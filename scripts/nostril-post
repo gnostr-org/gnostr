@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -e
+
+TMP=$(mktemp)
+
+$EDITOR "$TMP"
+
+if [ ! -f "$TMP" ]; then
+	printf "could not create temporary file\n" >&2
+	exit 1
+fi
+
+content="$(cat $TMP)"
+
+re="^[[:space:]]*$" 
+if [[ "$content" =~ $re ]]; then
+	printf "note empty. aborting.\n" >&2
+	exit 2
+fi
+
+sec=""
+if command -v git; then
+	key=$(git config nostr.secretkey)
+	if [ $key != "" ]; then
+		sec="--sec $key"
+	fi
+fi
+
+note=$(nostril --envelope $sec "$@" --content "$content")
+
+printf "relaying:\n" >&2
+printf "$note\n"
+<<<"$note" nostril relay
+printf "done.\n" >&2
+
+rm -f "$TMP"
