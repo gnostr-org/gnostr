@@ -1,0 +1,117 @@
+name: gnostr-docker
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        tag: ["latest", "slim-bullseye"]
+    runs-on: ${{ matrix.os }}
+    container: rust:${{ matrix.tag }}
+
+    steps:
+      - run: apt-get update && apt-get install autoconf build-essential curl cmake jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev help2man -y
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
+      - run: printenv
+      - run: cargo search gnostr --limit 100
+      - run: cargo install cargo-binstall && cargo-binstall --no-confirm --force gnostr-bins
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          submodules: 'true'
+          set-safe-directory: 'true'
+      ## notice: these are post checkout steps
+      ## - run: apk update && apk add autoconf automake build-base openssl-dev libtool make
+
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target
+
+      - run: touch ~/GITHUB_TOKEN.txt
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
+      - run: make detect | sudo make detect
+      ## objective: non-cmake build/install
+      - run: make nostril install || sudo make nostril install
+      ## objective: test gnostr-am with crate gnostr-sha256
+      - run: ./nostril --sec $(gnostr-sha256)
+      - run: cmake .
+      - run: make
+      ## objective: cmake build/install
+      - run: V=1 make nostril install || sudo make nostril install
+      ## objective: test gnostr with crate gnostr-bins gnostr-sha256
+      - run: ./nostril --sec $(gnostr-sha256)
+      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble))
+      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
