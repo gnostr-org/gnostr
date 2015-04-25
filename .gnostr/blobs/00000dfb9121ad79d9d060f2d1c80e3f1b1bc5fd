@@ -1,0 +1,35 @@
+commit 00000dfb9121ad79d9d060f2d1c80e3f1b1bc5fd
+Author: @RandyMcMillan <randy.lee.mcmillan@gmail.com>
+Date:   Mon Jul 17 14:29:16 2023 -0400
+
+    01:0002ea5f:
+
+diff --git a/src/gitminer.rs b/src/gitminer.rs
+index 14522e9..324c4e4 100644
+--- a/src/gitminer.rs
++++ b/src/gitminer.rs
+@@ -76,6 +76,7 @@ impl Gitminer {
+ 
+     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+ 
++        println!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash);
+         Command::new("sh")
+             .arg("-c")
+             .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
+diff --git a/src/repo.rs b/src/repo.rs
+index 7006e80..ddbeeb8 100644
+--- a/src/repo.rs
++++ b/src/repo.rs
+@@ -34,9 +34,10 @@ pub fn state() -> RepositoryState {
+     let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
+     println!("repo_root={:?}", repo_root.as_str());
+     let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
+-    println!("{} state={:?}", repo.path().display(), repo.state());
+-    //println!("state={:?}", repo.state());
++    println!("1:{} state={:?}", repo.path().display(), repo.state());
++    println!("state={:?}", repo.state());
+ 	if repo.state() == RepositoryState::Clean {
++    println!("2:{} state={:?}", repo.path().display(), repo.state());
+ 
+ 		//println!("clean {:?}", repo.state());
+ 

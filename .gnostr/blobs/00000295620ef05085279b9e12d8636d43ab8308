@@ -1,0 +1,23 @@
+commit 00000295620ef05085279b9e12d8636d43ab8308
+Author: @RandyMcMillan <randy.lee.mcmillan@gmail.com>
+Date:   Mon Jul 17 14:30:42 2023 -0400
+
+    02:0004ffaf:
+
+diff --git a/src/gitminer.rs b/src/gitminer.rs
+index 324c4e4..5ac518f 100644
+--- a/src/gitminer.rs
++++ b/src/gitminer.rs
+@@ -76,10 +76,10 @@ impl Gitminer {
+ 
+     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+ 
+-        println!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash);
++        println!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash);
+         Command::new("sh")
+             .arg("-c")
+-            .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
++            .arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
+             .output()
+             .ok()
+             .expect("Failed to generate commit");

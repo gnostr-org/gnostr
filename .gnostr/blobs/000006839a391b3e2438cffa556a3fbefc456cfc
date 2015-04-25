@@ -1,0 +1,36 @@
+commit 000006839a391b3e2438cffa556a3fbefc456cfc
+Author: @RandyMcMillan <randy.lee.mcmillan@gmail.com>
+Date:   Mon Jul 17 14:52:37 2023 -0400
+
+    03:00026031:
+
+diff --git a/src/gitminer.rs b/src/gitminer.rs
+index b448f61..c533630 100644
+--- a/src/gitminer.rs
++++ b/src/gitminer.rs
+@@ -83,12 +83,24 @@ impl Gitminer {
+         Command::new("sh")
+             .arg("-c")
+             .arg(format!("mkdir -p {}/.gnostr", self.opts.repo))
++            //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
++            .output()
++            .ok()
++            .expect("Failed to mkdir -p .gnostr");
++        Command::new("sh")
++            .arg("-c")
+             .arg(format!("mkdir -p {}/.gnostr/reflog", self.opts.repo))
++            //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
++            .output()
++            .ok()
++            .expect("Failed to mkdir -p .gnostr/blobs");
++        Command::new("sh")
++            .arg("-c")
+             .arg(format!("mkdir -p {}/.gnostr/blobs", self.opts.repo))
+             //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
+             .output()
+             .ok()
+-            .expect("Failed to generate commit");
++            .expect("Failed to mkdir -p .gnostr/reflog");
+ 
+         /* repo.blob() generates a blob, not a commit.
+          * we write the commit, then
