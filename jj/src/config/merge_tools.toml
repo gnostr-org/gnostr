@@ -1,0 +1,33 @@
+[merge-tools.kdiff3]
+# --merge to open output pane, CreateBakFiles=0 to not include backup files in commit
+edit-args = ["--merge", "--cs", "CreateBakFiles=0", "$left", "$right"]
+merge-args = ["$base", "$left", "$right", "-o", "$output", "--auto"]
+
+[merge-tools.meld]
+edit-args = ["$left", "$right"]
+merge-args = ["$left", "$base", "$right", "-o", "$output", "--auto-merge"]
+
+[merge-tools.meld-3]
+program="meld"
+# If using this as a template, note that `$output` is repeated twice below
+edit-args = ["$left", "$output", "$right", "-o", "$output"]
+
+[merge-tools.vimdiff]
+program = "vim"
+# `-d` enables diff mode. `-f` makes vim run in foreground even if it starts a GUI.
+# The other options make sure that only the output file can be modified.
+merge-args = ["-f", "-d", "$output", "-M", "$left", "$base", "$right",
+              "-c", "wincmd J", "-c", "set modifiable", "-c", "set write"]
+merge-tool-edits-conflict-markers = true
+# Using vimdiff as a diff editor is not recommended. For instructions on configuring
+# the DirDiff Vim plugin for a better experience, see
+# https://gist.github.com/ilyagr/5d6339fb7dac5e7ab06fe1561ec62d45
+edit-args = ["-f", "-d", "$left", "$right"]
+
+[merge-tools.vscode]
+program = "code"
+merge-args = ["--wait", "--merge", "$left", "$right", "$base", "$output"]
+# VS Code reads the output file and behaves better if it's prepopulated with conflict
+# markers. Unfortunately, it does not seem to be able to output conflict markers when
+# the user only resolves some of the conflicts.
+merge-tool-edits-conflict-markers = true

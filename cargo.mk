@@ -29,9 +29,9 @@ cargo-build:### 	cargo build
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-i:cargo-install
-cargo-install:### 	cargo install --path .
+cargo-install:### 	cargo install --path jj
 	#@. $(HOME)/.cargo/env
-	@cargo install --path $(PWD)
+	@cargo install --path jj
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
