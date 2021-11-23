@@ -49,6 +49,12 @@ jobs:
           git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
+          legit -p 0 -m $(date +%s) .
+          legit -p 00 -m $(date +%s) .
+          legit -p 000 -m $(date +%s) .
+          legit -p 0000 -m $(date +%s) .
+          legit -p 00000 -m $(date +%s) .
+          legit -p 000000 -m $(date +%s) .
           git log
 
 # Cross Compile 
@@ -69,6 +75,12 @@ jobs:
           git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
+          legit -p 0 -m $(date +%s) .
+          legit -p 00 -m $(date +%s) .
+          legit -p 000 -m $(date +%s) .
+          legit -p 0000 -m $(date +%s) .
+          legit -p 00000 -m $(date +%s) .
+          legit -p 000000 -m $(date +%s) .
           git log
 
 # Cross Compile 
@@ -89,6 +101,12 @@ jobs:
           git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
+          legit -p 0 -m $(date +%s) .
+          legit -p 00 -m $(date +%s) .
+          legit -p 000 -m $(date +%s) .
+          legit -p 0000 -m $(date +%s) .
+          legit -p 00000 -m $(date +%s) .
+          legit -p 000000 -m $(date +%s) .
           git log
 
 # Cross Compile 
@@ -109,5 +127,11 @@ jobs:
           git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
+          legit -p 0 -m $(date +%s) .
+          legit -p 00 -m $(date +%s) .
+          legit -p 000 -m $(date +%s) .
+          legit -p 0000 -m $(date +%s) .
+          legit -p 00000 -m $(date +%s) .
+          legit -p 000000 -m $(date +%s) .
           git log
 
