@@ -60,6 +60,9 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          make touch-time
+          legit -p 000000 -m "touch-time test" .
+          git log
 
 # Cross Compile 
   macos-10-host:
@@ -75,6 +78,9 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          make touch-time
+          legit -p 000000 -m "touch-time test" .
+          git log
 
 # Cross Compile 
   macos-latest-host:
@@ -90,4 +96,7 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          make touch-time
+          legit -p 000000 -m "touch-time test" .
+          git log
 
