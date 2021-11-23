@@ -45,6 +45,11 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          git config user.name $GITHUB_REPOSITORY_OWNER
+          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
+          make touch-time
+          legit -p 000000 -m "touch-time test" .
+          git log
 
 # Cross Compile 
   ubuntu-latest-host:
@@ -60,6 +65,8 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          git config user.name $GITHUB_REPOSITORY_OWNER
+          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
           git log
@@ -78,6 +85,8 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          git config user.name $GITHUB_REPOSITORY_OWNER
+          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
           git log
@@ -96,6 +105,8 @@ jobs:
         run: |
           sudo make legit
           legit -h
+          git config user.name $GITHUB_REPOSITORY_OWNER
+          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
           make touch-time
           legit -p 000000 -m "touch-time test" .
           git log
