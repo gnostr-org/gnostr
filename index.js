@@ -1,4 +1,5 @@
-const WebSocket = require('ws')
+const RelayPool = (function nostrlib() {
+const WS = typeof WebSocket !== 'undefined' ? WebSocket : require('ws')
 
 function RelayPool(relays, opts)
 {
@@ -114,24 +115,54 @@ function Relay(relay, opts={})
 }
 
 function init_websocket(me) {
-	const ws = me.ws = new WebSocket(me.url);
-	let resolved = false
-	ws.onmessage = (m) => { handle_nostr_message(me, m) }
-	ws.onclose = () => { 
-		if (me.onfn.close) 
-			me.onfn.close() 
-		if (!me.manualClose && me.opts.reconnect)
-			init_websocket(me)
-	}
-	ws.onerror = () => { 
-		if (me.onfn.error)
-			me.onfn.error() 
-		if (me.opts.reconnect)
-			init_websocket(me)
-	}
-	ws.onopen = () => {
-		if (me.onfn.open)
-			me.onfn.open()
+	const ws = me.ws = new WS(me.url);
+	return new Promise((resolve, reject) => {
+		let resolved = false
+		ws.onmessage = (m) => { handle_nostr_message(me, m) }
+		ws.onclose = () => { 
+			if (me.onfn.close) 
+				me.onfn.close() 
+			if (me.reconnecting)
+				return reject(new Error("close during reconnect"))
+			if (!me.manualClose && me.opts.reconnect)
+				reconnect(me)
+		}
+		ws.onerror = () => { 
+			if (me.onfn.error)
+				me.onfn.error() 
+			if (me.reconnecting)
+				return reject(new Error("error during reconnect"))
+			if (me.opts.reconnect)
+				reconnect(me)
+		}
+		ws.onopen = () => {
+			if (me.onfn.open)
+				me.onfn.open()
+
+			if (resolved) return
+
+			resolved = true
+			resolve(me)
+		}
+	});
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function reconnect(me)
+{
+	const reconnecting = true
+	let n = 100
+	try {
+		me.reconnecting = true
+		await init_websocket(me)
+		me.reconnecting = false
+	} catch {
+		console.error(`error thrown during reconnect... trying again in ${n} ms`)
+		await sleep(n)
+		n *= 1.5
 	}
 }
 
@@ -173,4 +204,8 @@ function handle_nostr_message(relay, msg)
 	}
 }
 
-module.exports = RelayPool
+return RelayPool
+})()
+
+if (typeof module !== 'undefined' && module.exports)
+	module.exports = RelayPool
