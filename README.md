@@ -24,6 +24,6 @@ pool.on('eose', relay => {
 });
 
 pool.on('event', (relay, sub_id, ev) => {
-	t.equal("subid", sub_id, `got event ${++n}/${expected} from ${relay.url}`)
+	console.log(ev)
 });
 ```
