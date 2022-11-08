@@ -5,3 +5,5 @@
 flamegraph.svg
 src/ui/bash_profile.log
 bash_profile.log
+.idea
+Cargo.lock

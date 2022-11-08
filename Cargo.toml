@@ -67,6 +67,13 @@ regex-onig = ["syntect/regex-onig"]
 timing = ["scopetime/enabled"]
 trace-libgit = ["asyncgit/trace-libgit"]
 vendor-openssl = ["asyncgit/vendor-openssl"]
+chrono = { version = "0.4.22", features = ["serde"] }
+clap = { version = "4.0.22", features = ["derive"] }
+serde = "1.0.147"
+tungstenite = "0.17.3"
+secp256k1 = { version = "0.24", features = ["bitcoin_hashes", "global-context", "rand-std"] }
+serde_json = "1.0.87"
+nostr_rust = "0.5.0"
 
 [workspace]
 members = ["asyncgit", "filetreelist", "git2-hooks", "git2-testing", "scopetime"]
