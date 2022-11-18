@@ -1,261 +1,92 @@
-const RelayPool = (function nostrlib() {
-const WS = typeof WebSocket !== 'undefined' ? WebSocket : require('ws')
 
-function RelayPool(relays, opts)
+const Relay = require('./lib/relay')
+const RelayPool = require('./lib/relay-pool')
+const noble = require('noble-secp256k1')
+
+async function signId(privkey, id) {
+	return await noble.schnorr.sign(id, privkey)
+}
+
+async function calculateId(ev) {
+	const commit = eventCommitment(ev)
+	const sha256 = noble.utils.sha256;
+	const buf = new TextEncoder().encode(commit);
+	return hexEncode(await sha256(buf))
+}
+
+function eventCommitment(ev) {
+	const {pubkey,created_at,kind,tags,content} = ev
+	return JSON.stringify([0, pubkey, created_at, kind, tags, content])
+}
+
+function delegationCommitment(pk, conditions) {
+	return `nostr:delegation:${pk}:${conditions}`
+}
+
+async function createDelegation(privkey, pubkey, publisherPubkey, conditions) {
+	const commitment = delegationCommitment(publisherPubkey, conditions)
+	const hash = hexEncode(await noble.utils.sha256(commitment))
+	const token = await signId(privkey, hash)
+	return {pubkey, publisherPubkey, conditions, token}
+}
+
+function createDelegationTag(delegation) {
+	const { pubkey, conditions, token } = delegation
+	return ["delegation", pubkey, conditions, token]
+}
+
+function upsert_delegation_tag(tags, delegation)
 {
-	if (!(this instanceof RelayPool))
-		return new RelayPool(relays)
-
-	this.onfn = {}
-	this.relays = []
-
-	for (const relay of relays) {
-		this.add(relay)
-	}
-
-	return this
-}
-
-RelayPool.prototype.close = function relayPoolClose() {
-	for (const relay of this.relays) {
-		relay.close()
-	}
-}
-
-RelayPool.prototype.on = function relayPoolOn(method, fn) {
-	for (const relay of this.relays) {
-		this.onfn[method] = fn
-		relay.onfn[method] = fn.bind(null, relay)
-	}
-}
-
-RelayPool.prototype.has = function relayPoolHas(relayUrl) {
-	for (const relay of this.relays) {
-		if (relay.url === relayUrl)
-			return true
-	}
-
-	return false
-}
-
-RelayPool.prototype.setupHandlers = function relayPoolSetupHandlers()
-{
-	// setup its message handlers with the ones we have already
-	const keys = Object.keys(this.onfn)
-	for (const handler of keys) {
-		for (const relay of this.relays) {
-			relay.onfn[handler] = this.onfn[handler].bind(null, relay)
-		}
-	}
-}
-
-RelayPool.prototype.remove = function relayPoolRemove(url) {
-	let i = 0
-
-	for (const relay of this.relays) {
-		if (relay.url === url) {
-			relay.ws && relay.ws.close()
-			this.relays = this.replays.splice(i, 1)
-			return true
-		}
-
-		i += 1
-	}
-
-	return false
-}
-
-RelayPool.prototype.subscribe = function relayPoolSubscribe(sub_id, filters, relay_ids) {
-	const relays = relay_ids ? this.find_relays(relay_ids) : this.relays
-	for (const relay of relays) {
-		relay.subscribe(sub_id, filters)
-	}
-}
-
-RelayPool.prototype.unsubscribe = function relayPoolUnsubscibe(sub_id, relay_ids) {
-	const relays = relay_ids ? this.find_relays(relay_ids) : this.relays
-	for (const relay of relays) {
-		relay.unsubscribe(sub_id)
-	}
-}
-
-
-RelayPool.prototype.add = function relayPoolAdd(relay) {
-	if (relay instanceof Relay) {
-		if (this.has(relay.url))
-			return false
-
-		this.relays.push(relay)
-		this.setupHandlers()
-		return true
-	}
-
-	if (this.has(relay))
-		return false
-
-	const r = Relay(relay, this.opts)
-	this.relays.push(r)
-	this.setupHandlers()
-	return true
-}
-
-RelayPool.prototype.find_relays = function relayPoolFindRelays(relay_ids) {
-	if (relay_ids instanceof Relay)
-		return [relay_ids]
-
-	if (relay_ids.length === 0)
-		return []
-
-	if (!relay_ids[0])
-		throw new Error("what!?")
-
-	if (relay_ids[0] instanceof Relay)
-		return relay_ids
-
-	return this.relays.reduce((acc, relay) => {
-		if (relay_ids.some((rid) => relay.url === rid))
-			acc.push(relay)
-		return acc
-	}, [])
-}
-
-Relay.prototype.wait_connected = async function relay_wait_connected(data) {
-	let retry = 1000
-	while (true) {
-		if (this.ws.readyState !== 1) {
-			await sleep(retry)
-			retry *= 1.5
-		}
-		else {
+	let found = false
+	for (const tag of tags) {
+		if (tag.length >= 4 && tag[0] === "delegation") {
+			tag[1] = delegation.pubkey
+			tag[2] = delegation.conditions
+			tag[3] = delegation.token
 			return
 		}
 	}
+	tags.push(createDelegationTag(delegation))
 }
 
+async function createDelegationEvent(publisher_privkey, ev, delegation) {
+	let tags = ev.tags || []
 
-function Relay(relay, opts={})
-{
-	if (!(this instanceof Relay))
-		return new Relay(relay, opts)
+	upsert_delegation_tag(tags, delegation)
 
-	this.url = relay
-	this.opts = opts
-
-	if (opts.reconnect == null)
-		opts.reconnect = true
-
-	const me = this
-	me.onfn = {}
-
-	init_websocket(me)
-
-	return this
+	ev.tags = tags
+	ev.pubkey = delegation.publisherPubkey
+	ev.id = await calculateId(ev)
+	ev.sig = await signId(publisher_privkey, ev.id)
+	return ev
 }
 
-function init_websocket(me) {
-	const ws = me.ws = new WS(me.url);
-	return new Promise((resolve, reject) => {
-		let resolved = false
-		ws.onmessage = (m) => { handle_nostr_message(me, m) }
-		ws.onclose = () => { 
-			if (me.onfn.close) 
-				me.onfn.close() 
-			if (me.reconnecting)
-				return reject(new Error("close during reconnect"))
-			if (!me.manualClose && me.opts.reconnect)
-				reconnect(me)
-		}
-		ws.onerror = () => { 
-			if (me.onfn.error)
-				me.onfn.error() 
-			if (me.reconnecting)
-				return reject(new Error("error during reconnect"))
-			if (me.opts.reconnect)
-				reconnect(me)
-		}
-		ws.onopen = () => {
-			if (me.onfn.open)
-				me.onfn.open()
-
-			if (resolved) return
-
-			resolved = true
-			resolve(me)
-		}
-	});
+function hexChar(val) {
+	if (val < 10)
+		return String.fromCharCode(48 + val)
+	if (val < 16)
+		return String.fromCharCode(97 + val - 10)
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function reconnect(me)
-{
-	const reconnecting = true
-	let n = 100
-	try {
-		me.reconnecting = true
-		await init_websocket(me)
-		me.reconnecting = false
-	} catch {
-		//console.error(`error thrown during reconnect... trying again in ${n} ms`)
-		await sleep(n)
-		n *= 1.5
+function hexEncode(buf) {
+	let str = ""
+	for (let i = 0; i < buf.length; i++) {
+		const c = buf[i]
+		str += hexChar(c >> 4)
+		str += hexChar(c & 0xF)
 	}
+	return str
 }
 
-Relay.prototype.on = function relayOn(method, fn) {
-	this.onfn[method] = fn
+module.exports = {
+	Relay,
+	RelayPool,
+	signId,
+	calculateId,
+	delegationCommitment,
+	createDelegationTag,
+	createDelegationEvent,
+	createDelegation,
+	eventCommitment
 }
 
-Relay.prototype.close = function relayClose() {
-	if (this.ws) {
-		this.manualClose = true
-		this.ws.close()
-	}
-}
-
-Relay.prototype.subscribe = function relay_subscribe(sub_id, filters) {
-	if (Array.isArray(filters))
-		this.send(["REQ", sub_id, ...filters])
-	else
-		this.send(["REQ", sub_id, filters])
-}
-
-Relay.prototype.unsubscribe = function relay_unsubscribe(sub_id) {
-	this.send(["CLOSE", sub_id])
-}
-
-Relay.prototype.send = async function relay_send(data) {
-	await this.wait_connected()
-	this.ws.send(JSON.stringify(data))
-}
-
-function handle_nostr_message(relay, msg)
-{
-	let data
-	try {
-		data = JSON.parse(msg.data)
-	} catch (e) {
-		console.error("handle_nostr_message", e)
-		return
-	}
-	if (data.length >= 2) {
-		switch (data[0]) {
-		case "EVENT":
-			if (data.length < 3)
-				return
-			return relay.onfn.event && relay.onfn.event(data[1], data[2])
-		case "EOSE":
-			return relay.onfn.eose && relay.onfn.eose(data[1])
-		case "NOTICE":
-			return relay.onfn.notice && relay.onfn.notice(...data.slice(1))
-		}
-	}
-}
-
-return RelayPool
-})()
-
-if (typeof module !== 'undefined' && module.exports)
-	module.exports = RelayPool

@@ -1,6 +1,6 @@
 {
   "name": "nostr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "nostr lib and cli",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "tape": "^5.6.0"
   },
   "dependencies": {
+    "noble-secp256k1": "^1.2.14",
     "ws": "^8.8.1"
   }
 }
