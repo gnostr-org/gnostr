@@ -1,6 +1,6 @@
 
 const test = require('tape')
-const {RelayPool, calculateId, createDelegation, createDelegationEvent} = require('../')
+const {RelayPool, calculateId, createDelegation, createDelegationEvent, getPublicKey} = require('../')
 
 const jb55 = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
 const damus = "wss://relay.damus.io"
@@ -18,6 +18,11 @@ function create_test_event() {
 
 	return {pubkey: PUBKEY, created_at, kind, content, tags}
 }
+
+test('get pubkey works', function (t) {
+	t.plan(1)
+	t.equal(getPublicKey(PRIVKEY), PUBKEY)
+});
 
 test('create delegate event', async function (t) {
 	const publisher_privkey = "d78578125f35cfc39fab89427d4086be1f0db939c393efd311631776a8e5d9ca"

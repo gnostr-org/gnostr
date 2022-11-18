@@ -78,11 +78,16 @@ function hexEncode(buf) {
 	return str
 }
 
+function getPublicKey(privkey) {
+	return noble.schnorr.getPublicKey(privkey)
+}
+
 module.exports = {
 	Relay,
 	RelayPool,
 	signId,
 	calculateId,
+	getPublicKey,
 	delegationCommitment,
 	createDelegationTag,
 	createDelegationEvent,
