@@ -23,10 +23,15 @@ function delegationCommitment(pk, conditions) {
 	return `nostr:delegation:${pk}:${conditions}`
 }
 
+async function signDelegationToken(privkey, unsigned_token) 
+{
+	const hash = hexEncode(await noble.utils.sha256(unsigned_token))
+	return (await signId(privkey, hash))
+}
+
 async function createDelegation(privkey, pubkey, publisherPubkey, conditions) {
-	const commitment = delegationCommitment(publisherPubkey, conditions)
-	const hash = hexEncode(await noble.utils.sha256(commitment))
-	const token = await signId(privkey, hash)
+	const unsigned_token = delegationCommitment(publisherPubkey, conditions)
+	const token = await signDelegationToken(privkey, unsigned_token)
 	return {pubkey, publisherPubkey, conditions, token}
 }
 
@@ -92,6 +97,7 @@ module.exports = {
 	createDelegationTag,
 	createDelegationEvent,
 	createDelegation,
+	signDelegationToken,
 	eventCommitment
 }
 

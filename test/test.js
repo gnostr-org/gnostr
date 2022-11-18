@@ -1,6 +1,6 @@
 
 const test = require('tape')
-const {RelayPool, calculateId, createDelegation, createDelegationEvent, getPublicKey} = require('../')
+const {RelayPool, calculateId, createDelegation, createDelegationEvent, getPublicKey, signDelegationToken} = require('../')
 
 const jb55 = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
 const damus = "wss://relay.damus.io"
@@ -34,6 +34,15 @@ test('create delegate event', async function (t) {
 	const delegate_ev = await createDelegationEvent(publisher_privkey, ev, delegation)
 
 	t.equal(delegate_ev.pubkey, delegation.publisherPubkey)
+})
+
+test('sign delegation token', async function (t) {
+	t.plan(1)
+
+	const unsigned_token = 'nostr:delegation:fa11cadbb65d6e81ae4e18a09ab7d784ea87d8b5c18bc81ece76b088fa0d1f5b:kind=1&created_at>1668780345&created_at<1700317277'
+
+	const signed = await signDelegationToken(PRIVKEY, unsigned_token)
+	t.equal(signed.length, 128)
 })
 
 test('calculate event id', async function (t) {
