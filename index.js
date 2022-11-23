@@ -7,10 +7,21 @@ async function signId(privkey, id) {
 	return await noble.schnorr.sign(id, privkey)
 }
 
+function utf8_encode(txt) {
+	if (typeof TextEncoder !== 'undefined' && TextEncoder) {
+		const encoder = new TextEncoder()
+		return encoder.encode(txt)
+	} else {
+		const util = require('util');
+		const encoder = new util.TextEncoder('utf-8');
+		return encoder.encode(txt)
+	}
+}
+
 async function calculateId(ev) {
 	const commit = eventCommitment(ev)
 	const sha256 = noble.utils.sha256;
-	const buf = new TextEncoder().encode(commit);
+	const buf = utf8_encode(commit);
 	return hexEncode(await sha256(buf))
 }
 
