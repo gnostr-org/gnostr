@@ -88,3 +88,22 @@ test('querying multiple works', function (t) {
 	});
 });
 
+test('connection error handling works', function (t) {
+	t.plan(3)
+
+	const pool = RelayPool(['ws://adfaskldasdf.example.com'])
+
+	pool.on('error', (relay, e) => {
+		t.match(e.message, /^((getaddrinfo ENOTFOUND)|(close during reconnect))/)
+	})
+})
+
+test('connection error handling works, no reconnect', function (t) {
+	t.plan(1)
+
+	const pool = RelayPool(['ws://adfaskldasdf.example.com'], {reconnect:false})
+
+	pool.on('error', (relay, e) => {
+		t.match(e.message, /^getaddrinfo ENOTFOUND/)
+	})
+})
