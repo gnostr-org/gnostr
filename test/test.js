@@ -1,6 +1,6 @@
 
 const test = require('tape')
-const {RelayPool, calculateId, createDelegation, createDelegationEvent, getPublicKey, signDelegationToken} = require('../')
+const {RelayPool, decryptDm, calculateId, createDelegation, createDelegationEvent, getPublicKey, signDelegationToken} = require('../')
 
 const jb55 = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
 const damus = "wss://relay.damus.io"
@@ -22,6 +22,14 @@ function create_test_event() {
 test('get pubkey works', function (t) {
 	t.plan(1)
 	t.equal(getPublicKey(PRIVKEY), PUBKEY)
+});
+
+test('decrypt works', function (t) {
+	t.plan(1)
+	const dm = {id: "62cfada0ff663ba225b67dd2c089242cdfd2c05107bd3d871cec8cee3dcf8ae2",pubkey: "8a5a685420091ae0abef79be1735921b6bab047cc5b2aaefb8f8902dedf117f5",created_at: 1669439828,kind: 4,tags: [["p","8a5a685420091ae0abef79be1735921b6bab047cc5b2aaefb8f8902dedf117f5"]],content: "01xFLdntA3rg+L1F+mGUug==?iv=P3yubTIbGbB+Nvi2qtsw0A==",sig: "f52a550ff18ca3cedfdf3c108744c7bd3cdde601c5b014ead814967c4bafe5c87735d32f8734a337d6a271b519d29a0fc863141197bdc6253a3a19c7488ebbff"}
+
+	const content = decryptDm(PRIVKEY, dm)
+	t.equal(content, "hi")
 });
 
 test('create delegate event', async function (t) {

@@ -2,6 +2,7 @@
 const Relay = require('./lib/relay')
 const RelayPool = require('./lib/relay-pool')
 const noble = require('noble-secp256k1')
+const crypto = require('crypto')
 
 async function signId(privkey, id) {
 	return await noble.schnorr.sign(id, privkey)
@@ -94,6 +95,38 @@ function hexEncode(buf) {
 	return str
 }
 
+function base64_decode(str)
+{
+	if (typeof Buffer !== 'undefined' && Buffer) {
+		return Buffer.from(str, 'base64')
+	} else if (typeof atob !== 'undefined' && atob) {
+		return atob(str)
+	}
+	throw new Error("no base64 implementation")
+}
+
+function decryptDm(privkey, ev) {
+	let [enc, iv] = ev.content.split("?")
+	if (!iv || !enc)
+		return
+	iv = iv.slice(3)
+	iv = base64_decode(iv)
+
+	const shared_point = noble.getSharedSecret(privkey, '02' + ev.pubkey)
+	const shared_x = shared_point.substr(2, 64)
+	const decipher = crypto.createDecipheriv(
+                'aes-256-cbc',
+                Buffer.from(shared_x, 'hex'),
+                iv
+	)
+
+	let decrypted = decipher.update(enc, "base64", "utf8")
+	decrypted += decipher.final("utf8")
+
+	return decrypted
+}
+
+
 function getPublicKey(privkey) {
 	return noble.schnorr.getPublicKey(privkey)
 }
@@ -104,6 +137,7 @@ module.exports = {
 	signId,
 	calculateId,
 	getPublicKey,
+	decryptDm,
 	delegationCommitment,
 	createDelegationTag,
 	createDelegationEvent,

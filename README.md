@@ -59,6 +59,12 @@ Calculate an id from an event
 
 Create a signature for an id
 
+### decryptDm(privkey, event)
+
+Decrypt a direct message
+
+Returns: decrypted content
+
 ### getPublicKey(privkey)
 
 Get a public key from a privkey
