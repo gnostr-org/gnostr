@@ -1,6 +1,6 @@
 {
   "name": "nostr",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "nostr lib and cli",
   "main": "index.js",
   "scripts": {
