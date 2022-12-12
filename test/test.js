@@ -1,6 +1,8 @@
 
 const test = require('tape')
-const {RelayPool, decryptDm, calculateId, createDelegation, createDelegationEvent, getPublicKey, signDelegationToken} = require('../')
+const {RelayPool, encryptDm, decryptDm, calculateId, createDelegation,
+	createDelegationEvent, getPublicKey,
+	signDelegationToken} = require('../')
 
 const jb55 = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
 const damus = "wss://relay.damus.io"
@@ -30,6 +32,16 @@ test('decrypt works', function (t) {
 
 	const content = decryptDm(PRIVKEY, dm)
 	t.equal(content, "hi")
+});
+
+test('encrypt then decrypt works', async function (t) {
+	t.plan(1)
+	const msg = "hello, world!"
+	let dm = {pubkey: PUBKEY, kind: 4, created_at: 1669439828}
+	dm.content = encryptDm(PRIVKEY, PUBKEY, msg)
+	const decrypted = decryptDm(PRIVKEY, dm)
+
+	t.equal(decrypted, msg)
 });
 
 test('create delegate event', async function (t) {

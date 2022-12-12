@@ -105,6 +105,23 @@ function base64_decode(str)
 	throw new Error("no base64 implementation")
 }
 
+
+function encryptDm(privkey, to, msg) {
+	const shared_point = noble.getSharedSecret(privkey, '02' + to)
+	const shared_x = shared_point.substr(2, 64)
+	const iv = crypto.randomBytes(16);
+	const cipher = crypto.createCipheriv(
+                'aes-256-cbc',
+                Buffer.from(shared_x, 'hex'),
+		iv
+	)
+
+	let encrypted = cipher.update(msg, 'utf8', 'base64');
+        encrypted += cipher.final('base64');
+
+	return encrypted + "?iv=" + iv.toString('base64')
+}
+
 function decryptDm(privkey, ev) {
 	let [enc, iv] = ev.content.split("?")
 	if (!iv || !enc)
@@ -138,6 +155,7 @@ module.exports = {
 	calculateId,
 	getPublicKey,
 	decryptDm,
+	encryptDm,
 	delegationCommitment,
 	createDelegationTag,
 	createDelegationEvent,

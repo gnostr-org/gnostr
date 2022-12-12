@@ -65,6 +65,12 @@ Decrypt a direct message
 
 Returns: decrypted content
 
+### encryptDM(privkey, pubkey, msg)
+
+Encrypt a direct message
+
+Returns: encrypted content
+
 ### getPublicKey(privkey)
 
 Get a public key from a privkey
