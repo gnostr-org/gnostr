@@ -56,15 +56,13 @@ jobs:
           make touch-time
       - name: legit -p 000000 -m "touch-time test ."
         run: |
-          legit -p 000000 -m "touch-time test" .
+          sudo -su runner cargo run . -p 000 -m "touch-time test"
       - name: legit -p 0 -m $(date +%s) .
         run: |
-          legit -p 0 -m $(date +%s) .
-          legit -p 00 -m $(date +%s) .
-          legit -p 000 -m $(date +%s) .
-          legit -p 0000 -m $(date +%s) .
-          legit -p 00000 -m $(date +%s) .
-          legit -p 000000 -m $(date +%s) .
+          sudo -su runner cargo run . -p 0 -m $(date +%s)
+          sudo -su runner cargo run . -p 00 -m $(date +%s)
+          sudo -su runner cargo run . -p 000 -m $(date +%s)
+          sudo -su runner cargo run . -p 0000 -m $(date +%s)
       - name: git log
         run: |
           git log
