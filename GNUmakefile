@@ -91,6 +91,9 @@ PRIVATE_ALLSPHINXOPTS = -d $(PRIVATE_BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(S
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
+HOMEBREW_NO_ENV_HINTS=0
+export HOMEBREW_NO_ENV_HINTS
+
 .PHONY: init
 init: help
 	@echo "make init"
@@ -98,9 +101,10 @@ init: help
 .PHONY: help
 help:
 	@echo ""
+	@echo "  make legit"
+	@echo ""
 	@echo "  make docs"
 	@echo "  make report"
-	@echo "  make awesome"
 	@echo "  make git-add"
 	@echo "  make remove"
 	@echo "  make global-branch"
@@ -114,7 +118,7 @@ help:
 	@echo ""
 
 .PHONY: report
-report: 
+report:
 	@echo ''
 	@echo '	[ARGUMENTS]	'
 	@echo '      args:'
@@ -131,26 +135,18 @@ report:
 	@echo '        - GIT_REPO_ORIGIN=${GIT_REPO_ORIGIN}'
 	@echo '        - GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo '        - GIT_REPO_PATH=${GIT_REPO_PATH}'
+	@echo ''
+	@echo '        - HOMEBREW_NO_ENV_HINTS=${HOMEBREW_NO_ENV_HINTS}'
 
 .PHONY: git-add
 .ONESHELL:
-git-add: remove
-	@echo git-add
-
+git-add:
 	git config advice.addIgnoredFile false
-	#git add *
-
 	git add --ignore-errors GNUmakefile
 	git add --ignore-errors README.md
-	git add --ignore-errors sources/*.md
-	git add --ignore-errors sources/*.html
+	git add --ignore-errors *.html
 	git add --ignore-errors TIME
-	git add --ignore-errors GLOBAL
-	#git add --ignore-errors CNAME
-	git add --ignore-errors touch-block-time.py
-	git add --ignore-errors *.py
-	#git add --ignore-errors sources/*.py
-	git add --ignore-errors index.html
+	git add --ignore-errors CNAME
 	git add --ignore-errors .gitignore
 	git add --ignore-errors .github
 	git add --ignore-errors *.sh
@@ -158,16 +154,13 @@ git-add: remove
 
 .PHONY: push
 .ONESHELL:
-push: touch-time
-	@echo push
-	bash -c "git commit --allow-empty -m '$(TIME)'"
-	bash -c "git push -f origin	+master:master"
+push: touch-time git-add
+	test legit && legit . -p 00000 -m "$(shell date +%s):make push"
+	@git push -f origin	+master:master
 
 .PHONY: branch
 .ONESHELL:
 branch: docs touch-time touch-block-time
-	@echo branch
-
 	git add --ignore-errors GNUmakefile TIME GLOBAL .github *.sh *.yml
 	git add --ignore-errors .github
 	git commit -m 'make branch by $(GIT_USER_NAME) on $(TIME)'
@@ -176,32 +169,24 @@ branch: docs touch-time touch-block-time
 
 .PHONY: touch-time
 .ONESHELL:
-touch-time:
+touch-time: remove
 	@echo touch-time
 	echo $(TIME) $(shell git rev-parse HEAD) > TIME
-	git add TIME
 
 .PHONY: automate
 automate: touch-time git-add
 	@echo automate
-	./.github/workflows/automate.sh
+	./automate.sh
+	test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
 
 .PHONY: docs
-docs: git-add awesome
-	#@echo docs
+docs: touch-time git-add
 	bash -c "if pgrep MacDown; then pkill MacDown; fi"
-	#bash -c "curl https://raw.githubusercontent.com/sindresorhus/awesome/main/readme.md -o ./sources/AWESOME-temp.md"
-	bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md'
-	bash -c 'cat $(PWD)/sources/COMMANDS.md              >> $(PWD)/README.md'
-	bash -c 'cat $(PWD)/sources/FOOTER.md                >> $(PWD)/README.md'
-	#brew install pandoc
 	bash -c "if hash pandoc 2>/dev/null; then echo; fi || brew install pandoc"
-	#bash -c 'pandoc -s README.md -o index.html  --metadata title="$(GH_USER_REPO)" '
-	bash -c 'pandoc -s README.md -o index.html'
-	#bash -c "if hash open 2>/dev/null; then open README.md; fi || echo failed to open README.md"
-	git add --ignore-errors sources/*.md
-	git add --ignore-errors *.md
-	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git 
+	bash -c 'pandoc -s README.md -o index.html  --metadata title="$(PROJECT_NAME)" '
+	$(MAKE) git-add
+	test legit && legit . -p 00000 -m "$(shell date +%s):make docs"
+	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
 .PHONY: legit
 .ONESHELL:
@@ -210,7 +195,10 @@ legit:
 
 .PHONY: clean
 .ONESHELL:
+remove:
+	bash -c "rm -rf TIME"
 clean: touch-time touch-global
+	bash -c "rm -rf TIME"
 	bash -c "rm -rf $(BUILDDIR)"
 
 .PHONY: failure
@@ -219,4 +207,5 @@ failure:
 .PHONY: success
 success:
 	@-/bin/true && ([ $$? -eq 0 ] && echo "success!") || echo "failure!"
-
+# vim: set noexpandtab:
+# vim: set setfiletype make
