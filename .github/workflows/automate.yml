@@ -44,9 +44,9 @@ jobs:
       - name: sudo make legit
         run: |
           sudo make legit
-      - name: legit -h
+      - name: cargo run -h
         run: |
-          legit -h
+          cargo run -h
       - name: git config
         run: |
           git config user.name $GITHUB_REPOSITORY_OWNER
