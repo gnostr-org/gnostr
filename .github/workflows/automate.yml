@@ -49,20 +49,35 @@ jobs:
           cargo run -h
       - name: git config
         run: |
-          git config user.name $GITHUB_REPOSITORY_OWNER
-          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
-      - name: make touch-time
+          sudo git config user.name $GITHUB_REPOSITORY_OWNER
+          sudo git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
+      - name: touch-time test
         run: |
-          make touch-time
-      - name: legit -p 000000 -m "touch-time test ."
+          sudo git config user.name $GITHUB_REPOSITORY_OWNER
+          sudo git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
+          sudo make touch-time git-add
+          sudo git diff
+          sudo make git-add
+          sudo git diff
+          sudo cargo run . -p 000 -m "touch-time test"
+      - name: cargo run . -p 0 -m $(date +%s)
         run: |
-          sudo -su runner cargo run . -p 000 -m "touch-time test"
-      - name: legit -p 0 -m $(date +%s) .
-        run: |
-          sudo -su runner cargo run . -p 0 -m $(date +%s)
-          sudo -su runner cargo run . -p 00 -m $(date +%s)
-          sudo -su runner cargo run . -p 000 -m $(date +%s)
-          sudo -su runner cargo run . -p 0000 -m $(date +%s)
+          sudo make touch-time
+          sudo git diff
+          sudo make git-add
+          sudo cargo run . -p 0 -m $(date +%s)
+          sudo make touch-time
+          sudo git diff
+          sudo make git-add
+          sudo cargo run . -p 00 -m $(date +%s)
+          sudo make touch-time
+          sudo git diff
+          sudo make git-add
+          sudo cargo run . -p 000 -m $(date +%s)
+          sudo make touch-time
+          sudo git diff
+          sudo make git-add
+          sudo cargo run . -p 0000 -m $(date +%s)
       - name: git log
         run: |
           git log
