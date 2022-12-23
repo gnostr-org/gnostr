@@ -1,8 +1,17 @@
-# Legit [![legit](https://github.com/RandyMcMillan/legit/actions/workflows/automate.yml/badge.svg)](https://github.com/RandyMcMillan/legit/actions/workflows/automate.yml)
+# [Legit](https://github.com/RandyMcMillan/legit.git) [![legit](https://github.com/RandyMcMillan/legit/actions/workflows/automate.yml/badge.svg)](https://github.com/RandyMcMillan/legit/actions/workflows/automate.yml)
 
 ##### Legit adds Proof of Work (PoW) to a git commit hash prefix.
 
-###### As an example, take a look at a few of the commits in this repo.
+### Example:
+
+```
+git log | grep "0000006"
+```
+
+`commit` [000000615b90566ae8559dd45852190edea79a8c](https://github.com/RandyMcMillan/legit/commit/000000615b90566ae8559dd45852190edea79a8c)
+
+`commit` [000000615b90566ae8559dd45852190edea79a8c](https://github.com/RandyMcMillan/legit/commit/000000615b90566ae8559dd45852190edea79a8c)
+
 
 ### Usage:
 
