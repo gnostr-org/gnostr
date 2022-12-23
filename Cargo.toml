@@ -4,6 +4,10 @@ description = "add proof of work to a git commit"
 version = "0.1.0"
 authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
 edition = "2021"
+readme = "README.md"
+documentation = "https://legit.randymcmillan.net"
+homepage = "https://legit.randymcmillan.net/"
+
 
 [dependencies]
 rust-crypto = "*"
