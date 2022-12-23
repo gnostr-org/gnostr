@@ -174,14 +174,12 @@ branch: docs touch-time touch-block-time
 .PHONY: touch-time
 .ONESHELL:
 touch-time: remove
-	@echo touch-time
-	echo $(TIME) $(shell git rev-parse HEAD) > TIME
+	@echo $(TIME) $(shell git rev-parse HEAD) > TIME
 
 .PHONY: automate
 automate: touch-time git-add
-	@echo automate
-	./automate.sh
-	test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
+	@./automate.sh
+	@test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
 
 .PHONY: docs
 docs: touch-time git-add
