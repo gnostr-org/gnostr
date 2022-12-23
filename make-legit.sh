@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+if ! hash cargo 2>/dev/null; then
+sudo -su $(whoami) rm -rf $HOME/.cargo/bin
+sudo -su $(whoami) curl https://sh.rustup.rs -sSf > rustup.sh && chmod +x rustup.sh && ./rustup.sh -y
+source $HOME/.cargo/env
+fi
+
 #ENV VARS
 OS=$(uname)
 OS_VERSION=$(uname -r)
@@ -73,8 +79,7 @@ if [[ "$OSTYPE" == "linux"* ]]; then
             $PACKAGE_MANAGER $INSTALL $AWK
             report
         fi
-        apt install libssl-dev
-        apt install rustc
+		sudo apt-get install libssl-dev rustc cargo
     fi
     if [[ "$OSTYPE" == "linux-musl" ]]; then
         PACKAGE_MANAGER=apk
@@ -148,5 +153,5 @@ else
     echo TODO add support for $OSTYPE
 fi
 
-cargo build --release
-sudo install -v ././target/release/legit /usr/local/bin/legit
+sudo -su $(whoami) cargo build
+sudo -su $(whoami) cargo build --release
