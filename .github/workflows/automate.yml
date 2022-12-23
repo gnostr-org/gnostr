@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: legit
+name: automate.yml
 
 # Controls when the action will run. 
 on:
@@ -68,82 +68,3 @@ jobs:
       - name: git log
         run: |
           git log
-
-# Cross Compile 
-  ubuntu-latest-host:
-    runs-on: ubuntu-latest
-    steps:
-      ## REF: https://githubmemory.com/repo/Gisleburt/cancel-workflow-action
-      - uses: styfle/cancel-workflow-action@0.8.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v2
-      - name: Make
-        run: |
-          sudo make legit
-          legit -h
-          git config user.name $GITHUB_REPOSITORY_OWNER
-          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
-          make touch-time
-          legit -p 000000 -m "touch-time test" .
-          legit -p 0 -m $(date +%s) .
-          legit -p 00 -m $(date +%s) .
-          legit -p 000 -m $(date +%s) .
-          legit -p 0000 -m $(date +%s) .
-          legit -p 00000 -m $(date +%s) .
-          legit -p 000000 -m $(date +%s) .
-          git log
-
-# Cross Compile 
-  macos-10-host:
-    runs-on: macos-10.15
-    steps:
-      ## REF: https://githubmemory.com/repo/Gisleburt/cancel-workflow-action
-      - uses: styfle/cancel-workflow-action@0.8.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v2
-      - name: Make
-        run: |
-          sudo make legit
-          legit -h
-          git config user.name $GITHUB_REPOSITORY_OWNER
-          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
-          make touch-time
-          legit -p 000000 -m "touch-time test" .
-          legit -p 0 -m $(date +%s) .
-          legit -p 00 -m $(date +%s) .
-          legit -p 000 -m $(date +%s) .
-          legit -p 0000 -m $(date +%s) .
-          legit -p 00000 -m $(date +%s) .
-          legit -p 000000 -m $(date +%s) .
-          git log
-
-# Cross Compile 
-  macos-latest-host:
-    runs-on: macos-latest
-    steps:
-      ## REF: https://githubmemory.com/repo/Gisleburt/cancel-workflow-action
-      - uses: styfle/cancel-workflow-action@0.8.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v2
-      - name: Make
-        run: |
-          sudo make legit
-          legit -h
-          git config user.name $GITHUB_REPOSITORY_OWNER
-          git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
-          make touch-time
-          legit -p 000000 -m "touch-time test" .
-          legit -p 0 -m $(date +%s) .
-          legit -p 00 -m $(date +%s) .
-          legit -p 000 -m $(date +%s) .
-          legit -p 0000 -m $(date +%s) .
-          legit -p 00000 -m $(date +%s) .
-          legit -p 000000 -m $(date +%s) .
-          git log
-
