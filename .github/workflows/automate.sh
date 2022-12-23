@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
+if ! hash rust 2>/dev/null; then
+sudo rm -rf $HOME/.cargo/bin
+sudo curl https://sh.rustup.rs -sSf > rustup.sh && chmod +x rustup.sh && ./rustup.sh -y
+source $HOME/.cargo/env
+fi
 #ENV VARS
+RUSTC=$(which rustc)
+CARGO=$(which cargo)
+
 OS=$(uname)
 OS_VERSION=$(uname -r)
 UNAME_M=$(uname -m)
@@ -28,6 +36,9 @@ checkbrew() {
         if !hash git 2>/dev/null; then
             brew install git
         fi
+        if !hash rustc 2>/dev/null; then
+			brew install rust
+		fi
         #if !hash pandoc 2>/dev/null; then
             brew install pandoc
         #fi
@@ -118,6 +129,10 @@ elif [[ "$OSTYPE" == "freebsd"* ]]; then
 else
     echo TODO add support for $OSTYPE
 fi
-cargo build --release
-sudo install -v ././target/release/legit /usr/local/bin/legit
+#sudo curl https://sh.rustup.rs -sSf > rustup.sh && chmod +x rustup.sh && ./rustup.sh -y
+$CARGO build
+#$CARGO build --release
+#sudo install -v ././target/release/legit /usr/local/bin/legit
+$CARGO run
+$CARGO run . -p b -m ""
 legit -h
