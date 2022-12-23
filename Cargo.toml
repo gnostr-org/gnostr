@@ -8,6 +8,7 @@ readme = "README.md"
 documentation = "https://legit.randymcmillan.net"
 homepage = "https://legit.randymcmillan.net/"
 repository = "https://github.com/randymcmillan/legit.git"
+license = "MIT OR Apache-2.0"
 
 
 
