@@ -2,6 +2,8 @@ SHELL                                   := /bin/bash
 PWD 									?= pwd_unknown
 TIME 									:= $(shell date +%s)
 export TIME
+LEGIT									:= $(which legit)
+export LEGIT
 
 ifeq ($(project),)
 PROJECT_NAME							:= $(notdir $(PWD))
@@ -124,6 +126,8 @@ report:
 	@echo '      args:'
 	@echo '        - TIME=${TIME}'
 	@echo '        - PROJECT_NAME=${PROJECT_NAME}'
+	@echo '        - LEGIT=${LEGIT}'
+	@echo ''
 	@echo '        - GIT_USER_NAME=${GIT_USER_NAME}'
 	@echo '        - GH_USER_REPO=${GH_USER_REPO}'
 	@echo '        - GIT_USER_EMAIL=${GIT_USER_EMAIL}'
@@ -185,7 +189,7 @@ docs: touch-time git-add
 	bash -c "if hash pandoc 2>/dev/null; then echo; fi || brew install pandoc"
 	bash -c 'pandoc -s README.md -o index.html  --metadata title="$(PROJECT_NAME)" '
 	$(MAKE) git-add
-	test legit && legit . -p 00000 -m "$(shell date +%s):make docs"
+	test legit && legit . -p 000000 -m "make: docs - $(shell date +%s)"
 	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
 .PHONY: legit
