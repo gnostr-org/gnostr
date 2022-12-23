@@ -1,8 +1,9 @@
 [package]
 name    = "legit"
+description = "add proof of work to a git commit"
 version = "0.1.0"
-authors = ["John <john@throttle.io>"]
-edition = "2018"
+authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
+edition = "2021"
 
 [dependencies]
 rust-crypto = "*"
