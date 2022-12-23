@@ -3,7 +3,6 @@
 ##### Legit adds Proof of Work (PoW) to a git commit hash prefix.
 
 ---
-
 ### `Example`
 ---
 
