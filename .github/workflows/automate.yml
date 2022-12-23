@@ -41,20 +41,32 @@ jobs:
           access_token: ${{ github.token }}
 
       - uses: actions/checkout@v2
-      - name: Make
+      - name: sudo make legit
         run: |
           sudo make legit
+      - name: legit -h
+        run: |
           legit -h
+      - name: git config
+        run: |
           git config user.name $GITHUB_REPOSITORY_OWNER
           git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
+      - name: make touch-time
+        run: |
           make touch-time
+      - name: legit -p 000000 -m "touch-time test ."
+        run: |
           legit -p 000000 -m "touch-time test" .
+      - name: legit -p 0 -m $(date +%s) .
+        run: |
           legit -p 0 -m $(date +%s) .
           legit -p 00 -m $(date +%s) .
           legit -p 000 -m $(date +%s) .
           legit -p 0000 -m $(date +%s) .
           legit -p 00000 -m $(date +%s) .
           legit -p 000000 -m $(date +%s) .
+      - name: git log
+        run: |
           git log
 
 # Cross Compile 
