@@ -1,14 +1,20 @@
 #![allow(unused)]
 #![allow(dead_code)]
+extern crate chrono;
+use chrono::offset::Utc;
+use chrono::DateTime;
+use std::time::SystemTime;
 use std::convert::TryInto;
 use std::any::type_name;
 //use std::mem::size_of;
 use std::{io, thread};
 use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
+use git2::Repository;
 
 mod worker;
 mod gitminer;
+mod repo;
 
 fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
@@ -25,6 +31,10 @@ fn type_of<T>(_: T) -> &'static str {
 fn main() -> io::Result<()> {
 
     let start = time::get_time();
+    let system_time = SystemTime::now();
+    let datetime: DateTime<Utc> = system_time.into();
+    println!("{}", datetime.format("%d/%m/%Y %T"));
+    let state = repo::state();
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
