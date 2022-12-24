@@ -4,6 +4,9 @@ TIME 									:= $(shell date +%s)
 export TIME
 LEGIT									:= $(which legit)
 export LEGIT
+CARGO_PATH								:=$(HOME)/.cargo
+export CARGO_PATH
+#PATH									:=$(shell sudo -su $(USER) $(CARGO_PATH))/bin:$(PATH)
 
 ifeq ($(project),)
 PROJECT_NAME							:= $(notdir $(PWD))
@@ -97,8 +100,8 @@ HOMEBREW_NO_ENV_HINTS=0
 export HOMEBREW_NO_ENV_HINTS
 
 .PHONY: init
-init: help
-	@echo "make init"
+init:
+	@$(MAKE) help
 
 .PHONY: help
 help:
@@ -126,7 +129,10 @@ report:
 	@echo '      args:'
 	@echo '        - TIME=${TIME}'
 	@echo '        - PROJECT_NAME=${PROJECT_NAME}'
+	@echo ''
 	@echo '        - LEGIT=${LEGIT}'
+	@echo '        - PATH=${PATH}'
+	@echo '        - CARGO_PATH=${CARGO_PATH}'
 	@echo ''
 	@echo '        - GIT_USER_NAME=${GIT_USER_NAME}'
 	@echo '        - GH_USER_REPO=${GH_USER_REPO}'
@@ -213,5 +219,7 @@ failure:
 .PHONY: success
 success:
 	@-/bin/true && ([ $$? -eq 0 ] && echo "success!") || echo "failure!"
+
+-include cargo.mk
 # vim: set noexpandtab:
 # vim: set setfiletype make
