@@ -187,7 +187,8 @@ docs: touch-time git-add
 	bash -c "if hash pandoc 2>/dev/null; then echo; fi || brew install pandoc"
 	#bash -c 'pandoc -s README.md -o index.html  --metadata title="$(PROJECT_NAME)" '
 	#bash -c 'pandoc -s README.md -o index.html  --metadata title="" '
-	pandoc -f markdown -t html README.md -o index.html --css=github-pandoc.css -s --metadata title=""
+	pandoc -f markdown -t html README.md -o index.html \
+		--css=github-pandoc.css -s --metadata title=""
 	$(MAKE) git-add
 	test legit && legit . -p 000000 -m "make: docs - $(shell date +%s)"
 	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
