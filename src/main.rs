@@ -61,7 +61,8 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     ap.set_description("Generate git commit sha with a custom prefix");
 
     ap.refer(&mut opts.repo)
-        .add_argument("repository-path", Store, "Path to your git repository (required)");
+        //.add_argument("repository-path", Store, "Path to your git repository (required)");
+        .add_argument("repository-path", Store, "Path to your git repository");
         //.required();
 
     ap.refer(&mut opts.target)
@@ -72,8 +73,8 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
         .add_option(&["-t", "--threads"], Store, "Number of worker threads to use (default 8)");
 
     ap.refer(&mut opts.message)
-        .add_option(&["-m", "--message"], Store, "Commit message to use (required)")
-        .required();
+        .add_option(&["-m", "--message"], Store, "Commit message to use (required)");
+        //.required();
 
     //ap.refer(&mut opts.timestamp)
     //    .add_option(&["--timestamp"], Store, "Commit timestamp to use (default now)");
