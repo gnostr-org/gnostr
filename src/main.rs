@@ -28,8 +28,8 @@ fn main() -> io::Result<()> {
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
-    println!("{}={}", type_of(count), (count as i32));
-    println!("{}={}", type_of(count), (count as i64));
+    //println!("{}={}", type_of(count), (count as i32));
+    //println!("{}={}", type_of(count), (count as i64));
 
     let mut opts = gitminer::Options{
         threads: count.try_into().unwrap(),
