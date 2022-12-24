@@ -154,6 +154,8 @@ report:
 git-add:
 	git config advice.addIgnoredFile false
 	git add --ignore-errors GNUmakefile
+	git add --ignore-errors legit.mk
+	git add --ignore-errors cargo.mk
 	git add --ignore-errors README.md
 	git add --ignore-errors *.html
 	git add --ignore-errors TIME
