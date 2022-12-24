@@ -7,7 +7,8 @@ export LEGIT
 CARGO_PATH								:=$(HOME)/.cargo
 export CARGO_PATH
 #PATH									:=$(shell sudo -su $(USER) $(CARGO_PATH))/bin:$(PATH)
-
+GIT_STATUS								:= $(shell  git status --ignore-submodules=dirty --porcelain=2 -s)
+export GIT_STATUS
 ifeq ($(project),)
 PROJECT_NAME							:= $(notdir $(PWD))
 else
@@ -221,5 +222,6 @@ success:
 	@-/bin/true && ([ $$? -eq 0 ] && echo "success!") || echo "failure!"
 
 -include cargo.mk
+-include legit.mk
 # vim: set noexpandtab:
 # vim: set setfiletype make
