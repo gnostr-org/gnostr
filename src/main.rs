@@ -1,5 +1,5 @@
-//#![allow(unused)]
-//#![allow(dead_code)]
+#![allow(unused)]
+#![allow(dead_code)]
 use std::convert::TryInto;
 use std::any::type_name;
 //use std::mem::size_of;
