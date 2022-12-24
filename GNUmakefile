@@ -199,8 +199,8 @@ docs: touch-time git-add
 	pandoc -f markdown -t html README.md -o index.html \
 		                        -s --metadata title=" "
 	#	--css=github-pandoc.css -s --metadata title=" "
-	$(MAKE) git-add
-	test legit && legit . -p 000000 -m "make: docs - $(shell date +%s)"
+	#$(MAKE) git-add
+	#test legit && legit . -p 000000 -m "make: docs - $(shell date +%s)"
 	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
 .PHONY: legit
