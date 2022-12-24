@@ -34,7 +34,8 @@ fn main() -> io::Result<()> {
     let mut opts = gitminer::Options{
         threads: count.try_into().unwrap(),
         target:  "000000".to_string(),
-        message: "default commit message".to_string(),
+        //message: "default commit message".to_string(),
+        message: count.to_string(),
         repo:    ".".to_string(),
         timestamp: time::now()
     };
