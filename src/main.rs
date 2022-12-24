@@ -1,8 +1,8 @@
-#![allow(unused)]
-#![allow(dead_code)]
+//#![allow(unused)]
+//#![allow(dead_code)]
 use std::convert::TryInto;
 use std::any::type_name;
-use std::mem::size_of;
+//use std::mem::size_of;
 use std::{io, thread};
 use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
@@ -14,13 +14,13 @@ fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
 }
 
-fn convert_to_u32(v: usize) -> Option<i8> {
-    if v > (std::i8::MAX as i32).try_into().unwrap() {
-        None
-    } else {
-        Some(v as i8)
-    }
-}
+//fn convert_to_u32(v: usize) -> Option<i8> {
+//    if v > (std::i8::MAX as i32).try_into().unwrap() {
+//        None
+//    } else {
+//        Some(v as i8)
+//    }
+//}
 
 fn main() -> io::Result<()> {
 
@@ -29,6 +29,7 @@ fn main() -> io::Result<()> {
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
     println!("{}={}", type_of(count), (count as i32));
+    println!("{}={}", type_of(count), (count as i64));
 
     let mut opts = gitminer::Options{
         threads: count.try_into().unwrap(),
