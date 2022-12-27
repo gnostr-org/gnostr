@@ -11,6 +11,7 @@ use std::{io, thread};
 use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
 use git2::Repository;
+use crypto::sha2::Sha256;
 
 mod worker;
 mod gitminer;
@@ -33,19 +34,23 @@ fn main() -> io::Result<()> {
     let start = time::get_time();
     let system_time = SystemTime::now();
     let datetime: DateTime<Utc> = system_time.into();
-    println!("{}", datetime.format("%d/%m/%Y %T"));
+    //println!("{}", datetime.format("%d/%m/%Y %T"));
     let state = repo::state();
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
     //println!("{}={}", type_of(count), (count as i32));
     //println!("{}={}", type_of(count), (count as i64));
+    let mut sha256 = Sha256::new();
+    //sha256.input_str(count);
+    //let ip_address_hash: String = format!("{:X}", sha256.finalize());
+
 
     let mut opts = gitminer::Options{
         threads: count.try_into().unwrap(),
         target:  "000000".to_string(),
-        //message: "default commit message".to_string(),
-        message: count.to_string(),
+        message: "default commit message".to_string(),
+        //message: count.to_string(),
         repo:    ".".to_string(),
         timestamp: time::now()
     };
