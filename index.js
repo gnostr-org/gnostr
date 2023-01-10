@@ -41,7 +41,8 @@ async function signDelegationToken(privkey, unsigned_token)
 	return (await signId(privkey, hash))
 }
 
-async function createDelegation(privkey, pubkey, publisherPubkey, conditions) {
+async function createDelegation(privkey, publisherPubkey, conditions) {
+	const pubkey = getPublicKey(privkey)
 	const unsigned_token = delegationCommitment(publisherPubkey, conditions)
 	const token = await signDelegationToken(privkey, unsigned_token)
 	return {pubkey, publisherPubkey, conditions, token}

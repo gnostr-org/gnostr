@@ -49,7 +49,7 @@ test('create delegate event', async function (t) {
 	const publisher_pubkey = "575d3b6f59dcb0595b127d210c1664ed465f819966b70c937cac7a6e91c3f7d0"
 
 	const conditions = "created_at<1669341617&kind=1"
-	const delegation = await createDelegation(PRIVKEY, PUBKEY, publisher_pubkey, conditions)
+	const delegation = await createDelegation(PRIVKEY, publisher_pubkey, conditions)
 	const ev = create_test_event()
 	const delegate_ev = await createDelegationEvent(publisher_privkey, ev, delegation)
 

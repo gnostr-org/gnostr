@@ -75,14 +75,12 @@ Returns: encrypted content
 
 Get a public key from a privkey
 
-### async createDelegation(privkey, pubkey, publisherPubkey, conditions)
+### async createDelegation(privkey, publisherPubkey, conditions)
 
 Create a delegation. This gives `publisherPubkey` permission to create events
 on the `privkey`s behalf subject to `conditions`
 
 `privkey`: authorizer private key
-
-`pubkey`: authorizer public key
 
 `publisherKey`: delegate/publisher pubkey
 
