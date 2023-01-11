@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-if ! hash cargo 2>/dev/null; then
+
+#TODO:
+if ! hash rustup-init 2>/dev/null; then
 sudo -su $(whoami) rm -rf $HOME/.cargo/bin
 sudo -su $(whoami) curl https://sh.rustup.rs -sSf > rustup.sh && chmod +x rustup.sh && ./rustup.sh -y
 source $HOME/.cargo/env
+else
+    command -v rustup-init
 fi
 
 #ENV VARS
@@ -37,8 +41,10 @@ checkbrew() {
         if hash openssl 2>/dev/null; then
             brew install openssl@1.1
         fi
-        if hash cargo 2>/dev/null; then
-            brew install rust
+        if ! hash rustc 2>/dev/null; then
+            brew install rustup-init
+            rustup-init
+            source ~/.bashrc
         fi
         true
     else
