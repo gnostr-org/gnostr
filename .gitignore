@@ -6,3 +6,4 @@ tmp
 test-cli-expect-output.txt
 .idea
 Cargo.lock
+.idea
