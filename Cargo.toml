@@ -45,7 +45,9 @@ chrono = { version = "0.4.22", features = ["serde"] }
 csv = "1.1.6"
 bech32 = "0.9.1"
 hex = "0.4.3"
+nostr-sdk_0_19 = { package = "nostr-sdk", version = "0.19", features = ["blocking"] }
 num_cpus = "1.15.0"
+unicode-normalization = "0.1.9"
 
 [dev-dependencies]
 assert_cmd = "2.0.17"
