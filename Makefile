@@ -67,6 +67,7 @@ configurator: configurator.c
 	$(CC) $< -o $@
 
 clean:
+	rm -rf /usr/local/share/man/man1/nostril.1
 	rm -f nostril *.o *.a
 	rm -rf deps/secp256k1
 
