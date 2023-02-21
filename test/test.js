@@ -1,8 +1,8 @@
 
 const test = require('tape')
 const {RelayPool, encryptDm, decryptDm, calculateId, createDelegation,
-	createDelegationEvent, getPublicKey,
-	signDelegationToken} = require('../')
+	createDelegationEvent, getPublicKey, signDelegationToken,
+	signId, verifyEvent} = require('../')
 
 const jb55 = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
 const damus = "wss://relay.damus.io"
@@ -12,10 +12,10 @@ const relays = [damus, scsi]
 const PRIVKEY = "81cbdb9c82bcb6067ca96ca0e754bb3d3efd1b813281010e392256c642de1064"
 const PUBKEY = "8a5a685420091ae0abef79be1735921b6bab047cc5b2aaefb8f8902dedf117f5"
 
-function create_test_event() {
+function create_test_event(value) {
 	const created_at = 0
 	const kind = 1
-	const content = "hi"
+  const content = (value ? value : "hi")
 	const tags = []
 
 	return {pubkey: PUBKEY, created_at, kind, content, tags}
@@ -72,6 +72,26 @@ test('calculate event id', async function (t) {
 	const id = await calculateId(ev)
 
 	t.equal(id, "c690044fedd4fb2a7a3c4757f9deb1be4893e81605a5ae9c04f99a189c2810dd");
+})
+
+test('verify event', async function (t) {
+	t.plan(2)
+
+	const ev = create_test_event()
+	ev.id = await calculateId(ev)
+	ev.sig = await signId(PRIVKEY, ev.id)
+
+	const verify = await verifyEvent(ev)
+
+	t.true(verify);
+
+	const other = create_test_event('different')
+	other.id = await calculateId(other)
+	other.sig = await signId(PRIVKEY, other.id)
+
+	const verifyFalse = await verifyEvent(other)
+
+	t.false(verifyFalse);
 })
 
 test('connect to multiple works', function (t) {

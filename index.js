@@ -8,6 +8,10 @@ async function signId(privkey, id) {
 	return await noble.schnorr.sign(id, privkey)
 }
 
+async function verifyEvent(event) {
+	return await noble.schnorr.verify(event.sig, event.id, event.pubkey)
+}
+
 function utf8_encode(txt) {
 	if (typeof TextEncoder !== 'undefined' && TextEncoder) {
 		const encoder = new TextEncoder()
@@ -153,6 +157,7 @@ module.exports = {
 	Relay,
 	RelayPool,
 	signId,
+	verifyEvent,
 	calculateId,
 	getPublicKey,
 	decryptDm,
