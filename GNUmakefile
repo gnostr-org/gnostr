@@ -200,7 +200,7 @@ legit:## 	legit
 .ONESHELL:
 remove:## 	remove
 	bash -c "rm -rf TIME"
-clean: touch-time touch-global## 	clean
+clean: touch-time## 	clean
 	bash -c "rm -rf TIME"
 	bash -c "rm -rf $(BUILDDIR)"
 
