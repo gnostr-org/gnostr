@@ -131,8 +131,9 @@ else
 fi
 #sudo curl https://sh.rustup.rs -sSf > rustup.sh && chmod +x rustup.sh && ./rustup.sh -y
 $CARGO build
-#$CARGO build --release
+$CARGO build --release
 #sudo install -v ././target/release/legit /usr/local/bin/legit
+$CARGO install --path .
 $CARGO run
 $CARGO run . -p b -m ""
 legit -h
