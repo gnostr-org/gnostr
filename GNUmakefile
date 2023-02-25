@@ -102,29 +102,17 @@ export HOMEBREW_NO_ENV_HINTS
 
 .PHONY: init
 init:
-	@$(MAKE) help
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .PHONY: help
-help:
+help:## 	verbose help
 	@echo ""
-	@echo "  make legit"
-	@echo ""
-	@echo "  make docs"
-	@echo "  make report"
-	@echo "  make git-add"
-	@echo "  make remove"
-	@echo "  make global-branch"
-	@echo "  make time-branch"
-	@echo "  make touch-global"
-	@echo "  make touch-time"
-	@echo "  make branch"
-	@echo "  make trigger"
-	@echo "  make push"
-	@echo ""
+	@echo verbose $@
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 	@echo ""
 
 .PHONY: report
-report:
+report:## 	report
 	@echo ''
 	@echo '	[ARGUMENTS]	'
 	@echo '      args:'
@@ -151,7 +139,7 @@ report:
 
 .PHONY: git-add
 .ONESHELL:
-git-add:
+git-add:## 	git-add
 	git config advice.addIgnoredFile false
 	git add --ignore-errors GNUmakefile
 	git add --ignore-errors legit.mk
@@ -167,13 +155,13 @@ git-add:
 
 .PHONY: push
 .ONESHELL:
-push: touch-time git-add
+push: touch-time git-add## 	push
 	test legit && legit . -p 00000 -m "make: push - $(shell date +%s)"
 	@git push -f origin	+master:master
 
 .PHONY: branch
 .ONESHELL:
-branch: docs touch-time touch-block-time
+branch: docs touch-time touch-block-time## 	branch
 	git add --ignore-errors GNUmakefile TIME GLOBAL .github *.sh *.yml
 	git add --ignore-errors .github
 	git commit -m 'make branch by $(GIT_USER_NAME) on $(TIME)'
@@ -182,16 +170,16 @@ branch: docs touch-time touch-block-time
 
 .PHONY: touch-time
 .ONESHELL:
-touch-time: remove
+touch-time: remove## 	touch-time
 	@echo $(TIME) $(shell git rev-parse HEAD) > TIME
 
 .PHONY: automate
-automate: touch-time git-add
+automate: touch-time git-add## 	automate
 	@./automate.sh
 	@test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
 
 .PHONY: docs
-docs: touch-time git-add
+docs: touch-time git-add## 	docs
 	bash -c "if pgrep MacDown; then pkill MacDown; fi"
 	bash -c "if hash pandoc 2>/dev/null; then echo; fi || brew install pandoc"
 	#bash -c 'pandoc -s README.md -o index.html  --metadata title="$(PROJECT_NAME)" '
@@ -205,14 +193,14 @@ docs: touch-time git-add
 
 .PHONY: legit
 .ONESHELL:
-legit:
+legit:## 	legit
 	./make-legit.sh
 
 .PHONY: clean
 .ONESHELL:
-remove:
+remove:## 	remove
 	bash -c "rm -rf TIME"
-clean: touch-time touch-global
+clean: touch-time touch-global## 	clean
 	bash -c "rm -rf TIME"
 	bash -c "rm -rf $(BUILDDIR)"
 
