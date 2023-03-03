@@ -212,9 +212,9 @@ docs: touch-time git-add## 	docs
 .PHONY: legit
 .ONESHELL:
 legit:## 	legit
+
 	@. make-legit.sh
 	$(MAKE) cargo-build
-	
 	$(MAKE) cargo-install
 tag:
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
