@@ -85,7 +85,7 @@ if [[ "$OSTYPE" == "linux"* ]]; then
             $PACKAGE_MANAGER $INSTALL $AWK
             report
         fi
-		sudo apt-get install libssl-dev rustc cargo
+		sudo apt-get install libssl-dev rustc cargo --fix-missing
     fi
     if [[ "$OSTYPE" == "linux-musl" ]]; then
         PACKAGE_MANAGER=apk
