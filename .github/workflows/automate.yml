@@ -21,63 +21,30 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   github-workspace:
     name: github-workspace
     runs-on: ubuntu-20.04
     steps:
-      - name: Print github workspace
-        run: |
-          printenv
-
-# Cross Compile 
-  ubuntu-20-host:
-    runs-on: ubuntu-20.04
-    steps:
-      ## REF: https://githubmemory.com/repo/Gisleburt/cancel-workflow-action
       - uses: styfle/cancel-workflow-action@0.8.0
         with:
           access_token: ${{ github.token }}
-
+      - name: Print github workspace
+        run: |
+          printenv
+  build_and_test:
+    name: cargo build --release --all-features
+    runs-on: ubuntu-latest
+    steps:
+      - uses: styfle/cancel-workflow-action@0.8.0
+        with:
+          access_token: ${{ github.token }}
       - uses: actions/checkout@v2
-      - name: sudo make legit
-        run: |
-          sudo make legit
-      - name: cargo run -h
-        run: |
-          cargo run -h
-      - name: git config
-        run: |
-          sudo git config user.name $GITHUB_REPOSITORY_OWNER
-          sudo git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
-      - name: touch-time test
-        run: |
-          sudo git config user.name $GITHUB_REPOSITORY_OWNER
-          sudo git config user.email $GITHUB_REPOSITORY_OWNER@test-email.com
-          sudo make touch-time git-add
-          sudo git diff
-          sudo make git-add
-          sudo git diff
-          sudo cargo run . -p 000 -m "touch-time test"
-      - name: cargo run . -p 0 -m $(date +%s)
-        run: |
-          sudo make touch-time
-          sudo git diff
-          sudo make git-add
-          sudo cargo run . -p 0 -m $(date +%s)
-          sudo make touch-time
-          sudo git diff
-          sudo make git-add
-          sudo cargo run . -p 00 -m $(date +%s)
-          sudo make touch-time
-          sudo git diff
-          sudo make git-add
-          sudo cargo run . -p 000 -m $(date +%s)
-          sudo make touch-time
-          sudo git diff
-          sudo make git-add
-          sudo cargo run . -p 0000 -m $(date +%s)
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo build --release --all-features
+
       - name: git log
         run: |
           git log
