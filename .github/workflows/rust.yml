@@ -16,9 +16,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
+    - name: make legit
       run: |
-        sudo apt install openssl-dev
-        cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+        make legit
