@@ -1,6 +1,6 @@
 [package]
 name    = "legit"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
 edition = "2021"
 rust-version = "1.61.0"
