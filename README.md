@@ -59,6 +59,12 @@ Calculate an id from an event
 
 Create a signature for an id
 
+### async verifyEvent(event)
+
+Verify an event
+
+Returns: true if valid signature, false otherwise
+
 ### decryptDm(privkey, event)
 
 Decrypt a direct message
