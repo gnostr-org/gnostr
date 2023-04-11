@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 #TODO:
+if ! hash brew 2>/dev/null; then
+  (echo; echo 'eval "$(/opt/homebrew/bin/brew shellenv)"') >> /Users/git/.bash_profile
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 if ! hash rustup-init 2>/dev/null; then
 sudo -su $(whoami) rm -rf $HOME/.cargo/bin
 sudo -su $(whoami) curl https://sh.rustup.rs -sSf > rustup.sh && chmod +x rustup.sh && ./rustup.sh -y
