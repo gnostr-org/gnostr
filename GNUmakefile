@@ -2,6 +2,30 @@ SHELL                                   := /bin/bash
 PWD 									?= pwd_unknown
 TIME 									:= $(shell date +%s)
 export TIME
+THIS_FILE                               := $(lastword $(MAKEFILE_LIST))
+export THIS_FILE
+TIME                                    := $(shell date +%s)
+export TIME
+OS                                      :=$(shell uname -s)
+export OS
+OS_VERSION                              :=$(shell uname -r)
+export OS_VERSION
+ARCH                                    :=$(shell uname -m)
+export ARCH
+ifeq ($(ARCH),x86_64)
+TRIPLET                                 :=x86_64-linux-gnu
+export TRIPLET
+endif
+ifeq ($(ARCH),arm64)
+TRIPLET                                 :=aarch64-linux-gnu
+export TRIPLET
+endif
+ifeq ($(ARCH),arm64)
+TRIPLET                                 :=aarch64-linux-gnu
+export TRIPLET
+endif
+
+
 LEGIT									:= $(which legit)
 export LEGIT
 CARGO_PATH								:=$(HOME)/.cargo
@@ -197,7 +221,9 @@ legit:## 	legit
 	@. make-legit.sh
 	$(MAKE) cargo-build
 	$(MAKE) cargo-install
-
+tag:
+	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git push -f --tags
 .PHONY: clean
 .ONESHELL:
 remove:## 	remove
