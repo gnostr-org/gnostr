@@ -46,7 +46,7 @@ bitcoin = "0.29.2"
 csv = "1.1.6"
 bech32 = "0.9.1"
 hex = "0.4.3"
-nostr-sdk_0_20 = { package = "nostr-sdk", version = "0.20", features = ["blocking", "vanity"] }
+nostr-sdk_0_21 = { package = "nostr-sdk", version = "0.21", features = ["blocking", "vanity"] }
 num_cpus = "1.15.0"
 unicode-normalization = "0.1.9"
 
