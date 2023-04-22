@@ -177,6 +177,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_io_stream"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6d7b9decdf35d8908a7e3ef02f64c5e9b1695e230154c0e8de3969142d9b94c"
+dependencies = [
+ "futures",
+ "pharos",
+ "rustc_version",
+]
+
+[[package]]
 name = "atomic-destructor"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1766,7 +1777,7 @@ dependencies = [
  "nostr-database",
  "nostr-lmdb",
  "nostr-relay-pool",
- "nostr-sdk 0.20.1",
+ "nostr-sdk 0.21.0",
  "nostr-sdk 0.43.0",
  "num_cpus",
  "once_cell",
@@ -1798,9 +1809,9 @@ dependencies = [
 
 [[package]]
 name = "nostr"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfd8d37c53cce9d4c7e63c7fdbe1154ff4911262bf99917ade3b17bd40c8e60a"
+checksum = "39bcd096e89dba1971a50055119ad74124c342c5c09878efcf6e42a4863c8e97"
 dependencies = [
  "aes",
  "base64 0.21.7",
@@ -1902,13 +1913,13 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk"
-version = "0.20.1"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9febc35798ae01c703590010e145b735449cbd061b82456614496a42eb8c1671"
+checksum = "9d60df29fc0725e362c26e8b776dfa41ca23dc157fbb41ca81fdd6705268838c"
 dependencies = [
  "gloo-timers 0.2.6",
  "log",
- "nostr 0.20.0",
+ "nostr 0.21.0",
  "nostr-sdk-net",
  "once_cell",
  "thiserror 1.0.69",
@@ -1931,25 +1942,20 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk-net"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29575c246919b3176fa10f432f2a4f667940b66959962842b390182ed44b0460"
+checksum = "5669dfdfeae7c85cfafa59bca1fadedbd8e494450a7e7249d6ccdcd4c41dcd2a"
 dependencies = [
- "futures-channel",
  "futures-util",
- "http 0.2.12",
- "httparse",
- "js-sys",
  "thiserror 1.0.69",
  "tokio",
  "tokio-rustls 0.23.4",
  "tokio-socks",
  "tokio-tungstenite 0.18.0",
  "url",
- "wasm-bindgen",
- "web-sys",
  "webpki",
  "webpki-roots 0.22.6",
+ "ws_stream_wasm",
 ]
 
 [[package]]
@@ -2126,6 +2132,16 @@ name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
+
+[[package]]
+name = "pharos"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9567389417feee6ce15dd6527a8a1ecac205ef62c2932bcf3d9f6fc5b78b414"
+dependencies = [
+ "futures",
+ "rustc_version",
+]
 
 [[package]]
 name = "phf"
@@ -2575,9 +2591,9 @@ checksum = "56f7d92ca342cea22a06f2121d944b4fd82af56988c270852495420f961d4ace"
 
 [[package]]
 name = "rustc_version"
-version = "0.4.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
+checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
  "semver",
 ]
@@ -2830,9 +2846,15 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.26"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
+checksum = "bebd363326d05ec3e2f532ab7660680f3b02130d780c299bca73469d521bc0ed"
+
+[[package]]
+name = "send_wrapper"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd0b0ec5f1c1ca621c432a25813d8d60c88abe6d3e08a3eb9cf37d97a0fe3d73"
 
 [[package]]
 name = "serde"
@@ -4190,6 +4212,25 @@ name = "writeable"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea2f10b9bb0928dfb1b42b65e1f9e36f7f54dbdf08457afefb38afcdec4fa2bb"
+
+[[package]]
+name = "ws_stream_wasm"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7999f5f4217fe3818726b66257a4475f71e74ffd190776ad053fa159e50737f5"
+dependencies = [
+ "async_io_stream",
+ "futures",
+ "js-sys",
+ "log",
+ "pharos",
+ "rustc_version",
+ "send_wrapper",
+ "thiserror 1.0.69",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "yoke"
