@@ -4,8 +4,9 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc::channel;
 use std::thread;
-
+use git2::*;
 use super::worker::Worker;
+use std::process;
 
 pub struct Options {
     pub threads:   u32,
@@ -137,7 +138,9 @@ impl Gitminer {
         for i in 0..statuses.len() {
             let status_entry = statuses.get(i).unwrap();
             if status_entry.status().intersects(m) {
-                return Err("Please stash all unstaged changes before running.");
+                println!("Please stash all unstaged changes before running.");
+                //return Err("Please stash all unstaged changes before running.");
+                process::exit(1)
             }
         }
 

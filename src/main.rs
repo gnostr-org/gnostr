@@ -10,7 +10,7 @@ use std::any::type_name;
 use std::{io, thread};
 use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
-use git2::Repository;
+use git2::*;
 use crypto::sha2::Sha256;
 
 mod worker;
