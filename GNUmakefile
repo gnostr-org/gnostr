@@ -235,6 +235,8 @@ failure:
 success:
 	@-/bin/true && ([ $$? -eq 0 ] && echo "success!") || echo "failure!"
 
+cargo:## 	
+	$(MAKE) -f cargo.mk
 -include cargo.mk
 -include legit.mk
 # vim: set noexpandtab:
