@@ -239,5 +239,6 @@ cargo:##
 	$(MAKE) -f cargo.mk
 -include cargo.mk
 -include legit.mk
+-include act.mk
 # vim: set noexpandtab:
 # vim: set setfiletype make
