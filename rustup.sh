@@ -22,30 +22,51 @@ set -u
 # If RUSTUP_UPDATE_ROOT is unset or empty, default it.
 RUSTUP_UPDATE_ROOT="${RUSTUP_UPDATE_ROOT:-https://static.rust-lang.org/rustup}"
 
-#XXX: If you change anything here, please make the same changes in setup_mode.rs
+# NOTICE: If you change anything here, please make the same changes in setup_mode.rs
 usage() {
-    cat 1>&2 <<EOF
-rustup-init 1.25.2 (8c4dad73d 2023-02-01)
+    cat <<EOF
+rustup-init 1.26.0 (577bf51ae 2023-04-05)
 The installer for rustup
 
 USAGE:
-    rustup-init [FLAGS] [OPTIONS]
-
-FLAGS:
-    -v, --verbose           Enable verbose output
-    -q, --quiet             Disable progress output
-    -y                      Disable confirmation prompt.
-        --no-modify-path    Don't configure the PATH environment variable
-    -h, --help              Prints help information
-    -V, --version           Prints version information
+    rustup-init [OPTIONS]
 
 OPTIONS:
-        --default-host <default-host>              Choose a default host triple
-        --default-toolchain <default-toolchain>    Choose a default toolchain to install
-        --default-toolchain none                   Do not install any toolchains
-        --profile [minimal|default|complete]       Choose a profile
-    -c, --component <components>...                Component name to also install
-    -t, --target <targets>...                      Target name to also install
+    -v, --verbose
+            Enable verbose output
+
+    -q, --quiet
+            Disable progress output
+
+    -y
+            Disable confirmation prompt.
+
+        --default-host <default-host>
+            Choose a default host triple
+
+        --default-toolchain <default-toolchain>
+            Choose a default toolchain to install. Use 'none' to not install any toolchains at all
+
+        --profile <profile>
+            [default: default] [possible values: minimal, default, complete]
+
+    -c, --component <components>...
+            Component name to also install
+
+    -t, --target <targets>...
+            Target name to also install
+
+        --no-update-default-toolchain
+            Don't update any existing default toolchain after install
+
+        --no-modify-path
+            Don't configure the PATH environment variable
+
+    -h, --help
+            Print help information
+
+    -V, --version
+            Print version information
 EOF
 }
 
@@ -72,7 +93,11 @@ main() {
     local _url="${RUSTUP_UPDATE_ROOT}/dist/${_arch}/rustup-init${_ext}"
 
     local _dir
-    _dir="$(ensure mktemp -d)"
+    if ! _dir="$(ensure mktemp -d)"; then
+        # Because the previous command ran in a subshell, we must manually
+        # propagate exit status.
+        exit 1
+    fi
     local _file="${_dir}/rustup-init${_ext}"
 
     local _ansi_escapes_are_valid=false
@@ -366,6 +391,9 @@ get_architecture() {
         riscv64)
             _cputype=riscv64gc
             ;;
+        loongarch64)
+            _cputype=loongarch64
+            ;;
         *)
             err "unknown CPU type: $_cputype"
 
@@ -600,14 +628,17 @@ check_help_for() {
 
 # Check if curl supports the --retry flag, then pass it to the curl invocation.
 check_curl_for_retry_support() {
-  local _retry_supported=""
-  # "unspecified" is for arch, allows for possibility old OS using macports, homebrew, etc.
-  if check_help_for "notspecified" "curl" "--retry"; then
-    _retry_supported="--retry 3"
-  fi
+    local _retry_supported=""
+    # "unspecified" is for arch, allows for possibility old OS using macports, homebrew, etc.
+    if check_help_for "notspecified" "curl" "--retry"; then
+        _retry_supported="--retry 3"
+        if check_help_for "notspecified" "curl" "--continue-at"; then
+            # "-C -" tells curl to automatically find where to resume the download when retrying.
+            _retry_supported="--retry 3 -C -"
+        fi
+    fi
 
-  RETVAL="$_retry_supported"
-
+    RETVAL="$_retry_supported"
 }
 
 # Return cipher suite string specified by user, otherwise return strong TLS 1.2-1.3 cipher suites
