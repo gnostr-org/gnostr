@@ -24,9 +24,11 @@ jobs:
       - run: ln -sf /usr/bin/python3 /usr/bin/python && ln -sf /usr/bin/pip3 /usr/bin/pip
 
       - uses: actions/checkout@v2
+        if: ${{ !env.ACT }}
+      - run: |
+          git config --global --add safe.directory /__w/nostril/nostril || echo
 
       - run: |
-          git config --global --add safe.directory /__w/nostril/nostril
           make
           make all
           make tags
