@@ -20,7 +20,6 @@ scripts/nostr-follows
 scripts/nostr-req
 scripts/subnote
 /dist
-/version
 
 .DS_Store
 deps/.DS_Store
