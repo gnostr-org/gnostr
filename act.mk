@@ -43,6 +43,9 @@ docker-install:## 	Download Docker.amd64.93002.dmg for MacOS Intel Compatibility
 	@[[ '$(shell uname -s)' == 'Darwin'* ]] && type -P open 2>/dev/null && open Docker.amd64.93002.dmg
 
 
+alpine:## act local CI (https://github.com/nektos/act)
+	$(MAKE) docker-start
+	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  --secret $(GH_ACT_TOKEN)  --userns $(PROJECT_NAME)  -W .github/workflows/$@.yml
 ubuntu-pre-release:## act local CI (https://github.com/nektos/act)
 	$(MAKE) docker-start
 	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  --secret $(GH_ACT_TOKEN)  --userns $(PROJECT_NAME)  -W .github/workflows/$@.yml
