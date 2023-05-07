@@ -37,6 +37,7 @@ jobs:
           printenv
       - name: make
         run: |
+          type -P brew && brew install automake || echo "install automake"
           make submodules
           make all
       - name: make install
