@@ -2,7 +2,7 @@ name: alpine-linux
 
 on:
   push:
-    branches: [ "master", "**" ]
+    branches: [ "master", "**", "v*", "v**", "v*.*.*-rc**" ]
   pull_request:
     branches: [ "master", "**" ]
 
