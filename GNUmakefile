@@ -38,7 +38,7 @@ endif
 export BIND
 
 ifeq ($(token),)
-GH_ACT_TOKEN                            :=$(shell cat ~/GH_ACT_TOKEN.txt)
+GH_ACT_TOKEN                            :=$(shell cat ~/GH_ACT_TOKEN.txt || echo "0")
 else
 GH_ACT_TOKEN                            :=$(shell echo $(token))
 endif
