@@ -22,14 +22,12 @@ jobs:
       - run: apk add gcc automake autoconf make python3 alpine-sdk libtool ctags gnupg rsync sudo
       - run: python3 -m ensurepip
       - run: ln -sf /usr/bin/python3 /usr/bin/python && ln -sf /usr/bin/pip3 /usr/bin/pip
-
-      - uses: actions/checkout@v2
-        if: ${{ !env.ACT }}
       - run: |
           git config --global --add safe.directory /__w/nostril/nostril || echo
 
+      - uses: actions/checkout@v2
       - run: |
-          make
+          make submodules
           make all
           make tags
           sudo make install > /dev/null 2>&1

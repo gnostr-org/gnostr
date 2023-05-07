@@ -48,6 +48,5 @@ jobs:
       - name: nostril
         run: |
           #pipe handles non-zero return from nostril default help
-          echo $(which nostril) > ./which-nostril.txt
-          type -P nostril && nostril        || echo "${PIPESTATUS[0]}"
-
+          sudo make install > /dev/null 2>&1
+          type -P nostril && nostril --envelope -t nostril --content ""
