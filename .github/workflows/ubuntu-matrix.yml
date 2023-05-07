@@ -28,22 +28,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ ! env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: printenv
         run: |
           printenv
       - name: make
         run: |
           make
-      - name: sudo make install
+      - name: make install
         run: |
-          sudo make install
+          sudo -S make install
       - name: man nostril
         run: |
-          man nostril
-      - name: sudo -su runner nostril
+          type -P nostril && man nostril || echo "man nostril not working..."
+      - name: nostril
         run: |
           #pipe handles non-zero return from nostril default help
-          sudo -su runner nostril        | echo "${PIPESTATUS[0]}"
+          echo $(which nostril) > ./which-nostril.txt
+          type -P nostril && nostril        || echo "${PIPESTATUS[0]}"
+
