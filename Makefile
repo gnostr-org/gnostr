@@ -7,17 +7,17 @@ ARS = libsecp256k1.a
 
 SUBMODULES = deps/secp256k1
 
-all: nostril docs
+all: nostril docs## make nostril docs
 
-docs: doc/nostril.1
+docs: doc/nostril.1## convert README.md to doc/nostril.1
 
-doc/nostril.1: README.md
+doc/nostril.1: README.md##
 	scdoc < $^ > $@
 
-version: nostril.c
+version: nostril.c## VERSION > $@
 	grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
 
-dist: docs version
+dist: docs version## create tar distribution
 	@mkdir -p dist
 	git ls-files --recurse-submodules | tar --transform 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
 	@ls -dt dist/* | head -n1 | xargs echo "tgz "
@@ -27,6 +27,7 @@ dist: docs version
 	cp CHANGELOG dist/CHANGELOG.txt
 	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
+submodules:deps/secp256k1/.git## refresh submodules
 deps/secp256k1/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 
@@ -51,27 +52,31 @@ libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-nostril: $(HEADERS) $(OBJS) $(ARS)
+nostril: $(HEADERS) $(OBJS) $(ARS)## make nostril binary
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
 
-install: all
+install: all## install docs/nostril.1 nostril nostril-query
 	mkdir -p $(PREFIX)/bin
 	install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1
 	install -m755 nostril $(PREFIX)/bin/nostril
 	install -m755 nostril-query $(PREFIX)/bin/nostril-query
 
+.PHONY:config.h
 config.h: configurator
 	./configurator > $@
 
-configurator: configurator.c
+.PHONY:configurator
+configurator: configurator.c## make configurator
+	rm -f configurator
 	$(CC) $< -o $@
 
-clean:
+clean:## remove nostril *.o *.a nostril.1 deps/secp256k1
+	rm -rf $(shell which nostril)
 	rm -rf /usr/local/share/man/man1/nostril.1
 	rm -f nostril *.o *.a
 	rm -rf deps/secp256k1
 
-tags: fake
+tags: fake## ctags *.c *.h
 	ctags *.c *.h
 
 .PHONY: fake
