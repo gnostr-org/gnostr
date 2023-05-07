@@ -37,7 +37,8 @@ jobs:
           printenv
       - name: make
         run: |
-          make
+          make submodules
+          make all
       - name: make install
         run: |
           sudo -S make install
