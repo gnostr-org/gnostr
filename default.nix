@@ -3,7 +3,7 @@
 with pkgs;
 stdenv.mkDerivation {
   pname = "nostril";
-  version = "0.1";
+  version = "0.1.6";
 
   src = ./.;
 
