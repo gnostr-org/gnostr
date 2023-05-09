@@ -85,5 +85,11 @@ export PYTHON_VERSION
 help:
 ##TODO: more verbose help
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
+
+tag:
+	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git push -f --tags
+
+
 -include Makefile
 -include act.mk
