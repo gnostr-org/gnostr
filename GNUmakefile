@@ -120,7 +120,7 @@ export HOMEBREW_NO_ENV_HINTS
 
 .PHONY: init
 init:
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?##"} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .PHONY: help
 help:## 	verbose help
@@ -191,9 +191,9 @@ branch: docs touch-time touch-block-time## 	branch
 touch-time: remove## 	touch-time
 	@echo $(TIME) $(shell git rev-parse HEAD) > TIME
 
-.PHONY: automate
-automate: touch-time git-add## 	automate
-	@./automate.sh
+.PHONY: auto
+auto: touch-time git-add## 	automate
+	#@./automate.sh
 	@test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
 
 .PHONY: docs
@@ -238,7 +238,9 @@ success:
 cargo:## 	
 	$(MAKE) -f cargo.mk
 -include cargo.mk
--include legit.mk
+act:## 	
+	$(MAKE) -f act.mk
 -include act.mk
+-include legit.mk
 # vim: set noexpandtab:
 # vim: set setfiletype make
