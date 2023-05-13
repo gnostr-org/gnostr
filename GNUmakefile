@@ -191,8 +191,7 @@ branch: docs touch-time touch-block-time## 	branch
 touch-time: remove## 	touch-time
 	@echo $(TIME) $(shell git rev-parse HEAD) > TIME
 
-.PHONY: auto
-auto: touch-time git-add## 	automate
+commit: touch-time git-add## 	commit
 	#@./automate.sh
 	@test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
 
