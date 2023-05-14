@@ -1,0 +1,53 @@
+.yellow-box {
+  background-color: #FFE4C4;
+  border: 1px solid black;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+}
+
+.green-box {
+  background-color: #c4ffb4;
+  max-height: 100px;
+  text-align: left;
+  border: 1px solid black;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+}
+
+.blue-box {
+  background-color: #65dae8;
+  border: 1px solid black;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+}
+
+.table_messages td, .table_messages th {
+  border: 1px solid #ddd;
+  padding: 8px;
+  white-space: pre;
+}
+
+.table_messages tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.table_messages tr:hover {
+  background-color: #ddd;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid purple;
+}
+
+.row {
+  display: grid;
+  grid-auto-flow: column;
+}
+
+.col {
+  border: solid;
+  background-color: lightgrey;
+}

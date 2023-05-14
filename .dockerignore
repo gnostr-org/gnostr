@@ -1,0 +1,18 @@
+## when binding the repo to an act instance
+## since it is a docker utility
+## it is useful to let act see the repo
+!.git
+!ext/*
+!ext/sec**
+!ext/boost**
+!test/*
+!database/*
+!resources/*
+!database/database.json
+!resources/server.crt
+!resources/server.key
+!test/list_01.txt
+!test/list_02.txt
+##act container needs fresh config
+!GNUmakefile
+CMakeCache.txt
