@@ -34,6 +34,26 @@ PROJECT_NAME							:= $(project)
 endif
 export PROJECT_NAME
 
+ifeq ($(reuse),true)
+REUSE                                   :=-r
+else
+REUSE                                   :=	
+endif
+export REUSE
+ifeq ($(bind),true)
+BIND                                   :=-b
+else
+BIND                                   :=      
+endif
+export BIND
+ifneq ($(job),)
+JOB                                     :=-j $(job)
+else
+JOB                                   :=	
+endif
+export JOB
+
+
 ifeq ($(port),)
 PORT									:= 0
 else
@@ -211,10 +231,7 @@ docs: touch-time git-add## 	docs
 .PHONY: legit
 .ONESHELL:
 legit:## 	legit
-
-	@. make-legit.sh
-	$(MAKE) cargo-build
-	$(MAKE) cargo-install
+	@$(MAKE) -f legit.mk
 tag:
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags
