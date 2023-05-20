@@ -12,6 +12,12 @@
 //#include <limits.h>
 //>>>>>>> 2c90db2 (nostril --hash - returns sha256 and nothing else)
 #include <unistd.h>
+#endif
+
+#ifdef _MSC_VER
+#include "clock_gettime.h"
+#define CLOCK_MONOTONIC 0
+#endif
 
 #include "secp256k1.h"
 #include "secp256k1_ecdh.h"
@@ -725,7 +731,11 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 	unsigned char iv[16];
 	unsigned char compressed_pubkey[33];
 	int content_len = strlen(ev->content);
+#ifdef _MSC_VER
+	unsigned char* encbuf = malloc(content_len + (content_len % 16) + 1);
+#else
 	unsigned char encbuf[content_len + (content_len % 16) + 1];
+#endif
 	struct cursor cur;
 	secp256k1_pubkey pubkey;
 
@@ -802,6 +812,9 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 
 	cur.p += 65;
 
+#ifdef _MSC_VER
+	free(encbuf);
+#endif
 	return 1;
 }
 
