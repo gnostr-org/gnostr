@@ -962,6 +962,21 @@ mod tests {
         use super::*;
 
         #[test]
+        fn simple_patch_matches_string() -> Result<()> {
+            let test_repo = GitTestRepo::default();
+            let oid = test_repo.populate()?;
+            let git_repo = Repo::from_path(&test_repo.dir)?;
+            let actual_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?;
+        
+            // ADD THIS LINE to see the output
+            println!("{}", actual_patch);
+        
+            let expected_patch = "From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\nFrom: Joe Bloggs <joe.bloggs@pm.me>\nDate: Thu, 1 Jan 1970 00:00:00 +0000\nSubject: [PATCH] add t2.md\n\n---\n t2.md | 1 +\n 1 file changed, 1 insertion(+)\n create mode 100644 t2.md\n\ndiff --git a/t2.md b/t2.md\nnew file mode 100644\nindex 0000000..a66525d\n--- /dev/null\n+++ b/t2.md\n@@ -0,0 +1 @@\n+some content1\n\\ No newline at end of file\n--\nlibgit2 1.7.2\n\n";
+            assert_eq!(actual_patch, expected_patch);
+            Ok(())
+        }
+
+        #[test]
         fn save_git_config_item_returns_ok() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -1312,7 +1327,7 @@ mod tests {
                 +some content1\n\\ \
                 No newline at end of file\n\
                 --\n\
-                libgit2 1.9.1\n\
+                libgit2 1.7.2\n\
                 \n\
                 ",
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
@@ -1348,7 +1363,7 @@ mod tests {
                 +some content1\n\\ \
                 No newline at end of file\n\
                 --\n\
-                libgit2 1.9.1\n\
+                libgit2 1.7.2\n\
                 \n\
                 ",
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
