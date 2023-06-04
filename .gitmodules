@@ -3,3 +3,7 @@
 	url = https://github.com/bitcoin-core/secp256k1
 	branch = master
 	ignore = dirty
+[submodule "deps/nostcat"]
+	path = deps/nostcat
+    url = git@github.com:RandyMcMillan/nostcat.git
+	ignore = dirty
