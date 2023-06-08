@@ -80,10 +80,12 @@ export python_version_minor
 export python_version_patch
 export PYTHON_VERSION
 
+.PHONY:- help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-help:
-##TODO: more verbose help
+help:## more verbose help
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
+
 -include Makefile
+-include nostcat.mk
 -include act.mk

@@ -45,13 +45,16 @@ docker-install:## 	Download Docker.amd64.93002.dmg for MacOS Intel Compatibility
 
 alpine:## act local CI (https://github.com/nektos/act)
 	$(MAKE) docker-start
-	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  --secret $(GH_ACT_TOKEN)  --userns $(PROJECT_NAME)  -W .github/workflows/$@.yml
+	@echo $(PROJECT_NAME)
+	@echo $(GH_ACT_TOKEN)
+	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  -W .github/workflows/$@.yml
 ubuntu-pre-release:## act local CI (https://github.com/nektos/act)
 	$(MAKE) docker-start
-	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  --secret $(GH_ACT_TOKEN)  --userns $(PROJECT_NAME)  -W .github/workflows/$@.yml
+	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  -W .github/workflows/$@.yml
 ubuntu-matrix:## act local CI
 	$(MAKE) docker-start
-	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  --secret $(GH_ACT_TOKEN)  --userns $(PROJECT_NAME)  -W .github/workflows/$@.yml
+	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  -W .github/workflows/$@.yml
 ubuntu-release:## act local CI
 	$(MAKE) docker-start
-	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  --secret $(GH_ACT_TOKEN)  --userns $(PROJECT_NAME)  -W .github/workflows/$@.yml
+	@export $(cat ~/GH_TOKEN.txt) && act -v $(BIND) $(REUSE)  -W .github/workflows/$@.yml
+
