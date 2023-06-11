@@ -7,3 +7,9 @@
 	path = deps/nostcat
     url = git@github.com:RandyMcMillan/nostcat.git
 	ignore = dirty
+[submodule "deps/git"]
+	path = deps/git
+	url = git@github.com:RandyMcMillan/git.git
+[submodule "deps/tcl"]
+	path = deps/tcl
+	url = git@github.com:gnostr-org/tcl.git

@@ -62,25 +62,31 @@ while [[ $counter -lt $LENGTH ]]
        echo $relay
        if hash nostril; then
            if hash nostcat; then
-               nostril --sec $secret --kind 0 --content "{ name: '$counter', about: '$counter', picture: 'https://robohash.org/$counter'}"
 
-               nostril --sec $secret --kind 1 \
-                   --envelope -t "$counter" -t "$relay" \
-                   --content "$content" --created-at $(date +%s)
-               nostril --sec $secret --kind 1 --envelope  -t "$counter" -t "$relay" \
-                   --content "$content" --created-at $(date +%s) |  nostcat -u $relay
+# kind 0
+nostril --sec $secret --kind 0 \
+    --envelope \
+    --content "{ name: '$counter', about: '$counter', picture: 'https://robohash.org/$counter'}" | nostcat -u $relay
+
+# kind 1
+nostril --sec $secret --kind 1 \
+    --envelope \
+    --content "$content" --created-at $(date +%s) | nostcat -u $relay
+
+# kind 2
+nostril --sec $secret --kind 2 \
+    --envelope \
+    --content "$content" --created-at $(date +%s) | nostcat -u $relay
+
            else
                make -C deps/nostcat/ rustup-install cargo-install
-               nostril --sec $secret --kind 1 --envelope  -t "$counter" -t "$relay" \
-                   --content "$content" --created-at $(date +%s)
-               nostril --sec $secret --kind 1 --envelope  -t "$counter" -t "$relay" \
-                   --content "$content" --created-at $(date +%s) |  nostcat -u $relay
            fi
-
        else
            make nostril
        fi
+
        ((counter++))
+
     done
 done
 echo All done
