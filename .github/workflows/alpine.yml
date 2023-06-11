@@ -34,6 +34,7 @@ jobs:
           path: |
             deps/nostcat
             deps/secp256k1
+            $home/.cargo/bin/nostcat
           key: ${{ runner.os }}-deps
 
       - run: |
@@ -52,4 +53,5 @@ jobs:
           path: |
             deps/nostcat
             deps/secp256k1
+            $home/.cargo/bin/nostcat
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
