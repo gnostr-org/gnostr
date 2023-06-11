@@ -86,6 +86,31 @@ export PYTHON_VERSION
 help:## more verbose help
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
+#######################
+.ONESHELL:
+docker-start:## 	start docker
+	touch requirements.txt
+	test -d .venv || $(PYTHON3) -m virtualenv .venv
+	( \
+	   source .venv/bin/activate; pip install -q -r requirements.txt; \
+	   python3 -m pip install -q omegaconf \
+	   pip install -q --upgrade pip; \
+	);
+	( \
+	    while ! docker system info > /dev/null 2>&1; do\
+	    echo 'Waiting for docker to start...';\
+	    if [[ '$(OS)' == 'Linux' ]]; then\
+	     systemctl restart docker.service;\
+	    fi;\
+	    if [[ '$(OS)' == 'Darwin' ]]; then\
+	     open --background -a /./Applications/Docker.app/Contents/MacOS/Docker;\
+	    fi;\
+	sleep 1;\
+	done\
+	)
+
+
+
 -include Makefile
 -include nostcat.mk
 -include act.mk
