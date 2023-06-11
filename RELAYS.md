@@ -1,6 +1,5 @@
 
 wss://relay.damus.io
-wss://relay.honk.pw
 wss://nostr-pub.wellorder.net
 wss://nostr.mom
 wss://nostr.slothy.win
@@ -97,8 +96,8 @@ wss://nostr.21crypto.ch
 wss://paid.spore.ws
 wss://nostr.notmyhostna.me
 wss://arnostr.permadao.io
+wss://rsr.uyky.net:30443
 wss://nostr.l00p.org
-wss://relay.reeve.cn
 wss://cheery-paddock-rsakdrtc35c55n6yregn.wnext.app
 wss://lightningrelay.com
 wss://no-str.wnhefei.cn:28443
@@ -121,7 +120,6 @@ wss://nostr-relay.app.ikeji.ma
 wss://nostr.yuv.al
 wss://relay.lacosanostr.com
 wss://lbrygen.xyz
-wss://relay.nostrdocs.com
 wss://nostrue.com
 wss://nostr.danvergara.com
 wss://n.xmr.se
@@ -133,7 +131,6 @@ wss://nostr.klabo.blog
 wss://puravida.nostr.land
 wss://nostr.bitcoiner.social
 wss://relay.orange-crush.com
-wss://nostr.bitcoinbay.engineering
 wss://nostr.spaceshell.xyz
 wss://nostr.screaminglife.io
 wss://nostr.roundrockbitcoiners.com
@@ -144,6 +141,7 @@ wss://nostr.arguflow.gg
 wss://nostr-au.coinfundit.com
 wss://relay.nostrology.org
 wss://nostr.kollider.xyz
+wss://nostr.bch.ninja
 wss://nostr.8e23.net
 wss://relay.nostrati.com
 wss://nostr-dev.wellorder.net
@@ -159,7 +157,6 @@ wss://nostr.688.org
 wss://relay.nostrich.land
 wss://global-relay.cesc.trade
 wss://nostr.weking.tk
-wss://nostr.zebedee.cloud
 wss://nostr.pjv.me
 wss://rsslay.nostr.net
 wss://nostr-relay.lnmarkets.com
@@ -167,7 +164,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -215,16 +211,16 @@ wss://nostr.bitocial.xyz
 wss://relay.leesalminen.com
 wss://relay.mrjohnsson.net
 wss://mastodon.cloud/api/v1/streaming
+wss://www.weixin.com
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
-wss://frighteningdeafeningagent.nailuogg.repl.co
 wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
 wss://relay.nostr.bg
+wss://nostr.malin.onl
 wss://nostr.reamde.dev
 wss://nostr-01.dorafactory.org
 wss://nostr.globals.fans
-wss://nostr.whoop.ph
 wss://nostr.oxtr.dev
 wss://nostr.fractalized.ovh
 wss://rsslay.data.haus
