@@ -98,7 +98,6 @@ wss://nostr.notmyhostna.me
 wss://arnostr.permadao.io
 wss://rsr.uyky.net:30443
 wss://nostr.l00p.org
-wss://relay.reeve.cn
 wss://cheery-paddock-rsakdrtc35c55n6yregn.wnext.app
 wss://lightningrelay.com
 wss://no-str.wnhefei.cn:28443
@@ -120,6 +119,7 @@ wss://nostr.yuv.al
 wss://relay.lacosanostr.com
 wss://lbrygen.xyz
 wss://relay.nostrdocs.com
+wss://nostrue.com
 wss://nostr.danvergara.com
 wss://n.xmr.se
 wss://nostr-us.coinfundit.com
@@ -163,7 +163,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -227,6 +226,7 @@ wss://nostr.fractalized.ovh
 wss://rsslay.data.haus
 wss://nostr.primz.org
 wss://relay.nostr.au
+wss://relay.johnnyasantos.com
 wss://btc.klendazu.com
 wss://relay.n057r.club
 wss://nostr.mjex.me
