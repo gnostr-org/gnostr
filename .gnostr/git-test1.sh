@@ -1,11 +1,77 @@
 #!/bin/bash
 #
+PWD=$(pwd | grep -o "[^/]*$")
+if [[ "$PWD" == ".gnostr" ]]; then
+echo $PWD
 declare -a LENGTH
 declare -a RELAYS
 declare -a FULLPATH
 declare -a BLOBS
+declare -a BLOCKHEIGHT
+declare -a TIME
+declare -a WEEBLE
+declare -a WOBBLE
 FULLPATH=`pwd`
+echo $FULLPATH
 source $FULLPATH/random-between.sh
+
+function get_time(){
+
+	TIME=$(date +%s)
+	#echo $TIME
+	return $TIME
+
+}
+get_time
+
+function get_block_height(){
+	BLOCKHEIGHT=$(curl https://blockchain.info/q/getblockcount 2>/dev/null)
+	echo -n $BLOCKHEIGHT
+	return $BLOCKHEIGHT
+}
+echo -e "\n"
+get_block_height
+echo -e "\n"
+
+function get_weeble(){
+	WEEBLE=$(expr $TIME / $BLOCKHEIGHT)
+	echo -n $WEEBLE
+	#return $WEEBLE
+}
+#echo -e "\n"
+get_weeble
+#echo -e "\n"
+#echo $(get_weeble)
+echo -e "\n"
+
+
+function get_wobble(){
+	WOBBLE=$(expr $TIME % $BLOCKHEIGHT)
+	echo -n $WOBBLE
+	#return $WOBBLE
+}
+#echo -e "\n"
+get_wobble
+#echo -e "\n"
+#echo $(get_wobble)
+echo -e "\n"
+
+#exit
+
+function get_weeble_wobble(){
+	get_weeble >/dev/null
+	get_wobble >/dev/null
+	WEEBLE_WOBBLE=$WEEBLE:$WOBBLE
+	#echo -n $WEEBLE_WOBBLE
+	echo $WEEBLE_WOBBLE
+	#return WEEBLE_WOBBLE
+}
+echo ""
+get_weeble_wobble
+echo ""
+#echo $(get_weeble_wobble)
+
+#exit
 
 function get_relays(){
 
@@ -53,6 +119,7 @@ fi
 
 while [[ $counter -lt $LENGTH ]]
     do
+    #get_weeble_wobble
     for relay in $RELAYS; do
        echo counter=$counter
        # echo randomBetweenAnswer=$randomBetweenAnswer
@@ -65,18 +132,18 @@ while [[ $counter -lt $LENGTH ]]
 
 mkdir -p blobs
 #git-object blob content
-export blob_hash=$(echo ''             | git hash-object -w --stdin)
+export blob_hash=$(echo ''                       | git hash-object -w --stdin)
 echo "$blob_hash" > blobs/$blob_hash
 
-export blob_hash0=$(echo '0'           | git hash-object -w --stdin)
+export blob_hash0=$(echo '0'                     | git hash-object -w --stdin)
 echo "$blob_hash0"
 echo "$blob_hash0" > blobs/$blob_hash0
 
-export blob_hash1=$(echo '1'           | git hash-object -w --stdin)
+export blob_hash1=$(echo '1'                     | git hash-object -w --stdin)
 echo "$blob_hash1"
 echo "$blob_hash1" > blobs/$blob_hash1
 
-export blob_hash_test=$(echo 'test content' | git hash-object -w --stdin)
+export blob_hash_test=$(echo 'test content'      | git hash-object -w --stdin)
 echo "$blob_hash_test"
 echo "$blob_hash_test" > blobs/$blob_hash_test
 
@@ -107,32 +174,55 @@ git cat-file -t $blob_hash_test
 # kind 0
 nostril --sec $secret --kind 0 \
     --envelope \
+    --tag weeble_wobble "$(get_weeble_wobble)" \
     --content "{ name: '$counter', about: '$counter', picture: 'https://robohash.org/$counter'}" | nostcat -u $relay
 
 # kind 1
 nostril --sec $secret --kind 1 \
     --envelope \
+    --tag weeble_wobble "$(get_weeble_wobble)" \
     --content "$content" --created-at $(date +%s) #print
+
 nostril --sec $secret --kind 1 \
     --envelope \
+    --tag weeble_wobble "$(get_weeble_wobble)" \
     --content "$content" --created-at $(date +%s) | nostcat -u $relay
+
+    #--tag weeble $(get_weeble) \
+    #--tag wobble $(get_wobble) \
 
 # kind 2
 nostril --sec $secret --kind 2 \
     --envelope \
+    --tag weeble "$(get_weeble)" \
+    --tag wobble "$(get_wobble)" \
+    --tag weeble_wobble "$(get_weeble_wobble)" \
     --content "$content" --created-at $(date +%s) #print
+#exit
 nostril --sec $secret --kind 2 \
     --envelope \
+    --tag weeble "$(get_weeble)" \
+    --tag wobble "$(get_wobble)" \
+    --tag weeble_wobble $(get_weeble_wobble) \
     --content "$content" --created-at $(date +%s) | nostcat -u $relay
+
+#exit
 
 BLOBS=$(ls -A blobs/)
 BLOB_COUNT=0
 for blob in $BLOBS; do
+get_weeble_wobble
 nostril --sec $secret --kind 2 \
     --envelope \
+    --tag weeble "$(get_weeble)" \
+    --tag wobble "$(get_wobble)" \
+    --tag weeble_wobble $(get_weeble_wobble) \
     --content "$blob" --created-at $(date +%s) #print
 nostril --sec $secret --kind 2 \
     --envelope \
+    --tag weeble "$(get_weeble)" \
+    --tag wobble "$(get_wobble)" \
+    --tag weeble_wobble $(get_weeble_wobble) \
     --content "$blob" --created-at $(date +%s) | nostcat -u $relay
 
 let BLOB_COUNT=$((LENGTH + 1))
@@ -152,3 +242,6 @@ echo BLOB_COUNT=$BLOB_COUNT
     done
 done
 echo All done
+else
+    [[ -d ".gnostr"  ]] && cd .gnostr && ./git-test1.sh || echo "initialize a .gnostr repo..."
+fi
