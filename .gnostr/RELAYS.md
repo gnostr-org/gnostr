@@ -18,6 +18,7 @@ wss://no.str.cr
 wss://nostr.bongbong.com
 wss://relay.sendstr.com
 wss://relay.cryptocculture.com
+wss://relay.nostr.scot
 wss://nostr.massmux.com
 wss://nostr-relay.schnitzel.world
 wss://relay.nostr.com.au
@@ -163,7 +164,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -182,6 +182,7 @@ wss://bitcoiner.social
 wss://klockenga.social
 wss://nostr.1f52b.xyz
 wss://nostr.sebastix.dev
+wss://relay-verified.deschooling.us
 wss://nostr.cizmar.net
 wss://pow.nostrati.com
 wss://n.wingu.se
