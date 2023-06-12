@@ -1,5 +1,6 @@
 
 wss://relay.damus.io
+wss://relay.honk.pw
 wss://nostr-pub.wellorder.net
 wss://nostr.mom
 wss://nostr.slothy.win
@@ -17,7 +18,6 @@ wss://no.str.cr
 wss://nostr.bongbong.com
 wss://relay.sendstr.com
 wss://relay.cryptocculture.com
-wss://relay.nostr.scot
 wss://nostr.massmux.com
 wss://nostr-relay.schnitzel.world
 wss://relay.nostr.com.au
@@ -42,7 +42,6 @@ wss://nostr.handyjunky.com
 wss://relay-pub.deschooling.us
 wss://nostr.easydns.ca
 wss://relay.dwadziesciajeden.pl
-wss://nostr-pub1.southflorida.ninja
 wss://relay.orangepill.dev
 wss://nostr.600.wtf
 wss://nostr.mouton.dev
@@ -83,6 +82,7 @@ wss://relay.zeh.app
 wss://spore.ws
 wss://relay.727whisky.com
 wss://nostr.ch3n2k.com
+wss://nostr.island.network
 wss://relay.1bps.io
 wss://relay.nostrview.com
 wss://relay.nostromo.social
@@ -98,6 +98,7 @@ wss://nostr.notmyhostna.me
 wss://arnostr.permadao.io
 wss://rsr.uyky.net:30443
 wss://nostr.l00p.org
+wss://relay.reeve.cn
 wss://cheery-paddock-rsakdrtc35c55n6yregn.wnext.app
 wss://lightningrelay.com
 wss://no-str.wnhefei.cn:28443
@@ -107,11 +108,9 @@ wss://nostr-2.afarazit.eu
 wss://private.red.gb.net
 wss://relay.nostrid.com
 wss://nostr-relay.xbytez.io
-wss://nostr.fluidtrack.in
 wss://nostr.beta3.dev
 wss://nostr.uthark.com
 wss://nostr.cruncher.com
-wss://nostr.foundrydigital.com
 wss://relay.nostrcheck.me
 wss://nostr.rbel.co
 wss://nostrelay.yeghro.site
@@ -120,7 +119,7 @@ wss://nostr-relay.app.ikeji.ma
 wss://nostr.yuv.al
 wss://relay.lacosanostr.com
 wss://lbrygen.xyz
-wss://nostrue.com
+wss://relay.nostrdocs.com
 wss://nostr.danvergara.com
 wss://n.xmr.se
 wss://nostr-us.coinfundit.com
@@ -164,6 +163,7 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
+wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -193,7 +193,6 @@ wss://nostr.bitcoinplebs.de
 wss://nostr.goller.net
 wss://nostr.corebreach.com
 wss://nostr01.vida.dev
-wss://nostr.localhost.re
 wss://tmp-relay.cesc.trade
 wss://nostr.plebchain.org
 wss://nostr.mutinywallet.com
@@ -214,6 +213,7 @@ wss://mastodon.cloud/api/v1/streaming
 wss://www.weixin.com
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
+wss://frighteningdeafeningagent.nailuogg.repl.co
 wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
 wss://relay.nostr.bg
@@ -221,12 +221,12 @@ wss://nostr.malin.onl
 wss://nostr.reamde.dev
 wss://nostr-01.dorafactory.org
 wss://nostr.globals.fans
+wss://nostr.whoop.ph
 wss://nostr.oxtr.dev
 wss://nostr.fractalized.ovh
 wss://rsslay.data.haus
 wss://nostr.primz.org
 wss://relay.nostr.au
-wss://relay.johnnyasantos.com
 wss://btc.klendazu.com
 wss://relay.n057r.club
 wss://nostr.mjex.me
