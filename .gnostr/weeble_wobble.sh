@@ -61,7 +61,23 @@ echo -e "\n"
 function get_weeble_wobble(){
 	get_weeble >/dev/null
 	get_wobble >/dev/null
-	WEEBLE_WOBBLE=$WEEBLE:$WOBBLE
+	# NOTE : doesnt need escaping
+	#WEEBLE_WOBBLE=$WEEBLE:$WOBBLE
+	#NOTE _ needs escaping
+	#NOTE tbd whether to use : or _
+	#WEEBLE_WOBBLE=$WEEBLE\_$WOBBLE
+	#NOTE since weeble and wobble are public
+	#and verifiable
+	#concating $WEEBLE$WOBBLE
+	#WEEBLE_WOBBLE=$WEEBLE$WOBBLE
+	#is also an option
+	#AND most importantly
+	#fits IN uint32!!!
+	#
+	#Using $relay/$weeble/$wobble
+	#can be useful for tracking
+	#blobs
+	WEEBLE_WOBBLE=$WEEBLE/$WOBBLE
 	#echo -n $WEEBLE_WOBBLE
 	echo $WEEBLE_WOBBLE
 	#return WEEBLE_WOBBLE
@@ -134,29 +150,24 @@ while [[ $counter -lt $LENGTH ]]
        if hash nostril; then
            if hash nostcat; then
 
+			   #blob location/remote blob location
 			   nostril --sec "$secret" --kind 2 \
 				   --envelope \
-				   --tag weeble "$(get_weeble)" \
-				   --tag wobble "$(get_wobble)" \
-				   --tag weeble_wobble $(get_weeble_wobble) \
-				   --tag relay $relay \
-				   --content "#weeble $(get_weeble) #wobble $(get_wobble) #weeble_wobble $(get_weeble_wobble) #relay $relay" \
+				   --tag weeble/wobble $(get_weeble_wobble) \
+				   --tag repo/branch "repo/branch" \
+				   --content "blob/$relay/$(get_weeble_wobble)/(blob_hash)" \
 				   --created-at $(date +%s) #print
 			   nostril --sec $secret --kind 2 \
 				   --envelope \
-				   --tag weeble "$(get_weeble)" \
-				   --tag wobble "$(get_wobble)" \
-				   --tag weeble_wobble $(get_weeble_wobble) \
-				   --tag relay $relay \
-				   --content "#weeble $(get_weeble) #wobble $(get_wobble) #weeble_wobble $(get_weeble_wobble) #relay $relay" \
+				   --tag weeble/wobble $(get_weeble_wobble) \
+				   --tag repo/branch "repo/branch" \
+				   --content "blob/$relay/$(get_weeble_wobble)/(blob_hash)" \
 				   --created-at $(date +%s) | websocat $relay
 			   nostril --sec $secret --kind 2 \
 				   --envelope \
-				   --tag weeble "$(get_weeble)" \
-				   --tag wobble "$(get_wobble)" \
-				   --tag weeble_wobble $(get_weeble_wobble) \
-				   --tag relay $relay \
-				   --content "#weeble $(get_weeble) #wobble $(get_wobble) #weeble_wobble $(get_weeble_wobble) #relay $relay" \
+				   --tag weeble/wobble $(get_weeble_wobble) \
+				   --tag repo/branch "repo/branch" \
+				   --content "blob/$relay/$(get_weeble_wobble)/(blob_hash)" \
 				   --created-at $(date +%s) | nostcat -u $relay
 
 
@@ -168,6 +179,7 @@ while [[ $counter -lt $LENGTH ]]
            make nostril
        fi
 	   git diff RELAYS.md && git add RELAYS.md
+	   git commit -m "" -- .gnostr/RELAYS.md && git push 2>/dev/null || echo
 	   get_relays
 	   get_time
 	   get_block_height
