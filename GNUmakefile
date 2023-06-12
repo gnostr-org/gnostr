@@ -113,4 +113,5 @@ docker-start:## 	start docker
 
 -include Makefile
 -include nostcat.mk
+-include gnostr.mk
 -include act.mk
