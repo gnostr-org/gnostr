@@ -127,8 +127,22 @@ while [[ $counter -lt $LENGTH ]]
        echo secret=$secret
        touch `pwd`/keys/$secret && echo $secret > `pwd`/keys/$secret
        echo $relay
+
        if hash nostril; then
            if hash nostcat; then
+			   nostril --sec $secret --kind 2 \
+				   --envelope \
+				   --tag weeble "$(get_weeble)" \
+				   --tag wobble "$(get_wobble)" \
+				   --tag weeble_wobble $(get_weeble_wobble) \
+				   --content "#relay: $relay" --created-at $(date +%s) #print
+			   nostril --sec $secret --kind 2 \
+				   --envelope \
+				   --tag weeble "$(get_weeble)" \
+				   --tag wobble "$(get_wobble)" \
+				   --tag weeble_wobble $(get_weeble_wobble) \
+				   --content "#relay: $relay" --created-at $(date +%s) | nostcat -u $relay
+				   --content "$relay" --created-at $(date +%s) | nostcat -u $relay
 
 mkdir -p blobs
 #git-object blob content
@@ -212,6 +226,14 @@ BLOBS=$(ls -A blobs/)
 BLOB_COUNT=0
 for blob in $BLOBS; do
 get_weeble_wobble
+
+nostril --sec $secret --kind 2 \
+    --envelope \
+    --tag weeble "$(get_weeble)" \
+    --tag wobble "$(get_wobble)" \
+    --tag weeble_wobble $(get_weeble_wobble) \
+    --content "$relay" --created-at $(date +%s) | nostcat -u $relay
+
 nostril --sec $secret --kind 2 \
     --envelope \
     --tag weeble "$(get_weeble)" \
