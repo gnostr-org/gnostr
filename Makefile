@@ -9,9 +9,22 @@ SUBMODULES = deps/secp256k1
 
 all: nostril docs## make nostril docs
 
-docs: doc/nostril.1## convert README.md to doc/nostril.1
+docs: doc/nostril.1 git-add docker-start##   docs: convert README to doc/nostril.1
+	#@echo docs
+	bash -c 'if pgrep MacDown; then pkill MacDown; fi'
+	bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md'
+	bash -c 'cat $(PWD)/sources/COMMANDS.md              >> $(PWD)/README.md'
+	bash -c 'cat $(PWD)/sources/FOOTER.md                >> $(PWD)/README.md'
+	@if hash pandoc 2>/dev/null; then \
+		bash -c 'pandoc -s README.md -o index.html'; \
+		fi || if hash docker 2>/dev/null; then \
+		docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 README.md; \
+		fi
+	git add --ignore-errors sources/*.md
+	git add --ignore-errors *.md
+	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
-doc/nostril.1: README.md##
+doc/nostril.1: README##
 	scdoc < $^ > $@
 
 version: nostril.c## VERSION > $@
