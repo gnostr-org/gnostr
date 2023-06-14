@@ -9,7 +9,7 @@ SUBMODULES = deps/secp256k1
 
 all: nostril docs## make nostril docs
 
-docs: doc/nostril.1 git-add docker-start##   docs: convert README to doc/nostril.1
+docs: doc/nostril.1 git-add docker-start## docs: convert README to doc/nostril.1
 	#@echo docs
 	bash -c 'if pgrep MacDown; then pkill MacDown; fi'
 	bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md'
