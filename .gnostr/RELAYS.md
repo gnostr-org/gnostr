@@ -108,6 +108,7 @@ wss://nostr.rocket-tech.net
 wss://nostr-2.afarazit.eu
 wss://private.red.gb.net
 wss://relay.nostrid.com
+wss://nostr-relay.xbytez.io
 wss://nostr.beta3.dev
 wss://nostr.uthark.com
 wss://nostr.cruncher.com
@@ -141,6 +142,7 @@ wss://nostr.arguflow.gg
 wss://nostr-au.coinfundit.com
 wss://relay.nostrology.org
 wss://nostr.kollider.xyz
+wss://nostr.bch.ninja
 wss://nostr.8e23.net
 wss://relay.nostrati.com
 wss://nostr-dev.wellorder.net
@@ -163,7 +165,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
 wss://nostr.milou.lol
