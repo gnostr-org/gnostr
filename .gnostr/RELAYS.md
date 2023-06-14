@@ -11,6 +11,7 @@ wss://nostr.einundzwanzig.space
 wss://nostr.cercatrova.me
 wss://nostr.swiss-enigma.ch
 wss://nos.lol
+wss://relay.nostr.band
 wss://nostr-relay.derekross.me
 wss://relay.oldcity-bitcoiners.info
 wss://no.str.cr
@@ -163,7 +164,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -213,6 +213,7 @@ wss://mastodon.cloud/api/v1/streaming
 wss://www.weixin.com
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
+wss://frighteningdeafeningagent.nailuogg.repl.co
 wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
 wss://nostr.malin.onl
@@ -237,4 +238,3 @@ wss://nostr.rocks
 wss://nostr.orangepill.dev
 wss://nostr.pinkanki.org
 wss://relay.s3x.social
-wss://btcpay.kukks.org/nostr/ws
