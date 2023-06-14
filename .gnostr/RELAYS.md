@@ -11,7 +11,6 @@ wss://nostr.einundzwanzig.space
 wss://nostr.cercatrova.me
 wss://nostr.swiss-enigma.ch
 wss://nos.lol
-wss://relay.nostr.band
 wss://nostr-relay.derekross.me
 wss://relay.oldcity-bitcoiners.info
 wss://no.str.cr
@@ -83,6 +82,7 @@ wss://relay.nostr.distrl.net
 wss://relay.zeh.app
 wss://spore.ws
 wss://relay.727whisky.com
+wss://nostr.ch3n2k.com
 wss://nostr.island.network
 wss://relay.1bps.io
 wss://relay.nostrview.com
@@ -102,6 +102,7 @@ wss://nostr.l00p.org
 wss://relay.reeve.cn
 wss://lightningrelay.com
 wss://no-str.wnhefei.cn:28443
+wss://bitcoinmaximalists.online
 wss://nostr.rocket-tech.net
 wss://nostr-2.afarazit.eu
 wss://private.red.gb.net
@@ -123,6 +124,7 @@ wss://nostrue.com
 wss://nostr.danvergara.com
 wss://n.xmr.se
 wss://nostr-us.coinfundit.com
+wss://nostr-eu.coinfundit.com
 wss://nproxy.kristapsk.lv
 wss://nostr.topeth.info
 wss://nostr.klabo.blog
@@ -139,7 +141,6 @@ wss://nostr.arguflow.gg
 wss://nostr-au.coinfundit.com
 wss://relay.nostrology.org
 wss://nostr.kollider.xyz
-wss://nostr.bch.ninja
 wss://nostr.8e23.net
 wss://relay.nostrati.com
 wss://nostr-dev.wellorder.net
@@ -212,7 +213,7 @@ wss://mastodon.cloud/api/v1/streaming
 wss://www.weixin.com
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
-wss://frighteningdeafeningagent.nailuogg.repl.co
+wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
 wss://nostr.malin.onl
 wss://nostr.reamde.dev

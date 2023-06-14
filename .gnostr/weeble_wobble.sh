@@ -11,6 +11,10 @@ declare -a BLOCKHEIGHT
 declare -a TIME
 declare -a WEEBLE
 declare -a WOBBLE
+declare -a REPO_NAME
+declare -a CURRENT_BRANCH
+REPO_NAME=$(pwd | grep -o "[^/]*$")
+CURRENT_BRANCH=$(git branch --show-current)
 FULLPATH=$PWD
 echo $FULLPATH
 source ./random-between.sh
@@ -136,6 +140,8 @@ fi
 while [[ $counter -lt $LENGTH ]]
     do
     #get_weeble_wobble
+	#test
+	nostril --sec $(echo -en "" | openssl dgst -sha256) | jq
     for relay in $RELAYS; do
        echo "counter=$counter"
        echo "randomBetweenAnswer=$randomBetweenAnswer"
@@ -151,23 +157,45 @@ while [[ $counter -lt $LENGTH ]]
            if hash nostcat; then
 
 			   #blob location/remote blob location
+			   nostril --sec "$(echo -en "" | openssl dgst -sha256)" --kind 2 \
+				   --envelope \
+				   --tag weeble/wobble $(get_weeble_wobble) \
+				   --tag weeble $(get_weeble) \
+				   --tag wobble $(get_wobble) \
+				   --tag repo "$PROJECT_NAME" \
+				   --tag branch "$CURRENT_BRANCH" \
+				   --tag blob_hash "blob_hash" \
+				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
+				   --created-at $(date +%s) | $(which jq)
 			   nostril --sec "$secret" --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
-				   --tag repo/branch "repo/branch" \
-				   --content "blob/$relay/$(get_weeble_wobble)/(blob_hash)" \
-				   --created-at $(date +%s) #print
+				   --tag weeble $(get_weeble) \
+				   --tag wobble $(get_wobble) \
+				   --tag repo "$PROJECT_NAME" \
+				   --tag branch "$CURRENT_BRANCH" \
+				   --tag blob_hash "blob_hash" \
+				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
+				   --created-at $(date +%s) | $(which jq)
 			   nostril --sec $secret --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
-				   --tag repo/branch "repo/branch" \
-				   --content "blob/$relay/$(get_weeble_wobble)/(blob_hash)" \
+				   --tag weeble $(get_weeble) \
+				   --tag wobble $(get_wobble) \
+				   --tag repo "$PROJECT_NAME" \
+				   --tag branch "$CURRENT_BRANCH" \
+				   --tag blob_hash "blob_hash" \
+				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
 				   --created-at $(date +%s) | websocat $relay
 			   nostril --sec $secret --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
-				   --tag repo/branch "repo/branch" \
-				   --content "blob/$relay/$(get_weeble_wobble)/(blob_hash)" \
+				   --tag weeble $(get_weeble) \
+				   --tag wobble $(get_wobble) \
+				   --tag repo "$PROJECT_NAME" \
+				   --tag branch "$CURRENT_BRANCH" \
+				   --tag blob_hash "blob_hash" \
+				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
 				   --created-at $(date +%s) | nostcat -u $relay
 
 
@@ -179,7 +207,7 @@ while [[ $counter -lt $LENGTH ]]
            make nostril
        fi
 	   git diff RELAYS.md && git add RELAYS.md
-	   git commit -m "" -- .gnostr/RELAYS.md && git push 2>/dev/null || echo
+	   git commit -m "" -- RELAYS.md && git push 2>/dev/null || echo
 	   get_relays
 	   get_time
 	   get_block_height
