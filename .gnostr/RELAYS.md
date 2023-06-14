@@ -11,7 +11,6 @@ wss://nostr.einundzwanzig.space
 wss://nostr.cercatrova.me
 wss://nostr.swiss-enigma.ch
 wss://nos.lol
-wss://relay.nostr.band
 wss://nostr-relay.derekross.me
 wss://relay.oldcity-bitcoiners.info
 wss://no.str.cr
@@ -23,6 +22,7 @@ wss://nostr.massmux.com
 wss://nostr-relay.schnitzel.world
 wss://relay.nostr.com.au
 wss://knostr.neutrine.com
+wss://nostr.nodeofsven.com
 wss://nostrical.com
 wss://nostr.gromeul.eu
 wss://relay.nostr.ro
@@ -43,6 +43,7 @@ wss://nostr.handyjunky.com
 wss://relay-pub.deschooling.us
 wss://nostr.easydns.ca
 wss://relay.dwadziesciajeden.pl
+wss://nostr-pub1.southflorida.ninja
 wss://relay.orangepill.dev
 wss://nostr.600.wtf
 wss://nostr.mouton.dev
@@ -62,7 +63,6 @@ wss://relay.austrich.net
 wss://nostr.terminus.money
 wss://nostr.0ne.day
 wss://relay.valera.co
-wss://nostr01.opencult.com
 wss://nostr.wine
 wss://nostr.koning-degraaf.nl
 wss://nostr.pleb.network
@@ -82,7 +82,6 @@ wss://relay.nostr.distrl.net
 wss://relay.zeh.app
 wss://spore.ws
 wss://relay.727whisky.com
-wss://nostr.ch3n2k.com
 wss://nostr.island.network
 wss://relay.1bps.io
 wss://relay.nostrview.com
@@ -100,7 +99,6 @@ wss://arnostr.permadao.io
 wss://rsr.uyky.net:30443
 wss://nostr.l00p.org
 wss://relay.reeve.cn
-wss://cheery-paddock-rsakdrtc35c55n6yregn.wnext.app
 wss://lightningrelay.com
 wss://no-str.wnhefei.cn:28443
 wss://bitcoinmaximalists.online
@@ -121,10 +119,10 @@ wss://nostr.yuv.al
 wss://relay.lacosanostr.com
 wss://lbrygen.xyz
 wss://relay.nostrdocs.com
+wss://nostrue.com
 wss://nostr.danvergara.com
 wss://n.xmr.se
 wss://nostr-us.coinfundit.com
-wss://nostr-eu.coinfundit.com
 wss://nproxy.kristapsk.lv
 wss://nostr.topeth.info
 wss://nostr.klabo.blog
@@ -164,7 +162,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
 wss://nostr.milou.lol
@@ -213,10 +210,7 @@ wss://mastodon.cloud/api/v1/streaming
 wss://www.weixin.com
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
-wss://frighteningdeafeningagent.nailuogg.repl.co
-wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
-wss://relay.nostr.bg
 wss://nostr.malin.onl
 wss://nostr.reamde.dev
 wss://nostr-01.dorafactory.org
@@ -239,3 +233,4 @@ wss://nostr.rocks
 wss://nostr.orangepill.dev
 wss://nostr.pinkanki.org
 wss://relay.s3x.social
+wss://btcpay.kukks.org/nostr/ws
