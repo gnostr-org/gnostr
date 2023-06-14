@@ -157,6 +157,7 @@ while [[ $counter -lt $LENGTH ]]
            if hash nostcat; then
 
 			   #blob location/remote blob location
+			   #empty hash nostr profile "0"
 			   nostril --sec "$(echo -en "" | openssl dgst -sha256)" --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
@@ -166,7 +167,8 @@ while [[ $counter -lt $LENGTH ]]
 				   --tag branch "$CURRENT_BRANCH" \
 				   --tag blob_hash "blob_hash" \
 				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
-				   --created-at $(date +%s) | $(which jq)
+				   --created-at $(date +%s) #| $(which jq)
+
 			   nostril --sec "$secret" --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
@@ -176,7 +178,7 @@ while [[ $counter -lt $LENGTH ]]
 				   --tag branch "$CURRENT_BRANCH" \
 				   --tag blob_hash "blob_hash" \
 				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
-				   --created-at $(date +%s) | $(which jq)
+				   --created-at $(date +%s) #| $(which jq)
 			   nostril --sec $secret --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
@@ -198,8 +200,6 @@ while [[ $counter -lt $LENGTH ]]
 				   --tag location "$relay/$(get_weeble_wobble)/(blob_hash)" \
 				   --created-at $(date +%s) | nostcat -u $relay
 
-
-#
            else
                make -C deps/nostcat/ rustup-install cargo-install
            fi
@@ -207,7 +207,7 @@ while [[ $counter -lt $LENGTH ]]
            make nostril
        fi
 	   git diff RELAYS.md && git add RELAYS.md
-	   git commit -m "" -- RELAYS.md && git push 2>/dev/null || echo
+	   git commit -m "$PROJECT_NAME/$CURRENT_BRANCH: RELAYS.md" -- RELAYS.md && git push 2>/dev/null || echo
 	   get_relays
 	   get_time
 	   get_block_height
