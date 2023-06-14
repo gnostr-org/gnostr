@@ -165,6 +165,7 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
+wss://brb.io
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
 wss://nostr.milou.lol
