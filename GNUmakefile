@@ -80,6 +80,51 @@ export python_version_minor
 export python_version_patch
 export PYTHON_VERSION
 
+#GIT CONFIG
+GIT_USER_NAME							:= $(shell git config user.name || echo $(PROJECT_NAME))
+export GIT_USER_NAME
+GH_USER_NAME							:= $(shell git config user.name || echo $(PROJECT_NAME))
+#MIRRORS
+GH_USER_REPO							:= $(GH_USER_NAME).github.io
+GH_USER_SPECIAL_REPO					:= $(GH_USER_NAME)
+KB_USER_REPO							:= $(GH_USER_NAME).keybase.pub
+#GITHUB RUNNER CONFIGS
+ifneq ($(ghuser),)
+GH_USER_NAME := $(ghuser)
+GH_USER_SPECIAL_REPO := $(ghuser)/$(ghuser)
+endif
+ifneq ($(kbuser),)
+KB_USER_NAME := $(kbuser)
+KB_USER_REPO := $(kbuser).keybase.pub
+endif
+export GIT_USER_NAME
+export GH_USER_REPO
+export GH_USER_SPECIAL_REPO
+export KB_USER_REPO
+
+GIT_USER_EMAIL							:= $(shell git config user.email || echo $(PROJECT_NAME))
+export GIT_USER_EMAIL
+GIT_SERVER								:= https://github.com
+export GIT_SERVER
+GIT_SSH_SERVER							:= git@github.com
+export GIT_SSH_SERVER
+GIT_PROFILE								:= $(shell git config user.name || echo $(PROJECT_NAME))
+export GIT_PROFILE
+GIT_BRANCH								:= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo $(PROJECT_NAME))
+export GIT_BRANCH
+GIT_HASH								:= $(shell git rev-parse --short HEAD 2>/dev/null || echo $(PROJECT_NAME))
+export GIT_HASH
+GIT_PREVIOUS_HASH						:= $(shell git rev-parse --short master@{1} 2>/dev/null || echo $(PROJECT_NAME))
+export GIT_PREVIOUS_HASH
+GIT_REPO_ORIGIN							:= $(shell git remote get-url origin 2>/dev/null || echo $(PROJECT_NAME))
+export GIT_REPO_ORIGIN
+GIT_REPO_NAME							:= $(PROJECT_NAME)
+export GIT_REPO_NAME
+GIT_REPO_PATH							:= $(HOME)/$(GIT_REPO_NAME)
+export GIT_REPO_PATH
+
+
+
 .PHONY:- help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -108,6 +153,39 @@ docker-start:## start docker
 	sleep 1;\
 	done\
 	)
+
+.PHONY: report
+report:
+	@echo ''
+	@echo '[ENV VARIABLES]	'
+	@echo ''
+	@echo 'TIME=${TIME}'
+	@echo 'BASENAME=${BASENAME}'
+	@echo 'PROJECT_NAME=${PROJECT_NAME}'
+	@echo 'TWITTER_API=${TWITTER_API}'
+	@echo 'PYTHON_VENV=${PYTHON_VENV}'
+	@echo 'PYTHON3_VENV=${PYTHON3_VENV}'
+	@echo ''
+	@echo 'NODE_VERSION=${NODE_VERSION}	'
+	@echo 'NODE_ALIAS=${NODE_ALIAS}	'
+	@echo ''
+	@echo 'HOMEBREW=${HOMEBREW}'
+	@echo ''
+	@echo 'GIT_USER_NAME=${GIT_USER_NAME}'
+	@echo 'GH_USER_REPO=${GH_USER_REPO}'
+	@echo 'GH_USER_SPECIAL_REPO=${GH_USER_SPECIAL_REPO}'
+	@echo 'KB_USER_REPO=${KB_USER_REPO}'
+	@echo 'GIT_USER_EMAIL=${GIT_USER_EMAIL}'
+	@echo 'GIT_SERVER=${GIT_SERVER}'
+	@echo 'GIT_PROFILE=${GIT_PROFILE}'
+	@echo 'GIT_BRANCH=${GIT_BRANCH}'
+	@echo 'GIT_HASH=${GIT_HASH}'
+	@echo 'GIT_PREVIOUS_HASH=${GIT_PREVIOUS_HASH}'
+	@echo 'GIT_REPO_ORIGIN=${GIT_REPO_ORIGIN}'
+	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
+	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
+
+
 
 -include Makefile
 -include nostcat.mk
