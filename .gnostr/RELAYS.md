@@ -108,7 +108,6 @@ wss://nostr.rocket-tech.net
 wss://nostr-2.afarazit.eu
 wss://private.red.gb.net
 wss://relay.nostrid.com
-wss://nostr-relay.xbytez.io
 wss://nostr.beta3.dev
 wss://nostr.uthark.com
 wss://nostr.cruncher.com
@@ -238,3 +237,4 @@ wss://nostr.rocks
 wss://nostr.orangepill.dev
 wss://nostr.pinkanki.org
 wss://relay.s3x.social
+wss://btcpay.kukks.org/nostr/ws
