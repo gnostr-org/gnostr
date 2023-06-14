@@ -88,7 +88,7 @@ help:## more verbose help
 
 #######################
 .ONESHELL:
-docker-start:## 	start docker
+docker-start:## start docker
 	touch requirements.txt
 	test -d .venv || $(PYTHON3) -m virtualenv .venv
 	( \
@@ -108,8 +108,6 @@ docker-start:## 	start docker
 	sleep 1;\
 	done\
 	)
-
-
 
 -include Makefile
 -include nostcat.mk
