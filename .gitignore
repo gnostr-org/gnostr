@@ -1,3 +1,4 @@
+!deps/git/config.*
 *.o
 /.direnv/
 .privenv
@@ -7,7 +8,7 @@ configurator.out*
 configurator
 .build-result
 .buildcmd
-config.h
+!config.h
 tags
 libsecp256k1.a
 /target

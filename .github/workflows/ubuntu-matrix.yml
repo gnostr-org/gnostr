@@ -32,22 +32,50 @@ jobs:
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v3
+        #fetch-depth: '0'
+      - name: Restore deps
+        id: cache-deps-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            deps/git
+            deps/jq
+            deps/nostcat
+            deps/secp256k1
+            $home/.cargo/bin/nostcat
+          key: ${{ runner.os }}-deps
+
       - name: printenv
         run: |
-          printenv && apt install python3 make autoconf automake libtool
+          printenv && sudo apt-get update && apt-get install -y python3 make autoconf automake libtool build-essential tclsh
           touch ~/GH_ACT_TOKEN.txt
       - name: make
         run: |
-          make submodules
-          make all
+          make submodules #&& make libgit.a && make libjq.a && make libsecp256k1.a
+          #cd deps/git && autoreconf -i && ./configure && make && cd ..
       - name: make install
         run: |
-          sudo -S make install
+          make nostril
       - name: man nostril
         run: |
-          type -P nostril && man nostril || echo "man nostril not working..."
+          echo
+          #type -P nostril && man nostril || echo "man nostril not working..."
       - name: nostril
         run: |
+          echo
           #pipe handles non-zero return from nostril default help
-          sudo make install > /dev/null 2>&1
-          type -P nostril && nostril --envelope -t nostril --content ""
+          #make install > /dev/null 2>&1
+          #type -P nostril && nostril --envelope -t nostril --content ""
+          ./nostril --envelope -t nostril --content ""
+      - name: Save deps
+        id: cache-deps-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            deps/nostcat
+            deps/secp256k1
+            $home/.cargo/bin/nostcat
+          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
+

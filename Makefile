@@ -1,5 +1,5 @@
-
-CFLAGS = -Wall -O2 -Ideps/secp256k1/include -I/deps/git
+CFLAGS = -Wall -O2 -Ideps/secp256k1/include -I/deps/git -I/deps/jq
+LDFLAGS = -Wl -V
 OBJS = sha256.o nostril.o aes.o base64.o
 HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
@@ -24,7 +24,7 @@ docs: doc/nostril.1 git-add docker-start## 	docs: convert README to doc/nostril.
 	git add --ignore-errors *.md
 	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
-doc/nostril.1: README##
+doc/nostril.1: README## 	
 	scdoc < $^ > $@
 
 version: nostril.c## 	VERSION > $@
@@ -40,7 +40,7 @@ dist: docs version## 	create tar distribution
 	cp CHANGELOG dist/CHANGELOG.txt
 	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git #deps/nostcat/.git## 	refresh-submodules
 
 ##secp256k1
 deps/secp256k1/.git:## 	secp256k1
@@ -77,9 +77,14 @@ libjq.a: deps/jq/.libs/libjq.a## libjq.a
 	cp $< $@
 
 ## nostcat
-deps/nostcat/.git:## nostcat
+deps/nostcat/.git:## 	
 	@devtools/refresh-submodules.sh $(SUBMODULES)
-
+deps/nostcat:## 	
+	cd deps/nostcat; \
+	make cargo-install
+deps/nostcat/target/release/nostcat:## 	
+	cp nostcat< $@
+nostcat:deps/nostcat/.git deps/nostcat/target/release/nostcat## 	nostcat
 
 %.o: %.c $(HEADERS)
 	@echo "cc $<"
