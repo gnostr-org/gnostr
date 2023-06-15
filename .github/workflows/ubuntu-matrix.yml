@@ -24,17 +24,18 @@ jobs:
   ubuntu-build_and_test:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ ! env.ACT }}
+        if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v3
       - name: printenv
         run: |
-          printenv
+          printenv && apt install python3 make autoconf automake libtool
+          touch ~/GH_ACT_TOKEN.txt
       - name: make
         run: |
           make submodules
