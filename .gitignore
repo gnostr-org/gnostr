@@ -24,3 +24,6 @@ scripts/subnote
 .DS_Store
 deps/.DS_Store
 deps/build/
+
+libgit.a
+libjq.a
