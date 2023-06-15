@@ -2,3 +2,6 @@
 #.git folder itself AND to NOT ignore the deps folder.
 !.git
 !deps
+!deps/git
+!deps/jq
+!deps/nostcat
