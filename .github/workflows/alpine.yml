@@ -18,20 +18,25 @@ jobs:
     container: alpine:${{ matrix.tag }}
 
     steps:
-      - run: touch CHANGELOG
       - run: apk add nodejs npm
-      - run: apk add gcc automake autoconf make python3 alpine-sdk libtool ctags gnupg rsync sudo
+      - run: touch CHANGELOG && touch ~/GH_ACT_TOKEN.txt
+      - run: apk add gcc automake autoconf make python3 alpine-sdk libtool ctags gnupg rsync sudo openssl-dev zlib
+      #- run: make #clean #submodules
       - run: python3 -m ensurepip
       - run: ln -sf /usr/bin/python3 /usr/bin/python && ln -sf /usr/bin/pip3 /usr/bin/pip
       - run: |
           git config --global --add safe.directory /__w/nostril/nostril || echo
 
       - uses: actions/checkout@v3
+        fetch-depth: '0'
       - name: Restore deps
         id: cache-deps-restore
         uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
         with:
           path: |
+            deps/git
+            deps/jq
             deps/nostcat
             deps/secp256k1
             $home/.cargo/bin/nostcat
@@ -49,6 +54,7 @@ jobs:
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
         with:
           path: |
             deps/nostcat

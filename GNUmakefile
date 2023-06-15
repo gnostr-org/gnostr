@@ -31,9 +31,9 @@ REUSE                                   :=
 endif
 export REUSE
 ifeq ($(bind),true)
-BIND                                   :=-b
+BIND                                    :=-b
 else
-BIND                                   :=      
+BIND                                    :=
 endif
 export BIND
 
@@ -81,13 +81,13 @@ export python_version_patch
 export PYTHON_VERSION
 
 #GIT CONFIG
-GIT_USER_NAME							:= $(shell git config user.name || echo $(PROJECT_NAME))
+GIT_USER_NAME                           := $(shell git config user.name || echo $(PROJECT_NAME))
 export GIT_USER_NAME
-GH_USER_NAME							:= $(shell git config user.name || echo $(PROJECT_NAME))
+GH_USER_NAME                            := $(shell git config user.name || echo $(PROJECT_NAME))
 #MIRRORS
-GH_USER_REPO							:= $(GH_USER_NAME).github.io
-GH_USER_SPECIAL_REPO					:= $(GH_USER_NAME)
-KB_USER_REPO							:= $(GH_USER_NAME).keybase.pub
+GH_USER_REPO                            := $(GH_USER_NAME).github.io
+GH_USER_SPECIAL_REPO                    := $(GH_USER_NAME)
+KB_USER_REPO                            := $(GH_USER_NAME).keybase.pub
 #GITHUB RUNNER CONFIGS
 ifneq ($(ghuser),)
 GH_USER_NAME := $(ghuser)
@@ -102,25 +102,29 @@ export GH_USER_REPO
 export GH_USER_SPECIAL_REPO
 export KB_USER_REPO
 
-GIT_USER_EMAIL							:= $(shell git config user.email || echo $(PROJECT_NAME))
+GIT_USER_EMAIL                          := $(shell git config user.email || echo $(PROJECT_NAME))
 export GIT_USER_EMAIL
-GIT_SERVER								:= https://github.com
+GIT_SERVER                              := https://github.com
 export GIT_SERVER
-GIT_SSH_SERVER							:= git@github.com
+GIT_SSH_SERVER                          := git@github.com
 export GIT_SSH_SERVER
-GIT_PROFILE								:= $(shell git config user.name || echo $(PROJECT_NAME))
+GIT_PROFILE                             := $(shell git config user.name || echo $(PROJECT_NAME))
 export GIT_PROFILE
-GIT_BRANCH								:= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo $(PROJECT_NAME))
+GIT_BRANCH                              := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || \
+                                           echo $(PROJECT_NAME))
 export GIT_BRANCH
-GIT_HASH								:= $(shell git rev-parse --short HEAD 2>/dev/null || echo $(PROJECT_NAME))
+GIT_HASH                                := $(shell git rev-parse --short HEAD 2>/dev/null || \
+                                           echo $(PROJECT_NAME))
 export GIT_HASH
-GIT_PREVIOUS_HASH						:= $(shell git rev-parse --short master@{1} 2>/dev/null || echo $(PROJECT_NAME))
+GIT_PREVIOUS_HASH                       := $(shell git rev-parse --short master@{1} 2>/dev/null || \
+                                           echo $(PROJECT_NAME))
 export GIT_PREVIOUS_HASH
-GIT_REPO_ORIGIN							:= $(shell git remote get-url origin 2>/dev/null || echo $(PROJECT_NAME))
+GIT_REPO_ORIGIN                         := $(shell git remote get-url origin 2>/dev/null || \
+                                           echo $(PROJECT_NAME))
 export GIT_REPO_ORIGIN
-GIT_REPO_NAME							:= $(PROJECT_NAME)
+GIT_REPO_NAME                           := $(PROJECT_NAME)
 export GIT_REPO_NAME
-GIT_REPO_PATH							:= $(HOME)/$(GIT_REPO_NAME)
+GIT_REPO_PATH                           := $(HOME)/$(GIT_REPO_NAME)
 export GIT_REPO_PATH
 
 
@@ -148,14 +152,14 @@ docker-start:## start docker
 	     systemctl restart docker.service;\
 	    fi;\
 	    if [[ '$(OS)' == 'Darwin' ]]; then\
-	     open --background -a /./Applications/Docker.app/Contents/MacOS/Docker;\
+	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker;\
 	    fi;\
 	sleep 1;\
 	done\
 	)
 
 .PHONY: report
-report:
+report:## report
 	@echo ''
 	@echo '[ENV VARIABLES]	'
 	@echo ''

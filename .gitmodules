@@ -9,10 +9,13 @@
 	ignore = dirty
 [submodule "deps/git"]
 	path = deps/git
-	url = git@github.com:RandyMcMillan/git.git
+	url = git@github.com:gnostr-org/git.git
+	ignore = dirty
 [submodule "deps/tcl"]
 	path = deps/tcl
 	url = git@github.com:gnostr-org/tcl.git
+	ignore = dirty
 [submodule "deps/jq"]
 	path = deps/jq
 	url = git@github.com:gnostr-org/jq.git
+	ignore = dirty
