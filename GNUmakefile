@@ -33,7 +33,7 @@ export REUSE
 ifeq ($(bind),true)
 BIND                                    :=-b
 else
-BIND                                    :=
+BIND                                    :=      
 endif
 export BIND
 
@@ -142,7 +142,7 @@ docker-start:## start docker
 	test -d .venv || $(PYTHON3) -m virtualenv .venv
 	( \
 	   source .venv/bin/activate; pip install -q -r requirements.txt; \
-	   python3 -m pip install -q omegaconf \
+	   python3 -m pip install -q omegaconf pipenv \
 	   pip install -q --upgrade pip; \
 	);
 	( \
