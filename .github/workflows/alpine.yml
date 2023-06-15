@@ -47,6 +47,10 @@ jobs:
           make submodules
           make nostcat
           make all
+          #git config --global --add safe.directory /__w/nostril/nostril || echo
+          make -f GNUmakefile submodules
+          NO_REGEX=NeedsStartEnd #for alpine testing
+          make -f GNUmakefile all
           make tags
           sudo make install > /dev/null 2>&1
           type -P nostril && nostril --envelope -t nostril --content ""
