@@ -40,10 +40,15 @@ dist: docs version## 	create tar distribution
 	cp CHANGELOG dist/CHANGELOG.txt
 	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git #deps/nostcat/.git## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## refresh-submodules
+
+deps/jq/.git:
+	@devtools/refresh-submodules.sh $(SUBMODULES)
+deps/nostcat/.git:
+	@devtools/refresh-submodules.sh $(SUBMODULES)
 
 ##secp256k1
-deps/secp256k1/.git:## 	secp256k1
+deps/secp256k1/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
 deps/secp256k1/configure: deps/secp256k1/.git
@@ -58,8 +63,8 @@ deps/secp256k1/.libs/libsecp256k1.a: deps/secp256k1/config.log
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 
-## git
-deps/git/.git:## git
+##git
+deps/git/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/git/libgit.a:
 	cd deps/git; \
@@ -67,8 +72,8 @@ deps/git/libgit.a:
 libgit.a: deps/git/libgit.a## libgit.a
 	cp $< $@
 
-## jq
-deps/jq/.git:## jq
+##jq
+deps/jq/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/jq/.libs/libjq.a:
 	cd deps/jq; \
