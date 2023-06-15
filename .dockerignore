@@ -1,0 +1,4 @@
+#act: since act is a docker utility, we tell docker to NOT ignore the
+#.git folder itself AND to NOT ignore the deps folder.
+!.git
+!deps
