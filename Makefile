@@ -40,7 +40,7 @@ dist: docs version## 	create tar distribution
 	cp CHANGELOG dist/CHANGELOG.txt
 	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## refresh-submodules
+submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## 	refresh-submodules
 
 deps/jq/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
