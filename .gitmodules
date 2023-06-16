@@ -19,3 +19,7 @@
 	path = deps/jq
 	url = git@github.com:gnostr-org/jq.git
 	ignore = dirty
+[submodule "deps/hyper-nostr"]
+	path = deps/hyper-nostr
+	url = git@github.com:gnostr-org/hyper-nostr.git
+	ignore = dirty
