@@ -18,7 +18,6 @@ wss://no.str.cr
 wss://nostr.bongbong.com
 wss://relay.sendstr.com
 wss://relay.cryptocculture.com
-wss://relay.nostr.scot
 wss://nostr.massmux.com
 wss://nostr-relay.schnitzel.world
 wss://relay.nostr.com.au
@@ -60,7 +59,6 @@ wss://ragnar-relay.com
 wss://nostr.zkid.social
 wss://nostr.bitcoin-21.org
 wss://nostr.data.haus
-wss://relay.austrich.net
 wss://nostr.terminus.money
 wss://nostr.0ne.day
 wss://relay.valera.co
@@ -150,9 +148,9 @@ wss://nostr-relay.nokotaro.com
 wss://relay.snort.social
 wss://nr.yay.so
 wss://nostr.lu.ke
-wss://nostr.anchel.nl
 wss://atlas.nostr.land
 wss://nostr.ownbtc.online
+wss://nostream.sh4.red
 wss://nostr.actn.io
 wss://nostr.688.org
 wss://relay.nostrich.land
@@ -165,7 +163,7 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://brb.io
+wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
 wss://nostr.milou.lol
@@ -194,6 +192,7 @@ wss://nostr.bitcoinplebs.de
 wss://nostr.goller.net
 wss://nostr.corebreach.com
 wss://nostr01.vida.dev
+wss://nostr.localhost.re
 wss://tmp-relay.cesc.trade
 wss://nostr.plebchain.org
 wss://nostr.mutinywallet.com
@@ -211,17 +210,16 @@ wss://nostr.bitocial.xyz
 wss://relay.leesalminen.com
 wss://relay.mrjohnsson.net
 wss://mastodon.cloud/api/v1/streaming
-wss://www.weixin.com
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
 wss://frighteningdeafeningagent.nailuogg.repl.co
 wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
+wss://relay.nostr.bg
 wss://nostr.malin.onl
 wss://nostr.reamde.dev
 wss://nostr-01.dorafactory.org
 wss://nostr.globals.fans
-wss://nostr.whoop.ph
 wss://nostr.oxtr.dev
 wss://nostr.fractalized.ovh
 wss://rsslay.data.haus
