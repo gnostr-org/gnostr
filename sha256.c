@@ -211,6 +211,7 @@ void sha256_init(struct sha256_ctx *ctx)
 
 void sha256_update(struct sha256_ctx *ctx, const void *p, size_t size)
 {
+	printf("%lu\n",size);
 	check_sha256(ctx);
 	add(ctx, p, size);
 }

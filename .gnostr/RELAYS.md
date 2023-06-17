@@ -140,7 +140,6 @@ wss://nostr.arguflow.gg
 wss://nostr-au.coinfundit.com
 wss://relay.nostrology.org
 wss://nostr.kollider.xyz
-wss://nostr.bch.ninja
 wss://nostr.8e23.net
 wss://relay.nostrati.com
 wss://nostr-dev.wellorder.net

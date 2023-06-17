@@ -132,12 +132,12 @@ export GIT_REPO_PATH
 .PHONY:- help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-help:## more verbose help
+help:## 	more verbose help
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
 #######################
 .ONESHELL:
-docker-start:## start docker
+docker-start:## 	start docker
 	touch requirements.txt
 	test -d .venv || $(PYTHON3) -m virtualenv .venv
 	( \
@@ -159,7 +159,7 @@ docker-start:## start docker
 	)
 
 .PHONY: report
-report:## report
+report:## 	report
 	@echo ''
 	@echo '[ENV VARIABLES]	'
 	@echo ''
@@ -192,6 +192,6 @@ report:## report
 
 
 -include Makefile
--include nostcat.mk
+#-include nostcat.mk
 -include gnostr.mk
 -include act.mk
