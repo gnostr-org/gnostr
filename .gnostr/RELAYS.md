@@ -180,7 +180,6 @@ wss://nostr.hugo.md
 wss://relay.nvote.co
 wss://bitcoiner.social
 wss://klockenga.social
-wss://nostr.1f52b.xyz
 wss://nostr.sebastix.dev
 wss://relay-verified.deschooling.us
 wss://nostr.cizmar.net
