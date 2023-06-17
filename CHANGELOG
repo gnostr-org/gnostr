@@ -1,4 +1,31 @@
-
-# 0.1.0
-
-Initial release
+0.2.1
+8963101 make: dist - fix tar --transform
+fe997da nostril.c:openssl_hash clean up
+2c90db2 nostril --hash - returns sha256 and nothing else
+bd06f0d nostril/master: RELAYS.md
+2866fa6 Makefile: submodules: help output format
+76594bd .gitmodules: deps/hyper-nostr
+d52ba6b .github/workflows/ubuntu-nostcat.yml: working with cache/restore
+0628087 .github/workflows/ubuntu-matrix.yml: git jq config
+1b76b7b make: ubuntu-jq working
+b7e90eb make: act: .github/workflows/ubuntu-git.yml: with cache/restore working
+11a6712 .dockerignore: do NOT ignore .git or deps
+745714f make: add deps/jq deps/git
+16838f2 make: act - remove alpine.yml
+ef13382 make: ubuntu-matrix working
+a478b50 intermediate:
+4f8c811 intermediate:
+0e5ed4d intermediate:
+90a9ebd .gitignore:deps/build
+1bc465d .gnostr/weeble_wobble.sh: add "0" profile
+dd46b4c nostril/master: RELAYS.md
+9b0b0dc .gitmodules: deps/jq
+77ef407 nostril/master: RELAYS.md
+82f0d55 nostril/master: RELAYS.md
+02fc9e7 nostril/master: RELAYS.md
+4fb4873 make: weeble_wobble docs
+1317df7 .gnostr/weeble_wobble.sh: weeble wobble repo branch tags
+2fa7b5a GNUmakefile:Makefile: help output formatting
+70442d8 make: docs including man nostril
+6645a24 RELAYS.md: update
+dc2db28 RELAYS.md: update

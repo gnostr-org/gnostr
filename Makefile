@@ -7,6 +7,13 @@ ARS = libsecp256k1.a libgit.a libjq.a
 
 SUBMODULES = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr
 
+VERSION:=$(shell cat version)
+export VERSION
+GTAR:=$(shell which gtar)
+export GTAR
+TAR:=$(shell which tar)
+export TAR
+
 all: nostril docs## 	make nostril docs
 
 docs: doc/nostril.1 git-add docker-start## 	docs: convert README to doc/nostril.1
@@ -31,14 +38,16 @@ version: nostril.c## 	VERSION > $@
 	grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
 
 dist: docs version## 	create tar distribution
-	@mkdir -p dist
-	git ls-files --recurse-submodules | $(shell which tar) 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
-	@ls -dt dist/* | head -n1 | xargs echo "tgz "
+	mkdir -p dist
+	cat version > CHANGELOG
+	git log $(shell git describe --tags --abbrev=0)..@ --oneline | sed '/Merge/d' >> CHANGELOG
+	cp CHANGELOG dist/CHANGELOG.txt
+	git ls-files --recurse-submodules | $(GTAR) --transform  's/^/nostril-$(VERSION)\//' -T- -caf dist/nostril-$(VERSION).tar.gz
+	ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist;\
 	sha256sum *.tar.gz > SHA256SUMS.txt;\
-	gpg -u 0x8A478B64FFE30F1095A8736BF5F27EFD1B38DABB --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
-	cp CHANGELOG dist/CHANGELOG.txt
-	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
+	gpg -u 0xE616FA7221A1613E5B99206297966C06BB06757B --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
+	##rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
 submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## 	refresh-submodules
 
