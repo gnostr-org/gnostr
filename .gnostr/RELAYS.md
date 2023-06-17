@@ -140,6 +140,7 @@ wss://nostr.arguflow.gg
 wss://nostr-au.coinfundit.com
 wss://relay.nostrology.org
 wss://nostr.kollider.xyz
+wss://nostr.bch.ninja
 wss://nostr.8e23.net
 wss://relay.nostrati.com
 wss://nostr-dev.wellorder.net
@@ -150,6 +151,7 @@ wss://nostr.lu.ke
 wss://atlas.nostr.land
 wss://nostr.ownbtc.online
 wss://nostream.sh4.red
+wss://nostr.fmt.wiz.biz
 wss://nostr.actn.io
 wss://nostr.688.org
 wss://relay.nostrich.land
@@ -236,4 +238,3 @@ wss://nostr.rocks
 wss://nostr.orangepill.dev
 wss://nostr.pinkanki.org
 wss://relay.s3x.social
-wss://btcpay.kukks.org/nostr/ws
