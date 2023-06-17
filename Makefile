@@ -32,7 +32,7 @@ version: nostril.c## 	VERSION > $@
 
 dist: docs version## 	create tar distribution
 	@mkdir -p dist
-	git ls-files --recurse-submodules | tar --transform 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
+	git ls-files --recurse-submodules | $(shell which tar) 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
 	@ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist;\
 	sha256sum *.tar.gz > SHA256SUMS.txt;\
