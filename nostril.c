@@ -1,4 +1,5 @@
-
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -31,19 +32,9 @@
 #define HAS_ENCRYPT (1<<4)
 #define HAS_DIFFICULTY (1<<5)
 #define HAS_MINE_PUBKEY (1<<6)
-
-
-
-
-
 #define TO_BASE_N (sizeof(unsigned)*CHAR_BIT + 1)
-
-//                               v--compound literal--v
 #define TO_BASE(x, b) my_to_base((char [TO_BASE_N]){""}, (x), (b))
-
-// Tailor the details of the conversion function as needed
-// This one does not display unneeded leading zeros
-// Use return value, not `buf`
+//                               ^--compound literal--^
 char *my_to_base(char buf[TO_BASE_N], unsigned i, int base) {
   assert(base >= 2 && base <= 36);
   char *s = &buf[TO_BASE_N - 1];
@@ -78,6 +69,16 @@ int print_base(int input) {
 }
 
 
+int is_executable_file(char const * file_path)
+{
+    struct stat sb;
+    return
+        (stat(file_path, &sb) == 0) &&
+        S_ISREG(sb.st_mode) &&
+        (access(file_path, X_OK) == 0);
+}
+
+
 struct key {
 	secp256k1_keypair pair;
 	unsigned char secret[32];
@@ -91,6 +92,7 @@ struct args {
 
 	unsigned char encrypt_to[32];
 	const char *sec;
+	const char *hash;
 	const char *tags;
 	const char *content;
 
@@ -118,6 +120,30 @@ struct nostr_event {
 	int num_tags;
 };
 
+void openssl_hash(int argc, const char *argv){
+
+	char command[128];
+	char target[128];
+	struct args args = {0};
+
+	args.hash = argv++; argc--;
+	if (args.hash){
+		strcpy(command, "echo");
+		strcat(command, " ");
+		strcat(command, args.hash);
+		strcat(command, "|");
+		strcat(command, "openssl dgst -sha256");
+		system(command);
+		//snprintf(command, strlen(command), "%s", target);
+		//if(system(command)){
+		//	printf("\n%s", command);
+		//	exit(0);
+		//}
+			exit(0);
+	}
+			exit(0);
+}
+
 void usage()
 {
 	printf("usage: nostril [OPTIONS]\n");
@@ -136,7 +162,7 @@ void usage()
 	printf("      -e <event_id>                   shorthand for --tag e <event_id>\n");
 	printf("      -p <pubkey>                     shorthand for --tag p <pubkey>\n");
 	printf("      -t <hashtag>                    shorthand for --tag t <hashtag>\n");
-	exit(1);
+	exit(0);
 }
 
 
@@ -480,13 +506,18 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 			usage();
 		}
 
+		if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv); }
+
 		if (!argc) {
 			fprintf(stderr, "expected argument: '%s'\n", arg);
 			return 0;
 		}
 
-		if (!strcmp(arg, "--sec")) {
+		if (!strcmp(arg, "--sec") || !strcmp(arg, "-s")) {
 			args->sec = *argv++; argc--;
+			if (args->sec){
+				printf("%s",args->sec);
+			}
 		} else if (!strcmp(arg, "--created-at")) {
 			arg = *argv++; argc--;
 			if (!parse_num(arg, &args->created_at)) {
