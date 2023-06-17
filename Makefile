@@ -39,7 +39,7 @@ version: nostril.c## 	VERSION > $@
 
 dist: docs version## 	create tar distribution
 	mkdir -p dist
-	cat version > CHANGELOG && git add CHANGELOG && git commit -m "update CHANGELOG"
+	cat version > CHANGELOG && git add CHANGELOG && git commit -m "update CHANGELOG" 2>/dev/null || echo
 	git log $(shell git describe --tags --abbrev=0)..@ --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
 	git ls-files --recurse-submodules | $(GTAR) --transform  's/^/nostril-$(VERSION)\//' -T- -caf dist/nostril-$(VERSION).tar.gz
