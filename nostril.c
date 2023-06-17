@@ -132,11 +132,14 @@ void openssl_hash(int argc, const char *argv){
 	args.hash = argv++; argc--;
 
 	if (args.hash){
-		strcpy(command, "echo");
+		strcpy(command, "echo -e");
 		strcat(command, " ");
 		strcat(command, args.hash);
 		strcat(command, "|");
+		//strcat(command, "openssl dgst -sha256 >");
 		strcat(command, "openssl dgst -sha256");
+		//strcat(command, args.hash);
+		strcat(command, "\n");
 		system(command);
 	}
 	exit(0);
@@ -514,7 +517,7 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 		if (!strcmp(arg, "--sec") || !strcmp(arg, "-s")) {
 			args->sec = *argv++; argc--;
 			if (args->sec){
-				printf("%s",args->sec);
+				//printf("%s",args->sec);
 			}
 		} else if (!strcmp(arg, "--created-at")) {
 			arg = *argv++; argc--;
@@ -744,8 +747,10 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 		return 0;
 	}
 
-	fprintf(stderr, "shared_secret ");
-	print_hex(shared_secret, 32);
+	//print_hex
+	//shared_secret
+	//fprintf(stderr, "shared_secret ");
+	//print_hex(shared_secret, 32);
 
 	memcpy(encbuf, ev->content, strlen(ev->content));
 	enclen = aes_encrypt(shared_secret, iv, encbuf, strlen(ev->content));
@@ -809,7 +814,7 @@ int main(int argc, const char *argv[])
 	struct args args = {0};
 	struct nostr_event ev = {0};
 	struct key key;
-        secp256k1_context *ctx;
+	secp256k1_context *ctx;
 
 	if (argc < 2)
 		usage();
@@ -845,7 +850,7 @@ int main(int argc, const char *argv[])
 			return 4;
 		}
 		fprintf(stderr, "secret_key ");
-		print_hex(key.secret, sizeof(key.secret));
+		//print_hex(key.secret, sizeof(key.secret));
 		fprintf(stderr, "\n");
 	}
 
