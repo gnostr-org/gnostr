@@ -79,6 +79,52 @@ int is_executable_file(char const * file_path)
 }
 
 
+
+
+
+
+#define TO_BASE_N (sizeof(unsigned)*CHAR_BIT + 1)
+
+//                               v--compound literal--v
+#define TO_BASE(x, b) my_to_base((char [TO_BASE_N]){""}, (x), (b))
+
+// Tailor the details of the conversion function as needed
+// This one does not display unneeded leading zeros
+// Use return value, not `buf`
+char *my_to_base(char buf[TO_BASE_N], unsigned i, int base) {
+  assert(base >= 2 && base <= 36);
+  char *s = &buf[TO_BASE_N - 1];
+  *s = '\0';
+  do {
+    s--;
+    *s = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i % base];
+    i /= base;
+  } while (i);
+
+  // Could employ memmove here to move the used buffer to the beginning
+  // size_t len = &buf[TO_BASE_N] - s;
+  // memmove(buf, s, len);
+
+  return s;
+}
+
+int print_base(int input) {
+
+  int ip1 = 0x01020304;
+  int ip2 = 0x05060708;
+  printf("%s %s\n", TO_BASE(ip1, 16), TO_BASE(ip2, 16));
+  printf("%s %s\n", TO_BASE(ip1, 2), TO_BASE(ip2, 2));
+  puts(TO_BASE(ip1, 8));
+  puts(TO_BASE(ip1, 36));
+  printf("%s %s\n", TO_BASE(input, 16), TO_BASE(input, 16));
+  printf("%s %s\n", TO_BASE(input, 2), TO_BASE(input, 2));
+  puts(TO_BASE(input, 8));
+  puts(TO_BASE(input, 36));
+  return 0;
+
+}
+
+
 struct key {
 	secp256k1_keypair pair;
 	unsigned char secret[32];
