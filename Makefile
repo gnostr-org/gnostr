@@ -1,11 +1,11 @@
-CFLAGS = -Wall -O2 -Ideps/secp256k1/include -I/deps/git -I/deps/jq
+CFLAGS = -Wall -O2 -Ideps/secp256k1/include
 LDFLAGS = -Wl -V
 OBJS = sha256.o nostril.o aes.o base64.o
 HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
 ARS = libsecp256k1.a libgit.a libjq.a
 
-SUBMODULES = deps/secp256k1 deps/git deps/jq
+SUBMODULES = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr
 
 all: nostril docs## 	make nostril docs
 
@@ -43,13 +43,10 @@ dist: docs version## 	create tar distribution
 submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## 	refresh-submodules
 
 deps/jq/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/nostcat/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
 
 ##secp256k1
 deps/secp256k1/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
 deps/secp256k1/configure: deps/secp256k1/.git
 	cd deps/secp256k1; \
