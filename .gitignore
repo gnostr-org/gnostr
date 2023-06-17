@@ -1,4 +1,5 @@
 CHANGELOG
+KEYS
 !deps/git/config.*
 *.o
 /.direnv/
