@@ -3,9 +3,9 @@ LDFLAGS = -Wl -V
 OBJS = sha256.o nostril.o aes.o base64.o
 HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
-ARS = libsecp256k1.a libgit.a libjq.a
+ARS = libsecp256k1.a libgit.a libjq.a libtclstub.a
 
-SUBMODULES = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr
+SUBMODULES = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr deps/tcl
 
 VERSION:=$(shell cat version)
 export VERSION
@@ -49,15 +49,12 @@ dist: docs version## 	create tar distribution
 	gpg -u 0xE616FA7221A1613E5B99206297966C06BB06757B --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
 	##rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git## 	refresh-submodules
-
-deps/jq/.git:
-deps/nostcat/.git:
+submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git deps/tcl.git## 	refresh-submodules
 
 ##secp256k1
 deps/secp256k1/.git:
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
-deps/secp256k1/configure: deps/secp256k1/.git
+deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1; \
 	./autogen.sh
 deps/secp256k1/config.log: deps/secp256k1/configure
@@ -69,39 +66,53 @@ deps/secp256k1/.libs/libsecp256k1.a: deps/secp256k1/config.log
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 
-##git
-deps/git/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
-deps/git/libgit.a:
-	cd deps/git; \
-	make install
-libgit.a: deps/git/libgit.a## libgit.a
-	cp $< $@
 
 ##jq
 deps/jq/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
-deps/jq/.libs/libjq.a:
+deps/jq/.libs/libjq.a:deps/jq/.git
 	cd deps/jq; \
 	autoreconf -fi && ./configure  --disable-maintainer-mode &&  make install
-libjq.a: deps/jq/.libs/libjq.a## libjq.a
+libjq.a: deps/jq/.libs/libjq.a## 	libjq.a
 	cp $< $@
 
-## nostcat
-deps/nostcat/.git:## 	
+##git
+deps/git/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
-deps/nostcat:## 	
+deps/git/libgit.a:deps/git/.git
+	cd deps/git; \
+	make install
+libgit.a: deps/git/libgit.a## 	libgit.a
+	cp $< $@
+
+##tcl
+deps/tcl/.git:
+	@devtools/refresh-submodules.sh $(SUBMODULES)
+deps/tcl/unix/libtclstub.a:deps/tcl/.git
+	cd deps/tcl; \
+	./autogen.sh configure && ./configure && make install
+libtclstub.a:deps/tcl/unix/libtclstub.a## 	libtclstub.a
+	cp $< $@
+tcl:libtclstub.a## 	tcl
+
+## nostcat
+deps/nostcat/.git:
+	@devtools/refresh-submodules.sh $(SUBMODULES)
+deps/nostcat:deps/nostcat/.git
 	cd deps/nostcat; \
 	make cargo-install
-deps/nostcat/target/release/nostcat:## 	
+deps/nostcat/target/release/nostcat:/deps/nostcat
 	cp nostcat< $@
-nostcat:deps/nostcat/.git deps/nostcat/target/release/nostcat## 	nostcat
+nostcat:deps/nostcat/target/release/nostcat## 	nostcat
 
 %.o: %.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-nostril: $(HEADERS) $(OBJS) $(ARS)## 	make nostril binary
+initialize:## 	ensure submodules exist
+	git submodule update --init --recursive
+nostril:initialize $(HEADERS) $(OBJS) $(ARS)## 	make nostril binary
+	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
 
 install: all## 	install docs/nostril.1 nostril nostril-query
