@@ -89,11 +89,11 @@ libgit.a: deps/git/libgit.a## 	libgit.a
 deps/tcl/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/tcl/unix/libtclstub.a:deps/tcl/.git
-	cd deps/tcl; \
+	cd deps/tcl/unix; \
 	./autogen.sh configure && ./configure && make install
-libtclstub.a:deps/tcl/unix/libtclstub.a## 	libtclstub.a
+libtclstub.a:deps/tcl/unix/libtclstub.a## 	deps/tcl/unix/libtclstub.a
 	cp $< $@
-tcl:libtclstub.a## 	tcl
+tcl-unix:libtclstub.a## 	deps/tcl/unix/libtclstub.a
 
 ## nostcat
 deps/nostcat/.git:
@@ -134,7 +134,7 @@ clean:## 	remove nostril *.o *.a nostril.1 deps/secp256k1
 	rm -rf $(shell which nostril)
 	rm -rf /usr/local/share/man/man1/nostril.1
 	rm -f nostril *.o *.a
-	rm -rf deps/secp256k1
+	rm -rf deps/*
 
 tags: fake## 	ctags *.c *.h
 	ctags *.c *.h
