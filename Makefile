@@ -108,6 +108,25 @@ deps/nostcat/target/release/nostcat:/deps/nostcat
 	cp nostcat< $@
 nostcat:deps/nostcat/target/release/nostcat## 	nostcat
 
+##git
+deps/git/.git:
+	@devtools/refresh-submodules.sh $(SUBMODULES)
+deps/git/libgit.a:deps/git/.git
+	cd deps/git; \
+	make install
+libgit.a: deps/git/libgit.a## 	libgit.a
+	cp $< $@
+
+##tcl
+deps/tcl/.git:
+	@devtools/refresh-submodules.sh $(SUBMODULES)
+deps/tcl/unix/libtclstub.a:deps/tcl/.git
+	cd deps/tcl; \
+	./autogen.sh configure && ./configure && make install
+libtclstub.a:deps/tcl/unix/libtclstub.a## 	libtclstub.a
+	cp $< $@
+tcl:libtclstub.a## 	tcl
+
 %.o: %.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
