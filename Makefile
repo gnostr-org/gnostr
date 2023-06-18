@@ -121,11 +121,11 @@ libgit.a: deps/git/libgit.a## 	libgit.a
 deps/tcl/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/tcl/unix/libtclstub.a:deps/tcl/.git
-	cd deps/tcl; \
+	cd deps/tcl/unix; \
 	./autogen.sh configure && ./configure && make install
-libtclstub.a:deps/tcl/unix/libtclstub.a## 	libtclstub.a
+libtclstub.a:deps/tcl/unix/libtclstub.a## 	deps/tcl/unix/libtclstub.a
 	cp $< $@
-tcl:libtclstub.a## 	tcl
+tcl-unix:libtclstub.a## 	deps/tcl/unix/libtclstub.a
 
 %.o: %.c $(HEADERS)
 	@echo "cc $<"
