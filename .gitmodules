@@ -23,3 +23,6 @@
 	path = deps/hyper-nostr
 	url = git@github.com:gnostr-org/hyper-nostr.git
 	ignore = dirty
+[submodule "deps/nostr-cpp"]
+	path = deps/nostr-cpp
+	url = git@github.com:gnostr-org/nostr-cpp.git
