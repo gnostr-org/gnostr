@@ -25,7 +25,7 @@
 #include "random.h"
 #include "proof.h"
 
-#define VERSION "0.2.3"
+#define VERSION "0.2.4"
 
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16

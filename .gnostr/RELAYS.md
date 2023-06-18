@@ -164,6 +164,7 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
+wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -180,6 +181,7 @@ wss://nostr.hugo.md
 wss://relay.nvote.co
 wss://bitcoiner.social
 wss://klockenga.social
+wss://nostr.1f52b.xyz
 wss://nostr.sebastix.dev
 wss://relay-verified.deschooling.us
 wss://nostr.cizmar.net
@@ -237,3 +239,4 @@ wss://nostr.rocks
 wss://nostr.orangepill.dev
 wss://nostr.pinkanki.org
 wss://relay.s3x.social
+wss://relay.primal.net
