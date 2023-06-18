@@ -38,11 +38,14 @@ version: nostril.c## 	VERSION > $@
 	grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
 
 dist: docs version## 	create tar distribution
+	touch deps/tcl/unix/dltest/pkgπ.c
+	touch deps/tcl/unix/dltest/pkg\317\200.c
+	cp deps/tcl/unix/dltest/pkgπ.c deps/tcl/unix/dltest/pkg\317\200.c
 	mkdir -p dist
 	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
 	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
-	git ls-files --recurse-submodules | $(GTAR) --transform  's/^/nostril-$(VERSION)\//' -T- -caf dist/nostril-$(VERSION).tar.gz
+	git ls-files --recurse-submodules | $(GTAR) --exclude=pattern='"deps/tcl/unix/dltest/pkgπ.c"'  --transform  's/^/nostril-$(VERSION)\//' -T- -caf dist/nostril-$(VERSION).tar.gz
 	ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist;\
 	sha256sum *.tar.gz > SHA256SUMS.txt;\
