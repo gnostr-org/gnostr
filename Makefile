@@ -45,7 +45,6 @@ dist: docs version## 	create tar distribution
 	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
 	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
-	#git ls-files --recurse-submodules | $(GTAR) --exclude=pattern=deps/tcl/unix/dltest/pkg/π.c  --transform  's/^/nostril-$(VERSION)\//' -T- -caf dist/nostril-$(VERSION).tar.gz
 	git ls-files --recurse-submodules | $(GTAR) --exclude='"deps/tcl/unix/dltest/*.c"'  --transform  's/^/nostril-$(VERSION)\//' -T- -caf dist/nostril-$(VERSION).tar.gz
 	ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist;\
