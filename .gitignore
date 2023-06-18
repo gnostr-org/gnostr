@@ -12,7 +12,6 @@ configurator
 .buildcmd
 !config.h
 tags
-libsecp256k1.a
 /target
 
 Cargo.lock
@@ -24,9 +23,11 @@ scripts/nostr-req
 scripts/subnote
 /dist
 
-.DS_Store
+**.DS_Store
 deps/.DS_Store
 deps/build/
 
 libgit.a
 libjq.a
+libtclstub.a
+libsecp256k1.a
