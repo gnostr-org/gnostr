@@ -31,3 +31,7 @@ libgit.a
 libjq.a
 libtclstub.a
 libsecp256k1.a
+
+.gnostr/.hyper-nostr-relay
+.gnostr/node_modules
+.hyper-nostr-relay
