@@ -83,7 +83,6 @@ wss://spore.ws
 wss://relay.727whisky.com
 wss://nostr.ch3n2k.com
 wss://nostr.island.network
-wss://relay.1bps.io
 wss://relay.nostrview.com
 wss://relay.nostromo.social
 wss://offchain.pub
@@ -92,7 +91,6 @@ wss://nostream.unift.xyz
 wss://jp-relay-nostr.invr.chat
 wss://nostr.dumpit.top
 wss://relay.humanumest.social
-wss://nostr.21crypto.ch
 wss://paid.spore.ws
 wss://nostr.notmyhostna.me
 wss://arnostr.permadao.io
@@ -164,7 +162,6 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
-wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
