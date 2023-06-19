@@ -14,5 +14,5 @@ ubuntu-nostcat:submodules docker-start## 	run act in .github
 	@export $(cat ~/gh_token.txt) && act -vbr  -W $(PWD)/.github/workflows/$@.yml
 
 	#the matrix/pre/release builds are for the resulting app builds
-ubuntu-matrix:submodules docker-start## 	run act in .github
+ubuntu-matrix:initialize docker-start## 	run act in .github
 	@export $(cat ~/gh_token.txt) && act -vb  -W $(PWD)/.github/workflows/$@.yml
