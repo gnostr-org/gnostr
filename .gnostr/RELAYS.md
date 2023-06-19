@@ -11,7 +11,6 @@ wss://nostr.einundzwanzig.space
 wss://nostr.cercatrova.me
 wss://nostr.swiss-enigma.ch
 wss://nos.lol
-wss://relay.nostr.band
 wss://nostr-relay.derekross.me
 wss://relay.oldcity-bitcoiners.info
 wss://no.str.cr
@@ -112,6 +111,7 @@ wss://nostr.uthark.com
 wss://nostr.cruncher.com
 wss://relay.nostrcheck.me
 wss://nostr.rbel.co
+wss://nostro.online
 wss://nostrelay.yeghro.site
 wss://relay.nostr.vet
 wss://nostr-relay.app.ikeji.ma
@@ -149,7 +149,6 @@ wss://relay.snort.social
 wss://nr.yay.so
 wss://nostr.lu.ke
 wss://atlas.nostr.land
-wss://nostr.ownbtc.online
 wss://nostream.sh4.red
 wss://nostr.fmt.wiz.biz
 wss://nostr.actn.io
@@ -189,6 +188,7 @@ wss://pow.nostrati.com
 wss://n.wingu.se
 wss://bhagos.org
 wss://relay.nostr.hach.re
+wss://nostr.asdf.mx
 wss://nostr.13x.sh
 wss://nostr.bitcoinplebs.de
 wss://nostr.goller.net
@@ -220,8 +220,8 @@ wss://nostr.rocketnode.space
 wss://relay.nostr.bg
 wss://nostr.malin.onl
 wss://nostr.reamde.dev
-wss://nostr-01.dorafactory.org
 wss://nostr.globals.fans
+wss://nostr.whoop.ph
 wss://nostr.oxtr.dev
 wss://nostr.fractalized.ovh
 wss://rsslay.data.haus
