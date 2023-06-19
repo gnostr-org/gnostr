@@ -98,6 +98,7 @@ wss://nostr.notmyhostna.me
 wss://arnostr.permadao.io
 wss://rsr.uyky.net:30443
 wss://nostr.l00p.org
+wss://relay.reeve.cn
 wss://lightningrelay.com
 wss://no-str.wnhefei.cn:28443
 wss://bitcoinmaximalists.online
@@ -213,7 +214,6 @@ wss://relay.mrjohnsson.net
 wss://mastodon.cloud/api/v1/streaming
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
-wss://frighteningdeafeningagent.nailuogg.repl.co
 wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
 wss://relay.nostr.bg
