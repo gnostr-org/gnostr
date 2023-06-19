@@ -26,3 +26,4 @@
 [submodule "deps/nostr-cpp"]
 	path = deps/nostr-cpp
 	url = git@github.com:gnostr-org/nostr-cpp.git
+	ignore = dirty
