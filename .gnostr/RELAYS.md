@@ -164,6 +164,7 @@ wss://relay.nostrgraph.net
 wss://rsslay.nostr.moe
 wss://nostrex.fly.dev
 wss://relay.roli.social
+wss://brb.io
 wss://eden.nostr.land
 wss://nostr-verified.wellorder.net
 wss://nostr.noones.com
@@ -228,6 +229,7 @@ wss://rsslay.data.haus
 wss://nostr.primz.org
 wss://relay.nostr.au
 wss://relay.johnnyasantos.com
+wss://btc.klendazu.com
 wss://relay.n057r.club
 wss://nostr.mjex.me
 wss://slick.mjex.me
