@@ -32,6 +32,8 @@ libjq.a
 libtclstub.a
 libsecp256k1.a
 
+**.DS_Store
 .gnostr/.hyper-nostr-relay
 .gnostr/node_modules
+.gnostr/**.DS_Store
 .hyper-nostr-relay
