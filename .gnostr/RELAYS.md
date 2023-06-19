@@ -214,6 +214,7 @@ wss://relay.mrjohnsson.net
 wss://mastodon.cloud/api/v1/streaming
 wss://nostr.256k1.dev
 wss://relay.beta.fogtype.com
+wss://frighteningdeafeningagent.nailuogg.repl.co
 wss://rsslay.ch3n2k.com
 wss://nostr.rocketnode.space
 wss://relay.nostr.bg
@@ -227,7 +228,6 @@ wss://rsslay.data.haus
 wss://nostr.primz.org
 wss://relay.nostr.au
 wss://relay.johnnyasantos.com
-wss://btc.klendazu.com
 wss://relay.n057r.club
 wss://nostr.mjex.me
 wss://slick.mjex.me
