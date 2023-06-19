@@ -39,20 +39,35 @@ jobs:
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps/git
+            deps
+            /var/cache/apt
           key: ${{ runner.os }}-deps
 
-      - name: printenv
+      - name: touch ~/GH_ACT_TOKEN.txt
+        run: |
+          touch ~/GH_ACT_TOKEN.txt
+          echo ${{ secrets.GITHUB_TOKEN }} > ~/GH_ACT_TOKEN.txt
+
+      - name: apt-get_install
         run: |
           printenv && sudo apt-get update && \
           apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
-          touch ~/GH_ACT_TOKEN.txt
+      - name: make submodules
+        run: |
+          make submodules
 
-      - name: deps/git
-        run: cd deps/git && autoreconf -i && ./configure && make && make install && cd ..
+      - name: deps/secp256k1
+        run: cd deps/secp256k1 && ./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys && make install && cd ..
 
-      - name: deps/jq
-        run: cd deps/jq && autoreconf -i && ./configure  --disable-maintainer-mode && make install && cd ..
+      - name: make nostril install
+        run: |
+          make nostril install
+
+      - name: 0
+        run: KEY=$(nostril --hash 0) && nostril --sec "$KEY" --envelope --content "gnostr is passing the ubuntu-matrix CI!"
+
+      - name: 1
+        run: KEY=$(nostril --hash 1) && nostril --sec "$KEY" --envelope --content "gnostr is passing the ubuntu-matrix CI!"
 
       - name: Save deps
         id: cache-deps-save
@@ -60,6 +75,7 @@ jobs:
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps/git
+            deps
+            /var/cache/apt
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
