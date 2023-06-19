@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: ubuntu-nostcat
 
 # Controls when the action will run.
 on:
@@ -41,19 +41,23 @@ jobs:
           path: |
             deps/git
             /root/.cargo
+            /root/.rustup
           key: ${{ runner.os }}-deps
 
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
       - name: rustup
-        run: |
-          printenv && sudo apt-get update && \
-          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
-          touch ~/GH_ACT_TOKEN.txt
-          rustup default stable
-          source "$HOME/.cargo/env"
-          cd deps/nostcat && make cargo-install #--release --all-features
+        run: printenv && sudo apt-get update && apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext git && touch ~/GH_ACT_TOKEN.txt
+
+      #- name: submodule update
+         #run: git submodule update --init --recursive
+
+      - name: submodule update
+        run: cargo install nostcat
+      #- name: rustup default stable
+         #run: rustup default stable && source "$HOME/.cargo/env" && make cargo-build cargo-install
 
       - name: Save deps
         id: cache-deps-save
@@ -63,5 +67,6 @@ jobs:
           path: |
             deps/git
             /root/.cargo
+            /root/.rustup
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
