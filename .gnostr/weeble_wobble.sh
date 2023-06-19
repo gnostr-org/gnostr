@@ -30,7 +30,9 @@ get_time
 
 function get_block_height(){
 	BLOCKHEIGHT=$(curl https://blockchain.info/q/getblockcount 2>/dev/null)
+	echo -e "\n"
 	echo -n $BLOCKHEIGHT
+	echo -e "\n"
 	return $BLOCKHEIGHT
 }
 echo -e "\n"
@@ -40,7 +42,7 @@ echo -e "\n"
 function get_weeble(){
 	WEEBLE=$(expr $TIME / $BLOCKHEIGHT)
 	echo -n $WEEBLE
-	#return $WEEBLE
+	export WEEBLE
 }
 #echo -e "\n"
 get_weeble
@@ -52,7 +54,7 @@ echo -e "\n"
 function get_wobble(){
 	WOBBLE=$(expr $TIME % $BLOCKHEIGHT)
 	echo -n $WOBBLE
-	#return $WOBBLE
+	export WOBBLE
 }
 #echo -e "\n"
 get_wobble
@@ -83,7 +85,9 @@ function get_weeble_wobble(){
 	#blobs
 	WEEBLE_WOBBLE=$WEEBLE/$WOBBLE
 	#echo -n $WEEBLE_WOBBLE
+	#echo -e "\n"
 	echo $WEEBLE_WOBBLE
+	#echo -e "\n"
 	#return WEEBLE_WOBBLE
 }
 echo ""
@@ -141,16 +145,17 @@ while [[ $counter -lt $LENGTH ]]
     do
     #get_weeble_wobble
 	#test
-	nostril --sec $(echo -en "" | openssl dgst -sha256) | jq
+	nostril --sec $(nostril --hash) | jq
     for relay in $RELAYS; do
        echo "counter=$counter"
        echo "randomBetweenAnswer=$randomBetweenAnswer"
 	   #secret=$(echo "$counter" | openssl dgst -sha256 && echo $secret | tr '[a-z]' '[A-Z]')
-	   secret=$(echo "$counter" | openssl dgst -sha256)
+	   secret=$(nostril --hash $counter)
        export secret
        echo "secret=$secret"
 
-       touch ./keys/$secret && echo $secret > ./keys/$secret
+       mkdir -p $PWD/keys
+       touch $PWD/keys/$secret && echo $secret > $PWD/keys/$secret
        echo "$relay"
 
        if hash nostril; then
@@ -158,7 +163,7 @@ while [[ $counter -lt $LENGTH ]]
 
 			   #blob location/remote blob location
 			   #empty hash nostr profile "0"
-			   nostril --sec "$(echo -en "" | openssl dgst -sha256)" --kind 2 \
+			   nostril --sec "$(nostril --hash )" --kind 2 \
 				   --envelope \
 				   --tag weeble/wobble $(get_weeble_wobble) \
 				   --tag weeble $(get_weeble) \
