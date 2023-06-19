@@ -128,20 +128,27 @@ void openssl_hash(int argc, const char *argv){
 
 	char command[128];
 	struct args args = {0};
-
 	args.hash = argv++; argc--;
 
 	if (args.hash){
-		strcpy(command, "echo -e");
-		strcat(command, " ");
+		strcat(command, "echo ");
 		strcat(command, args.hash);
-		strcat(command, "|");
-		//strcat(command, "openssl dgst -sha256 >");
+		strcat(command, " | ");
 		strcat(command, "openssl dgst -sha256");
-		//strcat(command, args.hash);
-		strcat(command, "\n");
-		system(command);
+		strcat(command, " | ");
+		strcat(command, "sed 's/SHA2-256(stdin)= //g'");
+	}else{
+		//0 2>/dev/null
+		strcat(command, "0 ");
+		strcat(command, " 2>/dev/null");
+		strcat(command, " | ");
+		strcat(command, "openssl dgst -sha256");
+		strcat(command, " | ");
+		strcat(command, "sed 's/SHA2-256(stdin)= //g'");
 	}
+	//printf("%s",command);
+	system(command);
+
 	exit(0);
 }
 

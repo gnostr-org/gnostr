@@ -5,7 +5,7 @@ HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
 ARS = libsecp256k1.a libgit.a libjq.a libtclstub.a
 
-SUBMODULES = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr deps/tcl
+SUBMODULES = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr deps/tcl deps/nostr-cpp
 
 VERSION:=$(shell cat version)
 export VERSION
@@ -16,9 +16,13 @@ export TAR
 
 all: nostril docs## 	make nostril docs
 
-docs: doc/nostril.1 git-add docker-start## 	docs: convert README to doc/nostril.1
+docs: doc/nostril.1 docker-start## 	docs: convert README to doc/nostril.1
 	#@echo docs
 	bash -c 'if pgrep MacDown; then pkill MacDown; fi'
+	bash -c 'mkdir -p $(PWD)/sources'
+	bash -c 'touch $(PWD)/sources/HEADER.md'
+	bash -c 'touch $(PWD)/sources/COMMANDS.md'
+	bash -c 'touch $(PWD)/sources/FOOTER.md'
 	bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md'
 	bash -c 'cat $(PWD)/sources/COMMANDS.md              >> $(PWD)/README.md'
 	bash -c 'cat $(PWD)/sources/FOOTER.md                >> $(PWD)/README.md'
@@ -27,8 +31,8 @@ docs: doc/nostril.1 git-add docker-start## 	docs: convert README to doc/nostril.
 		fi || if hash docker 2>/dev/null; then \
 		docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 README.md; \
 		fi
-	git add --ignore-errors sources/*.md
-	git add --ignore-errors *.md
+	bash -c "if hash git; then git add --ignore-errors sources/*.md; fi;"
+	bash -c "if hash git; then git add --ignore-errors *.md; fi;"
 	#git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
 doc/nostril.1: README## 	
@@ -52,7 +56,7 @@ dist: docs version## 	create tar distribution
 	gpg -u 0xE616FA7221A1613E5B99206297966C06BB06757B --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
 	##rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git deps/tcl.git## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git deps/tcl/.git deps/nostr-cpp/.git## 	submodules
 
 ##secp256k1
 deps/secp256k1/.git:
@@ -69,6 +73,22 @@ deps/secp256k1/.libs/libsecp256k1.a: deps/secp256k1/config.log
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 
+##nostr-cpp
+deps/nostr-cpp/.git:
+deps/nostr-cpp/include/secp256k1.h: deps/nostr-cpp/.git
+deps/nostr-cpp/configure: #deps/secp256k1/include/secp256k1.h
+	cd deps/nostr-cpp; \
+	./autogen.sh
+deps/nostr-cpp/config.log: deps/nostr-cpp/configure
+	cd deps/nostr-cpp; \
+	echo
+	#./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
+deps/nostr-cpp/.libs/libsecp256k1.a: deps/secp256k1/config.log
+	cd deps/nostr-cpp; \
+	echo
+	#make -j nostr-cpp.la
+nostr-cpp.a: deps/nostr-cpp/.libs/nostr-cpp.a## nostr-cpp.a
+	cp $< $@
 
 ##jq
 deps/jq/.git:
@@ -112,17 +132,22 @@ nostcat:deps/nostcat/target/release/nostcat## 	nostcat
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+init: initialize
 initialize:## 	ensure submodules exist
-	git submodule update --init --recursive
+	@bash -c "if hash git; then \
+		if ! $(CI) 2>/dev/null; then \
+			git submodule update --init --recursive 2>/dev/null; \
+		fi; \
+	fi;"
 nostril:initialize $(HEADERS) $(OBJS) $(ARS)## 	make nostril binary
-	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
 
-install: all## 	install docs/nostril.1 nostril nostril-query
+install: submodules nostril## 	install docs/nostril.1 nostril nostril-query
 	mkdir -p $(PREFIX)/bin
-	install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1
 	install -m755 nostril $(PREFIX)/bin/nostril
-	install -m755 nostril-query $(PREFIX)/bin/nostril-query
+	install -m755 sources/nostril-query $(PREFIX)/bin/nostril-query
+install-docs:
+	install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1
 
 .PHONY:config.h
 config.h: configurator
