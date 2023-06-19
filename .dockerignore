@@ -7,3 +7,5 @@
 !deps/git
 !deps/tcl
 !deps/nostcat
+
+!sources
