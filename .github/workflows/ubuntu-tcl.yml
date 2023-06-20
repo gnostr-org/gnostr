@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: ubuntu-tcl
 
 # Controls when the action will run.
 on:
@@ -39,29 +39,23 @@ jobs:
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps
-            /var/cache/apt
+            deps/git
           key: ${{ runner.os }}-deps
 
-      - name: touch ~/GH_ACT_TOKEN.txt
-        run: |
-          touch ~/GH_ACT_TOKEN.txt
-          echo ${{ secrets.GITHUB_TOKEN }} > ~/GH_ACT_TOKEN.txt
-
-      - name: apt-get_install
+      - name: printenv
         run: |
           printenv && sudo apt-get update && \
           apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
-      - name: deps/secp256k1
-        run: make submodules && cd ./deps/secp256k1 && ./autogen.sh && ./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys && make install && cd ..
-
+          touch ~/GH_ACT_TOKEN.txt
+      - name: make
+        run: |
+          cd deps/git && autoreconf -i && ./configure && make && make install && cd ..
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps
-            /var/cache/apt
+            deps/git
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
