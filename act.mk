@@ -13,7 +13,9 @@ ubuntu-nostcat:submodules docker-start## 	run act in .github
 	#in the single dep instances we reuse (-r) the container
 	@export $(cat ~/gh_token.txt) && act -vbr -C deps/nostcat \
 		-W $(PWD)/.github/workflows/$@.yml
-
+	#the matrix/pre/release builds are for the resulting app builds
+ubuntu-secp256k1:initialize docker-start## 	run act in .github
+	@export $(cat ~/gh_token.txt) && act -vb  -W $(PWD)/.github/workflows/$@.yml
 	#the matrix/pre/release builds are for the resulting app builds
 ubuntu-matrix:initialize docker-start## 	run act in .github
 	@export $(cat ~/gh_token.txt) && act -vb  -W $(PWD)/.github/workflows/$@.yml
