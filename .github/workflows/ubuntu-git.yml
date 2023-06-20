@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: deps
 
 # Controls when the action will run.
 on:
@@ -21,7 +21,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  ubuntu-build_and_test:
+  git:
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -49,6 +49,7 @@ jobs:
           touch ~/GH_ACT_TOKEN.txt
       - name: make
         run: |
+          make -f Makefile initialize
           cd deps/git && autoreconf -i && ./configure && make && make install && cd ..
       - name: Save deps
         id: cache-deps-save

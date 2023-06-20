@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: ubuntu
 
 # Controls when the action will run.
 on:
@@ -21,7 +21,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  ubuntu-build_and_test:
+  matrix:
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -51,23 +51,18 @@ jobs:
       - name: apt-get_install
         run: |
           printenv && sudo apt-get update && \
-          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
-      - name: make submodules
-        run: |
-          make submodules
-
-      - name: deps/secp256k1
-        run: cd deps/secp256k1 && ./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys && make install && cd ..
+          apt-get install -y \
+          python3 make autoconf automake libtool build-essential tclsh gettext
 
       - name: make nostril install
         run: |
           make nostril install
 
       - name: 0
-        run: KEY=$(nostril --hash 0) && nostril --sec "$KEY" --envelope --content "gnostr is passing the ubuntu-matrix CI!"
+        run: export KEY=$(nostril --hash 0) && nostril --sec "$KEY" --envelope --content "gnostr is passing the ubuntu-matrix CI!"
 
       - name: 1
-        run: KEY=$(nostril --hash 1) && nostril --sec "$KEY" --envelope --content "gnostr is passing the ubuntu-matrix CI!"
+        run: export KEY=$(nostril --hash 1) && nostril --sec "$KEY" --envelope --content "gnostr is passing the ubuntu-matrix CI!"
 
       - name: Save deps
         id: cache-deps-save

@@ -21,7 +21,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  jq:
+  secp256k1:
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -39,23 +39,29 @@ jobs:
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps/jq
+            deps
+            /var/cache/apt
           key: ${{ runner.os }}-deps
 
-      - name: printenv
+      - name: touch ~/GH_ACT_TOKEN.txt
         run: |
-          printenv && sudo apt-get update && apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
           touch ~/GH_ACT_TOKEN.txt
-      - name: make
+          echo ${{ secrets.GITHUB_TOKEN }} > ~/GH_ACT_TOKEN.txt
+
+      - name: apt-get_install
         run: |
-          #cd deps/jq && autoreconf -im && ./configure  --disable-maintainer-mode && make install && cd ..
-          cd deps/jq && autoreconf -i && ./configure  --disable-maintainer-mode && make install && cd ..
+          printenv && sudo apt-get update && \
+          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
+      - name: deps/secp256k1
+        run: make submodules && cd ./deps/secp256k1 && ./autogen.sh && ./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys && make install && cd ..
+
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps/jq
+            deps
+            /var/cache/apt
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
