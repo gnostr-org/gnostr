@@ -7,5 +7,6 @@
 !deps/git
 !deps/tcl
 !deps/nostcat
+!deps/nostcat/Cargo.*
 
 !sources

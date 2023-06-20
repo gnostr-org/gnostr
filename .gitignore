@@ -16,6 +16,10 @@ tags
 
 Cargo.lock
 Cargo.toml
+
+!deps/nostcat/Cargo.lock
+!deps/nostcat/Cargo.toml
+
 *.json
 scripts/jb55-post
 scripts/nostr-follows
