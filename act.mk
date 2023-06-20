@@ -1,21 +1,20 @@
 act-all:
 	echo "act-all"
-ubuntu-git:submodules docker-start## 	run act in .github
-	#we use -b to bind the repo to the act container
-	#in the single dep instances we reuse (-r) the container
+
+#we use -b to bind the repo to the act container
+#in the single dep instances we reuse (-r) the container
+
+ubuntu-git:submodules initialize docker-start## 	make ubuntu-git
 	@export $(cat ~/gh_token.txt) && act -vbr  -W $(PWD)/.github/workflows/$@.yml
-ubuntu-jq:submodules docker-start## 	run act in .github
-	#we use -b to bind the repo to the act container
-	#in the single dep instances we reuse (-r) the container
+
+ubuntu-jq:submodules initialize docker-start## 	make ubuntu-jq
 	@export $(cat ~/gh_token.txt) && act -vbr  -W $(PWD)/.github/workflows/$@.yml
-ubuntu-nostcat:submodules docker-start## 	run act in .github
-	#we use -b to bind the repo to the act container
-	#in the single dep instances we reuse (-r) the container
-	@export $(cat ~/gh_token.txt) && act -vbr -C deps/nostcat \
-		-W $(PWD)/.github/workflows/$@.yml
-	#the matrix/pre/release builds are for the resulting app builds
-ubuntu-secp256k1:initialize docker-start## 	run act in .github
+
+ubuntu-nostcat:submodules initialize docker-start## 	make ubuntu-nostcat
+	@export $(cat ~/gh_token.txt) && act -vbr -C deps/nostcat -W $(PWD)/.github/workflows/$@.yml
+
+ubuntu-secp:submodules initialize docker-start## 	make ubuntu-secp
 	@export $(cat ~/gh_token.txt) && act -vb  -W $(PWD)/.github/workflows/$@.yml
-	#the matrix/pre/release builds are for the resulting app builds
-ubuntu-matrix:initialize docker-start## 	run act in .github
+
+ubuntu-matrix:submodules initialize docker-start## 	make ubnutu-matrix
 	@export $(cat ~/gh_token.txt) && act -vb  -W $(PWD)/.github/workflows/$@.yml
