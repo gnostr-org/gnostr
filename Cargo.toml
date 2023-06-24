@@ -46,7 +46,7 @@ bitcoin = "0.29.2"
 csv = "1.1.6"
 bech32 = "0.9.1"
 hex = "0.4.3"
-nostr-sdk_0_22 = { package = "nostr-sdk", version = "0.22", features = ["blocking", "vanity"] }
+nostr-sdk_feature = { package = "nostr-sdk", git = "https://github.com/0xtrr/nostr.git", branch = "feature/improve-nip58-module", features = ["blocking", "vanity"] }
 num_cpus = "1.15.0"
 unicode-normalization = "0.1.9"
 
