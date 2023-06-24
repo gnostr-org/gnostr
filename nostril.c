@@ -132,14 +132,13 @@ void openssl_hash(int argc, const char *argv){
 		strcat(command, " ");
 		strcat(command, args.hash);
 		strcat(command, "|");
-		strcat(command, "openssl dgst -sha256");
+		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
 		system(command);
-		//snprintf(command, strlen(command), "%s", target);
-		//if(system(command)){
-		//	printf("\n%s", command);
-		//	exit(0);
-		//}
-			exit(0);
+		exit(0);
+	}else{
+		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+		system(command);
+		exit(0);
 	}
 			exit(0);
 }
