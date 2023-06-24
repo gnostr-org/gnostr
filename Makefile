@@ -133,11 +133,20 @@ configurator: configurator.c## 	make configurator
 	rm -f configurator
 	$(CC) $< -o $@
 
-clean:## 	remove nostril *.o *.a nostril.1 deps/secp256k1
+clean:## 	remove nostril *.o *.a nostril.1
 	rm -rf $(shell which nostril)
 	rm -rf /usr/local/share/man/man1/nostril.1
 	rm -f nostril *.o *.a
-	rm -rf deps/*
+clean-hyper-nostr:## 	remove deps/hyper-nostr
+	rm -rf deps/hyper-nostr
+clean-secp:## 	remove deps/secp256k1
+	rm -rf deps/secp256k1
+clean-git:## 	remove deps/git
+	rm -rf deps/git
+clean-tcl:## 	remove deps/tcl
+	rm -rf deps/tcl
+clean-jq:## 	remove deps/jq
+	rm -rf deps/jq
 
 tags: fake## 	ctags *.c *.h
 	ctags *.c *.h
