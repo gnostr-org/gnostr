@@ -52,7 +52,7 @@ dist: docs version## 	create tar distribution
 	gpg -u 0xE616FA7221A1613E5B99206297966C06BB06757B --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
 	##rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git deps/tcl.git## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/jq/.git deps/git/.git deps/nostcat/.git deps/tcl/.git## 	refresh-submodules
 
 ##secp256k1
 deps/secp256k1/.git:
@@ -68,7 +68,6 @@ deps/secp256k1/.libs/libsecp256k1.a: deps/secp256k1/config.log
 	make -j libsecp256k1.la
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
-
 
 ##jq
 deps/jq/.git:
@@ -107,25 +106,6 @@ deps/nostcat:deps/nostcat/.git
 deps/nostcat/target/release/nostcat:/deps/nostcat
 	cp nostcat< $@
 nostcat:deps/nostcat/target/release/nostcat## 	nostcat
-
-##git
-deps/git/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
-deps/git/libgit.a:deps/git/.git
-	cd deps/git; \
-	make install
-libgit.a: deps/git/libgit.a## 	libgit.a
-	cp $< $@
-
-##tcl
-deps/tcl/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
-deps/tcl/unix/libtclstub.a:deps/tcl/.git
-	cd deps/tcl/unix; \
-	./autogen.sh configure && ./configure && make install
-libtclstub.a:deps/tcl/unix/libtclstub.a## 	deps/tcl/unix/libtclstub.a
-	cp $< $@
-tcl-unix:libtclstub.a## 	deps/tcl/unix/libtclstub.a
 
 %.o: %.c $(HEADERS)
 	@echo "cc $<"
