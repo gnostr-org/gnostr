@@ -1,7 +1,10 @@
 #act: since act is a docker utility, we tell docker to NOT ignore the
 #.git folder itself AND to NOT ignore the deps folder.
 !.git
-!deps
-!deps/git
-!deps/jq
-!deps/nostcat
+deps
+#!deps/git
+#!deps/hyper-nostr
+#!deps/jq
+#!deps/nostcat
+#!deps/secp256k1
+#!deps/tcl
