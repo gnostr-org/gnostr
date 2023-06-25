@@ -138,14 +138,14 @@ help:## 	more verbose help
 #######################
 .ONESHELL:
 docker-start:## 	start docker
-	touch requirements.txt
-	test -d .venv || $(PYTHON3) -m virtualenv .venv
-	( \
+	@touch requirements.txt
+	@test -d .venv || $(PYTHON3) -m virtualenv .venv
+	@( \
 	   source .venv/bin/activate; pip install -q -r requirements.txt; \
-	   python3 -m pip install -q omegaconf pipenv \
+	   python3 -m pip install -q pipenv \
 	   pip install -q --upgrade pip; \
 	);
-	( \
+	@( \
 	    while ! docker system info > /dev/null 2>&1; do\
 	    echo 'Waiting for docker to start...';\
 	    if [[ '$(OS)' == 'Linux' ]]; then\
