@@ -23,3 +23,6 @@
 	path = deps/hyper-nostr
 	url = git@github.com:gnostr-org/hyper-nostr.git
 	ignore = dirty
+[submodule "deps/openssl"]
+	path = deps/openssl
+	url = git@github.com:gnostr-org/openssl.git
