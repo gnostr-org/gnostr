@@ -501,7 +501,7 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 	for (; argc; ) {
 		arg = *argv++; argc--;
 
-		if (!strcmp(arg, "--help")) {
+		if (!strcmp(arg, "--help") | !strcmp(arg, "-h")) {
 			usage();
 		}
 
