@@ -99,14 +99,17 @@ libtclstub.a:deps/tcl/unix/libtclstub.a## 	deps/tcl/unix/libtclstub.a
 	cp $< $@
 tcl-unix:libtclstub.a## 	deps/tcl/unix/libtclstub.a
 
-## nostcat
+##nostcat
+##	nostcat
+##		nostcat
+.PHONY:deps/nostcat
 deps/nostcat/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
 deps/nostcat:deps/nostcat/.git
 	cd deps/nostcat; \
 	make cargo-install
-deps/nostcat/target/release/nostcat:/deps/nostcat
-	cp nostcat< $@
+deps/nostcat/target/release/nostcat:deps/nostcat
+	cp $@ nostcat
 nostcat:deps/nostcat/target/release/nostcat## 	nostcat
 
 %.o: %.c $(HEADERS)
