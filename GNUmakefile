@@ -1,9 +1,14 @@
+
 ifeq ($(project),)
 PROJECT_NAME                            := $(notdir $(PWD))
 else
 PROJECT_NAME                            := $(project)
 endif
 export PROJECT_NAME
+VERSION                                 :=$(shell cat version)
+export VERSION
+TIME                                    :=$(shell date +%s)
+export TIME
 
 OS                                      :=$(shell uname -s)
 export OS
@@ -132,12 +137,11 @@ export GIT_REPO_PATH
 .PHONY:- help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-help:## 	more verbose help
+help:## 	
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
-#######################
 .ONESHELL:
-docker-start:## 	start docker
+docker-start:
 	@touch requirements.txt
 	@test -d .venv || $(PYTHON3) -m virtualenv .venv
 	@( \
@@ -159,21 +163,14 @@ docker-start:## 	start docker
 	)
 
 .PHONY: report
-report:## 	report
-	@echo ''
-	@echo '[ENV VARIABLES]	'
+report:## 	
 	@echo ''
 	@echo 'TIME=${TIME}'
-	@echo 'BASENAME=${BASENAME}'
 	@echo 'PROJECT_NAME=${PROJECT_NAME}'
-	@echo 'TWITTER_API=${TWITTER_API}'
+	@echo 'VERSION=${VERSION}'
+	@echo ''
 	@echo 'PYTHON_VENV=${PYTHON_VENV}'
 	@echo 'PYTHON3_VENV=${PYTHON3_VENV}'
-	@echo ''
-	@echo 'NODE_VERSION=${NODE_VERSION}	'
-	@echo 'NODE_ALIAS=${NODE_ALIAS}	'
-	@echo ''
-	@echo 'HOMEBREW=${HOMEBREW}'
 	@echo ''
 	@echo 'GIT_USER_NAME=${GIT_USER_NAME}'
 	@echo 'GH_USER_REPO=${GH_USER_REPO}'
@@ -188,8 +185,6 @@ report:## 	report
 	@echo 'GIT_REPO_ORIGIN=${GIT_REPO_ORIGIN}'
 	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
-
-
 
 -include Makefile
 #-include nostcat.mk
