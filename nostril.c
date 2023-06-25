@@ -21,7 +21,7 @@
 #include "random.h"
 #include "proof.h"
 
-#define VERSION "0.2.4"
+#define VERSION "0.2.5"
 
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16
@@ -143,6 +143,16 @@ void openssl_hash(int argc, const char *argv){
 			exit(0);
 }
 
+void about()
+{
+	printf("nostril is a tool that creates and signs nostr events.\n");
+	exit(0);
+}
+void version()
+{
+	printf("%s\n", VERSION);
+	exit(0);
+}
 void usage()
 {
 	printf("usage: nostril [OPTIONS]\n");
@@ -158,6 +168,9 @@ void usage()
 	printf("      --pow <difficulty>              number of leading 0 bits of the id to mine\n");
 	printf("      --mine-pubkey                   mine a pubkey instead of id\n");
 	printf("      --tag <key> <value>             add a tag\n");
+	printf("\n");
+	printf("      --hash <value>                  return sha256 of <value>\n");
+	printf("\n");
 	printf("      -e <event_id>                   shorthand for --tag e <event_id>\n");
 	printf("      -p <pubkey>                     shorthand for --tag p <pubkey>\n");
 	printf("      -t <hashtag>                    shorthand for --tag t <hashtag>\n");
@@ -501,9 +514,11 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 	for (; argc; ) {
 		arg = *argv++; argc--;
 
-		if (!strcmp(arg, "--help") | !strcmp(arg, "-h")) {
-			usage();
-		}
+		if (!strcmp(arg, "--help") | !strcmp(arg, "-h")) { usage(); }
+
+		if (!strcmp(arg, "--version") | !strcmp(arg, "-v")) { version(); }
+
+		if (!strcmp(arg, "--about") | !strcmp(arg, "-a")) { about(); }
 
 		if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv); }
 
