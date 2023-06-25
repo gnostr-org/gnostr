@@ -34,8 +34,10 @@ docs: doc/nostril.1 git-add docker-start## 	docs: convert README to doc/nostril.
 doc/nostril.1: README## 	
 	scdoc < $^ > $@
 
+.PHONY: version
 version: nostril.c## 	VERSION > $@
-	grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
+	@grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
+	@cat $@
 
 dist: docs version## 	create tar distribution
 	touch deps/tcl/unix/dltest/pkgπ.c
