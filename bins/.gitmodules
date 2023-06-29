@@ -1,0 +1,17 @@
+[submodule "vendor/nostr-types"]
+	path = vendor/nostr-types
+  url = https://github.com/mikedilger/nostr-types
+  branch = 661273cf
+  dirty = ignore
+[submodule "vendor/nip44"]
+	path = vendor/nip44
+	url = https://github.com/mikedilger/nip44
+  dirty = ignore
+[submodule "vendor/gnostr-types"]
+	path = vendor/gnostr-types
+	url = https://github.com/gnostr-org/gnostr-types.git
+  dirty = ignore
+[submodule "vendor/gnip44"]
+	path = vendor/gnip44
+	url = https://github.com/gnostr-org/gnip44.git
+  dirty = ignore

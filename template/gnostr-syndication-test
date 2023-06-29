@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+declare id
+declare pubkey
+declare content
+
+#ID=$(gnostr --sec $(gnostr --hash) --tag gnostr relays --tag gnostr test-syndication --envelope --content "$(gnostr-get-relays)" | gnostr-cat -u ws://192.168.254.135:6102 | jq .[1] | sed 's/"//' | sed 's/"//')
+#echo $ID
+
+#gnostr-query -l 1 -i $ID | gnostr-cat -u ws://192.168.254.135:6102 #| jq .[1]
+
+
+#ID2=$(gnostr --sec $(gnostr --hash) --tag gnostr relays --tag gnostr test-syndication --envelope --content "$(gnostr-git diff HEAD)" | gnostr-cat -u ws://192.168.254.135:6102 | jq .[1] | sed 's/"//' | sed 's/"//')
+#echo $ID2
+
+#gnostr-query -l 1 -i $ID2 | gnostr-cat -u ws://192.168.254.135:6102 #| jq .[1]
+
+#echo $ID2
+
+
+##jq
+#./template/gnostr-syndication-test | jq '.. |."id"? | select(. != null)'
+
+
+function push(){
+
+#echo -e 0=$0
+#echo -e 1=$1
+#echo -e 2=$2
+
+#
+#ID3=$(gnostr --sec $(gnostr --hash) --tag gnostr commit --tag gnostr test-syndication --envelope --content "$(gnostr-git show HEAD~$1)" | gnostr-cat -u ws://192.168.254.135:6102 | jq .[1] | sed 's/"//' | sed 's/"//')
+
+#ID3=$(gnostr --sec $(gnostr --hash) --tag gnostr commit --tag gnostr test-syndication --envelope --content "$(gnostr-git show HEAD~$2)" | gnostr-cat -u ws://192.168.254.135:6102 | jq .[1] | sed 's/"//' | sed 's/"//')
+#ID3=$(gnostr --sec $(gnostr --hash) --tag gnostr commit --tag gnostr test-syndication --envelope --content "$(gnostr-git show $1)") #| gnostr-cat -u ws://192.168.254.135:6102 | jq .[1] | sed 's/"//' | sed 's/"//')
+ID3=$(gnostr --sec $(gnostr --hash) --tag gnostr commit --tag gnostr test-syndication --envelope --content "$(git show $1)" | gnostr-cat -u ws://192.168.254.135:6102 | jq .[1] | sed 's/"//' | sed 's/"//')
+#echo $ID3 #| jq
+#exit;
+#echo $ID2
+
+}
+function pull(){
+
+id=$(gnostr-query -l 1 -i $ID3 | gnostr-cat -u ws://192.168.254.135:6102  | jq '.. |."id"? | select(. != null)')
+pubkey=$(gnostr-query -l 1 -i $ID3 | gnostr-cat -u ws://192.168.254.135:6102  | jq '.. |."pubkey"? | select(. != null)')
+#gnostr-query -l 1 -i $ID3 | gnostr-cat -u ws://192.168.254.135:6102  | jq '.. |."tags"? | select(. != null)'
+#gnostr-query -l 1 -i $ID3 | gnostr-cat -u ws://192.168.254.135:6102  | jq '.. |."created_at"? | select(. != null)'
+
+content=$(gnostr-query -l 1 -i $ID3 | gnostr-cat -u ws://192.168.254.135:6102  | jq '.. |."content"? | select(. != null)')
+
+}
+
+push
+pull
+#echo -e $id
+#echo -e $pubkey
+echo -e $content
+
+
+#echo -e $(./template/gnostr-syndication-test | jq -M -S)
+
+#echo $ID3
+#gnostr --sec $(gnostr --hash) --tag "gnostr-git" "diff" --tag diff HEAD --envelope --content "$(gnostr-git diff HEAD)" | gnostr-cat -u ws://192.168.254.135:6102
+
+#gnostr --sec $(gnostr --hash) --tag "gnostr-git" "diff" --tag diff HEAD --envelope --content "$(gnostr-git diff HEAD)" | gnostr-relays
+#
+#| jq .[1] | sed 's/"//' | sed 's/"//'

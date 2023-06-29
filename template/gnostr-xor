@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+from hashlib import sha256
+import subprocess
+import struct
+import sys
+import os
+program = sys.argv[0]
+def get_arg(index):
+    try:
+        sys.argv[index]
+    except IndexError:
+        return ''
+    else:
+        return sys.argv[index]
+arg1 = get_arg(1)
+arg2 = get_arg(2)
+arg3 = get_arg(3)
+arg4 = get_arg(4)
+if not arg1:
+  arg1 = '0000000000000000000000000000000000000000000000000000000000000000'
+  ## print(arg1);
+if not arg2:
+  arg2 = '0000000000000000000000000000000000000000000000000000000000000000'
+  ## print(arg2);
+## if not arg3:
+##   arg3 = '0000000000000000000000000000000000000000000000000000000000000000'
+##   ## print(arg3);
+def change_to_be_hex(s):
+    return int(s,base=16)
+def xor_two_str(str1,str2):
+    a = change_to_be_hex(str1)
+    b = change_to_be_hex(str2)
+    return hex(a ^ b)
+## gnostr_blockheight = "gnostr-blockheight"
+## blockheight        = subprocess.call(gnostr_blockheight, stdout=open(os.devnull, 'wb'))
+## blockheight_hash   = sha256(str(blockheight).encode('utf-8')).hexdigest()
+## print(xor_two_str(blockheight_hash, key))
+if arg1 and arg2:
+  print(xor_two_str(arg1, arg2)[2:])
+## if arg1 and arg3:
+##   print(xor_two_str(arg1, arg3))
+## if arg2 and arg3:
+##   print(xor_two_str(arg2, arg3))
+
+
+## TODO:test vectors
+## gnostr-xor \
+## $(gnostr-sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855) \
+## $(gnostr-sha256 0000000000000000000000000000000000000000000000000000000000000000)
+##                 add77469e0dddf203c91ba4450576317737b1b61590239f94fcc2f011a13f7b3
+## gnostr-xor \
+## $(gnostr-sha256 0000000000000000000000000000000000000000000000000000000000000000) \
+## $(gnostr-sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)
+##                 add77469e0dddf203c91ba4450576317737b1b61590239f94fcc2f011a13f7b3
+
+## gnostr-xor \
+## $(gnostr-sha256 0000000000000000000000004b825dc642cb6eb9a060e54bf8d69288fbee4904) \
+## $(gnostr-sha256 0000000000000000000000000000000000000000000000000000000000000000)
+##                 d4aa5c4bb8931d39ff40bf060f37aaf4af5c358fdeab2b2277ef9045d5c1ae0f
+
+## gnostr-xor \
+## $(gnostr-sha256 0000000000000000000000000000000000000000000000000000000000000000) \
+## $(gnostr-sha256 0000000000000000000000004b825dc642cb6eb9a060e54bf8d69288fbee4904)
+##                 d4aa5c4bb8931d39ff40bf060f37aaf4af5c358fdeab2b2277ef9045d5c1ae0f
+
+## gnostr-xor \
+## $(gnostr-sha256 0000000000000000000000004b825dc642cb6eb9a060e54bf8d69288fbee4904) \
+## $(gnostr-sha256 d4aa5c4bb8931d39ff40bf060f37aaf4af5c358fdeab2b2277ef9045d5c1ae0f)
+##                 53fea41583e086149820bd57567b1998209677822e40e1e4b3b8201c80d74e91
+
+## gnostr-xor \
+## $(gnostr-sha256 d4aa5c4bb8931d39ff40bf060f37aaf4af5c358fdeab2b2277ef9045d5c1ae0f) \
+## $(gnostr-sha256 0000000000000000000000004b825dc642cb6eb9a060e54bf8d69288fbee4904)
+##                 53fea41583e086149820bd57567b1998209677822e40e1e4b3b8201c80d74e91

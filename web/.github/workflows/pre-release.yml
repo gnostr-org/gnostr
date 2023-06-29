@@ -1,0 +1,131 @@
+name: pre-release-matrix
+
+# Controls when the action will run.
+on:
+  pull_request:
+    branches:
+      - 'master'
+      - 'main'
+      - '!v**'
+#  push:
+#    branches:
+#      - 'master'
+#      - 'main'
+#      - '!v**'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    env:
+      GNOSTR: "gnostr"
+      GNOSTR_ACT: "gnostr-act"
+      GNOSTR_CAT: "gnostr-cat"
+      GNOSTR_CLI: "gnostr-cli"
+      GNOSTR_CLIENT: "gnostr-client"
+      GNOSTR_COMMAND: "gnostr-command"
+      GNOSTR_FS: "gnostr-fs"
+      GNOSTR_GIT: "gnostr-git"
+      GNOSTR_GNODE: "gnostr-gnode"
+      GNOSTR_LEGIT: "gnostr-legit"
+      GNOSTR_LFS: "gnostr-lfs"
+      GNOSTR_PROXY: "gnostr-proxy"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+          all_but_latest: true
+      - name: Restore deps
+        id: cache-pre-release-deps-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            $HOME/.cargo/bin
+            CMakeFiles/*.dir
+            ~/.rustup
+          key: ${{ runner.os }}-pre-release-deps
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+
+      - uses: actions-rs/toolchain@v1.0.6
+        #if: ${{ !env.ACT }}
+        with:
+          toolchain: nightly
+          default: true
+          override: true
+
+      - name: echo GNOSTR
+        #if: ${{ !env.ACT }}
+        run: |
+          echo $GNOSTR
+          touch ~/GITHUB_TOKEN.txt
+
+      - name:  apt-get update || brew install virtualenv
+        run: |
+          sudo apt-get update && sudo apt-get install virtualenv || brew install virtualenv
+          touch ~/GITHUB_TOKEN.txt
+
+      - run: python3 -m pip install virtualenv
+
+        #- run: cargo install --force gnostr-cat
+        #- run: cargo install --force gnostr-cli
+        #- run: cargo install --force gnostr-command
+        #- run: cargo install --force gnostr-legit
+        #- run: cargo install --force gnostr-sha256
+        #- run: date +%s > APP_KEY && gnostr-sha256 $(cat APP_KEY)
+      - run: V=1 make install
+
+      - name: "Build release"
+        run: |
+          ls -a
+
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }}
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ matrix.os }}
+          prerelease: true
+          title: "Pre-Release Build"
+          files: |
+            gnostr-*
+            $HOME/.cargo/bin/gnostr-cat
+            $HOME/.cargo/bin/gnostr-cli
+            $HOME/.cargo/bin/gnostr-command
+            $HOME/.cargo/bin/gnostr-legit
+            $HOME/.cargo/bin/gnostr-sha256
+
+      - name: Save deps
+        id: cache-pre-release-deps-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            $HOME/.cargo/bin
+            CMakeFiles/*.dir
+            ~/.rustup
+          key: ${{ steps.cache-pre-release-deps-restore.outputs.cache-primary-key }}
