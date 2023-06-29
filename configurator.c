@@ -37,11 +37,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _MSC_VER
-#define sleep Sleep
-#else
 #include <unistd.h>
-#endif
 
 #ifdef _MSC_VER
 #define popen _popen
@@ -59,7 +55,7 @@
 	"-D_CRT_NONSTDC_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS"
 #define DEFAULT_OUTPUT_EXE_FLAG "-Fe:"
 #else
-#define DEFAULT_COMPILER "cc"
+#define DEFAULT_COMPILER "gcc"
 #define DEFAULT_FLAGS "-g3 -ggdb -Wall -Wundef -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wold-style-definition"
 #define DEFAULT_OUTPUT_EXE_FLAG "-o"
 #endif

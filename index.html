@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<p>nostril(1)</p>
+<h1 id="name">NAME</h1>
+<p>nostril - generate nostr events</p>
+<h1 id="synposis">SYNPOSIS</h1>
+<p><em>nostril</em> [OPTIONS…]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p><em>nostril</em> is a tool that creates and signs nostr events.</p>
+<h1 id="options">OPTIONS</h1>
+<p><em>–content</em> The text contents of the note</p>
+<p><em>–dm</em> <hex pubkey> Create a direct message. This will create a
+kind-4 note with the contents encrypted&gt;</p>
+<p><em>–envelope</em> Wrap the event with <code>["EVENT", ... ]</code>
+for easy relaying</p>
+<p><em>–kind</em> <number> Set the kind of the note</p>
+<p><em>–created-at</em> <unix timestamp> Set the created at. Optional,
+this is set automatically.</p>
+<p><em>–mine-pubkey</em> Mine a pubkey. This may or may not be
+cryptographically dubious.</p>
+<p><em>–pow</em> <difficulty> Number of leading 0 bits of the id the
+mine for proof-of-work.</p>
+<p><em>–tag</em> <key> <value> Add a tag with a single value</p>
+<p><em>-t</em> Shorthand for –tag t <hashtag></p>
+<p><em>-p</em> Shorthand for –tag p <hex pubkey></p>
+<em>-e</em> Shorthand for –tag e
+<note id>
+<h1 id="examples">Examples</h1>
+<p><em>Generate an event</em></p>
+<pre><code>$ ./nostril --sec &lt;key&gt; --content &quot;this is a message&quot;
+{
+    &quot;id&quot;: &quot;da9c36bb8206e748cf136af2a43613a5ee113cb5906a09a8d3df5386039d53ab&quot;,
+    &quot;pubkey&quot;: &quot;4f6fa8547cf2888415522918175ea0bc0eb473287c5bd7cc459ca440bdf87d97&quot;,
+    &quot;created_at&quot;: 1660750302,
+    &quot;kind&quot;: 1,
+    &quot;tags&quot;: [],
+    &quot;content&quot;: &quot;this is a message&quot;,
+    &quot;sig&quot;: &quot;3e4d7d93522e54f201a22944d4d37eb4505ef1cf91c278a3f7d312b772a6c6509d1e11f146d5a003265ae10411a20057bade2365501872d2f2f24219730eed87&quot;
+}</code></pre>
+<p><em>Wrap event to send to a relay</em></p>
+<pre><code>$ ./nostril --envelope --sec &lt;key&gt; --content &quot;hello&quot;
+[ &quot;EVENT&quot;,
+{
+    &quot;id&quot;: &quot;ed378d3fdda785c091e9311c6e6eeb075db349a163c5e38de95946f6013a8001&quot;,
+    &quot;pubkey&quot;: &quot;fd3fdb0d0d8d6f9a7667b53211de8ae3c5246b79bdaf64ebac849d5148b5615f&quot;,
+    &quot;created_at&quot;: 1649948103,
+    &quot;kind&quot;: 1,
+    &quot;tags&quot;: [],
+    &quot;content&quot;: &quot;hello&quot;,
+    &quot;sig&quot;: &quot;9d9a49bbc66d4782030b24c71416965e790214d02a54ab132d960c2b02def0371c3d93e5a60a285c55e99721599d1332450731e2c6bb1114b96b591c6967f872&quot;
+} ]</code></pre>
+<p><em>Send to a relay</em></p>
+<pre><code>nostril --envelope --sec &lt;key&gt; --content &quot;this is a message&quot; | websocat wss://relay.damus.io</code></pre>
+<p><em>Send a nip04 DM</em></p>
+<pre><code>nostril --envelope --dm &lt;pubkey&gt; --sec &lt;key&gt; --content &quot;this is a secret&quot; | websocat wss://relay.damus.io</code></pre>
+<p><em>Mine a pubkey</em></p>
+<pre><code>nostril --mine-pubkey --pow &lt;difficulty&gt;</code></pre>
+<p><em>Reply to an event. nip10 compliant, includes the
+<code>thread_id</code></em></p>
+<pre><code>./nostril --envelope --sec &lt;key&gt; --content &quot;this is reply message&quot; --tag e &lt;thread_id&gt; --tag e &lt;note_id&gt; | websocat wss://relay.damus.io</code></pre>
+</body>
+</html>

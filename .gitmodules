@@ -1,3 +1,28 @@
 [submodule "deps/secp256k1"]
 	path = deps/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1
+	branch = master
+	ignore = dirty
+[submodule "deps/nostcat"]
+	path = deps/nostcat
+    url = git@github.com:gnostr-org/nostcat.git
+	ignore = dirty
+[submodule "deps/git"]
+	path = deps/git
+	url = git@github.com:gnostr-org/git.git
+	ignore = dirty
+[submodule "deps/tcl"]
+	path = deps/tcl
+	url = git@github.com:gnostr-org/tcl.git
+	ignore = dirty
+[submodule "deps/jq"]
+	path = deps/jq
+	url = git@github.com:gnostr-org/jq.git
+	ignore = dirty
+[submodule "deps/hyper-nostr"]
+	path = deps/hyper-nostr
+	url = git@github.com:gnostr-org/hyper-nostr.git
+	ignore = dirty
+[submodule "deps/openssl"]
+	path = deps/openssl
+	url = git@github.com:gnostr-org/openssl.git
