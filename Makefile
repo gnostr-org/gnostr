@@ -77,7 +77,7 @@ deps/secp256k1/config.log: deps/secp256k1/configure
 deps/secp256k1/.libs/libsecp256k1.a: deps/secp256k1/config.log
 	cd deps/secp256k1 && \
 		make -j && make install #libsecp256k1.a
-.PHONY:libsecp256k1.a
+#.PHONY:libsecp256k1.a
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 ##libsecp256k1.a
@@ -88,7 +88,7 @@ libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 
 deps/jq/.git:
 	@devtools/refresh-submodules.sh $(SUBMODULES)
-.PHONY:deps/jq/.libs/libjq.a
+#.PHONY:deps/jq/.libs/libjq.a
 deps/jq/.libs/libjq.a:deps/jq/.git
 	cd deps/jq && \
 		autoreconf -fi && ./configure  --disable-maintainer-mode &&  make install
