@@ -4,7 +4,10 @@ KEYS
 *.o
 /.direnv/
 .privenv
+
 gnostr
+gnostr-git
+
 /result
 configurator.out*
 configurator
