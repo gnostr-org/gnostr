@@ -2,6 +2,7 @@ CFLAGS = -Wall -O2 -Ideps/secp256k1/include
 LDFLAGS = -Wl -V
 OBJS = sha256.o gnostr.o aes.o base64.o
 GNOSTR_GIT_OBJS = sha256.o aes.o base64.o gnostr-git.o
+GNOSTR_RELAY_OBJS = sha256.o aes.o base64.o gnostr-relay.o
 HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
 export PREFIX
@@ -17,8 +18,7 @@ TAR:=$(shell which tar)
 export TAR
 
 ##all:
-##	gnostr docs
-all: gnostr gnostr-git docs## 	make gnostr docs
+all: gnostr gnostr-git gnostr-relay docs## 	make gnostr gnostr-git gnostr-relay docs
 
 ##docs:
 ##	doc/gnostr.1 docker-start
@@ -155,6 +155,10 @@ gnostr-git:initialize $(HEADERS) $(GNOSTR_GIT_OBJS) $(ARS)## 	make gnostr-git
 ##gnostr-git
 	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_GIT_OBJS) $(ARS) -o $@
+gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
+##gnostr-relay
+	git submodule update --init --recursive
+	$(CC) $(CFLAGS) $(GNOSTR_RELAY_OBJS) $(ARS) -o $@
 
 ##install all
 ##	install docs/gnostr.1 gnostr gnostr-query
@@ -163,9 +167,8 @@ install: all## 	install docs/gnostr.1 gnostr gnostr-query
 	@install -m644 doc/gnostr.1 $(PREFIX)/share/man/man1/gnostr.1
 	@install -m755 gnostr $(PREFIX)/bin/gnostr
 	@install -m755 gnostr-git $(PREFIX)/bin/gnostr-git
-#set PREFIX=/usr/local; for f in .gnostr/gnostr-*; do install ${f} $PREFIX/bin/; done;
+	@install -m755 gnostr-relay $(PREFIX)/bin/gnostr-relay
 	bash -c "for f in template/gnostr-*; do echo ${f}; done;"
-	#bash -c "for f in .gnostr/gnostr-*; do install ${f} ${PREFIX}/bin/; done;"
 
 .PHONY:config.h
 config.h: configurator
