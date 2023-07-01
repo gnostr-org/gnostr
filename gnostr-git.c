@@ -95,6 +95,8 @@ struct args {
 	const char *hash;
 	const char *tags;
 	const char *content;
+	const char *commit;
+	const char *blob;
 
 	uint64_t created_at;
 };
@@ -110,6 +112,8 @@ struct nostr_event {
 	unsigned char sig[64];
 
 	const char *content;
+	const char *commit;
+	const char *blob;
 
 	uint64_t created_at;
 	int kind;
@@ -144,7 +148,7 @@ void openssl_hash(int argc, const char *argv){
 
 void about()
 {
-	printf("gnostr-git: gnostr git interface.\n");
+	printf("gnostr-git: the gnostr git command line interface..\n");
 	exit(0);
 }
 void version()
@@ -158,6 +162,11 @@ void usage()
 	printf("\n");
 	printf("  GIT OPTIONS\n");
 	printf("\n");
+	printf("      --commit <string>               a git commit\n");
+	printf("      --content <string>              the content of a blob\n");
+	printf("      --blob <string>                 the id of a blob\n");
+	printf("\n");
+	printf("      --hash <value>                  return sha256 of <value>\n");
 	printf("\n");
 	exit(0);
 }
