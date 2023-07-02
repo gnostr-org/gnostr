@@ -45,7 +45,7 @@ jobs:
       - name: printenv
         run: |
           printenv && sudo apt-get update && \
-          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
+          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext libcurl4-openssl-dev
           touch ~/GH_ACT_TOKEN.txt
 
       - name: deps/git
