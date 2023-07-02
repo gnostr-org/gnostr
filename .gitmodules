@@ -43,3 +43,6 @@
 [submodule "deps/act"]
 	path = deps/act
 	url = https://github.com/gnostr-org/act.git
+	branch = 310cb79
+	ignore = dirty
+	shallow = true

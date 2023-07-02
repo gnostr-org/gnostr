@@ -53,9 +53,12 @@ jobs:
       - name: make submodules
         run: |
           make submodules
-      - name: make initialize
+      - name: make act-install
         run: |
-          make initialize
+          make act-install
+      #- name: make gnostr
+      #  run: |
+      #    make gnostr
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
