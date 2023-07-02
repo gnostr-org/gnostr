@@ -152,7 +152,7 @@ nostcat:deps/nostcat/target/release/nostcat## 	nostcat
 ##initialize
 ##	git submodule update --init --recursive
 initialize:## 	ensure submodules exist
-	git submodule update --init --recursive
+	#git submodule update --init --recursive
 gnostr:initialize $(HEADERS) $(OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
