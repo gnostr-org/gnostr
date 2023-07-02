@@ -18,7 +18,7 @@
 	shallow = true
 [submodule "deps/tcl"]
 	path = deps/tcl
-	url = https://@github.com/gnostr-org/tcl.git
+	url = https://github.com/gnostr-org/tcl.git
 	branch = master
 	ignore = dirty
 	shallow = true
