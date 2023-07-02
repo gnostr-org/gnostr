@@ -139,8 +139,16 @@ void openssl_hash(int argc, const char *argv, struct args *args){
 
 	char command[128];
 	//char target[128];
-
+	
+	printf("143:argv=%s", argv);
+	printf("143:argc=%d", argc);
+	printf("145:args->hash=%s", args->hash);
 	args->hash = argv++; argc--;
+	printf("146:argv=%s", argv);
+	printf("147:argc=%d", argc);
+	printf("148:args->hash=%s", args->hash);
+	exit(0);
+
 	if (args->hash){
 		strcpy(command, "echo");
 		strcat(command, " ");
@@ -173,7 +181,7 @@ void openssl_hash(int argc, const char *argv, struct args *args){
 
 void about()
 {
-	printf("gnostr-git: the gnostr git command line interface..\n");
+	printf("gnostr-xor: the gnostr xor utility.\n");
 	exit(0);
 }
 void version()
@@ -187,8 +195,9 @@ void usage()
 	printf("\n");
 	printf("  XOR OPTIONS\n");
 	printf("\n");
-	printf("      --hash <value>                  return sha256 of <value>\n");
-	printf("      --xor <value> <value>           return sha256 of <value>\n");
+	printf("      --help                          \n");
+	printf("      --about                         \n");
+	printf("      --xor <value> <value>           return xor of <value>\n");
 	printf("\n");
 	exit(0);
 }
@@ -226,31 +235,36 @@ static int nostr_add_tag(struct nostr_event *ev, const char *t1, const char *t2)
 
 static int parse_args(int argc, const char *argv[], struct args *args, struct nostr_event *ev)
 {
-	const char *arg, *arg2, arg3;
-	uint64_t n;
-	int has_added_tags = 0;
 
+	printf("argv=%s\n", *argv);
+	printf("argc=%d\n", argc);
 	argv++; argc--;
+	printf("argv=%s\n", *argv);
+	printf("argc=%d\n", argc);
+	exit(0);
+
 	for (; argc; ) {
 		//args->arg1 = *argv++; argc--;
 		//args->arg2 = *argv++; argc--;
-		arg = *argv++; argc--;
+		//arg = *argv++; argc--;
 
-		if (!strcmp(arg, "--help") | !strcmp(arg, "-h")) { usage(); }
+		if (!strcmp(*argv, "--help")  | !strcmp(*argv, "-h")) { usage(); exit(0); }
 
-		if (!strcmp(arg, "--xor")){
+		if (!strcmp(*argv, "--about") | !strcmp(*argv, "-a")) { about(); exit(0); }
+
+		if (!strcmp(*argv, "--xor")){
 
 			char *result[512]={0x0};
-			args->xor_result = result;
+			args->xor_result = (char *)result;
 			openssl_hash(argc, *argv++, args);
 			openssl_hash(argc, *argv++, args);
-			int i;
-			for (i = 0; i < sizeof(result); i++)
-				//printf("i=%d\n", i);
-				//printf("arg1[i]=%d\n", args->arg1[i]);
-				//printf("arg2[i]=%d\n", args->arg2[i]);
-				args->xor_result[i] = args->arg1[i] ^ args->arg2[i];
-				printf("xor_result[i]=%c\n", args->xor_result[i]);
+			//int i;
+			//for (i = 0; i < sizeof(result); i++)
+			//	//printf("i=%d\n", i);
+			//	//printf("arg1[i]=%d\n", args->arg1[i]);
+			//	//printf("arg2[i]=%d\n", args->arg2[i]);
+			//	args->xor_result[i] = args->arg1[i] ^ args->arg2[i];
+			//	printf("xor_result[i]=%c\n", args->xor_result[i]);
 
 			printf("xor_result=%s", args->xor_result);
 
@@ -258,7 +272,7 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 		}
 
 		if (!argc) {
-			fprintf(stderr, "expected argument: '%s'\n", arg);
+			fprintf(stderr, "expected argument: '%s'\n", *argv);
 			return 0;
 		}
 	}
