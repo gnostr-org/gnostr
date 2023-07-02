@@ -3,26 +3,40 @@
 	url = https://github.com/bitcoin-core/secp256k1
 	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/nostcat"]
 	path = deps/nostcat
-    url = git@github.com:gnostr-org/nostcat.git
+    url = https://github.com/gnostr-org/nostcat.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/git"]
 	path = deps/git
-	url = git@github.com:gnostr-org/git.git
+	url = https://github.com/gnostr-org/git.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/tcl"]
 	path = deps/tcl
-	url = git@github.com:gnostr-org/tcl.git
+	url = https://@github.com/gnostr-org/tcl.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/jq"]
 	path = deps/jq
-	url = git@github.com:gnostr-org/jq.git
+	url = https://github.com/gnostr-org/jq.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/hyper-nostr"]
 	path = deps/hyper-nostr
-	url = git@github.com:gnostr-org/hyper-nostr.git
+	url = https://github.com/gnostr-org/hyper-nostr.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/openssl"]
 	path = deps/openssl
-	url = git@github.com:gnostr-org/openssl.git
+	url = https://github.com/gnostr-org/openssl.git
+	branch = master
+	ignore = dirty
+	shallow = true
