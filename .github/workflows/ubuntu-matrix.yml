@@ -40,22 +40,23 @@ jobs:
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps/git
+            deps
           key: ${{ runner.os }}-deps
 
-      - name: apt-get update
+      - name: apt-get update and install
         run: |
+          printenv
           apt-get update && apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext libcurl4-openssl-dev
           touch ~/GH_ACT_TOKEN.txt
-      - name: make libgit.a
+      - name: make submodules all
         run: |
-          make submodules libgit.a
+          make submodules all
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
         #if: ${{ !env.ACT }}
         with:
           path: |
-            deps/git
+            deps
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
