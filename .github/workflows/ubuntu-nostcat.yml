@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: ubuntu-nostcat
 
 # Controls when the action will run.
 on:
@@ -49,7 +49,7 @@ jobs:
       - name: rustup
         run: |
           printenv && sudo apt-get update && \
-          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
+          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext libcurl4-openssl-dev
           touch ~/GH_ACT_TOKEN.txt
           rustup default stable
           source "$HOME/.cargo/env"

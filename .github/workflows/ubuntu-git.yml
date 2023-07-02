@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: ubuntu-git
 
 # Controls when the action will run.
 on:
@@ -47,7 +47,7 @@ jobs:
         run: |
           printenv
           sudo apt-get update
-          sudo apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
+          apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext libcurl4-openssl-dev
           touch ~/GH_ACT_TOKEN.txt
       - name: make libgit.a
         run: |
