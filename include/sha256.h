@@ -1,4 +1,3 @@
-
 #ifndef CCAN_CRYPTO_SHA256_H
 #define CCAN_CRYPTO_SHA256_H
 

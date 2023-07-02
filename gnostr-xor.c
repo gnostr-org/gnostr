@@ -13,13 +13,21 @@
 #include "secp256k1_ecdh.h"
 #include "secp256k1_schnorrsig.h"
 
-#include "cursor.h"
-#include "hex.h"
-#include "base64.h"
-#include "aes.h"
-#include "sha256.h"
-#include "random.h"
-#include "proof.h"
+#include "include/cursor.h"
+#include "include/hex.h"
+#include "include/base64.h"
+#include "include/aes.h"
+#include "include/sha256.h"
+#include "include/random.h"
+#ifndef PROOF_H
+#include "include/proof.h"
+#endif
+
+#ifndef STRUCT_ARGS_H
+#include "include/struct_args.h"
+#endif
+#include "include/openssl_hash.h"
+#include "include/xor_hash.h"
 
 #define VERSION "0.0.0"
 
@@ -86,25 +94,6 @@ struct key {
 	unsigned char pubkey[32];
 };
 
-struct args {
-	unsigned int flags;
-	int kind;
-	int difficulty;
-
-	unsigned char encrypt_to[32];
-	const char *sec;
-	const char *hash;
-	const char *arg1;
-	const char *arg2;
-	      char *xor_result;
-	const char *tags;
-	const char *content;
-	const char *commit;
-	const char *blob;
-
-	uint64_t created_at;
-};
-
 struct nostr_tag {
 	const char *strs[MAX_TAG_ELEMS];
 	int num_elems;
@@ -135,31 +124,117 @@ static inline void xor_mix(unsigned char *dest, const unsigned char *a, const un
         dest[i] = a[i] ^ b[i];
 }
 
-void openssl_hash(int argc, const char *argv, struct args *args){
 
-	char command[128];
+//void openssl_hash(int argc, const char *argv, struct args *args){
+//
+//	char command[128];
+//	//char target[128];
+//	//struct args args = {0};
+//
+//	args->hash = argv++; argc--;
+//	if (args->hash){
+//		strcpy(command, "echo");
+//		strcat(command, " ");
+//		strcat(command, args->hash);
+//		strcat(command, "|");
+//		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+//		system(command);
+//		exit(0);
+//	}else{
+//		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+//		system(command);
+//		exit(0);
+//	}
+//}
+//void openssl_hash(int argc, const char *argv, struct args *args){
+//
+//	//char command[128];
+//	char command[256];
+//	int len;
+//	//char target[128];
+//	//struct args args = {0};
+//	
+//	//TODO:
+//	//assert sha256(0000000000000000000000000000000000000000000000000000000000000000000000) = 2f4b4c41017a2ddd1cc8cd75478a82e9452e445d4242f09782535376d6f4ba50
+//	//
+//	args->hash = argv;
+//	
+//
+//	args->arg1 = (char *)argv++; argc--;
+//	len = strlen(args->arg1);
+//	if( args->arg1[len-1] == '\n' ){
+//		args->arg1[len-1] = '\0';
+//		//memset(args->arg1, 0, sizeof(&args->arg1));
+//		//memset(&args->arg1, 0, sizeof(args->arg1));
+//		printf("len=%d\n", len);
+//		printf("args->arg1[len-1]=%d\n", args->arg1[len-1]);
+//		printf("args->arg1=%s\n", args->arg1);
+//	}else{
+//		
+//		printf("len=%d\n", len);
+//		printf("args->arg1[len-1]=%d\n", args->arg1[len-1]);
+//		printf("args->arg1=%s\n", args->arg1);
+//
+//	}
+//
+//	if (args->hash){
+//		strcpy(command, "echo");
+//		strcat(command, " ");
+//		strcat(command, argv++);
+//		strcat(command, "|");
+//		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+//		system(command);
+//		exit(0);
+//	}else{
+//		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+//		system(command);
+//		exit(0);
+//	}
+//}
+
+void hash_xor(int argc, const char *argv, struct args *args){
+
+	char command[512];
 	//char target[128];
 	
-	printf("143:argv=%s", argv);
-	printf("143:argc=%d", argc);
-	printf("145:args->hash=%s", args->hash);
-	args->hash = argv++; argc--;
-	printf("146:argv=%s", argv);
-	printf("147:argc=%d", argc);
-	printf("148:args->hash=%s", args->hash);
-	exit(0);
-
-	if (args->hash){
-		strcpy(command, "echo");
-		strcat(command, " ");
-		strcat(command, args->hash);
-		strcat(command, "|");
-		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
-		//system(command);
-	}else{
-		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
-		//system(command);
+	printf("144:argv=%s\n", argv);
+	//printf("143:argc=%d\n", argc);
+	//printf("145:args->hash=%s\n", args->hash);
+	//args->hash = argv++; argc--;
+	//printf("146:argv=%s\n", argv);
+	//printf("147:argc=%d\n", argc);
+	//printf("148:args->hash=%s\n", args->hash);
+	//exit(0);
+	if (!strcmp(argv, "--hash")) {
+		
+		printf("154:args->hash=%s\n", args->hash);
+		args->hash = argv++; argc--;
+		printf("156:args->hash=%s\n", args->hash);
+		args->hash = argv++;
+		args->hash = argv++;
+		args->hash = argv++;
+		args->hash = argv++;
+		args->hash = argv++;
+		args->hash = argv++;
+		args->hash = argv++;
+		args->hash = argv++;
+		printf("165:args->hash=%s\n", args->hash);
+		if (args->hash){
+		
+			strcpy(command, "echo");
+			strcat(command, " ");
+			strcat(command, args->hash);
+			strcat(command, "|");
+			strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+			system(command);
+		
+		}else{
+			strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+			system(command);
+		}
 	}
+
+	if (!strcmp(argv, "--xor")  | !strcmp(argv, "-xor")) {
 
 	FILE *cmd=popen(command, "r");
 			char result[512]={0x0};
@@ -176,7 +251,9 @@ void openssl_hash(int argc, const char *argv, struct args *args){
 			while (fgets((char *)args->arg2, sizeof(result2), cmd2) !=NULL)
 				printf("args->arg2=%s", args->arg2);
 				pclose(cmd2);
+	
 
+	}
 }
 
 void about()
@@ -236,38 +313,62 @@ static int nostr_add_tag(struct nostr_event *ev, const char *t1, const char *t2)
 static int parse_args(int argc, const char *argv[], struct args *args, struct nostr_event *ev)
 {
 
-	printf("argv=%s\n", *argv);
-	printf("argc=%d\n", argc);
-	argv++; argc--;
-	printf("argv=%s\n", *argv);
-	printf("argc=%d\n", argc);
-	exit(0);
+	//printf("argv=%s\n", *argv);
+	//printf("argc=%d\n", argc);
+	//argv++; argc--;
+	//printf("argv=%s\n", *argv);
+	//printf("argc=%d\n", argc);
+	//exit(0);
+
+	argv++; argc--;//pop gnostr-xor argument
 
 	for (; argc; ) {
 		//args->arg1 = *argv++; argc--;
 		//args->arg2 = *argv++; argc--;
 		//arg = *argv++; argc--;
 
-		if (!strcmp(*argv, "--help")  | !strcmp(*argv, "-h")) { usage(); exit(0); }
+		if (!strcmp(*argv, "--help")  | !strcmp(*argv, "-h")) { usage(); exit(0); };
 
-		if (!strcmp(*argv, "--about") | !strcmp(*argv, "-a")) { about(); exit(0); }
+		if (!strcmp(*argv, "--about") | !strcmp(*argv, "-a")) { about(); exit(0); };
+
+		if (!strcmp(*argv, "--hash")){
+
+			//printf("302:argv=%s\n", *argv);
+			args->hash = *argv++;
+			//printf("304:argv=%s\n", *argv);
+			openssl_hash(argc, *argv, args);
+
+		};
+		//no argv++ increment to preserve if --hash logic
+		//when sending to openssl_hash function
 
 		if (!strcmp(*argv, "--xor")){
 
-			char *result[512]={0x0};
+			char *result[512]={0x0};//ensure size
 			args->xor_result = (char *)result;
-			openssl_hash(argc, *argv++, args);
-			openssl_hash(argc, *argv++, args);
+			args->arg1 = (char *)result;
+			args->arg2 = (char *)result;
+			openssl_hash(argc, *argv, args);
+			openssl_hash(argc, *argv, args);
+
 			//int i;
 			//for (i = 0; i < sizeof(result); i++)
-			//	//printf("i=%d\n", i);
-			//	//printf("arg1[i]=%d\n", args->arg1[i]);
-			//	//printf("arg2[i]=%d\n", args->arg2[i]);
+			//{
+			//	printf("i=%d\n", i);
+			//	printf("arg1[i]=%d\n", args->arg1[i]);
+			//	printf("arg2[i]=%d\n", args->arg2[i]);
+			//	printf("xor_result[i]=%c\n", args->xor_result[i]);
 			//	args->xor_result[i] = args->arg1[i] ^ args->arg2[i];
 			//	printf("xor_result[i]=%c\n", args->xor_result[i]);
+			//}
 
-			printf("xor_result=%s", args->xor_result);
+			printf("args->hash=%s\n", args->hash);
+			printf("args->arg1=%s\n", args->arg1);
+			printf("args->arg2=%s\n", args->arg2);
+			printf("xor_result=%s\n", args->xor_result);
 
+			exit(0);
+		}else{
 			exit(0);
 		}
 

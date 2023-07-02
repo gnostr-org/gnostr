@@ -1,3 +1,5 @@
+#ifndef HEX_H
+#define HEX_H
 
 static inline int char_to_hex(unsigned char *val, char c)
 {
@@ -66,4 +68,4 @@ static inline int hex_encode(const void *buf, size_t bufsize, char *dest, size_t
 
 	return 1;
 }
-
+#endif

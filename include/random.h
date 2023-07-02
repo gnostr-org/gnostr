@@ -1,3 +1,5 @@
+#ifndef RANDOM_H
+#define RANDOM_H
 /*************************************************************************
  * Copyright (c) 2020-2021 Elichai Turkel                                *
  * Distributed under the CC0 software license, see the accompanying file *
@@ -20,6 +22,7 @@
 #include <windows.h>
 #include <ntstatus.h>
 #include <bcrypt.h>
+#include <string>
 #elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/random.h>
 #elif defined(__OpenBSD__)
@@ -70,3 +73,4 @@ static void print_hex(unsigned char* data, size_t size) {
     }
     fprintf(stderr, "\n");
 }
+#endif

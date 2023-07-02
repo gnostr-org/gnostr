@@ -13,13 +13,15 @@
 #include "secp256k1_ecdh.h"
 #include "secp256k1_schnorrsig.h"
 
-#include "cursor.h"
-#include "hex.h"
-#include "base64.h"
-#include "aes.h"
-#include "sha256.h"
-#include "random.h"
-#include "proof.h"
+#include "include/cursor.h"
+#include "include/hex.h"
+#include "include/base64.h"
+#include "include/aes.h"
+#include "include/sha256.h"
+#include "include/random.h"
+#include "include/proof.h"
+
+#include "include/openssl_hash.h"
 
 #define VERSION "0.0.0"
 
@@ -85,20 +87,6 @@ struct key {
 	unsigned char pubkey[32];
 };
 
-struct args {
-	unsigned int flags;
-	int kind;
-	int difficulty;
-
-	unsigned char encrypt_to[32];
-	const char *sec;
-	const char *hash;
-	const char *tags;
-	const char *content;
-
-	uint64_t created_at;
-};
-
 struct nostr_tag {
 	const char *strs[MAX_TAG_ELEMS];
 	int num_elems;
@@ -120,27 +108,27 @@ struct nostr_event {
 	int num_tags;
 };
 
-void openssl_hash(int argc, const char *argv){
-
-	char command[128];
-	char target[128];
-	struct args args = {0};
-
-	args.hash = argv++; argc--;
-	if (args.hash){
-		strcpy(command, "echo");
-		strcat(command, " ");
-		strcat(command, args.hash);
-		strcat(command, "|");
-		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
-		system(command);
-		exit(0);
-	}else{
-		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
-		system(command);
-		exit(0);
-	}
-}
+//void openssl_hash(int argc, const char *argv){
+//
+//	char command[128];
+//	char target[128];
+//	struct args args = {0};
+//
+//	args.hash = argv++; argc--;
+//	if (args.hash){
+//		strcpy(command, "echo");
+//		strcat(command, " ");
+//		strcat(command, args.hash);
+//		strcat(command, "|");
+//		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+//		system(command);
+//		exit(0);
+//	}else{
+//		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
+//		system(command);
+//		exit(0);
+//	}
+//}
 
 void about()
 {
@@ -525,7 +513,7 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 
 		if (!strcmp(arg, "--about") | !strcmp(arg, "-a")) { about(); }
 
-		if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv); }
+		if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv, args); }
 
 		if (!argc) {
 			fprintf(stderr, "expected argument: '%s'\n", arg);

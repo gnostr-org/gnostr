@@ -13,13 +13,13 @@
 #include "secp256k1_ecdh.h"
 #include "secp256k1_schnorrsig.h"
 
-#include "cursor.h"
-#include "hex.h"
-#include "base64.h"
-#include "aes.h"
-#include "sha256.h"
-#include "random.h"
-#include "proof.h"
+#include "include/cursor.h"
+#include "include/hex.h"
+#include "include/base64.h"
+#include "include/aes.h"
+#include "include/sha256.h"
+#include "include/random.h"
+#include "include/proof.h"
 
 #define VERSION "0.0.0"
 

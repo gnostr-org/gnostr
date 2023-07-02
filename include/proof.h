@@ -1,3 +1,5 @@
+#ifndef PROOF_H
+#define PROOF_H
 static inline int zero_bits(unsigned char b)
 {
 	int n = 0;
@@ -24,3 +26,4 @@ static int count_leading_zero_bits(unsigned char *hash)
 	}
 	return total;
 }
+#endif
