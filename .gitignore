@@ -8,6 +8,9 @@ KEYS
 gnostr
 gnostr-git
 gnostr-relay
+gnostr-xor
+
+a.out
 
 /result
 configurator.out*
