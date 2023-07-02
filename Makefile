@@ -19,7 +19,7 @@ TAR:=$(shell which tar)
 export TAR
 
 ##all:
-all: gnostr gnostr-git gnostr-relay docs## 	make gnostr gnostr-git gnostr-relay docs
+all: gnostr gnostr-git gnostr-relay gnostr-xor docs## 	make gnostr gnostr-git gnostr-relay gnostr-xor docs
 
 ##docs:
 ##	doc/gnostr.1 docker-start
@@ -174,12 +174,13 @@ gnostr-xor: $(HEADERS) $(GNOSTR_XOR_OBJS) $(ARS)## 	make gnostr-xor
 
 ##install all
 ##	install docs/gnostr.1 gnostr gnostr-query
-install: all## 	install docs/gnostr.1 gnostr gnostr-query
+install: all## 	install docs/gnostr.1 gnostr gnostr-query gnostr-relay gnostr-xor
 	@mkdir -p $(PREFIX)/bin
 	@install -m644 doc/gnostr.1 $(PREFIX)/share/man/man1/gnostr.1
 	@install -m755 gnostr $(PREFIX)/bin/gnostr
 	@install -m755 gnostr-git $(PREFIX)/bin/gnostr-git
 	@install -m755 gnostr-relay $(PREFIX)/bin/gnostr-relay
+	@install -m755 gnostr-xor $(PREFIX)/bin/gnostr-xor
 	bash -c "for f in template/gnostr-*; do echo ${f}; done;"
 
 .PHONY:config.h
