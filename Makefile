@@ -3,6 +3,7 @@ LDFLAGS = -Wl -V
 OBJS = sha256.o gnostr.o aes.o base64.o
 GNOSTR_GIT_OBJS = sha256.o aes.o base64.o gnostr-git.o
 GNOSTR_RELAY_OBJS = sha256.o aes.o base64.o gnostr-relay.o
+GNOSTR_XOR_OBJS = gnostr-xor.o
 HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
 export PREFIX
@@ -152,14 +153,24 @@ gnostr:initialize $(HEADERS) $(OBJS) $(ARS)## 	make gnostr binary
 ##	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
 	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
+
 gnostr-git:initialize $(HEADERS) $(GNOSTR_GIT_OBJS) $(ARS)## 	make gnostr-git
 ##gnostr-git
 	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_GIT_OBJS) $(ARS) -o $@
+
 gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ##gnostr-relay
 	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_RELAY_OBJS) $(ARS) -o $@
+
+.PHONY:gnostr-xor
+gnostr-xor: $(HEADERS) $(GNOSTR_XOR_OBJS) $(ARS)## 	make gnostr-xor
+##gnostr-xor
+	echo $@
+	touch $@
+	rm -f $@
+	$(CC) $@.c -o $@
 
 ##install all
 ##	install docs/gnostr.1 gnostr gnostr-query
