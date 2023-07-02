@@ -138,7 +138,7 @@ static inline void xor_mix(unsigned char *dest, const unsigned char *a, const un
 void openssl_hash(int argc, const char *argv, struct args *args){
 
 	char command[128];
-	char target[128];
+	//char target[128];
 
 	args->hash = argv++; argc--;
 	if (args->hash){
@@ -148,26 +148,27 @@ void openssl_hash(int argc, const char *argv, struct args *args){
 		strcat(command, "|");
 		strcat(command, "openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
 		//system(command);
-		//FILE *cmd=popen(command, "r");
-		//		char result[128]={0x0};
-		//		while (fgets(result, sizeof(result), cmd) !=NULL)
-		//		printf("result=%s\n", result);
-		//		pclose(cmd);
 	}else{
 		strcpy(command, "0>/dev/null|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'");
 		//system(command);
 	}
-FILE *cmd=popen(command, "r");
-		char result[512]={0x0};
-		args->xor_result = result;
-		args->arg1 = result;
-		args->arg2 = result;
-		while (fgets((char *)args->arg1, sizeof(result), cmd) !=NULL)
-			printf("args->arg1=%s", args->arg1);
-			pclose(cmd);
-		while (fgets((char *)args->arg2, sizeof(result), cmd) !=NULL)
-			printf("args->arg2=%s", args->arg2);
-			pclose(cmd);
+
+	FILE *cmd=popen(command, "r");
+			char result[512]={0x0};
+			args->xor_result = result;
+			args->arg1 = result;
+			while (fgets((char *)args->arg1, sizeof(result), cmd) !=NULL)
+				printf("args->arg1=%s", args->arg1);
+				pclose(cmd);
+
+	FILE *cmd2=popen(command, "r");
+			char result2[512]={0x0};
+			args->xor_result = result;
+			args->arg2 = result;
+			while (fgets((char *)args->arg2, sizeof(result2), cmd2) !=NULL)
+				printf("args->arg2=%s", args->arg2);
+				pclose(cmd2);
+
 }
 
 void about()
@@ -239,15 +240,17 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 
 		if (!strcmp(arg, "--xor")){
 
-			char result[512]={0x0};
+			char *result[512]={0x0};
+			args->xor_result = result;
 			openssl_hash(argc, *argv++, args);
 			openssl_hash(argc, *argv++, args);
 			int i;
 			for (i = 0; i < sizeof(result); i++)
 				//printf("i=%d\n", i);
-				printf("arg1[i]=%d\n", args->arg1[i]);
-				printf("arg2[i]=%d\n", args->arg2[i]);
+				//printf("arg1[i]=%d\n", args->arg1[i]);
+				//printf("arg2[i]=%d\n", args->arg2[i]);
 				args->xor_result[i] = args->arg1[i] ^ args->arg2[i];
+				printf("xor_result[i]=%c\n", args->xor_result[i]);
 
 			printf("xor_result=%s", args->xor_result);
 
