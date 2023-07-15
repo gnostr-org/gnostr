@@ -184,9 +184,37 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
+
+    let event =
+        if cfg!(target_os = "windows") {
+        Command::new("cmd")
+                .args(["/C", "gnostr ","--sec", &hash])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "macos"){
+        Command::new("sh")
+                .args(["-c", "gnostr ", "--sec", &hash])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .args(["-c", "gnostr ", "--sec", &hash])
+                .output()
+                .expect("failed to execute process")
+        } else {
+        Command::new("sh")
+                .args(["-c", "gnostr ", "--sec", &hash])
+                .output()
+                .expect("failed to execute process")
+        };
+
+
     let duration = time::get_time() - start;
     println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
     Ok(())
+
 }
 
 fn parse_args_or_exit(opts: &mut gitminer::Options) {
