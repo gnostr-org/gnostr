@@ -184,31 +184,33 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
+    let gnostr_sec = format!("{:?}", &hash);
 
     let event =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "gnostr ","--hash", &hash])
+                .args(["/C", "gnostr ","--hash", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash", &hash])
+                .args(["-c", "gnostr ", "--hash", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash", &hash])
+                .args(["-c", "gnostr ", "--hash", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash", &hash])
+                .args(["-c", "gnostr ", "--hash", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         };
+
     let gnostr_event = String::from_utf8(event.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
