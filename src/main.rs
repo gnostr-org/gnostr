@@ -188,8 +188,11 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
-    let gnostr_sec = format!("{:?}", &hash);
+    let gnostr_sec = format!("{}", hash);
     println!("gnostr_sec={}", gnostr_sec);
+    println!("hash: {:?}", hash);
+    println!("sha256 before write: {:?}", &gnostr_sec);
+    println!("sha256 before write: {:?}", &gnostr_sec);
 
 // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
     let event =
