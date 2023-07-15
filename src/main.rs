@@ -188,8 +188,16 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
-    let gnostr_sec = format!("{}", &hash);
-    println!("gnostr_sec={}", gnostr_sec);
+    let mut hasher = Sha256::new();
+    hasher.update(&hash);
+    // `update` can be called repeatedly and is generic over `AsRef<[u8]>`
+    //hasher.update("String data");
+    // Note that calling `finalize()` consumes hasher
+    //let gnostr_sec = hasher.finalize();
+    let gnostr_sec: String = format!("{:X}", hasher.finalize());
+    //println!("Binary hash: {:?}", hash);
+    println!("hash: {:?}", hash);
+
     println!("hash: {:?}", hash);
     println!("sha256 before write: {:?}", &gnostr_sec);
     println!("sha256 before write: {:?}", &gnostr_sec);
