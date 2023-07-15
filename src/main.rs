@@ -185,7 +185,9 @@ fn main() -> io::Result<()> {
     };
 
     let gnostr_sec = format!("{:?}", &hash);
+    println!("gnostr_sec={}", gnostr_sec);
 
+// echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
     let event =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
