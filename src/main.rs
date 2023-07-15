@@ -54,20 +54,35 @@ fn main() -> io::Result<()> {
     //println!("repo_root={:?}", repo_root.as_str());
     let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
     //println!("{} state={:?}", repo.path().display(), repo.state());
-    //println!("state={:?}", repo.state());
+    println!("state={:?}", repo.state());
     if repo.state() != RepositoryState::Clean {
 
     //println!("clean {:?}", repo.state());
 
-    let repo_state = if cfg!(target_os = "windows") {
+    let repo_state =
+        if cfg!(target_os = "windows") {
         Command::new("cmd")
                 .args(["/C", "git status"])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "macos"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("git diff")
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("git diff")
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("git status")
+                .arg("git diff")
                 .output()
                 .expect("failed to execute process")
         };
@@ -106,20 +121,36 @@ fn main() -> io::Result<()> {
    //    }
    //}
 
-    let output = if cfg!(target_os = "windows") {
+
+    let output =
+        if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "echo hello"])
+                .args(["/C", "git status"])
                 .output()
                 .expect("failed to execute process")
-    } else {
+        } else
+        if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("git status")
+                .arg("git diff")
                 .output()
                 .expect("failed to execute process")
-    };
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("git diff")
+                .output()
+                .expect("failed to execute process")
+        } else {
+        Command::new("sh")
+                .arg("-c")
+                .arg("git diff")
+                .output()
+                .expect("failed to execute process")
+        };
 
-    let utf8_string = String::from_utf8(output.stdout)
+    let message = String::from_utf8(output.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
 
@@ -133,7 +164,7 @@ fn main() -> io::Result<()> {
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
         //message: "gnostr".to_string(),
-        message: utf8_string,
+        message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
         repo:    path.as_path().display().to_string(),
