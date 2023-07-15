@@ -16,7 +16,7 @@ use std::{io, thread};
 use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
 use git2::*;
-use crypto::sha2::Sha256;
+use sha2::{Sha256, Digest};
 
 mod worker;
 mod gitminer;
@@ -42,32 +42,41 @@ fn main() -> io::Result<()> {
 
     let start = time::get_time();
     let system_time = SystemTime::now();
-        //.duration_since(SystemTime::UNIX_EPOCH);
+
     let datetime: DateTime<Utc> = system_time.into();
-    println!("{}", datetime.format("%d/%m/%Y %T"));
+    //println!("{}", datetime.format("%d/%m/%Y %T/%s"));
+    //println!("{}", datetime.format("%d/%m/%Y %T"));
+
     let state = repo::state();
+    //println!("{:#?}", state);
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
     //println!("{}={}", type_of(count), (count as i32));
     //println!("{}={}", type_of(count), (count as i64));
-    let mut sha256 = Sha256::new();
-    //sha256.input_str(count);
-    //let ip_address_hash: String = format!("{:X}", sha256.finalize());
+    let mut hasher = Sha256::new();
+    let data = b"Hello world!";
+    hasher.update(data);
+    // `update` can be called repeatedly and is generic over `AsRef<[u8]>`
+    hasher.update("String data");
+    // Note that calling `finalize()` consumes hasher
+    let hash = hasher.finalize();
+    println!("Binary hash: {:?}", hash);
+
    let now = SystemTime::now();
 
-   // we sleep for 2 seconds
-   sleep(Duration::new(2, 0));
-    match now.elapsed() {
-       Ok(elapsed) => {
-           // it prints '2'
-           println!("{}", elapsed.as_secs());
-       }
-       Err(e) => {
-           // an error occurred!
-           println!("Error: {e:?}");
-       }
-   }
+   //// we sleep for 2 seconds
+   //sleep(Duration::new(2, 0));
+   // match now.elapsed() {
+   //    Ok(elapsed) => {
+   //        // it prints '2'
+   //        println!("{}", elapsed.as_secs());
+   //    }
+   //    Err(e) => {
+   //        // an error occurred!
+   //        println!("Error: {e:?}");
+   //    }
+   //}
 
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -82,12 +91,10 @@ fn main() -> io::Result<()> {
                 .expect("failed to execute process")
     };
 
-    //let hello = output.stdout;
-    //println!();
-    //let utf8_string = String::from_utf8(hello)
     let utf8_string = String::from_utf8(output.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
+
     let path = env::current_dir()?;
         //println!("The current directory is {}", path.display());
         //Ok(());
