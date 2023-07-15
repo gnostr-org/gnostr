@@ -104,7 +104,11 @@ fn main() -> io::Result<()> {
     hasher.update("String data");
     // Note that calling `finalize()` consumes hasher
     let hash = hasher.finalize();
-    println!("Binary hash: {:?}", hash);
+    //println!("Binary hash: {:?}", hash);
+    println!("hash: {:?}", hash);
+    println!("sha256 before write: {:x}", hash);
+    println!("sha256 before write: {:X}", hash);
+
 
    let now = SystemTime::now();
 
