@@ -48,13 +48,13 @@ fn main() -> io::Result<()> {
     //println!("{}", datetime.format("%d/%m/%Y %T"));
 
     let state = repo::state();
-    println!("{:#?}", state);
+    //println!("{:#?}", state);
     //
     let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
-    println!("repo_root={:?}", repo_root.as_str());
+    //println!("repo_root={:?}", repo_root.as_str());
     let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
-    println!("{} state={:?}", repo.path().display(), repo.state());
-    println!("state={:?}", repo.state());
+    //println!("{} state={:?}", repo.path().display(), repo.state());
+    //println!("state={:?}", repo.state());
     if repo.state() != RepositoryState::Clean {
 
     //println!("clean {:?}", repo.state());
