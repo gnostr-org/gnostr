@@ -188,7 +188,7 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
-    let gnostr_sec = format!("{}", hash);
+    let gnostr_sec = format!("{}", &hash);
     println!("gnostr_sec={}", gnostr_sec);
     println!("hash: {:?}", hash);
     println!("sha256 before write: {:?}", &gnostr_sec);
