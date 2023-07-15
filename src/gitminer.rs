@@ -124,6 +124,7 @@ impl Gitminer {
         Ok((tree_s, head_s))
     }
 
+    //repo status CLEAN not enough
     fn ensure_no_unstaged_changes(repo: &mut git2::Repository) -> Result<(), &'static str> {
         let mut opts = git2::StatusOptions::new();
         let mut m    = git2::Status::empty();

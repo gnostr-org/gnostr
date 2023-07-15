@@ -48,7 +48,35 @@ fn main() -> io::Result<()> {
     //println!("{}", datetime.format("%d/%m/%Y %T"));
 
     let state = repo::state();
-    //println!("{:#?}", state);
+    println!("{:#?}", state);
+    //
+    let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
+    println!("repo_root={:?}", repo_root.as_str());
+    let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
+    println!("{} state={:?}", repo.path().display(), repo.state());
+    println!("state={:?}", repo.state());
+    if repo.state() != RepositoryState::Clean {
+
+    //println!("clean {:?}", repo.state());
+
+    let repo_state = if cfg!(target_os = "windows") {
+        Command::new("cmd")
+                .args(["/C", "git status"])
+                .output()
+                .expect("failed to execute process")
+        } else {
+        Command::new("sh")
+                .arg("-c")
+                .arg("git status")
+                .output()
+                .expect("failed to execute process")
+        };
+
+    let state = String::from_utf8(repo_state.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+    println!("state={:?}", state);
+    }
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
