@@ -198,8 +198,8 @@ fn main() -> io::Result<()> {
     let gnostr_sec: String = format!("{:X}", hasher.finalize());
     //println!("Binary hash: {:?}", hash);
     println!("hash: {:?}", hash);
-    println!("sha256 before write: {:?}", gnostr_sec);
-    println!("sha256 before write: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
+    println!("sha256 before pad: {:?}", gnostr_sec);
+    println!("sha256 after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
 
 
     //let s = "12345".pad(64, '0', Alignment::Right, true);
