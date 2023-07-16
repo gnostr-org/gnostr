@@ -17,6 +17,7 @@ use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
 use git2::*;
 use sha2::{Sha256, Digest};
+use pad::{PadStr, Alignment};
 
 mod worker;
 mod gitminer;
@@ -197,11 +198,13 @@ fn main() -> io::Result<()> {
     let gnostr_sec: String = format!("{:X}", hasher.finalize());
     //println!("Binary hash: {:?}", hash);
     println!("hash: {:?}", hash);
-
     println!("hash: {:?}", hash);
+
     println!("sha256 before write: {:?}", gnostr_sec);
     println!("sha256 before write: {:?}", gnostr_sec);
 
+
+    let s = "12345".pad(10, '0', Alignment::Right, true);
 // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
     let event =
         if cfg!(target_os = "windows") {
