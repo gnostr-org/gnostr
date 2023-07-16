@@ -231,7 +231,7 @@ fn main() -> io::Result<()> {
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
 //shell test
-
+    //git rev-parse --verify HEAD
     let event =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -265,8 +265,8 @@ fn main() -> io::Result<()> {
     //echo gnostr|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
 
     let duration = time::get_time() - start;
-    println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
-    println!("Success! Generated gnostr event {} in {} seconds", gnostr_event, duration.num_seconds());
+    //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
+    println!("{}", gnostr_event);
     Ok(())
 
 }
