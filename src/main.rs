@@ -204,7 +204,8 @@ fn main() -> io::Result<()> {
     println!("sha256 before write: {:?}", gnostr_sec);
 
 
-    let s = "12345".pad(10, '0', Alignment::Right, true);
+    let s = "12345".pad(64, '0', Alignment::Right, true);
+    println!("s: {:?}", s);
 // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
     let event =
         if cfg!(target_os = "windows") {
