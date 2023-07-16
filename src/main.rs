@@ -197,7 +197,8 @@ fn main() -> io::Result<()> {
     //let gnostr_sec = hasher.finalize();
     let gnostr_sec: String = format!("{:X}", hasher.finalize());
     //println!("Binary hash: {:?}", hash);
-    println!("hash: {:?}", hash);
+    println!("hash before: {:?}", hash);
+    println!("hash after pad: {:?}", hash);
     println!("sha256 before pad: {:?}", gnostr_sec);
     println!("sha256 after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
 
