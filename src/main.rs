@@ -97,17 +97,17 @@ fn main() -> io::Result<()> {
     assert!(count >= 1_usize);
     //println!("{}={}", type_of(count), (count as i32));
     //println!("{}={}", type_of(count), (count as i64));
-    let mut hasher = Sha256::new();
-    let data = b"Hello world!";
-    hasher.update(data);
-    // `update` can be called repeatedly and is generic over `AsRef<[u8]>`
-    hasher.update("String data");
-    // Note that calling `finalize()` consumes hasher
-    let hash = hasher.finalize();
-    //println!("Binary hash: {:?}", hash);
-    println!("hash: {:?}", hash);
-    println!("sha256 before write: {:x}", hash);
-    println!("sha256 before write: {:X}", hash);
+    //let mut hasher = Sha256::new();
+    //let data = b"Hello world!";
+    //hasher.update(data);
+    //// `update` can be called repeatedly and is generic over `AsRef<[u8]>`
+    //hasher.update("String data");
+    //// Note that calling `finalize()` consumes hasher
+    //let hash = hasher.finalize();
+    ////println!("Binary hash: {:?}", hash);
+    //println!("hash: {:?}", hash);
+    //println!("sha256 before write: {:x}", hash);
+    //println!("sha256 before write: {:X}", hash);
 
 
    let now = SystemTime::now();
