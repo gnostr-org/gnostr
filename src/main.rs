@@ -17,6 +17,7 @@ use argparse::{ArgumentParser,Store};
 use gitminer::Gitminer;
 use git2::*;
 use sha2::{Sha256, Digest};
+use pad::{PadStr, Alignment};
 
 mod worker;
 mod gitminer;
@@ -59,15 +60,30 @@ fn main() -> io::Result<()> {
 
     //println!("clean {:?}", repo.state());
 
-    let repo_state = if cfg!(target_os = "windows") {
+    let repo_state =
+        if cfg!(target_os = "windows") {
         Command::new("cmd")
                 .args(["/C", "git status"])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "macos"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("gnostr-git diff")
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("gnostr-git diff")
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("git status")
+                .arg("gnostr-git diff")
                 .output()
                 .expect("failed to execute process")
         };
@@ -82,14 +98,18 @@ fn main() -> io::Result<()> {
     assert!(count >= 1_usize);
     //println!("{}={}", type_of(count), (count as i32));
     //println!("{}={}", type_of(count), (count as i64));
-    let mut hasher = Sha256::new();
-    let data = b"Hello world!";
-    hasher.update(data);
-    // `update` can be called repeatedly and is generic over `AsRef<[u8]>`
-    hasher.update("String data");
-    // Note that calling `finalize()` consumes hasher
-    let hash = hasher.finalize();
-    println!("Binary hash: {:?}", hash);
+    //let mut hasher = Sha256::new();
+    //let data = b"Hello world!";
+    //hasher.update(data);
+    //// `update` can be called repeatedly and is generic over `AsRef<[u8]>`
+    //hasher.update("String data");
+    //// Note that calling `finalize()` consumes hasher
+    //let hash = hasher.finalize();
+    ////println!("Binary hash: {:?}", hash);
+    //println!("hash: {:?}", hash);
+    //println!("sha256 before write: {:x}", hash);
+    //println!("sha256 before write: {:X}", hash);
+
 
    let now = SystemTime::now();
 
@@ -106,20 +126,36 @@ fn main() -> io::Result<()> {
    //    }
    //}
 
-    let output = if cfg!(target_os = "windows") {
+
+    let output =
+        if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "echo hello"])
+                .args(["/C", "git status"])
                 .output()
                 .expect("failed to execute process")
-    } else {
+        } else
+        if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("git status")
+                .arg("git diff")
                 .output()
                 .expect("failed to execute process")
-    };
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("git diff")
+                .output()
+                .expect("failed to execute process")
+        } else {
+        Command::new("sh")
+                .arg("-c")
+                .arg("git diff")
+                .output()
+                .expect("failed to execute process")
+        };
 
-    let utf8_string = String::from_utf8(output.stdout)
+    let message = String::from_utf8(output.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
 
@@ -133,7 +169,7 @@ fn main() -> io::Result<()> {
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
         //message: "gnostr".to_string(),
-        message: utf8_string,
+        message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
         repo:    path.as_path().display().to_string(),
@@ -153,9 +189,97 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
+    let mut hasher = Sha256::new();
+    hasher.update(&hash);
+    // `update` can be called repeatedly and is generic over `AsRef<[u8]>`
+    //hasher.update("String data");
+    // Note that calling `finalize()` consumes hasher
+    //let gnostr_sec = hasher.finalize();
+    let gnostr_sec: String = format!("{:X}", hasher.finalize());
+    //println!("Binary hash: {:?}", hash);
+    //println!("hash before: {:?}", hash);
+    //println!("hash after pad: {:?}", hash);
+    //println!("&hash before: {:?}", &hash);
+    //println!("&hash after pad: {:?}", &hash);
+    //println!("gnostr_sec before pad: {:?}", gnostr_sec);
+    //println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
+    //println!("&gnostr_sec before pad: {:?}", &gnostr_sec);
+    //println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64, '0', Alignment::Right, true));
+
+
+
+    //let s = "12345".pad(64, '0', Alignment::Right, true);
+    //println!("s: {:?}", s);
+// echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
+//
+//
+//shell test
+    let touch =
+        Command::new("sh")
+                .args(["-c", "touch ", &hash])
+                .output()
+                .expect("failed to execute process");
+    let touch_event = String::from_utf8(touch.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+    let cat =
+        Command::new("sh")
+                .args(["-c", "touch ", &hash])
+                .output()
+                .expect("failed to execute process");
+    let cat_event = String::from_utf8(cat.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+//shell test
+    //git rev-parse --verify HEAD
+    let event =
+        if cfg!(target_os = "windows") {
+        Command::new("cmd")
+                .args(["/C", "gnostr --hash 0"])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "macos"){
+        Command::new("sh")
+                .args(["-c", "gnostr --hash 0"])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .args(["-c", "gnostr --hash 0"])
+                .output()
+                .expect("failed to execute process")
+        } else {
+        Command::new("sh")
+                .args(["-c", "gnostr --hash 0"])
+                .output()
+                .expect("failed to execute process")
+        };
+
+    let gnostr_event = String::from_utf8(event.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+
+    //assert...
+    //echo gnostr|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
+
+//gnostr-legit must only return a sha256 generated by the
+//recent commit hash
+//to enable nested commands
+//REF:
+//gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD")
+//gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD"))
+//Example:
+//gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "#gnostr will exist!")) --envelope --content "$(gnostr-git log -n 1)" | gnostr-cat -u wss://relay.damus.io
+    //
+    //
+    //
     let duration = time::get_time() - start;
-    println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
+    //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
+    println!("{}", gnostr_event);
     Ok(())
+
 }
 
 fn parse_args_or_exit(opts: &mut gitminer::Options) {

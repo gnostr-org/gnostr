@@ -1,10 +1,10 @@
 [package]
 name    = "gnostr-legit"
-version = "0.2.4"
+version = "0.0.0"
 authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
 edition = "2021"
 rust-version = "1.61.0"
-description = "add proof of work to a git commit"
+description = "gnostr blob manager and pow miner"
 documentation = "https://legit.gnostr.org"
 readme = "README.md"
 homepage = "https://legit.gnostr.org/"
@@ -21,4 +21,5 @@ argparse    = "0.2.2"
 time        = "0.1.42"
 chrono      = "0"
 sha2 = "0.10.7"
+pad = "0.1.6"
 #crypto      = "0.4.0"

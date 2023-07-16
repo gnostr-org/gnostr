@@ -70,9 +70,22 @@ impl Gitminer {
     }
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
+            .output()
+            .ok()
+            .expect("Failed to generate commit");
+
         /* repo.blob() generates a blob, not a commit.
-         * don't know if there's a way to do this with libgit2. */
-        let tmpfile  = format!("/tmp/{}.tmp", hash);
+         * we write the commit, then
+         * we use the tmpfile to create .gnostr/blobs/<hash>
+         * we 'git show' the mined tmpfile
+         * and pipe it into the .gnostr/blobs/<hash>
+         */
+
+        let tmpfile  = format!("/tmp/{}.tmp",hash);
         let mut file = File::create(&Path::new(&tmpfile))
             .ok()
             .expect(&format!("Failed to create temporary file {}", &tmpfile));
@@ -81,12 +94,28 @@ impl Gitminer {
             .ok()
             .expect(&format!("Failed to write temporary file {}", &tmpfile));
 
+        //write the commit
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash))
             .output()
             .ok()
             .expect("Failed to generate commit");
+
+        //write the blob
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
+            .output()
+            .ok()
+            .expect("Failed to write .gnostr/blobs/<hash>");
+        //add the blob
+        //Command::new("sh")
+        //    .arg("-c")
+        //    .arg(format!("cd {} && git add .gnostr/blobs/{}", self.opts.repo, hash))
+        //    .output()
+        //    .ok()
+        //    .expect("Failed to git add .gnostr/blobs/<hash>");
 
         Ok(())
     }
@@ -111,6 +140,22 @@ impl Gitminer {
         Ok(format!("{} <{}>", name, email))
     }
 
+    fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+        Gitminer::ensure_no_unstaged_changes(repo)?;
+
+        let head   = repo.revparse_single("HEAD").unwrap();
+        let head_2 = format!("{}", head.id());
+
+        Ok((head_2))
+    }
+    fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+        Gitminer::ensure_no_unstaged_changes(repo)?;
+
+        let head   = repo.revparse_single("HEAD~1").unwrap();
+        let head_1 = format!("{}", head.id());
+
+        Ok((head_1))
+    }
     fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
