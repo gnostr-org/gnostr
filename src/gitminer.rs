@@ -87,6 +87,13 @@ impl Gitminer {
             .output()
             .ok()
             .expect("Failed to generate commit");
+//
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && git branch {}", self.opts.repo, hash))
+            .output()
+            .ok()
+            .expect("Failed to generate commit");
 
         Ok(())
     }
@@ -111,6 +118,22 @@ impl Gitminer {
         Ok(format!("{} <{}>", name, email))
     }
 
+    fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+        Gitminer::ensure_no_unstaged_changes(repo)?;
+
+        let head   = repo.revparse_single("HEAD").unwrap();
+        let head_2 = format!("{}", head.id());
+
+        Ok((head_2))
+    }
+    fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+        Gitminer::ensure_no_unstaged_changes(repo)?;
+
+        let head   = repo.revparse_single("HEAD~1").unwrap();
+        let head_1 = format!("{}", head.id());
+
+        Ok((head_1))
+    }
     fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
