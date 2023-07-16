@@ -201,16 +201,37 @@ fn main() -> io::Result<()> {
     println!("hash after pad: {:?}", hash);
     println!("&hash before: {:?}", &hash);
     println!("&hash after pad: {:?}", &hash);
-    println!("gnostr_sec before pad: {:?}", gnostr_sec);
-    println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
-    println!("&gnostr_sec before pad: {:?}", &gnostr_sec);
-    println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64, '0', Alignment::Right, true));
+    //println!("gnostr_sec before pad: {:?}", gnostr_sec);
+    //println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
+    //println!("&gnostr_sec before pad: {:?}", &gnostr_sec);
+    //println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64, '0', Alignment::Right, true));
 
 
 
     //let s = "12345".pad(64, '0', Alignment::Right, true);
     //println!("s: {:?}", s);
 // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
+//
+//
+//shell test
+    let touch =
+        Command::new("sh")
+                .args(["-c", "touch ", &hash])
+                .output()
+                .expect("failed to execute process");
+    let touch_event = String::from_utf8(touch.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+    let cat =
+        Command::new("sh")
+                .args(["-c", "touch ", &hash])
+                .output()
+                .expect("failed to execute process");
+    let cat_event = String::from_utf8(cat.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+//shell test
+
     let event =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -220,18 +241,18 @@ fn main() -> io::Result<()> {
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash", &gnostr_sec])
+                .args(["-c", "gnostr ", "--hash ", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash", &gnostr_sec])
+                .args(["-c", "gnostr ", "--hash ", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash", &gnostr_sec])
+                .args(["-c", "gnostr ", "--hash ", &gnostr_sec])
                 .output()
                 .expect("failed to execute process")
         };
