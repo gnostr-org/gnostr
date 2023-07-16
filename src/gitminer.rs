@@ -135,17 +135,17 @@ impl Gitminer {
     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
         let cfg = match repo.config() {
             Ok(c)  => c,
-            Err(_) => { return Err("Failed to load git config"); }
+            Err(_) => { return Err("Failed to load git config user.name"); }
         };
 
         let name  = match cfg.get_string("user.name") {
             Ok(s)  => s,
-            Err(_) => { return Err("Failed to find git user name"); }
+            Err(_) => { return Err("Failed to find git config user.name"); }
         };
 
         let email = match cfg.get_string("user.email") {
             Ok(s)  => s,
-            Err(_) => { return Err("Failed to find git email address"); }
+            Err(_) => { return Err("Failed to find git config user.email"); }
         };
 
         Ok(format!("{} <{}>", name, email))
@@ -154,12 +154,12 @@ impl Gitminer {
     fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static str> {
         let cfg = match repo.config() {
             Ok(c)  => c,
-            Err(_) => { return Err("Failed to load git config"); }
+            Err(_) => { return Err("Failed to load git config gnostr.relays"); }
         };
 
         let relays  = match cfg.get_string("gnostr.relays") {
             Ok(s)  => s,
-            Err(_) => { return Err("Failed to find git user name"); }
+            Err(_) => { return Err("Failed to find git config gnostr.relays"); }
         };
 
 
