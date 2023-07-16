@@ -112,19 +112,20 @@ impl Gitminer {
             .output()
             .ok()
             .expect("Failed to write .gnostr/blobs/<hash>");
-        //add the blob
-        //Command::new("sh")
-        //    .arg("-c")
-        //    .arg(format!("cd {} && mkdir -p .gnostr/blobs && git add .gnostr/blobs/{}", self.opts.repo, hash))
-        //    .output()
-        //    .ok()
-        //    .expect("Failed to git add .gnostr/blobs/<hash>");
+
 //REF:
-//gnostr-git reflog      --format='wss://${RELAY}/${REPO}/%C(auto)%H/%<|(17)%gdcommit:%s'
-        //write the reflog
+//gnostr-git reflog --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd:commit:%s'
+//gnostr-git-reflog -f
+//write the reflog
+//the new reflog is associated with a commit
+//we will use gnostr-git-reflog -f
+//for an integrity check as well
+//to test the 'gnostr' protocol
+//write the reflog
+//
         Command::new("sh")
             .arg("-c")
-            .arg(format!("cd {} && mkdir -p .gnostr/reflog && touch -f .gnostr/reflog/{} && git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gdcommit:%s' > .gnostr/reflog/{}", self.opts.repo, hash, "{RELAY}", "{REPO}", hash))
+            .arg(format!("cd {} && mkdir -p .gnostr/reflog && touch -f .gnostr/reflog/{} && git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog/{}", self.opts.repo, hash, "{RELAY}", "{REPO}", hash))
             .output()
             .ok()
             .expect("Failed to write .gnostr/reflog/<hash>");
