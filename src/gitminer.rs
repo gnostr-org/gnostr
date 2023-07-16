@@ -66,11 +66,13 @@ impl Gitminer {
 
         let (_, blob, hash) = rx.recv().unwrap();
 
+        let test = self.write_reflog(&hash, &blob);
+
         match self.write_commit(&hash, &blob) {
             Ok(_)  => Ok(hash),
             Err(e) => Err(e)
         }
-    }
+    }//end pub fn mine
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
 
@@ -113,6 +115,11 @@ impl Gitminer {
             .ok()
             .expect("Failed to write .gnostr/blobs/<hash>");
 
+        Ok(())
+    }//end write_commit
+
+    fn write_reflog(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+
 //REF:
 //gnostr-git reflog --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd:commit:%s'
 //gnostr-git-reflog -f
@@ -129,8 +136,9 @@ impl Gitminer {
             .output()
             .ok()
             .expect("Failed to write .gnostr/reflog/<hash>");
+
         Ok(())
-    }
+    }//end write_commit
 
 
     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
