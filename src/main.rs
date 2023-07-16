@@ -261,6 +261,8 @@ fn main() -> io::Result<()> {
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
 
+    //assert...
+    //echo gnostr|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
 
     let duration = time::get_time() - start;
     println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
