@@ -199,8 +199,13 @@ fn main() -> io::Result<()> {
     //println!("Binary hash: {:?}", hash);
     println!("hash before: {:?}", hash);
     println!("hash after pad: {:?}", hash);
-    println!("sha256 before pad: {:?}", gnostr_sec);
-    println!("sha256 after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
+    println!("&hash before: {:?}", &hash);
+    println!("&hash after pad: {:?}", &hash);
+    println!("gnostr_sec before pad: {:?}", gnostr_sec);
+    println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
+    println!("&gnostr_sec before pad: {:?}", &gnostr_sec);
+    println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64, '0', Alignment::Right, true));
+
 
 
     //let s = "12345".pad(64, '0', Alignment::Right, true);
