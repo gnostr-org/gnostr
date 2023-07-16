@@ -124,7 +124,7 @@ impl Gitminer {
         //write the reflog
         Command::new("sh")
             .arg("-c")
-            .arg(format!("cd {} && mkdir -p .gnostr/reflog && touch -f .gnostr/reflog/{} && git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gdcommit:%s' > .gnostr/reflog/{}", self.opts.repo, hash, "RELAY", "REPO", hash))
+            .arg(format!("cd {} && mkdir -p .gnostr/reflog && touch -f .gnostr/reflog/{} && git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gdcommit:%s' > .gnostr/reflog/{}", self.opts.repo, hash, "{RELAY}", "{REPO}", hash))
             .output()
             .ok()
             .expect("Failed to write .gnostr/reflog/<hash>");
