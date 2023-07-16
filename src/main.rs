@@ -235,24 +235,24 @@ fn main() -> io::Result<()> {
     let event =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "gnostr ","--hash", &gnostr_sec])
+                .args(["/C", "gnostr ","--hash", "0"])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash ", &gnostr_sec])
+                .args(["-c", "gnostr ", "--hash ", "0"])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash ", &gnostr_sec])
+                .args(["-c", "gnostr ", "--hash ", "0"])
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
-                .args(["-c", "gnostr ", "--hash ", &gnostr_sec])
+                .args(["-c", "gnostr ", "--hash ", "0"])
                 .output()
                 .expect("failed to execute process")
         };
