@@ -285,7 +285,7 @@ fn main() -> io::Result<()> {
 fn parse_args_or_exit(opts: &mut gitminer::Options) {
     let mut ap = ArgumentParser::new();
     ap.set_description("Generate git commit sha with a custom prefix");
-    ap.stop_on_first_argument(false);
+    //ap.stop_on_first_argument(false);
 
     //ap.refer(&mut opts.repo)
     //    //.add_argument("repository-path", Store, "Path to your git repository (required)");
