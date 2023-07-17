@@ -32,14 +32,14 @@ pub fn state() -> RepositoryState {
     //let repo_root = std::env::args().nth(1).unwrap_or(pwd);
 
     let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
-    println!("repo_root={:?}", repo_root.as_str());
+    //println!("repo_root={:?}", repo_root.as_str());
     let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
-    println!("1:{} state={:?}", repo.path().display(), repo.state());
-    println!("state={:?}", repo.state());
-	if repo.state() == RepositoryState::Clean {
-    println!("2:{} state={:?}", repo.path().display(), repo.state());
+    //println!("1:{} state={:?}", repo.path().display(), repo.state());
+    //println!("state={:?}", repo.state());
+    if repo.state() == RepositoryState::Clean {
+    //println!("2:{} state={:?}", repo.path().display(), repo.state());
 
-		//println!("clean {:?}", repo.state());
+    //println!("clean {:?}", repo.state());
 
         let repo_state = if cfg!(target_os = "windows") {
             Command::new("cmd")
@@ -59,6 +59,6 @@ pub fn state() -> RepositoryState {
     .unwrap();
     //println!("state={:?}", state);
 
-	}
-	return repo.state()
+    }
+    return repo.state()
 }
