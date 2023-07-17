@@ -91,7 +91,7 @@ fn main() -> io::Result<()> {
     let state = String::from_utf8(repo_state.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("state={:?}", state);
+    //println!("state={:?}", state);
     }
 
     let count = thread::available_parallelism()?.get();
@@ -232,7 +232,7 @@ fn main() -> io::Result<()> {
     .unwrap();
 //shell test
     //git rev-parse --verify HEAD
-    let event =
+    let shell_test =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
                 .args(["/C", "gnostr --hash 0"])
@@ -257,7 +257,7 @@ fn main() -> io::Result<()> {
                 .expect("failed to execute process")
         };
 
-    let gnostr_event = String::from_utf8(event.stdout)
+    let gnostr_test = String::from_utf8(shell_test.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
 
@@ -277,7 +277,7 @@ fn main() -> io::Result<()> {
     //
     let duration = time::get_time() - start;
     //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
-    println!("{}", gnostr_event);
+    println!("{}", gnostr_test);
     Ok(())
 
 }
@@ -291,7 +291,7 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     //    //.add_argument("repository-path", Store, "Path to your git repository (required)");
     //    .add_argument("repository-path", Store, "Path to your git repository");
     //    //.required();
-    ap.refer(&mut opts.repo).add_argument("repository-path", Store, "Path to your git repository");
+    //ap.refer(&mut opts.repo).add_argument("repository-path", Store, "Path to your git repository");
 
     ap.refer(&mut opts.target)
         .add_option(&["-p", "--prefix"], Store, "Desired commit prefix (required)");
@@ -306,6 +306,8 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
 
     //ap.refer(&mut opts.timestamp)
     //    .add_option(&["--timestamp"], Store, "Commit timestamp to use (default now)");
+    
+    ap.refer(&mut opts.repo).add_argument("repository-path", Store, "Path to your git repository");
 
     ap.parse_args_or_exit();
 }
