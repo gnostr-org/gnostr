@@ -158,7 +158,7 @@ impl Gitminer {
             .expect("Failed to write .gnostr/reflog/<hash>");
         Command::new("sh")
             .arg("-c")
-            .arg(format!("cd {} && gnostr-git add .gnostr/reflog/{}", self.opts.repo, hash))
+            .arg(format!("cd {} && gnostr-git add -f .gnostr/reflog/{}", self.opts.repo, hash))
             .output()
             .ok()
             .expect("Failed to gnostr-git add .gnostr/reflog/<hash>");
