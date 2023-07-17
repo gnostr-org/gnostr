@@ -83,12 +83,24 @@ impl Gitminer {
         Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}/.gnostr", self.opts.repo))
+            //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
+            .output()
+            .ok()
+            .expect("Failed to mkdir -p .gnostr");
+        Command::new("sh")
+            .arg("-c")
             .arg(format!("mkdir -p {}/.gnostr/reflog", self.opts.repo))
+            //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
+            .output()
+            .ok()
+            .expect("Failed to mkdir -p .gnostr/blobs");
+        Command::new("sh")
+            .arg("-c")
             .arg(format!("mkdir -p {}/.gnostr/blobs", self.opts.repo))
             //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
             .output()
             .ok()
-            .expect("Failed to generate commit");
+            .expect("Failed to mkdir -p .gnostr/reflog");
 
         /* repo.blob() generates a blob, not a commit.
          * we write the commit, then
