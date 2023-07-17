@@ -66,7 +66,7 @@ impl Gitminer {
 
         let (_, blob, hash) = rx.recv().unwrap();
 
-        let test = self.write_reflog(&hash, &blob);
+        //let test = self.write_reflog(&hash, &blob);
 
         match self.write_commit(&hash, &blob) {
             Ok(_)  => Ok(hash),
@@ -77,11 +77,11 @@ impl Gitminer {
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
 
         println!("mkdir -p {}/.gnostr && ", self.opts.repo);
-        println!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash);
+        //println!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash);
         Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}/.gnostr && ", self.opts.repo))
-            .arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
+            //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
             .output()
             .ok()
             .expect("Failed to generate commit");
