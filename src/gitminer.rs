@@ -76,7 +76,7 @@ impl Gitminer {
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
 
-        println!("mkdir -p {}/.gnostr && ", self.opts.repo);
+        //println!("mkdir -p {}/.gnostr && ", self.opts.repo);
         //println!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash);
         Command::new("sh")
             .arg("-c")
