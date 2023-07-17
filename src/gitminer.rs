@@ -82,9 +82,9 @@ impl Gitminer {
         //println!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash);
         Command::new("sh")
             .arg("-c")
-            .arg(format!("mkdir -p {}/.gnostr && ", self.opts.repo))
-            .arg(format!("mkdir -p {}/.gnostr/reflog && ", self.opts.repo))
-            .arg(format!("mkdir -p {}/.gnostr/blobs && ", self.opts.repo))
+            .arg(format!("mkdir -p {}/.gnostr", self.opts.repo))
+            .arg(format!("mkdir -p {}/.gnostr/reflog", self.opts.repo))
+            .arg(format!("mkdir -p {}/.gnostr/blobs", self.opts.repo))
             //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
             .output()
             .ok()
