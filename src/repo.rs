@@ -26,7 +26,7 @@ pub fn state() -> RepositoryState {
     let pwd = String::from_utf8(get_pwd.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("pwd={:?}", pwd);
+    //println!("pwd={:?}", pwd);
 
 
     //let repo_root = std::env::args().nth(1).unwrap_or(pwd);
