@@ -1,0 +1,31 @@
+commit 00000c224b7dfa80b39143f1f1c1eab07787659d
+Author: @RandyMcMillan <randy.lee.mcmillan@gmail.com>
+Date:   Mon Jul 17 15:09:38 2023 -0400
+
+    01:000516f7:
+
+diff --git a/src/gitminer.rs b/src/gitminer.rs
+index d46c936..161e97a 100644
+--- a/src/gitminer.rs
++++ b/src/gitminer.rs
+@@ -127,13 +127,13 @@ impl Gitminer {
+             .ok()
+             .expect("Failed to generate commit");
+ 
+-        ////write the blob
+-        //Command::new("sh")
+-        //    .arg("-c")
+-        //    .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
+-        //    .output()
+-        //    .ok()
+-        //    .expect("Failed to write .gnostr/blobs/<hash>");
++        //write the blob
++        Command::new("sh")
++            .arg("-c")
++            .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
++            .output()
++            .ok()
++            .expect("Failed to write .gnostr/blobs/<hash>");
+ 
+         Ok(())
+     }//end write_commit

@@ -1,0 +1,321 @@
+wss://{RELAY}/{REPO}/00000d9aef2da3f3f891a39a69498b0a41363e8a/HEAD@{0}:commit:01:0001c39b:
+wss://{RELAY}/{REPO}/0000062ba4e66ce42ab91ed693186ca49928caeb/HEAD@{1}:commit:03:0006988f:
+wss://{RELAY}/{REPO}/000006839a391b3e2438cffa556a3fbefc456cfc/HEAD@{2}:commit:03:00026031:
+wss://{RELAY}/{REPO}/0000068737d40aef8d8b24f689845ed706c11d86/HEAD@{3}:commit:02:000cf272:
+wss://{RELAY}/{REPO}/000003024a0006cb79c224e2b6c897482927bac8/HEAD@{4}:commit:03:00004882:
+wss://{RELAY}/{REPO}/000000dea4ba5ca66d9dc5388c660ef2b0c7e64f/HEAD@{5}:commit:00:0002a2cc:
+wss://{RELAY}/{REPO}/00000656bb91878d3c1431ee670257c3a1951db3/HEAD@{6}:commit:01:0000a625:
+wss://{RELAY}/{REPO}/000008564022df32f627c9890f343c31fe8feee2/HEAD@{7}:commit:00:0001028b:
+wss://{RELAY}/{REPO}/000003f8c890a2de6a4298a01ef9b2733e3ecf68/HEAD@{8}:commit:03:0000f1bf:
+wss://{RELAY}/{REPO}/00000a7c1bf008c6a213a7cc72d6de9423e59f42/HEAD@{9}:commit:03:00033655:
+wss://{RELAY}/{REPO}/0000078ed1f8abd209aa2765b84600b4789306fe/HEAD@{10}:commit:02:0003be70:
+wss://{RELAY}/{REPO}/000002dacb2151b6678d0e5aab4fed4bc5900802/HEAD@{11}:commit:02:000cbdbf:
+wss://{RELAY}/{REPO}/000000270cc296281242f4bf48d90b84e28ca33b/HEAD@{12}:commit:03:00034b88:
+wss://{RELAY}/{REPO}/00000ef7c378e7f0346c7951024cecce6425e081/HEAD@{13}:commit:02:0000510b:
+wss://{RELAY}/{REPO}/0000076ab6b8770fdce9b0b07c73f4a1b96c7dc3/HEAD@{14}:commit:02:0001b4a4:
+wss://{RELAY}/{REPO}/00000295620ef05085279b9e12d8636d43ab8308/HEAD@{15}:commit:02:0004ffaf:
+wss://{RELAY}/{REPO}/00000dfb9121ad79d9d060f2d1c80e3f1b1bc5fd/HEAD@{16}:commit:01:0002ea5f:
+wss://{RELAY}/{REPO}/000001dbb60b275180b6ab476c1e1e722f14da15/HEAD@{17}:commit:03:0001f8cb:
+wss://{RELAY}/{REPO}/00000b40b7acaf3c806ea5a70f786067a6630e78/HEAD@{18}:commit:01:000459cc:
+wss://{RELAY}/{REPO}/bfb5a0551ead773f94bf3b61d250cf38c2bc7b20/HEAD@{19}:commit:.gnostr: add blobs reflogs
+wss://{RELAY}/{REPO}/bfb5a0551ead773f94bf3b61d250cf38c2bc7b20/HEAD@{20}:commit:.gnostr: add blobs reflogs
+wss://{RELAY}/{REPO}/0000013d66e5768fcf23535f544c4aa206e6b6ee/HEAD@{21}:commit:03:00008625:
+wss://{RELAY}/{REPO}/00000bc5d8274fa5bcc47dbd2802d27a827fa0dc/HEAD@{22}:commit:01:00021cd5:
+wss://{RELAY}/{REPO}/00000e6469f345fa3caaae068ba845ba4e91c295/HEAD@{23}:commit:01:0005869d:
+wss://{RELAY}/{REPO}/000009e6d1fdf1506efc10b6e07cbd4b15698a7a/HEAD@{24}:commit:03:00014eb0:
+wss://{RELAY}/{REPO}/000001927e00e166642f98f97628ec01cab5395d/HEAD@{25}:commit:00:0007afb8:
+wss://{RELAY}/{REPO}/000002e9e65c016eac50edb456d473fdb9ff1224/HEAD@{26}:commit:01:0000c34b:
+wss://{RELAY}/{REPO}/00000f1337ef2bc59378055b7af693acd902579c/HEAD@{27}:commit:01:00002748:
+wss://{RELAY}/{REPO}/00000c3f4ab7230616cb8de1a9590036feee8d28/HEAD@{28}:commit:02:0001545c:
+wss://{RELAY}/{REPO}/0000061276dbd9be2fa43465668bbbdfb104891c/HEAD@{29}:commit:01:000269cd:
+wss://{RELAY}/{REPO}/00000f16aae30f38cf8af7ac90186db8f71d5499/HEAD@{30}:commit:01:0001b9a2:
+wss://{RELAY}/{REPO}/00000edadb79fe69f23447311315dc677be7ad9e/HEAD@{31}:commit:03:0002ef52:
+wss://{RELAY}/{REPO}/0000051cab49338afe1092847e69f2f1a29d2643/HEAD@{32}:commit:02:000035aa:
+wss://{RELAY}/{REPO}/00000e72a5ce70debf60b9b04872959470cb76f3/HEAD@{33}:commit:03:000091ca:
+wss://{RELAY}/{REPO}/000004bb37407d51462986b1e187c55859c3db34/HEAD@{34}:commit:01:0001d8b4:
+wss://{RELAY}/{REPO}/00000f31a3c79e2d83f695bfebef452229b3437c/HEAD@{35}:commit:02:00000f5e:
+wss://{RELAY}/{REPO}/000000be19c6b9fc35b957a16c057e2d8542ceef/HEAD@{36}:commit:01:0000b50a:
+wss://{RELAY}/{REPO}/000005866ee34001c43f199b072f816e1736f1be/HEAD@{37}:commit:01:0001c007:
+wss://{RELAY}/{REPO}/00000f6fde16384739c9afb82f458e7fc6be3d39/HEAD@{38}:commit:03:00033c35:
+wss://{RELAY}/{REPO}/00000293a317050952ec7fa4f93b7c0f7bc21efd/HEAD@{39}:commit:02:00015383:
+wss://{RELAY}/{REPO}/000002dfa272398d5c0be64c14e805f2a8885448/HEAD@{40}:commit:01:0002395b:
+wss://{RELAY}/{REPO}/bfb5a0551ead773f94bf3b61d250cf38c2bc7b20/HEAD@{41}:commit:.gnostr: add blobs reflogs
+wss://{RELAY}/{REPO}/00000c2f35a6e4e0125126ac6c764dc2ff67aa44/HEAD@{42}:commit:00:0002542e:write_reflog function
+wss://{RELAY}/{REPO}/00000e5e520e7f37b8c6da828d258359a55cb504/HEAD@{43}:commit:01:0008b1fd:write_reflog function
+wss://{RELAY}/{REPO}/00000835b1c4c83be444efaf665d464b8306a357/HEAD@{44}:commit:02:0001349f:write_reflog function
+wss://{RELAY}/{REPO}/000002f599f680b6e5620d7761a8886c86477838/HEAD@{45}:commit:03:0001a4d5:
+wss://{RELAY}/{REPO}/00000e7a1b24812fd570ed6ecbeac827c09a066b/HEAD@{46}:commit:03:000beee1:src/gitminer.rs:write the reflog: conform to the 'gnostr' protocol
+wss://{RELAY}/{REPO}/0000072ca3f1618c7a200f7a2d5734b604fb41eb/HEAD@{47}:commit:00:000599d4:create/write blobs/reflogs working
+wss://{RELAY}/{REPO}/00000d40a024f5c2107f9c5a8cf5f3bc4e3170a4/HEAD@{48}:commit:02:0004bfbc:create/write blobs/reflogs working
+wss://{RELAY}/{REPO}/000006fcbe74b9a332ebcca88dd74e6868471871/HEAD@{49}:commit:03:0002af8e:create/write blobs/reflogs working
+wss://{RELAY}/{REPO}/0000069f95dcee1bb0755b122e4550b7ab6df5d0/HEAD@{50}:commit:01:000a5a2c:
+wss://{RELAY}/{REPO}/00000ab8e0279a02d2eb165a905fcc60d10059e1/HEAD@{51}:commit:03:000066ea:src/gitminer.rs: write .gnostr/reflog
+wss://{RELAY}/{REPO}/00000877dc106900253ed18343df4c5e4d80f7d7/HEAD@{52}:commit:00:000f39c6:src/gitminer.rs: write .gnostr/reflog
+wss://{RELAY}/{REPO}/00000877dc106900253ed18343df4c5e4d80f7d7/HEAD@{53}:commit:00:000f39c6:src/gitminer.rs: write .gnostr/reflog
+wss://{RELAY}/{REPO}/00000027547402834980f74a7540bd63aeb42d9c/HEAD@{54}:commit:01:0002c43c:
+wss://{RELAY}/{REPO}/00000877dc106900253ed18343df4c5e4d80f7d7/HEAD@{55}:commit:00:000f39c6:src/gitminer.rs: write .gnostr/reflog
+wss://{RELAY}/{REPO}/0000002a093d7cb814969fd018b5eb0f205c6679/HEAD@{56}:commit:02:00013047:
+wss://{RELAY}/{REPO}/00000eed8f45ffef1c2dafa73b684f281fe4d05c/HEAD@{57}:commit:00:0002895b:
+wss://{RELAY}/{REPO}/000003524cbae6ffb9bed7672968e75961f554f7/HEAD@{58}:commit:02:000123fd:attempt to seperate write functions
+wss://{RELAY}/{REPO}/00000877dc106900253ed18343df4c5e4d80f7d7/HEAD@{59}:commit:00:000f39c6:src/gitminer.rs: write .gnostr/reflog
+wss://{RELAY}/{REPO}/0000094b7c770bda6f743da9168432c530f26242/HEAD@{60}:commit:03:000069e3:
+wss://{RELAY}/{REPO}/000006be2b9b98413f841867276fe0ea3d65e5bb/HEAD@{61}:commit:00:0001550a:.gnostr/blobs: add new blobs
+wss://{RELAY}/{REPO}/00000b5a20020afd4c06899b2ebd7ed6cb05d28f/HEAD@{62}:commit:03:000adcc4:src/gitminer.rs: fix error messages for git config
+wss://{RELAY}/{REPO}/000006a544ffc9a0f6dcd577ad937c726e2b3f84/HEAD@{63}:commit:01:00014565:
+wss://{RELAY}/{REPO}/00000568b8bf31f68bb1ca992f52d23cb4d8e999/HEAD@{64}:commit:02:00000ceb:struct Gitminer add relays
+wss://{RELAY}/{REPO}/8cff82781ce6985e8b134ce7f085ff96fdd4a259/HEAD@{65}:commit:01:0007836b:gnostr-legit: blob creation
+wss://{RELAY}/{REPO}/00000039472a15dac7401d3726f55f9f36d23a2b/HEAD@{66}:commit:01:0007836b:gnostr-legit: blob creation
+wss://{RELAY}/{REPO}/0000089c59d0ca960c2cc7b67c55eaa3433ddb73/HEAD@{67}:commit:03:0001bd88:gnostr-legit working as sub command
+wss://{RELAY}/{REPO}/00000d1e53ec65bbb00e049621417b35b3d72465/HEAD@{68}:commit:02:0006dd99:
+wss://{RELAY}/{REPO}/00000d2609554509f67e5c74c0145d5e0287f050/HEAD@{69}:commit:00:00006c70:
+wss://{RELAY}/{REPO}/000002a2c2aa1f41ecaec4c9b81e8795a8cad360/HEAD@{70}:commit:01:000181a8:
+wss://{RELAY}/{REPO}/00000515f6b7dedc33041e6d58feacede0131d8c/HEAD@{71}:commit:03:00001363:write commit/blob
+wss://{RELAY}/{REPO}/00000682c0a4c81e0f3bc92798fc18e7ff857b6f/HEAD@{72}:commit:02:0001457a:write commit/blob
+wss://{RELAY}/{REPO}/000002aa3b76cdae5ee274921cdbfbc2de87f31d/HEAD@{73}:commit:03:0000aed2:write commit/blob
+wss://{RELAY}/{REPO}/0000073f9f6f0d2dc6a112f2b503a3ae5f7e3159/HEAD@{74}:commit:01:00047fde:write commit/blob
+wss://{RELAY}/{REPO}/00000e71b4ebde34983b1f82af993c488087e4fd/HEAD@{75}:commit:03:0002be4b:
+wss://{RELAY}/{REPO}/0000082d1609c0c2bbd8b894fc826fc78fd0b924/HEAD@{76}:commit:03:0000392c:write commit/blob
+wss://{RELAY}/{REPO}/0000008e6df519e8eeaea4e84929b857d9ea51fd/HEAD@{77}:commit:00:00017ae2:write commit/blob
+wss://{RELAY}/{REPO}/00000c7bba1862e00767cdec5e8cd84ee55f05d3/HEAD@{78}:commit:02:0000c300:
+wss://{RELAY}/{REPO}/00000074d9f399f76a45b9eb89c03941630359aa/HEAD@{79}:commit:01:000cf4e5:
+wss://{RELAY}/{REPO}/0000085d0d6bb7e9de0e3e87c28e27b439be4573/HEAD@{80}:commit:03:0005164a:
+wss://{RELAY}/{REPO}/0000085d0d6bb7e9de0e3e87c28e27b439be4573/HEAD@{81}:commit:03:0005164a:
+wss://{RELAY}/{REPO}/0000085d0d6bb7e9de0e3e87c28e27b439be4573/HEAD@{82}:commit:03:0005164a:
+wss://{RELAY}/{REPO}/0000085d0d6bb7e9de0e3e87c28e27b439be4573/HEAD@{83}:commit:03:0005164a:
+wss://{RELAY}/{REPO}/1bd24ac643cef8ec7adaee1d07b958652fd837f1/HEAD@{84}:commit:03:00003ead:
+wss://{RELAY}/{REPO}/00000a6937cd3c7f7f572b139231d2a4ea0bb073/HEAD@{85}:commit:02:00047aed:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000a6937cd3c7f7f572b139231d2a4ea0bb073/HEAD@{86}:commit:02:00047aed:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000a6937cd3c7f7f572b139231d2a4ea0bb073/HEAD@{87}:commit:02:00047aed:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000a6937cd3c7f7f572b139231d2a4ea0bb073/HEAD@{88}:commit:02:00047aed:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/0000004d314cdf095ca810884a821ffa7c61ba1b/HEAD@{89}:commit:03:00003ead:
+wss://{RELAY}/{REPO}/0000031ab2bd3eb8575b6f7c189cdeabb6906825/HEAD@{90}:commit:01:0002bad2:On branch master Your branch is up to date with 'origin/master'.
+wss://{RELAY}/{REPO}/0000004d314cdf095ca810884a821ffa7c61ba1b/HEAD@{91}:commit:03:00003ead:
+wss://{RELAY}/{REPO}/00000a6937cd3c7f7f572b139231d2a4ea0bb073/HEAD@{92}:commit:02:00047aed:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000bda075a8b265b0dd2677131093a8cf680ab/HEAD@{93}:commit:01:000ea980:
+wss://{RELAY}/{REPO}/00000bda075a8b265b0dd2677131093a8cf680ab/HEAD@{94}:commit:01:000ea980:
+wss://{RELAY}/{REPO}/00000b4354aaf38a0a6647792b070f09ef98aa80/HEAD@{95}:commit:01:000c9cbf:
+wss://{RELAY}/{REPO}/00000353116a3310a4354a5e771405b3d4c9ba46/HEAD@{96}:commit:03:0000fdb1:
+wss://{RELAY}/{REPO}/00000353116a3310a4354a5e771405b3d4c9ba46/HEAD@{97}:commit:03:0000fdb1:
+wss://{RELAY}/{REPO}/00000d7d9ae3533ace9d977f4227021cee291d3f/HEAD@{98}:commit:03:0001db96:
+wss://{RELAY}/{REPO}/0000015403fee2cfc02804a71a9803e864f5da8c/HEAD@{99}:commit:02:00001be3:
+wss://{RELAY}/{REPO}/0000009ffeed18bf4a580f9b33308b2c7044a936/HEAD@{100}:commit:03:0001eef3:
+wss://{RELAY}/{REPO}/00000d0d04fe7a85d6ac3a9d7bf3d6ffe3c91baf/HEAD@{101}:commit:03:0007d51c:
+wss://{RELAY}/{REPO}/00000de6bdba891021aa292e121cd8a102fc3935/HEAD@{102}:commit:00:000090e8:
+wss://{RELAY}/{REPO}/00000ce69cdf2f0555a4bfa7eb2fdafabe8b90d0/HEAD@{103}:commit:01:0003150e:
+wss://{RELAY}/{REPO}/000005521e68aeecfcb5d269ede61cdd831a2301/HEAD@{104}:commit:03:00016974:
+wss://{RELAY}/{REPO}/00000b267c61dd416654828e6ca14f4e4c45c583/HEAD@{105}:commit:02:00006855:
+wss://{RELAY}/{REPO}/00000353116a3310a4354a5e771405b3d4c9ba46/HEAD@{106}:commit:03:0000fdb1:
+wss://{RELAY}/{REPO}/00000de98c09df06e53fddd60c8f77288633859b/HEAD@{107}:commit:00:0003c9f4:
+wss://{RELAY}/{REPO}/00000bda075a8b265b0dd2677131093a8cf680ab/HEAD@{108}:commit:01:000ea980:
+wss://{RELAY}/{REPO}/000008cf9522c492a7c3e5d8403c36ff0f838358/HEAD@{109}:commit:02:00002be4:#gnostr will exist!
+wss://{RELAY}/{REPO}/0000078a12e94c2157c2f36e196aa792c34c3ef4/HEAD@{110}:commit:01:0002002f:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000da4b0905328b9eb94e0d1ca86c4c6eb720f/HEAD@{111}:commit:01:00016ecd:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000456c4114a0dff19dfad9cfc1582daad0fdc/HEAD@{112}:commit:00:00000531:#gnostr will exist!
+wss://{RELAY}/{REPO}/000001472b93720db94563ce7d49509f4ef976bf/HEAD@{113}:commit:01:000a3158:#gnostr will exist!
+wss://{RELAY}/{REPO}/000008904c9967c64537c29592adf7b51c521988/HEAD@{114}:commit:01:0000b5c4:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000d60bb3d599333e3babdae2d9c485f173e7e/HEAD@{115}:commit:02:0000bbd8:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000a315b7324d21c396c31fc9631aa1b298b8a/HEAD@{116}:commit:01:0000664d:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000e71f830789e092d3bb58616537c2e6d7a21/HEAD@{117}:commit:01:00002ed6:#gnostr will exist!
+wss://{RELAY}/{REPO}/000001c116115f15ec73f8ffcc917d6f1dfeb0b4/HEAD@{118}:commit:03:00003f67:#gnostr will exist!
+wss://{RELAY}/{REPO}/000007d80207a32822731b2b27e8fa655f313791/HEAD@{119}:commit:02:000435b0:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000f47638102f4deee4a29ad28addf5c97f559/HEAD@{120}:commit:01:00042349:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000ca1bd2e13fe33ca1a98a1a37c92ea6cef8a/HEAD@{121}:commit:01:00043134:#gnostr will exist!
+wss://{RELAY}/{REPO}/00000b925b3a01e9c7967f81208ae0af909b32a3/HEAD@{122}:commit:03:00069eb7:#gnostr will exist!
+wss://{RELAY}/{REPO}/000000d57e888c1a88d0bd3ed0c5032a1b82eef9/HEAD@{123}:commit:01:00011505:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000f312e318c553c3c7b28e0c5fd74a7dad9fb/HEAD@{124}:commit:03:0004d9ba:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/000001df9fc1e96d9e680dbf073403cc769fcf34/HEAD@{125}:commit:00:0004919c:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000f270806b0f32d14fd5dd26ae13be579145a/HEAD@{126}:commit:03:00002f97:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/000008213fb00b8be698fe8bb099f028bd135e8f/HEAD@{127}:commit:01:00003cfe:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000b4bc30a96304f44a75e4e9aef0eeb83e52e/HEAD@{128}:commit:03:0006bdd9:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000fe94b8042978f70e9c3cd23fcfbb9cc6a2c/HEAD@{129}:commit:01:00026594:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000aef1cf80416973a258564dfa8c57a1c9b73/HEAD@{130}:commit:00:0000d6f8:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000bd263aad139a1c6d3a6b3e96d61130f41e2/HEAD@{131}:commit:00:0000a86d:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000e5375a19b3952ae97c5a70cde2da8d1d1c9/HEAD@{132}:commit:01:000589fc:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/0000006d4fdff1f7b4802784d70b6469d460481f/HEAD@{133}:commit:03:000f6fbc:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000e5d9a40881fac4cac3c44ace1feb0a164a6/HEAD@{134}:commit:00:0009e08c:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000f6c84b8e4338d0bd07fe5d67013bf6316ed/HEAD@{135}:commit:03:00002160:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/0000000bafb7e871163a2a3d792a72f9ecf397fe/HEAD@{136}:commit:01:000053ee:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000e47b05d98dadfb42a97b1e4c72ffc32c526/HEAD@{137}:commit:00:0000bfd4:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/0000081cb8e09dcf1fc0993da327b542c100f4f4/HEAD@{138}:commit:02:000051f7:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/00000a6937cd3c7f7f572b139231d2a4ea0bb073/HEAD@{139}:commit:02:00047aed:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/0000031c01940ffe9aa89c10153b096c18fdf63c/HEAD@{140}:commit:02:00013e0e:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/0000068a1f125e08155ce12e587219be53efd449/HEAD@{141}:commit:01:00063caf:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/000009ec0ddc88b989b090606f138a69d2a2c93e/HEAD@{142}:commit:00:0002e122:git rev-parse --verify HEAD
+wss://{RELAY}/{REPO}/05a66f2151ca349bd1f8091d99370aef09f25400/HEAD@{143}:commit:00:0000000d:make: install legit-install
+wss://{RELAY}/{REPO}/00000e12cba1d7f7a00a6aeb75f453083dbec9c9/HEAD@{144}:commit:00:00023991:
+wss://{RELAY}/{REPO}/00000e12cba1d7f7a00a6aeb75f453083dbec9c9/HEAD@{145}:commit:00:00023991:
+wss://{RELAY}/{REPO}/291bb54fa6775d444af93c4a77e0f34f8ef6e2a8/HEAD@{146}:commit:src/main.rs: add target_os detect window, macos, linux
+wss://{RELAY}/{REPO}/00000e12cba1d7f7a00a6aeb75f453083dbec9c9/HEAD@{147}:commit:00:00023991:
+wss://{RELAY}/{REPO}/00000e12cba1d7f7a00a6aeb75f453083dbec9c9/HEAD@{148}:commit:00:00023991:
+wss://{RELAY}/{REPO}/00000e12cba1d7f7a00a6aeb75f453083dbec9c9/HEAD@{149}:commit:00:00023991:
+wss://{RELAY}/{REPO}/000003bc0dc38fcb6d62e0a8cc6de5d20efcdfbf/HEAD@{150}:commit:01:0008180e:
+wss://{RELAY}/{REPO}/000004f15c83370ea73e2dc7801433c7288f08bf/HEAD@{151}:commit:01:000646bf:
+wss://{RELAY}/{REPO}/00000dfae62ae076134d2a3ac5082430059de236/HEAD@{152}:commit:03:0002fb62:
+wss://{RELAY}/{REPO}/00000bfecf0138d012196ae0180fd18f8afeecac/HEAD@{153}:commit:01:0009a0ec:
+wss://{RELAY}/{REPO}/000007ca3cf3445e870c1bc7d76f6a8d45a99013/HEAD@{154}:commit:00:0006497c:
+wss://{RELAY}/{REPO}/00000daf3102deafa9eea639e8be0ec2bbfcab54/HEAD@{155}:commit:01:0001c5cf:
+wss://{RELAY}/{REPO}/00000f76967f593d60fdf806518284497c20b81d/HEAD@{156}:commit:03:000087eb:
+wss://{RELAY}/{REPO}/000003e8c071a1acdca889f22549b892a65fed7d/HEAD@{157}:commit:01:000290b6:
+wss://{RELAY}/{REPO}/000000b96191fe11e3c6057d8fcf976798b13256/HEAD@{158}:commit:01:000110a7:
+wss://{RELAY}/{REPO}/00000790906bd0f8fd2e1573f484dfde9846f85d/HEAD@{159}:commit:00:000386a0:
+wss://{RELAY}/{REPO}/0000011989ba786635188bc96ea24ba881b073eb/HEAD@{160}:commit:02:000215da:
+wss://{RELAY}/{REPO}/0000061a5883d765dbed31d10decdb09d9fbc441/HEAD@{161}:commit:00:00059cb1:
+wss://{RELAY}/{REPO}/000007de4f2846801f978c25f2510bb53c32f87c/HEAD@{162}:commit:02:0000ab4c:
+wss://{RELAY}/{REPO}/00000cc8b7203810d63228780c694f5ded2e42a6/HEAD@{163}:commit:00:000138c6:
+wss://{RELAY}/{REPO}/0000024f0e4c823de8b7cffe67a854a22130434d/HEAD@{164}:commit:03:000a1f0d:
+wss://{RELAY}/{REPO}/00000079951c41132a2e807d2e72404a32228d87/HEAD@{165}:commit:02:0002bef2:
+wss://{RELAY}/{REPO}/000003cf895ab5366f347a76a987b5bd07b313ff/HEAD@{166}:commit:00:0001b440:
+wss://{RELAY}/{REPO}/000000b64a065760e5441bf47f0571cb690b28fc/HEAD@{167}:commit:02:00001228:
+wss://{RELAY}/{REPO}/000004c8273581dfa94ee64fc8e0409e05886dbb/HEAD@{168}:commit:00:0000c774:
+wss://{RELAY}/{REPO}/000003e2d152b1b157fdda4ef27d02145f5f0fc8/HEAD@{169}:commit:03:00009549:
+wss://{RELAY}/{REPO}/00000a91a47d6db37e3fc152e13c20f489426672/HEAD@{170}:commit:00:000297e2:
+wss://{RELAY}/{REPO}/00000d8e07c4c78fd87ded3678d8716ddc3342cc/HEAD@{171}:commit:01:00072823:
+wss://{RELAY}/{REPO}/000000a2c31b9ba1617f6284b15226c488b343c0/HEAD@{172}:commit:01:0003ca9a:
+wss://{RELAY}/{REPO}/00000ce33473d02cbe8b53b09ecab6f134860641/HEAD@{173}:commit:00:000a7a6d:
+wss://{RELAY}/{REPO}/00000014e80b2c21c39c61064b429152293f8281/HEAD@{174}:commit:02:000c159f:
+wss://{RELAY}/{REPO}/1df085b731e4c463b4b275686d5f81f81add621a/HEAD@{175}:commit:src/main.rs: add target_os detect window, macos, linux
+wss://{RELAY}/{REPO}/291bb54fa6775d444af93c4a77e0f34f8ef6e2a8/HEAD@{176}:commit:src/main.rs: add target_os detect window, macos, linux
+wss://{RELAY}/{REPO}/000000825da6f3d07b4be5825d3e0336566e7615/HEAD@{177}:commit:00:0001a30c:
+wss://{RELAY}/{REPO}/00000f6e3b30ab65161aa8d7fb17ee380db995b8/HEAD@{178}:commit:00:000289f4:On branch master Your branch is ahead of 'origin/master' by 4 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000b95f2640ebea23f8345389be180cf8e552c/HEAD@{179}:commit:03:0002f2fc:On branch master Your branch is ahead of 'origin/master' by 3 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000eeaf28c5e9420ae2f73228386808706bb53/HEAD@{180}:commit:01:000b486d:On branch master Your branch is ahead of 'origin/master' by 2 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/000009466ccdb48f7efb7e6e39e4d2234866430f/HEAD@{181}:commit:03:00010dc8:On branch master Your branch is ahead of 'origin/master' by 1 commit.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0000012f7246c615f1689f0bfdf9b2cede14a1a9/HEAD@{182}:commit:02:0009ad72:On branch master Your branch is up to date with 'origin/master'.
+wss://{RELAY}/{REPO}/291bb54fa6775d444af93c4a77e0f34f8ef6e2a8/HEAD@{183}:commit:src/main.rs: add target_os detect window, macos, linux
+wss://{RELAY}/{REPO}/0000031ab2bd3eb8575b6f7c189cdeabb6906825/HEAD@{184}:commit:01:0002bad2:On branch master Your branch is up to date with 'origin/master'.
+wss://{RELAY}/{REPO}/0000089c59d0ca960c2cc7b67c55eaa3433ddb73/HEAD@{185}:commit:03:0001bd88:gnostr-legit working as sub command
+wss://{RELAY}/{REPO}/6767228dce38689ddf0589c4f796ddc0774290b4/HEAD@{186}:commit:initial checkin
+wss://{RELAY}/{REPO}/00000acb05a987cd0df23ed06c7f0ecbecd8f8de/HEAD@{187}:commit:02:0005d2d1:gnostr-legit working as sub command
+wss://{RELAY}/{REPO}/0000072911d72739aedd8909957985a0f9c6450c/HEAD@{188}:commit:01:00026687:gnostr-legit working as sub command
+wss://{RELAY}/{REPO}/00000482e640c0a26c7919a16b2b70c8c1abbd32/HEAD@{189}:commit:00:0005c5d7:On branch master Your branch is ahead of 'origin/master' by 5 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000566e0d1c69618486b55a9c562ff225c34a7/HEAD@{190}:commit:02:00042cba:On branch master Your branch is ahead of 'origin/master' by 4 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0000244bf08aef82bacb7e56539d8378deff4052/HEAD@{191}:commit:01:00002dd6:On branch master Your branch is ahead of 'origin/master' by 3 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0237021e87376199f1a87816a01436eb82951fc3/HEAD@{192}:commit:00:00000001:On branch master Your branch is ahead of 'origin/master' by 2 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/000005da1dbb88b972b355af5a3a84e9fcecdfd5/HEAD@{193}:commit:01:0000a3df:On branch master Your branch is ahead of 'origin/master' by 1 commit.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0000074c9e436bcab99cdad31f2d6a73a50afa63/HEAD@{194}:commit:00:0000cf60:On branch master Your branch is up to date with 'origin/master'.
+wss://{RELAY}/{REPO}/0cc24beac8e0897878bfcfede8e73b6fdbbf7afb/HEAD@{195}:commit:00:0000000d:test
+wss://{RELAY}/{REPO}/09991c7b0d80ad30b129f6a08260e4e0a57a02d0/HEAD@{196}:commit:01:00000003:On branch master Your branch and 'origin/master' have diverged, and have 10 and 17 different commits each, respectively.   (use "git pull" to merge the remote branch into yours)
+wss://{RELAY}/{REPO}/0000039817fbfa55cfbdddb242ebee849bf0182f/HEAD@{197}:commit:03:0000a867:On branch master Your branch and 'origin/master' have diverged, and have 9 and 17 different commits each, respectively.   (use "git pull" to merge the remote branch into yours)
+wss://{RELAY}/{REPO}/00000fdfc2f5a2b626f78224292331ded760db06/HEAD@{198}:commit:03:0006cc1d:On branch master Your branch and 'origin/master' have diverged, and have 8 and 17 different commits each, respectively.   (use "git pull" to merge the remote branch into yours)
+wss://{RELAY}/{REPO}/0000017a282b190abe88da951a4ca2e352ece321/HEAD@{199}:commit:01:0009927a:On branch master Your branch and 'origin/master' have diverged, and have 7 and 17 different commits each, respectively.   (use "git pull" to merge the remote branch into yours)
+wss://{RELAY}/{REPO}/00000646eccfdaa38fa96c007d21568bdfc0e9e8/HEAD@{200}:commit:01:00002fc8:On branch master Your branch and 'origin/master' have diverged, and have 6 and 17 different commits each, respectively.   (use "git pull" to merge the remote branch into yours)
+wss://{RELAY}/{REPO}/00000db94554b02f67e96034014d5465a0b1ee55/HEAD@{201}:commit:00:0008a860:On branch master Your branch and 'origin/master' have diverged, and have 5 and 17 different commits each, respectively.   (use "git pull" to merge the remote branch into yours)
+wss://{RELAY}/{REPO}/021687c06e63ed98b9a81ca96d6d49ec2179f571/HEAD@{202}:commit:00:00000005:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/00ec3e71e24bbe4f857dcd63fedd9c34811c8cb8/HEAD@{203}:commit:00:00000006:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0de59b69822f403c619703ec78d3312e400f19c8/HEAD@{204}:commit:00:00000003:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0de59b69822f403c619703ec78d3312e400f19c8/HEAD@{205}:commit:00:00000003:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0c1bbbb075c51069619fa383074e3ad8f7e1823a/HEAD@{206}:commit:00:00000002:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/9296ea3fb875c8a802abeac79ab4909d4c5f83a5/HEAD@{207}:commit:utf8_string:
+wss://{RELAY}/{REPO}/9296ea3fb875c8a802abeac79ab4909d4c5f83a5/HEAD@{208}:commit:utf8_string:
+wss://{RELAY}/{REPO}/000003a285ead924063229775c70d54e73f013d9/HEAD@{209}:commit:01:00004a4f:On branch master Your branch is ahead of 'origin/master' by 15 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0000051a686c5d3422c63bb81a43af61d5a87ef3/HEAD@{210}:commit:01:0003c882:On branch master Your branch is ahead of 'origin/master' by 1 commit.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/069bc21b12a77f56107f9c6c937f9d5db651264b/HEAD@{211}:commit:01:00000006:src/repo.rs get_pwd pwd
+wss://{RELAY}/{REPO}/0b8818bfcd8b88ab74e0696ee0584d0b712ea727/HEAD@{212}:commit:01:00000004:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/09998af934f415d551cb031b391f5cfaa0699ad8/HEAD@{213}:commit:03:00000001:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0fbd6fc13c9fbd24aebe2b634962714b3737ec31/HEAD@{214}:commit:00:00000003:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/09998af934f415d551cb031b391f5cfaa0699ad8/HEAD@{215}:commit:03:00000001:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0779c2df0339ca79a6ad3208ce060ea63d7f528c/HEAD@{216}:commit:02:00000004:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0779c2df0339ca79a6ad3208ce060ea63d7f528c/HEAD@{217}:commit:02:00000004:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/09998af934f415d551cb031b391f5cfaa0699ad8/HEAD@{218}:commit:03:00000001:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/099fbfdaaa0919b98c2133eba52c75d922f4229e/HEAD@{219}:commit:01:00000004:src/repo.rs repo_state state
+wss://{RELAY}/{REPO}/0f8680c232203350ff036c788e39b6b840c2de87/HEAD@{220}:commit:02:00000003:src/repo.rs repo_state state[C
+wss://{RELAY}/{REPO}/069bc21b12a77f56107f9c6c937f9d5db651264b/HEAD@{221}:commit:01:00000006:src/repo.rs get_pwd pwd
+wss://{RELAY}/{REPO}/0000051a686c5d3422c63bb81a43af61d5a87ef3/HEAD@{222}:commit:01:0003c882:On branch master Your branch is ahead of 'origin/master' by 1 commit.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000810c98ba7d049198a268ad58e3dc994233c/HEAD@{223}:commit:02:000c2ccb:On branch master Your branch is up to date with 'origin/master'.
+wss://{RELAY}/{REPO}/0c319232456cf14864636e1062a32921d351f2b4/HEAD@{224}:commit:02:00000001:src/repo.rs get_pwd pwd
+wss://{RELAY}/{REPO}/0f50b14d42ebfe49ad92a61061aaf9421952f66c/HEAD@{225}:commit:03:00000005:test
+wss://{RELAY}/{REPO}/0aff378f14a7636b2a197ddd58dd0493fc3d96e0/HEAD@{226}:commit:00:0000000e:test
+wss://{RELAY}/{REPO}/00000121cc66174826ab88596cef152c07537290/HEAD@{227}:commit:00:0007fe44:On branch master Your branch is ahead of 'origin/master' by 29 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000f0a477510616234b7a8e98cad99f57a713f/HEAD@{228}:commit:01:0000a839:On branch master Your branch is ahead of 'origin/master' by 28 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0c23a40e60cd8c89a706735f8c31b0bcaac02bf4/HEAD@{229}:commit:03:00000007:test
+wss://{RELAY}/{REPO}/03e93dee9147e993994473a12a2187053f8425f3/HEAD@{230}:commit:02:00000004:test
+wss://{RELAY}/{REPO}/50ce4754b68d61e66bc168bbdd7e6250bc71d0a1/HEAD@{231}:commit:src/main.rs: use sha2
+wss://{RELAY}/{REPO}/44c711ec3b91db4670bf36790c48a91b3aeebb21/HEAD@{232}:commit:src/main.rs: use sha2
+wss://{RELAY}/{REPO}/44c711ec3b91db4670bf36790c48a91b3aeebb21/HEAD@{233}:commit:src/main.rs: use sha2
+wss://{RELAY}/{REPO}/04b391a25aaee83dc448b00661c551b2e69f598a/HEAD@{234}:commit:03:00000002:test
+wss://{RELAY}/{REPO}/04b391a25aaee83dc448b00661c551b2e69f598a/HEAD@{235}:commit:03:00000002:test
+wss://{RELAY}/{REPO}/083f604fdc40cea5cd216b2d29afe46169de1094/HEAD@{236}:commit:01:00000003:test
+wss://{RELAY}/{REPO}/0850d9f24689741354418837e16a6ef9b994b09c/HEAD@{237}:commit:03:00000000:test
+wss://{RELAY}/{REPO}/0850d9f24689741354418837e16a6ef9b994b09c/HEAD@{238}:commit:03:00000000:test
+wss://{RELAY}/{REPO}/083f604fdc40cea5cd216b2d29afe46169de1094/HEAD@{239}:commit:01:00000003:test
+wss://{RELAY}/{REPO}/0e8c251af22fd622fa9bc61a6513d105dac55f2f/HEAD@{240}:commit:01:00000001:test
+wss://{RELAY}/{REPO}/04b391a25aaee83dc448b00661c551b2e69f598a/HEAD@{241}:commit:03:00000002:test
+wss://{RELAY}/{REPO}/0bb3afbf794c68bae47c3ce54ff28cabbf3b70bf/HEAD@{242}:commit:03:00000007:On branch master Your branch is ahead of 'origin/master' by 23 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/000004f8f5d23ab9acf44f40a8040e32f484f1ed/HEAD@{243}:commit:00:0004f62c:test
+wss://{RELAY}/{REPO}/00000db5fecf231b624e2a0f8ac8edbb4e272191/HEAD@{244}:commit:02:00009201:On branch master Your branch is ahead of 'origin/master' by 21 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0000e7d83476f51317a606bf222d70543aa5137a/HEAD@{245}:commit:03:00000123:On branch master Your branch is ahead of 'origin/master' by 20 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/0dd1d9d5f6cd3d23eb146e32459de130d0a34d4c/HEAD@{246}:commit:01:00000002:On branch master Your branch is ahead of 'origin/master' by 19 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000ed29eea8bee4f0960e6d77751fc35d192ef/HEAD@{247}:commit:02:0002546a:On branch master Your branch is ahead of 'origin/master' by 18 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/00000ca065a22aa91e4c3406edc0bb7b7cf3ea85/HEAD@{248}:commit:01:00001d41:On branch master Your branch is ahead of 'origin/master' by 17 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/000004e918cf6c3b4c5900df263646c2a59c6a09/HEAD@{249}:commit:02:0000674e:On branch master Your branch is ahead of 'origin/master' by 16 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/000003a285ead924063229775c70d54e73f013d9/HEAD@{250}:commit:01:00004a4f:On branch master Your branch is ahead of 'origin/master' by 15 commits.   (use "git push" to publish your local commits)
+wss://{RELAY}/{REPO}/000005cb4af1c18f6d36b5322e240aa796039396/HEAD@{251}:commit:00:0002fd9e:gnostr
+wss://{RELAY}/{REPO}/000005cfa383f0c5a8769f903da5c3265c9b83d2/HEAD@{252}:commit:03:000d49ac:gnostr
+wss://{RELAY}/{REPO}/00000f34036215fa2714667ce9ed453b9ed8b882/HEAD@{253}:commit:01:0005ff97:gnostr
+wss://{RELAY}/{REPO}/00000bd96d71c71add7a2fde4c11ab7b9762c22d/HEAD@{254}:commit:02:00026915:gnostr
+wss://{RELAY}/{REPO}/000009ef7522eb398a6b03860441909d0a685c6e/HEAD@{255}:commit:02:00002753:1
+wss://{RELAY}/{REPO}/0000012c36d1e37bc2bed7f8d3550a0c44701543/HEAD@{256}:commit:03:00021232:2
+wss://{RELAY}/{REPO}/00000ae554f27baddb71d9ec232de9b457a855dd/HEAD@{257}:commit:00:0000d5ec:
+wss://{RELAY}/{REPO}/0000070a0260b2e34f26e24115e5ab5a546b74fa/HEAD@{258}:commit:00:000028af:gnostr
+wss://{RELAY}/{REPO}/0000094d77bfc8f6b0d7dcec3d32e533fcd5c5a5/HEAD@{259}:commit:02:0003a2bb:gnostr
+wss://{RELAY}/{REPO}/00000942475d1f5124764eaf70fb366916162576/HEAD@{260}:commit:00:00002e63:gnostr
+wss://{RELAY}/{REPO}/00000094b915c4a74370496bb1d96341b4fc3a6a/HEAD@{261}:commit:03:000272ee:gnostr
+wss://{RELAY}/{REPO}/000ac6966cc15ec175950152713e3cba3b5f3b6d/HEAD@{262}:commit:02:000001d5:gnostr
+wss://{RELAY}/{REPO}/038326b44f2a887bb6d00e257211b038d57d93bd/HEAD@{263}:commit:03:00000003:gnostr
+wss://{RELAY}/{REPO}/000000cdf790f42026ddf7a096ef2258481cbde7/HEAD@{264}:commit:00:0002ddff:gnostr
+wss://{RELAY}/{REPO}/00000fcee2671f84250e04d28565908ceebf74a0/HEAD@{265}:commit:00:000e39c8:gnostr
+wss://{RELAY}/{REPO}/000007290856a1f69f24d0285e44d95099cd4ed4/HEAD@{266}:commit:02:000c3af1:gnostr
+wss://{RELAY}/{REPO}/00f7139de0afb5682e2878acd8c8903215ce85f5/HEAD@{267}:commit:02:00000005:gnostr
+wss://{RELAY}/{REPO}/00f7139de0afb5682e2878acd8c8903215ce85f5/HEAD@{268}:commit:02:00000005:gnostr
+wss://{RELAY}/{REPO}/0bfa4853a1737aeadbac38ff59ba4c1be3a4c154/HEAD@{269}:commit:00:00000016:gnostr
+wss://{RELAY}/{REPO}/0e0fb08c88ab76553c36e91a5e97ea0d2eadc29a/HEAD@{270}:commit:00:00000004:initial gnostr-legit config with proof of work
+wss://{RELAY}/{REPO}/0e0fb08c88ab76553c36e91a5e97ea0d2eadc29a/HEAD@{271}:commit:00:00000004:initial gnostr-legit config with proof of work
+wss://{RELAY}/{REPO}/0000002a3bb954d533918b6bf3c0c1236466b1e0/HEAD@{272}:commit:00:0052bc88:initial gnostr-legit config with proof of work
+wss://{RELAY}/{REPO}/01234574509b46997914c2bf0957a11cbe5c90c2/HEAD@{273}:commit:Update to 2018 edition + fix OpenSSL/Git2 01-000c1861
+wss://{RELAY}/{REPO}/0afbab8c9e5882abcaffc3f7d923630543918bcc/HEAD@{274}:commit:01:00000003:test
+wss://{RELAY}/{REPO}/03f30e3043b1148e951fb5c1c46bd50483d2c62e/HEAD@{275}:commit:03:00000001:test
+wss://{RELAY}/{REPO}/0652cd6ef5e06d288dbcd0085fbac0f29c0fb0b5/HEAD@{276}:commit:01:0000000d:gnostr
+wss://{RELAY}/{REPO}/000001341ad4f12266cf10caa643ae5f8a9a8ee0/HEAD@{277}:commit:02:0008aae0:this is a gnostr commit with some proof of work!
+wss://{RELAY}/{REPO}/d23e029d8ca03c459de8ca8362d5d58be008b31b/HEAD@{278}:commit:.github/workflows/static.yml:
+wss://{RELAY}/{REPO}/000001341ad4f12266cf10caa643ae5f8a9a8ee0/HEAD@{279}:commit:02:0008aae0:this is a gnostr commit with some proof of work!
+wss://{RELAY}/{REPO}/00000cdcf6e7300487028ef9b916e821194967f3/HEAD@{280}:commit:03:00023cf2:this is a gnostr commit with some proof of work!
+wss://{RELAY}/{REPO}/75429d7fdd5d5c255f7709aa822a3af8420999bb/HEAD@{281}:commit:gnostr-legit: Cargo.toml Cargo.lock: config
+wss://{RELAY}/{REPO}/00007c6b0d64b84a7a5563e7f7851b77c4b16779/HEAD@{282}:commit:01:00002543:this is a gnostr commit with some proof of work!
+wss://{RELAY}/{REPO}/000021dc33f435278899666f3fd53efac82112b9/HEAD@{283}:commit:02:0000ff0f:this is a gnostr commit with some proof of work!
+wss://{RELAY}/{REPO}/00007ac75bee5bcd23054b0f7ef3aa84a3ceb092/HEAD@{284}:commit:03:0000022e:this is a gnostr commit with some proof of workgit loggit log!
+wss://{RELAY}/{REPO}/00000539ad2a094400db6a2c0936eb78dd566e25/HEAD@{285}:commit:01:0000020b:this is a gnostr commit with some proof of workgit log
+wss://{RELAY}/{REPO}/00002680e01c43d982a34831d6a6ab0b9ae2ebd7/HEAD@{286}:commit:01:000013e8:gnostr
+wss://{RELAY}/{REPO}/0000e80b96d7543735494dcbaf88d1652ade6690/HEAD@{287}:commit:03:000009e4:
+wss://{RELAY}/{REPO}/00007f8dcb372577ade367786d4c0c6dd1bf8861/HEAD@{288}:commit:01:00000cba:
+wss://{RELAY}/{REPO}/0000b4ee5f066cc0b19af514bc8274c16f0c425b/HEAD@{289}:commit:00:0000b5cd:testing
+wss://{RELAY}/{REPO}/00003b432bc4257e0bf6bdad0bf6eeb15cdcd164/HEAD@{290}:commit:02:00000b88:gnostr
+wss://{RELAY}/{REPO}/0000a8a943b290dcd6bc16d9baa147571ec573fc/HEAD@{291}:commit:gnostr:03:000020f1
+wss://{RELAY}/{REPO}/00009442fcd7ae43da1ff04bba294c495b5b2fad/HEAD@{292}:commit:gnostr:01:00004e1c
+wss://{RELAY}/{REPO}/00006f20e417214c744744016e179e8eafdd8ac2/HEAD@{293}:commit:gnostr/legit:03:0000f48d
+wss://{RELAY}/{REPO}/00006479b8ca7b9072f51bb78211efbfd400ed46/HEAD@{294}:commit:gnostr/legit:03:00002381
+wss://{RELAY}/{REPO}/0000dd3af9854783d77e62dcf003a3f913b92493/HEAD@{295}:commit:gnostr/legit:03/00000bb6
+wss://{RELAY}/{REPO}/000092255faa84c5315e10247a05a8353086e223/HEAD@{296}:commit:gnostr/legit:02-00004a82
+wss://{RELAY}/{REPO}/0000f7344e5bf42ea47fcbe456218106feb915bc/HEAD@{297}:commit:gnostr/legit/:02-00004b32
+wss://{RELAY}/{REPO}/000084967a1b2256e65ca2290e554a7b6550b0d7/HEAD@{298}:commit:gnostr/legit/:01-00001471
+wss://{RELAY}/{REPO}/0000004d14fe4d7f82c1ae5f65a9947a16aa789d/HEAD@{299}:commit:gnostr/legit/ 03-0038dfe5
+wss://{RELAY}/{REPO}/000000dc0cc0274ba5b8f58581bfdcb5e0ae6ca1/HEAD@{300}:commit:gnostr/legit 00-00210df9
+wss://{RELAY}/{REPO}/0000058b9e5bac8119780f249586d9b505c31623/HEAD@{301}:commit:gnostr/legit 01-000041a7
+wss://{RELAY}/{REPO}/000081c782c67bf1dcbce373b627a14f815579ed/HEAD@{302}:commit:gnostr/legit 01-00000722
+wss://{RELAY}/{REPO}/00473cf8da0cd01474d3143ded4616dae7d09158/HEAD@{303}:commit:gnostr/legit 01-00000012
+wss://{RELAY}/{REPO}/0c0477bbc0b4b847bfc25b81c0f604487e077823/HEAD@{304}:commit:gnostr/legit 00-00000005
+wss://{RELAY}/{REPO}/11174a92d6032cb1146fe83a2c1cb1a811afcb04/HEAD@{305}:commit:gnostr/legit 01-00000055
+wss://{RELAY}/{REPO}/117cb10ef97d71f143dfba30d4329318a68afbcd/HEAD@{306}:commit:gnostr/legit 00-0000004e
+wss://{RELAY}/{REPO}/19a1113c44786b6733a5a3e77fc9f94225822fde/HEAD@{307}:commit:gnostr/legit 02-00000001
+wss://{RELAY}/{REPO}/000007197ff066456a1b6e4726a08df2535ee985/HEAD@{308}:commit:gnostr/legit 02-000756f9
+wss://{RELAY}/{REPO}/000055957346d75c2cc67654f08ead08a47a9eef/HEAD@{309}:commit:gnostr/legit 01-00001c42
+wss://{RELAY}/{REPO}/00005db3998f7598e8002935d1f561a313146df5/HEAD@{310}:commit:gnostr/legit 02-0000025e
+wss://{RELAY}/{REPO}/00912b29bc64f2b54329ebf56e9e373dfafaacea/HEAD@{311}:commit:gnostr/legit 03-00000009
+wss://{RELAY}/{REPO}/00c636be564909704fbefd8d0eaea2b6c3c382d5/HEAD@{312}:commit:gnostr/legit 02-00000004
+wss://{RELAY}/{REPO}/ef0d0571a63fcfdaffdc5f3ce3d7ee0c334adfcd/HEAD@{313}:commit:src/main.rs:
+wss://{RELAY}/{REPO}/00064dab764319266b4a71ecf0ed4c7c36eb2054/HEAD@{314}:commit:default commit message 02-00000c56
+wss://{RELAY}/{REPO}/adcc384b66a63e5ec127c255102188b7fe8195b4/HEAD@{315}:commit:src/main.rs:
+wss://{RELAY}/{REPO}/000ef874689312ee5211668a9881f222db2e6d3b/HEAD@{316}:commit:default commit message 02-0000044d
+wss://{RELAY}/{REPO}/0009e160fd0cf1c2fdf18fab30780181aa9f41ef/HEAD@{317}:commit:default commit message 02-0000075a
+wss://{RELAY}/{REPO}/000a39e3296c002c509ef73a0da9b0c47805a299/HEAD@{318}:commit:default commit message 02-0000008b
+wss://{RELAY}/{REPO}/75429d7fdd5d5c255f7709aa822a3af8420999bb/HEAD@{319}:commit:gnostr-legit: Cargo.toml Cargo.lock: config
+wss://{RELAY}/{REPO}/d23e029d8ca03c459de8ca8362d5d58be008b31b/HEAD@{320}:commit:.github/workflows/static.yml:

@@ -1,0 +1,41 @@
+commit 0000062ba4e66ce42ab91ed693186ca49928caeb
+Author: @RandyMcMillan <randy.lee.mcmillan@gmail.com>
+Date:   Mon Jul 17 15:00:01 2023 -0400
+
+    03:0006988f:
+
+diff --git a/src/gitminer.rs b/src/gitminer.rs
+index c533630..5eea3e7 100644
+--- a/src/gitminer.rs
++++ b/src/gitminer.rs
+@@ -66,7 +66,8 @@ impl Gitminer {
+ 
+         let (_, blob, hash) = rx.recv().unwrap();
+ 
+-        //let test = self.write_reflog(&hash, &blob);
++        let write_reflog = self.write_reflog(&hash, &blob);
++        let write_blob = self.write_reflog(&hash, &blob);
+ 
+         match self.write_commit(&hash, &blob) {
+             Ok(_)  => Ok(hash),
+@@ -157,8 +158,19 @@ impl Gitminer {
+             .expect("Failed to write .gnostr/reflog/<hash>");
+ 
+         Ok(())
+-    }//end write_commit
++    }//end write_reflog
++
++    fn write_blob(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+ 
++        Command::new("sh")
++            .arg("-c")
++            .arg(format!("cd {} && mkdir -p .gnostr/blobs && touch -f .gnostr/blobs/{}", self.opts.repo, hash))//stream blob into hashfile
++            .output()
++            .ok()
++            .expect("Failed to write .gnostr/blobs/<hash>");
++
++        Ok(())
++    }//end write_blob
+ 
+     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
+         let cfg = match repo.config() {
