@@ -127,13 +127,13 @@ impl Gitminer {
             .ok()
             .expect("Failed to generate commit");
 
-        ////write the blob
-        //Command::new("sh")
-        //    .arg("-c")
-        //    .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
-        //    .output()
-        //    .ok()
-        //    .expect("Failed to write .gnostr/blobs/<hash>");
+        //write the blob
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
+            .output()
+            .ok()
+            .expect("Failed to write .gnostr/blobs/<hash>");
 
         Ok(())
     }//end write_commit
