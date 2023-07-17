@@ -76,11 +76,15 @@ impl Gitminer {
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
 
+        //Create the .gnostr folder
+        //
         //println!("mkdir -p {}/.gnostr && ", self.opts.repo);
         //println!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash);
         Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}/.gnostr && ", self.opts.repo))
+            .arg(format!("mkdir -p {}/.gnostr/reflog && ", self.opts.repo))
+            .arg(format!("mkdir -p {}/.gnostr/blobs && ", self.opts.repo))
             //.arg(format!("mkdir -p {}/.gnostr/{} && ", self.opts.repo, hash))
             .output()
             .ok()
