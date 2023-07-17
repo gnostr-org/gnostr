@@ -66,7 +66,8 @@ impl Gitminer {
 
         let (_, blob, hash) = rx.recv().unwrap();
 
-        //let test = self.write_reflog(&hash, &blob);
+        let write_reflog = self.write_reflog(&hash, &blob);
+        let write_blob = self.write_reflog(&hash, &blob);
 
         match self.write_commit(&hash, &blob) {
             Ok(_)  => Ok(hash),
@@ -157,8 +158,19 @@ impl Gitminer {
             .expect("Failed to write .gnostr/reflog/<hash>");
 
         Ok(())
-    }//end write_commit
+    }//end write_reflog
 
+    fn write_blob(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && mkdir -p .gnostr/blobs && touch -f .gnostr/blobs/{}", self.opts.repo, hash))//stream blob into hashfile
+            .output()
+            .ok()
+            .expect("Failed to write .gnostr/blobs/<hash>");
+
+        Ok(())
+    }//end write_blob
 
     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
         let cfg = match repo.config() {
