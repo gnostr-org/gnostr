@@ -220,6 +220,7 @@ gnostr-event:## 	gnostr-event
 ## 	make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io | jq --raw-output '.[1]'
 ## 	gnostr-query -i $(make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io | jq --raw-output  '.[1]') | $(which gnostr-cat) -u wss://relay.damus.io
 ## 	gnostr-query -i $(make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io | jq --raw-output  '.[1]') | $(which gnostr-cat) -u wss://relay.damus.io | jq
+## 	gnostr-query -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 | gnostr-cat -u wss://relay.damus.io
 	@test gnostr && gnostr --sec $(SESSION_KEY) --envelope --tag "gnostr" "$(shell gnostr-git -v)"  --content "gnostr v$(shell gnostr -v) gnostr-git v$(shell gnostr-git -v)" #| $(which gnostr-cat) -u wss://relay.damus.io
 .PHONY: branch
 .ONESHELL:
