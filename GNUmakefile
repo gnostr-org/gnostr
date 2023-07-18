@@ -204,7 +204,7 @@ git-add:## 	git-add
 .PHONY: push
 .ONESHELL:
 push: touch-time git-add## 	push
-	test legit && legit . -p 00000 -m "make: push - $(shell date +%s)"
+	test gnostr-legit && gnostr-legit . -p 00000 -m "make: push - $(shell date +%s)"
 	@git push -f origin	+master:master
 
 .PHONY: branch
