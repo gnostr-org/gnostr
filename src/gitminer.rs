@@ -13,13 +13,14 @@ pub struct Options {
     pub target:    String,
     pub message:   String,
     pub repo:      String,
-    pub timestamp: time::Tm,
+    pub timestamp: time::Tm
 }
 
 pub struct Gitminer {
     opts:   Options,
     repo:   git2::Repository,
-    author: String
+    author: String,
+    pub relays: String
 }
 
 
@@ -32,11 +33,13 @@ impl Gitminer {
         };
 
         let author = Gitminer::load_author(&repo)?;
+        let relays = Gitminer::load_gnostr_relays(&repo)?;
 
         Ok(Gitminer {
             opts:   opts,
             repo:   repo,
-            author: author
+            author: author,
+            relays: relays
         })
     }
 
@@ -70,9 +73,22 @@ impl Gitminer {
     }
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
+            .output()
+            .ok()
+            .expect("Failed to generate commit");
+
         /* repo.blob() generates a blob, not a commit.
-         * don't know if there's a way to do this with libgit2. */
-        let tmpfile  = format!("/tmp/{}.tmp", hash);
+         * we write the commit, then
+         * we use the tmpfile to create .gnostr/blobs/<hash>
+         * we 'git show' the mined tmpfile
+         * and pipe it into the .gnostr/blobs/<hash>
+         */
+
+        let tmpfile  = format!("/tmp/{}.tmp",hash);
         let mut file = File::create(&Path::new(&tmpfile))
             .ok()
             .expect(&format!("Failed to create temporary file {}", &tmpfile));
@@ -81,6 +97,7 @@ impl Gitminer {
             .ok()
             .expect(&format!("Failed to write temporary file {}", &tmpfile));
 
+        //write the commit
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash))
@@ -88,6 +105,30 @@ impl Gitminer {
             .ok()
             .expect("Failed to generate commit");
 
+        //write the blob
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
+            .output()
+            .ok()
+            .expect("Failed to write .gnostr/blobs/<hash>");
+
+//REF:
+//gnostr-git reflog --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd:commit:%s'
+//gnostr-git-reflog -f
+//write the reflog
+//the new reflog is associated with a commit
+//we will use gnostr-git-reflog -f
+//for an integrity check as well
+//to test the 'gnostr' protocol
+//write the reflog
+//
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && mkdir -p .gnostr/reflog && touch -f .gnostr/reflog/{} && git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog/{}", self.opts.repo, hash, "{RELAY}", "{REPO}", hash))
+            .output()
+            .ok()
+            .expect("Failed to write .gnostr/reflog/<hash>");
         Ok(())
     }
 
@@ -95,22 +136,53 @@ impl Gitminer {
     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
         let cfg = match repo.config() {
             Ok(c)  => c,
-            Err(_) => { return Err("Failed to load git config"); }
+            Err(_) => { return Err("Failed to load git config user.name"); }
         };
 
         let name  = match cfg.get_string("user.name") {
             Ok(s)  => s,
-            Err(_) => { return Err("Failed to find git user name"); }
+            Err(_) => { return Err("Failed to find git config user.name"); }
         };
 
         let email = match cfg.get_string("user.email") {
             Ok(s)  => s,
-            Err(_) => { return Err("Failed to find git email address"); }
+            Err(_) => { return Err("Failed to find git config user.email"); }
         };
 
         Ok(format!("{} <{}>", name, email))
     }
 
+    fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static str> {
+        let cfg = match repo.config() {
+            Ok(c)  => c,
+            Err(_) => { return Err("Failed to load git config gnostr.relays"); }
+        };
+
+        let relays  = match cfg.get_string("gnostr.relays") {
+            Ok(s)  => s,
+            Err(_) => { return Err("Failed to find git config gnostr.relays"); }
+        };
+
+
+        Ok(format!("{}", relays))
+    }
+
+    fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+        Gitminer::ensure_no_unstaged_changes(repo)?;
+
+        let head   = repo.revparse_single("HEAD").unwrap();
+        let head_2 = format!("{}", head.id());
+
+        Ok((head_2))
+    }
+    fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+        Gitminer::ensure_no_unstaged_changes(repo)?;
+
+        let head   = repo.revparse_single("HEAD~1").unwrap();
+        let head_1 = format!("{}", head.id());
+
+        Ok((head_1))
+    }
     fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 

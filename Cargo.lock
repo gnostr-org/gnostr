@@ -208,11 +208,12 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "0.2.4"
+version = "0.0.0"
 dependencies = [
  "argparse",
  "chrono",
  "git2",
+ "pad",
  "rust-crypto",
  "sha2",
  "time",
@@ -367,6 +368,15 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "pad"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2ad9b889f1b12e0b9ee24db044b5129150d5eada288edc800f789928dc8c0e3"
+dependencies = [
+ "unicode-width",
 ]
 
 [[package]]
