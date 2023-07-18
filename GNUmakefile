@@ -199,6 +199,7 @@ git-add:## 	git-add
 	git add --ignore-errors .github
 	git add --ignore-errors *.sh
 	git add --ignore-errors *.yml
+	git add --ignore-errors src
 
 .PHONY: push
 .ONESHELL:
