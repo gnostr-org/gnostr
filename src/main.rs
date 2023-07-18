@@ -53,21 +53,20 @@ fn example() {
 
 
 fn main() -> io::Result<()> {
-    if cfg!(debug_assertions) {
-        println!("Debugging enabled");
-    } else {
-        println!("Debugging disabled");
-    }
 
-    #[cfg(debug_assertions)]
-    println!("Debugging enabled");
+    //if cfg!(debug_assertions) {
+    //    println!("Debugging enabled");
+    //} else {
+    //    println!("Debugging disabled");
+    //}
 
-    #[cfg(not(debug_assertions))]
-    println!("Debugging disabled");
+    //#[cfg(debug_assertions)]
+    //println!("Debugging enabled");
 
-    example();
-    
+    //#[cfg(not(debug_assertions))]
+    //println!("Debugging disabled");
 
+    //example();
 
     let start = time::get_time();
     let system_time = SystemTime::now();
