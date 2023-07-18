@@ -151,10 +151,10 @@ init:
 
 .PHONY: help
 help:## 	help
-##help
 	@echo ""
 #@echo verbose $@
-	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
+#@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | sed -e 's/^/ /'
 	@echo ""
 
 .PHONY: report
