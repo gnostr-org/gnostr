@@ -213,6 +213,14 @@ push: touch-time git-add## 	push
 	test gnostr-legit && gnostr-legit . -p 00000 -m "make: push - $(shell date +%s)"
 	@git push -f origin	+master:master
 
+gnostr-event:## 	gnostr-event
+##gnostr-event:
+## 	make gnostr-event
+## 	make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io
+## 	make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io | jq --raw-output '.[1]'
+## 	gnostr-query -i $(make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io | jq --raw-output  '.[1]') | $(which gnostr-cat) -u wss://relay.damus.io
+## 	gnostr-query -i $(make gnostr-event | $(which gnostr-cat) -u wss://relay.damus.io | jq --raw-output  '.[1]') | $(which gnostr-cat) -u wss://relay.damus.io | jq
+	@test gnostr && gnostr --sec $(SESSION_KEY) --envelope --tag "gnostr" "$(shell gnostr-git -v)"  --content "gnostr v$(shell gnostr -v) gnostr-git v$(shell gnostr-git -v)" #| $(which gnostr-cat) -u wss://relay.damus.io
 .PHONY: branch
 .ONESHELL:
 branch: docs touch-time touch-block-time## 	branch
