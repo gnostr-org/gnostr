@@ -26,6 +26,8 @@ GNOSTR                                  := $(shell which gnostr)
 export GNOSTR_LEGIT
 GNOSTR_LEGIT                            := $(shell which gnostr-legit)
 export GNOSTR_LEGIT
+GNOSTR_CAT                            := $(shell which gnostr-cat)
+export GNOSTR_CAT
 CARGO_PATH                              :=$(HOME)/.cargo
 export CARGO_PATH
 #PATH                                   :=$(shell sudo -su $(USER) $(CARGO_PATH))/bin:$(PATH)
@@ -166,8 +168,11 @@ report:## 	report
 	@echo '        - project=${project}'
 	@echo '             usage: make project=<string>'
 	@echo ''
+	@echo '        - GNOSTR=${GNOSTR}'
 	@echo '        - GNOSTR_LEGIT=${GNOSTR_LEGIT}'
-###@echo '        - PATH=${PATH}'
+	@echo '        - GNOSTR_CAT=${GNOSTR_CAT}'
+#@echo '        - PATH=${PATH}'
+	@echo ''
 	@echo '        - CARGO_PATH=${CARGO_PATH}'
 	@echo ''
 	@echo '        - GIT_USER_NAME=${GIT_USER_NAME}'
