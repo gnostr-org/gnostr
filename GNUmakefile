@@ -22,17 +22,20 @@ ifeq ($(ARCH),arm64)
 TRIPLET                                 :=aarch64-linux-gnu
 export TRIPLET
 endif
-GNOSTR_LEGIT									:= $(shell which gnostr-legit)
+GNOSTR                                  := $(shell which gnostr)
 export GNOSTR_LEGIT
-CARGO_PATH								:=$(HOME)/.cargo
+GNOSTR_LEGIT                            := $(shell which gnostr-legit)
+export GNOSTR_LEGIT
+CARGO_PATH                              :=$(HOME)/.cargo
 export CARGO_PATH
-#PATH									:=$(shell sudo -su $(USER) $(CARGO_PATH))/bin:$(PATH)
-GIT_STATUS								:= $(shell  git status --ignore-submodules=dirty --porcelain=2 -s)
+#PATH                                   :=$(shell sudo -su $(USER) $(CARGO_PATH))/bin:$(PATH)
+GIT_STATUS                              := $(shell  gnostr-git status --ignore-submodules=dirty --porcelain=2 -s)
 export GIT_STATUS
 ifeq ($(project),)
-PROJECT_NAME							:= $(notdir $(PWD))
+project                                 := $(notdir $(PWD))
+PROJECT_NAME                            := $(notdir $(PWD))
 else
-PROJECT_NAME							:= $(project)
+PROJECT_NAME                            := $(project)
 endif
 export PROJECT_NAME
 
@@ -160,6 +163,8 @@ report:## 	report
 	@echo '        - SESSION_KEY=${SESSION_KEY}'
 	@echo ''
 	@echo '        - PROJECT_NAME=${PROJECT_NAME}'
+	@echo '        - project=${project}'
+	@echo '             usage: make project=<string>'
 	@echo ''
 	@echo '        - GNOSTR_LEGIT=${GNOSTR_LEGIT}'
 ###@echo '        - PATH=${PATH}'
