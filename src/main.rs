@@ -43,30 +43,32 @@ fn get_current_working_dir() -> std::io::Result<PathBuf> {
 
 #[cfg(debug_assertions)]
 fn example() {
-    println!("Debugging enabled");
+    //println!("Debugging enabled");
+    println!("cwd={:?}",get_current_working_dir());
 }
 
 #[cfg(not(debug_assertions))]
 fn example() {
-    println!("Debugging disabled");
+    //println!("Debugging disabled");
+    //println!("cwd={:?}",get_current_working_dir());
 }
 
 
 fn main() -> io::Result<()> {
 
-    //if cfg!(debug_assertions) {
-    //    println!("Debugging enabled");
-    //} else {
-    //    println!("Debugging disabled");
-    //}
+    if cfg!(debug_assertions) {
+        //println!("Debugging enabled");
+    } else {
+        //println!("Debugging disabled");
+    }
 
-    //#[cfg(debug_assertions)]
+    #[cfg(debug_assertions)]
     //println!("Debugging enabled");
 
-    //#[cfg(not(debug_assertions))]
+    #[cfg(not(debug_assertions))]
     //println!("Debugging disabled");
 
-    //example();
+    example();
 
     let start = time::get_time();
     let system_time = SystemTime::now();
@@ -77,7 +79,7 @@ fn main() -> io::Result<()> {
 
     let cwd = get_current_working_dir();
     #[cfg(debug_assertions)]
-        println!("Debugging enabled");
+        //println!("Debugging enabled");
     //println!("{:#?}", cwd);
     let state = repo::state();
     //println!("{:#?}", state);
