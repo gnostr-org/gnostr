@@ -22,12 +22,16 @@ ifeq ($(ARCH),arm64)
 TRIPLET                                 :=aarch64-linux-gnu
 export TRIPLET
 endif
+#GNOSTR
 GNOSTR                                  := $(shell which gnostr)
-export GNOSTR_LEGIT
+export GNOSTR
+#GNOSTR_LEGIT
 GNOSTR_LEGIT                            := $(shell which gnostr-legit)
 export GNOSTR_LEGIT
+#GNOSTR_CAT
 GNOSTR_CAT                            := $(shell which gnostr-cat)
 export GNOSTR_CAT
+
 CARGO_PATH                              :=$(HOME)/.cargo
 export CARGO_PATH
 #PATH                                   :=$(shell sudo -su $(USER) $(CARGO_PATH))/bin:$(PATH)
@@ -40,6 +44,14 @@ else
 PROJECT_NAME                            := $(project)
 endif
 export PROJECT_NAME
+
+
+ifeq ($(q),true)
+QUIET                                   :=-q
+else
+QUIET                                   :=	
+endif
+export QUIET
 
 ifeq ($(reuse),true)
 REUSE                                   :=-r
