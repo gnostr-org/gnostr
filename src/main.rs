@@ -160,49 +160,50 @@ fn main() -> io::Result<()> {
    //}
 
 
-    let output =
+    let gnostr_blockheight =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "git status"])
+                .args(["/C", "gnostr-blockheight"])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("git diff")
+                .arg("gnostr-blockheight")
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
                 .arg("-c")
-                .arg("git diff")
+                .arg("gnostr-blockheight")
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("git diff")
+                .arg("gnostr-blockheight")
                 .output()
                 .expect("failed to execute process")
         };
 
-    let message = String::from_utf8(output.stdout)
+    let blockheight = String::from_utf8(gnostr_blockheight.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
+    println!("blockheight={}", blockheight);
 
     let path = env::current_dir()?;
         //println!("The current directory is {}", path.display());
         //Ok(());
     let mut opts = gitminer::Options{
-        threads: count.try_into().unwrap(),
+        threads:count.try_into().unwrap(),
         target:  "00000".to_string(),//default 00000
         //gnostr:##:nonce
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
-        //message: "gnostr".to_string(),
-        message: message,
+        message: "gnostr".to_string(),
+        //message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
         repo:    path.as_path().display().to_string(),
