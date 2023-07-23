@@ -98,7 +98,6 @@ fn main() -> io::Result<()> {
     let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
     //println!("{} state={:?}", repo.path().display(), repo.state());
     //println!("state={:?}", repo.state());
-    if repo.state() != RepositoryState::Clean {
 
     //println!("clean {:?}", repo.state());
     let repo_path =
@@ -132,41 +131,52 @@ fn main() -> io::Result<()> {
     let path = String::from_utf8(repo_path.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("path={:?}", path);
+    //println!("path={:?}", path);
 
-    let repo_state =
+    //#!/bin/bash
+    //declare -a RELAYS
+    //function gnostr-get-relays(){
+
+    //RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    //    sed -e 's/[{}]/''/g' |
+    //    sed -e 's/\[/''/g' |
+    //    sed -e 's/\]/''/g' |
+    //    sed -e 's/"//g' |
+    //    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+    //echo $RELAYS
+    //}
+    //gnostr-get-relays
+
+    //#!/bin/bash
+    //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
+    let set_relays =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "git status"])
+                .args(["/C", "gnostr-set-relays"])
                 .output()
-                .expect("failed to execute process")
+                .expect("try:\ngnostr-git config -l | grep gnostr.relays")
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-git diff")
+                .arg("gnostr-set-relays")
                 .output()
-                .expect("failed to execute process")
+                .expect("try:\ngnostr-git config -l | grep gnostr.relays")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-git diff")
+                .arg("gnostr-set-relays")
                 .output()
-                .expect("failed to execute process")
+                .expect("try:\ngnostr-git config -l | grep gnostr.relays")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-git diff")
+                .arg("gnostr-set-relays")
                 .output()
-                .expect("failed to execute process")
+                .expect("try:\ngnostr-git config -l | grep gnostr.relays")
         };
-
-    let state = String::from_utf8(repo_state.stdout)
-    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-    .unwrap();
-    println!("state={:?}", state);
-    }
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
@@ -236,7 +246,6 @@ fn main() -> io::Result<()> {
 
     let path = env::current_dir()?;
         //println!("The current directory is {}", path.display());
-        //Ok(());
     let mut opts = gitminer::Options{
         threads:count.try_into().unwrap(),
         target:  "00000".to_string(),//default 00000
