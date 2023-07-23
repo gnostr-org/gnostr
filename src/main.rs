@@ -242,7 +242,7 @@ fn main() -> io::Result<()> {
     let blockheight = String::from_utf8(gnostr_blockheight.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("blockheight={}", blockheight);
+    //println!("blockheight={}", blockheight);
 
     let path = env::current_dir()?;
         //println!("The current directory is {}", path.display());

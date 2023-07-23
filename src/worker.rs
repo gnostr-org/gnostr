@@ -59,7 +59,7 @@ impl Worker {
                            parent {}\n\
                            author {} {}\n\
                            committer {} {}\n\n\
-                           {:02}:{:08x}:{}",
+                           {:02}/{:08x}:{}",
                           self.tree,
                           self.parent,
                           self.author, tstamp,
