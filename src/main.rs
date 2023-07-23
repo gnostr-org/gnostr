@@ -7,7 +7,7 @@ use chrono::DateTime;
 //use std::time::SystemTime;
 use std::io::{Result};
 use std::env;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::thread::sleep;
 use std::convert::TryInto;
 use std::any::type_name;
@@ -28,6 +28,13 @@ mod repo;
 //fn type_of<T>(_: T) -> &'static str {
 //    type_name::<T>()
 //}
+
+fn get_epoch_ms() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis()
+}
 
 fn convert_to_u32(v: usize) -> Option<i8> {
     if v > (std::i8::MAX as i32).try_into().unwrap() {
@@ -71,6 +78,8 @@ fn main() -> io::Result<()> {
     example();
 
     let start = time::get_time();
+    let epoch = get_epoch_ms();
+    //println!("{}", epoch);
     let system_time = SystemTime::now();
 
     let datetime: DateTime<Utc> = system_time.into();
