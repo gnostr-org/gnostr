@@ -361,7 +361,7 @@ fn main() -> io::Result<()> {
     //
     let duration = time::get_time() - start;
     //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
-    //println!("gnostr_event={}", gnostr_event);
+    println!("gnostr_event={}", gnostr_event);
     Ok(())
 
 }
