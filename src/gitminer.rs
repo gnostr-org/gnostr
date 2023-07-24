@@ -125,10 +125,10 @@ impl Gitminer {
 //
         Command::new("sh")
             .arg("-c")
-            .arg(format!("cd {} && mkdir -p .gnostr/reflog && touch -f .gnostr/reflog/{} && git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog/{}", self.opts.repo, hash, "{RELAY}", "{REPO}", hash))
+            .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog", self.opts.repo, "{RELAY}", "{REPO}"))
             .output()
             .ok()
-            .expect("Failed to write .gnostr/reflog/<hash>");
+            .expect("Failed to write .gnostr/reflog");
         Ok(())
     }
 
