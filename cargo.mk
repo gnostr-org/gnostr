@@ -8,9 +8,8 @@ cargo-build:###	cargo build
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-install:###	cargo install --path .
-	@. $(HOME)/.cargo/env
+	#@. $(HOME)/.cargo/env
 	@cargo install --path $(PWD)
-	@echo "export PATH=$(CARGO_PATH)/bin:$(PATH)"
 cargo-br:cargo-build-release###	cargo-br
 ## 	make cargo-br q=true
 cargo-build-release:###	cargo-build-release
