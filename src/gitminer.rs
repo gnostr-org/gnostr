@@ -122,10 +122,22 @@ impl Gitminer {
 //for an integrity check as well
 //to test the 'gnostr' protocol
 //write the reflog
+
+//gnostr-git update-index --assume-unchanged .gnostr/reflog
+//--[no-]assume-unchanged
+//When this flag is specified, the object names recorded for the paths are not updated. Instead, this option sets/unsets the "assume unchanged" bit for the paths. When the "assume unchanged" bit is on, the user promises not to change the file and allows Git to assume that the working tree file matches what is recorded in the index. If you want to change the working tree file, you need to unset the bit to tell Git. This is sometimes helpful when working with a big project on a filesystem that has very slow lstat(2) system call (e.g. cifs).
 //
+//Git will fail (gracefully) in case it needs to modify this file in the index e.g. when merging in a commit; thus, in case the assumed-untracked file is changed upstream, you will need to handle the situation manually.
+
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog", self.opts.repo, "{RELAY}", "{REPO}"))
+            .output()
+            .ok()
+            .expect("Failed to write .gnostr/reflog");
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git update-index --assume-unchaged .gnostr/reflog", self.opts.repo))
             .output()
             .ok()
             .expect("Failed to write .gnostr/reflog");
