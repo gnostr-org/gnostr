@@ -81,3 +81,4 @@ libsecp256k1.a
 gnostr-cat
 
 bin
+.gnostr/gnostr-proxy
