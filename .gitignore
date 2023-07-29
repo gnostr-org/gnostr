@@ -24,6 +24,21 @@ gnostr-git
 gnostr-relay
 gnostr-xor
 gnostr-legit
+gnostr-client
+gnostr-get-relays
+gnostr-gnode
+gnostr-req
+tests
+
+libnostr.a
+
+install_manifest.txt
+response.txt
+src/nostril/Makefile
+src/nostril/libnostri.a
+src/nostril/nostril
+
+CMakeCache.txt
 
 a.out
 jsmin
@@ -53,6 +68,10 @@ scripts/subnote
 **.DS_Store
 deps/.DS_Store
 deps/build/
+ext/secp256k1-0.3.2/CTestTestfile.cmake
+ext/secp256k1-0.3.2/DartConfiguration.tcl
+ext/secp256k1-0.3.2/src/CTestTestfile.cmake
+
 
 libgit.a
 libjq.a
