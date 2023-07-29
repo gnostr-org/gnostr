@@ -1,0 +1,26 @@
+usage: gnostr-git reflog [show] [<log-options>] [<ref>]
+   or: gnostr-git reflog expire [--expire=<time>] [--expire-unreachable=<time>]
+                         [--rewrite] [--updateref] [--stale-fix]
+                         [--dry-run | -n] [--verbose] [--all [--single-worktree] | <refs>...]
+   or: gnostr-git reflog delete [--rewrite] [--updateref]
+                         [--dry-run | -n] [--verbose] <ref>@{<specifier>}...
+   or: gnostr-git reflog exists <ref>
+
+   or: gnostr-git reflog [--hash-list] [-hl]
+   or: gnostr-git reflog [--format] [-f]
+   or: gnostr-git reflog [-gd]
+      
+gnostr-git reflog accepts any of the options accepted by gnostr-git reflog
+  try:
+       gnostr-git log    --format='%C(auto)%H%<|(17)%gd/commit:%s'
+       gnostr-git reflog --format='%C(auto)%H%<|(17)%gd/commit:%s'
+
+gnostr:
+   protocol:
+      hash                                    /type  :comment
+      5209741e7313c34bde7b404c940e0cdd7ec5e711/commit:gnostr: initial commit
+      gnostr uses the colon as a delimiter           :
+      slashes are valid in git branch names   /      :
+      gnostr uses slashes for remote/path/references  
+      gnostr includes 'weeble/wobble' timestamping as 
+      part of commit/blob/remote/path/refs references.

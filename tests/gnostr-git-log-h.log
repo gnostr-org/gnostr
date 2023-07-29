@@ -1,0 +1,33 @@
+usage: gnostr-git log [<options>] [<revision-range>] [[--] <path>...]
+   or: gnostr-git show [<options>] <object>...
+
+    -q, --quiet           suppress diff output
+    --source              show source
+    --use-mailmap         use mail map file
+    --mailmap             alias of --use-mailmap
+    --clear-decorations   clear all previously-defined decoration filters
+    --decorate-refs <pattern>
+                          only decorate refs that match <pattern>
+    --decorate-refs-exclude <pattern>
+                          do not decorate refs that match <pattern>
+    --decorate[=...]      decorate options
+    -L <range:file>       trace the evolution of line range <start>,<end> or function :<funcname> in <file>
+
+   or: gnostr-git log [--hash-list] [-hl]
+   or: gnostr-git log [--format] [-f]
+   or: gnostr-git log [-gd]
+      
+gnostr-git log accepts any of the options accepted by gnostr-git    log
+  try:
+       gnostr-git log    --format='%C(auto)%H%<|(17)%gd/commit:%s'
+       gnostr-git reflog --format='%C(auto)%H%<|(17)%gd/commit:%s'
+
+gnostr:
+   protocol:
+      hash                                    /type  :comment
+      5209741e7313c34bde7b404c940e0cdd7ec5e711/commit:gnostr: initial commit
+      gnostr uses the colon as a delimiter           :
+      slashes are valid in git branch names   /      :
+      gnostr uses slashes for remote/path/references  
+      gnostr includes 'weeble/wobble' timestamping as 
+      part of commit/blob/remote/path/refs references.

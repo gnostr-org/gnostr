@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+
+gnostr --sec $(gnostr --hash) --tag gnostr relays --tag gnostr test-syndication --envelope --content "$(gnostr-get-relays)" | gnostr-cat -u ws://192.168.254.135:6102
+
+gnostr-query -t gnostr | gnostr-cat -u ws://192.168.254.135:6102

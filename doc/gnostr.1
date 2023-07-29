@@ -5,19 +5,19 @@
 .nh
 .ad l
 .\" Begin generated content:
-.TH "nostril" "1" "2023-06-30"
+.TH "gnostr" "1" "2023-07-11"
 .P
 .SH NAME
 .P
-nostril - generate nostr events
+gnostr - a git nostr utility
 .P
 .SH SYNPOSIS
 .P
-\fBnostril\fR [OPTIONS.\&.\&.\&]
+\fBgnostr\fR [OPTIONS.\&.\&.\&]
 .P
 .SH DESCRIPTION
 .P
-\fBnostril\fR is a tool that creates and signs nostr events.\&
+\fBgnostr\fR is a tool that creates and signs nostr events.\&
 .P
 .SH OPTIONS
 .P
@@ -84,7 +84,7 @@ Shorthand for --tag e <note id>
 .P
 .nf
 .RS 4
-$ \&./nostril --sec <key> --content "this is a message"
+$ \&./gnostr --sec <key> --content "this is a message"
 {
 	"id": "da9c36bb8206e748cf136af2a43613a5ee113cb5906a09a8d3df5386039d53ab",
 	"pubkey": "4f6fa8547cf2888415522918175ea0bc0eb473287c5bd7cc459ca440bdf87d97",
@@ -101,7 +101,7 @@ $ \&./nostril --sec <key> --content "this is a message"
 .P
 .nf
 .RS 4
-$ \&./nostril --envelope --sec <key> --content "hello"
+$ \&./gnostr --envelope --sec <key> --content "hello"
 [ "EVENT",
 {
 	"id": "ed378d3fdda785c091e9311c6e6eeb075db349a163c5e38de95946f6013a8001",
@@ -119,7 +119,7 @@ $ \&./nostril --envelope --sec <key> --content "hello"
 .P
 .nf
 .RS 4
-nostril --envelope --sec <key> --content "this is a message" | websocat wss://relay\&.damus\&.io
+gnostr --envelope --sec <key> --content "this is a message" | websocat wss://relay\&.damus\&.io
 .fi
 .RE
 .P
@@ -127,7 +127,7 @@ nostril --envelope --sec <key> --content "this is a message" | websocat wss://re
 .P
 .nf
 .RS 4
-nostril --envelope --dm <pubkey> --sec <key> --content "this is a secret" | websocat wss://relay\&.damus\&.io
+gnostr --envelope --dm <pubkey> --sec <key> --content "this is a secret" | websocat wss://relay\&.damus\&.io
 .fi
 .RE
 .P
@@ -135,7 +135,7 @@ nostril --envelope --dm <pubkey> --sec <key> --content "this is a secret" | webs
 .P
 .nf
 .RS 4
-nostril --mine-pubkey --pow <difficulty>
+gnostr --mine-pubkey --pow <difficulty>
 .fi
 .RE
 .P
@@ -143,6 +143,6 @@ nostril --mine-pubkey --pow <difficulty>
 .P
 .nf
 .RS 4
-\&./nostril --envelope --sec <key> --content "this is reply message" --tag e <thread_id> --tag e <note_id> | websocat wss://relay\&.damus\&.io
+\&./gnostr --envelope --sec <key> --content "this is reply message" --tag e <thread_id> --tag e <note_id> | websocat wss://relay\&.damus\&.io
 .fi
 .RE

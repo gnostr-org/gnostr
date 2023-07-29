@@ -3,26 +3,114 @@
 	url = https://github.com/bitcoin-core/secp256k1
 	branch = master
 	ignore = dirty
-[submodule "deps/nostcat"]
-	path = deps/nostcat
-    url = git@github.com:gnostr-org/nostcat.git
-	ignore = dirty
-[submodule "deps/git"]
-	path = deps/git
-	url = git@github.com:gnostr-org/git.git
-	ignore = dirty
+	shallow = true
 [submodule "deps/tcl"]
 	path = deps/tcl
-	url = git@github.com:gnostr-org/tcl.git
+	url = https://github.com/gnostr-org/tcl.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/jq"]
 	path = deps/jq
-	url = git@github.com:gnostr-org/jq.git
+	url = https://github.com/gnostr-org/jq.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/hyper-nostr"]
 	path = deps/hyper-nostr
-	url = git@github.com:gnostr-org/hyper-nostr.git
+	url = https://github.com/gnostr-org/hyper-nostr.git
+	branch = master
 	ignore = dirty
+	shallow = true
 [submodule "deps/openssl"]
 	path = deps/openssl
-	url = git@github.com:gnostr-org/openssl.git
+	url = https://github.com/gnostr-org/openssl.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/act"]
+	path = deps/act
+	url = https://github.com/gnostr-org/act.git
+	branch = 310cb79
+	ignore = dirty
+	shallow = true
+[submodule "deps/hyper-sdk"]
+	path = deps/hyper-sdk
+	url = https://github.com/gnostr-org/hyper-sdk.git
+	branch = 38db824808be1bffae4ca3bc76051aaadc1b6b82
+	ignore = dirty
+	shallow = true
+[submodule "gnostr-cat"]
+	path = deps/gnostr-cat
+	url = git@github.com:gnostr-org/gnostr-cat.git
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-aio"]
+	path = deps/gnostr-aio
+	url = git@github.com:gnostr-org/gnostr-aio.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-py"]
+	path = deps/gnostr-py
+	url = git@github.com:gnostr-org/gnostr-py.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-git"]
+	path = deps/gnostr-git
+	url = https://github.com/gnostr-org/gnostr-git.git
+	branch = v0.0.0_21
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-web"]
+	path = deps/gnostr-web
+	url = https://github.com/RandyMcMillan/gnostr-web.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-legit"]
+	path = deps/gnostr-legit
+	url = https://github.com/gnostr-org/gnostr-legit.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-proxy"]
+	path = deps/gnostr-proxy
+	url = git@github.com:gnostr-org/gnostr-proxy.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-relay"]
+	path = deps/gnostr-relay
+	url = https://github.com/gnostr-org/gnostr-relay.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-grep"]
+	path = deps/gnostr-grep
+	url = https://github.com/gnostr-org/gnostr-grep.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-command"]
+	path = deps/gnostr-command
+	url = https://github.com/gnostr-org/gnostr-command.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "nips"]
+	path = nips
+	url = https://github.com/gnostr-org/nips.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-hyp"]
+	path = deps/gnostr-hyp
+	url = https://github.com/gnostr-org/gnostr-hyp.git
+	branch = master
+	ignore = dirty
+	shallow = true
+[submodule "deps/gnostr-sha256"]
+	path = deps/gnostr-sha256
+	url = git@github.com:gnostr-org/gnostr-sha256.git

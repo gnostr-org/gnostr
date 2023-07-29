@@ -29,27 +29,37 @@ TRIPLET                                 :=aarch64-linux-gnu
 export TRIPLET
 endif
 
+HOMEBREW                                :=$(shell which brew || false)
+
+ifeq ($(verbose),true)
+VERBOSE                                 :=-v
+else
+VERBOSE                                 :=
+endif
+export VERBOSE
+
 ifeq ($(reuse),true)
 REUSE                                   :=-r
 else
-REUSE                                   :=	
+REUSE                                   :=
 endif
 export REUSE
+
 ifeq ($(bind),true)
 BIND                                    :=-b
 else
-BIND                                    :=      
+BIND                                    :=
 endif
 export BIND
 
 ifeq ($(token),)
-GH_ACT_TOKEN                            :=$(shell cat ~/GH_ACT_TOKEN.txt || echo "0")
+GITHUB_TOKEN                            :=$(shell cat ~/GITHUB_TOKEN.txt || echo "0")
 else
-GH_ACT_TOKEN                            :=$(shell echo $(token))
+GITHUB_TOKEN                            :=$(shell echo $(token))
 endif
-export GH_ACT_TOKEN
+export GITHUB_TOKEN
 
-export $(cat ~/GH_ACT_TOKEN) && make act
+export $(cat ~/GITHUB_TOKEN) && make act
 
 PYTHON                                  := $(shell which python)
 export PYTHON
@@ -140,12 +150,21 @@ export GIT_REPO_PATH
 help:## 	
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
+-include Makefile
+
+##initialize
+##	git submodule update --init --recursive
+initialize:## 	ensure submodules exist
+	git submodule update --init --recursive
+
 .ONESHELL:
-docker-start:
-	@touch requirements.txt
+docker-start:venv
+##docker-start
+##	start docker on Linux or Darwin
+	@touch requirements.txt && $(PYTHON3) -m pip install -q -r requirements.txt
 	@test -d .venv || $(PYTHON3) -m virtualenv .venv
 	@( \
-	   source .venv/bin/activate; pip install -q -r requirements.txt; \
+	   . .venv/bin/activate; pip install -q -r requirements.txt; \
 	   python3 -m pip install -q pipenv \
 	   pip install -q --upgrade pip; \
 	);
@@ -153,7 +172,7 @@ docker-start:
 	    while ! docker system info > /dev/null 2>&1; do\
 	    echo 'Waiting for docker to start...';\
 	    if [[ '$(OS)' == 'Linux' ]]; then\
-	     systemctl restart docker.service;\
+	     type -P systemctl && systemctl restart docker.service || type -P service && service restart docker;\
 	    fi;\
 	    if [[ '$(OS)' == 'Darwin' ]]; then\
 	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker;\
@@ -162,12 +181,40 @@ docker-start:
 	done\
 	)
 
+detect:
+##detect
+##	detect uname -s uname -m uname -p
+	@[[ '$(shell uname -s)' == 'Darwin' ]] && \
+		echo "is Darwin" || \
+		echo "not Darwin";
+	@[[ '$(shell uname -s)' == 'Linux'* ]] && \
+		echo "is Linux" || \
+		echo "not Linux";
+	@[[ '$(shell uname -m)' == 'x86_64' ]] && \
+		echo "is x86_64" || \
+		echo "not x86_64";
+	@[[ '$(shell uname -p)' == 'i386' ]]   && \
+		echo "is i386" || \
+		echo "not i386";
+
 .PHONY: report
 report:## 	
 	@echo ''
 	@echo 'TIME=${TIME}'
 	@echo 'PROJECT_NAME=${PROJECT_NAME}'
 	@echo 'VERSION=${VERSION}'
+	@echo ''
+	@echo 'OS=${OS}'
+	@echo 'OS_VERSION=${OS_VERSION}'
+	@echo 'ARCH=${ARCH}'
+	@echo ''
+	@echo 'PYTHON=${PYTHON}'
+	@echo 'PYTHON2=${PYTHON2}'
+	@echo 'PYTHON3=${PYTHON3}'
+	@echo ''
+	@echo 'PIP=${PIP}'
+	@echo 'PIP2=${PIP2}'
+	@echo 'PIP3=${PIP3}'
 	@echo ''
 	@echo 'PYTHON_VENV=${PYTHON_VENV}'
 	@echo 'PYTHON3_VENV=${PYTHON3_VENV}'
@@ -186,7 +233,25 @@ report:##
 	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
 
--include Makefile
+checkbrew:## 	checkbrew
+ifeq ($(HOMEBREW),)
+	@/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+else
+	@type -P brew && brew install wxWidgets openssl@3.0 gettext
+endif
+
+tag:## 	git tag & git push
+##tag
+##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git push -f --tags || echo "unable to push tags..."
+
+#-include Makefile
 #-include nostcat.mk
 -include gnostr.mk
+-include venv.mk
 -include act.mk
+-include clean.mk
+
+# vim: set noexpandtab:
+# vim: set setfiletype make

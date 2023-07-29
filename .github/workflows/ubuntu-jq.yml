@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: ubuntu-jq
 
 # Controls when the action will run.
 on:
@@ -32,30 +32,64 @@ jobs:
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v3
-        fetch-depth: 0
+        with:
+          fetch-depth: '0'
+          submodules: 'true'
+          set-safe-directory: 'true'
       - name: Restore deps
         id: cache-deps-restore
         uses: actions/cache/restore@v3
-        #if: ${{ !env.ACT }}
+        if: ${{ !env.ACT }}
         with:
           path: |
             deps/jq
+            deps/git
+            deps/secp256k1
+            deps/hyper-sdk
+            deps/hyper-nostr
+            /root/.cargo
+            /root/.rustup
           key: ${{ runner.os }}-deps
 
-      - name: printenv
+      - name: apt-get update and install
         run: |
-          printenv && sudo apt-get update && apt-get install -y python3 make autoconf automake libtool build-essential tclsh gettext
-          touch ~/GH_ACT_TOKEN.txt
-      - name: make
+          sudo apt-get update && \
+          sudo apt-get install -y \
+              build-essential \
+              autoconf \
+              libtool bash \
+              git \
+              bison \
+              flex \
+              python3 \
+              python3-pip \
+              wget && \
+          pip3 install pipenv
+          #git submodule init && \
+          #git submodule update && \
+          #cd deps/jq && \
+          #autoreconf -i && \
+          #./configure --disable-valgrind --enable-all-static --prefix=/usr/local && \
+          #make -j8 && \
+          #make check && \
+          #make install
+          touch ~/GITHUB_TOKEN.txt
+      - name: make libjq.a
         run: |
-          #cd deps/jq && autoreconf -im && ./configure  --disable-maintainer-mode && make install && cd ..
-          cd deps/jq && autoreconf -i && ./configure  --disable-maintainer-mode && make install && cd ..
+          #pushd deps/jq && autoreconf -i && ./configure  --disable-maintainer-mode  && make all install && popd
+          make libjq.a
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
-        #if: ${{ !env.ACT }}
+        if: ${{ !env.ACT }}
         with:
           path: |
             deps/jq
+            deps/git
+            deps/secp256k1
+            deps/hyper-sdk
+            deps/hyper-nostr
+            /root/.cargo
+            /root/.rustup
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays

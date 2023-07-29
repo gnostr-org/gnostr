@@ -1,0 +1,20 @@
+#!/bin/bash
+declare -a RELAYS
+function gnostr-get-relays(){
+
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+echo $RELAYS
+}
+gnostr-get-relays
+
+#USAGE:
+#gnostr --sec $(gnostr --hash) -t "active-relays" --envelope --content "$(gnostr get-relays)" | gnostr-relays
+#gnostr --sec $(gnostr --hash) -t "active-relays" --envelope --content "$(gnostr get relays)" | gnostr-relays
+#gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" && git config -l | grep gnostr.relays
+#gnostr-git config --global --replace-all gnostr.relays "$(gnostr get-relays)" && git config -l | grep gnostr.relays

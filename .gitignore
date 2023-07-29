@@ -1,10 +1,36 @@
+http_relay
+cmake_install.cmake
+CMakeFiles/
+http_client
+http_relayV
+nostro
+nostro.log.txt
+server.crt
+server.key
+vostro
+vostro.log.txt
+list_01.txt
+list_02.txt
 CHANGELOG
 KEYS
+GIT-VERSION-FILE
 !deps/git/config.*
 *.o
 /.direnv/
 .privenv
+
 gnostr
+gnostr-git
+gnostr-relay
+gnostr-xor
+gnostr-legit
+
+a.out
+jsmin
+
+gnostr-*.*.*-*-*
+dist/gnostr-*.*.*-*-*
+dist-*
 /result
 configurator.out*
 configurator
@@ -22,6 +48,7 @@ scripts/nostr-follows
 scripts/nostr-req
 scripts/subnote
 /dist
+/.dist-*
 
 **.DS_Store
 deps/.DS_Store
@@ -32,4 +59,6 @@ libjq.a
 libtclstub.a
 libsecp256k1.a
 
-nostcat
+gnostr-cat
+
+bin
