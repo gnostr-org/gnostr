@@ -43,9 +43,9 @@ export GTAR
 all: submodules gnostr gnostr-git gnostr-relay gnostr-xor gnostr-get-relays docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
-##docs:
+##gnostr-docs:
 ##	docker-statt doc/gnostr.1
-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
+gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
 #@echo docs
 	@bash -c 'if pgrep MacDown; then pkill MacDown; fi; 2>/dev/null'
 	@bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md 2>/dev/null'
@@ -301,19 +301,14 @@ gnostr-xor: $(HEADERS) $(GNOSTR_XOR_OBJS) $(ARS)## 	make gnostr-xor
 .ONESHELL:
 ##install all
 ##	install docs/gnostr.1 gnostr gnostr-query
-gnostr-install:## 	install docs/gnostr.1 gnostr gnostr-query *gnostr-relay* gnostr-xor
+gnostr-install:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
 	shopt -s extglob && install -m755 -vC include/*.*           ${PREFIX}/include 2>/dev/null
 	shopt -s extglob && install -m755 -vC gnostr                $(PREFIX)/bin     2>/dev/null
-	shopt -s extglob && install -m755 -vC gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
-#@shpt -s extglob && install -m755 -vC gnostr-relay             $(PREFIX)/bin     2>/dev/null
-##double forward slasshes ok AFAIK
-	shopt -s extglob && install -m755 -vC gnostr-*              $(PREFIX)/bin 2>/dev/null
-#shopt -s extglob && install -m755 -vC template/gnostr-*     $(PREFIX)/bin 2>/dev/null
-	rm /usr/local/bin/gnostr-*.sh 2>/dev/null || true
-	rm /usr/local/bin/gnostr-*.c  2>/dev/null || true
-	rm /usr/local/bin/gnostr-*.o  2>/dev/null || true
+	shopt -s extglob && install -m755 -vC template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
+	shopt -s extglob && install -m755 -vC template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
+	shopt -s extglob && install -m755 -vC template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
 
 .ONESHELL:
 ##install-doc
