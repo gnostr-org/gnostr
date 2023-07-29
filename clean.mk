@@ -1,6 +1,6 @@
 ##clean
 ##	remove gnostr *.o *.a gnostr.1
-clean:## 	remove gnostr *.o *.a gnostr.1
+cleann:## 	remove gnostr *.o *.a gnostr.1
 	rm -rf $(shell which gnostr) || echo
 	rm -rf /usr/local/share/man/man1/gnostr.1 || echo
 	rm -f gnostr *.o *.a || echo

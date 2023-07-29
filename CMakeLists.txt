@@ -10,6 +10,12 @@ endif()
 set(CMAKE_BUILD_TYPE Debug)
 project (nostr_client_relay LANGUAGES CXX C)
 
+option(BUILD_RELEASE "BUILD_RELEASE" ON)
+
+if(BUILD_RELEASE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 option(BUILD_STATIC "BUILD_STATIC" OFF)
 option(BUILD_GUI "BUILD_STATIC" OFF)
 option(BUILD_WEB "BUILD_WEB" OFF)
@@ -31,7 +37,6 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 # external dependencies
 #//////////////////////////
 
-include_directories(${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2/include)
@@ -152,19 +157,25 @@ if(USE_OPENSSL)
 endif()
 
 if(USE_OPENSSL)
+
+	set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
+	find_package(OpenSSL REQUIRED)
+	message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+	message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+	include_directories(${OPENSSL_INCLUDE_DIR})
+	set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
+
+  if (MSVC)
+    set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
+    message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+  endif()
+  find_package(OpenSSL REQUIRED)
+  message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+  message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+  include_directories(${OPENSSL_INCLUDE_DIR})
+  set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
   if (MSVC)
     set(lib_dep ${lib_dep} crypt32.lib)
-  endif()
-  if (MSVC)
-	set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
-	message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
-  else (UNIX OR APPLE)
-		  set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
-		  find_package(OpenSSL REQUIRED)
-		  message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
-		  message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-		  include_directories(${OPENSSL_INCLUDE_DIR})
-		  set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
   endif()
 endif()
 
@@ -182,10 +193,13 @@ target_link_libraries (http_relay ${lib_dep})
 # executables
 #//////////////////////////
 
-add_executable(nostro src/wss_client.cc)
-add_executable(vostro src/wss_relay.cc)
-target_link_libraries (nostro ${lib_dep})
-target_link_libraries (vostro ${lib_dep})
+add_executable(gnostr-client src/wss_client.cc)
+add_executable(gnostr-req src/wss_req.cc)
+add_executable(gnostr-gnode src/wss_relay.cc)
+
+target_link_libraries (gnostr-client ${lib_dep})
+target_link_libraries (gnostr-req ${lib_dep})
+target_link_libraries (gnostr-gnode ${lib_dep})
 
 #//////////////////////////
 # tests
@@ -199,7 +213,7 @@ target_link_libraries (tests ${lib_dep})
 #//////////////////////////
 if(UNIX AND NOT APPLE)
 add_executable(examples examples/examples.cc)
-target_link_libraries (examples ${lib_dep})
+target_link_libraries (examples ${l/ib_dep})
 endif()
 
 #//////////////////////////
@@ -247,3 +261,31 @@ endif()
 if (BUILD_WEB)
  add_subdirectory(web)
 endif()
+
+
+#//////////////////////////
+# Install
+#//////////////////////////
+
+install(TARGETS gnostr-gnode
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-gnode
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
+install(TARGETS gnostr-client
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/debug)
+install(TARGETS gnostr-client
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
+install(TARGETS gnostr-req
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/debug)
+install(TARGETS gnostr-req
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
+

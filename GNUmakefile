@@ -147,7 +147,7 @@ export GIT_REPO_PATH
 .PHONY:- help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-help:## 	
+helpp:## 	
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
 -include Makefile
@@ -246,8 +246,6 @@ tag:## 	git tag & git push
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags || echo "unable to push tags..."
 
-#-include Makefile
-#-include nostcat.mk
 -include gnostr.mk
 -include venv.mk
 -include act.mk
