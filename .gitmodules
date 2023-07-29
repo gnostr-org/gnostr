@@ -4,12 +4,6 @@
 	branch = master
 	ignore = dirty
 	shallow = true
-[submodule "deps/jq"]
-	path = deps/jq
-	url = https://github.com/gnostr-org/jq.git
-	branch = master
-	ignore = dirty
-	shallow = true
 [submodule "deps/hyper-nostr"]
 	path = deps/hyper-nostr
 	url = https://github.com/gnostr-org/hyper-nostr.git
@@ -55,12 +49,6 @@
 	path = deps/gnostr-git
 	url = https://github.com/gnostr-org/gnostr-git.git
 	branch = v0.0.0_21
-	ignore = dirty
-	shallow = true
-[submodule "deps/gnostr-web"]
-	path = deps/gnostr-web
-	url = https://github.com/RandyMcMillan/gnostr-web.git
-	branch = master
 	ignore = dirty
 	shallow = true
 [submodule "deps/gnostr-legit"]
