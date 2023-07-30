@@ -91,9 +91,9 @@ chmod:## 	chmod
 	chmod +rwx devtools/refresh-submodules.sh
 
 dist: gnostr-docs version## 	create tar distribution
-	touch deps/tcl/unix/dltest/pkgπ.c || echo
-	touch deps/tcl/unix/dltest/pkg\317\200.c || echo
-	cp deps/tcl/unix/dltest/pkgπ.c deps/tcl/unix/dltest/pkg\317\200.c || echo
+## touch deps/tcl/unix/dltest/pkgπ.c || echo
+## touch deps/tcl/unix/dltest/pkg\317\200.c || echo
+## cp deps/tcl/unix/dltest/pkgπ.c deps/tcl/unix/dltest/pkg\317\200.c || echo
 	mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo
 	mkdir -p dist && touch dist/.gitkeep
 	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
