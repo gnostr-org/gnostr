@@ -20,10 +20,10 @@ endif
 #export PREFIX
 
 ARS                                    := libsecp256k1.a
-LIB_ARS                                := libsecp256k1.a libgit.a libjq.a libtclstub.a
+LIB_ARS                                := libsecp256k1.a libgit.a
 
 SUBMODULES                              = deps/secp256k1
-SUBMODULES_MORE                         = deps/secp256k1 deps/git deps/jq deps/gnostr-cat deps/hyper-nostr deps/tcl deps/hyper-sdk deps/act deps/openssl deps/gnostr-py deps/gnostr-aio deps/act deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay
+SUBMODULES_MORE                         = deps/secp256k1 deps/git deps/gnostr-cat deps/hyper-nostr deps/tcl deps/hyper-sdk deps/act deps/openssl deps/gnostr-py deps/gnostr-aio deps/act deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -39,8 +39,8 @@ export GTAR
 
 
 ##all:
-#all: submodules gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
-all: submodules gnostr gnostr-git gnostr-relay gnostr-xor gnostr-get-relays docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+#all: submodules gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor gnostr-docs
+all: submodules gnostr gnostr-git gnostr-relay gnostr-xor gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
@@ -126,7 +126,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/jq/.git deps/gnostr-git/.git deps/gnostr-web/.git deps/gnostr-cat/.git deps/tcl/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/openssl/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git deps/gnostr-sha256## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/openssl/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git## 	refresh-submodules
 
 .PHONY:deps/secp256k1/config.log
 .ONESHELL:
