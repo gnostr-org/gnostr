@@ -30,18 +30,18 @@
 	shallow = true
 [submodule "gnostr-cat"]
 	path = deps/gnostr-cat
-	url = git@github.com:gnostr-org/gnostr-cat.git
+	url = https://github.com/gnostr-org/gnostr-cat.git
 	ignore = dirty
 	shallow = true
 [submodule "deps/gnostr-aio"]
 	path = deps/gnostr-aio
-	url = git@github.com:gnostr-org/gnostr-aio.git
+	url = https://github.com/gnostr-org/gnostr-aio.git
 	branch = master
 	ignore = dirty
 	shallow = true
 [submodule "deps/gnostr-py"]
 	path = deps/gnostr-py
-	url = git@github.com:gnostr-org/gnostr-py.git
+	url = https://github.com/gnostr-org/gnostr-py.git
 	branch = master
 	ignore = dirty
 	shallow = true
@@ -59,7 +59,7 @@
 	shallow = true
 [submodule "deps/gnostr-proxy"]
 	path = deps/gnostr-proxy
-	url = git@github.com:gnostr-org/gnostr-proxy.git
+	url = https://github.com/gnostr-org/gnostr-proxy.git
 	branch = master
 	ignore = dirty
 	shallow = true
@@ -95,4 +95,4 @@
 	shallow = true
 [submodule "deps/gnostr-sha256"]
 	path = deps/gnostr-sha256
-	url = git@github.com:gnostr-org/gnostr-sha256.git
+	url = https://github.com/gnostr-org/gnostr-sha256.git
