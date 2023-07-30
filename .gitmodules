@@ -10,12 +10,6 @@
 	branch = master
 	ignore = dirty
 	shallow = true
-[submodule "deps/openssl"]
-	path = deps/openssl
-	url = https://github.com/gnostr-org/openssl.git
-	branch = master
-	ignore = dirty
-	shallow = true
 [submodule "deps/act"]
 	path = deps/act
 	url = https://github.com/gnostr-org/act.git
