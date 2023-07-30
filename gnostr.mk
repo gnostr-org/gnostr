@@ -105,6 +105,8 @@ dist: gnostr-docs version## 	create tar distribution
 		--exclude='"deps/gnostr-proxy/resources/js/isomophic-git/__tests__/"' \
 		--transform  's/^/gnostr-$(VERSION)-$(OS)-$(ARCH)\//' -T- -caf dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz
 	ls -dt dist/* | head -n1 | xargs echo "tgz "
+
+dist-sign:##dist-sign
 	cd dist && \touch SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
 		touch gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz && \
 		rm **SHA256SUMS**.txt** || echo && \
