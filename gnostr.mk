@@ -91,20 +91,13 @@ chmod:## 	chmod
 	chmod +rwx devtools/refresh-submodules.sh
 
 dist: gnostr-docs version## 	create tar distribution
-## touch deps/tcl/unix/dltest/pkgπ.c || echo
-## touch deps/tcl/unix/dltest/pkg\317\200.c || echo
-## cp deps/tcl/unix/dltest/pkgπ.c deps/tcl/unix/dltest/pkg\317\200.c || echo
 	mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo
 	mkdir -p dist && touch dist/.gitkeep
 	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
 	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
 	#git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__
-	git ls-files --recurse-submodules | $(GTAR) \
-		--exclude='"deps/tcl/unix/dltest/*.c"' \
-		--exclude='"deps/gnostr-proxy/resources/js/isomophic-git/__tests__/"' \
-		--transform  's/^/gnostr-$(VERSION)-$(OS)-$(ARCH)\//' -T- -caf dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz
-	ls -dt dist/* | head -n1 | xargs echo "tgz "
+	git-archive-all -C . dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar
 
 dist-sign:##dist-sign
 	cd dist && \touch SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
@@ -118,9 +111,9 @@ dist-test:submodules dist## 	dist-test
 ##dist-test
 ## 	cd dist and run tests on the distribution
 	cd dist && \
-		$(GTAR) -tvf gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz > gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz.txt
+		$(GTAR) -tvf gnostr-$(VERSION)-$(OS)-$(ARCH).tar > gnostr-$(VERSION)-$(OS)-$(ARCH).tar.txt
 	cd dist && \
-		$(GTAR) -xf  gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz && \
+		$(GTAR) -xf  gnostr-$(VERSION)-$(OS)-$(ARCH).tar && \
 		cd  gnostr-$(VERSION)-$(OS)-$(ARCH) && make chmod all install
 diff-log:
 	@mkdir -p tests && diff template/gnostr-git-reflog template/gnostr-git-log > tests/diff.log || \
@@ -131,7 +124,8 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/openssl/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git## 	refresh-submodules
+	git submodule update --init --recursive
 
 .PHONY:deps/secp256k1/config.log
 .ONESHELL:
