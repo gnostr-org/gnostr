@@ -41,6 +41,7 @@ jobs:
             /root/.cargo
             /root/.rustup
             /root/.nvm
+            libsecp256k1.a
           key: ${{ runner.os }}-deps
 
       - uses: actions/checkout@v3
@@ -85,5 +86,6 @@ jobs:
             /root/.cargo
             /root/.rustup
             /root/.nvm
+            libsecp256k1.a
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
