@@ -194,6 +194,7 @@ deps/gnostr-legit/.git:
 deps/gnostr-legit/gnostr-legit:deps/gnostr-legit/.git
 	cd deps/gnostr-legit && \
 		make legit-install
+deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/gnostr-legit## 	gnostr-legit
 gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 
