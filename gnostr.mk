@@ -4,7 +4,7 @@ LDFLAGS                                 = -Wl -V
 GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
 #GNOSTR_RELAY_OBJS                       = gnostr-relay.o sha256.o aes.o base64.o
-GNOSTR_XOR_OBJS                         = gnostr-xor.o   sha256.o aes.o base64.o libsecp256k1.a
+## GNOSTR_XOR_OBJS                         = gnostr-xor.o   sha256.o aes.o base64.o libsecp256k1.a
 HEADER_INCLUDE                          = include
 HEADERS                                 = $(HEADER_INCLUDE)/hex.h \
                                          $(HEADER_INCLUDE)/random.h \
@@ -39,8 +39,8 @@ export GTAR
 
 
 ##all:
-#all: submodules gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor gnostr-docs
-all: submodules gnostr gnostr-git gnostr-relay gnostr-xor gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+#all: submodules gnostr gnostr-cat gnostr-git gnostr-relay gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-docs
+all: submodules gnostr gnostr-git gnostr-relay gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
@@ -279,7 +279,7 @@ deps/act/.git:
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-gnostr:clean $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
@@ -291,13 +291,13 @@ gnostr:clean $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 #	git submodule update --init --recursive
 #	$(CC) $(CFLAGS) $(GNOSTR_RELAY_OBJS) $(ARS) -o $@
 
-#.PHONY:gnostr-xor
-gnostr-xor: $(HEADERS) $(GNOSTR_XOR_OBJS) $(ARS)## 	make gnostr-xor
-##gnostr-xor
-	echo $@
-	touch $@
-	rm -f $@
-	$(CC) $@.c -o $@
+## #.PHONY:gnostr-xor
+## gnostr-xor: $(HEADERS) $(GNOSTR_XOR_OBJS) $(ARS)## 	make gnostr-xor
+## ##gnostr-xor
+## 	echo $@
+## 	touch $@
+## 	rm -f $@
+## 	$(CC) $@.c -o $@
 
 .ONESHELL:
 ##install all
