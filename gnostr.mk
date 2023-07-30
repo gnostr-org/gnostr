@@ -97,7 +97,7 @@ dist: gnostr-docs version## 	create tar distribution
 	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
 	#git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__
-	git-archive-all -C . dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar
+	git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar
 
 dist-sign:##dist-sign
 	cd dist && \touch SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
