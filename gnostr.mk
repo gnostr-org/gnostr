@@ -114,7 +114,7 @@ dist-test:submodules dist## 	dist-test
 		$(GTAR) -tvf gnostr-$(VERSION)-$(OS)-$(ARCH).tar > gnostr-$(VERSION)-$(OS)-$(ARCH).tar.txt
 	cd dist && \
 		$(GTAR) -xf  gnostr-$(VERSION)-$(OS)-$(ARCH).tar && \
-		cd  gnostr-$(VERSION)-$(OS)-$(ARCH) && make chmod all install
+		cd  gnostr-$(VERSION)-$(OS)-$(ARCH) && cmake . && make chmod all
 diff-log:
 	@mkdir -p tests && diff template/gnostr-git-reflog template/gnostr-git-log > tests/diff.log || \
 		git diff tests/diff.log
