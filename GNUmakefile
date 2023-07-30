@@ -243,8 +243,8 @@ endif
 tag:## 	git tag & git push
 tags:tag
 ##tag
-##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
-	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+##	git tag v$(VERSION)-$(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git tag v$(VERSION)-$(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags || echo "unable to push tags..."
 
 -include gnostr.mk
