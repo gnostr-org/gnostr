@@ -42,5 +42,11 @@ jobs:
         with:
           name: gnostr-${{ matrix.os }}
           path: |
+            .gitmodules
+            CMakeList.txt
+            *.c
+            include/**
+            src/**
+            template/**
             gnostr**
             gnostr-**
