@@ -26,17 +26,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    env: CXX=g++
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: '0'
-          submodules: 'recursive'
-          set-safe-directory: 'true'
       - name: Restore deps
         id: cache-deps-restore
         uses: actions/cache/restore@v3
@@ -46,6 +40,8 @@ jobs:
             deps/*
             /root/.cargo
             /root/.rustup
+            /root/.nvm
+            libsecp256k1.a
           key: ${{ runner.os }}-deps
 
       - uses: actions/checkout@v3
@@ -57,13 +53,28 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: rustup
+      - name: apt-get install
         run: |
           sudo apt-get update
-          sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++
-          touch ~/GITHUB_TOKEN.txt
+          sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++ cargo
 
-      - run: rm -f deps/gnostr-relay/CMakeCache.txt && make gnostr-relay
+      - run: touch ~/GITHUB_TOKEN.txt
+
+      - run: cmake .
+      - run: sudo make libsecp256k1.a
+      - run: sudo make gnostr
+
+      - name: sudo make gnostr-cat
+        run: |
+      - run: sudo make gnostr-cat
+
+      - name: sudo make gnostr-legit
+        run: |
+      - run: sudo make gnostr-legit
+
+      #- name: sudo make gnostr-proxy
+      #  run: |
+      #- run: sudo make gnostr-proxy
 
       - name: Save deps
         id: cache-deps-save
@@ -74,5 +85,7 @@ jobs:
             deps/*
             /root/.cargo
             /root/.rustup
+            /root/.nvm
+            libsecp256k1.a
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
