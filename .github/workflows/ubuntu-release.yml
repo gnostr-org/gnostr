@@ -1,32 +1,47 @@
-name: ubuntu-release
+name: ubuntu-pre-release
 
 # Controls when the action will run.
 on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
   push:
     branches:
       - 'master'
+      - 'main'
       - '**pre-release**'
 
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-     release:
+  pre-release:
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-latest]
+
     runs-on: ${{ matrix.os }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
+
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - run: sudo make dist
+      - run: make dist
+
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: "marvinpinto/action-automatic-releases@latest"
         if: ${{ !env.ACT }}
         with:
