@@ -14,34 +14,30 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-latest]
+        os: [ubuntu-latest] #,ubuntu-20.04, ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v3
       - name: "printenv"
         run: |
           printenv
-      - name: "Build release"
+      - name: "sudo apt-get install libcurl4-openssl-dev gettext"
         run: |
-          make submodules
-          make all
-          mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
-          shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
-          mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
-          shasum -a 256 nostril-query-$RUNNER_OS-$RUNNER_ARCH > nostril-query-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
-          ls -a
+          sudo apt-get install libcurl4-openssl-dev gettext
+      - name: "Build pre-release"
+        run: |
+          sudo touch /root/GITHUB_TOKEN.txt
+          sudo make dist
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output
         run: echo "{name}={value}" >> $GITHUB_OUTPUT
-      - uses: "marvinpinto/action-automatic-releases@latest"
+      - uses: actions/upload-artifact@v3
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ matrix.os }}
-          prerelease: false
-          title: "Release Build"
-          files: |
-            nostril-*
+          name: gnostr-${{ matrix.os }}
+          path: |
+            dist
