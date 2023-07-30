@@ -26,13 +26,15 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: "make all gnostr"
+      - name: sudo apt-get install
         run: |
           sudo apt-get install libcurl4-openssl-dev gettext
-          touch ~/GITHUB_TOKEN.txt
-          cmake .
-          sudo make all gnostr
-          sudo make dist
+
+      - run: touch ~/GITHUB_TOKEN.txt
+      - run: cmake .
+      - run: sudo make all gnostr
+      - run: sudo make dist
+
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output

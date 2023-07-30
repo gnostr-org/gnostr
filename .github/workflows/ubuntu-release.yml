@@ -1,4 +1,4 @@
-name: ubuntu-pre-release
+name: ubuntu-release
 
 # Controls when the action will run.
 on:
@@ -11,7 +11,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  pre-release:
+     release:
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-latest]
@@ -26,13 +26,14 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: "make all gnostr"
+      - name: apt-get install
         run: |
           sudo apt-get install libcurl4-openssl-dev gettext
-          touch ~/GITHUB_TOKEN.txt
-          cmake .
-          sudo make all gnostr
-          sudo make dist
+
+      - run: touch ~/GITHUB_TOKEN.txt
+      - run: cmake .
+      - run: sudo make all gnostr
+      - run: sudo make dist
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output
