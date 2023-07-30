@@ -65,6 +65,10 @@ jobs:
         run: |
       - run: sudo make gnostr-cat
 
+      - name: sudo make gnostr-legit
+        run: |
+      - run: sudo make gnostr-legit
+
       #- name: sudo make gnostr-proxy
       #  run: |
       #- run: sudo make gnostr-proxy
