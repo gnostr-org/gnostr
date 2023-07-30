@@ -4,8 +4,7 @@ name: ubuntu-pre-release
 on:
   push:
     branches:
-      - 'master'
-      - '**pre-release**'
+      - '**'
 
   workflow_dispatch:
 
@@ -31,9 +30,7 @@ jobs:
       - name: "Build pre-release"
         run: |
           sudo touch /root/GITHUB_TOKEN.txt
-          sudo make all
-          mv ./gnostr ./gnostr-$RUNNER_OS-$RUNNER_ARCH
-          shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          sudo make dist
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output
@@ -42,5 +39,4 @@ jobs:
         with:
           name: gnostr-${{ matrix.os }}
           path: |
-            gnostr**
-            gnostr-**
+            dist
