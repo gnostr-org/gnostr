@@ -40,5 +40,7 @@ jobs:
         run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v3
         with:
-          name: gnostr-$RUNNER_OS_-$RUNNER_ARCH
-          path: gnostr* gnostr-*
+          name: gnostr-${{ matrix.os }}
+          path: |
+            gnostr**
+            gnostr-**
