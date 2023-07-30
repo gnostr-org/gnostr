@@ -38,6 +38,7 @@ src/nostril/Makefile
 src/nostril/libnostri.a
 src/nostril/nostril
 
+Makefile
 CMakeCache.txt
 
 a.out
