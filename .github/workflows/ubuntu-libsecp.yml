@@ -26,17 +26,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    env: CXX=g++
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: '0'
-          submodules: 'recursive'
-          set-safe-directory: 'true'
       - name: Restore deps
         id: cache-deps-restore
         uses: actions/cache/restore@v3
@@ -63,7 +57,8 @@ jobs:
           sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++
           touch ~/GITHUB_TOKEN.txt
 
-      - run: make libsecp256k1.a
+      - run: cmake .
+      - run: sudo make libsecp256k1.a
 
       - name: Save deps
         id: cache-deps-save

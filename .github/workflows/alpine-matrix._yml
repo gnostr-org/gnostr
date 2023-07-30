@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: alpine-matrix
 
 # Controls when the action will run.
 on:
@@ -22,10 +22,11 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
+    runs-on: ubuntu-20.08
     strategy:
       matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+        tag: [3.13.5]
+    container: alpine:${{ matrix.tag }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
@@ -51,11 +52,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: apt-get
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++
-
+      - name: rustup
+      - run: apk add autoconf automake bash build-base cmake docker file git libc-dev libcurl libtool make openrc openssl-dev python3 py3-pip sed util-linux zlib-dev
+      - run: ln -sf /usr/bin/python3 /usr/local/bin/python
       - run: touch ~/GITHUB_TOKEN.txt
       - run: cmake .
       - run: sudo make libsecp256k1.a

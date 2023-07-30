@@ -59,7 +59,7 @@ jobs:
 
       - run: cmake .
       - run: sudo make libsecp256k1.a
-      - run: make gnostr
+      - run: sudo make gnostr
 
       - name: Save deps
         id: cache-deps-save
