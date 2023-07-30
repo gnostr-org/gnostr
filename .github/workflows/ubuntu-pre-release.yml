@@ -21,6 +21,15 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
+
+        ## gpg --list-secret-keys --keyid-format LONG
+        ## gpg --export-secret-keys --armor {your_keyId}
+
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v1
+         env:
+           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        ## PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
@@ -28,7 +37,7 @@ jobs:
           set-safe-directory: 'true'
       - name: sudo apt-get install
         run: |
-          sudo apt-get install libcurl4-openssl-dev gettext
+          sudo apt-get install libcurl4-openssl-dev gettext gnupg
 
       - run: touch ~/GITHUB_TOKEN.txt
       - run: cmake .

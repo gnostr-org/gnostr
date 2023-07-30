@@ -71,7 +71,7 @@ deps/build/
 ext/secp256k1-0.3.2/CTestTestfile.cmake
 ext/secp256k1-0.3.2/DartConfiguration.tcl
 ext/secp256k1-0.3.2/src/CTestTestfile.cmake
-
+deps/gnostr-proxy/resources/js/isomophic-git/__tests__/
 
 libgit.a
 libjq.a

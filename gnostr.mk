@@ -99,7 +99,10 @@ dist: gnostr-docs version## 	create tar distribution
 	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
 	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
-	git ls-files --recurse-submodules | $(GTAR) --exclude='"deps/tcl/unix/dltest/*.c"' \
+	#git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__
+	git ls-files --recurse-submodules | $(GTAR) \
+		--exclude='"deps/tcl/unix/dltest/*.c"' \
+		--exclude='"deps/gnostr-proxy/resources/js/isomophic-git/__tests__/"' \
 		--transform  's/^/gnostr-$(VERSION)-$(OS)-$(ARCH)\//' -T- -caf dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz
 	ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist && \touch SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
