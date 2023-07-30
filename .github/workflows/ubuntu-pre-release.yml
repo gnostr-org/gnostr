@@ -41,4 +41,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: gnostr-$RUNNER_OS_-$RUNNER_ARCH
-          path: .
+          path: gnostr* gnostr-*
