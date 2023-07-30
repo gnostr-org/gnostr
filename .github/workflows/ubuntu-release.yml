@@ -26,18 +26,7 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: apt-get install
-        run: |
-          sudo apt-get install libcurl4-openssl-dev gettext
-
-      - run: touch ~/GITHUB_TOKEN.txt
-      - run: cmake .
-      - run: sudo make all gnostr
       - run: sudo make dist
-      - name: Save state
-        run: echo "{name}={value}" >> $GITHUB_STATE
-      - name: Set output
-        run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: "marvinpinto/action-automatic-releases@latest"
         if: ${{ !env.ACT }}
         with:

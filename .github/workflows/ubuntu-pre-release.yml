@@ -27,13 +27,6 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: sudo apt-get install
-        run: |
-          sudo apt-get install libcurl4-openssl-dev gettext gnupg
-
-      - run: touch ~/GITHUB_TOKEN.txt
-      - run: cmake .
-      - run: sudo make all gnostr
       - run: sudo make dist
 
       - name: Save state
