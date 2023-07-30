@@ -40,6 +40,7 @@ jobs:
             deps/*
             /root/.cargo
             /root/.rustup
+            /root/.nvm
           key: ${{ runner.os }}-deps
 
       - uses: actions/checkout@v3
@@ -83,5 +84,6 @@ jobs:
             deps/*
             /root/.cargo
             /root/.rustup
+            /root/.nvm
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
