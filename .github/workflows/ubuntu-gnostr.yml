@@ -66,6 +66,9 @@ jobs:
 
       - run: touch ~/GITHUB_TOKEN.txt
 
+      - run: cmake .
+      - run: sudo make libsecp256k1.a
+
       - name: sudo make gnostr-cat
         run: |
           touch ~/GITHUB_TOKEN.txt
@@ -81,8 +84,6 @@ jobs:
           touch ~/GITHUB_TOKEN.txt
           #sudo make gnostr-proxy
 
-      - run: cmake .
-      - run: sudo make libsecp256k1.a
       - run: sudo make gnostr
       - run: sudo make install
 
