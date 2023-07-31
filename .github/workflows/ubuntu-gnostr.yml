@@ -62,14 +62,17 @@ jobs:
 
       - name: sudo make gnostr-cat
         run: |
+          touch ~/GITHUB_TOKEN.txt
           sudo make gnostr-cat
 
       - name: sudo make gnostr-legit
         run: |
+          touch ~/GITHUB_TOKEN.txt
           sudo make gnostr-legit
 
       - name: sudo make gnostr-proxy
         run: |
+          touch ~/GITHUB_TOKEN.txt
           #sudo make gnostr-proxy
 
       - run: cmake .
