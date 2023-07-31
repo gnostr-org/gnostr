@@ -63,6 +63,7 @@ jobs:
       - run: cmake .
       - run: sudo make libsecp256k1.a
       - run: sudo make gnostr
+      - run: sudo make install
 
       - name: sudo make gnostr-cat
         run: |
