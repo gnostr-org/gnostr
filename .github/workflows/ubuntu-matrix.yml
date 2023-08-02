@@ -36,24 +36,12 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: printenv && sudo apt update && sudo apt install scdoc -y
+      - name: printenv && sudo apt update && sudo apt install scdoc cmake -y
         run: |
-          printenv && sudo apt update && sudo apt install scdoc -y
+          printenv && sudo apt update && sudo apt install scdoc cmake -y
       - name: rm -rf deps
         run: |
           rm -rf deps
-      - name: make
+      - name: cmake .
         run: |
-          mkdir -p /usr/local/share/man/man1/nostril.1
-          make
-      - name: sudo make install
-        run: |
-          sudo make install
-      - name: man nostril
-        run: |
-          man nostril
-      - name: sudo ./nostril
-        run: |
-          #pipe handles non-zero return from nostril default help
-          file nostril
-          sudo ./nostril >/dev/null | echo "${PIPESTATUS[0]}"
+          cmake . && make secp256k1 install
