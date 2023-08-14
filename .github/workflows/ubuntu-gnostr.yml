@@ -1,0 +1,104 @@
+name: ubuntu-gnostr
+
+# Controls when the action will run.
+on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+      - name: Restore deps
+        id: cache-deps-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            deps/*
+            /root/.cargo
+            /root/.rustup
+            /root/.nvm
+            libsecp256k1.a
+          key: ${{ runner.os }}-deps
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          submodules: 'true'
+          set-safe-directory: 'true'
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: apt-get install
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+          autoconf automake \
+          bash build-essential \
+          gettext libcurl4-openssl-dev \
+          libtool make python3 python3-pip \
+          util-linux zlib1g-dev cmake \
+          g++ cargo pandoc util-linux
+
+      - run: touch ~/GITHUB_TOKEN.txt
+
+      - run: cmake .
+      - run: sudo make libsecp256k1.a
+
+      - name: sudo make gnostr-cat
+        run: |
+          touch ~/GITHUB_TOKEN.txt
+          sudo make gnostr-cat
+
+      - name: sudo make gnostr-legit
+        run: |
+          touch ~/GITHUB_TOKEN.txt
+          sudo make gnostr-legit
+
+      - name: sudo make gnostr-proxy
+        run: |
+          touch ~/GITHUB_TOKEN.txt
+          #sudo make gnostr-proxy
+
+      - run: sudo make gnostr
+      - run: sudo make install
+
+
+
+      - name: Save deps
+        id: cache-deps-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            deps/*
+            /root/.cargo
+            /root/.rustup
+            /root/.nvm
+            libsecp256k1.a
+          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
+

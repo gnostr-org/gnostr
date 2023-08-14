@@ -1,0 +1,43 @@
+name: ubuntu-release
+
+# Controls when the action will run.
+on:
+  push:
+    tags:
+      - "v*"
+      - "v*.*.*-rc**"
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu-latest] #,ubuntu-20.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v3
+      - name: "printenv"
+        run: |
+          printenv
+      - name: "sudo apt-get install libcurl4-openssl-dev gettext"
+        run: |
+          sudo apt-get install libcurl4-openssl-dev gettext
+      - name: "Build pre-release"
+        run: |
+          sudo touch /root/GITHUB_TOKEN.txt
+          sudo make dist
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v3
+        with:
+          name: gnostr-${{ matrix.os }}
+          path: |
+            dist

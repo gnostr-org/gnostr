@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+#
+
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+#echo $RELAYS
+
+gnostr_relays=${GNOSTR_RELAYS:-$RELAYS}
+#export gnostr_relays
+gnostr_relayer=${GNOSTR_RELAYER:-gnostr-cat}
+#export gnostr_relayer
+#to_stdout=0
+#echo ${!#}
+#echo $0 $1
+if [[ $1 = "-c" ]]; then
+curl_test(){
+echo "curl test"
+	curl --include \
+     --no-buffer \
+     --header "Connection: Upgrade" \
+     --header "Upgrade: websocket" \
+     --header "Host: example.com:80" \
+     --header "Origin: http://example.com:80" \
+     --header "Sec-WebSocket-Key: SGVsbG8sIHdvcmxkIQ==" \
+     --header "Sec-WebSocket-Version: 13" \
+     http://example.com:80/
+ }
+curl_test
+exit;
+fi
+
+if [[ $1 = "-t" ]]; then
+
+gnostr-git config --global --replace-all gnostr.relays "wss://relay.damus.io ws://0.0.0.0:6102" && git config -l | grep gnostr.relays
+
+gnostr_tests(){
+GNOSTR=$(which gnostr)
+echo "TESTS:$GNOSTR"
+echo "TEST1:$GNOSTR"
+$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 1"
+echo "TEST2:$GNOSTR"
+$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 2" | gnostr-cat -u wss://relay.damus.io
+echo "TEST3:$GNOSTR"
+$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 33" | gnostr-relays
+echo "TEST4:$GNOSTR"
+$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "$(gnostr-git-reflog -f)" | gnostr-relays
+echo "TEST5:$GNOSTR"
+$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "$(gnostr-git-reflog -hl)" | gnostr-relays
+
+echo "$GNOSTR:TESTS complete"
+
+GNOSTR_QUERY=$(which gnostr-query)
+echo "TESTS:$GNOSTR_QUERY"
+
+
+
+echo "TEST0:$GNOSTR_QUERY"
+# THIS SERVES AS A DATA INTEGRITY CHECK
+# IT IS THE FIRST GIT COMMIT OVER NOSTR
+# WE PRESERVE IT FOR POSTERITY
+$GNOSTR_QUERY -i fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | gnostr-cat -u ws://0.0.0.0:6102 > ./test/first-gnostr-commit.txt || exit && gnostr --sec $(gnostr --hash) --envelope --content "$(cat ./test/first-gnostr-commit.txt)" | gnostr-relays
+
+
+echo "TEST1:$GNOSTR_QUERY"
+$GNOSTR_QUERY -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr" | gnostr-cat -u ws://0.0.0.0:6102
+echo "TEST2:$GNOSTR_QUERY"
+$GNOSTR_QUERY -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr" | gnostr-relays
+
+echo "TEST3:$GNOSTR_QUERY"
+echo "'gnostr query -i <pubkey>' | gnostr-relays"
+gnostr query -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr"  | gnostr-relays
+
+#echo "TEST4:$GNOSTR_QUERY"
+gnostr-query -i 2cafcbbf54b1b0b17f46ff7c8192d572ff1480757d32254bee3cc02f535e41a7 | gnostr-relays
+
+#echo "TEST5:$GNOSTR_QUERY"
+gnostr-query -t gnostr | gnostr-relays
+
+gnostr-git config -l | grep "gnostr.relays"
+echo "$GNOSTR_QUERY:TESTS complete"
+
+
+}
+gnostr_tests
+exit;
+fi
+
+if ! command -v $gnostr_relayer; then
+	printf "gnostr-cat '%s' not found. Please install or set GNOSTR_RELAYER to your preferred relayer.\n" "$gnostr_relayer"
+	exit 1
+fi
+
+if [ "$gnostr_relays" == "" ]; then
+	printf 'no relays set. set\n\n    export GNOSTR_RELAYS="wss://relay.damus.io ws://0.0.0.0:6102" or\n\n    gnostr-git config --global --add
+	gnostr.relays "wss://relay.damus.io ws://0.0.0.0:6102\n"' >&2
+	exit 1
+fi
+
+#REF:quick config
+#gnostr-proxy default ws://0.0.0.0:6102
+#gnostr-git config --global --replace-all gnostr.relays "wss://relay.damus.io ws://0.0.0.0:6102"
+#git config -l | grep gnostr.relays
+#gnostr-git config --global --replace-all gnostr.relays "ws://0.0.0.0:6102" && git config -l | grep gnostr.relays
+#echo $gnostr_relayer $gnostr_relays
+
+$gnostr_relayer $gnostr_relays
