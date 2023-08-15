@@ -20,7 +20,6 @@ GIT-VERSION-FILE
 .privenv
 
 gnostr
-gnostr-git
 gnostr-relay
 gnostr-xor
 gnostr-legit
@@ -31,7 +30,6 @@ gnostr-req
 tests
 
 gnostr-repo
-gnostr-sha256
 gnostr-sha256-test
 gnostr-tests
 gnostr-grep
@@ -86,8 +84,6 @@ libgit.a
 libjq.a
 libtclstub.a
 libsecp256k1.a
-
-gnostr-cat
 
 bin
 .gnostr/gnostr-proxy
