@@ -13,7 +13,7 @@
 [submodule "deps/act"]
 	path = deps/act
 	url = https://github.com/gnostr-org/act.git
-	branch = 310cb79
+	branch = master
 	ignore = dirty
 	shallow = true
 [submodule "deps/hyper-sdk"]
@@ -42,7 +42,7 @@
 [submodule "deps/gnostr-git"]
 	path = deps/gnostr-git
 	url = https://github.com/gnostr-org/gnostr-git.git
-	branch = v0.0.0_21
+	branch = master
 	ignore = dirty
 	shallow = true
 [submodule "deps/gnostr-legit"]
@@ -126,6 +126,12 @@
 [submodule "deps/gnostr-act"]
 	path = deps/gnostr-act
 	url = https://github.com/gnostr-org/gnostr-act.git
+	branch = master
+	ignore = dirty
+	shallow = true
 [submodule "deps/gnostr-mail"]
 	path = deps/gnostr-mail
 	url = https://github.com/gnostr-org/gnostr-mail.git
+	branch = master
+	ignore = dirty
+	shallow = true

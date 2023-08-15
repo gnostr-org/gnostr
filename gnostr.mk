@@ -40,12 +40,12 @@ export GTAR
 
 ##all:
 #all: submodules gnostr gnostr-cat gnostr-git gnostr-relay gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-docs
-all: submodules gnostr gnostr-git gnostr-relay gnostr-get-relays gnostr-set-relays gnostr-cli gnostr-proxy gnostr-legit gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+all: submodules gnostr gnostr-git gnostr-relay gnostr-get-relays gnostr-set-relays gnostr-cli gnostr-proxy gnostr-legit gnostr-act gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-act gnostr-xor gnostr-docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
 ##	docker-statt doc/gnostr.1
-gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
+gnostr-docs:docker-start doc/gnostr.1## 	gnostr-docs: convert README to doc/gnostr.1
 #@echo docs
 	@bash -c 'if pgrep MacDown; then pkill MacDown; fi; 2>/dev/null'
 	@bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md 2>/dev/null'
@@ -125,7 +125,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git deps/gnostr-act/.git## 	refresh-submodules
 	git submodule update --init --recursive
 
 .PHONY:deps/secp256k1/config.log
@@ -171,6 +171,13 @@ deps/gnostr-git/.git:
 deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
 	cd deps/gnostr-git && make && make install
 gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
+
+deps/gnostr-act/.git:
+	@devtools/refresh-submodules.sh deps/gnostr-act
+.PHONY:deps/gnostr-act/gnostr-act
+deps/gnostr-act/gnostr-act:deps/gnostr-act/.git
+	cd deps/gnostr-act && make install
+gnostr-act:deps/gnostr-act/gnostr-act## 	gnostr-act
 
 ##.PHONY:gnostr-get-relays gnostr-set-relays
 ##gnostr-get-relays:
@@ -338,8 +345,8 @@ gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 install-all:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
-	shopt -s extglob && install -m755 -vC include/*.*           ${PREFIX}/include 2>/dev/null
-	shopt -s extglob && install -m755 -vC gnostr                $(PREFIX)/bin     2>/dev/null
+	shopt -s extglob && install -m755 -vC include/*.*                    ${PREFIX}/include 2>/dev/null
+	shopt -s extglob && install -m755 -vC gnostr                         $(PREFIX)/bin     2>/dev/null
 	shopt -s extglob && install -m755 -vC template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
 	shopt -s extglob && install -m755 -vC template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
 	shopt -s extglob && install -m755 -vC template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
