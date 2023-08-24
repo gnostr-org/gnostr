@@ -147,6 +147,18 @@ dependencies = [
 
 [[package]]
 name = "async-utility"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3716c0d3970fe92d79a8f4cda2caf91113574505dff5b18e455e549d4b078e98"
+dependencies = [
+ "futures-util",
+ "gloo-timers 0.2.6",
+ "tokio",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "async-utility"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a34a3b57207a7a1007832416c3e4862378c8451b4e8e093e436f48c2d3d2c151"
@@ -163,7 +175,7 @@ version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a7d8c7d34a225ba919dd9ba44d4b9106d20142da545e086be8ae21d1897e043"
 dependencies = [
- "async-utility",
+ "async-utility 0.3.1",
  "futures",
  "futures-util",
  "js-sys",
@@ -1773,7 +1785,7 @@ dependencies = [
  "nostr-database",
  "nostr-lmdb",
  "nostr-relay-pool",
- "nostr-sdk 0.22.0",
+ "nostr-sdk 0.23.0",
  "nostr-sdk 0.43.0",
  "num_cpus",
  "once_cell",
@@ -1805,8 +1817,9 @@ dependencies = [
 
 [[package]]
 name = "nostr"
-version = "0.22.0"
-source = "git+https://github.com/0xtrr/nostr.git?branch=feature%2Fimprove-nip58-module#68a81a3dfccaafd02a6c8f2a78fade1eee27152f"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "525a8f75106f4eeb1fedaacadc61547548fe4715c3edde7d03eed2900b467952"
 dependencies = [
  "aes",
  "base64 0.21.7",
@@ -1817,11 +1830,11 @@ dependencies = [
  "cbc",
  "getrandom 0.2.16",
  "instant",
- "log",
  "reqwest 0.11.27",
  "secp256k1 0.27.0",
  "serde",
  "serde_json",
+ "tracing",
  "url",
 ]
 
@@ -1855,7 +1868,7 @@ version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3bcd44ea344d1cab3447615681cd3bb90134cafe4d157d3e714c23c31268cd8"
 dependencies = [
- "async-utility",
+ "async-utility 0.3.1",
  "nostr 0.43.0",
  "nostr-relay-pool",
  "tokio",
@@ -1880,7 +1893,7 @@ version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03e20688047b2114906ba84cce26c955e6cd079c10fc7328bc2618dc8031fb17"
 dependencies = [
- "async-utility",
+ "async-utility 0.3.1",
  "heed",
  "nostr 0.43.0",
  "nostr-database",
@@ -1894,7 +1907,7 @@ version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "265d9b44771ed15db93b183a0c93dbb703b2b0d0b74dffb5c2a081be52373a5a"
 dependencies = [
- "async-utility",
+ "async-utility 0.3.1",
  "async-wsocket",
  "atomic-destructor",
  "lru",
@@ -1907,17 +1920,17 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk"
-version = "0.22.0"
-source = "git+https://github.com/0xtrr/nostr.git?branch=feature%2Fimprove-nip58-module#68a81a3dfccaafd02a6c8f2a78fade1eee27152f"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d97f949e4e303d07e8cb92dff5896da922b906133c8b75b570fd3ec93b782430"
 dependencies = [
- "gloo-timers 0.2.6",
- "log",
- "nostr 0.22.0",
+ "async-utility 0.1.1",
+ "nostr 0.23.0",
  "nostr-sdk-net",
  "once_cell",
  "thiserror 1.0.69",
  "tokio",
- "wasm-bindgen-futures",
+ "tracing",
 ]
 
 [[package]]
@@ -1926,7 +1939,7 @@ version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "599f8963d6a1522a13b1a2b0ea6e168acfc367706606f1d33fa595e91fa22db0"
 dependencies = [
- "async-utility",
+ "async-utility 0.3.1",
  "nostr 0.43.0",
  "nostr-database",
  "nostr-relay-pool",
@@ -1935,8 +1948,9 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk-net"
-version = "0.22.0"
-source = "git+https://github.com/0xtrr/nostr.git?branch=feature%2Fimprove-nip58-module#68a81a3dfccaafd02a6c8f2a78fade1eee27152f"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b61e657a7dc7c64b1aaa8b8225983d1783c2dc3dd1f3844ac316a7ef360d65c"
 dependencies = [
  "futures-util",
  "thiserror 1.0.69",
@@ -3459,7 +3473,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
 dependencies = [
  "pin-project-lite",
+ "tracing-attributes",
  "tracing-core",
+]
+
+[[package]]
+name = "tracing-attributes"
+version = "0.1.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81383ab64e72a7a8b8e13130c49e3dab29def6d0c7d76a03087b3cf71c5c6903"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
