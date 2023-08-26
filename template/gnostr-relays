@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
-gnostr_relays=${GNOSTR_RELAYS:-$(gnostr git config gnostr.relays)}
+#
+
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+#echo $RELAYS
+
+gnostr_relays=${GNOSTR_RELAYS:-$RELAYS}
 #export gnostr_relays
 gnostr_relayer=${GNOSTR_RELAYER:-gnostr-cat}
 #export gnostr_relayer
@@ -70,7 +81,7 @@ gnostr-query -i 2cafcbbf54b1b0b17f46ff7c8192d572ff1480757d32254bee3cc02f535e41a7
 #echo "TEST5:$GNOSTR_QUERY"
 gnostr-query -t gnostr | gnostr-relays
 
-gnostr git config -l | grep "gnostr.relays"
+gnostr-git config -l | grep "gnostr.relays"
 echo "$GNOSTR_QUERY:TESTS complete"
 
 

@@ -33,7 +33,7 @@ elif
 	exit
 elif
 [[ ${!i} == "--format" ]] || [[ ${!i} == "-f" ]]; then
-	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd:commit:%s'
+	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd/commit/%s'
 	exit
 elif
 [[ ${!i} == "-gd" ]] || [[ ${!i} == "-g" ]]; then
