@@ -211,9 +211,9 @@ target_link_libraries (tests ${lib_dep})
 #//////////////////////////
 # examples
 #//////////////////////////
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT LINUX)
 add_executable(examples examples/examples.cc)
-target_link_libraries (examples ${l/ib_dep})
+target_link_libraries (examples ${lib_dep})
 endif()
 
 #//////////////////////////
