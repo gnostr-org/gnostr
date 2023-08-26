@@ -247,6 +247,8 @@ libtclstub.a:deps/tcl/unix/libtclstub.a## 	deps/tcl/unix/libtclstub.a
 ##	./autogen.sh configure && ./configure && make install
 tcl-unix:libtclstub.a## 	deps/tcl/unix/libtclstub.a
 
+
+
 deps/gnostr-cat/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-cat
 #.PHONY:deps/gnostr-cat
@@ -264,6 +266,48 @@ deps/gnostr-cat/target/release/gnostr-cat:deps/gnostr-cat
 ##	cd deps/gnostr-cat; \
 ##	make cargo-install
 gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat## 	gnostr-cat
+
+
+
+deps/gnostr-cli/.git:
+	@devtools/refresh-submodules.sh deps/gnostr-cli
+#.PHONY:deps/gnostr-cli
+deps/gnostr-cli:deps/gnostr-cli/.git
+	cd deps/gnostr-cli && \
+		make cargo-install
+.PHONY:deps/gnostr-cli/target/release/gnostr-cli
+deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
+	cd deps/gnostr-cli && \
+		make cargo-install
+	@cp $@ gnostr-cli || echo "" 2>/dev/null
+.PHONY:gnostr-cli
+##gnostr-cli
+##deps/gnostr-cli deps/gnostr-cli/.git
+##	cd deps/gnostr-cli; \
+##	make cargo-install
+gnostr-cli:deps/gnostr-cli/target/release/gnostr-cli## 	gnostr-cli
+
+
+
+deps/gnostr-grep/.git:
+	@devtools/refresh-submodules.sh deps/gnostr-grep
+#.PHONY:deps/gnostr-grep
+deps/gnostr-grep:deps/gnostr-grep/.git
+	cd deps/gnostr-grep && \
+		make cargo-install
+.PHONY:deps/gnostr-grep/target/release/gnostr-grep
+deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
+	cd deps/gnostr-grep && \
+		make cargo-install
+	@cp $@ gnostr-grep || echo "" 2>/dev/null
+.PHONY:gnostr-grep
+##gnostr-grep
+##deps/gnostr-grep deps/gnostr-grep/.git
+##	cd deps/gnostr-grep; \
+##	make cargo-install
+gnostr-grep:deps/gnostr-grep/target/release/gnostr-grep## 	gnostr-grep
+
+
 
 deps/hyper-sdk/.git:
 	@devtools/refresh-submodules.sh deps/hyper-sdk
