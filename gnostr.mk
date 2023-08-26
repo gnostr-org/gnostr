@@ -392,4 +392,9 @@ gnostr-configurator: configurator.c
 	rm -f configurator
 	$(CC) $< -o $@
 
+
+
+gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy
+
+
 .PHONY: fake
