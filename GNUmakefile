@@ -187,7 +187,7 @@ detect:
 ## min rust version is rustc 1.72.0 ## therefore we install via rustup
 	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && echo 'is Darwin' && $(shell echo which brew) && $(shell echo which cmake) && $(shell echo which rustup) && $(shell echo which cargo) || echo 'not Darwin';"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install cmake expat libexpat1-dev zlib* gettext --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install autoconf cmake expat libexpat1-dev zlib* gettext --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
 	bash -c "[ '$(shell uname -m)' == 'x86_64' ] && echo 'is x86_64' || echo 'not x86_64';"
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
