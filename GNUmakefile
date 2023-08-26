@@ -184,18 +184,10 @@ docker-start:venv
 detect:
 ##detect
 ##	detect uname -s uname -m uname -p
-	@[[ '$(shell uname -s)' == 'Darwin' ]] && \
-		echo "is Darwin" || \
-		echo "not Darwin";
-	@[[ '$(shell uname -s)' == 'Linux'* ]] && \
-		echo "is Linux" && apt-get install cmake expat libexpat1-dev  zlib* --fix-missing || \
-		echo "not Linux";
-	@[[ '$(shell uname -m)' == 'x86_64' ]] && \
-		echo "is x86_64" || \
-		echo "not x86_64";
-	@[[ '$(shell uname -p)' == 'i386' ]]   && \
-		echo "is i386" || \
-		echo "not i386";
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && echo 'is Darwin' && $(shell echo which brew) && $(shell echo which cmake) || echo 'not Darwin';"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && apt-get install cmake expat libexpat1-dev zlib* --fix-missing || echo 'not Darwin';"
+	bash -c "[ '$(shell uname -m)' == 'x86_64' ] && echo 'is x86_64' || echo 'not x86_64';"
+	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
 .PHONY: report
 report:## 	
