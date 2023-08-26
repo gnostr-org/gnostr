@@ -132,6 +132,7 @@ submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hy
 deps/secp256k1/.git:
 	devtools/refresh-submodules.sh deps/secp256k1
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
+.PHONY:deps/secp256k1/configure
 deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1 && \
 		./autogen.sh && \
