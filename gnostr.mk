@@ -136,6 +136,7 @@ deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1 && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
+.PHONY:deps/secp256k1/.libs/libsecp256k1.a
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 	cd deps/secp256k1 && \
 		make -j && make install
