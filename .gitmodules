@@ -65,7 +65,7 @@
 	shallow = true
 [submodule "deps/gnostr-grep"]
 	path = deps/gnostr-grep
-	url = git@github.com:gnostr-org/gnostr.git
+	url = https://github.com/gnostr-org/gnostr-grep.git
 	branch = master
 	ignore = dirty
 	shallow = true
@@ -90,3 +90,6 @@
 [submodule "deps/gnostr-sha256"]
 	path = deps/gnostr-sha256
 	url = https://github.com/gnostr-org/gnostr-sha256.git
+[submodule "deps/gnostr-cli"]
+	path = deps/gnostr-cli
+	url = https://github.com/gnostr-org/gnostr-cli.git
