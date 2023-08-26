@@ -284,6 +284,7 @@ gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
 #	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
+	install ./gnostr /usr/local/bin/
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
