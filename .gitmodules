@@ -66,7 +66,7 @@
 [submodule "deps/gnostr-grep"]
 	path = deps/gnostr-grep
 	url = https://github.com/gnostr-org/gnostr-grep.git
-	branch = master
+	branch = v0.0.1
 	ignore = dirty
 [submodule "deps/gnostr-command"]
 	path = deps/gnostr-command
