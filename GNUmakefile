@@ -188,7 +188,7 @@ detect:
 		echo "is Darwin" || \
 		echo "not Darwin";
 	@[[ '$(shell uname -s)' == 'Linux'* ]] && \
-		echo "is Linux" && apt-get install cmake --fix-missing || \
+		echo "is Linux" && apt-get install cmake expat zlib* --fix-missing || \
 		echo "not Linux";
 	@[[ '$(shell uname -m)' == 'x86_64' ]] && \
 		echo "is x86_64" || \
