@@ -172,6 +172,9 @@ deps/gnostr-git/.git:
 deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
 	cd deps/gnostr-git && make && make install
 gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
+	cp $< $@
+	install $@ /usr/local/bin/
+	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 
 .PHONY:
 gnostr-get-relays:
@@ -187,7 +190,7 @@ gnostr-build:## 		cmake build gnostr-relay
 
 
 
-deps/gnostr-legit/.git:
+deps/gnostr-legit/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-legit
 #.PHONY:deps/gnostr-legit/gnostr-legit
 deps/gnostr-legit/gnostr-legit:deps/gnostr-legit/.git
@@ -196,6 +199,7 @@ deps/gnostr-legit/gnostr-legit:deps/gnostr-legit/.git
 deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/gnostr-legit## 	gnostr-legit
 gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
+	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
 
 
