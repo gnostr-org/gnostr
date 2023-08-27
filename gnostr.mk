@@ -446,7 +446,11 @@ gnostr-configurator: configurator.c
 	rm -f configurator
 	$(CC) $< -o $@
 
-
+gnostr-query-test:
+	gnostr-query -t gnostr | gnostr-cat -u ws://127.0.0.1:6102
+	gnostr-query -t weeble | gnostr-cat -u ws://127.0.0.1:6102
+	gnostr-query -t wobble | gnostr-cat -u ws://127.0.0.1:6102
+	gnostr-query -t blockheigt | gnostr-cat -u ws://127.0.0.1:6102
 
 gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy
 
