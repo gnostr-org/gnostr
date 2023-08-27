@@ -31,6 +31,8 @@ gnostr-req
 tests
 
 libnostr.a
+*.dylib
+
 
 install_manifest.txt
 response.txt
@@ -85,3 +87,4 @@ bin
 .gnostr/gnostr-proxy
 .nvmrc
 .gnostr/proxy
+.gnostr
