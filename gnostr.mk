@@ -189,12 +189,17 @@ gnostr-get-relays:
 
 
 
-gnostr-relay:build## 	gnostr-relay:build
 .PHONY:gnostr-build
-gnostr-build:## 		cmake build gnostr-relay
-	rm build/CMakeCache.txt
+gnostr-build:## 	gnostr-build
+	rm build/CMakeCache.txt || echo
 	cmake -S . -B build && cd build && cmake ../ && make
 
+
+
+.PHONY:gnostr-build-install
+gnostr-build-install:gnostr-build## 	gnostr-build-install
+	cd build && make install
+	$(MAKE) gnostr-install || echo
 
 
 
@@ -456,6 +461,7 @@ gnostr-query-test:gnostr-query gnostr-install
 	gnostr-query -t blockheigt | gnostr-cat -u ws://127.0.0.1:6102
 
 gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query
+	$(MAKE) gnostr-build-install
 
 
 .PHONY: fake
