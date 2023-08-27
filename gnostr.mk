@@ -163,8 +163,15 @@ deps/jq/.libs/libjq.a:deps/jq/.git
 libjq.a: deps/jq/.libs/libjq.a## 	libjq.a
 	cp $< $@
 
+
+
+
+
 deps/gnostr-web/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-web
+
+
+
 
 deps/gnostr-git/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-git
@@ -175,6 +182,8 @@ gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
 	cp $< $@
 	install $@ /usr/local/bin/
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
+
+
 
 .PHONY:
 gnostr-get-relays:
@@ -218,9 +227,9 @@ deps/gnostr-proxy/.git:
 .PHONY:deps/gnostr-proxy
 deps/gnostr-proxy:deps/gnostr-proxy/.git
 	cd deps/gnostr-proxy && \
-		make nvm run
+		$(MAKE) install
 gnostr-proxy:deps/gnostr-proxy
-	cat deps/gnostr-proxy/public/assets/entrypoints.json
+	install deps/gnostr-proxy/gnostr-proxy /usr/local/bin
 
 #deps/gnostr-relay/.git:
 #	@devtools/refresh-submodules.sh deps/gnostr-relay

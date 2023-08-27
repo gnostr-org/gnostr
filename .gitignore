@@ -83,3 +83,5 @@ gnostr-cat
 
 bin
 .gnostr/gnostr-proxy
+.nvmrc
+.gnostr/proxy
