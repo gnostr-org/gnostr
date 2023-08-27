@@ -127,17 +127,17 @@ diff-log:
 submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git## 	refresh-submodules
 	git submodule update --init --recursive
 
-.PHONY:deps/secp256k1/config.log
+#.PHONY:deps/secp256k1/config.log
 .ONESHELL:
 deps/secp256k1/.git:
 	devtools/refresh-submodules.sh deps/secp256k1
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
-.PHONY:deps/secp256k1/configure
+#.PHONY:deps/secp256k1/configure
 deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1 && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
-.PHONY:deps/secp256k1/.libs/libsecp256k1.a
+#.PHONY:deps/secp256k1/.libs/libsecp256k1.a
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 	cd deps/secp256k1 && \
 		make -j && make install
@@ -175,7 +175,6 @@ deps/gnostr-web/.git:
 
 deps/gnostr-git/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-git
-.PHONY:deps/gnostr-git/gnostr-git
 deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
 	cd deps/gnostr-git && make && make install
 gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
@@ -185,15 +184,15 @@ gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
 
 
 
-.PHONY:
 gnostr-get-relays:
 	$(CC) ./template/gnostr-get-relays.c -o gnostr-get-relays
 
 
 
 gnostr-relay:build## 	gnostr-relay:build
-.PHONY:build
+.PHONY:gnostr-build
 gnostr-build:## 		cmake build gnostr-relay
+	rm build/CMakeCache.txt
 	cmake -S . -B build && cd build && cmake ../ && make
 
 
@@ -335,7 +334,7 @@ deps/act/.git:
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+gnostr:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
