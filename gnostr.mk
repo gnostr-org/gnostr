@@ -365,6 +365,7 @@ gnostr-install:
 	@install -m755 -vC include/*.*                    $(PREFIX)/include 2>/dev/null
 	@install -m755 -vC gnostr                         $(PREFIX)/bin     2>/dev/null
 	@install -m755 -vC template/gnostr-*              $(PREFIX)/bin     2>/dev/null
+	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
 	@install -m755 -vC template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
 	@install -m755 -vC template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
 	@install -m755 -vC template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
@@ -446,13 +447,16 @@ gnostr-configurator: configurator.c
 	rm -f configurator
 	$(CC) $< -o $@
 
-gnostr-query-test:
+gnostr-query:
+	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
+
+gnostr-query-test:gnostr-query gnostr-install
 	gnostr-query -t gnostr | gnostr-cat -u ws://127.0.0.1:6102
 	gnostr-query -t weeble | gnostr-cat -u ws://127.0.0.1:6102
 	gnostr-query -t wobble | gnostr-cat -u ws://127.0.0.1:6102
 	gnostr-query -t blockheigt | gnostr-cat -u ws://127.0.0.1:6102
 
-gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy
+gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query
 
 
 .PHONY: fake
