@@ -49,10 +49,13 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
 
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1.0.6
+        #if: ${{ !env.ACT }}
         with:
           toolchain: stable
+
       - name: apt-get install
+        #if: ${{ !env.ACT }}
         run: |
           sudo apt-get update
           sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++ cargo
@@ -62,7 +65,6 @@ jobs:
       - run: sudo make detect
       - run: sudo cmake .
 
-      - run: make -C deps/gnostr-proxy nvm && export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
       - run: sudo make gnostr-proxy && gnostr-proxy & ps -ef | grep runner
 
       - name: Save deps
