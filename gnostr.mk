@@ -304,14 +304,12 @@ gnostr-cli:deps/gnostr-cli/target/release/gnostr-cli## 	gnostr-cli
 
 deps/gnostr-grep/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-grep
-#.PHONY:deps/gnostr-grep
+.PHONY:deps/gnostr-grep
 deps/gnostr-grep:deps/gnostr-grep/.git
-	cd deps/gnostr-grep && \
-		make cargo-install
 .PHONY:deps/gnostr-grep/target/release/gnostr-grep
 deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
 	cd deps/gnostr-grep && \
-		make cargo-install
+		make install
 	@cp $@ gnostr-grep || echo "" 2>/dev/null
 .PHONY:gnostr-grep
 ##gnostr-grep

@@ -189,7 +189,7 @@ detect:
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && echo 'is Darwin' && $(shell echo which brew) && $(shell echo which cmake) && $(shell echo which rustup) && $(shell echo which cargo) && $(shell echo which gettext) && $(shell echo which autoconf) && $(shell echo which node) && $(shell echo which go) || echo"
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install -q --cask cmake || echo 'not Darwin';"
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install -q autoconf automake coreutils gettext golang node@14 || echo 'not Darwin';"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install autoconf clang cmake expat gettext golang-go libcurl4-openssl-dev libexpat1-dev libssl-dev libtool npm pkg-config python3 python-is-python3 virtualenv zlib* --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install autoconf build-essential clang cmake expat gettext golang-go libcurl4-openssl-dev libexpat1-dev libssl-dev libtool npm pkg-config python3 python3-pip  python-is-python3 util-linux virtualenv zlib* --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
 	bash -c "[ '$(shell uname -m)' == 'x86_64' ] && echo 'is x86_64' || echo 'not x86_64';"
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
