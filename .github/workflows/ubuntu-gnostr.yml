@@ -60,6 +60,7 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
 
       - run: sudo make detect
+      - run: sudo cmake .
 
       - run: sudo make libsecp256k1.a
       - run: sudo make gnostr
