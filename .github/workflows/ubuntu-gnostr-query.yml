@@ -62,6 +62,7 @@ jobs:
       - run: sudo make detect
       - run: sudo cmake .
 
+      - run: sudo make gnostr-cat
       - run: sudo make gnostr-query
       - run: sudo make gnostr-query-test
 
