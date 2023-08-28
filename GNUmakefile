@@ -184,6 +184,7 @@ docker-start:venv
 detect:
 ##detect
 ##	detect uname -s uname -m uname -p
+	bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$HOME/.nvm'; [ -s '$NVM_DIR/nvm.sh' ] && \. '$NVM_DIR/nvm.sh'; [ -s '$NVM_DIR/bash_completion' ] && \. '$NVM_DIR/bash_completion' &"
 ## min rust version is rustc 1.72.0 ## therefore we install via rustup
 	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & source "$(HOME)/.cargo/env"
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && echo 'is Darwin' && $(shell echo which brew) && $(shell echo which cmake) && $(shell echo which rustup) && $(shell echo which cargo) && $(shell echo which gettext) && $(shell echo which autoconf) && $(shell echo which node) && $(shell echo which go) || echo"

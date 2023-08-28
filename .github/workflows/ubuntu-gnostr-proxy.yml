@@ -62,7 +62,7 @@ jobs:
       - run: sudo make detect
       - run: sudo cmake .
 
-      - run: make -C deps/gnostr-proxy nvm && source ~/.bashrc
+      - run: make -C deps/gnostr-proxy nvm && export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
       - run: sudo make gnostr-proxy && gnostr-proxy & ps -ef | grep runner
 
       - name: Save deps
