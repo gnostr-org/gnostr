@@ -187,6 +187,9 @@ gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
 gnostr-get-relays:
 	$(CC) ./template/gnostr-get-relays.c -o gnostr-get-relays
 
+gnostr-set-relays:
+	$(CC) ./template/gnostr-set-relays.c -o gnostr-set-relays
+
 
 
 .PHONY:gnostr-build
