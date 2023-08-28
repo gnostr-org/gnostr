@@ -1,4 +1,4 @@
-name: ubuntu-gnostr
+name: ubuntu-gnostr-git
 
 # Controls when the action will run.
 on:
