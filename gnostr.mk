@@ -463,9 +463,9 @@ gnostr-query:
 	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
 
 gnostr-query-test:gnostr-cat gnostr-query gnostr-install
-	gnostr-query -t gnostr | gnostr-cat -u wss://relay.damus.io
-	gnostr-query -t weeble | gnostr-cat -u wss://relay.damus.io
-	gnostr-query -t wobble | gnostr-cat -u wss://relay.damus.io
+	gnostr-query -t gnostr | $(shell which gnostr-cat) -u wss://relay.damus.io
+	gnostr-query -t weeble | $(shell which gnostr-cat) -u wss://relay.damus.io
+	gnostr-query -t wobble | $(shell which gnostr-cat) -u wss://relay.damus.io
 	gnostr-query -t blockheight | gnostr-cat -u wss://relay.damus.io
 
 gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-act
