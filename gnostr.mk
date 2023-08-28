@@ -272,16 +272,11 @@ deps/gnostr-cat:deps/gnostr-cat/.git
 	cd deps/gnostr-cat && \
 		make cargo-install
 .PHONY:deps/gnostr-cat/target/release/gnostr-cat
-deps/gnostr-cat/target/release/gnostr-cat:deps/gnostr-cat
-	cd deps/gnostr-cat && \
-		make cargo-install
-	@cp $@ gnostr-cat || echo "" 2>/dev/null
 .PHONY:gnostr-cat
-##gnostr-cat
-##deps/gnostr-cat deps/gnostr-cat/.git
-##	cd deps/gnostr-cat; \
-##	make cargo-install
-gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat## 	gnostr-cat
+gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
+	cd deps/gnostr-cat && \
+		make install
+	@cp $@ gnostr-cat || echo "" 2>/dev/null
 
 
 
