@@ -334,7 +334,7 @@ deps/gnostr-aio/.git:
 deps/gnostr-act/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-act
 gnostr-act:deps/gnostr-act/.git
-	cd deps/gnostr-act && $(MAKE) install
+	cd deps/gnostr-act && ./install-gnostr-act
 
 
 
