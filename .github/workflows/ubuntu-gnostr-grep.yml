@@ -1,4 +1,4 @@
-name: ubuntu-gnostr
+name: ubuntu-gnostr-grep
 
 # Controls when the action will run.
 on:
@@ -65,7 +65,8 @@ jobs:
       - run: sudo make detect
       - run: sudo cmake .
 
-      - run: sudo make gnostr-grep && gnostr-grep 0 version
+      - run: sudo make gnostr-grep
+      - run: gnostr-grep 0 version
 
       - name: Save deps
         id: cache-deps-save
