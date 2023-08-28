@@ -62,7 +62,7 @@ jobs:
       - run: sudo make detect
       - run: sudo cmake .
 
-      - run: sudo make gnostr-proxy
+      - run: sudo make gnostr-proxy && gnostr-proxy & ps -ef | grep runner
 
       - name: Save deps
         id: cache-deps-save
