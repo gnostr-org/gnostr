@@ -22,8 +22,8 @@ endif
 ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
-SUBMODULES                              = deps/secp256k1
-SUBMODULES_MORE                         = deps/secp256k1 deps/git deps/gnostr-cat deps/hyper-nostr deps/tcl deps/hyper-sdk deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay
+#SUBMODULES                              = deps/secp256k1
+SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/hyper-nostr deps/tcl deps/hyper-sdk deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay
 
 VERSION                                :=$(shell cat version)
 export VERSION
