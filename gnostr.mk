@@ -462,11 +462,11 @@ gnostr-configurator: configurator.c
 gnostr-query:
 	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
 
-gnostr-query-test:gnostr-query gnostr-install
-	gnostr-query -t gnostr | gnostr-cat -u ws://127.0.0.1:6102
-	gnostr-query -t weeble | gnostr-cat -u ws://127.0.0.1:6102
-	gnostr-query -t wobble | gnostr-cat -u ws://127.0.0.1:6102
-	gnostr-query -t blockheigt | gnostr-cat -u ws://127.0.0.1:6102
+gnostr-query-test:gnostr-cat gnostr-query gnostr-install
+	gnostr-query -t gnostr | gnostr-cat -u wss://relay.damus.io
+	gnostr-query -t weeble | gnostr-cat -u wss://relay.damus.io
+	gnostr-query -t wobble | gnostr-cat -u wss://relay.damus.io
+	gnostr-query -t blockheight | gnostr-cat -u wss://relay.damus.io
 
 gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-act
 	$(MAKE) gnostr-build-install
