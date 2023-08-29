@@ -20,14 +20,18 @@ GIT-VERSION-FILE
 .privenv
 
 gnostr
-gnostr-git
-gnostr-relay
-gnostr-xor
-gnostr-legit
+gnostr-cat
+gnostr-cli
 gnostr-client
+gnostr-git
 gnostr-get-relays
 gnostr-gnode
+gnostr-grep
+gnostr-legit
+gnostr-relay
 gnostr-req
+gnostr-set-relays
+gnostr-xor
 tests
 
 libnostr.a
@@ -75,6 +79,9 @@ ext/secp256k1-0.3.2/CTestTestfile.cmake
 ext/secp256k1-0.3.2/DartConfiguration.tcl
 ext/secp256k1-0.3.2/src/CTestTestfile.cmake
 deps/gnostr-proxy/resources/js/isomophic-git/__tests__/
+
+ext/wt-4.10.0/wt-config-version.cmake
+ext/wt-4.10.0/wt-config.cmake
 
 libgit.a
 libjq.a
