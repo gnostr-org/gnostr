@@ -22,11 +22,20 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
+    env:
+      GNOSTR: "gnostr"
     strategy:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
@@ -60,7 +69,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++ cargo
 
-      - run: touch ~/GITHUB_TOKEN.txt
+      - name: apt-get install
+        #if: ${{ !env.ACT }}
+        run: |
+          echo $GNOSTR
 
       - run: sudo make detect
       - run: sudo cmake .
