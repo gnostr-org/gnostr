@@ -4,7 +4,7 @@ LDFLAGS                                 = -Wl -V
 GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
 #GNOSTR_RELAY_OBJS                       = gnostr-relay.o sha256.o aes.o base64.o
-## GNOSTR_XOR_OBJS                         = gnostr-xor.o   sha256.o aes.o base64.o libsecp256k1.a
+#GNOSTR_XOR_OBJS                         = gnostr-xor.o   sha256.o aes.o base64.o libsecp256k1.a
 HEADER_INCLUDE                          = include
 HEADERS                                 = $(HEADER_INCLUDE)/hex.h \
                                          $(HEADER_INCLUDE)/random.h \
@@ -39,8 +39,8 @@ export GTAR
 
 
 ##all:
-#all: submodules gnostr gnostr-cat gnostr-git gnostr-relay gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-docs
-all: submodules gnostr gnostr-git gnostr-relay gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+#all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
@@ -90,31 +90,6 @@ chmod:## 	chmod
 	find . -type d ! -name 'deps' ! -name 'configurator*' ! -name '.venv' -print0 -maxdepth 1 | xargs -0 chmod 0755
 	chmod +rwx devtools/refresh-submodules.sh
 
-dist: gnostr-docs version## 	create tar distribution
-	mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo
-	mkdir -p dist && touch dist/.gitkeep
-	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
-	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
-	cp CHANGELOG dist/CHANGELOG.txt
-	#git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__
-	git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar
-
-dist-sign:##dist-sign
-	cd dist && \touch SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
-		touch gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz && \
-		rm **SHA256SUMS**.txt** || echo && \
-		sha256sum gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz > SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
-		gpg -u 0xE616FA7221A1613E5B99206297966C06BB06757B \
-		--sign --armor --detach-sig --output SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt.asc SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt
-#rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/gnostr/
-dist-test:submodules dist## 	dist-test
-##dist-test
-## 	cd dist and run tests on the distribution
-	cd dist && \
-		$(GTAR) -tvf gnostr-$(VERSION)-$(OS)-$(ARCH).tar > gnostr-$(VERSION)-$(OS)-$(ARCH).tar.txt
-	cd dist && \
-		$(GTAR) -xf  gnostr-$(VERSION)-$(OS)-$(ARCH).tar && \
-		cd  gnostr-$(VERSION)-$(OS)-$(ARCH) && cmake . && make chmod all
 diff-log:
 	@mkdir -p tests && diff template/gnostr-git-reflog template/gnostr-git-log > tests/diff.log || \
 		git diff tests/diff.log
@@ -250,20 +225,6 @@ gnostr-proxy:deps/gnostr-proxy
 #gnostr-relay:deps/gnostr-relay## 	gnostr-relay
 #	cp $< $@
 
-deps/tcl/.git:
-	@devtools/refresh-submodules.sh deps/tcl
-deps/tcl/unix/libtclstub.a:deps/tcl/.git
-	cd deps/tcl/unix && \
-		./autogen.sh configure && ./configure && make install
-libtclstub.a:deps/tcl/unix/libtclstub.a## 	deps/tcl/unix/libtclstub.a
-	cp $< $@
-##tcl-unix
-##	deps/tcl/unix/libtclstub.a deps/tcl/.git
-##	cd deps/tcl/unix; \
-##	./autogen.sh configure && ./configure && make install
-tcl-unix:libtclstub.a## 	deps/tcl/unix/libtclstub.a
-
-
 
 deps/gnostr-cat/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-cat
@@ -280,12 +241,9 @@ gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 
 
 
+.PHONY:deps/gnostr-cli/.git
 deps/gnostr-cli/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-cli
-#.PHONY:deps/gnostr-cli
-deps/gnostr-cli:deps/gnostr-cli/.git
-	cd deps/gnostr-cli && \
-		make cargo-build-release
 .PHONY:deps/gnostr-cli/target/release/gnostr-cli
 deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
 	cd deps/gnostr-cli && \
@@ -295,7 +253,7 @@ deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
 ##gnostr-cli
 ##deps/gnostr-cli deps/gnostr-cli/.git
 ##	cd deps/gnostr-cli; \
-##	make cargo-install
+##	make cargo-build-release cargo-install
 gnostr-cli:deps/gnostr-cli/target/release/gnostr-cli## 	gnostr-cli
 
 
@@ -466,5 +424,30 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-act
 	$(MAKE) gnostr-build-install
 
+dist: gnostr-docs version## 	create tar distribution
+	mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo
+	mkdir -p dist && touch dist/.gitkeep
+	cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo
+	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
+	cp CHANGELOG dist/CHANGELOG.txt
+	#git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__
+	git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar
+
+dist-sign:## 	dist-sign
+	cd dist && \touch SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
+		touch gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz && \
+		rm **SHA256SUMS**.txt** || echo && \
+		sha256sum gnostr-$(VERSION)-$(OS)-$(ARCH).tar.gz > SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt && \
+		gpg -u 0xE616FA7221A1613E5B99206297966C06BB06757B \
+		--sign --armor --detach-sig --output SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt.asc SHA256SUMS-$(VERSION)-$(OS)-$(ARCH).txt
+#rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/gnostr/
+dist-test:submodules dist## 	dist-test
+##dist-test
+## 	cd dist and run tests on the distribution
+	cd dist && \
+		$(GTAR) -tvf gnostr-$(VERSION)-$(OS)-$(ARCH).tar > gnostr-$(VERSION)-$(OS)-$(ARCH).tar.txt
+	cd dist && \
+		$(GTAR) -xf  gnostr-$(VERSION)-$(OS)-$(ARCH).tar && \
+		cd  gnostr-$(VERSION)-$(OS)-$(ARCH) && cmake . && make chmod all
 
 .PHONY: fake

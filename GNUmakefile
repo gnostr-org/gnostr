@@ -147,8 +147,10 @@ export GIT_REPO_PATH
 .PHONY:- help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-helpp:## 	
-	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
+	@echo
+more:## 	more help
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/	/'
+	#$(MAKE) -f Makefile help
 
 -include Makefile
 
@@ -183,21 +185,26 @@ docker-start:venv
 
 detect:
 ##detect
-##	detect uname -s uname -m uname -p
+##	detect uname -s uname -m uname -p and install sequence
+##	install nvm sequence
 	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
-## min rust version is rustc 1.72.0 ## therefore we install via rustup
+##	install rustup sequence
 	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & source "$(HOME)/.cargo/env"
+##	install if Darwin sequence
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && echo 'is Darwin' && $(shell echo which brew) && $(shell echo which cmake) && $(shell echo which rustup) && $(shell echo which cargo) && $(shell echo which gettext) && $(shell echo which autoconf) && $(shell echo which node) && $(shell echo which go) || echo"
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install -q --cask cmake || echo 'not Darwin';"
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install -q autoconf automake coreutils gettext golang mercurial node@14 || echo 'not Darwin';"
+##	install if Linux sequence
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install autoconf bison build-essential clang cmake expat gettext golang-go libcurl4-openssl-dev libexpat1-dev libssl-dev libtool mercurial npm pkg-config python3 python3-pip  python-is-python3 util-linux virtualenv zlib* --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
+##	install gvm sequence
 	@rm -rf $(HOME)/.gvm
 	@bash -c "bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer) || echo"
 	bash -c "[ '$(shell uname -m)' == 'x86_64' ] && echo 'is x86_64' || echo 'not x86_64';"
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
 .PHONY: report
-report:## 	
+report:## 	print make variables
+##	print make variables
 	@echo ''
 	@echo 'TIME=${TIME}'
 	@echo 'PROJECT_NAME=${PROJECT_NAME}'
@@ -232,16 +239,20 @@ report:##
 	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
 
-checkbrew:## 	checkbrew
+checkbrew:## 	install brew command
+##	install brew command
 ifeq ($(HOMEBREW),)
 	@/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 else
 	@type -P brew && brew install wxWidgets openssl@3.0 gettext
+	$(MAKE) detect
+##	brew install wxWidgets openssl@3.0 gettext
+##	make detect
 endif
 
 tag:## 	git tag & git push
 tags:tag
-##tag
+##tag 
 ##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags || echo "unable to push tags..."
