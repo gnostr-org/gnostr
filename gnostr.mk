@@ -179,6 +179,14 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 	cd build && make install
 	$(MAKE) gnostr-install || echo
 
+deps/gnostr-command/.git:gnostr-git
+	@devtools/refresh-submodules.sh deps/gnostr-command
+deps/gnostr-command/gnostr-command:deps/gnostr-command/.git
+	cd deps/gnostr-command && \
+		make install
+deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command/gnostr-command## 	gnostr-command
+gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-command
+	cp $< $@ && exit;
 
 
 deps/gnostr-legit/.git:gnostr-git
@@ -421,7 +429,7 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 	gnostr-query -t wobble | $(shell which gnostr-cat) -u wss://relay.damus.io
 	gnostr-query -t blockheight | gnostr-cat -u wss://relay.damus.io
 
-gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-act
+gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-act gnostr-command
 	$(MAKE) gnostr-build-install
 
 dist: gnostr-docs version## 	create tar distribution
