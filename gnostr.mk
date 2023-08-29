@@ -285,11 +285,11 @@ deps/gnostr-cli/.git:
 #.PHONY:deps/gnostr-cli
 deps/gnostr-cli:deps/gnostr-cli/.git
 	cd deps/gnostr-cli && \
-		make cargo-install
+		make cargo-build-release
 .PHONY:deps/gnostr-cli/target/release/gnostr-cli
 deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
 	cd deps/gnostr-cli && \
-		make cargo-install
+		make cargo-build-release cargo-install
 	@cp $@ gnostr-cli || echo "" 2>/dev/null
 .PHONY:gnostr-cli
 ##gnostr-cli
