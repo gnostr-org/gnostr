@@ -458,5 +458,6 @@ ext/boost_1_82_0/.git:
 ext/boost_1_82_0:ext/boost_1_82_0/.git
 	cd ext/boost_1_82_0 && ./bootstrap.sh && ./b2 && ./b2 headers
 boost:ext/boost_1_82_0
+boostr:boost
 
 .PHONY: fake
