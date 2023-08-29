@@ -195,7 +195,7 @@ detect:
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install -q --cask cmake || which cmake || echo 'not Darwin';"
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install -q autoconf automake coreutils gettext golang mercurial node@14 || echo 'not Darwin';"
 ##	install if Linux sequence
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install autoconf bison build-essential clang cmake expat gettext golang-go libcurl4-openssl-dev libexpat1-dev libssl-dev libtool mercurial npm pandoc pkg-config python3 python3-pip  python-is-python3 util-linux virtualenv zlib* --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && echo 'is Linux' && $(shell echo which apt-get) &&  apt-get install autoconf bison build-essential clang cmake-curses-gui cmake expat gettext golang-go libcurl4-openssl-dev libexpat1-dev libssl-dev libtool mercurial npm pandoc pkg-config python3 python3-pip  python-is-python3 util-linux virtualenv zlib* --fix-missing && $(shell echo which cargo) || echo 'add apt-get install sequence';"
 ##	install gvm sequence
 	@rm -rf $(HOME)/.gvm
 	@bash -c "bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer) || echo"
