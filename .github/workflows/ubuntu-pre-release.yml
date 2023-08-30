@@ -30,7 +30,7 @@ jobs:
       - name: "Build pre-release"
         run: |
           sudo touch /root/GITHUB_TOKEN.txt
-          sudo make dist
+          sudo make gnostr-all all
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output
@@ -39,4 +39,4 @@ jobs:
         with:
           name: gnostr-${{ matrix.os }}
           path: |
-            dist
+            .
