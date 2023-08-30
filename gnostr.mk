@@ -63,7 +63,7 @@ doc/gnostr.1: README##
 .PHONY: version
 version: gnostr.c## 	print version
 	@grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
-	@cat $@
+#	@cat $@
 .PHONY:GIT-VERSION-FILE git-version
 git-version:GIT-VERSION-FILE
 GIT-VERSION-FILE:deps/gnostr-git/GIT-VERSION-FILE
