@@ -106,7 +106,7 @@ impl Gitminer {
         //write the commit
         Command::new("sh")
             .arg("-c")
-            .arg(format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash))
+            .arg(format!("cd {} && gnostr-git hash-object -t commit -w --stdin < {} && gnostr-git reset --hard {}", self.opts.repo, tmpfile, hash))
             .output()
             .ok()
             .expect("Failed to generate commit");

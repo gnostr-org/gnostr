@@ -2,7 +2,7 @@ SHELL                                   := /bin/bash
 PWD 									?= pwd_unknown
 TIME 									:= $(shell date +%s)
 export TIME
-SESSION_KEY                             := $(shell gnostr --hash $(TIME))
+SESSION_KEY                             := $(shell which gnostr --hash $(TIME) || echo)
 export SESSION_KEY
 OS                                      :=$(shell uname -s)
 export OS
@@ -23,13 +23,13 @@ TRIPLET                                 :=aarch64-linux-gnu
 export TRIPLET
 endif
 #GNOSTR
-GNOSTR                                  := $(shell which gnostr)
+GNOSTR                                  := $(shell which gnostr || echo)
 export GNOSTR
 #GNOSTR_LEGIT
-GNOSTR_LEGIT                            := $(shell which gnostr-legit)
+GNOSTR_LEGIT                            := $(shell which gnostr-legit || echo)
 export GNOSTR_LEGIT
 #GNOSTR_CAT
-GNOSTR_CAT                            := $(shell which gnostr-cat)
+GNOSTR_CAT                            := $(shell which gnostr-cat || echo)
 export GNOSTR_CAT
 
 CARGO_PATH                              :=$(HOME)/.cargo

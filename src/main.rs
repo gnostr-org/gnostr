@@ -51,7 +51,7 @@ fn get_current_working_dir() -> std::io::Result<PathBuf> {
 #[cfg(debug_assertions)]
 fn example() {
     //println!("Debugging enabled");
-    println!("cwd={:?}",get_current_working_dir());
+    //println!("cwd={:?}",get_current_working_dir());
 }
 
 #[cfg(not(debug_assertions))]
@@ -150,6 +150,7 @@ fn main() -> io::Result<()> {
 
     //#!/bin/bash
     //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
+
     let set_relays =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -210,37 +211,74 @@ fn main() -> io::Result<()> {
    //    }
    //}
 
-    let gnostr_weeble =
+    let pwd =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "gnostr-weeble"])
+                .args(["/C", "echo %cd%"])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-weeble")
+                .arg("echo ${PWD##*/}")
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-weeble")
+                .arg("echo ${PWD##*/}")
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-weeble")
+                .arg("echo ${PWD##*/}")
                 .output()
                 .expect("failed to execute process")
         };
+
+    let pwd = String::from_utf8(pwd.stdout)
+    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+    .unwrap();
+    //println!("pwd={}", pwd);
+
+    let gnostr_weeble =
+        if cfg!(target_os = "windows") {
+        Command::new("cmd")
+                .args(["/C", "gnostr-weeble || echo weeble"])
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "macos"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
+                .output()
+                .expect("failed to execute process")
+        } else
+        if cfg!(target_os = "linux"){
+        Command::new("sh")
+                .arg("-c")
+                .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
+                .output()
+                .expect("failed to execute process")
+        } else {
+        Command::new("sh")
+                .arg("-c")
+                .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
+                .output()
+                .expect("failed to execute process")
+        };
+
     let weeble = String::from_utf8(gnostr_weeble.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("weeble={}", weeble);
+
+    //assert_eq!(weeble.is_empty(), true); // a)
+                                         //
+    //println!("weeble={}", weeble);
 
     let gnostr_wobble =
         if cfg!(target_os = "windows") {
@@ -252,20 +290,20 @@ fn main() -> io::Result<()> {
         if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-wobble")
+                .arg("gnostr-wobble || echo wobble")
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-wobble")
+                .arg("gnostr-wobble || echo wobble")
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-wobble")
+                .arg("gnostr-wobble || echo wobble")
                 .output()
                 .expect("failed to execute process")
         };
@@ -273,7 +311,7 @@ fn main() -> io::Result<()> {
     let wobble = String::from_utf8(gnostr_wobble.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("wobble={}", wobble);
+    //println!("wobble={}", wobble);
 
     let gnostr_blockheight =
         if cfg!(target_os = "windows") {
@@ -285,20 +323,20 @@ fn main() -> io::Result<()> {
         if cfg!(target_os = "macos"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-blockheight")
+                .arg("gnostr-blockheight || echo blockheight")
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-blockheight")
+                .arg("gnostr-blockheight || echo blockheight")
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-blockheight")
+                .arg("gnostr-blockheight || echo blockheight")
                 .output()
                 .expect("failed to execute process")
         };
@@ -306,17 +344,21 @@ fn main() -> io::Result<()> {
     let blockheight = String::from_utf8(gnostr_blockheight.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
-    println!("blockheight={}", blockheight);
+    //println!("blockheight={}", blockheight);
 
     let path = env::current_dir()?;
-    println!("The current directory is {}", path.display());
+
+
+    //println!("The current directory is {}", path.display());
+
+
     let mut opts = gitminer::Options{
         threads:count.try_into().unwrap(),
         target:  "00000".to_string(),//default 00000
         //gnostr:##:nonce
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
-        message: "gnostr".to_string(),
+        message: pwd,
         //message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
@@ -386,24 +428,24 @@ fn main() -> io::Result<()> {
     let event =
         if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C", "gnostr --hash 0"])
+                .args(["/C", "gnostr --sec $(gnostr-sha256 0) --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --envelope --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "macos"){
         Command::new("sh")
-                .args(["-c", "gnostr --hash 0"])
+                .args(["-c", "gnostr --sec $(gnostr-sha256 0) --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --envelope --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
                 .output()
                 .expect("failed to execute process")
         } else
         if cfg!(target_os = "linux"){
         Command::new("sh")
-                .args(["-c", "gnostr --hash 0"])
+                .args(["-c", "gnostr --sec $(gnostr-sha256 0) --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --envelope --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
                 .output()
                 .expect("failed to execute process")
         } else {
         Command::new("sh")
-                .args(["-c", "gnostr --hash 0"])
+                .args(["-c", "gnostr --sec $(gnostr-sha256 0) --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --envelope --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
                 .output()
                 .expect("failed to execute process")
         };
@@ -411,6 +453,16 @@ fn main() -> io::Result<()> {
     let gnostr_event = String::from_utf8(event.stdout)
     .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
     .unwrap();
+
+
+
+
+
+
+
+
+
+
 
     //assert...
     //echo gnostr|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
@@ -428,7 +480,7 @@ fn main() -> io::Result<()> {
     //
     let duration = time::get_time() - start;
     //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
-    println!("gnostr_event={}", gnostr_event);
+    println!("{}", gnostr_event);
     Ok(())
 
 }

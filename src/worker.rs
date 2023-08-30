@@ -55,7 +55,7 @@ impl Worker {
             let result = self.calculate(&blob);
 
             if result.starts_with(&self.target) {
-                self.tx.send((self.id, raw, result)).unwrap();
+                self.tx.send((self.id, raw, result));
                 break;
             }
 
@@ -68,17 +68,18 @@ impl Worker {
                            parent {}\n\
                            author {} {}\n\
                            committer {} {}\n\n\
-                          {:04}/{:06}/{:06}/{:02}\n/{:08x}\n:{}",
+                          {:04}/{:06}/{:06}/{:02}/{:08x}/{}",
                           self.tree,
                           self.parent,
                           self.author, tstamp,
                           self.author, tstamp,
-                          self.weeble,
-                          self.wobble,
-                          self.blockheight,
+                          self.weeble.trim(),
+                          self.wobble.trim(),
+                          self.blockheight.trim(),
                           self.id,
                           value,
                           self.message);
+        //be careful when changing - fails silently when wrong.
         let blob = format!("commit {}\0{}", raw.len(), raw);
 
         (raw, blob)
