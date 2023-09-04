@@ -115,7 +115,8 @@ deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 #.PHONY:deps/secp256k1/.libs/libsecp256k1.a
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 	cd deps/secp256k1 && \
-		make -j && make install
+		make -j
+.PHONY:libsecp256k1.a
 .PHONY:libsecp256k1.a
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
@@ -308,6 +309,7 @@ gnostr-act:deps/gnostr-act/.git
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+.PHONY:gnostr
 gnostr:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
