@@ -233,6 +233,7 @@ ifneq ($(shell id -u),0)
 	@echo $(shell id -u -n) 'not root'
 	@echo
 endif
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get update                    || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install autoconf          || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install bison             || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install build-essential   || echo   "
