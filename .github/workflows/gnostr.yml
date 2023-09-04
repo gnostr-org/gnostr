@@ -60,15 +60,17 @@ jobs:
         #if: ${{ !env.ACT }}
         with:
           toolchain: nightly
+          default: true
+          override: true
 
       - name: echo GNOSTR
         #if: ${{ !env.ACT }}
         run: |
           echo $GNOSTR
 
-      - name: apt-get install || brew install
+      - name:  apt-get update || brew install virtualenv
         run: |
-          sudo apt-get update || brew update
+          sudo apt-get update || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
 
       - run: make detect && cmake .
