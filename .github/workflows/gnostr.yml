@@ -73,6 +73,7 @@ jobs:
           sudo apt-get update || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
 
+      - run: python3 -m pip install virtualenv
       - run: V=1 make detect && cmake .
       - run: V=1 make gnostr
       - run: V=1 make gnostr-act
