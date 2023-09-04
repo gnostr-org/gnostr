@@ -270,19 +270,14 @@ gnostr-cli:deps/gnostr-cli/target/release/gnostr-cli## 	gnostr-cli
 
 deps/gnostr-grep/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-grep
-.PHONY:deps/gnostr-grep
 deps/gnostr-grep:deps/gnostr-grep/.git
-.PHONY:deps/gnostr-grep/target/release/gnostr-grep
-deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
+deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep## 	gnostr-grep
 	cd deps/gnostr-grep && \
-		make cargo-build-release cargo-install
-	cp $< $@ && install $@ /usr/local/bin/
+		make cargo-build-release install
 .PHONY:gnostr-grep
-##gnostr-grep
-##deps/gnostr-grep deps/gnostr-grep/.git
-##	cd deps/gnostr-grep; \
-##	make cargo-build-release cargo-install
 gnostr-grep:deps/gnostr-grep/target/release/gnostr-grep## 	gnostr-grep
+	cp $< $@ && install $@ /usr/local/bin/
+	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
 
 
