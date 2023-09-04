@@ -146,12 +146,13 @@ deps/gnostr-git/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-git
 deps/gnostr-git:deps/gnostr-git/.git
 deps/gnostr-git/configure:deps/gnostr-git
-	cd deps/gnostr-git && make configure && ./configure && make
+	cd deps/gnostr-git && make configure
 deps/gnostr-git/gnostr-git:deps/gnostr-git/configure
+	cd deps/gnostr-git && ./configure && make
+.PHONY:gnostr-git
 gnostr-git:deps/gnostr-git/gnostr-git##gnostr-git
-	cp $< $@
-	install $@ /usr/local/bin/
-	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
+	cp $< $@ && install $@ /usr/local/bin/
+	cp $< deps/gnostr-git/gnostr-git-instaweb && install deps/gnostr-git/gnostr-git-instaweb /usr/local/bin/
 
 
 
@@ -241,11 +242,11 @@ deps/gnostr-cat:deps/gnostr-cat/.git
 .PHONY:deps/gnostr-cat/target/release/gnostr-cat
 deps/gnostr-cat/target/release/gnostr-cat:deps/gnostr-cat
 	cd deps/gnostr-cat && \
-		make cargo-build-release install
+		make cargo-build-release
 gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 	cd deps/gnostr-cat && \
 		make install
-	@cp $@ gnostr-cat || echo "" 2>/dev/null
+	cp $< $@ && install $@ /usr/local/bin/
 
 
 
@@ -256,7 +257,7 @@ deps/gnostr-cli:deps/gnostr-cli/.git
 deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
 	cd deps/gnostr-cli && \
 		make cargo-build-release cargo-install
-	@cp $@ gnostr-cli || echo "" 2>/dev/null
+	cp $< $@ && install $@ /usr/local/bin/
 ##gnostr-cli
 ##deps/gnostr-cli deps/gnostr-cli/.git
 ##	cd deps/gnostr-cli; \
@@ -274,7 +275,7 @@ deps/gnostr-grep:deps/gnostr-grep/.git
 deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
 	cd deps/gnostr-grep && \
 		make cargo-build-release cargo-install
-	@cp $@ .  || echo "" 2>/dev/null
+	cp $< $@ && install $@ /usr/local/bin/
 .PHONY:gnostr-grep
 ##gnostr-grep
 ##deps/gnostr-grep deps/gnostr-grep/.git
@@ -316,7 +317,7 @@ gnostr:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
 #	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	install ./gnostr /usr/local/bin/
+	cp $< $@ && install $@ /usr/local/bin/
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
