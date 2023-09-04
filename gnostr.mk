@@ -23,7 +23,7 @@ ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
 #SUBMODULES                              = deps/secp256k1
-SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/hyper-nostr deps/hyper-sdk deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
+SUBMODULES                              = deps/secp256k1 deps/gnostr-cat deps/hyper-nostr deps/hyper-sdk deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-proxy #ext/boost_1_82_0
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -44,7 +44,7 @@ all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr g
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
-##	docker-statt doc/gnostr.1
+##	docker-start doc/gnostr.1
 gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
 #@echo docs
 	@bash -c 'if pgrep MacDown; then pkill MacDown; fi; 2>/dev/null'
@@ -99,24 +99,18 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git deps/gnostr-sha256/.git ## ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
-#.PHONY:deps/secp256k1/config.log
 .ONESHELL:
-deps/secp256k1/.git:
-	devtools/refresh-submodules.sh deps/secp256k1
-deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
-#.PHONY:deps/secp256k1/configure
-deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
+deps/secp256k1/configure:
 	cd deps/secp256k1 && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
-#.PHONY:deps/secp256k1/.libs/libsecp256k1.a
+.PHONY:deps/secp256k1/.libs/libsecp256k1.a
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 	cd deps/secp256k1 && \
 		make -j && make install
-.PHONY:libsecp256k1.a
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 ##libsecp256k1.a
@@ -150,9 +144,11 @@ deps/gnostr-web/.git:
 
 deps/gnostr-git/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-git
-deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
-	cd deps/gnostr-git && make && make install
-gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
+deps/gnostr-git:deps/gnostr-git/.git
+deps/gnostr-git/configure:deps/gnostr-git
+	cd deps/gnostr-git && make configure && ./configure && make
+deps/gnostr-git/gnostr-git:deps/gnostr-git/configure
+gnostr-git:deps/gnostr-git/gnostr-git##gnostr-git
 	cp $< $@
 	install $@ /usr/local/bin/
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
@@ -161,9 +157,11 @@ gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
 
 gnostr-get-relays:
 	$(CC) ./template/gnostr-get-relays.c -o gnostr-get-relays
+	install $@ /usr/local/bin/
 
 gnostr-set-relays:
 	$(CC) ./template/gnostr-set-relays.c -o gnostr-set-relays
+	install $@ /usr/local/bin/
 
 
 
@@ -183,19 +181,19 @@ deps/gnostr-command/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-command
 deps/gnostr-command/gnostr-command:deps/gnostr-command/.git
 	cd deps/gnostr-command && \
-		make install
-deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command/gnostr-command## 	gnostr-command
+		make cargo-build-release install
+deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command## 	gnostr-command
 gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-command
 	cp $< $@ && exit;
+	install $@ /usr/local/bin/
 
 
-deps/gnostr-legit/.git:gnostr-git
+deps/gnostr-legit/.git:##gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-legit
-#.PHONY:deps/gnostr-legit/gnostr-legit
-deps/gnostr-legit/gnostr-legit:deps/gnostr-legit/.git
+deps/gnostr-legit:deps/gnostr-legit/.git
+deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit## 	gnostr-legit
 	cd deps/gnostr-legit && \
-		make legit-install
-deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/gnostr-legit## 	gnostr-legit
+		make cargo-build-release install
 gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
@@ -204,13 +202,14 @@ gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 
 deps/gnostr-sha256/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-sha256
-#.PHONY:deps/gnostr-sha256/gnostr-sha256
-deps/gnostr-sha256/gnostr-sha256:deps/gnostr-sha256/.git
+deps/gnostr-sha256:deps/gnostr-sha256/.git
+deps/gnostr-sha256/target/release/gnostr-sha256:deps/gnostr-sha256## 	gnostr-sha256
 	cd deps/gnostr-sha256 && \
 		make cargo-install
-deps/gnostr-sha256/target/release/gnostr-sha256:deps/gnostr-sha256/gnostr-sha256## 	gnostr-sha256
-.PHONY:
+deps/gnostr-sha256/target/release/gnostr-sha256:deps/gnostr-sha256## 	gnostr-sha256
 gnostr-sha256:deps/gnostr-sha256/target/release/gnostr-sha256
+	cp $< $@ && install $@ /usr/local/bin/
+
 
 deps/gnostr-proxy/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-proxy
@@ -218,6 +217,7 @@ deps/gnostr-proxy/.git:
 deps/gnostr-proxy:deps/gnostr-proxy/.git
 	cd deps/gnostr-proxy && \
 		$(MAKE) install
+.PHONY:gnostr-proxy
 gnostr-proxy:deps/gnostr-proxy
 	install deps/gnostr-proxy/gnostr-proxy /usr/local/bin
 
@@ -238,10 +238,10 @@ deps/gnostr-cat/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-cat
 #.PHONY:deps/gnostr-cat
 deps/gnostr-cat:deps/gnostr-cat/.git
-	cd deps/gnostr-cat && \
-		make cargo-install
 .PHONY:deps/gnostr-cat/target/release/gnostr-cat
-.PHONY:gnostr-cat
+deps/gnostr-cat/target/release/gnostr-cat:deps/gnostr-cat
+	cd deps/gnostr-cat && \
+		make cargo-build-release install
 gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 	cd deps/gnostr-cat && \
 		make install
@@ -249,20 +249,20 @@ gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 
 
 
-.PHONY:deps/gnostr-cli/.git
 deps/gnostr-cli/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-cli
+deps/gnostr-cli:deps/gnostr-cli/.git
 .PHONY:deps/gnostr-cli/target/release/gnostr-cli
 deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
 	cd deps/gnostr-cli && \
 		make cargo-build-release cargo-install
 	@cp $@ gnostr-cli || echo "" 2>/dev/null
-.PHONY:gnostr-cli
 ##gnostr-cli
 ##deps/gnostr-cli deps/gnostr-cli/.git
 ##	cd deps/gnostr-cli; \
 ##	make cargo-build-release cargo-install
 gnostr-cli:deps/gnostr-cli/target/release/gnostr-cli## 	gnostr-cli
+	cp $< $@ && install $@ /usr/local/bin/
 
 
 
@@ -273,13 +273,13 @@ deps/gnostr-grep:deps/gnostr-grep/.git
 .PHONY:deps/gnostr-grep/target/release/gnostr-grep
 deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
 	cd deps/gnostr-grep && \
-		make install
-	@cp $@ gnostr-grep || echo "" 2>/dev/null
+		make cargo-build-release cargo-install
+	@cp $@ .  || echo "" 2>/dev/null
 .PHONY:gnostr-grep
 ##gnostr-grep
 ##deps/gnostr-grep deps/gnostr-grep/.git
 ##	cd deps/gnostr-grep; \
-##	make cargo-install
+##	make cargo-build-release cargo-install
 gnostr-grep:deps/gnostr-grep/target/release/gnostr-grep## 	gnostr-grep
 
 
@@ -299,8 +299,11 @@ deps/gnostr-aio/.git:
 
 deps/gnostr-act/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-act
+deps/gnostr-act/bin/gnostr-act:
 gnostr-act:deps/gnostr-act/.git
 	cd deps/gnostr-act && ./install-gnostr-act
+gnostr-act:deps/gnostr-act/bin/gnostr-act
+	cp $< $@ && install $@ /usr/local/bin/
 
 
 
@@ -423,7 +426,9 @@ gnostr-configurator: configurator.c
 gnostr-query:
 	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
 
+.ONESHELL:
 gnostr-query-test:gnostr-cat gnostr-query gnostr-install
+	type -P gnostr-cat || cargo install gnostr-cat
 	./template/gnostr-query -t gnostr | $(shell which gnostr-cat) -u wss://relay.damus.io
 	./template/gnostr-query -t weeble | $(shell which gnostr-cat) -u wss://relay.damus.io
 	./template/gnostr-query -t wobble | $(shell which gnostr-cat) -u wss://relay.damus.io
@@ -439,6 +444,8 @@ dist: gnostr-docs version## 	create tar distribution
 	git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG
 	cp CHANGELOG dist/CHANGELOG.txt
 	#git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__
+	$(shell which python3) -m ensurepip
+	$(shell which python3) -m pip install git-archive-all
 	git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar
 
 dist-sign:## 	dist-sign
