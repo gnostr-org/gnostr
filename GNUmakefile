@@ -193,6 +193,11 @@ detect:
 	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & source "$(HOME)/.cargo/env"
 
 ## 	Darwin
+ifneq ($(shell id -u),0)
+	@echo
+	@echo $(shell id -u -n) 'not root'
+	@echo
+endif
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew update                     || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install autoconf            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
@@ -215,14 +220,6 @@ detect:
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                || echo "
 
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which autoconf                   || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which automake                   || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which brew                       || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which cargo                      || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which cmake                      || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which go                         || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && which node                       || echo "
-
 
 
 
@@ -230,6 +227,12 @@ detect:
 
 
 ## 	Linux
+ifneq ($(shell id -u),0)
+	@echo
+	@echo $(shell id -u -n) 'not root'
+	@echo
+	sudo su $(shell id -u -n) && $(MAKE) detect
+endif
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install autoconf          || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install bison             || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install build-essential   || echo   "
@@ -260,6 +263,16 @@ detect:
 	bash -c "[ '$(shell uname -m)' == 'x86_64' ] && echo 'is x86_64' || echo 'not x86_64';"
 	bash -c "[ '$(shell uname -m)' == 'arm64' ] && [ '$(shell uname -s)' == 'Darwin' ] && type -P brew && brew install pandoc || echo 'not arm64 AND Darwin';"
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
+
+
+	bash -c "which autoconf                   || echo "
+	bash -c "which automake                   || echo "
+	bash -c "which brew                       || echo "
+	bash -c "which cargo                      || echo "
+	bash -c "which cmake                      || echo "
+	bash -c "which go                         || echo "
+	bash -c "which node                       || echo "
+
 
 .PHONY: report
 report:## 	print make variables
