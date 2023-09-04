@@ -299,8 +299,7 @@ deps/gnostr-aio/.git:
 
 deps/gnostr-act/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-act
-deps/gnostr-act/bin/gnostr-act:
-gnostr-act:deps/gnostr-act/.git
+deps/gnostr-act/bin/gnostr-act:deps/gnostr-act/.git
 	cd deps/gnostr-act && ./install-gnostr-act
 gnostr-act:deps/gnostr-act/bin/gnostr-act
 	cp $< $@ && install $@ /usr/local/bin/
