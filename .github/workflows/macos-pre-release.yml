@@ -27,11 +27,11 @@ jobs:
           printenv
       - name: "Build pre-release"
         run: |
-          make all
-          mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
-          shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
-          mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
-          shasum -a 256 nostril-query-$RUNNER_OS-$RUNNER_ARCH > nostril-query-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          make detect gnostr-all all
+          mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          mv gnostr-query gnostr-query-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 gnostr-query-$RUNNER_OS-$RUNNER_ARCH > gnostr-query-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           ls -a
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
@@ -44,5 +44,5 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            nostril-*
+            gnostr-*
 

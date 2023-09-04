@@ -1,4 +1,4 @@
-name: ubuntu-gnostr-grep
+name: ubuntu-gnostr-cli
 
 # Controls when the action will run.
 on:
@@ -45,7 +45,7 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          fetch-depth: '10'
+          fetch-depth: '0'
           submodules: 'true'
           set-safe-directory: 'true'
 
@@ -54,12 +54,18 @@ jobs:
         with:
           toolchain: stable
 
+      - name: apt-get update || brew update
+        #if: ${{ !env.ACT }}
+        run: |
+          sudo apt-get update || brew update
+          sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++ cargo || echo
+
       - run: touch ~/GITHUB_TOKEN.txt
 
       - run: sudo make detect
       - run: sudo cmake .
 
-      - run: sudo make gnostr-grep && cargo install gnostr-grep && gnostr-grep 0 version
+      - run: sudo make gnostr-cli
 
       - name: Save deps
         id: cache-deps-save

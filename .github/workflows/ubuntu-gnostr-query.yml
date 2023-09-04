@@ -65,9 +65,7 @@ jobs:
       - run: sudo make detect
       - run: sudo cmake .
 
-      - run: sudo make gnostr-cat
-      - run: sudo make gnostr-query
-      - run: sudo make gnostr-query-test
+      - run: sudo make gnostr-cat gnostr-query gnostr-query-test || cargo install gnostr-cat && make gnostr-query-test
 
       - name: Save deps
         id: cache-deps-save
