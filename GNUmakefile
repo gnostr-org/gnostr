@@ -190,7 +190,7 @@ detect:
 ##	install nvm sequence
 	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
 ##	install rustup sequence
-	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & source "$(HOME)/.cargo/env"
+	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & . "$(HOME)/.cargo/env"
 
 ## 	Darwin
 ifneq ($(shell id -u),0)
@@ -231,31 +231,30 @@ ifneq ($(shell id -u),0)
 	@echo
 	@echo $(shell id -u -n) 'not root'
 	@echo
-	sudo su $(shell id -u -n) && $(MAKE) detect
 endif
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install autoconf          || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install bison             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install build-essential   || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install cargo             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install clang             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install cmake-curses-gui  || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install cmake             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install expat             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install gettext           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install golang-go         || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install libcurl4-openssl-dev || echo"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install libssl-dev        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install libtool           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install mercurial         || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install npm               || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install pandoc            || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install pkg-config        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install python3           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install python3-pip       || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install python-is-python3 || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install util-linux        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install virtualenv        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && apt-get install zlib              || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install autoconf          || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install bison             || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install build-essential   || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install cargo             || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install clang             || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install cmake-curses-gui  || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install cmake             || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install expat             || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install gettext           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install golang-go         || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install libcurl4-openssl-dev || echo"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install libssl-dev        || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install libtool           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install mercurial         || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install npm               || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install pandoc            || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install pkg-config        || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python3           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python3-pip       || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python-is-python3 || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install util-linux        || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install virtualenv        || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install zlib              || echo   "
 
 ##	install gvm sequence
 	@rm -rf $(HOME)/.gvm || echo "not removing ~/.gvm"
