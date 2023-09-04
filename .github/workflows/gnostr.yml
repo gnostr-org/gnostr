@@ -71,7 +71,9 @@ jobs:
           sudo apt-get update || brew update
           touch ~/GITHUB_TOKEN.txt
 
-      - run: make detect && cmake . && sudo make gnostr gnostr-all all install
+      - run: make detect && cmake .
+      - run: make gnostr gnostr-all all
+      - run: make install
 
       - name: Save deps
         id: cache-deps-save
