@@ -94,7 +94,7 @@ deps/gnostr-proxy/resources/js/isomophic-git/__tests__/
 ## libgit.a
 libjq.a
 libtclstub.a
-## libsecp256k1.a
+libsecp256k1.a
 
 bin
 
