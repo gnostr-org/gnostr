@@ -73,9 +73,11 @@ jobs:
           sudo apt-get update || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
 
-      - run: make detect && cmake .
-      - run: make gnostr gnostr-all all
-      - run: make install
+      - run: V=1 make detect && cmake .
+      - run: V=1 make gnostr
+      - run: V=1 make gnostr-all
+      - run: V=1 make all
+      - run: V=1 make install
 
       - name: Save deps
         id: cache-deps-save
