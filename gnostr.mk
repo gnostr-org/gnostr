@@ -99,7 +99,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -431,7 +431,13 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 	./template/gnostr-query -t wobble | $(shell which gnostr-cat) -u wss://relay.damus.io
 	./template/gnostr-query -t blockheight | gnostr-cat -u wss://relay.damus.io
 
-gnostr-all:detect gnostr gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-command gnostr-git gnostr-act
+## 	for CI purposes we build largest apps last
+## 	rust based apps first after gnostr
+## 	nodejs apps second
+##
+## 	gnostr-legit relies on gnostr-git and gnostr-install sequence
+##
+gnostr-all:detect gnostr gnostr-install gnostr-cat gnostr-grep gnostr-sha256 gnostr-command gnostr-proxy gnostr-query gnostr-git gnostr-legit gnostr-act gnostr-cli
 	$(MAKE) gnostr-build-install
 
 dist: gnostr-docs version## 	create tar distribution
