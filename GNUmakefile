@@ -212,6 +212,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup              || echo "
