@@ -46,8 +46,8 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            /root/.cargo
-            /root/.rustup
+            ~/.cargo
+            ~/.rustup
             CARGO_TARGET_DIR
           key: ${{ runner.os }}-deps
 
@@ -69,7 +69,6 @@ jobs:
       - name: apt-get install || brew install
         run: |
           sudo apt-get update || brew update
-          sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++ || brew install autoconf automake bash gettext libtool make python3 util-linux cmake
           touch ~/GITHUB_TOKEN.txt
 
       - run: make detect && cmake . && sudo make gnostr gnostr-all all install
@@ -80,8 +79,8 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            /root/.cargo
-            /root/.rustup
+            ~/.cargo
+            ~/.rustup
             CARGO_TARGET_DIR
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
