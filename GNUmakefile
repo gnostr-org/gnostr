@@ -178,7 +178,7 @@ docker-start:venv
 	     type -P systemctl && systemctl restart docker.service || type -P service && service restart docker;\
 	    fi;\
 	    if [[ '$(OS)' == 'Darwin' ]]; then\
-	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker;\
+	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker || brew install --cask docker;\
 	    fi;\
 	sleep 1;\
 	done\
@@ -200,6 +200,7 @@ endif
 ##	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost               || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install cmake --cask        || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install coreutils           || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker       || echo "
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gcc                || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gettext             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui             || echo "

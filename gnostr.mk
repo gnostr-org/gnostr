@@ -44,7 +44,7 @@ all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr g
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
-##	docker-statt doc/gnostr.1
+##	docker-start doc/gnostr.1
 gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
 #@echo docs
 	@bash -c 'if pgrep MacDown; then pkill MacDown; fi; 2>/dev/null'
