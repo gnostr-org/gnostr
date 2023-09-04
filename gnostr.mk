@@ -189,12 +189,13 @@ gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-comma
 	install $@ /usr/local/bin/
 
 
-deps/gnostr-legit/.git:##gnostr-git
+deps/gnostr-legit/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-legit
 deps/gnostr-legit:deps/gnostr-legit/.git
 deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit## 	gnostr-legit
 	cd deps/gnostr-legit && \
 		make cargo-build-release install
+.PHONY:gnostr-legit
 gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
