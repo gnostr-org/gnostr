@@ -1,0 +1,66 @@
+name: pre-release-matrix
+
+# Controls when the action will run.
+on:
+  push:
+    tags:
+      - "v*"
+      - "v*.*.*-rc**"
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v3
+      - name: "printenv"
+        run: |
+          printenv
+      - name: "sudo apt-get update || brew install virtualenv"
+        run: |
+          sudo apt-get update || brew install virtualenv
+      - name: "make detect"
+        run: |
+          make detect
+      - name: "cmake ."
+        run: |
+          cmake .
+      - name: "make gnostr"
+        run: |
+          make gnostr
+      - name: "make gnostr-all"
+        run: |
+          make gnostr-all
+      - name: "make all"
+        run: |
+          make all
+      - name: "make dist-test"
+        run: |
+          make dist-test
+      - name: "Build release"
+        run: |
+          mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          ls -a
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }}
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ matrix.os }}
+          prerelease: true
+          title: "Release Build"
+          files: |
+            gnostr-*

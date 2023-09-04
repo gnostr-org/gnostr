@@ -1,18 +1,17 @@
-## gnostr
-## gnostr-cat
-## gnostr-cli
-## gnostr-client
-## gnostr-command
-## gnostr-get-relays
-## gnostr-git
-## gnostr-gnode
-## gnostr-grep
-## gnostr-legit
-## gnostr-relay
-## gnostr-req
-## gnostr-set-relays
-## gnostr-tests
-## gnostr-xor
+gnostr
+gnostr-act
+gnostr-cli
+gnostr-command
+gnostr-get-relays
+gnostr-git
+gnostr-git-instaweb
+gnostr-grep
+gnostr-legit
+gnostr-set-relays
+gnostr-sha256
+src/nostril/libnostri.a
+src/nostril/nostril
+
 
 ## libnostr.a
 ## src/nostril/libnostri.a
@@ -84,9 +83,14 @@ ext/boost_1_82_0
 ext/secp256k1-0.3.2/CTestTestfile.cmake
 ext/secp256k1-0.3.2/DartConfiguration.tcl
 ext/secp256k1-0.3.2/src/CTestTestfile.cmake
+ext/secp256k1-0.3.2/src/libsecp256k1-config-version.cmake
+ext/secp256k1-0.3.2/src/libsecp256k1-config.cmake
+
 ext/wt-4.10.0/wt-config-version.cmake
 ext/wt-4.10.0/wt-config.cmake
+
 ext/wxWidgets-3.2.2.1
+
 
 deps/gnostr-proxy/resources/js/isomophic-git/__tests__/
 

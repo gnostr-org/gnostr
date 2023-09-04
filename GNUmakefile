@@ -187,10 +187,6 @@ docker-start:venv
 detect:
 ##detect
 ##	detect uname -s uname -m uname -p and install sequence
-##	install nvm sequence
-	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
-##	install rustup sequence
-	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & . "$(HOME)/.cargo/env"
 
 ## 	Darwin
 ifneq ($(shell id -u),0)
@@ -265,6 +261,11 @@ endif
 	bash -c "[ '$(shell uname -m)' == 'arm64' ] && [ '$(shell uname -s)' == 'Darwin' ] && type -P brew && brew install pandoc || echo 'not arm64 AND Darwin';"
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
+##	install rustup sequence
+	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & . "$(HOME)/.cargo/env"
+
+##	install nvm sequence
+	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
 
 	bash -c "which autoconf                   || echo "
 	bash -c "which automake                   || echo "
@@ -273,7 +274,7 @@ endif
 	bash -c "which cmake                      || echo "
 	bash -c "which go                         || echo "
 	bash -c "which node                       || echo "
-
+	bash -c "which rustup                     || echo "
 
 .PHONY: report
 report:## 	print make variables
