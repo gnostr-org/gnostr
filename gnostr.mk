@@ -448,11 +448,10 @@ dist: gnostr-docs version## 	create tar distribution
 	   $(shell which python3) -m pip install git-archive-all;\
 	   mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo;\
 	   mkdir -p dist && touch dist/.gitkeep;\
-	   cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo\;
-	   git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG\;
-	   cp CHANGELOG dist/CHANGELOG.txt\;
-	   git rm -rf deps/gnostr-proxy/resources/js/isomophic-git/__tests__\;
-	   $(PYTHON3) -m git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar\;
+	   cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo;\
+	   git log $(shell git describe --tags --abbrev=0)..@^1 --oneline | sed '/Merge/d' >> CHANGELOG;\
+	   cp CHANGELOG dist/CHANGELOG.txt;\
+	   git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar;\
 	);
 
 dist-sign:## 	dist-sign
