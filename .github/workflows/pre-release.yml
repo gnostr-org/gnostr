@@ -38,8 +38,8 @@ jobs:
       - run: V=1 make gnostr-cat
       - run: V=1 make gnostr-cli
       - run: V=1 make gnostr-client
-      #- run: V=1 make gnostr-command
-      #- run: V=1 make gnostr-docs
+      - run: V=1 make gnostr-command
+      - run: V=1 make gnostr-docs
       - run: V=1 make gnostr-get-relays
       - run: V=1 make gnostr-git
       - run: V=1 make gnostr-gnode
@@ -48,19 +48,27 @@ jobs:
       - run: V=1 make gnostr-legit
       - run: V=1 make gnostr-proxy
       - run: V=1 make gnostr-query
-      #- run: V=1 make gnostr-query-test
+      - run: V=1 make gnostr-query-test
       - run: V=1 make gnostr-req
       - run: V=1 make gnostr-set-relays
       - run: V=1 make gnostr-sha256
       - run: V=1 make gnostr-tests
+
+      - uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 12
+      - run: |
+          set -x
+          docker version
       - name: "make dist-test"
         run: |
+          V=1 make gnostr-docs
           make dist-test
       - name: "Build release"
         run: |
           mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           ls -a
+
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output
