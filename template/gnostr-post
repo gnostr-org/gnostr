@@ -27,11 +27,11 @@ if command -v git; then
 	fi
 fi
 
-note=$(nostril --envelope $sec "$@" --content "$content")
+note=$(gnostr --envelope $sec "$@" --content "$content")
 
 printf "relaying:\n" >&2
 printf "$note\n"
-<<<"$note" nostril relay
+<<<"$note" gnostr relay
 printf "done.\n" >&2
 
 rm -f "$TMP"

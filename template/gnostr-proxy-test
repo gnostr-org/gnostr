@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+gnostr --sec $(gnostr --hash)  --envelope  --content "$(lynx -dump -nolist http://localhost:6102)" | gnostr-relays
