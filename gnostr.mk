@@ -451,9 +451,9 @@ dist: gnostr-docs version## 	create tar distribution
 	   mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo;\
 	   mkdir -p dist && touch dist/.gitkeep;\
 	   cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo;\
-	   git log $(shell git describe --tags --abbrev=0)...@^1 --oneline | sed '/Merge/d' >> CHANGELOG;\
+	   git log $(shell git describe --tags --abbrev=0)...@^1 --oneline  >> CHANGELOG;\
 	   cp CHANGELOG dist/CHANGELOG.txt;\
-	   git-archive-all -C . --force-submodules dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar;\
+	   git-archive-all -C . dist/gnostr-$(VERSION)-$(OS)-$(ARCH).tar >/tmp/gnostr-make-dist.log;\
 	);
 
 dist-sign:## 	dist-sign
