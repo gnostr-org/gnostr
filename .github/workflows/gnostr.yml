@@ -80,7 +80,10 @@ jobs:
           touch ~/GITHUB_TOKEN.txt
 
       - run: python3 -m pip install virtualenv
+
       - run: V=1 make detect && cmake .
+      - run: V=1 make install
+
       - run: V=1 make gnostr
       - run: V=1 make gnostr-act
       - run: V=1 make gnostr-cat
@@ -101,7 +104,6 @@ jobs:
       - run: V=1 make gnostr-set-relays
       - run: V=1 make gnostr-sha256
       - run: V=1 make gnostr-tests
-      - run: V=1 make install
 
       - name: Save deps
         id: cache-deps-save
