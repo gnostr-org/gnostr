@@ -200,7 +200,7 @@ endif
 ##	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost               || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install cmake --cask        || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install coreutils           || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker       || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker       || echo "
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gcc                || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gettext             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui             || echo "
@@ -217,6 +217,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install virtualenv          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && /Applications/Docker.app/Contents/Resources/bin/docker system info || echo "
 
 
 
