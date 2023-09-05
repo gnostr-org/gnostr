@@ -44,7 +44,7 @@ all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr g
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
-##	docker-statt doc/gnostr.1
+##	docker-start doc/gnostr.1
 gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
 #@echo docs
 	@bash -c 'if pgrep MacDown; then pkill MacDown; fi; 2>/dev/null'
@@ -99,7 +99,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -111,11 +111,12 @@ deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
 deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1 && \
 		./autogen.sh && \
-		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
+		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests
 #.PHONY:deps/secp256k1/.libs/libsecp256k1.a
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 	cd deps/secp256k1 && \
-		make -j && make install
+		make -j
+.PHONY:libsecp256k1.a
 .PHONY:libsecp256k1.a
 libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
@@ -308,6 +309,7 @@ gnostr-act:deps/gnostr-act/.git
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+.PHONY:gnostr
 gnostr:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
@@ -429,7 +431,13 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 	./template/gnostr-query -t wobble | $(shell which gnostr-cat) -u wss://relay.damus.io
 	./template/gnostr-query -t blockheight | gnostr-cat -u wss://relay.damus.io
 
-gnostr-all:detect gnostr gnostr-git gnostr-legit gnostr-cat gnostr-grep gnostr-cli gnostr-sha256 gnostr-proxy gnostr-query gnostr-act gnostr-command
+## 	for CI purposes we build largest apps last
+## 	rust based apps first after gnostr
+## 	nodejs apps second
+##
+## 	gnostr-legit relies on gnostr-git and gnostr-install sequence
+##
+gnostr-all:gnostr gnostr-install gnostr-cat gnostr-grep gnostr-sha256 gnostr-command gnostr-proxy gnostr-query gnostr-git gnostr-legit gnostr-act gnostr-cli
 	$(MAKE) gnostr-build-install
 
 dist: gnostr-docs version## 	create tar distribution

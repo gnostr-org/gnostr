@@ -1,4 +1,4 @@
-name: ubuntu-gnostr
+name: gnostr-matrix
 
 # Controls when the action will run.
 on:
@@ -26,9 +26,15 @@ jobs:
       GNOSTR: "gnostr"
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 12
+      - run: |
+          set -x
+          docker version
+          docker run --rm hello-world
       - name: echo test
         #if: ${{ !env.ACT }}
         run: |
@@ -46,39 +52,58 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            libsecp256k1.a
-            /root/.cargo
-            /root/.rustup
+            ~/.cargo
+            ~/.rustup
             CARGO_TARGET_DIR
           key: ${{ runner.os }}-deps
 
       - uses: actions/checkout@v3
         with:
-          fetch-depth: '10'
           submodules: 'true'
           set-safe-directory: 'true'
 
       - uses: actions-rs/toolchain@v1.0.6
         #if: ${{ !env.ACT }}
         with:
-          toolchain: stable
+          toolchain: nightly
+          default: true
+          override: true
 
-      - name: apt-get install
-        #if: ${{ !env.ACT }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autoconf automake bash build-essential gettext libcurl4-openssl-dev libtool make python3 python3-pip util-linux zlib1g-dev cmake g++ cargo
-
-      - name: apt-get install
+      - name: echo GNOSTR
         #if: ${{ !env.ACT }}
         run: |
           echo $GNOSTR
 
-      - run: sudo make detect
-      - run: sudo cmake .
+      - name:  apt-get update || brew install virtualenv
+        run: |
+          sudo apt-get update || brew install virtualenv
+          touch ~/GITHUB_TOKEN.txt
 
-      - run: sudo make libsecp256k1.a
-      - run: sudo make gnostr
+      - run: python3 -m pip install virtualenv
+
+      - run: V=1 make detect && cmake .
+      - run: V=1 make install
+
+      - run: V=1 make gnostr
+      - run: V=1 make gnostr-act
+      - run: V=1 make gnostr-cat
+      - run: V=1 make gnostr-cli
+      - run: V=1 make gnostr-client
+      #- run: V=1 make gnostr-command
+      #- run: V=1 make gnostr-docs
+      - run: V=1 make gnostr-get-relays
+      - run: V=1 make gnostr-git
+      - run: V=1 make gnostr-gnode
+      - run: V=1 make gnostr-grep
+      - run: V=1 make gnostr-install
+      - run: V=1 make gnostr-legit
+      - run: V=1 make gnostr-proxy
+      - run: V=1 make gnostr-query
+      #- run: V=1 make gnostr-query-test
+      - run: V=1 make gnostr-req
+      - run: V=1 make gnostr-set-relays
+      - run: V=1 make gnostr-sha256
+      - run: V=1 make gnostr-tests
 
       - name: Save deps
         id: cache-deps-save
@@ -86,9 +111,8 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            libsecp256k1.a
-            /root/.cargo
-            /root/.rustup
+            ~/.cargo
+            ~/.rustup
             CARGO_TARGET_DIR
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
