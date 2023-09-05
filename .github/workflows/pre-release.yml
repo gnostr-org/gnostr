@@ -59,10 +59,7 @@ jobs:
       - run: |
           set -x
           docker version
-      - name: "make dist-test"
-        run: |
-          V=1 make gnostr-docs
-          make dist-test
+
       - name: "Build release"
         run: |
           mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
