@@ -1,12 +1,1 @@
-0.0.0_28
-e15dee1c9 CHANGELOG:
-d0515f9f7 deps/gnostr-git: squashed: v0.0.0
-c64138a84 CHANGELOG: update
-d72df9b76 CHANGELOG:
-ea1334a8b CHANGELOG: update
-6a646f9c0 make: version: no cat $@
-a0ea4b6f4 .gitmodules: deps/gnostr-git:v0.0.1
-84c546177 deps/gnostr-git: v0.0.1
-26d6b4c3e deps/gnostr-git: v0.0.0_22
-ad8f0ef1f CHANGELOG: update
-995c65a0e  .github/workflows/ubuntu-pre-release.yml: make submodules
+0.0.0
