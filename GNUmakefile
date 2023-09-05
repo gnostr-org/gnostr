@@ -184,7 +184,7 @@ docker-start:venv
 	done\
 	)
 
-detect:
+detect:## 	install sequence got Darwin and Linux
 ##detect
 ##	detect uname -s uname -m uname -p and install sequence
 
