@@ -1,16 +1,16 @@
-nostril(1)
+gnostr(1)
 
 # NAME
 
-nostril - generate nostr events
+gnostr - a git nostr utility
 
 # SYNPOSIS
 
-*nostril* [OPTIONS...]
+*gnostr* [OPTIONS...]
 
 # DESCRIPTION
 
-*nostril* is a tool that creates and signs nostr events.
+*gnostr* is a tool that creates and signs nostr events.
 
 # OPTIONS
 
@@ -54,7 +54,7 @@ nostril - generate nostr events
 *Generate an event*
 
 ```
-$ ./nostril --sec <key> --content "this is a message"
+$ ./gnostr --sec <key> --content "this is a message"
 {
 	"id": "da9c36bb8206e748cf136af2a43613a5ee113cb5906a09a8d3df5386039d53ab",
 	"pubkey": "4f6fa8547cf2888415522918175ea0bc0eb473287c5bd7cc459ca440bdf87d97",
@@ -69,7 +69,7 @@ $ ./nostril --sec <key> --content "this is a message"
 *Wrap event to send to a relay*
 
 ```
-$ ./nostril --envelope --sec <key> --content "hello"
+$ ./gnostr --envelope --sec <key> --content "hello"
 [ "EVENT",
 {
 	"id": "ed378d3fdda785c091e9311c6e6eeb075db349a163c5e38de95946f6013a8001",
@@ -85,23 +85,23 @@ $ ./nostril --envelope --sec <key> --content "hello"
 *Send to a relay*
 
 ```
-nostril --envelope --sec <key> --content "this is a message" | websocat wss://relay.damus.io
+gnostr --envelope --sec <key> --content "this is a message" | websocat wss://relay.damus.io
 ```
 
 *Send a nip04 DM*
 
 ```
-nostril --envelope --dm <pubkey> --sec <key> --content "this is a secret" | websocat wss://relay.damus.io
+gnostr --envelope --dm <pubkey> --sec <key> --content "this is a secret" | websocat wss://relay.damus.io
 ```
 
 *Mine a pubkey*
 
 ```
-nostril --mine-pubkey --pow <difficulty>
+gnostr --mine-pubkey --pow <difficulty>
 ```
 
 *Reply to an event. nip10 compliant, includes the `thread_id`*
 
 ```
-./nostril --envelope --sec <key> --content "this is reply message" --tag e <thread_id> --tag e <note_id> | websocat wss://relay.damus.io
+./gnostr --envelope --sec <key> --content "this is reply message" --tag e <thread_id> --tag e <note_id> | websocat wss://relay.damus.io
 ```

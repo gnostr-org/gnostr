@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+declare -a LENGTH
+declare -a RELAYS
+declare -a FULLPATH
+declare -a BLOBS
+declare -a BLOCKHEIGHT
+declare -a TIME
+declare -a WEEBLE
+declare -a WOBBLE
+declare -a REPO_NAME
+declare -a CURRENT_BRANCH
+REPO_NAME=$(pwd | grep -o "[^/]*$")
+CURRENT_BRANCH=$(git branch --show-current)
+FULLPATH=$PWD
+source gnostr-nonce
+
+function get_time(){
+
+	TIME=$(date +%s)
+	return $TIME
+
+}
+get_time
+
+function get_block_height(){
+	BLOCKHEIGHT=$(curl https://blockchain.info/q/getblockcount 2>/dev/null)
+	return $BLOCKHEIGHT
+}
+get_block_height
+
+function get_wobble(){
+	WOBBLE=$(expr $TIME % $BLOCKHEIGHT)
+	echo $WOBBLE
+}
+get_wobble
+

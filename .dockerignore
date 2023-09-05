@@ -1,10 +1,28 @@
 #act: since act is a docker utility, we tell docker to NOT ignore the
 #.git folder itself AND to NOT ignore the deps folder.
 !.git
-deps
-#!deps/git
-#!deps/hyper-nostr
-#!deps/jq
-#!deps/nostcat
-#!deps/secp256k1
-#!deps/tcl
+!deps
+!deps/act
+!deps/git
+!deps/git/sha1collisiondetection
+!deps/hyper-nostr
+!deps/hyper-sdk
+!deps/jq
+!deps/jq/modules/oniguruma
+!deps/nostcat
+!deps/openssl
+!deps/openssl/cloudflare-quiche
+!deps/openssl/cloudflare-quiche/quiche/deps/boringssl
+!deps/openssl/fuzz/corpora
+!deps/openssl/gost-engine
+!deps/openssl/gost-engine/libprov
+!deps/openssl/krb5
+!deps/openssl/oqs-provider
+!deps/openssl/pyca-cryptography
+!deps/openssl/python-ecdsa
+!deps/openssl/tlsfuzzer
+!deps/openssl/tlslite-ng
+!deps/openssl/wycheproof
+!deps/secp256k1
+!deps/tcl
+!**.a

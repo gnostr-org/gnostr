@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+help(){
+	gnostr-git reflog -h | sed -e "s/git/gnostr-git/g"
+	printf "   or: gnostr-git reflog [--hash-list] [-hl]\n"
+	printf "   or: gnostr-git reflog [--format] [-f]\n"
+	printf "   or: gnostr-git reflog [-gd]\n"
+	printf "   "
+	printf "   \n"
+	printf "gnostr-git reflog accepts any of the options accepted by gnostr-git reflog\n"
+	echo "  try:"
+	echo "       gnostr-git log    --format='%C(auto)%H%<|(17)%gd/commit:%s'"
+	echo "       gnostr-git reflog --format='%C(auto)%H%<|(17)%gd/commit:%s'"
+	printf "\n"
+	printf "gnostr:\n"
+	printf "   protocol:\n"
+	printf "      hash                                    /type  :comment\n"
+	printf "      5209741e7313c34bde7b404c940e0cdd7ec5e711/commit:gnostr: initial commit\n"
+	printf "      gnostr uses the colon as a delimiter           :\n"
+	printf "      slashes are valid in git branch names   /      :\n"
+	printf "      gnostr uses slashes for remote/path/references  \n"
+	printf "      gnostr includes 'weeble/wobble' timestamping as \n"
+	printf "      part of commit/blob/remote/path/refs references.\n"
+	exit
+}
+for ((i=1; i<=$#; i++)); do
+if
+	[[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
+	help
+	exit
+elif
+[[ ${!i} == "--hash-list" ]] || [[ ${!i} == "-hl" ]]; then
+	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H'
+	exit
+elif
+[[ ${!i} == "--format" ]] || [[ ${!i} == "-f" ]]; then
+	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd/commit/%s'
+	exit
+elif
+[[ ${!i} == "-gd" ]] || [[ ${!i} == "-g" ]]; then
+	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H%<|(17)%gd'
+	exit
+else
+	##silence is golden
+	exit
+fi
+done

@@ -38,5 +38,7 @@ if [ "$(git submodule status "$@" | grep -c '^ ')" != $# ]; then
     echo Reinitializing submodules "$@" ...
     git submodule sync "$@"
     rm -rf "$@"
-    git submodule update --init --recursive "$@"
+    git submodule update --force --init --recursive "$@"
+else
+	git submodule foreach --recursive "git submodule update --force --init --recursive;"
 fi
