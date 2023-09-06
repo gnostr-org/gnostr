@@ -2,21 +2,24 @@ gnostr
 gnostr-act
 gnostr-cat
 gnostr-cli
+gnostr-client
 gnostr-command
 gnostr-get-relays
 gnostr-git
 gnostr-git-instaweb
+gnostr-gnode
 gnostr-grep
 gnostr-legit
+gnostr-req
 gnostr-set-relays
 gnostr-sha256
+gnostr-tests
 src/nostril/libnostri.a
 src/nostril/nostril
 
-node_modules
+libnostr.a
 
-## libnostr.a
-## src/nostril/libnostri.a
+node_modules
 
 ## Cargo.lock
 ## Cargo.toml
