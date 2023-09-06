@@ -206,6 +206,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install coreutils           || echo "
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker       || echo "
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gcc                || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install expat               || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gettext             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-archive-all     || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui             || echo "
