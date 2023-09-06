@@ -240,13 +240,13 @@ deps/gnostr-cat/.git:
 #.PHONY:deps/gnostr-cat
 deps/gnostr-cat:deps/gnostr-cat/.git
 	cd deps/gnostr-cat && \
-		make cargo-install
+		make cargo-build-release install
 .PHONY:deps/gnostr-cat/target/release/gnostr-cat
 .PHONY:gnostr-cat
 gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 	cd deps/gnostr-cat && \
 		make install
-	@cp $@ gnostr-cat || echo "" 2>/dev/null
+	cp $< $@
 
 
 
