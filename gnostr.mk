@@ -313,7 +313,7 @@ gnostr-act:deps/gnostr-act/.git
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY:gnostr
-gnostr:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+gnostr:deps/secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
