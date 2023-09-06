@@ -46,6 +46,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
+            src/nostril
             ~/.cargo
             ~/.rustup
             CARGO_TARGET_DIR
@@ -84,6 +85,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
+            src/nostril
             ~/.cargo
             ~/.rustup
             CARGO_TARGET_DIR
