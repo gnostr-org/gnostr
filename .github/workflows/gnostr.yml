@@ -47,6 +47,7 @@ jobs:
         with:
           path: |
             src/nostril
+            CMakeFiles/*.dir
             ~/.cargo
             ~/.rustup
             CARGO_TARGET_DIR
@@ -86,6 +87,7 @@ jobs:
         with:
           path: |
             src/nostril
+            CMakeFiles/*.dir
             ~/.cargo
             ~/.rustup
             CARGO_TARGET_DIR
