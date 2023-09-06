@@ -152,12 +152,14 @@ deps/gnostr-web/.git:
 
 deps/gnostr-git/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-git
+.PHONY:deps/gnostr-git/gnostr-git
 deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
+	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 	cd deps/gnostr-git && make && make install
+.PHONY:gnostr-git
 gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
 	cp $< $@
 	install $@ /usr/local/bin/
-	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 
 
 
