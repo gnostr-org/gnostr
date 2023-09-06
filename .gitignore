@@ -13,6 +13,7 @@ gnostr-sha256
 src/nostril/libnostri.a
 src/nostril/nostril
 
+node_modules
 
 ## libnostr.a
 ## src/nostril/libnostri.a
