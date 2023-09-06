@@ -4,7 +4,6 @@ name: pre-release-matrix
 on:
   push:
     tags:
-      - "v*"
       - "v*.*.*-rc**"
 
   workflow_dispatch:
@@ -15,6 +14,17 @@ jobs:
     permissions: write-all
     env:
       GNOSTR: "gnostr"
+      GNOSTR_ACT: "gnostr-act"
+      GNOSTR_CAT: "gnostr-cat"
+      GNOSTR_CLI: "gnostr-cli"
+      GNOSTR_CLIENT: "gnostr-client"
+      GNOSTR_COMMAND: "gnostr-command"
+      GNOSTR_FS: "gnostr-fs"
+      GNOSTR_GIT: "gnostr-git"
+      GNOSTR_GNODE: "gnostr-gnode"
+      GNOSTR_LEGIT: "gnostr-legit"
+      GNOSTR_LFS: "gnostr-lfs"
+      GNOSTR_PROXY: "gnostr-proxy"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -37,7 +47,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.cargo
+            $INPUT_PATH
             ~/.rustup
             CARGO_TARGET_DIR
           key: ${{ runner.os }}-deps
@@ -62,12 +72,13 @@ jobs:
 
       - name:  apt-get update || brew install virtualenv
         run: |
-          sudo apt-get update || brew install virtualenv
+          sudo apt-get update && sudo apt-get install virtualenv || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
 
+      - run: V=1 make detect
       - run: python3 -m pip install virtualenv
 
-      - run: V=1 make detect && cmake .
+      - run: V=1 cmake .
       - run: V=1 make gnostr
       - run: V=1 make gnostr-tests
 
@@ -87,9 +98,9 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ matrix.os }}
           prerelease: true
-          title: "Release Build"
+          title: "Pre-Release Build"
           files: |
-            README
+            $GNOSTR
 
       - name: Save deps
         id: cache-deps-save
@@ -97,7 +108,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.cargo
+            $INPUT_PATH
             ~/.rustup
             CARGO_TARGET_DIR
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
