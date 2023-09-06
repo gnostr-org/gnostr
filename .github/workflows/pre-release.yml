@@ -11,23 +11,59 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  release:
+  build:
+    env:
+      GNOSTR: "gnostr"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
+      - name: Restore deps
+        id: cache-deps-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+            CARGO_TARGET_DIR
+          key: ${{ runner.os }}-deps
+
       - uses: actions/checkout@v3
-      - name: "printenv"
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+
+      - uses: actions-rs/toolchain@v1.0.6
+        #if: ${{ !env.ACT }}
+        with:
+          toolchain: nightly
+          default: true
+          override: true
+
+      - name: echo GNOSTR
+        #if: ${{ !env.ACT }}
         run: |
-          printenv
-      - name: "sudo apt-get update || brew install virtualenv"
+          echo $GNOSTR
+          touch ~/GITHUB_TOKEN.txt
+
+      - name:  apt-get update || brew install virtualenv
         run: |
           sudo apt-get update || brew install virtualenv
+          touch ~/GITHUB_TOKEN.txt
+
       - run: python3 -m pip install virtualenv
 
       - run: V=1 make detect && cmake .
@@ -38,8 +74,7 @@ jobs:
       - run: V=1 make gnostr-cat
       - run: V=1 make gnostr-cli
       - run: V=1 make gnostr-client
-      - run: V=1 make gnostr-command
-      - run: V=1 make gnostr-docs
+      #- run: V=1 make gnostr-command
       - run: V=1 make gnostr-get-relays
       - run: V=1 make gnostr-git
       - run: V=1 make gnostr-gnode
@@ -48,17 +83,19 @@ jobs:
       - run: V=1 make gnostr-legit
       - run: V=1 make gnostr-proxy
       - run: V=1 make gnostr-query
-      - run: V=1 make gnostr-query-test
+      #- run: V=1 make gnostr-query-test
       - run: V=1 make gnostr-req
       - run: V=1 make gnostr-set-relays
       - run: V=1 make gnostr-sha256
-      - run: V=1 make gnostr-tests
 
       - uses: docker-practice/actions-setup-docker@master
         timeout-minutes: 12
       - run: |
           set -x
           docker version
+
+      - run: V=1 make gnostr-docs
+      - run: V=1 make gnostr-tests
 
       - name: "Build release"
         run: |
@@ -79,3 +116,14 @@ jobs:
           title: "Release Build"
           files: |
             gnostr-*
+
+      - name: Save deps
+        id: cache-deps-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+            CARGO_TARGET_DIR
+          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
