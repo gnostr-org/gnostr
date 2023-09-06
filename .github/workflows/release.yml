@@ -102,7 +102,9 @@ jobs:
           prerelease: false
           title: "Release Build"
           files: |
-            $GNOSTR
+            gnostr
+            gnostr-*
+            !*.mk
 
       - name: Save deps
         id: cache-deps-save
