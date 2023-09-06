@@ -340,13 +340,13 @@ gnostr:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 gnostr-install:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
-	@install -m755 -vC include/*.*                    $(PREFIX)/include 2>/dev/null
-	@install -m755 -vC gnostr                         $(PREFIX)/bin     2>/dev/null
-	@install -m755 -vC template/gnostr-*              $(PREFIX)/bin     2>/dev/null
-	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
-	@install -m755 -vC template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
-	@install -m755 -vC template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
-	@install -m755 -vC template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null
+	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
 
 .ONESHELL:
 ##install-doc
@@ -354,63 +354,63 @@ gnostr-install:
 install-doc:## 	install-doc
 ## 	install -m 0644 -vC doc/gnostr.1 $(PREFIX)/share/man/man1/gnostr.1
 	@mkdir -p /usr/local/share/man/man1 || echo "try 'sudo mkdir -p /usr/local/share/man/man1'"
-	@install -m 0644 -vC doc/gnostr.1 $(PREFIX)/share/man/man1/gnostr.1 || \
+	@install -m 0644 -v doc/gnostr.1 $(PREFIX)/share/man/man1/gnostr.1 || \
 		echo "doc/gnostr.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-about.1 $(PREFIX)/share/man/man1/gnostr-about.1 || \
+	@install -m 0644 -v doc/gnostr-about.1 $(PREFIX)/share/man/man1/gnostr-about.1 || \
 		echo "doc/gnostr-about.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-act.1 $(PREFIX)/share/man/man1/gnostr-act.1 || \
+	@install -m 0644 -v doc/gnostr-act.1 $(PREFIX)/share/man/man1/gnostr-act.1 || \
 		echo "doc/gnostr-act.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-cat.1 $(PREFIX)/share/man/man1/gnostr-cat.1 || \
+	@install -m 0644 -v doc/gnostr-cat.1 $(PREFIX)/share/man/man1/gnostr-cat.1 || \
 		echo "doc/gnostr-cat.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-cli.1 $(PREFIX)/share/man/man1/gnostr-cli.1 || \
+	@install -m 0644 -v doc/gnostr-cli.1 $(PREFIX)/share/man/man1/gnostr-cli.1 || \
 		echo "doc/gnostr-cli.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-client.1 $(PREFIX)/share/man/man1/gnostr-client.1 || \
+	@install -m 0644 -v doc/gnostr-client.1 $(PREFIX)/share/man/man1/gnostr-client.1 || \
 		echo "doc/gnostr-client.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-get-relays.1 $(PREFIX)/share/man/man1/gnostr-get-relays.1 || \
+	@install -m 0644 -v doc/gnostr-get-relays.1 $(PREFIX)/share/man/man1/gnostr-get-relays.1 || \
 		echo "doc/gnostr-get-relays.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-git-log.1 $(PREFIX)/share/man/man1/gnostr-git-log.1 || \
+	@install -m 0644 -v doc/gnostr-git-log.1 $(PREFIX)/share/man/man1/gnostr-git-log.1 || \
 		echo "doc/gnostr-git-log.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-git-reflog.1 $(PREFIX)/share/man/man1/gnostr-git-reflog.1 || \
+	@install -m 0644 -v doc/gnostr-git-reflog.1 $(PREFIX)/share/man/man1/gnostr-git-reflog.1 || \
 		echo "doc/gnostr-git-reflog.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-git.1 $(PREFIX)/share/man/man1/gnostr-git.1 || \
+	@install -m 0644 -v doc/gnostr-git.1 $(PREFIX)/share/man/man1/gnostr-git.1 || \
 		echo "doc/gnostr-git.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-gnode.1 $(PREFIX)/share/man/man1/gnostr-gnode.1 || \
+	@install -m 0644 -v doc/gnostr-gnode.1 $(PREFIX)/share/man/man1/gnostr-gnode.1 || \
 		echo "doc/gnostr-gnode.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-grep.1 $(PREFIX)/share/man/man1/gnostr-grep.1 || \
+	@install -m 0644 -v doc/gnostr-grep.1 $(PREFIX)/share/man/man1/gnostr-grep.1 || \
 		echo "doc/gnostr-grep.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-hyp.1 $(PREFIX)/share/man/man1/gnostr-hyp.1 || \
+	@install -m 0644 -v doc/gnostr-hyp.1 $(PREFIX)/share/man/man1/gnostr-hyp.1 || \
 		echo "doc/gnostr-hyp.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-legit.1 $(PREFIX)/share/man/man1/gnostr-legit.1 || \
+	@install -m 0644 -v doc/gnostr-legit.1 $(PREFIX)/share/man/man1/gnostr-legit.1 || \
 		echo "doc/gnostr-legit.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-nonce.1 $(PREFIX)/share/man/man1/gnostr-nonce.1 || \
+	@install -m 0644 -v doc/gnostr-nonce.1 $(PREFIX)/share/man/man1/gnostr-nonce.1 || \
 		echo "doc/gnostr-nonce.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-post.1 $(PREFIX)/share/man/man1/gnostr-post.1 || \
+	@install -m 0644 -v doc/gnostr-post.1 $(PREFIX)/share/man/man1/gnostr-post.1 || \
 		echo "doc/gnostr-post.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-proxy.1 $(PREFIX)/share/man/man1/gnostr-proxy.1 || \
+	@install -m 0644 -v doc/gnostr-proxy.1 $(PREFIX)/share/man/man1/gnostr-proxy.1 || \
 		echo "doc/gnostr-proxy.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-query.1 $(PREFIX)/share/man/man1/gnostr-query.1 || \
+	@install -m 0644 -v doc/gnostr-query.1 $(PREFIX)/share/man/man1/gnostr-query.1 || \
 		echo "doc/gnostr-query.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-readme.1 $(PREFIX)/share/man/man1/gnostr-readme.1 || \
+	@install -m 0644 -v doc/gnostr-readme.1 $(PREFIX)/share/man/man1/gnostr-readme.1 || \
 		echo "doc/gnostr-readme.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-relays.1 $(PREFIX)/share/man/man1/gnostr-relays.1 || \
+	@install -m 0644 -v doc/gnostr-relays.1 $(PREFIX)/share/man/man1/gnostr-relays.1 || \
 		echo "doc/gnostr-relays.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-repo.1 $(PREFIX)/share/man/man1/gnostr-repo.1 || \
+	@install -m 0644 -v doc/gnostr-repo.1 $(PREFIX)/share/man/man1/gnostr-repo.1 || \
 		echo "doc/gnostr-repo.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-req.1 $(PREFIX)/share/man/man1/gnostr-req.1 || \
+	@install -m 0644 -v doc/gnostr-req.1 $(PREFIX)/share/man/man1/gnostr-req.1 || \
 		echo "doc/gnostr-req.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-send.1 $(PREFIX)/share/man/man1/gnostr-send.1 || \
+	@install -m 0644 -v doc/gnostr-send.1 $(PREFIX)/share/man/man1/gnostr-send.1 || \
 		echo "doc/gnostr-send.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-set-relays.1 $(PREFIX)/share/man/man1/gnostr-set-relays.1 || \
+	@install -m 0644 -v doc/gnostr-set-relays.1 $(PREFIX)/share/man/man1/gnostr-set-relays.1 || \
 		echo "doc/gnostr-set-relays.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-sha256.1 $(PREFIX)/share/man/man1/gnostr-sha256.1 || \
+	@install -m 0644 -v doc/gnostr-sha256.1 $(PREFIX)/share/man/man1/gnostr-sha256.1 || \
 		echo "doc/gnostr-sha256.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-tests.1 $(PREFIX)/share/man/man1/gnostr-tests.1 || \
+	@install -m 0644 -v doc/gnostr-tests.1 $(PREFIX)/share/man/man1/gnostr-tests.1 || \
 		echo "doc/gnostr-tests.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-web.1 $(PREFIX)/share/man/man1/gnostr-web.1 || \
+	@install -m 0644 -v doc/gnostr-web.1 $(PREFIX)/share/man/man1/gnostr-web.1 || \
 		echo "doc/gnostr-web.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-weeble.1 $(PREFIX)/share/man/man1/gnostr-weeble.1 || \
+	@install -m 0644 -v doc/gnostr-weeble.1 $(PREFIX)/share/man/man1/gnostr-weeble.1 || \
 		echo "doc/gnostr-weeble.1 failed to install..."
-	@install -m 0644 -vC doc/gnostr-wobble.1 $(PREFIX)/share/man/man1/gnostr-wobble.1 || \
+	@install -m 0644 -v doc/gnostr-wobble.1 $(PREFIX)/share/man/man1/gnostr-wobble.1 || \
 		echo "doc/gnostr-wobble.1 failed to install..."
 
 .PHONY:config.h
