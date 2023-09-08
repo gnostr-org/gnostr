@@ -248,7 +248,7 @@ deps/gnostr-cat:deps/gnostr-cat/.git
 .PHONY:gnostr-cat
 gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 	cd deps/gnostr-cat && \
-		make install
+		make cargo-build-release install
 	cp $< $@
 
 
