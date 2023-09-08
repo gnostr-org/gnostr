@@ -107,19 +107,15 @@ submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hy
 deps/secp256k1/.git:
 	devtools/refresh-submodules.sh deps/secp256k1
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
-.PHONY:deps/secp256k1/configure
+#.PHONY:deps/secp256k1/configure
 ## force configure if build on host then in docker vm
 deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1 && \
 		./autogen.sh && \
-		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests
-#.PHONY:deps/secp256k1/.libs/libsecp256k1.a
+		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
+.PHONY:deps/secp256k1/.libs/libsecp256k1.a
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
-	cd deps/secp256k1 && \
-		make -j
-.PHONY:libsecp256k1.a
-.PHONY:libsecp256k1.a
-libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
+libsecp256k1.a:deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 ##libsecp256k1.a
 ##	deps/secp256k1/.git
@@ -342,7 +338,7 @@ gnostr-install:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
 	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null
-	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null
 	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null
 	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
