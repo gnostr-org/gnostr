@@ -79,6 +79,7 @@ jobs:
 
       - run: V=1 make detect && cmake .
       - run: V=1 make gnostr
+      - run: V=1 make gnostr-all
 
       - name: Save deps
         id: cache-deps-save
