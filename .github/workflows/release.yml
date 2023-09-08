@@ -82,7 +82,7 @@ jobs:
 
       - run: V=1 cmake .
       - run: V=1 make gnostr
-      - run: V=1 make gnostr-tests
+      - run: V=1 make gnostr-all
 
       - name: "Build release"
         run: |
@@ -104,7 +104,6 @@ jobs:
           files: |
             gnostr
             gnostr-*
-            !*.mk
 
       - name: Save deps
         id: cache-deps-save
