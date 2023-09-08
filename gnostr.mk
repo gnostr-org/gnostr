@@ -437,7 +437,7 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 ##
 ## 	gnostr-legit relies on gnostr-git and gnostr-install sequence
 ##
-gnostr-all:gnostr gnostr-install gnostr-cat gnostr-grep gnostr-sha256 gnostr-command gnostr-proxy gnostr-query gnostr-git gnostr-legit gnostr-act gnostr-cli
+gnostr-all:gnostr gnostr-install gnostr-cat gnostr-cli gnostr-grep gnostr-sha256 gnostr-command gnostr-proxy gnostr-query gnostr-git gnostr-legit gnostr-act
 	$(MAKE) gnostr-build-install
 
 ## git log $(git describe --tags --abbrev=0)...@^1
