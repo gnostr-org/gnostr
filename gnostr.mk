@@ -109,6 +109,7 @@ deps/secp256k1/.git:
 deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
 #.PHONY:deps/secp256k1/configure
 ## force configure if build on host then in docker vm
+.PHONY:deps/secp256k1/configure## 	This MUST be PHONY for docker builds
 deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
 	cd deps/secp256k1 && \
 		./autogen.sh && \
@@ -314,7 +315,7 @@ gnostr:deps/secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OB
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
 #	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	install ./gnostr /usr/local/bin/
+	install gnostr /usr/local/bin/
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
