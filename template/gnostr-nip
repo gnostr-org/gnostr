@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+if [ ! -z "$1" ]; then
+  if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    if [ "$2" == "0" ]; then
+    echo "NIP-0: metadata: the content is set to a stringified JSON object {name: <username>, about: <string>, picture: <url, string>} describing the user who created the event. A relay may delete older events once it gets a new one for the same pubkey.";
+    fi
+    if [ "$2" == "1" ]; then
+      echo "NIP-1:"
+    fi
+    if [ "$2" == "2" ]; then
+      echo "NIP-2:"
+    fi
+  fi
+exit
+fi
+#
+MESSAGE=\
+"{\"name\":\"0\",\"username\":0\"\",\"display_name\":\"0\",\"displayName\":\"0\",\"picture\":\"https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png\",\"banner\":\"https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png\",\"website\":\"https://randymcmillan.github.io\",\"about\":\"ABOUT\",\"nip05\":\"randymcmillan@randymcmillan.net\",\"lud16\":\"ekkachai@BitcoinNostr.com\",\"lud06\":\"\"}"
+
+gnostr --sec $(gnostr --hash) --kind 0 \
+  --envelope \
+  --content $MESSAGE
+
+# gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
+#
+# gnostr-query -k 0 -l 1 | gnostr-cat -u wss://nos.lol | jq .[2].content | tr -d "\""
+#
+# echo $(./template/gnostr-nip0) #| gnostr-relays
+#
+# echo $(./template/gnostr-nip0) | gnostr-cat -u wss://nos.lol | jq .[1] | tr -d "\""
+#
+# echo $(gnostr-query -k 0 -l 1 | gnostr-cat -u wss://nos.lol | jq .[2].content | jq | tr -d "\"") | tr -d "\\"
+#
+# gnostr --sec $(gnostr-sha256) --envelope --content $(echo gnostr-query -k 0 -l 1 | gnostr-cat -u wss://nos.lol | jq .[2].content ) | tr -d "\\"
+#
