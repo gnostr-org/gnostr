@@ -195,7 +195,7 @@ deps/gnostr-legit/.git:gnostr-git
 #.PHONY:deps/gnostr-legit/gnostr-legit
 deps/gnostr-legit/gnostr-legit:deps/gnostr-legit/.git
 	cd deps/gnostr-legit && \
-		make legit-install
+		make cargo-build-release install
 deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/gnostr-legit## 	gnostr-legit
 gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
