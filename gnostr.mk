@@ -177,7 +177,7 @@ gnostr-build:## 	gnostr-build
 
 .PHONY:gnostr-build-install
 gnostr-build-install:gnostr-build## 	gnostr-build-install
-	cd build && make install
+	cd build && make all install && install gnostr-tests /usr/local/bin || echo
 	$(MAKE) gnostr-install || echo
 
 deps/gnostr-command/.git:gnostr-git
