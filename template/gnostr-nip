@@ -31,8 +31,14 @@ fi
 MESSAGE=\
 {\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"https://gnostr.org\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}
 
-gnostr --sec $(gnostr --hash) --kind 0 \
-  --envelope \
+
+gnostr --sec $(gnostr-sha256)       \
+  --kind 0                          \
+  --tag gnostr gnostr               \
+  --tag weeble $(gnostr-weeble)     \
+  --tag wobble $(gnostr-wobble)     \
+  --tag block $(gnostr-blockheight) \
+  --envelope                        \
   --content "$MESSAGE"
 
 # gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
