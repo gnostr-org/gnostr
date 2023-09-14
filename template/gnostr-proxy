@@ -4,7 +4,7 @@ gnostr-set-relays 2>/tmp/gnostr-proxy.log || echo
 # gnostr-proxy sub-shell process
 #
 #
-NVM_VERSION=v16.20.2
+NVM_VERSION=v18.17.1
 touch .nvmrc
 echo $NVM_VERSION > .nvmrc
 if ! grep -q "$NVM_VERSION" .nvmrc; then echo "$NVM_VERSION" > .nvmrc; fi;\
