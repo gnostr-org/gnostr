@@ -13,13 +13,33 @@ if [ ! -z "$1" ]; then
   fi
 exit
 fi
-#
-MESSAGE=\
-"{\"name\":\"0\",\"username\":0\"\",\"display_name\":\"0\",\"displayName\":\"0\",\"picture\":\"https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png\",\"banner\":\"https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png\",\"website\":\"https://randymcmillan.github.io\",\"about\":\"ABOUT\",\"nip05\":\"randymcmillan@randymcmillan.net\",\"lud16\":\"ekkachai@BitcoinNostr.com\",\"lud06\":\"\"}"
 
-gnostr --sec $(gnostr --hash) --kind 0 \
-  --envelope \
-  --content $MESSAGE
+## [
+##   "EVENT",
+##   "gnostr-query",
+##   {
+##     "content": "{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"sha256()\",\"about\":\"■\",\"name\":\"sha256()\"}",
+##     "created_at": 1694667257,
+##     "id": "c6fee3d5f0b3391fb25e26624f8a36e78c686c6e0fcf97da6a736bc0188695a0",
+##     "kind": 0,
+##     "pubkey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+##     "sig": "a5f8af02461166f01645786970c43e8a2de8e45df123d9685cf76eca83e6bf98c8b44b957accd5d3fbc4b0cc69c089b465a1682680ad7491b6f1bc759cc21dfd",
+##     "tags": []
+##   }
+## ]
+
+MESSAGE=\
+{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"https://gnostr.org\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}
+
+
+gnostr --sec $(gnostr-sha256)       \
+  --kind 0                          \
+  --tag gnostr gnostr               \
+  --tag weeble $(gnostr-weeble)     \
+  --tag wobble $(gnostr-wobble)     \
+  --tag block $(gnostr-blockheight) \
+  --envelope                        \
+  --content "$MESSAGE"
 
 # gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
 #
