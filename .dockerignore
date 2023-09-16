@@ -1,4 +1,9 @@
 #act: since act is a docker utility, we tell docker to NOT ignore the
+#
+## WARNING gnostr-act/docker
+.venv #gnostr-alpine
+##
+#
 #.git folder itself AND to NOT ignore the deps folder.
 !.git
 !deps
