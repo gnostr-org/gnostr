@@ -51,4 +51,4 @@ jobs:
       - run: make gnostr || rm gnostr && make gnostr
       - run: make gnostr-install
       ## TODO: add ssh config to act sequence
-      - run: make tag 2>/dev/null
+      - run: rm -rf .venv
