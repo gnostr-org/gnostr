@@ -453,8 +453,26 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 ##
 ## 	gnostr-legit relies on gnostr-git and gnostr-install sequence
 ##
-gnostr-all:gnostr gnostr-install gnostr-cat gnostr-cli gnostr-grep gnostr-sha256 gnostr-command gnostr-proxy gnostr-query gnostr-git gnostr-legit gnostr-act
-	$(MAKE) gnostr-build-install
+gnostr-all:
+	rm CMakeCache.txt || echo
+	$(shell which cmake) .
+	$(MAKE) -j libsecp256k1.a
+	type -P gnostr         || $(MAKE) -j gnostr
+	$(MAKE) -j gnostr-install
+	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
+	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
+	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
+	type -P gnostr-sha256  || $(MAKE) -j gnostr-sha256
+	type -P gnostr-command || $(MAKE) -j gnostr-command
+	type -P gnostr-proxy   || $(MAKE) -j gnostr-proxy
+	type -P gnostr-query   || $(MAKE) -j gnostr-query
+	type -P gnostr-git     || $(MAKE) -j gnostr-git
+	type -P gnostr-legit   || $(MAKE) -j gnostr-legit
+	type -P gnostr-client  || $(MAKE) -j gnostr-client
+	type -P gnostr-gnode   || $(MAKE) -j gnostr-gnode
+	$(MAKE) -j gnostr-build
+	$(MAKE) -j gnostr-install
+	type -P gnostr-act && echo "'make gnostr-act' to install gnostr-act " || $(MAKE) -j gnostr-act
 
 ## git log $(git describe --tags --abbrev=0)...@^1
 
