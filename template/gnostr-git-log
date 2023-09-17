@@ -56,6 +56,11 @@ for ((i=1; i<=$#; i++)); do
 if
 [[ ${!i} == "-org" ]] || [[ ${!i} == "--org" ]]; then
 ((i++))
+if [ -z ${!i} ]; then
+  ORG=help
+	help
+	exit
+fi
 if
 	[[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
   ORG=help
@@ -66,6 +71,11 @@ ORG=${!i}
 ((i++))
 ## echo $ORG
 echo ${!i}
+if [ -z ${!i} ]; then
+  ORG=help
+	help
+	exit
+fi
 fi
 
 ## Once positionals are captured
