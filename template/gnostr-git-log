@@ -81,7 +81,33 @@ else
    echo "${!i} is not a number"
 fi
 fi
+echo ${!i}
 
+## git \
+#   log \
+#   --date='unix' \
+#   -10 \
+#   --pretty="%C(Yellow)%h %x09 %C(reset)%ad %x09 %C(Cyan)%an: %C(reset)%s" \
+#   --reverse
+## git \
+#   log \
+#   --date='unix' \
+#   -10 \
+#   --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%an/%C(reset)%s" \
+#   --reverse
+##  git \
+#    log \
+#    --date='unix' \
+#    -10 \
+#    --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%n/%C(reset)%s" \
+#   --reverse
+##  git \
+#    log \
+#    --date='unix' \
+#    -10 --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%C(reset)%s" \
+#   --reverse
+#
+#
 ## Once positionals are captured
 ## if -h --help
 ## present help output based on positionals captured
