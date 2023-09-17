@@ -70,11 +70,15 @@ fi
 ORG=${!i}
 ((i++))
 ## echo $ORG
-echo ${!i}
-if [ -z ${!i} ]; then
-  ORG=help
-	help
-	exit
+## echo ${!i}
+if [[ ${!i} =~ ^[0-9]+$ ]]; then
+  declare DEPTH
+  DEPTH=${!i}
+   echo "${!i} is a number"
+   echo DEPTH=$DEPTH
+((i++))
+else
+   echo "${!i} is not a number"
 fi
 fi
 
