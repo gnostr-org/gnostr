@@ -1,4 +1,4 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'Nostr_client_relay'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
@@ -45,7 +45,7 @@ void usage()
 
 int main(int argc, const char* argv[])
 {
-  std::string relay_vostro = "localhost:8080";
+  std::string gnostr_gnode = "localhost:8080";
   std::string uri;
   std::string content;
   std::string authors;
@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
 
   if (!uri.size())
   {
-    uri = relay_vostro;
+    uri = gnostr_gnode;
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 

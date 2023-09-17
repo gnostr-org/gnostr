@@ -1,30 +1,50 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'Nostr_client_relay'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
 #include "server_wss.hpp"
 #include <future>
+#include <iostream>
+#include <string>
+#include <algorithm>
+
 
 #include "log.hh"
 #include "nostr.hh"
 #include "database.hh"
 #include "relay.hh"
+#include "argparse.hpp"
+
 
 using WssServer = SimpleWeb::SocketServer<SimpleWeb::WSS>;
-std::string log_program_name("vostro");
+std::string log_program_name("gnostr-gnode");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // main
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int main()
+int main(int argc, char * argv[])
 {
+    argparse::ArgumentParser program("main");
+    program.add_argument("port").default_value<int>(8080)
+        .help("display the square of a given number")
+        .scan<'i', int>();
+    program.add_argument("--verbose").default_value(false).implicit_value(true);
+    try {
+        program.parse_args(argc, argv);
+    } catch (const std::runtime_error &err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        return 1;
+    }
+    int port = program.get<int>("port");
+
   comm::start_log();
 
   relay_t relay;
 
   WssServer server("server.crt", "server.key");
-  server.config.port = 8080;
+  server.config.port = port;
   auto& endpoint = server.endpoint["/"];
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
