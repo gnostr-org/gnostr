@@ -1,4 +1,4 @@
-# This file is part of 'Nostr_client_relay' 
+# This file is part of 'Nostr_client_relay'
 # Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 # See file LICENSE for full license details.
 
@@ -22,7 +22,7 @@ set(web ${web} home.cc)
 set(web ${web} follows.hh)
 set(web ${web} follows.cc)
 
-add_executable(wostro web.cc web.hh ${web})
+add_executable(gnostr-web web.cc web.hh ${web})
 
 #//////////////////////////
 #link with libraries
@@ -41,25 +41,29 @@ if (MSVC)
 endif()
 
 if(APPLE)
-  set(lib_web ${lib_web} $ENV{HOME}/wt_install/lib/libwt.dylib)
-  set(lib_web ${lib_web} $ENV{HOME}/wt_install/lib/libwthttp.dylib) 
-  set(BOOST_LIB_DIRS $ENV{HOME}/git/nostr_client_relay/ext/boost_1_82_0/stage/lib)
-  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_filesystem.a)
-  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_thread.a)
-  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options.a)
+  #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwt.dylib)
+  #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwthttp.dylib)
+  set(lib_web ${lib_web} /usr/local/lib/libwt.dylib)
+  set(lib_web ${lib_web} /usr/local/lib/libwthttp.dylib)
+  set(BOOST_LIB_DIRS /usr/local/lib)
+  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_filesystem-mt.a)
+  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_thread-mt.a)
+  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options-mt.a)
 endif()
 
 if (LINUX)
-  set(lib_web ${lib_web} $ENV{HOME}/wt_install/lib/libwt.so)
-  set(lib_web ${lib_web} $ENV{HOME}/wt_install/lib/libwthttp.so)
-  set(BOOST_LIB_DIRS $ENV{HOME}/git/nostr_client_relay/ext/boost_1_82_0/stage/lib)
+  #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwt.so)
+  #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwthttp.so)
+  set(lib_web ${lib_web} /usr/local/lib/libwt.so)
+  set(lib_web ${lib_web} /usr/local/lib/libwthttp.so)
+  set(BOOST_LIB_DIRS /usr/local/lib)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_filesystem.so)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_thread.so)
-  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options.so) 
+  set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options.so)
 endif()
 
 set(lib_web ${lib_web} ${lib_dep})
-target_link_libraries (wostro ${lib_web})
+target_link_libraries (gnostr-web ${lib_web})
 
 message(STATUS "Copying data files to: ${CMAKE_BINARY_DIR}/web")
 file(COPY "${CMAKE_SOURCE_DIR}/web/nostro.css" DESTINATION ${CMAKE_BINARY_DIR}/web)

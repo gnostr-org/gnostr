@@ -8,3 +8,10 @@ reflog
 .nvmrc
 .gnostr/proxy
 .gnostr/web
+
+Makefile
+CMakeFiles/
+cmake_install.cmake
+wostro
+CMakeCache.txt
+wostro.log.txt
