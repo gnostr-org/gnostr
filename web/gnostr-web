@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+gnostr-set-relays 2>/tmp/gnostr-web.log || echo
+(echo `pwd`) & clear && \
+# gnostr-web sub-shell process
+#
+#
+NVM_VERSION=v18.17.1
+touch .nvmrc
+echo $NVM_VERSION > .nvmrc
+if ! grep -q "$NVM_VERSION" .nvmrc; then echo "$NVM_VERSION" > .nvmrc; fi;\
+touch .gitignore
+if ! grep -q ".nvmrc" .gitignore; then echo ".nvmrc" >> .gitignore; fi;\
+
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/dev/null && \. "$NVM_DIR/nvm.sh" >/dev/null && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && echo "gnostr-web:nvm:node -v $NVM_VERSION" && nvm install $NVM_VERSION >/tmp/gnostr-web.log 2>&1 && nvm use --silent 2>/tmp/gnostr-web.log \
+
+(\
+
+if ! grep -q ".gnostr/web" .gitignore; then echo ".gnostr/web" >> .gitignore; fi;\
+
+mkdir -p .gnostr >/tmp/gnostr-web.log;\
+[ ! -d .gnostr/web ] && echo "gnostr-web:git:installing .gnostr/web"
+[ ! -d .gnostr/web ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-web.git .gnostr/web >/tmp/gnostr-web.log 2>&1; \
+[   -d .gnostr/web ] && echo "gnostr-web:git:updating .gnostr/web"
+[   -d .gnostr/web ] && cd .gnostr/web && git reset --hard 2>/tmp/gnostr-web.log && git pull -f origin master 2>/tmp/gnostr-web.log && echo ".gnostr/web" >> .gitignore >/tmp/gnostr-web.log 2>&1 &&  make run -k > /tmp/gnostr-web.log 2>&1;\
+)#2>/tmp/gnostr-web.log;
+
