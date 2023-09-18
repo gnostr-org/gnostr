@@ -1,0 +1,10 @@
+node_modules
+**.DS_Store
+bash_profile.log
+**demo/.DS_Store
+demo/bash_profile.log
+**pnpm-lock.yaml
+reflog
+.nvmrc
+.gnostr/proxy
+.gnostr/web
