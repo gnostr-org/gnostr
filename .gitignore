@@ -42,6 +42,8 @@ server.key
 vostro
 vostro.log.txt
 
+desktop/gnostro.app
+
 list_01.txt
 list_02.txt
 CHANGELOG
@@ -116,3 +118,21 @@ bin
 .github/workflows/.DS_Store
 
 pubkeys.txt
+
+ext/wt-4.10.0/CMakeDoxyfile.in
+ext/wt-4.10.0/CMakeDoxygenDefaults.cmake
+ext/wt-4.10.0/Wt/
+ext/wt-4.10.0/src/AuthCssTheme_xml.C
+ext/wt-4.10.0/src/AuthStrings_xml.C
+ext/wt-4.10.0/src/Boot_html.C
+ext/wt-4.10.0/src/Boot_js.C
+ext/wt-4.10.0/src/Bootstrap3Theme_xml.C
+ext/wt-4.10.0/src/Bootstrap5Theme_xml.C
+ext/wt-4.10.0/src/BootstrapTheme_xml.C
+ext/wt-4.10.0/src/Hybrid_html.C
+ext/wt-4.10.0/src/Plain_html.C
+ext/wt-4.10.0/src/WCartesianChart_js.C
+ext/wt-4.10.0/src/Wt_js.C
+ext/wt-4.10.0/src/Wt_xml.C
+ext/wt-4.10.0/wt_config.xml
+wostro.log.txt
