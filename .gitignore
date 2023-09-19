@@ -14,6 +14,7 @@ gnostr-req
 gnostr-set-relays
 gnostr-sha256
 gnostr-tests
+web/gnostr-web
 src/nostril/libnostri.a
 src/nostril/nostril
 
