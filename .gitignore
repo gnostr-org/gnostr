@@ -93,6 +93,7 @@ ext/secp256k1-0.3.2/DartConfiguration.tcl
 ext/secp256k1-0.3.2/src/CTestTestfile.cmake
 ext/secp256k1-0.3.2/src/libsecp256k1-config-version.cmake
 ext/secp256k1-0.3.2/src/libsecp256k1-config.cmake
+ext/secp256k1-0.3.2/examples/CTestTestfile.cmake
 
 ext/wt-4.10.0/wt-config-version.cmake
 ext/wt-4.10.0/wt-config.cmake
