@@ -138,3 +138,6 @@ ext/wt-4.10.0/src/Wt_js.C
 ext/wt-4.10.0/src/Wt_xml.C
 ext/wt-4.10.0/wt_config.xml
 wostro.log.txt
+
+tests.log.txt
+web/wt_config.xml
