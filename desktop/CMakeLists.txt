@@ -48,7 +48,7 @@ endif()
 add_executable(gnostro WIN32 MACOSX_BUNDLE ${src_extra})
 
 #//////////////////////////
-# gnostro link 
+# gnostro link
 #//////////////////////////
 
 if (MSVC)
