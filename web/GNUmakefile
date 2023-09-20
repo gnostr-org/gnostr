@@ -335,7 +335,7 @@ test-query:
     -t weeble \
     -t wobble | gnostr-cat -u ws://127.0.0.1:6102
 
--include Makefile
+#-include Makefile
 -include venv.mk
 -include act.mk
 
