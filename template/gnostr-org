@@ -26,6 +26,6 @@ mkdir -p .gnostr >/tmp/gnostr-org.log;\
 [ ! -d .gnostr/org ] && echo "gnostr-org:git:installing .gnostr/org"
 [ ! -d .gnostr/org ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-org.git .gnostr/org >/tmp/gnostr-org.log 2>&1; \
 [   -d .gnostr/org ] && echo "gnostr-org:git:updating .gnostr/org"
-[   -d .gnostr/org ] && cd .gnostr/org && git reset --hard $GNOSTR_ORG_LOG && git pull -f origin master $GNOSTR_ORG_LOG && echo ".gnostr/org" >> .gitignore >/tmp/gnostr-org.log 2>&1 && make run > /tmp/gnostr-org.log 2>&1;\
+[   -d .gnostr/org ] && cd .gnostr/org && git reset --hard $GNOSTR_ORG_LOG && git pull -f origin master $GNOSTR_ORG_LOG && echo ".gnostr/org" >> .gitignore $GNOSTR_ORG_LOG && make run $GNOSTR_ORG_LOG;\
 )#$GNOSTR_ORG_LOG;
 
