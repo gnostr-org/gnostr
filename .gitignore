@@ -141,4 +141,5 @@ wostro.log.txt
 
 tests.log.txt
 web/wt_config.xml
+web/APP_KEY
 .gnostr/org
