@@ -2,7 +2,12 @@
 gnostr-set-relays 2>/tmp/gnostr-org.log || echo
 (echo `pwd`) & clear && \
 # gnostr-org sub-shell process
-#
+declare GNOSTR_ORG_LOG
+
+if [ "$1" == "-l" ] || [ "$1" == "--log" ];
+then
+GNOSTR_ORG_LOG="2>/tmp/gnostr-org.log"
+fi
 #
 NVM_VERSION=v18.17.1
 touch .nvmrc
@@ -11,7 +16,7 @@ if ! grep -q "$NVM_VERSION" .nvmrc; then echo "$NVM_VERSION" > .nvmrc; fi;\
 touch .gitignore
 if ! grep -q ".nvmrc" .gitignore; then echo ".nvmrc" >> .gitignore; fi;\
 
-export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/dev/null && \. "$NVM_DIR/nvm.sh" >/dev/null && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && echo "gnostr-org:nvm:node -v $NVM_VERSION" && nvm install $NVM_VERSION >/tmp/gnostr-org.log 2>&1 && nvm use --silent 2>/tmp/gnostr-org.log \
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/dev/null && \. "$NVM_DIR/nvm.sh" >/dev/null && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && echo "gnostr-org:nvm:node -v $NVM_VERSION" && nvm install $NVM_VERSION $GNOSTR_ORG_LOG 2>&1 && nvm use --silent $GNOSTR_ORG_LOG \
 
 (\
 
@@ -21,6 +26,6 @@ mkdir -p .gnostr >/tmp/gnostr-org.log;\
 [ ! -d .gnostr/org ] && echo "gnostr-org:git:installing .gnostr/org"
 [ ! -d .gnostr/org ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-org.git .gnostr/org >/tmp/gnostr-org.log 2>&1; \
 [   -d .gnostr/org ] && echo "gnostr-org:git:updating .gnostr/org"
-[   -d .gnostr/org ] && cd .gnostr/org && git reset --hard 2>/tmp/gnostr-org.log && git pull -f origin master 2>/tmp/gnostr-org.log && echo ".gnostr/org" >> .gitignore >/tmp/gnostr-org.log 2>&1 && make run > /tmp/gnostr-org.log 2>&1;\
-)#2>/tmp/gnostr-org.log;
+[   -d .gnostr/org ] && cd .gnostr/org && git reset --hard $GNOSTR_ORG_LOG && git pull -f origin master $GNOSTR_ORG_LOG && echo ".gnostr/org" >> .gitignore $GNOSTR_ORG_LOG && make run $GNOSTR_ORG_LOG;\
+)#$GNOSTR_ORG_LOG;
 

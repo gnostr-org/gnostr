@@ -157,7 +157,7 @@
 
                Path used by Wt to do session management.
               -->
-            <run-directory>/home/pvn/wt_install/var/run/wt</run-directory>
+            <run-directory>/var/run/wt</run-directory>
 
         </connector-fcgi>
 
@@ -207,7 +207,7 @@
            (e.g. for apache + fastcgi module), or on stderr (e.g. for
            the built-in httpd).
          -->
-        <log-file>/home/pvn/git/nostr_client_relay/build/web/wt.log.txt</log-file>
+        <log-file>/tmp/gnostr-web.log</log-file>
 
         <!-- Logger configuration
 

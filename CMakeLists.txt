@@ -288,6 +288,13 @@ install(TARGETS gnostr-req
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
+install(TARGETS gnostr-tests
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-tests
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
 if(BUILD_WEB)
 install(TARGETS gnostr-web
         CONFIGURATIONS Debug
@@ -295,4 +302,8 @@ install(TARGETS gnostr-web
 install(TARGETS gnostr-web
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
+endif()
+
+if (BUILD_GUI)
+
 endif()
