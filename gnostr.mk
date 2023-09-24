@@ -37,6 +37,29 @@ GTAR                                   :=$(shell which tar)
 endif
 export GTAR
 
+## 	gnostr-web-deploy
+## 	PATH
+ifneq ($(path),)
+PATH                                   :=$(path)
+else
+PATH                                   :=/web ## example http://127.0.0.1:80/web
+endif
+export PATH
+## 	PORT
+ifneq ($(port),)
+PORT                                   :=$(port)
+else
+PORT                                   :=80
+endif
+export PORT
+## 	ROOT
+ifneq ($(root),)
+ROOT                                   :=$(root)
+else
+ROOT                                   :=$(PWD)
+endif
+export ROOT
+
 
 ##all:
 #all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
@@ -143,8 +166,17 @@ libjq.a: deps/jq/.libs/libjq.a## 	libjq.a
 
 deps/gnostr-web/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-web
-gnostr-web-deploy:
-	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=.
+gnostr-web-deploy:## 	gnostr-web-deploy
+## 	gnostr-web-deploy help
+	$(shell which cmake) . -DBUILD_WEB=ON
+## 	ccmake .
+## 	BUILD_WEB  ON
+	echo "open http://127.0.0.1:$(PORT)$(PATH)"
+	./bin/gnostr-web \
+    --http-address=0.0.0.0 \
+    --http-port=$(PORT) \
+    --deploy-path=$(PATH) \
+    --docroot=$(ROOT)
 
 
 

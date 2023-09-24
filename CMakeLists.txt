@@ -272,6 +272,9 @@ install(TARGETS gnostr-gnode
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-gnode
+        CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
 install(TARGETS gnostr-client
@@ -279,10 +282,16 @@ install(TARGETS gnostr-client
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-client
         CONFIGURATIONS Release
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-client
+        CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
 install(TARGETS gnostr-req
         CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-req
+        CONFIGURATIONS Release
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-req
         CONFIGURATIONS Release
@@ -290,6 +299,9 @@ install(TARGETS gnostr-req
 
 install(TARGETS gnostr-tests
         CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-tests
+        CONFIGURATIONS Release
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-tests
         CONFIGURATIONS Release
@@ -298,6 +310,9 @@ install(TARGETS gnostr-tests
 if(BUILD_WEB)
 install(TARGETS gnostr-web
         CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-web
+        CONFIGURATIONS Release
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-web
         CONFIGURATIONS Release

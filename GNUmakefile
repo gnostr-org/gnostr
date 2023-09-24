@@ -296,6 +296,10 @@ report:## 	print make variables
 	@echo 'OS_VERSION=${OS_VERSION}'
 	@echo 'ARCH=${ARCH}'
 	@echo ''
+	@echo 'PATH=${PATH}'
+	@echo 'PORT=${PORT}'
+	@echo 'ROOT=${ROOT}'
+	@echo ''
 	@echo 'PYTHON=${PYTHON}'
 	@echo 'PYTHON2=${PYTHON2}'
 	@echo 'PYTHON3=${PYTHON3}'
@@ -334,7 +338,7 @@ endif
 
 tag:## 	git tag & git push
 tags:tag
-##tag 
+##tag
 ##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags || echo "unable to push tags..."
