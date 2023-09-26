@@ -139,10 +139,6 @@ libjq.a: deps/jq/.libs/libjq.a## 	libjq.a
 
 
 
-
-
-deps/gnostr-web/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-web
 gnostr-web-deploy:
 	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=.
 
