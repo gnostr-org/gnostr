@@ -106,3 +106,4 @@ nostril --mine-pubkey --pow <difficulty>
 ./nostril --envelope --sec <key> --content "this is reply message" --tag e <thread_id> --tag e <note_id> | websocat wss://relay.damus.io
 ```
 
+[http://localhost/web](http://localhost/web)
