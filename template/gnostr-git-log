@@ -5,11 +5,14 @@ mkdir -p .gnostr
 declare ORG
 
 declare WEEBLE
-WEEBLE=$(gnostr-weeble)
+WEEBLE=$(gnostr-weeble 2>/tmp/gnostr-git-log.log)
+[ -z $WEEBLE ] && WEEBLE=0000
 declare WOBBLE
-WOBBLE=$(gnostr-wobble)
+WOBBLE=$(gnostr-wobble 2>/tmp/gnostr-git-log.log)
+[ -z $WOBBLE ] && WOBBLE=000000
 declare BLOCKHEIGHT
-BLOCKHEIGHT=$(gnostr-blockheight)
+BLOCKHEIGHT=$(gnostr-blockheight 2>/tmp/gnostr-git-log.log)
+[ -z $BLOCKHEIGHT ] && BLOCKHEIGHT=000000
 
 declare REPO
 REPO=$(pwd | grep -o '[^/]*$')
@@ -28,16 +31,16 @@ help(){
     exit
   fi
 	gnostr-git    log -h | sed -e "s/git/gnostr-git/g"
-	printf "   or: gnostr-git log [--hash-list] [-hl]\n"
-	printf "   or: gnostr-git log [--format] [-f]\n"
-	printf "   or: gnostr-git log [-gd]\n"
-	printf "   or: gnostr-git log [--commit-list] [-cl]\n"
+	printf "   or: gnostr-git    log [--hash-list] [-hl]\n"
+	printf "   or: gnostr-git    log [--format] [-f]\n"
+	printf "   or: gnostr-git    log [-gd]\n"
+	printf "   or: gnostr-git    log [--commit-list] [-cl]\n"
 	printf "   "
 	printf "   \n"
-	printf "gnostr-git log accepts any of the options accepted by git log\n"
+	printf "gnostr-git    log accepts any of the options accepted by git log\n"
 	echo "  try:"
-	echo "       gnostr-git log    --format='%C(auto)%H%<|(17)%gd/%s'"
-	echo "       gnostr-git reflog --format='%C(auto)%H%<|(17)%gd/commit:%s'"
+	echo "       gnostr-git    log --format='%C(auto)%H%<|(17)%gd/%s'"
+	echo "       gnostr-git    log --format='%C(auto)%H%<|(17)%gd/commit:%s'"
 	printf "\n"
 	printf "gnostr:\n"
 	printf "   protocol:\n"
@@ -52,7 +55,7 @@ help(){
 }
 for ((i=1; i<=$#; i++)); do
 ## positional first
-## gnostr-git-log --org gnostr-org
+## gnostr-git-log    --org gnostr-org
 if
 [[ ${!i} == "-org" ]] || [[ ${!i} == "--org" ]]; then
 ((i++))
@@ -83,28 +86,28 @@ fi
 fi
 echo ${!i}
 
-## git \
-#   log \
+##  git \
+#      log \
 #   --date='unix' \
 #   -10 \
 #   --pretty="%C(Yellow)%h %x09 %C(reset)%ad %x09 %C(Cyan)%an: %C(reset)%s" \
 #   --reverse
-## git \
-#   log \
+##  git \
+#      log \
 #   --date='unix' \
 #   -10 \
 #   --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%an/%C(reset)%s" \
 #   --reverse
 ##  git \
-#    log \
-#    --date='unix' \
-#    -10 \
-#    --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%n/%C(reset)%s" \
+#      log \
+#   --date='unix' \
+#   -10 \
+#   --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%n/%C(reset)%s" \
 #   --reverse
 ##  git \
-#    log \
-#    --date='unix' \
-#    -10 --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%C(reset)%s" \
+#      log \
+#   --date='unix' \
+#   -10 --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%C(reset)%s" \
 #   --reverse
 #
 #
@@ -120,26 +123,26 @@ fi
 
 if
 [[ "${!i}" == "--hash-list" ]] || [[ "${!i}" == "-hl" ]]; then
-gnostr-git    log      --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H'
+gnostr-git    log --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H'
 	exit
 elif
 [[ ${!i} == "--format" ]] || [[ ${!i} == "-f" ]]; then
-gnostr-git    log      --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H/%<|(17)%gd%s'
+gnostr-git    log --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H/%<|(17)%gd%s'
 	exit
 elif
 [[ ${!i} == "-gd" ]] || [[ ${!i} == "-g" ]]; then
-gnostr-git    log      --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H%<|(17)%gd'
+gnostr-git    log --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H%<|(17)%gd'
 	exit
 elif
 [[ ${!i} == "-cl" ]] || [[ ${!i} == "--commit-log" ]]; then
-gnostr-git log    --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H%<|(17)%gd/commit/%s'
+gnostr-git    log --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H%<|(17)%gd/commit/%s'
 	exit
 else
 	##silence is golden
 	exit
 fi
-## commit log
-#  gnostr-git log    --format='%C(auto)%H%<|(17)%gd/commit/%s'
+## commit    log
+#  gnostr-git    log --format='%C(auto)%H%<|(17)%gd/commit/%s'
 ## Example:
 ## gnostr/1694932217/24860cf8/dbe80abc-f0dac6f/1694975073
 ## echo $REMOTE_PATH;

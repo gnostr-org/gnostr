@@ -7,7 +7,9 @@ if (MSVC)
 else()
  cmake_minimum_required(VERSION 3.15)
 endif()
+
 set(CMAKE_BUILD_TYPE Debug)
+
 project (nostr_client_relay LANGUAGES CXX C)
 
 option(BUILD_RELEASE "BUILD_RELEASE" ON)
@@ -17,7 +19,7 @@ if(BUILD_RELEASE)
 endif()
 
 option(BUILD_STATIC "BUILD_STATIC" OFF)
-option(BUILD_GUI "BUILD_STATIC" OFF)
+option(BUILD_GUI "BUILD_GUI" OFF)
 option(BUILD_WEB "BUILD_WEB" OFF)
 option(USE_OPENSSL "set OFF to build without OpenSSL" ON)
 option(DEV_MODE "DEV_MODE" OFF)
@@ -36,11 +38,53 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 #//////////////////////////
 # external dependencies
 #//////////////////////////
+add_subdirectory(${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
 
+set(BOOST_INCLUDE_LIBRARIES thread filesystem system program_options asio date_time headers)
+set(BOOST_ENABLE_CMAKE ON)
+
+include_directories(${CMAKE_SOURCE_DIR}/ext/Simple-WebSocket-Server-v2.0.2)
 include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2/include)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2)
+## add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+
+## include(FetchContent)
+## FetchContent_Declare(
+##   Boost
+##   GIT_REPOSITORY https://github.com/boostorg/boost.git
+##   GIT_PROGRESS TRUE
+##   GIT_TAG boost-1.82.0
+## )
+## FetchContent_MakeAvailable(Boost)
+##
+## #INCLUDE_DIRECTORIES(${BOOST_LIBRARY_INCLUDES})
+## #include_directories(asio INTERFACE ${boost_asio_SOURCE_DIR}/include)
+##
+## # Add source to this project's executable.
+## add_executable (ComUdpProxy "ComUdpProxy.cpp" "ComUdpProxy.h" "Sender.h"  "Receiver.h" "Message.h")
+##
+## #target_include_directories(ComUdpProxy PRIVATE ${BOOST_LIBRARY_INCLUDES})
+##
+## target_link_libraries(ComUdpProxy
+##   PRIVATE
+##   Boost::asio
+##   Boost::filesystem
+##   Boost::thread
+##   Boost::program_options
+## )
+##
+## if (CMAKE_VERSION VERSION_GREATER 3.12)
+##   set_property(TARGET ComUdpProxy PROPERTY CXX_STANDARD 20)
+## endif()
+
+## find_package(
+##  Boost 1.81.0 REQUIRED
+##  COMPONENTS  filesystem system thread program_options
+## )
+## install(PROGRAMS ${Boost_LIBRARIES} DESTINATION /usr/local/lib)
 
 if(BUILD_WEB)
 if(MSVC)

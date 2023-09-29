@@ -147,6 +147,9 @@ web:
 	@cmake . -DBUILD_WEB=ON -DCMAKE_C_FLAGS=-g -DCMAKE_BUILD_TYPE=Release
 	@$(MAKE) gnostr-web
 gnostr-web-deploy:
+	@echo "\n"
+	@echo "gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=."
+	@echo "\n"
 	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=.
 
 

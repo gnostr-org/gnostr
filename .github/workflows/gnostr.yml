@@ -81,6 +81,8 @@ jobs:
       - run: V=1 make gnostr
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr-all
+      - run: V=1 cmake . -DBUILD_WEB=ON && make gnostr-web
+      - run: V=1 make install
 
       - name: Save deps
         id: cache-deps-save
