@@ -1,0 +1,34 @@
+{
+  "name": "gnostr.js",
+  "version": "0.0.1",
+  "description": "gnostr.js",
+  "main": "gnostr.js",
+  "directories": {
+    "doc": "doc",
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "./gnostr.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gnostr-org/gnostr.git"
+  },
+  "keywords": [
+    "gnostr",
+    "nostr",
+    "git",
+    "node",
+    "nodejs"
+  ],
+  "author": "@randymcmillan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gnostr-org/gnostr/issues"
+  },
+  "homepage": "https://github.com/gnostr-org/gnostr#readme",
+  "dependencies": {
+    "shelljs": "0.8.5"
+  }
+}
