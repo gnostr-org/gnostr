@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+from hashlib import sha256
+import subprocess
+import struct
+import sys
+import os
+program = sys.argv[0]
+def get_arg(index):
+    try:
+        sys.argv[index]
+    except IndexError:
+        return ''
+    else:
+        return sys.argv[index]
+arg1 = get_arg(1)
+arg2 = get_arg(2)
+arg3 = get_arg(3)
+arg4 = get_arg(4)
+if not arg1:
+  arg1 = '0000000000000000000000000000000000000000000000000000000000000000'
+  ## print(arg1);
+if not arg2:
+  arg2 = '0000000000000000000000000000000000000000000000000000000000000000'
+  ## print(arg2);
+## if not arg3:
+##   arg3 = '0000000000000000000000000000000000000000000000000000000000000000'
+##   ## print(arg3);
+def change_to_be_hex(s):
+    return int(s,base=16)
+def xor_two_str(str1,str2):
+    a = change_to_be_hex(str1)
+    b = change_to_be_hex(str2)
+    return hex(a ^ b)
+## gnostr_blockheight = "gnostr-blockheight"
+## blockheight        = subprocess.call(gnostr_blockheight, stdout=open(os.devnull, 'wb'))
+## blockheight_hash   = sha256(str(blockheight).encode('utf-8')).hexdigest()
+## print(xor_two_str(blockheight_hash, key))
+if arg1 and arg2:
+  print(xor_two_str(arg1, arg2)[2:])
+## if arg1 and arg3:
+##   print(xor_two_str(arg1, arg3))
+## if arg2 and arg3:
+##   print(xor_two_str(arg2, arg3))
