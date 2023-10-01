@@ -171,6 +171,16 @@ gnostr-set-relays:
 	$(CC) ./template/gnostr-set-relays.c -o gnostr-set-relays
 
 
+gnostr-cargo-binstall:
+	type -P cargo && \
+		cargo install cargo-binstall && \
+		cargo-binstall \
+		gnostr-cat \
+		gnostr-cli \
+		gnostr-command \
+		gnostr-grep \
+		gnostr-legit \
+		gnostr-sha256
 
 .PHONY:gnostr-build
 gnostr-build:## 	gnostr-build
