@@ -90,7 +90,7 @@ gnostr_tests
 exit;
 fi
 
-if ! command -v $gnostr_relayer; then
+if ! command -v $gnostr_relayer >/tmp/gnostr-relays.log; then
 	printf "gnostr-cat '%s' not found. Please install or set GNOSTR_RELAYER to your preferred relayer.\n" "$gnostr_relayer"
 	exit 1
 fi
