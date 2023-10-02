@@ -190,6 +190,8 @@ docker-start:venv
 
 detect:## 	install sequence got Darwin and Linux
 ##detect
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && type -P brew >/tmp/gnostr.log && \
+		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
 ##	detect uname -s uname -m uname -p and install sequence
 
 ## 	Darwin
@@ -237,6 +239,8 @@ ifneq ($(shell id -u),0)
 	@echo $(shell id -u -n) 'not root'
 	@echo
 endif
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && type -P brew >/tmp/gnostr.log && \
+		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get update                    || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install autoconf          || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install bison             || echo   "
@@ -334,7 +338,7 @@ endif
 
 tag:## 	git tag & git push
 tags:tag
-##tag 
+##tag
 ##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags || echo "unable to push tags..."
