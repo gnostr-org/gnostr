@@ -119,6 +119,10 @@ set(src ${src} src/database.cc)
 add_library(nostr ${src})
 add_dependencies(nostr configurator)
 
+##TODO:rename to gnostr-get-relays
+##     once tools are stable
+add_executable(gnostr-get-relays-c src/gnostr-get-relays.c)
+
 #//////////////////////////
 # link with libraries
 # lib_dep contains a cascade definition of all the libraries needed to link

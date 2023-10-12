@@ -5,6 +5,7 @@ gnostr-cli
 gnostr-client
 gnostr-command
 gnostr-get-relays
+gnostr-get-relays-c
 gnostr-git
 gnostr-git-instaweb
 gnostr-gnode
