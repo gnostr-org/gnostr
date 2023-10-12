@@ -1,3 +1,16 @@
+[![pre-release-matrix](https://github.com/gnostr-org/gnostr/actions/workflows/pre-release.yml/badge.svg)](https://github.com/gnostr-org/gnostr/actions/workflows/pre-release.yml)
+  
+
+---
+
+<details>
+<summary>checkout nostril</summary>
+<p>
+
+[github.com/jb55/nostril.git](https://github.com/jb55/nostril.git)
+
+[git://jb55.com/nostril](git://jb55.com/nostril)
+
 nostril(1)
 
 # NAME
@@ -105,4 +118,7 @@ nostril --mine-pubkey --pow <difficulty>
 ```
 ./nostril --envelope --sec <key> --content "this is reply message" --tag e <thread_id> --tag e <note_id> | websocat wss://relay.damus.io
 ```
+
+</p>
+</details>
 
