@@ -39,6 +39,10 @@ if (MSVC)
   set(src ${src} clock_gettime.h)
 endif()
 
+##TODO:rename to gnostr-get-relays
+##     once tools are stable
+add_executable(gnostr-get-relays-c src/gnostr-get-relays.c)
+
 #//////////////////////////
 #link with libraries
 #lib_dep contains a cascade definition of all the libraries needed to link
