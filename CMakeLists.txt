@@ -291,6 +291,12 @@ install(TARGETS gnostr-req
 install(TARGETS gnostr-req
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS gnostr-get-relays-c
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-get-relays-c
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
 
 install(TARGETS gnostr-tests
         CONFIGURATIONS Debug
