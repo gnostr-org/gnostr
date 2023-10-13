@@ -1,4 +1,4 @@
-##	
+##
 ##make cargo-*
 cargo-help:### 	cargo-help
 	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -29,10 +29,15 @@ cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1
 
+cargo-deps-gnostr-all:cargo-deps-gnostr-cat cargo-deps-gnostr-cli cargo-deps-gnostr-command cargo-deps-gnostr-grep cargo-deps-gnostr-legit cargo-deps-gnostr-sha256### 	cargo-deps-gnostr-all
 cargo-deps-gnostr-cat:### 	cargo-deps-gnostr-cat
 	cargo -Z unstable-options  -C deps/gnostr-cat install --path .
+cargo-deps-gnostr-cli:### 	cargo-deps-gnostr-cli
+	cargo -Z unstable-options  -C deps/gnostr-cli install --path .
 cargo-deps-gnostr-command:### 	cargo-deps-gnostr-command
 	cargo -Z unstable-options  -C deps/gnostr-command install --path .
+cargo-deps-gnostr-grep:### 	cargo-deps-gnostr-grep
+	cargo -Z unstable-options  -C deps/gnostr-grep install --path .
 cargo-deps-gnostr-legit:### 	cargo-deps-gnostr-legit
 	cargo -Z unstable-options  -C deps/gnostr-legit install --path .
 cargo-deps-gnostr-sha256:### 	cargo-deps-gnostr-sha256
