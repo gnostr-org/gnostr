@@ -95,7 +95,7 @@ def e_spigot ( n, offset ):
 
   return
 
-def e_spigot_test ( ):
+def e_spigot_test ( n=100 ):
 
 #*****************************************************************************80
 #
