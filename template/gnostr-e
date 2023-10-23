@@ -120,11 +120,16 @@ def e_spigot_test ( ):
   ## print ( '  Python version: %s' % ( platform.python_version ( ) ) )
   ## print ( '  Test e_spigot()' )
 
-  n = 101
   ## print ( '' )
   ## print ( '  Compute and print the first ', n, 'decimal digits of e.mantissa:' )
   ## print ( '' )
   e_spigot ( n, 0 )
+
+  print("0", get_arg(0));
+  print("1", get_arg(1));
+  print("2", get_arg(2));
+  print("3", get_arg(3));
+
 
   ## print ( '' )
   ## print ( '  Correct first 100 digits of e.mantissa:' )
