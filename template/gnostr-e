@@ -91,7 +91,7 @@ def e_spigot (n, offset):
   ## print ( '2.', end = '' ) ## we are only interested in mantissa
   ## simular to gnostr-pi
 
-  for j in range ( 1, n ):
+  for j in range ( 1, n + 1 ):
     a = a * 10
     q = 0
     for i in range ( n - 1, -1, -1 ):
@@ -104,24 +104,27 @@ def e_spigot (n, offset):
 
   return
 
+def about():
+  #*****************************************************************************80
+  #
+  ## e_spigot_test tests e_spigot.
+  #
+  #  Licensing:
+  #
+  #    This code is distributed under the GNU LGPL license.
+  #
+  #  Modified:
+  #
+  #    20 March 2021
+  #
+  #  Author:
+  #
+  #    John Burkardt
+  #
+  print("about")
+
 def e_spigot_test ( n=100 ):
 
-#*****************************************************************************80
-#
-## e_spigot_test tests e_spigot.
-#
-#  Licensing:
-#
-#    This code is distributed under the GNU LGPL license.
-#
-#  Modified:
-#
-#    20 March 2021
-#
-#  Author:
-#
-#    John Burkardt
-#
   import platform
 
   ## print ( '' )
@@ -132,13 +135,13 @@ def e_spigot_test ( n=100 ):
   ## print ( '' )
   ## print ( '  Compute and print the first ', n, 'decimal digits of e.mantissa:' )
   ## print ( '' )
+
+  ## print("0", get_arg(0));
+  ## print("1", get_arg(1));
+  ## print("2", get_arg(2));
+  ## print("3", get_arg(3));
+
   e_spigot ( n, 0 )
-
-  print("0", get_arg(0));
-  print("1", get_arg(1));
-  print("2", get_arg(2));
-  print("3", get_arg(3));
-
 
   ## print ( '' )
   ## print ( '  Correct first 100 digits of e.mantissa:' )
@@ -182,25 +185,9 @@ if ( __name__ == '__main__' ):
 
     hexify = lambda s: [hex(ord(i)) for i in list(str(s))]
     byteval = '\x60'.encode('ASCII');
-    ## print(hex(ord(byteval))) # b'\x60';
-    ## print(hexify(byteval));
-    ## print("Geeks : %2d, Portal : %5.2f" % (1, 05.333));
-    ## print("Total students : %3d, Boys : %2d" % (240, 120));
-    ## print("%7.3o" % (25)); # octal
-    ## print("%10.3E" % (356.08977))   # print exponential value
 
     argc=0;
     argc=len(sys.argv);
-    ## print("int(argc)=", int(argc));
-    ## print("str(len(sys.argv))=",str(len(sys.argv)));
-    ## print("bool(sys.argv[0:])=",bool(sys.argv[0:]));
-    ## print("bool(sys.argv[1:])=",bool(sys.argv[1:]));
-    ## print("bool(sys.argv[2:])=",bool(sys.argv[2:]));
-    ## print("bool(sys.argv[3:])=",bool(sys.argv[3:]));
-    ## print("bool(sys.argv[4:])=",bool(sys.argv[4:]));
-    ## print("bool(sys.argv[5:])=",bool(sys.argv[5:]));
-    ## print("This is the name of the program:", sys.argv[0]);
-    ## print("Argument List:", str(sys.argv));
 
     count = 0; ## len(sys.argv) - 1;
     argv = sys.argv[1:];
@@ -234,7 +221,10 @@ if ( __name__ == '__main__' ):
             get_arg(1) == "-test" or
             get_arg(1) == "-t" or
             get_arg(1) == "t"):
-            e_spigot_test ();exit(0);
+          if (get_arg(2)):
+            if (get_arg(3)):
+              e_spigot_test (int(sys.argv[2]), int(sys.argv[3])); exit();
+            e_spigot_test (int(sys.argv[2])); exit();
 
     if(get_arg(1)):
         argv1 = int(sys.argv[1]);
