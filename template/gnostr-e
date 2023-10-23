@@ -32,7 +32,7 @@ def e_101 ( ):
 #
 #    John Burkardt
 #
-  print ( '2.', end = '' )
+  ## print ( '2.', end = '' )
   print ( '7182818284', end = '' )
   print ( '5904523536', end = '' )
   print ( '0287471352', end = '' )
@@ -115,27 +115,27 @@ def e_spigot_test ( ):
 #
   import platform
 
-  print ( '' )
-  print ( 'e_spigot_test:' )
-  print ( '  Python version: %s' % ( platform.python_version ( ) ) )
-  print ( '  Test e_spigot()' )
+  ## print ( '' )
+  ## print ( 'e_spigot_test:' )
+  ## print ( '  Python version: %s' % ( platform.python_version ( ) ) )
+  ## print ( '  Test e_spigot()' )
 
   n = 101
-  print ( '' )
-  print ( '  Compute and print the first ', n, 'decimal digits of e:.' )
-  print ( '' )
+  ## print ( '' )
+  ## print ( '  Compute and print the first ', n, 'decimal digits of e.mantissa:' )
+  ## print ( '' )
   e_spigot ( n )
 
-  print ( '' )
-  print ( '  Correct first 101 digits of e:' )
-  print ( '' )
+  ## print ( '' )
+  ## print ( '  Correct first 100 digits of e.mantissa:' )
+  ## print ( '' )
   e_101 ( )
 #
 #  Terminate.
 #
-  print ( '' )
-  print ( 'e_spigot_test:' )
-  print ( '  Normal end of execution.' )
+  ## print ( '' )
+  ## print ( 'e_spigot_test:' )
+  ## print ( '  Normal end of execution.' )
 
   return
 
@@ -198,7 +198,7 @@ if ( __name__ == '__main__' ):
                                     "last ="])
     except:
         options = "";
-        print("Error Message ");
+        ## print("Error Message ");
         ## help();
 
     if (options):
@@ -208,24 +208,25 @@ if ( __name__ == '__main__' ):
             elif name in ['-l', '--last']:
                 last = value
 
-    ## print(first + " " + last)
-
-    ## print("argc=",argc);
     for arg in sys.argv:
         ## print("count=",count);
         ## print("sys.argv[count] =",sys.argv[count]);
-        if (get_arg(1) == "-h" or get_arg(1) == "--help"):
-            print("-h or --help", str(sys.argv[1])); print("get_arg(2)=", get_arg(2)); ## exit(0);
+        if (get_arg(1) == "--help" or
+            get_arg(1) == "-help" or
+            get_arg(1) == "-h" or
+            get_arg(1) == "h"):
+            help(); exit(0);
+        if (get_arg(1) == "--test" or
+            get_arg(1) == "-test" or
+            get_arg(1) == "-t" or
+            get_arg(1) == ""):
+            e_spigot_test ();exit(0);
 
-        ## if(get_arg(count)):
-        ##     print("sys.argv[count] =",sys.argv[count]);
-        ## count = count + 1;
-
-    ## a = np.ones ( n + 1, dtype = np.int32 )
     if(get_arg(1)):
         ## print("str(sys.argv[1]):", str(sys.argv[1]));
-        if sys.argv[1] == "-h" or sys.argv[1] == "-h":
-            print("-h --help", str(sys.argv[1]));
+        if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+            ## print("-h --help", str(sys.argv[1]));
+            help();
             exit(0);
         argv1 = int(sys.argv[1]);
         e_spigot ( argv1 );
