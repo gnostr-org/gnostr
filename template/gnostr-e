@@ -1,0 +1,243 @@
+#! /usr/bin/env python3
+
+import sys
+import getopt
+
+def help():
+    print("help"); exit();
+
+def get_arg(index):
+    try:
+        sys.argv[index]
+    except IndexError:
+        return ''
+    else:
+        return sys.argv[index]
+
+def e_101 ( ):
+
+#*****************************************************************************80
+#
+## e_101 prints the first 101 decimal digits of e.
+#
+#  Licensing:
+#
+#    This code is distributed under the GNU LGPL license.
+#
+#  Modified:
+#
+#    20 March 2021
+#
+#  Author:
+#
+#    John Burkardt
+#
+  print ( '2.', end = '' )
+  print ( '7182818284', end = '' )
+  print ( '5904523536', end = '' )
+  print ( '0287471352', end = '' )
+  print ( '6624977572', end = '' )
+  print ( '4709369995', end = '' )
+  print ( '9574966967', end = '' )
+  print ( '6277240766', end = '' )
+  print ( '3035354759', end = '' )
+  print ( '4571382178', end = '' )
+  print ( '5251664274' )
+
+  return
+
+def e_spigot ( n ):
+
+#*****************************************************************************80
+#
+## e_spigot implements the "e spigot" algorithm for decimal digits of e.
+#
+#  Licensing:
+#
+#    This code is distributed under the GNU LGPL license.
+#
+#  Modified:
+#
+#    25 February 2019
+#
+#  Author:
+#
+#    John Burkardt
+#
+#  Reference:
+#
+#    Stanley Rabinowitz, Stan Wagon,
+#    A spigot algorithm for the digits of pi,
+#    American Mathematical Monthly,
+#    Volume 102, Number 3, pages 195-203, March 1995.
+#
+#  Input:
+#
+#    integer N, the number of digits to compute.
+#
+  import numpy as np
+
+  a = np.ones ( n + 1, dtype = np.int32 )
+
+  ## print ( '2.', end = '' ) ## we are only interested in mantissa
+  ## simular to gnostr-pi
+
+  for j in range ( 1, n ):
+    a = a * 10
+    q = 0
+    for i in range ( n - 1, -1, -1 ):
+      a[i] = a[i] + q
+      q = ( a[i] // ( i + 2 ) )
+      a[i] = ( a[i] % ( i + 2 ) )
+    print ( q, end = '' )
+
+  print ( '' )
+
+  return
+
+def e_spigot_test ( ):
+
+#*****************************************************************************80
+#
+## e_spigot_test tests e_spigot.
+#
+#  Licensing:
+#
+#    This code is distributed under the GNU LGPL license.
+#
+#  Modified:
+#
+#    20 March 2021
+#
+#  Author:
+#
+#    John Burkardt
+#
+  import platform
+
+  print ( '' )
+  print ( 'e_spigot_test:' )
+  print ( '  Python version: %s' % ( platform.python_version ( ) ) )
+  print ( '  Test e_spigot()' )
+
+  n = 101
+  print ( '' )
+  print ( '  Compute and print the first ', n, 'decimal digits of e:.' )
+  print ( '' )
+  e_spigot ( n )
+
+  print ( '' )
+  print ( '  Correct first 101 digits of e:' )
+  print ( '' )
+  e_101 ( )
+#
+#  Terminate.
+#
+  print ( '' )
+  print ( 'e_spigot_test:' )
+  print ( '  Normal end of execution.' )
+
+  return
+
+def timestamp ( ):
+
+#*****************************************************************************80
+#
+## timestamp prints the date as a timestamp.
+#
+#  Licensing:
+#
+#    This code is distributed under the GNU LGPL license.
+#
+#  Modified:
+#
+#    21 August 2019
+#
+#  Author:
+#
+#    John Burkardt
+#
+  import time
+
+  t = time.time ( )
+  print ( time.ctime ( t ) )
+
+  return
+
+if ( __name__ == '__main__' ):
+
+    hexify = lambda s: [hex(ord(i)) for i in list(str(s))]
+    byteval = '\x60'.encode('ASCII');
+    ## print(hex(ord(byteval))) # b'\x60';
+    ## print(hexify(byteval));
+    ## print("Geeks : %2d, Portal : %5.2f" % (1, 05.333));
+    ## print("Total students : %3d, Boys : %2d" % (240, 120));
+    ## print("%7.3o" % (25)); # octal
+    ## print("%10.3E" % (356.08977))   # print exponential value
+
+    argc=0;
+    argc=len(sys.argv);
+    ## print("int(argc)=", int(argc));
+    ## print("str(len(sys.argv))=",str(len(sys.argv)));
+    ## print("bool(sys.argv[0:])=",bool(sys.argv[0:]));
+    ## print("bool(sys.argv[1:])=",bool(sys.argv[1:]));
+    ## print("bool(sys.argv[2:])=",bool(sys.argv[2:]));
+    ## print("bool(sys.argv[3:])=",bool(sys.argv[3:]));
+    ## print("bool(sys.argv[4:])=",bool(sys.argv[4:]));
+    ## print("bool(sys.argv[5:])=",bool(sys.argv[5:]));
+    ## print("This is the name of the program:", sys.argv[0]);
+    ## print("Argument List:", str(sys.argv));
+
+    count = 0; ## len(sys.argv) - 1;
+    argv = sys.argv[1:];
+    first = "";
+    last = "";
+    try:
+        options, args = getopt.getopt(argv, "f:l:",
+                                   ["first =",
+                                    "last ="])
+    except:
+        options = "";
+        print("Error Message ");
+        ## help();
+
+    if (options):
+        for name, value in options:
+            if name in ['-f', '--first']:
+                first = value
+            elif name in ['-l', '--last']:
+                last = value
+
+    ## print(first + " " + last)
+
+    ## print("argc=",argc);
+    for arg in sys.argv:
+        ## print("count=",count);
+        ## print("sys.argv[count] =",sys.argv[count]);
+        if (get_arg(1) == "-h" or get_arg(1) == "--help"):
+            print("-h or --help", str(sys.argv[1])); print("get_arg(2)=", get_arg(2)); ## exit(0);
+
+        ## if(get_arg(count)):
+        ##     print("sys.argv[count] =",sys.argv[count]);
+        ## count = count + 1;
+
+    ## a = np.ones ( n + 1, dtype = np.int32 )
+    if(get_arg(1)):
+        ## print("str(sys.argv[1]):", str(sys.argv[1]));
+        if sys.argv[1] == "-h" or sys.argv[1] == "-h":
+            print("-h --help", str(sys.argv[1]));
+            exit(0);
+        argv1 = int(sys.argv[1]);
+        e_spigot ( argv1 );
+
+    if(get_arg(2)):
+        ## print("str(sys.argvp[2]):", str(sys.argv[2]));
+        ## e_spigot ( str(sys.argv[2] ));
+        argv2 = int(sys.argv[2]);
+        e_spigot ( argv2 );
+
+    ## timestamp ( );
+    ## e_spigot_test ( );
+    ## timestamp ( )
+
+
