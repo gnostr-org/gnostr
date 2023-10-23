@@ -86,12 +86,12 @@ def e_spigot (n, offset):
 
   import numpy as np
 
-  a = np.ones ( n + 1, dtype = np.int32 )
+  a = np.ones ( n + offset + 1, dtype = np.int32 )
 
   ## print ( '2.', end = '' ) ## we are only interested in mantissa
   ## simular to gnostr-pi
 
-  for j in range ( 1, n + 1 ):
+  for j in range ( 1, n + offset + 1 ):
     a = a * 10
     q = 0
     for i in range ( n - 1, -1, -1 ):
@@ -136,10 +136,10 @@ def e_spigot_test ( n=100, offset=0 ):
   ## print ( '  Compute and print the first ', n, 'decimal digits of e.mantissa:' )
   ## print ( '' )
 
-  ## print("0", get_arg(0));
-  ## print("1", get_arg(1));
-  ## print("2", get_arg(2));
-  ## print("3", get_arg(3));
+  print("0", get_arg(0));
+  print("1", get_arg(1));
+  print("2", get_arg(2));
+  print("3", get_arg(3));
 
   e_spigot ( n, offset )
 
