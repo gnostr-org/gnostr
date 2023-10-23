@@ -46,7 +46,7 @@ def e_101 ( ):
 
   return
 
-def e_spigot ( n ):
+def e_spigot ( n, offset ):
 
 #*****************************************************************************80
 #
@@ -124,7 +124,7 @@ def e_spigot_test ( ):
   ## print ( '' )
   ## print ( '  Compute and print the first ', n, 'decimal digits of e.mantissa:' )
   ## print ( '' )
-  e_spigot ( n )
+  e_spigot ( n, 0 )
 
   ## print ( '' )
   ## print ( '  Correct first 100 digits of e.mantissa:' )
@@ -219,25 +219,23 @@ if ( __name__ == '__main__' ):
         if (get_arg(1) == "--test" or
             get_arg(1) == "-test" or
             get_arg(1) == "-t" or
-            get_arg(1) == ""):
+            get_arg(1) == "t"):
             e_spigot_test ();exit(0);
 
     if(get_arg(1)):
-        ## print("str(sys.argv[1]):", str(sys.argv[1]));
-        if sys.argv[1] == "-h" or sys.argv[1] == "--help":
-            ## print("-h --help", str(sys.argv[1]));
-            help();
-            exit(0);
         argv1 = int(sys.argv[1]);
-        e_spigot ( argv1 );
+    else:
+      argv1 = 100;
 
     if(get_arg(2)):
-        ## print("str(sys.argvp[2]):", str(sys.argv[2]));
-        ## e_spigot ( str(sys.argv[2] ));
         argv2 = int(sys.argv[2]);
-        e_spigot ( argv2 );
+    else:
+      argv2 = 0;
 
-    ## timestamp ( );
+    ## NOTE: we want offset * 4 ## see: gnostr-pi
+    e_spigot ( argv1, argv2);
+
+    ## timestamp ( ); ##TODO: repurpose weeble/wobble
     ## e_spigot_test ( );
     ## timestamp ( )
 
