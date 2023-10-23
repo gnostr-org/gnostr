@@ -46,35 +46,44 @@ def e_101 ( ):
 
   return
 
-def e_spigot ( n, offset ):
+def about ():
 
-#*****************************************************************************80
-#
-## e_spigot implements the "e spigot" algorithm for decimal digits of e.
-#
-#  Licensing:
-#
-#    This code is distributed under the GNU LGPL license.
-#
-#  Modified:
-#
-#    25 February 2019
-#
-#  Author:
-#
-#    John Burkardt
-#
-#  Reference:
-#
-#    Stanley Rabinowitz, Stan Wagon,
-#    A spigot algorithm for the digits of pi,
-#    American Mathematical Monthly,
-#    Volume 102, Number 3, pages 195-203, March 1995.
-#
-#  Input:
-#
-#    integer N, the number of digits to compute.
-#
+  #*****************************************************************************80
+  #
+  ## e_spigot implements the "e spigot" algorithm for decimal digits of e.
+  #
+  #  Licensing:
+  #
+  #    This code is distributed under the GNU LGPL license.
+  #
+  #  Modified:
+  #
+  #    25 February 2019
+  #
+  #  Author:
+  #
+  #    John Burkardt
+  #
+  #  Reference:
+  #
+  #    Stanley Rabinowitz, Stan Wagon,
+  #    A spigot algorithm for the digits of pi,
+  #    American Mathematical Monthly,
+  #    Volume 102, Number 3, pages 195-203, March 1995.
+  #
+  #  Input:
+  #
+  #    integer N, the number of digits to compute.
+  #
+  print("about");
+
+def e_spigot (n, offset):
+
+  ## print(get_arg(0));
+  ## print(get_arg(1));
+  ## print(get_arg(2));
+  ## print(get_arg(3));
+
   import numpy as np
 
   a = np.ones ( n + 1, dtype = np.int32 )
