@@ -123,7 +123,7 @@ def about():
   #
   print("about")
 
-def e_spigot_test ( n=100 ):
+def e_spigot_test ( n=100, offset=0 ):
 
   import platform
 
@@ -141,7 +141,7 @@ def e_spigot_test ( n=100 ):
   ## print("2", get_arg(2));
   ## print("3", get_arg(3));
 
-  e_spigot ( n, 0 )
+  e_spigot ( n, offset )
 
   ## print ( '' )
   ## print ( '  Correct first 100 digits of e.mantissa:' )
