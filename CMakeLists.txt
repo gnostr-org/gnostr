@@ -123,6 +123,8 @@ add_dependencies(nostr configurator)
 ##     once tools are stable
 add_executable(gnostr-get-relays-c src/gnostr-get-relays.c)
 
+add_executable(gnostr-pi src/gnostr-pi.c)
+
 #//////////////////////////
 # link with libraries
 # lib_dep contains a cascade definition of all the libraries needed to link
@@ -285,12 +287,20 @@ install(TARGETS gnostr-client
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
+install(TARGETS gnostr-pi
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-pi
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
 install(TARGETS gnostr-req
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-req
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
+
 install(TARGETS gnostr-get-relays-c
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)

@@ -29,7 +29,7 @@
 
 #include "include/openssl_hash.h"
 
-#define VERSION "0.0.13"
+#define VERSION "0.0.14"
 
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16
@@ -767,7 +767,11 @@ static void try_subcommand(int argc, const char *argv[])
 	if (strlen(sub) >= 1 && sub[0] != '-') {
 		snprintf(buf, sizeof(buf)-1, "gnostr-%s", sub);
 		execvp(buf, (char * const *)argv+1);
-	}
+  } else {
+
+    // printf("TODO:handle gnostr-sub-sub");
+
+  }
 }
 
 

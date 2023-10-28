@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+NOSTR_RELAYER=${NOSTR_RELAYER:-gnost-cat}
+FUZZER=${FUZZER:-fzf}
+
+check_cmd() {
+	if ! command -v $1 >&2 >/dev/null; then
+		printf "error: $1 is required. please install. \n"
+		exit 0
+	fi
+}
+
+if ! command -v $NOSTR_RELAYER >&2 >/dev/null; then
+	printf "error: nostr relayer '%s' not found, set \$NOSTR_RELAYER or install '%s'\n" $NOSTR_RELAYER $NOSTR_RELAYER
+	exit 1
+fi
+
+if ! command -v $FUZZER >&2 >/dev/null; then
+	printf "error: fuzzer '%s' not found, set \$FUZZER or install '%s'\n" $FUZZER $FUZZER
+	exit 1
+fi
+
+check_cmd "nostril"
+check_cmd "nostril-query"
+check_cmd "jq"
+
+usage() {
+	printf "usage: git-show-nostr [OPTIONS...]\n"
+	printf "\n"
+	printf "OPTIONS\n\n"
+	printf "     -O         output patches to a local file.\n"
+	printf "     -o name    output patches to a local file with a specific filename.\n"
+	printf "     -r relay   nostr relay to query. Uses 'git config nostr.relays' option by default\n"
+	printf "\n"
+	printf "Including query OPTIONS from nostril-query:\n\n"
+	nostril query -h | grep -A100 ^options:
+	exit 0
+}
+
+if [ "$1" == "--help" ]; then
+	usage
+	exit 1
+fi
+
+limit=20
+
+while true; do
+if [ -z $1 ]; then
+	break
+fi
+case "$1" in
+	-O)
+		writeout=1
+		shift
+		;;
+	-o)
+		writeout=1
+		fname=$OPTARG
+		shift
+		;;
+	-r)
+		relay=$2
+		shift
+		shift
+		;;
+	*)
+		break
+		;;
+esac
+done
+
+if [ -z $relay ]; then
+	relay="$(git config nostr.relays || :)"
+fi
+
+hashtag=$(git config nostr.hashtag || :)
+if [[ "$hashtag" != "" ]]; then
+	hashtag="-t $hashtag"
+fi
+
+if [ -z "$relay" ]; then
+	usage
+	exit 0
+fi
+
+target=$tag
+
+fullquery=$(nostril query --kinds 19691228 --limit $limit $hashtag "$@")
+
+if [ -z $fname ]; then
+	target=${target:-all}
+	outname="nostr-patches-$target.json"
+else
+	outname=$fname
+fi
+
+if [ -z $writeout ]; then
+	outname=$(mktemp)
+fi
+
+echo "$fullquery" | $NOSTR_RELAYER $relay | sort -u | jq -c '.[2]' > "$outname"
+
+if [ ! -z $writeout ]; then
+	printf "saved results to %s\n" "$outname" >&2
+fi
+
+pager="$(git config core.pager || :)"
+if [ ! -t 1 ]; then
+	pager=cat
+fi
+
+ev_count=$(wc -l < "$outname")
+if [ $ev_count = 1 ]; then
+	jq -r .content "$outname" | $pager
+	exit 1
+fi
+
+dateformatter=""
+if ! command -v datefmt >&2 >/dev/null; then
+	printf "install https://jb55.com/datefmt if you want nice relative timestamp formatting\n" >&2
+	dateformatter=cat
+else
+	dateformatter="datefmt --relative"
+fi
+
+evid=$(jq -r '
+def tag(name): .tags[] | select(.[0] == name) | .[1];
+
+. | [(.created_at | tostring), ((.|tag("t")) // " "), (.|tag("subject")), (.|tag("author")), .pubkey[0:20], "id:\(.id)"] | @tsv' "$outname" |
+sort -rn |
+$dateformatter |
+column -t -s $'\t' |
+$FUZZER |
+sed -E -n 's,.*id:([a-f0-9]{64}).*,\1,p'
+)
+
+q=$(printf 'select(.id == "%s") | .content' "$evid")
+jq -r "$q" "$outname" | $pager
+
+if [ -z $writeout ]; then
+	rm -f "$outname"
+fi
