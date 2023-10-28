@@ -143,11 +143,23 @@ libjq.a: deps/jq/.libs/libjq.a## 	libjq.a
 .PHONY:web
 web-deploy:gnostr-web-deploy
 web:
+	(\
+	if [ ! $(uname -s) = 'Darwin' ]; then \
+		if grep -q Microsoft /proc/version; then \
+			alias open='explorer.exe'; \
+		else \
+			alias open='xdg-open'; \
+		fi \
+	fi \
+	)
+	bash -c "echo $(shell which open)"
+
 	@devtools/refresh-submodules.sh web
 	@cmake . -DBUILD_WEB=ON -DCMAKE_C_FLAGS=-g -DCMAKE_BUILD_TYPE=Release
 	@$(MAKE) gnostr-web
 gnostr-web-deploy:
-	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=.
+	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=. & \
+    $(shell which open) http://0.0.0.0:80
 
 
 
