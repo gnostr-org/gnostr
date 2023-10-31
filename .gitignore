@@ -1,3 +1,5 @@
+build
+
 gnostr-*.patch
 gnostr
 gnostr-act
@@ -141,6 +143,27 @@ ext/wt-4.10.0/src/Wt_js.C
 ext/wt-4.10.0/src/Wt_xml.C
 ext/wt-4.10.0/wt_config.xml
 wostro.log.txt
+
+ext/Simple-WebSocket-Server-v2.0.2/bash_profile.log
+ext/wt-4.10.0/bash_profile.log
+ext/wt-4.10.0/examples/gitmodel/gitview.wt
+ext/wt-4.10.0/examples/wt-homepage/Home.wt
+ext/wt-4.10.0/examples/wt-homepage/bash_profile.log
+ext/wt-4.10.0/test/test.http
+ext/wt-4.10.0/test/test.mssqlserver
+ext/wt-4.10.0/test/test.sqlite3
+ext/wt-4.10.0/test/test.wt
+
+src/nostril/.envrc
+src/nostril/.github/
+src/nostril/.gitignore
+src/nostril/.gitmodules
+src/nostril/default.nix
+src/nostril/devtools/
+src/nostril/doc/
+src/nostril/nostril-query
+src/nostril/scripts/
+src/nostril/shell.nix
 
 tests.log.txt
 web/wt_config.xml
