@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 import sys
 
+def get_arg(index):
+    try:
+        sys.argv[index]
+    except IndexError:
+        return ''
+    else:
+        return sys.argv[index]
+
 # define a function to check if a number is a palindrome
-def is_palindrome(n):
+def gnostr_hexidrome(n):
     # convert the number to a string
     s = str(n)
     # check if the string is the same forwards and backwards
@@ -20,7 +28,7 @@ def loop(lb, ub):
     # loop through the range of numbers
     for n in range(start, end+1):
         # if the number is a palindrome, add it to the list
-        if is_palindrome(n):
+        if gnostr_hexidrome(n):
             palindromes.append(n)
 
     # print the list of palindromes
@@ -40,45 +48,48 @@ def loop(lb, ub):
             ## print('[{}]'.format(''.join(str(x)[2:] for x in hexlist)))
             print('{}'.format(''.join(str(x)[2:] for x in hexlist)))
 
+
+
+
+
+
 if (args_count := len(sys.argv)) == 3:
 
-    if int(sys.argv[1]) > int(sys.argv[2]):
-        ## print("int(sys.argv[1]) > int(sys.argv[2])");
-        lower_bound = int(sys.argv[2]);
-        upper_bound = int(sys.argv[1]);
+    if int(get_arg(1)) > int(get_arg(2)):
+        ## print("int(get_arg(1)) > int(get_arg(2))");
+        lower_bound = int(get_arg(2));
+        upper_bound = int(get_arg(1));
         loop(lower_bound, upper_bound)
 
-    if int(sys.argv[1]) < int(sys.argv[2]) or int(sys.argv[1]) == int(sys.argv[2]):
-        ## print("int(sys.argv[1]) < int(sys.argv[2])");
-        lower_bound = int(sys.argv[1]);
-        upper_bound = int(sys.argv[2]);
+    if int(get_arg(1)) < int(get_arg(2)) or int(get_arg(1)) == int(get_arg(2)):
+        ## print("int(get_arg(1)) < int(get_arg(2))");
+        lower_bound = int(get_arg(1));
+        upper_bound = int(get_arg(2));
         loop(lower_bound, upper_bound)
 
-elif args_count == 2:
+elif (args_count := len(sys.argv)) == 2:
 
-    if int(sys.argv[1]) > int(sys.argv[2]):
-        print("int(sys.argv[1]) > int(sys.argv[2])");
+    if int(get_arg(1)) > int(get_arg(2)):
+        print("int(get_arg(1)) > int(get_arg(2))");
         lower_bound = int(0);
-        upper_bound = int(sys.argv[2]);
+        upper_bound = int(get_arg(2));
         loop(lower_bound, upper_bound)
 
-    if int(sys.argv[1]) < int(sys.argv[2]):
-        print("int(sys.argv[1]) < int(sys.argv[2])");
+    if int(get_arg(1)) < int(get_arg(2)):
+        print("int(get_arg(1)) < int(get_arg(2))");
         lower_bound = int(0);
-        upper_bound = int(sys.argv[1]);
+        upper_bound = int(get_arg(1));
         loop(lower_bound, upper_bound)
 
-
-elif args_count > 2:
-
-    print("Usage:\n")
-    print("is_palindrome <int>\n")
-    print("is_palindrome <int> <int>\n")
+elif (args_count := len(sys.argv)) > 2:
+    print("Usage:")
+    print("gnostr-hexidrome <int>")
+    print("gnostr-hexidrome <int> <int>")
     raise SystemExit(0)
 
-elif args_count < 2:
+elif (args_count := len(sys.argv)) < 2:
 
-    print("Usage:\n")
-    print("is_palindrome <int>\n")
-    print("is_palindrome <int> <int>\n")
+    print("Usage:")
+    print("gnostr-hexidrome <int>")
+    print("gnostr-hexidrome <int> <int>")
     raise SystemExit(0)
