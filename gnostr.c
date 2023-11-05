@@ -100,9 +100,18 @@ void usage()
 {
 	printf("usage: gnostr [OPTIONS]\n");
 	printf("\n");
-	printf("  GIT OPTIONS\n");
+	printf("  GNOSTR-GIT:\n");
+	printf("  CONFIG:\n");
 	printf("\n");
+	printf("  gnostr-git config\n");
+	printf("  gnostr git config --global\n");
+	printf("  gnostr git config --global --add gnostr.secretkey $(gnostr-sha256 12345)\n");
+	printf("  gnostr git config --global --get gnostr.secretkey\n");
+	printf("  5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5\n");
 	printf("\n");
+	printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey)\n");
+	printf("\n");
+	printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey) --envelope --content \n");
 	printf("  RELAY OPTIONS\n");
 	printf("\n");
 	printf("\n");
@@ -123,6 +132,15 @@ void usage()
 	printf("      -e <event_id>                   shorthand for --tag e <event_id>\n");
 	printf("      -p <pubkey>                     shorthand for --tag p <pubkey>\n");
 	printf("      -t <hashtag>                    shorthand for --tag t <hashtag>\n");
+	printf("\n");
+	printf("\n");
+
+
+//gnostr-git config --global --get gnostr.secretkey
+
+// git config --global --add gnostr.secretkey
+// 0000000000000000000000000000000000000000000000000000000000000001
+
 	exit(0);
 }
 
