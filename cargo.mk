@@ -31,7 +31,10 @@ cargo-report:### 	cargo-report
 
 cargo-deps-gnostr-all:cargo-deps-gnostr-cat cargo-deps-gnostr-cli cargo-deps-gnostr-command cargo-deps-gnostr-grep cargo-deps-gnostr-legit cargo-deps-gnostr-sha256### 	cargo-deps-gnostr-all
 cargo-deps-gnostr-cat:### 	cargo-deps-gnostr-cat
-	cargo -Z unstable-options  -C deps/gnostr-cat install --path .
+	rustup-init -y -q --default-toolchain $(TOOLCHAIN) && \
+    source "$(HOME)/.cargo/env" && \
+    cd deps/gnostr-cat && $(MAKE) cargo-build-release cargo-install
+    ## cargo $(Z) deps/gnostr-cat install --path .
 cargo-deps-gnostr-cli:### 	cargo-deps-gnostr-cli
 	cargo -Z unstable-options  -C deps/gnostr-cli install --path .
 cargo-deps-gnostr-command:### 	cargo-deps-gnostr-command

@@ -31,6 +31,27 @@ endif
 
 HOMEBREW                                :=$(shell which brew || false)
 
+RUSTUP_INIT_SKIP_PATH_CHECK=yes
+TOOLCHAIN=stable
+Z=	##
+ifneq ($(toolchain),)
+
+ifeq ($(toolchain),nightly)
+TOOLCHAIN=nightly
+Z=-Z unstable-options
+endif
+
+ifeq ($(toolchain),stable)
+TOOLCHAIN=stable
+Z=	##
+endif
+
+endif
+
+export RUSTUP_INIT_SKIP_PATH_CHECK
+export TOOLCHAIN
+export Z
+
 ifeq ($(verbose),true)
 VERBOSE                                 :=-v
 else
