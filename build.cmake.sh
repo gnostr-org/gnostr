@@ -66,7 +66,8 @@ fi
 if [[ "$OSTYPE" == "msys"* ]]; then
 ./Debug/vostro --http-address=0.0.0.0 --http-port=8080  --docroot=.
 else
-$SCRIPTPATH/build/./vostro \
+$SCRIPTPATH/build/web/gnostr-web \
+--deploy-path=/web \
 --http-address=0.0.0.0 \
 --http-port=$PORT  \
 --docroot=. || echo "port busy?"
