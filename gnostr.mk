@@ -217,6 +217,9 @@ deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command/gnostr-com
 gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-command
 	cp $< $@ && exit;
 
+.PHONY:bins
+bins:
+	@cd bins && make cargo-b-release && make cargo-i
 
 deps/gnostr-legit/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-legit
