@@ -212,7 +212,7 @@ deps/gnostr-command/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-command
 deps/gnostr-command/gnostr-command:deps/gnostr-command/.git
 	cd deps/gnostr-command && \
-		make install
+		make cargo-b-release
 deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command/gnostr-command## 	gnostr-command
 gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-command
 	cp $< $@ && exit;
