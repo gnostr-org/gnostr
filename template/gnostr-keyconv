@@ -1,0 +1,234 @@
+#!/usr/bin/python3
+
+import pip
+
+while True:
+
+    try:
+        #import your modules here. !
+        from distutils.spawn import find_executable
+        from shutil import which
+        import hashlib
+        import shutil
+        import base58
+        import sys
+        import os
+
+        ## pip.main(['install', '-q', 'bip85-cli'])
+        break
+
+    except ImportError as err_mdl:
+
+        print((err_mdl.name))
+        pip.main(['install', err_mdl.name])
+
+## while True:
+##
+##     try:
+##         shutil.copy(os.path.abspath('gnostr-keyconv'), '/usr/local/bin/gnostr-keyconv')
+##
+##     except ImportError as err_mdl:
+##
+##         print((err_mdl.name))
+##         ## pip.main(['install', err_mdl.name])
+
+def in_path(name):
+    """Check whether `name` is on PATH."""
+    ## print(os.path.abspath(name))
+    ## print(os.path.dirname(os.path.abspath(name)))
+    return find_executable(name) is not None
+
+if in_path("gnostr-keyconv"):
+    True
+
+prefix_dict =	{
+  "xprv": "0488ade4", # Mainnet - P2PKH or P2SH  - m/44'/0'
+  "yprv": "049d7878", # Mainnet - P2WPKH in P2SH - m/49'/0'
+  "zprv": "04b2430c", # Mainnet - P2WPKH 	     - m/84'/0'
+  "Yprv": "0295b005", # Mainnet - Multi-signature P2WSH in P2SH
+  "Zprv": "02aa7a99", # Mainnet - Multi-signature P2WSH
+  "tprv": "04358394", # Testnet - P2PKH or P2SH  - m/44'/1'
+  "uprv": "044a4e28", # Testnet - P2WPKH in P2SH - m/49'/1'
+  "vprv": "045f18bc", # Testnet - P2WPKH         - m/84'/1'
+  "Uprv": "024285b5", # Testnet - Multi-signature P2WSH in P2SH
+  "Vprv": "02575048", # Testnet - Multi-signature P2WSH
+
+  'xpub': '0488b21e', # Mainnet - P2PKH or P2SH  - m/44'/0'
+  'ypub': '049d7cb2', # Mainnet - P2WPKH in P2SH - m/49'/0'
+  'zpub': '04b24746', # Mainnet - P2WPKH 	     - m/84'/0'
+  'Ypub': '0295b43f', # Mainnet - Multi-signature P2WSH in P2SH
+  'Zpub': '02aa7ed3', # Mainnet - Multi-signature P2WSH
+  'tpub': '043587cf', # Testnet - P2PKH or P2SH  - m/44'/1'
+  'upub': '044a5262', # Testnet - P2WPKH in P2SH - m/49'/1'
+  'vpub': '045f1cf6', # Testnet - P2WPKH         - m/84'/1'
+  'Upub': '024289ef', # Testnet - Multi-signature P2WSH in P2SH
+  'Vpub': '02575483'  # Testnet - Multi-signature P2WSH
+}
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+## xprv 0
+## REF: https://iancoleman.io/bip39/
+## sha256() empty hash value is used as entropy source
+##
+## Entropy:
+## e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+##
+## Raw Binary:
+## 11100011101 10000110001 00010000101 00110001111 11000001110 00001010010 01101011111 01111110100 11001000100 11001011011 11101110010 01001000010 01111010111 00100000111 10010001100 10010011011 10010011010 01100101001 00100101011 00110010001 10110111100 00101001010 11100001010 101
+##
+## Binary Checksum:
+## 01011101
+##
+## Word Indexes:
+## 1821, 1073, 133, 399, 1550, 82, 863, 1012, 1604, 1627, 1906, 578, 983, 263, 1164, 1179, 1178, 809, 299, 401, 1468, 330, 1802, 1373
+##
+## BIP39 Mnemonic:
+## together mail awful cradle scrub apart hip leader silk slice unusual embark kit can muscle nature nation gown century cram resource citizen throw produce
+##
+## BIP39 Seed:
+## 512f8b5659eab6fc5d374f6dd9baee1088b83be63a24d2976a210f16b1cebc738c5f848165b4c5674f280956cc099de4e37de88684aface56fc19d5c191f3485
+##
+## BIP32 Root Key:
+## xprv9s21ZrQH143K2adDUydUhh9twPi4jxoG4dPHKsVNcid2DJRbpfUuemEETVYhr91RGSQHvyED6REErWA19bLG4iRrbWPCFsNdMWswBgABd2N
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+## BIP85 Application
+## BIP39
+## BIP85 Mnemonic Language
+## English
+## BIP85 Mnemonic Length
+## 12
+## BIP85 Index
+## 0
+## BIP85 Child Key
+## problem sick produce useless fish rhythm panic main entry typical demise hotel
+
+## Derivation Path
+## Purpose
+## 44
+## Coin
+## 0
+## Account
+## 0
+## External / Internal
+## 0
+
+## Account Extended Private Key
+## xprv9z4Btz1nrdJPotVdoN5cpgQhkCSFNFfu3V2dVafAfKv52HXkYRBTLt2MTBk2HhY3bEAxuU3pQKuwid23iRxzsz6jhq5nXqYjUaebHrpAr5K
+## Account Extended Public Key
+## xpub6D3YJVYggzrh2Na6uPcdBpMSJEGjmiPkQhxEHy4nDfT3u5ru5xVhtgLqJUyEccFfgzCAd7Nh73PHEy3B4asn4MdKJP4SY32AcbVptXWuuUu
+## The BIP32 derivation path and extended keys are the basis for the derived addresses.
+## BIP32 Derivation Path
+## m/44'/0'/0'/0
+##
+## BIP32 Extended Private Key
+## xprvA11xZi3THUPzDKnhLMKpitHEkHwGA63kUbSbhhUZH7Wiu2qd1ADi93YFaUK9Yw2ztXj9Ybydob5o182fFsZczXum1QoStR41qvHuzqUJcwY
+## BIP32 Extended Public Key
+## xpub6E1JyDaM7qxHRosASNrq62DyJKmkZYmbqpNCW5tAqT3hmqAmYhXxgqrjRk2g9xifvnEcxuxWv2ACaYBWtWbxVuXf3UaYoF2RruGGM17EfJ6
+
+
+key_dict = {
+  "x": "xprv9s21ZrQH143K2adDUydUhh9twPi4jxoG4dPHKsVNcid2DJRbpfUuemEETVYhr91RGSQHvyED6REErWA19bLG4iRrbWPCFsNdMWswBgABd2N",
+  "y": "yprvABrGsX5C9jansspLKLR6unFQ7MrWgankyjuW7GPFzizuGQEq5KeUGptNUhWHr3fLg5X6gSpmZ5anjnmZsHkGrx7TTr5cqnC7dEwaaBut7hG",
+  "z": "zprvAWgYBBk7JR8GjB1T9hCj7sLuHKzxdCnFtrRitfH9NjNnKW44Kyp2ttYWVuTsqxKG5iduRvRL1jwLd5P8azAHfBo4LBn3Rh1bty1DxmUduAH",
+  "t": "tprv8ZgxMBicQKsPdPrk9YUysLmtFX8GyUqGQBJQCHuq6h7VzuAgp2pfAWbgNfiMrWPjdsw4w4qyFmp3KMhkGogCsmhT89bVvE6gGcdMdLRt9MK",
+  "u": "uprv8tXDerPXZ1QsUh3ryuGc5RsPRVGiv6pmKHpcygoiUhVP3zyv4gzDnaFpPsfwrR3f3X3sgYSXiSAbCeKJzW6Dg1P3zVHvW8vAYLh11wPUsjm",
+  "": "",
+  "": "",
+  "": "",
+  "": "",
+  "": "",
+  "": "",
+  "": "",
+}
+
+def supported_prefixes():
+    import json
+    print("\nSupported prefixes:\n");
+    print(json.dumps(prefix_dict, indent=4));
+    print(json.dumps(key_dict, indent=4));
+
+def help():
+    print("Usage:\n")
+    print("       gnostr-keyconv [-t, --tests]    - run tests()")
+    print("       gnostr-keyconv [-p, --prefixes] - print supported prefixes")
+    print("       gnostr-keyconv <key> <type>\n")
+    print("")
+    print("Tests Vectors:")
+    print("1:")
+    print("gnostr-keyconv zpub6qwqZGWt6Gqm9i2bY2ErmJcTfRHHYX4LeUeszP33bSH3zgNdGiD7LEg57BQp2k5EQ4Qr5UAhgG1DMRSMZSA44UTNy1rLTqa3qaSnT9GmdsF ypub")
+    print("2:")
+    print("gnostr-keyconv ypub6X7aFbqxwbJHJQqUhfTEZDWxVT8qbu4qjN8fCz9ADRuAwaZQ243YiB1w5yTE2qRJzRJ3Kza9DbefU8pnqjk3GEmn6g9usvkZZrP94VcBVdz xpub")
+    print("3:")
+    print("gnostr-keyconv xpub6CHJwwB3nukoT7eMsJfcM8RTKUzPfH5LpFcSRbFGqRXHtUkAmPsz67Mo4mVe2vmPanBEaWyakwJ7arDE83L2U16BELTVJ1w5J8KVfyMqtzE zpub")
+    print("4:")
+    print("gnostr-keyconv yprvAJ8Dr6K57Djz5vm1bdvEC5aDwRJMCSLzN9D4QbjYf6NC4nEFUWjJANhTEghL3npior1TjTXW8vcuiaXoRGH8ZrEBn62qzPxbVKn6x5oY5vq xprv")
+    print("5:")
+    print("gnostr-keyconv xprv9yHxYRe9xYCWEdZtmH8byzUimT9uFpMVT2gqdCqfH5zK1gR2DrZjYK3KDUjk3tAoQCteyyvwgGGMqHvEhZs7mcYaukLRQV97DbiTZSJRaKC zprv")
+    print("6:")
+    print("gnostr-keyconv zprvAcxV9kyzFuHTwDx8RzhrQAfj7PSo94LVHFjHBzdS36k57t3UjAtrnSMbFtev3hUeDV8GUw84bayTbs9N8xh9N5uneRjGaJn5m3qkLdQwiaZ yprv")
+
+def convert_key(key, target_prefix):
+  decoded_key_bytes = base58.b58decode_check(key)
+  target_key_bytes =  bytes.fromhex(prefix_dict[target_prefix]) + decoded_key_bytes[4:]
+  return base58.b58encode_check(target_key_bytes)
+
+def main(key, target_prefix):
+
+    if not key or not target_prefix:
+        help();
+        return "Insufficient parameters."
+
+    if key[1:4] != target_prefix[1:4]:
+        return "The key and the target prefix must be both public or both private."
+
+    if not key[:4] in prefix_dict:
+        return "Invalid key target version."
+
+    if not target_prefix in prefix_dict:
+        return "Invalid prefix target version."
+
+    return convert_key(key, target_prefix)
+
+def tests():
+
+    result = main("zpub6qwqZGWt6Gqm9i2bY2ErmJcTfRHHYX4LeUeszP33bSH3zgNdGiD7LEg57BQp2k5EQ4Qr5UAhgG1DMRSMZSA44UTNy1rLTqa3qaSnT9GmdsF", "ypub");
+    print("1:result");
+    print(result);
+    result = main("ypub6X7aFbqxwbJHJQqUhfTEZDWxVT8qbu4qjN8fCz9ADRuAwaZQ243YiB1w5yTE2qRJzRJ3Kza9DbefU8pnqjk3GEmn6g9usvkZZrP94VcBVdz", "xpub");
+    print("2:result");
+    print(result);
+    result = main("xpub6CHJwwB3nukoT7eMsJfcM8RTKUzPfH5LpFcSRbFGqRXHtUkAmPsz67Mo4mVe2vmPanBEaWyakwJ7arDE83L2U16BELTVJ1w5J8KVfyMqtzE", "zpub");
+    print("3:result");
+    print(result);
+    result = main("yprvAJ8Dr6K57Djz5vm1bdvEC5aDwRJMCSLzN9D4QbjYf6NC4nEFUWjJANhTEghL3npior1TjTXW8vcuiaXoRGH8ZrEBn62qzPxbVKn6x5oY5vq", "xprv");
+    print("4:result");
+    print(result);
+    result = main("xprv9yHxYRe9xYCWEdZtmH8byzUimT9uFpMVT2gqdCqfH5zK1gR2DrZjYK3KDUjk3tAoQCteyyvwgGGMqHvEhZs7mcYaukLRQV97DbiTZSJRaKC", "zprv");
+    print("5:result");
+    print(result);
+    result = main("zprvAcxV9kyzFuHTwDx8RzhrQAfj7PSo94LVHFjHBzdS36k57t3UjAtrnSMbFtev3hUeDV8GUw84bayTbs9N8xh9N5uneRjGaJn5m3qkLdQwiaZ", "yprv");
+    print("6:result");
+    print(result);
+
+try:
+    key = sys.argv[1]
+    if key == "-t" or key == "--tests":
+        tests();
+        exit();
+    if key == "-p" or key == "--prefixes":
+        supported_prefixes();
+        exit();
+    target_prefix = sys.argv[2]
+    result = main(key, target_prefix)
+    print(result)
+except IndexError:
+    help();
