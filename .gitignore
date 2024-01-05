@@ -102,6 +102,7 @@ ext/secp256k1-0.3.2/examples/CTestTestfile.cmake
 
 ext/wt-4.10.0/wt-config-version.cmake
 ext/wt-4.10.0/wt-config.cmake
+ext/wt-4.10.0/examples
 
 ext/wxWidgets-3.2.2.1
 

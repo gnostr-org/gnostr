@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 
 set -e
+#uxo pipefail
+
+##echo $1 $2
+WEEBLE=${gnostr-weeble:-}
+WOBBLE=${gnostr-wobble:-}
+#echo $WEEBLE
+#echo $WOBBLE
+
+ARG=${1:-}
+CONTENT=${2:-#gnostr}
+
+if [[ $ARG == "-h" ]];
+then
+  printf "gnostr-post help"; exit;
+fi
+if [[ $ARG == "--help" ]];
+then
+  printf "gnostr-post help"; exit
+fi
+if [[ $ARG == "help" ]];
+then
+  printf "gnostr-post help"; exit
+fi
 
 TMP=$(mktemp)
 
@@ -13,25 +36,32 @@ fi
 
 content="$(cat $TMP)"
 
-re="^[[:space:]]*$" 
+re="^[[:space:]]*$"
 if [[ "$content" =~ $re ]]; then
 	printf "note empty. aborting.\n" >&2
 	exit 2
 fi
 
 sec=""
-if command -v git; then
-	key=$(git config nostr.secretkey)
+if command -v gnostr-git >/dev/null; then
+	key=$(gnostr-git config gnostr.secretkey) || \
+  key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
+	if [ $key != "" ]; then
+		sec="--sec $key"
+	fi
+elif command -v git >/dev/null; then
+	key=$(git config nostr.secretkey) || \
+  key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
 	if [ $key != "" ]; then
 		sec="--sec $key"
 	fi
 fi
 
-note=$(gnostr --envelope $sec "$@" --content "$content")
+note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-wobble) --content "GNOSTR:$content")
 
-printf "relaying:\n" >&2
+##printf "relaying:\n" >&2
 printf "$note\n"
-<<<"$note" gnostr relay
+<<<"$note" gnostr-relays
 printf "done.\n" >&2
 
 rm -f "$TMP"

@@ -1,5 +1,5 @@
 [![pre-release-matrix](https://github.com/gnostr-org/gnostr/actions/workflows/pre-release.yml/badge.svg)](https://github.com/gnostr-org/gnostr/actions/workflows/pre-release.yml)
-  
+
 # gnostr: a git+nostr workflow utility
 
 ### install make:
@@ -167,5 +167,3 @@ nostril --mine-pubkey --pow <difficulty>
 
 </p>
 </details>
-
-

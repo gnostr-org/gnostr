@@ -11,6 +11,8 @@ usage() {
 	printf "usage: gnostr send [OPTIONS...] <commit> [GNOSTR OPTIONS...]\n\n"
 
 	printf "OPTIONS\n\n"
+	printf "     -h --help\n"
+	printf "     -v --version\n"
 	printf "     -r            Relay to broadcast to. Will use 'git config gnostr.relays' by default\n"
 	printf "     -d            Dry run. Just print event to stdout instead of relaying.\n"
 	printf "\n"
@@ -24,6 +26,9 @@ usage() {
 
 while getopts "dr:t:" o; do
     case "${o}" in
+        h)
+            usage
+            ;;
         r)
             relay=${OPTARG}
             ;;
@@ -71,7 +76,7 @@ id=$(jq -r '.[1].id' <<<"$json")
 
 if [ -n "$dryrun" ]; then
 	echo "$json"
-	printf "\nDRY RUN. printing event data\n" >&2
+	## printf "\nDRY RUN. printing event data\n" >&2
 elif [ -z "$relay" ]; then
 	echo "$json"
 	printf "\nRELAY NOT SET, not relaying. Use -r wss://relay.damus.io or 'git config --global gnostr.relays wss://relay.damus.io'\n" >&2

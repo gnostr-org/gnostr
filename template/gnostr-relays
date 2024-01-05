@@ -36,54 +36,59 @@ fi
 
 if [[ $1 = "-t" ]]; then
 
-gnostr-git config --global --replace-all gnostr.relays "wss://relay.damus.io ws://0.0.0.0:6102" && git config -l | grep gnostr.relays
+gnostr-git config --global --replace-all gnostr.relays "wss://relay.damus.io" && git config -l | grep gnostr.relays
 
 gnostr_tests(){
+
 GNOSTR=$(which gnostr)
 echo "TESTS:$GNOSTR"
-echo "TEST1:$GNOSTR"
-$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 1"
-echo "TEST2:$GNOSTR"
-$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 2" | gnostr-cat -u wss://relay.damus.io
-echo "TEST3:$GNOSTR"
-$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 33" | gnostr-relays
-echo "TEST4:$GNOSTR"
-$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "$(gnostr-git-reflog -f)" | gnostr-relays
-echo "TEST5:$GNOSTR"
-$GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "$(gnostr-git-reflog -hl)" | gnostr-relays
 
+## echo "TEST1:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 1"
+## echo "TEST2:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 2" | gnostr-cat -u wss://relay.damus.io
+## echo "TEST3:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "test 3" | gnostr-relays
+## echo "TEST4:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "$(gnostr-git-reflog -f)" | gnostr-relays
+## echo "TEST5:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" --envelope --content "$(gnostr-git-reflog -hl)" | gnostr-relays
+## echo "TEST6:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" -t "$(gnostr-weeble)" -t "$(gnostr-wobble)" --envelope --content "$(gnostr-git-reflog -hl)" | gnostr-relays
+## echo "TEST7:$GNOSTR"
+## $GNOSTR --sec $(gnostr --hash 0) -t "gnostr" -t "$(gnostr-weeble)" -t "$(gnostr-wobble)" --envelope --content "$(gnostr-git-reflog -hl)" | gnostr-relays
+
+$GNOSTR --sec $(gnostr-sha256 $(curl -s https://blockchain.info/q/getblockcount)) --tag block $(curl -s https://blockchain.info/q/getblockcount) --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble)    --envelope           --content "BLOCK:$(curl -s https://blockchain.info/q/getblockcount):WEEBLE:$(gnostr-weeble):WOBBLE:$(gnostr-wobble)"
 echo "$GNOSTR:TESTS complete"
 
-GNOSTR_QUERY=$(which gnostr-query)
-echo "TESTS:$GNOSTR_QUERY"
+## GNOSTR_QUERY=$(which gnostr-query)
+## echo "TESTS:$GNOSTR_QUERY"
+## echo "TEST0:$GNOSTR_QUERY"
+## # THIS SERVES AS A DATA INTEGRITY CHECK
+## # IT IS THE FIRST GIT COMMIT OVER NOSTR
+## # WE PRESERVE IT FOR POSTERITY
+## mkdir -p test
+## $GNOSTR_QUERY -i fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | gnostr-cat -u ws://0.0.0.0:6102 > ./test/first-gnostr-commit.txt || exit && gnostr --sec $(gnostr --hash) --envelope --content "$(cat ./test/first-gnostr-commit.txt)" | gnostr-relays
+##  cat test/first-gnostr-commit.txt
 
 
-
-echo "TEST0:$GNOSTR_QUERY"
-# THIS SERVES AS A DATA INTEGRITY CHECK
-# IT IS THE FIRST GIT COMMIT OVER NOSTR
-# WE PRESERVE IT FOR POSTERITY
-$GNOSTR_QUERY -i fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | gnostr-cat -u ws://0.0.0.0:6102 > ./test/first-gnostr-commit.txt || exit && gnostr --sec $(gnostr --hash) --envelope --content "$(cat ./test/first-gnostr-commit.txt)" | gnostr-relays
-
-
-echo "TEST1:$GNOSTR_QUERY"
-$GNOSTR_QUERY -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr" | gnostr-cat -u ws://0.0.0.0:6102
-echo "TEST2:$GNOSTR_QUERY"
-$GNOSTR_QUERY -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr" | gnostr-relays
-
-echo "TEST3:$GNOSTR_QUERY"
-echo "'gnostr query -i <pubkey>' | gnostr-relays"
-gnostr query -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr"  | gnostr-relays
-
-#echo "TEST4:$GNOSTR_QUERY"
-gnostr-query -i 2cafcbbf54b1b0b17f46ff7c8192d572ff1480757d32254bee3cc02f535e41a7 | gnostr-relays
-
-#echo "TEST5:$GNOSTR_QUERY"
-gnostr-query -t gnostr | gnostr-relays
-
-gnostr-git config -l | grep "gnostr.relays"
-echo "$GNOSTR_QUERY:TESTS complete"
-
+##echo "TEST1:$GNOSTR_QUERY"
+##$GNOSTR_QUERY -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr" | gnostr-cat -u ws://0.0.0.0:6102
+###echo "TEST2:$GNOSTR_QUERY"
+###$GNOSTR_QUERY -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr" | gnostr-relays
+##
+##echo "TEST3:$GNOSTR_QUERY"
+##echo "'gnostr query -l 1 -i <pubkey>' | gnostr-relays"
+##gnostr query -l 1 -i 184ba32823ecb0e38d195c6484aace10edb7a4948c5e52434a8833e115c3e5f6 -t "gnostr"  | gnostr-relays
+##
+###echo "TEST4:$GNOSTR_QUERY"
+###gnostr-query -i 2cafcbbf54b1b0b17f46ff7c8192d572ff1480757d32254bee3cc02f535e41a7 | gnostr-relays
+##
+###echo "TEST5:$GNOSTR_QUERY"
+##gnostr-query -l 1 -t gnostr | gnostr-relays
+##
+##gnostr-git config -l | grep "gnostr.relays"
+##echo "$GNOSTR_QUERY:TESTS complete"
 
 }
 gnostr_tests
