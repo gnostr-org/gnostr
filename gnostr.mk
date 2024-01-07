@@ -37,10 +37,31 @@ GTAR                                   :=$(shell which tar)
 endif
 export GTAR
 
+DOCS=\
+gnostr-act\
+gnostr-blockheight\
+gnostr-cli\
+gnostr-client\
+gnostr-get-relays-c\
+gnostr-get-relays\
+gnostr-git-log\
+gnostr-git-reflog\
+gnostr-gnode\
+gnostr-keyconv\
+gnostr-post\
+gnostr-query\
+gnostr-relays\
+gnostr-req\
+gnostr-send\
+gnostr-set-relays\
+gnostr-sha256\
+gnostr-weeble\
+gnostr-wobble\
+gnostr\
 
 ##all:
 #all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
-all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+all: submodules gnostr gnostr-git gnostr-get-relays ##gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
@@ -57,8 +78,40 @@ gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
 	git add --ignore-errors sources/*.md 2>/dev/null || echo && git add --ignore-errors *.md 2>/dev/null || echo
 #@git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
-doc/gnostr.1: README##
-	scdoc < $^ > $@
+doc-gnostr-act:
+	help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 #&& man doc/gnostr-act.1
+doc-gnostr-cat:
+	help2man gnostr-cat > doc/gnostr-cat.1 #&& man doc/gnostr-cat.1
+doc-gnostr-git:
+	help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 #&& man doc/gnostr-git.1
+.PHONY:doc
+doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+##help2man < $^ > $@
+	@(\
+	for b in $(DOCS);\
+  do touch doc/$$b.1;\
+  done;\
+  exit;\
+	)
+	(\
+	for b in $(DOCS);\
+  do echo doc/$$b.1 > /tmp/make-doc.log;\
+  done;\
+  exit;\
+	)
+	(\
+	for b in $(DOCS);\
+  do help2man $$b > doc/$$b.1;\
+  echo $$b;\
+  done;\
+  exit;\
+	)
+	#for b in $(DOCS); do echo $b; done; exit
+	#for b in $(DOCS); do touch doc/$(DOCS); done;exit
+	#for n in $(DOCS); do touch doc/$n.1; done
+	#bash -c "for n in $(ls gnostr-*   ); do touch doc/$n.1; done"
+	#for n in $(DOCS); do [ -x $n ] &&  help2man $n > doc/$n.1 || true; done
+	#bash -c "for n in $(ls gnostr-* ); do [ -x $n ] &&  help2man $n > doc/$n.1 || true; done"
 
 .PHONY: version
 version: gnostr.c## 	print version
@@ -221,27 +274,27 @@ gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-comma
 bins:
 	@cd bins && make cargo-b-release && make cargo-i
 
+.PHONY:tui
+tui:
+	@cd tui && make build-release install
+
 deps/gnostr-legit/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-legit
-#.PHONY:deps/gnostr-legit/gnostr-legit
-deps/gnostr-legit/gnostr-legit:deps/gnostr-legit/.git
+#.PHONY:deps/gnostr-legit/release/gnostr-legit
+deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/.git
 	cd deps/gnostr-legit && \
-		make cargo-build-release install
-deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/gnostr-legit## 	gnostr-legit
+		make cargo-b-release install
 gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
-
-
 
 deps/gnostr-sha256/.git:
 	@devtools/refresh-submodules.sh deps/gnostr-sha256
 #.PHONY:deps/gnostr-sha256/gnostr-sha256
 deps/gnostr-sha256/gnostr-sha256:deps/gnostr-sha256/.git
 	cd deps/gnostr-sha256 && \
-		make cargo-install
+		make cargo-b-release install
 deps/gnostr-sha256/target/release/gnostr-sha256:deps/gnostr-sha256/gnostr-sha256## 	gnostr-sha256
-.PHONY:
 gnostr-sha256:deps/gnostr-sha256/target/release/gnostr-sha256
 
 
@@ -490,6 +543,8 @@ gnostr-all:
 	$(MAKE) -j libsecp256k1.a
 	type -P gnostr         || $(MAKE) -j gnostr
 	$(MAKE) -j gnostr-install
+	type -P gnostr-post-event || $(MAKE) -j bins
+	type -P gnostr-tui        || $(MAKE) -j tui
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep

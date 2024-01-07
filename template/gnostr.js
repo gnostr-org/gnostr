@@ -1,17 +1,48 @@
 #!/usr/bin/env node
-'use strict';
 
-const version = 'v0.0.1'
-const { ArgumentParser } = require('argparse');
-//const { version } = require('./package.json');
+var shell = require('shelljs');
 
-const parser = new ArgumentParser({
-  description: 'Argparse example'
+if (!shell.which('git')) {
+  console.log(shel.which('git'));
+  shell.echo('Sorry, this script requires git');
+  shell.exit(1);
+}
+// console.log(shell.which('git'));
+if (!shell.which('gnostr')) {
+  console.log(shell.which('gnostr'));
+  shell.echo('Sorry, this script requires gnostr');
+  shell.exit(1);
+}
+// console.log(shell.which('gnostr'));
+if (!shell.which('gnostr-proxy')) {
+  console.log(shell.which('gnostr-proxy'));
+  shell.echo('Sorry, this script requires gnostr');
+  shell.exit(1);
+}
+// console.log(shell.which('gnostr-proxy'));
+if (!shell.which('gnostr-sha256')) {
+  console.log(shell.which('gnostr-sha256'));
+  shell.echo('Sorry, this script requires gnostr-sha256');
+  shell.exit(1);
+}
+// console.log(shell.which('gnostr-sha256'));
+
+var body = shell.exec('gnostr --sec $(gnostr-sha256)');
+//console.log(body);
+
+
+const { argv } = require('node:process');
+const process = require('node:process');
+const path = require('node:path');
+const { cwd } = require('node:process');
+// console.log(`cwd=${cwd()}`);
+
+// print process.argv
+argv.forEach((val, index) => {
+
+  if (`${val}` == `-h`)
+  { console.log(`HELP!!`); }
+  else
+  { console.log(`${index}: ${val}`); }
+
 });
-
-parser.add_argument('-v', '--version', { action: 'version', version });
-parser.add_argument('-f', '--foo', { help: 'foo bar' });
-parser.add_argument('-b', '--bar', { help: 'bar foo' });
-parser.add_argument('--baz', { help: 'baz bar' });
-
-console.dir(parser.parse_args());
