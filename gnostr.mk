@@ -231,10 +231,10 @@ gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
 
 
 gnostr-get-relays:
-	$(CC) ./template/gnostr-get-relays.c -o gnostr-get-relays
+	$(CC) ./src/gnostr-get-relays.c -o gnostr-get-relays
 
 gnostr-set-relays:
-	$(CC) ./template/gnostr-set-relays.c -o gnostr-set-relays
+	$(CC) ./src/gnostr-set-relays.c -o gnostr-set-relays
 
 
 gnostr-cargo-binstall:
