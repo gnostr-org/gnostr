@@ -277,7 +277,8 @@ bins:
 bins-test-post-event:
 	cat test/first-gnostr-commit.json | gnostr-post-event wss://relay.damus.io
 bins-test-fetch-by-id:
-		gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c
+		gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq || true
+		#gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq .content || true
 
 .PHONY:tui
 tui:
