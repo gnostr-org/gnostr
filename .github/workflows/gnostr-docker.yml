@@ -34,7 +34,7 @@ jobs:
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
-      - run: apt-get update && apt-get install build-essential libexpat1-dev libcurl4-openssl-dev git make python3 python-is-python3 sudo tcl zlib1g-dev -y
+      - run: apt-get update && apt-get install build-essential libexpat1-dev libcurl4-openssl-dev libssl-dev git make pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
       - run: printenv
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
@@ -56,3 +56,4 @@ jobs:
       - run: make bins tui gnostr-git gnostr-all gnostr-install all
       - run: make bins tui gnostr-git gnostr-all gnostr-install all install
       - run: gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
+      - run: make bins-test-fetch-by-id
