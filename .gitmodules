@@ -36,7 +36,7 @@
 [submodule "deps/gnostr-legit"]
 	path = deps/gnostr-legit
 	url = https://github.com/gnostr-org/gnostr-legit.git
-	branch = v0.0.6-pre
+	branch = master
 	ignore = dirty
 [submodule "deps/gnostr-proxy"]
 	path = deps/gnostr-proxy
