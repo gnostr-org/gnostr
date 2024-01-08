@@ -1,4 +1,4 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'gnostr-client'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
@@ -13,7 +13,7 @@
 #include "uuid.hh"
 
 using WssClient = SimpleWeb::SocketClient<SimpleWeb::WSS>;
-std::string log_program_name("nostro");
+std::string log_program_name("gnostr-client");
 std::vector<std::string> store;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ std::vector<std::string> store;
 
 void usage()
 {
-  std::cout << "./nostro [OPTIONS]" << std::endl;
+  std::cout << "gnostr-client [OPTIONS]" << std::endl;
   std::cout << "[OPTIONS]:" << std::endl;
   std::cout << "  --uri <wss URI>      Wss URI to send" << std::endl;
   std::cout << "  --req                message is a request (REQ). EVENT parameters are ignored" << std::endl;
@@ -35,6 +35,11 @@ void usage()
   std::cout << "  --content <string>   the content of the note" << std::endl;
   std::cout << "  --kind <number>      set kind" << std::endl;
   std::cout << "  --sec <hex seckey>   set the secret key for signing, otherwise one will be randomly generated" << std::endl;
+  exit(0);
+}
+void version()
+{
+  std::cout << "v0.0.0" << std::endl;
   exit(0);
 }
 
@@ -59,9 +64,14 @@ int main(int argc, const char* argv[])
   for (int i = 1; i < argc; ++i)
   {
     std::string arg = argv[i];
-    if (arg == "--help")
+    if (arg == "--help" || arg == "-h")
     {
       usage();
+      return 0;
+    }
+    else if (arg == "--version" || arg == "-v")
+    {
+      version();
       return 0;
     }
     else if (arg == "--req")

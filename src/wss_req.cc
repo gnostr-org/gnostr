@@ -64,6 +64,11 @@ int main(int argc, const char* argv[])
       usage();
       return 0;
     }
+    if (arg == "--version")
+    {
+      printf("v0.0.0");
+      return 0;
+    }
     else if (arg == "--req")
     {
       is_req = 1;

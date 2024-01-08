@@ -3,6 +3,96 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <time.h>
+
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
+#ifdef _OPENMP
+    #include <omp.h>     // This line won't add the library if you don't compile with -fopenmp option.
+    #ifdef _MSC_VER
+         // For Microsoft compiler
+         #define OMP_FOR(n) __pragma(omp parallel for if(n>10))
+    #else  // assuming "__GNUC__" is defined
+         // For GCC compiler
+         #define OMP_FOR(n) _Pragma("omp parallel for if(n>10)")
+    #endif
+#else
+    #define omp_get_thread_num() 0
+    #define OMP_FOR(n)
+#endif
+
+
+#ifdef _OPENMP
+#define N 20000
+#define THREADS_NB omp_get_max_threads()
+
+void init_arrays(double *a, double *b) {
+  memset(a, 0, sizeof(a));
+  memset(b, 0, sizeof(b));
+  for (int i = 0; i < N; i++) {
+    a[i] += 1.0;
+    b[i] += 1.0;
+  }
+}
+
+double func2(double i, double j) {
+  double res = 0.0;
+
+  while (i / j > 0.0) {
+    res += i / j;
+    i -= 0.1;
+    j -= 0.000003;
+  }
+  return res;
+}
+
+double single_thread(double *a, double *b) {
+  double res = 0;
+  int i, j;
+  for (i = 0; i < N; i++) {
+    for (j = 0; j < N; j++) {
+      if (i == j) continue;
+      res += func2(a[i], b[j]);
+    }
+  }
+  return res;
+}
+
+double multi_threads(double *a, double *b) {
+  double res = 0;
+  int i, j;
+  #pragma omp parallel for private(j) num_threads(THREADS_NB) reduction(+:res)
+  for (i = 0; i < N; i++) {
+    for (j = 0; j < N; j++) {
+      if (i == j) continue;
+      res += func2(a[i], b[j]);
+    }
+  }
+  return res;
+}
+
+int bench(void) {
+  double *a, *b;
+  a = (double *)calloc(N, sizeof(double));
+  b = (double *)calloc(N, sizeof(double));
+  init_arrays(a, b);
+
+  clock_t start_time = clock();
+  double res = single_thread(a, b);
+  double elapsed_time = (double)(clock() - start_time) / CLOCKS_PER_SEC;
+  printf("Default:  Done with %f in %f sd\n", res, elapsed_time);
+
+  start_time = clock();
+  res = multi_threads(a, b);
+  elapsed_time = (double)(clock() - start_time) / CLOCKS_PER_SEC;
+  printf("With OMP: Done with %f in %f sd\n", res, elapsed_time / THREADS_NB);
+
+  return elapsed_time;
+}
+#endif
 
 void int2bin(int n, int* bin, int* bin_size, const int bits);
 
@@ -73,6 +163,131 @@ http://web.comlab.ox.ac.uk/oucl/work/jeremy.gibbons/publications/spigot.pdf
 
 int main(int argc, char** argv) {
 
+if (DEBUG) { printf("main:%x\n",argc); }
+
+if (argc == 1) {
+
+  if (DEBUG) { printf("==1:%x\n",argc); }
+
+}
+if (argc == 2) {
+
+  if (DEBUG) { printf("==2:%x\n",argc); }
+
+}
+if (argc == 3) {
+
+  if (DEBUG) { printf("==3:%x\n",argc); }
+
+}
+if (argc >= 3) {
+
+  if (DEBUG) { printf(">=3:%x\n",argc); }
+
+}
+if (argc >= 2) {
+
+    if (DEBUG) {
+
+      printf(">=2:%x\n",argc);
+
+    }
+
+    #ifdef _OPENMP
+
+    if (!strcmp(argv[1], "--bench")) {
+
+      if (DEBUG) {
+
+        printf("BENCH:DEBUG:%x\n",argc);
+        printf("strcmp(argv[1],\"--bench\") = %x\n", !strcmp(argv[1], "--bench"));
+
+      } else {
+
+        printf("BENCH:ELSE:DEBUG:%x\n",argc);
+        printf("strcmp(argv[1],\"--bench\") = %x\n", !strcmp(argv[1], "--bench"));
+
+      }
+
+    }
+
+    #endif
+
+    if (!strcmp(argv[1], "--test")) {
+
+      if (DEBUG) {
+
+        printf("TEST:%x\n",argc);
+        printf("strcmp(argv[1],\"--test\") = %x\n", !strcmp(argv[1], "--test"));
+
+      }
+
+    }
+    if (!strcmp(argv[1], "-t")) {
+
+      if (DEBUG) {
+
+        printf("T:%x\n",argc);
+        printf("strcmp(argv[1],\"-t\") = %x\n", !strcmp(argv[1], "-t"));
+
+      };
+
+    }
+    if (!strcmp(argv[1], "--help")) {
+
+      if (DEBUG) {
+
+        printf("HELP:%x\n",argc);
+        printf("strcmp(argv[1],\"--help\") = %x\n", !strcmp(argv[1], "--help"));
+
+      }
+
+    }
+    if (!strcmp(argv[1], "-h")) {
+
+      if (DEBUG) {
+
+        printf("H:%x\n",argc);
+        printf("strcmp(argv[1],\"-h\") = %x\n", !strcmp(argv[1], "-h"));
+
+      }
+
+    }
+    if (!strcmp(argv[1], "--version")) {
+
+      if (DEBUG) {
+
+        printf("VERSION:%x\n",argc);
+        printf("strcmp(argv[1],\"--version\") = %x\n", !strcmp(argv[1], "--version"));
+
+      }
+
+    }
+    if (!strcmp(argv[1], "-v")) {
+
+      if (DEBUG) {
+
+        printf("V:%x\n",argc);
+        printf("strcmp(argv[1],\"-v\") = %x\n", !strcmp(argv[1], "-v"));
+
+      }
+
+    }
+
+  } else {
+
+      if (DEBUG) {
+
+        printf("ELSE:DEBUG:%x\n",argc);
+
+      } else {
+
+        //printf("ELSE:ELSE:%x\n",argc);
+
+      }
+
+}
+
 /*
    input 0 4 8 12 16 20 24 28 etc...
 */
@@ -80,7 +295,6 @@ int main(int argc, char** argv) {
 /*
    begin int2bin
 */
-
    char ch;
    ch = 'A';
    int binary[32];
