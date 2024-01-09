@@ -48,6 +48,7 @@ jobs:
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
       - run: make
+      - run: make nvm
       - run: make bins
       - run: make      tui
       - run: make gnostr-act
