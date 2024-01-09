@@ -1,5 +1,5 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
+cd `pwd`
 remote=$(git config --get remote.origin.url)
 echo "remote repository: $remote"
 sleep 4
@@ -23,7 +23,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
 ./bootstrap.sh
-./b2 --prefix=. variant=release 
+./b2 --prefix=. variant=release
 
 fi
 popd

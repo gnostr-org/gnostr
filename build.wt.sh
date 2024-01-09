@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+cd `pwd`
 # --http-address=0.0.0.0 --http-port=8080 --deploy-path=/hello --docroot=.
 # --http-address=0.0.0.0 --http-port=80 --docroot=.
 
@@ -38,9 +39,9 @@ make install
 
 fi
 
-popd 
-popd 
-popd 
+popd
+popd
+popd
 
 
 
