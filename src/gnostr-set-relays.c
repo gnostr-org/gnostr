@@ -13,6 +13,15 @@
 
 #define TEST_FUN_NAME STR(TEST_FUN)
 
+void help(){
+  printf("help");
+    exit(0);
+}
+void version(){
+  printf("v0.0.0");
+    exit(0);
+}
+
 void some_func(void)
 {
   //char command[256];
@@ -28,6 +37,29 @@ void another_func(void)
 
 int main(int argc, const char **argv) {
 
+    if (argc >= 2){
+    if (argv[0]){
+     //printf(" %s",argv[0]);
+    }
+    if (argv[1]){
+     //printf(" %s",argv[1]);
+    }
+    if (!strcmp(argv[1], "-h")){
+     //printf("argv[1]: %s",argv[1]);
+     help();
+    }
+    if (!strcmp(argv[1], "--help")){
+     //printf("argv[1]: %s",argv[1]);
+     help();
+    }
+    if (!strcmp(argv[1], "-v")){
+     version();
+    }
+    if (!strcmp(argv[1], "--version")){
+     version();
+    }
+    exit(0);
+  }
 
   TEST_FUN();
   //printf("TEST_FUN_NAME=%s\n", TEST_FUN_NAME);
