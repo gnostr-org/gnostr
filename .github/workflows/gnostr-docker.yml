@@ -23,20 +23,19 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-
     strategy:
       fail-fast: false
       matrix:
-        tag: ["latest", "slim-bullseye", "slim-bookworm"]
-
+        os: ["ubuntu-latest"]
+        tag: ["latest", "slim-bullseye"]
+    runs-on: ${{ matrix.os }}
     container: rust:${{ matrix.tag }}
 
     steps:
+      - run: apt-get update && apt-get install autoconf build-essential curl cmake jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release   git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
-      - run: apt-get update && apt-get install autoconf build-essential cmake libexpat1-dev libcurl4-openssl-dev libssl-dev git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
       - run: printenv
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
@@ -49,8 +48,10 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
+      - run: ./build.cmake.sh
       - run: cmake .
       - run: make
+      - run: V=1 make gnostr bins gnostr-sha256 &&  gnostr --sec $(gnostr-sha256) --content 'gnostr is already a fully functioning command line utility...'  | gnostr-post-event wss://nos.lol
       - run: make nvm
       - run: make bins
       - run: make      tui
@@ -70,5 +71,3 @@ jobs:
       - run: make                            install
       - run: ls /usr/local/bin
       - run: gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
-      - run: make bins-test-fetch-by-id
-      - run: gnostr --sec $(gnostr-sha256) --content "$(curl -sSL "https://mempool.space/api/mempool/recent")" | gnostr-post-event wss://relay.damus.io | jq

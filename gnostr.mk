@@ -23,7 +23,7 @@ ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
 #SUBMODULES                              = deps/secp256k1
-SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/hyper-nostr deps/hyper-sdk deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
+SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -67,24 +67,27 @@ all: submodules gnostr gnostr-git gnostr-get-relays ##gnostr-docs## 	make gnostr
 
 ##gnostr-docs:
 ##	docker-start doc/gnostr.1
-gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
+gnostr-docs:doc/gnostr.1 doc## 	docs: convert README to doc/gnostr.1
 #@echo docs
 	@bash -c 'if pgrep MacDown; then pkill MacDown; fi; 2>/dev/null'
 	@bash -c 'cat $(PWD)/sources/HEADER.md                >  $(PWD)/README.md 2>/dev/null'
 	@bash -c 'cat $(PWD)/sources/COMMANDS.md              >> $(PWD)/README.md 2>/dev/null'
 	@bash -c 'cat $(PWD)/sources/FOOTER.md                >> $(PWD)/README.md 2>/dev/null'
-	@type -P pandoc && pandoc -s README.md -o index.html 2>/dev/null || \
-		type -P docker && docker pull pandoc/latex:2.6 && \
-		docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 README.md
+	##@type -P pandoc && pandoc -s README.md -o index.html 2>/dev/null || \
+	##	type -P docker && docker pull pandoc/latex:2.6 && \
+	##	docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 README.md
 	git add --ignore-errors sources/*.md 2>/dev/null || echo && git add --ignore-errors *.md 2>/dev/null || echo
 #@git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
 doc-gnostr-act:gnostr-act
-	help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 #&& man doc/gnostr-act.1
+	[ -x $(shell which gnostr-act) ] || $(MAKE) gnostr-act
+	[ -x $(shell which gnostr-act) ] && help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 #&& man doc/gnostr-act.1
 doc-gnostr-cat:gnostr-cat
-	#help2man gnostr-cat > doc/gnostr-cat.1 #&& man doc/gnostr-cat.1
+	[ -x $(shell which gnostr-cat) ] || $(MAKE) gnostr-cat
+	[ -x $(shell which gnostr-cat) ] && help2man gnostr-cat > doc/gnostr-cat.1 #&& man doc/gnostr-cat.1
 doc-gnostr-git:gnostr-git
-	help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 #&& man doc/gnostr-git.1
+	[ -x $(shell which gnostr-git) ] || $(MAKE) gnostr-git
+	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 #&& man doc/gnostr-git.1
 .PHONY:doc
 doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
 ##help2man < $^ > $@
@@ -153,7 +156,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/hyper-nostr/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -208,8 +211,7 @@ web:
 	)
 	bash -c "echo $(shell which open)"
 
-	@devtools/refresh-submodules.sh web
-	@cmake . -DBUILD_WEB=ON -DCMAKE_C_FLAGS=-g -DCMAKE_BUILD_TYPE=Release
+	@cmake .  -DWT_INCLUDE="${WX_PREFIX}/lib/include" -DWT_CONFIG_H="${WX_PREFIX}/include" -DBUILD_WEB=ON -DBUILD_GUI=OFF -DCMAKE_C_FLAGS=-g -DCMAKE_BUILD_TYPE=Release
 	@$(MAKE) gnostr-web
 gnostr-web-deploy:
 	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=. & \
@@ -284,6 +286,7 @@ bins-test-fetch-by-id:
 .PHONY:tui gnostr-tui
 gnostr-tui:tui
 tui:
+	@devtools/refresh-submodules.sh tui
 	@cd tui && make build-release install
 
 deps/gnostr-legit/.git:gnostr-git
@@ -393,10 +396,10 @@ gnostr-grep:deps/gnostr-grep/target/release/gnostr-grep## 	gnostr-grep
 
 
 
-deps/hyper-sdk/.git:
-	@devtools/refresh-submodules.sh deps/hyper-sdk
-deps/hyper-nostr/.git:
-	@devtools/refresh-submodules.sh deps/hyper-nostr
+#deps/hyper-sdk/.git:
+#	@devtools/refresh-submodules.sh deps/hyper-sdk
+#deps/hyper-nostr/.git:
+#	@devtools/refresh-submodules.sh deps/hyper-nostr
 deps/openssl/.git:
 	@devtools/refresh-submodules.sh deps/openssl
 deps/gnostr-py/.git:

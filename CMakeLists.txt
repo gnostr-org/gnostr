@@ -155,7 +155,9 @@ install(PROGRAMS template/gnostr-send DESTINATION bin)
 install(PROGRAMS template/gnostr-snapshot DESTINATION bin)
 install(PROGRAMS template/gnostr-syndication DESTINATION bin)
 install(PROGRAMS template/gnostr-syndication-test DESTINATION bin)
+if(BUILD_WEB)
 install(PROGRAMS web/gnostr-web DESTINATION bin)
+endif()
 install(PROGRAMS web/gnostr-web-deploy DESTINATION bin)
 install(PROGRAMS template/gnostr-weeble DESTINATION bin)
 install(PROGRAMS template/gnostr-wobble DESTINATION bin)
@@ -374,12 +376,12 @@ install(TARGETS gnostr-tests
         RUNTIME DESTINATION /usr/local/bin)
 
 if(BUILD_WEB)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+  #install(TARGETS gnostr-web
+  #        CONFIGURATIONS Debug
+  #        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+  #install(TARGETS gnostr-web
+  #        CONFIGURATIONS Release
+  #        RUNTIME DESTINATION /usr/local/bin)
 endif()
 
 if (BUILD_GUI)
