@@ -34,7 +34,7 @@ jobs:
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
-      - run: apt-get update && apt-get install autoconf build-essential cmake libexpat1-dev libcurl4-openssl-dev libssl-dev git make pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
+      - run: apt-get update && apt-get install autoconf build-essential cmake libexpat1-dev libcurl4-openssl-dev libssl-dev git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
       - run: printenv
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
@@ -61,7 +61,7 @@ jobs:
       - run: make gnostr-org
       - run: make gnostr-proxy
       - run: make gnostr-sha256
-      - run: make secp256k1
+      - run: make libsecp256k1.a
       - run: make                 gnostr-all
       - run: make                     gnostr-install
       - run: make                         all
