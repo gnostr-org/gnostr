@@ -285,7 +285,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python-is-python3 || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install util-linux        || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install virtualenv        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install zlib              || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install zlib1g-dev        || echo   "
 
 ##	install gvm sequence
 	@rm -rf $(HOME)/.gvm || echo "not removing ~/.gvm"
@@ -295,7 +295,7 @@ endif
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
 ##	install rustup sequence
-	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default & . "$(HOME)/.cargo/env"
+	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default #& . "$(HOME)/.cargo/env"
 
 ##	install nvm sequence
 	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
