@@ -121,8 +121,8 @@ add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-add_executable(gnostr-get-relays-c src/gnostr-get-relays.c)
-add_executable(gnostr-set-relays-c src/gnostr-set-relays.c)
+add_executable(gnostr-get-relays src/gnostr-get-relays.c)
+add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
 
@@ -152,8 +152,6 @@ install(PROGRAMS template/gnostr-proxy-test DESTINATION bin)
 install(PROGRAMS template/gnostr-query DESTINATION bin)
 install(PROGRAMS template/gnostr-relays DESTINATION bin)
 install(PROGRAMS template/gnostr-send DESTINATION bin)
-install(PROGRAMS template/gnostr-set-relays DESTINATION bin)
-install(PROGRAMS template/gnostr-set-relays.c DESTINATION bin)
 install(PROGRAMS template/gnostr-snapshot DESTINATION bin)
 install(PROGRAMS template/gnostr-syndication DESTINATION bin)
 install(PROGRAMS template/gnostr-syndication-test DESTINATION bin)
@@ -319,17 +317,17 @@ install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-get-relays-c
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays-c
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-set-relays-c
+install(TARGETS gnostr-set-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-set-relays-c
+install(TARGETS gnostr-set-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
@@ -354,17 +352,17 @@ install(TARGETS gnostr-req
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-get-relays-c
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays-c
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-set-relays-c
+install(TARGETS gnostr-set-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-set-relays-c
+install(TARGETS gnostr-set-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
