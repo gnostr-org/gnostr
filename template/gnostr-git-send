@@ -2,6 +2,7 @@
 
 set -eo pipefail
 gnostr-set-relays
+which gnostr-cat >/dev/null || cargo install gnostr-cat || echo "install rustup"
 NOSTR_RELAYER=${NOSTR_RELAYER:-gnostr-cat}
 
 if ! command -v $NOSTR_RELAYER >&2 >/dev/null; then
@@ -16,25 +17,37 @@ check_cmd() {
 	fi
 }
 
-check_cmd "nostril"
+check_cmd "gnostr"
 
 usage() {
-	printf "usage: git-send-nostr [OPTIONS...] <commit> [NOSTRIL OPTIONS...]\n\n"
+	printf "usage: gnostr-git-send [options...] <commit> [gnostr options...]\n\n"
 
 	printf "OPTIONS\n\n"
 	printf "     -r            Relay to broadcast to. Will use 'git config nostr.relays' by default\n"
 	printf "     -d            Dry run. Just print event to stdout instead of relaying.\n"
 	printf "\n"
-	printf "     any other nostril option is supported here:\n\n"
-	printf "NOSTRIL OPTIONS\n"
-	nostril | sed '1,/OPTIONS/d'
+	printf "     any other gnostr option is supported here:\n\n"
+	printf "GNOSTR OPTIONS\n"
+	gnostr | sed '1,/OPTIONS/d'
 	printf "\nEXAMPLES\n\n"
-	printf "git send-nostr -d HEAD^- -t nostril -t nostrildev --pow 15\n\n"
+	printf "gnostr-git-send -d HEAD^- -t gnostr -t gnostr-git-send --pow 15\n\n"
 	exit 0
+}
+version() {
+	printf "v0.0.0"
 }
 
 while getopts "dr:t:" o; do
     case "${o}" in
+        h)
+            usage
+            ;;
+        help)
+            usage
+            ;;
+        v)
+            version
+            ;;
         r)
             relay=${OPTARG}
             ;;
@@ -53,7 +66,7 @@ shift $((OPTIND-1))
 
 
 if [ -z $relay ]; then
-	relay=$(git config gnostr.relays || :)
+  relay=$(git config gnostr.relays) || relay=$(gnostr-git config gnostr.relays);
 	if [[ $relay == "" ]]; then
 		unset relay
 	fi
@@ -81,7 +94,7 @@ fi
 patch="$(git format-patch --stdout $commit)"
 subject=$(<<<"$patch" grep "^Subject:"| head -n1 | sed 's,^Subject: ,,')
 author=$(<<<"$patch" grep "^From:"| head -n1 | sed 's,^From: ,,')
-json=$(nostril --envelope $sec --kind 19691228 $hashtag --tag author "$author" --tag subject "$subject" --content "$patch" "$@")
+json=$(gnostr --envelope $sec --kind 19691228 $hashtag --tag author "$author" --tag subject "$subject" --content "$patch" "$@")
 
 id=$(jq -r '.[1].id' <<<"$json")
 
