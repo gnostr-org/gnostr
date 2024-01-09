@@ -34,7 +34,7 @@ jobs:
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
-      - run: apt-get update && apt-get install build-essential cmake libexpat1-dev libcurl4-openssl-dev libssl-dev git make pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
+      - run: apt-get update && apt-get install autoconf build-essential cmake libexpat1-dev libcurl4-openssl-dev libssl-dev git make pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
       - run: printenv
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
@@ -48,13 +48,29 @@ jobs:
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
       - run: make
-      - run: make gnostr-legit
       - run: make bins
       - run: make      tui
-      - run: make          gnostr-git
-      - run: make                     gnostr-all
-      - run: make                                gnostr-install
-      - run: make                                               all
-      - run: make                                                   install
+      - run: make gnostr-act
+      - run: make gnostr-aio
+      - run: make gnostr-cat
+      - run: make gnostr-cli
+      - run: make gnostr-command
+      - run: make gnostr-git
+      - run: make gnostr-grep
+      - run: make gnostr-legit
+      - run: make gnostr-lfs
+      - run: make gnostr-org
+      - run: make gnostr-proxy
+      - run: make gnostr-py
+      - run: make gnostr-sha256
+      - run: make hyper-nostr
+      - run: make hyper-sdk
+      - run: make secp256k1
+      - run: make                 gnostr-all
+      - run: make                     gnostr-install
+      - run: make                         all
+      - run: make                            install
       - run: gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
       - run: make bins-test-fetch-by-id
+
+      - run: gnostr --sec $(gnostr-sha256) --content "$(curl -sSL "https://mempool.space/api/mempool/recent")" | gnostr-post-event wss://relay.damus.io | jq
