@@ -171,3 +171,10 @@ web/wt_config.xml
 web/APP_KEY
 .gnostr/org
 .gnostr/web
+
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target
