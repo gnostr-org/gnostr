@@ -79,11 +79,11 @@ gnostr-docs:docker-start doc/gnostr.1## 	docs: convert README to doc/gnostr.1
 	git add --ignore-errors sources/*.md 2>/dev/null || echo && git add --ignore-errors *.md 2>/dev/null || echo
 #@git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
-doc-gnostr-act:
+doc-gnostr-act:gnostr-act
 	help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 #&& man doc/gnostr-act.1
-doc-gnostr-cat:
-	help2man gnostr-cat > doc/gnostr-cat.1 #&& man doc/gnostr-cat.1
-doc-gnostr-git:
+doc-gnostr-cat:gnostr-cat
+	#help2man gnostr-cat > doc/gnostr-cat.1 #&& man doc/gnostr-cat.1
+doc-gnostr-git:gnostr-git
 	help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 #&& man doc/gnostr-git.1
 .PHONY:doc
 doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
