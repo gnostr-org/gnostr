@@ -271,7 +271,8 @@ deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command/gnostr-com
 gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-command
 	cp $< $@ && exit;
 
-.PHONY:bins
+.PHONY:bins gnostr-bins
+gnostr-bins:bins
 bins:
 	@cd bins && make cargo-b-release && make cargo-i
 bins-test-post-event:
@@ -280,7 +281,8 @@ bins-test-fetch-by-id:
 		gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq || true
 		#gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq .content || true
 
-.PHONY:tui
+.PHONY:tui gnostr-tui
+gnostr-tui:tui
 tui:
 	@cd tui && make build-release install
 
