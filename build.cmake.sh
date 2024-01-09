@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+cd `pwd`
 PORT=8080
 #echo ${!#}
 if [[ $1 == "-p" ]];then
