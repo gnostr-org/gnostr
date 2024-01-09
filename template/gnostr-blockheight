@@ -1,20 +1,50 @@
 #!/usr/bin/env bash
 
-## We try a local node first
-## then mempool.space
-## then blochchain.info
-## finally docs-demo.btc.quiknode.pro
+function help(){
+
+printf "Get current bitcoin blockcount/height\n"
+printf "We try a local node first\n"
+printf "then mempool.space\n"
+printf "then blochchain.info\n"
+printf "finally docs-demo.btc.quiknode.pro\n"
+
+}
 
 declare -a BLOCKHEIGHT
+BLOCKHEIGHT=000000
+ARG=${1:-}
+CONTENT=${2:-#gnostr}
+
+if [[ $ARG == "-h" ]];
+then
+  help;exit;
+fi
+if [[ $ARG == "--help" ]];
+then
+  help;exit;
+fi
+if [[ $ARG == "help" ]];
+then
+  help;exit;
+fi
+if [[ $ARG == "-v" ]];
+then
+  printf "v0.0.0"; exit
+fi
+if [[ $ARG == "--version" ]];
+then
+  printf "v0.0.0"; exit
+fi
+
 function gnostr_blockheight(){
-	
+
 	type -P bitcoin-cli >/tmp/gnostr.log && \
 	BLOCKHEIGHT=$(bitcoin-cli getblockcount 2>/tmp/gnostr.log) >/tmp/gnostr.log || \
 	BLOCKHEIGHT=$(curl -s "https://mempool.space/api/blocks/tip/height") || \
 	BLOCKHEIGHT=$(curl -s https://blockchain.info/q/getblockcount 2>/dev/null) || \
 	BLOCKHEIGHT=$(curl -s https://docs-demo.btc.quiknode.pro/   -X POST   -H "Content-Type: application/json"   --data '{ "method": "getblockcount" }' 2>/tmp/gnostr.log | jq --arg v "$result" '.result')
 	echo $BLOCKHEIGHT
-	#return $BLOCKHEIGHT
+	return $BLOCKHEIGHT
 
 }
 gnostr_blockheight

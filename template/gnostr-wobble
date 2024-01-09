@@ -12,8 +12,7 @@ declare -a CURRENT_BRANCH
 REPO_NAME=$(pwd | grep -o "[^/]*$")
 CURRENT_BRANCH=$(git branch --show-current)
 FULLPATH=$PWD
-source gnostr-nonce
-
+#source gnostr-nonce
 function get_time(){
 
 	TIME=$(date +%s)
@@ -32,5 +31,33 @@ function get_wobble(){
 	WOBBLE=$(expr $TIME % $BLOCKHEIGHT)
 	echo $WOBBLE
 }
-get_wobble
 
+function get_help(){
+
+  #get_wobble
+
+  #printf "gnostr-wobble\n";
+  printf "WOBBLE=TIME mod BLOCKHEIGHT"
+  exit;
+}
+if [[ $1 == "-h" ]];
+then
+  get_help
+fi
+if [[ $1 == "--help" ]];
+then
+  get_help
+fi
+if [[ $1 == "help" ]];
+then
+  get_help
+fi
+if [[ $1 == "-v" ]];
+then
+  printf "v0.0.0"; exit
+fi
+if [[ $1 == "--version" ]];
+then
+  printf "v0.0.0"; exit
+fi
+get_wobble

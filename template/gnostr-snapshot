@@ -130,4 +130,3 @@ for ((i=1; i<=$#; i++)); do
   fi
 exit
 done
-default

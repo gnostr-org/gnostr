@@ -13,21 +13,16 @@ RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
 echo $RELAYS; exit
 fi
 
-if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-echo "USAGE:\n"
-echo \
-    "gnostr --sec \$(gnostr --hash) -t gnostr --envelope --content '\$(gnostr get-relays)'"
-echo \
-    "gnostr --sec \$(gnostr --hash) -t 'gnostr' --envelope --content '\$(gnostr get relays)' | gnostr-relays"
-echo \
-    "gnostr-git config --global --replace-all gnostr.relays '\$(gnostr-get-relays)' && git config -l | grep gnostr.relays"
-echo \
-    "gnostr-git config --global --replace-all gnostr.relays '\$(gnostr get-relays)' && git config -l | grep gnostr.relays"
-exit
+if [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
+  echo "v0.0.1"; exit
 fi
-
-
-## default
+if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+  echo "gnostr-get-relays"
+  echo "gnostr --sec \$(gnostr --hash) -t gnostr --envelope --content '\$(gnostr get-relays)'"
+  echo "gnostr --sec \$(gnostr --hash) -t 'gnostr' --envelope --content '\$(gnostr get relays)' | gnostr-relays"
+  echo "gnostr-git config --global --replace-all gnostr.relays '\$(gnostr-get-relays)' && git config -l | grep gnostr.relays"
+  echo "gnostr-git config --global --replace-all gnostr.relays '\$(gnostr get-relays)' && git config -l | grep gnostr.relays"
+else
 RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/[{}]/''/g' |
     sed -e 's/\[/''/g' |
@@ -35,3 +30,4 @@ RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/"//g'
     ) 2>/dev/null
 echo $RELAYS; exit
+fi

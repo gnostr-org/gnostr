@@ -1,43 +1,15 @@
 #!/usr/bin/env bash
-
-mkdir -p .gnostr
-
-declare ORG
-
-declare WEEBLE
-WEEBLE=$(gnostr-weeble)
-declare WOBBLE
-WOBBLE=$(gnostr-wobble)
-declare BLOCKHEIGHT
-BLOCKHEIGHT=$(gnostr-blockheight)
-
-declare REPO
-REPO=$(pwd | grep -o '[^/]*$')
-declare BRANCH
-BRANCH=$(git branch --show-current)
-declare UTC_SECS
-UTC_SECS=$(date +%s)
-
-declare REMOTE_PATH
-REMOTE_PATH=$REPO/$WEEBLE/$WOBBLE/$BLOCKHEIGHT/$BRANCH
-
 help(){
-  if [ ! -z $ORG ]; then
-    echo "$ORG help"
-	  printf "gnostr-git [-org] [--org]\n"
-    exit
-  fi
 	gnostr-git    log -h | sed -e "s/git/gnostr-git/g"
-	printf "   or: gnostr-git log [--hash-list] [-hl]\n"
-	printf "   or: gnostr-git log [--format] [-f]\n"
-	printf "   or: gnostr-git log [-gd]\n"
-	printf "   or: gnostr-git log [--commit-list] [-cl]\n"
+	printf "   or: gnostr-git    log [--hash-list] [-hl]\n"
+	printf "   or: gnostr-git    log [--format] [-f]\n"
+	printf "   or: gnostr-git    log [-gd]\n"
 	printf "   "
 	printf "   \n"
-	printf "gnostr-git log accepts any of the options accepted by git log\n"
+	printf "gnostr-git    log accepts any of the options accepted by gnostr-git    log\n"
 	echo "  try:"
-	echo "       gnostr-git log    --format='%C(auto)%H%<|(17)%gd/%s'"
-	echo "       gnostr-git reflog --format='%C(auto)%H%<|(17)%gd/commit:%s'"
+	echo "       gnostr-git log    --format='%C(auto)%H%<|(17)%gd/commit:%s'"
+	echo "       gnostr-git    log --format='%C(auto)%H%<|(17)%gd/commit:%s'"
 	printf "\n"
 	printf "gnostr:\n"
 	printf "   protocol:\n"
@@ -51,97 +23,28 @@ help(){
 	exit
 }
 for ((i=1; i<=$#; i++)); do
-## positional first
-## gnostr-git-log --org gnostr-org
-if
-[[ ${!i} == "-org" ]] || [[ ${!i} == "--org" ]]; then
-((i++))
-if [ -z ${!i} ]; then
-  ORG=help
-	help
-	exit
-fi
-if
-	[[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
-  ORG=help
-	help
-	exit
-fi
-ORG=${!i}
-((i++))
-## echo $ORG
-## echo ${!i}
-if [[ ${!i} =~ ^[0-9]+$ ]]; then
-  declare DEPTH
-  DEPTH=${!i}
-   echo "${!i} is a number"
-   echo DEPTH=$DEPTH
-((i++))
-else
-   echo "${!i} is not a number"
-fi
-fi
-echo ${!i}
-
-## git \
-#   log \
-#   --date='unix' \
-#   -10 \
-#   --pretty="%C(Yellow)%h %x09 %C(reset)%ad %x09 %C(Cyan)%an: %C(reset)%s" \
-#   --reverse
-## git \
-#   log \
-#   --date='unix' \
-#   -10 \
-#   --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%an/%C(reset)%s" \
-#   --reverse
-##  git \
-#    log \
-#    --date='unix' \
-#    -10 \
-#    --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%n/%C(reset)%s" \
-#   --reverse
-##  git \
-#    log \
-#    --date='unix' \
-#    -10 --pretty="%C(Yellow)%h%x2F%C(reset)%ad%x2F%C(Cyan)%C(reset)%s" \
-#   --reverse
-#
-#
-## Once positionals are captured
-## if -h --help
-## present help output based on positionals captured
-
 if
 	[[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
 	help
 	exit
-fi
-
-if
-[[ "${!i}" == "--hash-list" ]] || [[ "${!i}" == "-hl" ]]; then
-gnostr-git    log      --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H'
+elif
+	[[ ${!i} == "-v" ]] || [[ $1 == "--version" ]] || [[ $1 == "version" ]]; then
+	printf "v0.0.0"
+	exit
+elif
+[[ ${!i} == "--hash-list" ]] || [[ ${!i} == "-hl" ]]; then
+	gnostr-git    log      --format='wss://{RELAY}/{REPO}/%C(auto)%H'
 	exit
 elif
 [[ ${!i} == "--format" ]] || [[ ${!i} == "-f" ]]; then
-gnostr-git    log      --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H/%<|(17)%gd%s'
+	gnostr-git    log      --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd/commit/%s'
 	exit
 elif
 [[ ${!i} == "-gd" ]] || [[ ${!i} == "-g" ]]; then
-gnostr-git    log      --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H%<|(17)%gd'
-	exit
-elif
-[[ ${!i} == "-cl" ]] || [[ ${!i} == "--commit-log" ]]; then
-gnostr-git log    --format=$(pwd | grep -o '[^/]*$')'/%C(auto)%H%<|(17)%gd/commit/%s'
+	gnostr-git    log      --format='wss://{RELAY}/{REPO}/%C(auto)%H%<|(17)%gd'
 	exit
 else
 	##silence is golden
 	exit
 fi
-## commit log
-#  gnostr-git log    --format='%C(auto)%H%<|(17)%gd/commit/%s'
-## Example:
-## gnostr/1694932217/24860cf8/dbe80abc-f0dac6f/1694975073
-## echo $REMOTE_PATH;
 done
-echo $REMOTE_PATH;
