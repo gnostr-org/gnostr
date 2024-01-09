@@ -15,8 +15,6 @@ if (LINUX)
   include_directories(${CMAKE_BINARY_DIR}/ext/wxWidgets-3.2.2.1/lib/wx/include/gtk3-unicode-static-3.2)
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/ext/wxWidgets-3.2.2.1/include)
-
 if (MSVC)
   include_directories(${CMAKE_BINARY_DIR}/ext/wxWidgets-3.2.2.1/lib/vc_x64_lib/mswud)
   link_directories(${CMAKE_BINARY_DIR}/ext/wxWidgets-3.2.2.1/lib/vc_x64_lib)
@@ -26,6 +24,7 @@ elseif(APPLE)
   add_definitions(-DWXUSINGDLL -D__WXOSX_COCOA__ -D__WXMAC__ -D__WXOSX__)
 endif()
 
+include_directories(${CMAKE_SOURCE_DIR}/ext/wxWidgets-3.2.2.1/include)
 
 #//////////////////////////
 # gnostro sources
