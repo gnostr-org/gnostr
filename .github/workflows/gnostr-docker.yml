@@ -1,6 +1,8 @@
 name: gnostr-docker
 
 on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
     branches:
       - '*'
@@ -47,6 +49,7 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
+      - run: cmake .
       - run: make
       - run: make nvm
       - run: make bins
@@ -65,7 +68,7 @@ jobs:
       - run: make                     gnostr-install
       - run: make                         all
       - run: make                            install
+      - run: ls /usr/local/bin
       - run: gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
       - run: make bins-test-fetch-by-id
-
       - run: gnostr --sec $(gnostr-sha256) --content "$(curl -sSL "https://mempool.space/api/mempool/recent")" | gnostr-post-event wss://relay.damus.io | jq
