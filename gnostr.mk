@@ -555,7 +555,7 @@ gnostr-all:
 	type -P gnostr         || $(MAKE) -j gnostr
 	$(MAKE) -j gnostr-install
 	type -P gnostr-post-event || $(MAKE) -j bins
-	type -P gnostr-tui        || $(MAKE) -j tui
+	#type -P gnostr-tui        || $(MAKE) -j tui
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
