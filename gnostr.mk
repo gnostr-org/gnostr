@@ -287,7 +287,7 @@ bins-test-fetch-by-id:
 gnostr-tui:tui
 tui:
 	@devtools/refresh-submodules.sh tui
-	@cd tui && make build-release install
+	@cd tui && make build-release install && cd ..
 
 deps/gnostr-legit/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-legit
