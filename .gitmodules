@@ -98,11 +98,6 @@
 	url = https://github.com/gnostr-org/gnostr-org.git
 	branch = master
 	ignore = dirty
-[submodule "web"]
-	path = web
-	url = https://github.com/gnostr-org/gnostr-web.git
-	branch = master
-	ignore = dirty
 [submodule "ext/wxWidgets-3.2.2.1"]
 	path = ext/wxWidgets-3.2.2.1
 	url = https://github.com/gnostr-org/wxWidgets.git
@@ -112,5 +107,20 @@
 [submodule "bins"]
 	path = bins
 	url = https://github.com/gnostr-org/gnostr-bins.git
+  ignore = dirty
+  depth = shallow
+[submodule "workspace"]
+	path = workspace
+	url = https://github.com/gnostr-org/gnostr-workspace.git
+  ignore = dirty
+  depth = shallow
+[submodule "drives"]
+	path = drives
+	url = https://github.com/gnostr-org/gnostr-drives.git
+  ignore = dirty
+  depth = shallow
+[submodule "tui"]
+	path = tui
+	url = https://github.com/gnostr-org/gnostr-tui.git
   ignore = dirty
   depth = shallow

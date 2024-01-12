@@ -28,6 +28,10 @@ if
 	help
 	exit
 elif
+	[[ ${!i} == "-v" ]] || [[ $1 == "--version" ]] || [[ $1 == "version" ]]; then
+	printf "v0.0.0"
+	exit
+elif
 [[ ${!i} == "--hash-list" ]] || [[ ${!i} == "-hl" ]]; then
 	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H'
 	exit

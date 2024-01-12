@@ -2,6 +2,8 @@ name: gnostr-matrix
 
 # Controls when the action will run.
 on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
     branches:
       - '*'
@@ -26,7 +28,7 @@ jobs:
       GNOSTR: "gnostr"
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]#, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -57,6 +59,7 @@ jobs:
         with:
           submodules: 'true'
           set-safe-directory: 'true'
+          fetch-depth: '10'
 
       - uses: actions-rs/toolchain@v1.0.6
         #if: ${{ !env.ACT }}
@@ -70,17 +73,17 @@ jobs:
         run: |
           echo $GNOSTR
 
-      - name:  apt-get update || brew install virtualenv
+      - name:  apt-get update && apt-get install jq || brew install jq || true
         run: |
-          sudo apt-get update || brew install virtualenv
+          sudo apt-get update && apt-get install jq || brew install jq || true
           touch ~/GITHUB_TOKEN.txt
 
       - run: python3 -m pip install virtualenv
 
       - run: V=1 make detect && cmake .
-      - run: V=1 make gnostr
-      - run: V=1 make gnostr-install
+      - run: V=1 make gnostr bins gnostr-sha256 &&  gnostr --sec $(gnostr-sha256) --content 'gnostr is already a fully functioning command line utility...'  | gnostr-post-event wss://nos.lol
       - run: V=1 make gnostr-all
+      - run: V=1 make gnostr-install
       - run: ./build.cmake.sh
 
       - name: Save deps

@@ -98,24 +98,27 @@ void version()
 }
 void usage()
 {
-	printf("usage: gnostr [OPTIONS]\n");
+	printf("\nusage: gnostr [OPTIONS]\n");
 	printf("\n");
-	printf("  GNOSTR-GIT:\n");
-	printf("  CONFIG:\n");
+	printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey)");
 	printf("\n");
-	printf("  gnostr-git config\n");
-	printf("  gnostr git config --global\n");
+	printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey) --envelope --content \" \"\n\n");
+	printf("\n");
+	printf("COMMAND CONTEXT:\n\n");
+	printf("  gnostr --sec $(gnostr-sha256 $(curl -s https://blockchain.info/q/getblockcount)) \\\n          -t block \\\n          -t $(curl -s https://blockchain.info/q/getblockcount) \\\n          --envelope \\\n          --content \"BLOCK:$(curl -s https://blockchain.info/q/getblockcount)\"\n\n");
+	printf("\n");
+	printf("GNOSTR-GIT:\n");
+	printf("CONFIG:\n");
+	printf("\n");
+	printf("  gnostr-git config\n\n");
+	printf("  gnostr git config --global\n\n");
 	printf("  gnostr git config --global --add gnostr.secretkey $(gnostr-sha256 12345)\n");
 	printf("  gnostr git config --global --get gnostr.secretkey\n");
-	printf("  5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5\n");
+//printf("  5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5");
 	printf("\n");
-	printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey)\n");
+	printf("RELAY OPTIONS:\n\n");
 	printf("\n");
-	printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey) --envelope --content \n");
-	printf("  RELAY OPTIONS\n");
-	printf("\n");
-	printf("\n");
-	printf("  NOSTR OPTIONS\n");
+	printf("NOSTR OPTIONS:\n");
 	printf("\n");
 	printf("      --content <string>              the content of the note\n");
 	printf("      --dm <hex pubkey>               make an encrypted dm to said pubkey. sets kind and tags.\n");
@@ -679,7 +682,8 @@ static int mine_event(struct nostr_event *ev, int difficulty)
 			return 0;
 
 		if ((res = count_leading_zero_bits(ev->id)) >= difficulty) {
-			fprintf(stderr, "mined %d bits\n", res);
+			//fprintf(stderr, "mined %d bits\n", res);
+			fprintf(stderr, "");
 			return 1;
 		}
 	}

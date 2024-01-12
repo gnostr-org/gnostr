@@ -121,9 +121,48 @@ add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-add_executable(gnostr-get-relays-c src/gnostr-get-relays.c)
+add_executable(gnostr-get-relays src/gnostr-get-relays.c)
+add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
+
+install(PROGRAMS template/gnostr-add DESTINATION bin)
+install(PROGRAMS template/gnostr-add.sh DESTINATION bin)
+install(PROGRAMS template/gnostr-blockheight DESTINATION bin)
+install(PROGRAMS template/gnostr-e DESTINATION bin)
+install(PROGRAMS template/gnostr-fs DESTINATION bin)
+install(PROGRAMS template/gnostr-functions DESTINATION bin)
+install(PROGRAMS template/gnostr-get-relays DESTINATION bin)
+install(PROGRAMS template/gnostr-git-log DESTINATION bin)
+install(PROGRAMS template/gnostr-git-reflog DESTINATION bin)
+install(PROGRAMS template/gnostr-git-send DESTINATION bin)
+install(PROGRAMS template/gnostr-git-show DESTINATION bin)
+install(PROGRAMS template/gnostr-hexidrome DESTINATION bin)
+install(PROGRAMS template/gnostr-iftop DESTINATION bin)
+install(PROGRAMS template/gnostr-init DESTINATION bin)
+install(PROGRAMS template/gnostr-jsmin.c DESTINATION bin)
+install(PROGRAMS template/gnostr-keyconv DESTINATION bin)
+install(PROGRAMS template/gnostr-nip DESTINATION bin)
+install(PROGRAMS template/gnostr-nonce DESTINATION bin)
+install(PROGRAMS template/gnostr-nvm DESTINATION bin)
+install(PROGRAMS template/gnostr-org DESTINATION bin)
+install(PROGRAMS template/gnostr-post DESTINATION bin)
+install(PROGRAMS template/gnostr-proxy DESTINATION bin)
+install(PROGRAMS template/gnostr-proxy-test DESTINATION bin)
+install(PROGRAMS template/gnostr-query DESTINATION bin)
+install(PROGRAMS template/gnostr-relays DESTINATION bin)
+install(PROGRAMS template/gnostr-send DESTINATION bin)
+install(PROGRAMS template/gnostr-snapshot DESTINATION bin)
+install(PROGRAMS template/gnostr-syndication DESTINATION bin)
+install(PROGRAMS template/gnostr-syndication-test DESTINATION bin)
+if(BUILD_WEB)
+install(PROGRAMS web/gnostr-web DESTINATION bin)
+endif()
+install(PROGRAMS web/gnostr-web-deploy DESTINATION bin)
+install(PROGRAMS template/gnostr-weeble DESTINATION bin)
+install(PROGRAMS template/gnostr-wobble DESTINATION bin)
+install(PROGRAMS template/gnostr-xor DESTINATION bin)
+
 
 #//////////////////////////
 # link with libraries
@@ -280,6 +319,20 @@ install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
+install(TARGETS gnostr-get-relays
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-get-relays
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
+install(TARGETS gnostr-set-relays
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-set-relays
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
 install(TARGETS gnostr-client
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
@@ -301,10 +354,17 @@ install(TARGETS gnostr-req
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-get-relays-c
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays-c
+install(TARGETS gnostr-get-relays
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+
+install(TARGETS gnostr-set-relays
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-set-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
@@ -316,12 +376,12 @@ install(TARGETS gnostr-tests
         RUNTIME DESTINATION /usr/local/bin)
 
 if(BUILD_WEB)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+  #install(TARGETS gnostr-web
+  #        CONFIGURATIONS Debug
+  #        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+  #install(TARGETS gnostr-web
+  #        CONFIGURATIONS Release
+  #        RUNTIME DESTINATION /usr/local/bin)
 endif()
 
 if (BUILD_GUI)

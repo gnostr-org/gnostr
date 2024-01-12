@@ -157,24 +157,31 @@ def supported_prefixes():
     print(json.dumps(key_dict, indent=4));
 
 def help():
-    print("Usage:\n")
-    print("       gnostr-keyconv [-t, --tests]    - run tests()")
-    print("       gnostr-keyconv [-p, --prefixes] - print supported prefixes")
-    print("       gnostr-keyconv <key> <type>\n")
-    print("")
-    print("Tests Vectors:")
-    print("1:")
-    print("gnostr-keyconv zpub6qwqZGWt6Gqm9i2bY2ErmJcTfRHHYX4LeUeszP33bSH3zgNdGiD7LEg57BQp2k5EQ4Qr5UAhgG1DMRSMZSA44UTNy1rLTqa3qaSnT9GmdsF ypub")
-    print("2:")
-    print("gnostr-keyconv ypub6X7aFbqxwbJHJQqUhfTEZDWxVT8qbu4qjN8fCz9ADRuAwaZQ243YiB1w5yTE2qRJzRJ3Kza9DbefU8pnqjk3GEmn6g9usvkZZrP94VcBVdz xpub")
-    print("3:")
-    print("gnostr-keyconv xpub6CHJwwB3nukoT7eMsJfcM8RTKUzPfH5LpFcSRbFGqRXHtUkAmPsz67Mo4mVe2vmPanBEaWyakwJ7arDE83L2U16BELTVJ1w5J8KVfyMqtzE zpub")
-    print("4:")
-    print("gnostr-keyconv yprvAJ8Dr6K57Djz5vm1bdvEC5aDwRJMCSLzN9D4QbjYf6NC4nEFUWjJANhTEghL3npior1TjTXW8vcuiaXoRGH8ZrEBn62qzPxbVKn6x5oY5vq xprv")
-    print("5:")
-    print("gnostr-keyconv xprv9yHxYRe9xYCWEdZtmH8byzUimT9uFpMVT2gqdCqfH5zK1gR2DrZjYK3KDUjk3tAoQCteyyvwgGGMqHvEhZs7mcYaukLRQV97DbiTZSJRaKC zprv")
-    print("6:")
-    print("gnostr-keyconv zprvAcxV9kyzFuHTwDx8RzhrQAfj7PSo94LVHFjHBzdS36k57t3UjAtrnSMbFtev3hUeDV8GUw84bayTbs9N8xh9N5uneRjGaJn5m3qkLdQwiaZ yprv")
+    print("\n")
+    print("	gnostr-keyconv [-h, --help]\n")
+    print("	gnostr-keyconv [-v, --verion]\n")
+    print("	gnostr-keyconv [-t, --tests]\n")
+    print("	gnostr-keyconv [-p, --prefixes]\n")
+    print("	gnostr-keyconv [-vecs, --vectors]\n")
+    print("	gnostr-keyconv <key> <type>	\n")
+    print("	")
+    exit();
+
+def vectors():
+    print("\n")
+    print("	Tests-Vectors:	\n")
+    print("	1:")
+    print("	gnostr-keyconv zpub6qwqZGWt6Gqm9i2bY2ErmJcTfRHHYX4LeUeszP33bSH3zgNdGiD7LEg57BQp2k5EQ4Qr5UAhgG1DMRSMZSA44UTNy1rLTqa3qaSnT9GmdsF ypub")
+    print("	2:")
+    print("	gnostr-keyconv ypub6X7aFbqxwbJHJQqUhfTEZDWxVT8qbu4qjN8fCz9ADRuAwaZQ243YiB1w5yTE2qRJzRJ3Kza9DbefU8pnqjk3GEmn6g9usvkZZrP94VcBVdz xpub")
+    print("	3:")
+    print("	gnostr-keyconv xpub6CHJwwB3nukoT7eMsJfcM8RTKUzPfH5LpFcSRbFGqRXHtUkAmPsz67Mo4mVe2vmPanBEaWyakwJ7arDE83L2U16BELTVJ1w5J8KVfyMqtzE zpub")
+    print("	4:")
+    print("	gnostr-keyconv yprvAJ8Dr6K57Djz5vm1bdvEC5aDwRJMCSLzN9D4QbjYf6NC4nEFUWjJANhTEghL3npior1TjTXW8vcuiaXoRGH8ZrEBn62qzPxbVKn6x5oY5vq xprv")
+    print("	5:")
+    print("	gnostr-keyconv xprv9yHxYRe9xYCWEdZtmH8byzUimT9uFpMVT2gqdCqfH5zK1gR2DrZjYK3KDUjk3tAoQCteyyvwgGGMqHvEhZs7mcYaukLRQV97DbiTZSJRaKC zprv")
+    print("	6:")
+    print("	gnostr-keyconv zprvAcxV9kyzFuHTwDx8RzhrQAfj7PSo94LVHFjHBzdS36k57t3UjAtrnSMbFtev3hUeDV8GUw84bayTbs9N8xh9N5uneRjGaJn5m3qkLdQwiaZ yprv")
 
 def convert_key(key, target_prefix):
   decoded_key_bytes = base58.b58decode_check(key)
@@ -221,6 +228,16 @@ def tests():
 
 try:
     key = sys.argv[1]
+    ##if key == "-h" or key == "--help":
+    if key == "--help":
+        help();
+        ##exit();
+    if key == "-v" or key == "--version":
+        print("v0.0.0");
+        exit();
+    if key == "-vecs" or key == "--vectors":
+        vectors();
+        exit();
     if key == "-t" or key == "--tests":
         tests();
         exit();
@@ -231,4 +248,4 @@ try:
     result = main(key, target_prefix)
     print(result)
 except IndexError:
-    help();
+  vectors();

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+cd `pwd`
 
 # build dependencies first
 mkdir -p build/ext/wxWidgets-3.2.2.1

@@ -1,4 +1,4 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'Nostr_client_relay'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
@@ -24,7 +24,7 @@ extern std::string log_program_name;
 
 void comm::start_log()
 {
-  ofs_log.open(log_program_name + ".log.txt", std::ofstream::trunc);
+  ofs_log.open("/tmp/" + log_program_name + ".log", std::ofstream::trunc);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

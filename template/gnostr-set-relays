@@ -1,2 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+
+if [[ $1 = "-h" ]] || [[ $1 = "--help" ]]; then
+
+  echo ""help""
+
+exit;
+fi
+if [[ $1 = "-v" ]] || [[ $1 = "--version" ]]; then
+
+  echo ""v0.0.0""
+
+exit;
+fi
 gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays

@@ -1,0 +1,19 @@
+[package]
+name = "gnostr"
+version = "0.0.0"
+edition = "2021"
+authors = ["gnostr <admin@gnostr.org>","extrawurst <mail@rusticorn.com>", "TODO:add more contributors"]
+description = "gnostr: a git+nostr workflow utility"
+rust-version = "1.65"
+exclude = [".github/*", ".vscode/*", "assets/*"]
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
+readme = "README.md"
+license = "MIT"
+categories = ["command-line-utilities"]
+keywords = ["git", "gui", "cli", "terminal", "ui", "gnostr"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+inline-c = "0.1.7"
