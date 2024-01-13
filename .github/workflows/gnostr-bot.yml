@@ -48,7 +48,7 @@ jobs:
       - run: rm -rf CMakeFiles
       - run: cmake .
       - run: V=1 make detect gnostr gnostr-install
-      - run: echo $(gnostr-sha256 $(git diff HEAD))
+      - run: echo $(date +%s)
       - run: DATE=$(date +%s) && gnostr --sec $(gnostr-sha256 $DATE) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content 'Somebody is developing with gnostr!' | gnostr-post-event wss://nos.lol
       - run: DATE=$(date +%s) && gnostr --sec $(gnostr-sha256 $DATE) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content "WEEBLE:$(gnostr-weeble):BLOCKHEIGHT:$(gnostr-blockheight):WOBBLE:$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
  
