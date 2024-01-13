@@ -9,7 +9,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "./gnostr.js"
+    "test": "./gnostr.js",
+    "h-test": "./gnostr.js -h",
+    "help-test": "./gnostr.js --help",
+    "v-test": "./gnostr.js -v",
+    "version-test": "./gnostr.js --version"
   },
   "repository": {
     "type": "git",
