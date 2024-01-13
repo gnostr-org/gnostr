@@ -42,7 +42,6 @@ gnostr-act\
 gnostr-blockheight\
 gnostr-cli\
 gnostr-client\
-gnostr-get-relays-c\
 gnostr-get-relays\
 gnostr-git-log\
 gnostr-git-reflog\
