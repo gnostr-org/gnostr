@@ -178,3 +178,4 @@ web/APP_KEY
 # already existing elements were commented out
 
 #/target
+.gnostr/webview
