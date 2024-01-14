@@ -42,6 +42,8 @@ gnostr-act\
 gnostr-blockheight\
 gnostr-cli\
 gnostr-client\
+gnostr-db\
+gnostr-db-cli\
 gnostr-get-relays\
 gnostr-git-log\
 gnostr-git-reflog\
@@ -287,6 +289,11 @@ gnostr-tui:tui
 tui:
 	@devtools/refresh-submodules.sh tui
 	@cd tui && make build-release install && cd ..
+.PHONY:db gnostr-db
+gnostr-db:db
+db:
+	@devtools/refresh-submodules.sh db
+	@cd db && make build-release install && cd ..
 
 deps/gnostr-legit/.git:gnostr-git
 	@devtools/refresh-submodules.sh deps/gnostr-legit
