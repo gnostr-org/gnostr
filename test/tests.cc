@@ -7,9 +7,13 @@
 #include <fstream> 
 #include <iostream>
 #include <sstream>
-#include "uuid.hh"
-#include "log.hh"
-#include "nostr.hh"
+#include <future>
+#include <algorithm>
+
+#include "../src/uuid.hh"
+#include "../src/log.hh"
+#include "../src/nostr.hh"
+#include "../src/argparse.hpp"
 
 std::string log_program_name("tests");
 
@@ -39,13 +43,49 @@ std::vector<std::string> list = { "list_01.txt",
 // main
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int main()
+int main(int argc, char * argv[])
 {
-  comm::start_log();
 
-  get_metadata();
+    comm::start_log();
 
-  return 0;
+    std::string uuid = uuid::generate_uuid_v4();
+    //comm::log(uuid);
+    //std::cout << uuid << std::endl;
+
+    argparse::ArgumentParser program("gnostr-tests", "v0.0.0");
+
+    //positional arg
+    program.add_argument("port").default_value<int>(0)
+        .help("gnostr-tests <int>")
+        .scan<'i', int>();
+
+    program.add_argument("--port").default_value<int>(0)
+        .nargs(1)
+        .help("gnostr-tests --port <int>")
+        .scan<'i', int>();
+
+    try {
+        program.parse_args(argc, argv);
+    } catch (const std::runtime_error &err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        return 1;
+    }
+
+    //handle positional arg `port`
+    int port = program.get<int>("port");
+    if (port){
+    std::cout << std::string("port:") << port << std::endl;
+    }
+    int port2 = program.get<int>("--port");
+    if (port2){
+        std::cout << std::string("--port:") << port2 << std::endl;
+        std::cout << std::string("port2") << std::endl;
+    }
+
+    get_metadata();
+
+    return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
