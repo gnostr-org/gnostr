@@ -127,3 +127,6 @@
 [submodule "gnostr-db"]
 	path = db
 	url = https://github.com/gnostr-org/gnostr-db.git
+[submodule "modal"]
+	path = modal
+	url = https://github.com/gnostr-org/gnostr-modal
