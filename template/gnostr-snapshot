@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
+mkdir -p .gnostr
 mkdir -p .gnostr/snapshots
+
 GNOSTR_SNAPSHOTS=.gnostr/snapshots
 
 declare EMPTY_TREE_SHA1
@@ -45,8 +47,8 @@ help(){
 }
 
 #git using sha1
-default(){
-    
+function default(){
+
 ## if [[ ! -z $COMMIT ]]; then
 ##   echo $COMMIT
 ## fi
