@@ -82,7 +82,8 @@ jobs:
 
       - run: V=1 make detect && cmake .
       - run: V=1 make gnostr-install
-      - run: V=1 make gnostr bins gnostr-sha256 &&  gnostr --sec $(gnostr-sha256) --content 'Somebody is developing with gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
+      - run: V=1 make gnostr bins gnostr-sha256 &&  gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content 'Somebody is developing with gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event wss://relay.damus.io
       - run: V=1 make gnostr-all
       - run: V=1 make gnostr-install
       - run: ./build.cmake.sh
