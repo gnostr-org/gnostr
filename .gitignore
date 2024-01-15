@@ -172,6 +172,8 @@ web/APP_KEY
 .gnostr/org
 .gnostr/web
 
+#gnostr-act:gnostr-alpine.tml
+gnostr-alpine
 
 # Added by cargo
 #
