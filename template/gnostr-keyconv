@@ -159,7 +159,7 @@ def supported_prefixes():
 def help():
     print("\n")
     print("	gnostr-keyconv [-h, --help]\n")
-    print("	gnostr-keyconv [-v, --verion]\n")
+    print("	gnostr-keyconv [-v, --version]\n")
     print("	gnostr-keyconv [-t, --tests]\n")
     print("	gnostr-keyconv [-p, --prefixes]\n")
     print("	gnostr-keyconv [-vecs, --vectors]\n")
