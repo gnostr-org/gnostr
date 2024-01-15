@@ -33,8 +33,9 @@ jobs:
     steps:
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
-      - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
+      - run: apk update && apk add bash cmake curl git make python3 && python3 -m ensurepip
       - run: printenv
+      - run: touch ~/GITHUB_TOKEN.txt
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
         with:
@@ -42,13 +43,14 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
       ## notice: these are post checkout steps
-      - run: apk update && apk add autoconf automake build-base openssl-dev libtool make
-      - run: touch ~/GITHUB_TOKEN.txt
+      - run: apk update && apk add autoconf automake build-base openssl-dev libtool make sudo
       - run: rm CMakeCache.txt || echo && cmake .
       - run: make
+      - run: make clean
       - run: make help
       - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
-      - run: make gnostr || rm gnostr && make gnostr
+      - run: rm gnostr || true
+      - run: make gnostr && cp gnostr gnostr-alpine
       - run: make gnostr-install
       ## TODO: add ssh config to act sequence
       - run: rm -rf .venv

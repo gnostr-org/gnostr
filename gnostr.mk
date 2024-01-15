@@ -56,6 +56,7 @@ gnostr-req\
 gnostr-send\
 gnostr-set-relays\
 gnostr-sha256\
+gnostr-tests\
 gnostr-tui\
 gnostr-weeble\
 gnostr-wobble\

@@ -484,11 +484,11 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 	for (; argc; ) {
 		arg = *argv++; argc--;
 
-		if (!strcmp(arg, "--help") | !strcmp(arg, "-h")) { usage(); }
+		if (!strcmp(arg, "--help") || !strcmp(arg, "-h")) { usage(); }
 
-		if (!strcmp(arg, "--version") | !strcmp(arg, "-v")) { version(); }
+		if (!strcmp(arg, "--version") || !strcmp(arg, "-v")) { version(); }
 
-		if (!strcmp(arg, "--about") | !strcmp(arg, "-a")) { about(); }
+		if (!strcmp(arg, "--about") || !strcmp(arg, "-a")) { about(); }
 
 		if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv, args); }
 
