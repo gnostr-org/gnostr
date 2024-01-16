@@ -39,6 +39,7 @@ export GTAR
 
 DOCS=\
 gnostr-act\
+gnostr-bits\
 gnostr-blockheight\
 gnostr-cli\
 gnostr-client\
@@ -49,6 +50,7 @@ gnostr-git-log\
 gnostr-git-reflog\
 gnostr-gnode\
 gnostr-keyconv\
+gnostr-modal\
 gnostr-post\
 gnostr-query\
 gnostr-relays\
