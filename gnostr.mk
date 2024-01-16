@@ -110,6 +110,7 @@ doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
 	(\
 	for b in $(DOCS);\
   do help2man $$b > doc/$$b.1;\
+  install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
   echo $$b;\
   done;\
   exit;\
@@ -463,7 +464,7 @@ gnostr:deps/secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OB
 
 .ONESHELL:
 ##install all
-##	install docs/gnostr.1 gnostr gnostr-query
+##	install doc/gnostr.1 gnostr gnostr-query
 gnostr-install:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
