@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-mkdir -p .gnostr
 mkdir -p .gnostr/snapshots
-
 GNOSTR_SNAPSHOTS=.gnostr/snapshots
 
 declare EMPTY_TREE_SHA1
@@ -34,7 +32,7 @@ UTC_SECS=$(date +%s)
 
 declare REMOTE_PATH
 REMOTE_PATH=$GNOSTR_SNAPSHOTS/$REPO-$WEEBLE-$BLOCKHEIGHT-$WOBBLE-$BRANCH
-echo $REMOTE_PATH
+## echo $REMOTE_PATH
 
 help(){
 	printf "   gnostr-snapshot --help     [-h]       print help\n"
@@ -47,13 +45,14 @@ help(){
 }
 
 #git using sha1
-function default(){
-if [[ ! -z $COMMIT ]]; then
-  echo $COMMIT
-fi
-if [[ ! -z $DEPTH ]]; then
-  echo $DEPTH
-fi
+default(){
+    
+## if [[ ! -z $COMMIT ]]; then
+##   echo $COMMIT
+## fi
+## if [[ ! -z $DEPTH ]]; then
+##   echo $DEPTH
+## fi
 ## if [[ ! -z $PATH ]]; then
 ##   echo $PATH
 ## fi
@@ -83,6 +82,10 @@ for ((i=1; i<=$#; i++)); do
 
   if [[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
     help
+    exit
+  fi
+  if [[ ${!i} == "-v" ]] || [[ $1 == "--version" ]] || [[ $1 == "version" ]]; then
+    echo v0.0.0
     exit
   fi
 
@@ -134,3 +137,4 @@ for ((i=1; i<=$#; i++)); do
   fi
 exit
 done
+default
