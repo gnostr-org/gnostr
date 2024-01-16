@@ -127,3 +127,13 @@
 [submodule "gnostr-db"]
 	path = db
 	url = https://github.com/gnostr-org/gnostr-db.git
+  ignore = dirty
+  depth = shallow
+[submodule "modal"]
+	path = modal
+	url = https://github.com/gnostr-org/gnostr-modal
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-bits"]
+	path = bits
+	url = https://github.com/gnostr-org/gnostr-bits.git
