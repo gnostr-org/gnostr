@@ -285,6 +285,11 @@ bins-test-fetch-by-id:
 		gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq || true
 		#gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq .content || true
 
+.PHONY:bits gnostr-bits
+gnostr-bits:bits
+bits:
+	@devtools/refresh-submodules.sh bits
+	@cd bits && make build-release install && cd ..
 .PHONY:modal gnostr-modal
 gnostr-modal:modal
 modal:

@@ -134,3 +134,6 @@
 	url = https://github.com/gnostr-org/gnostr-modal
   ignore = dirty
   depth = shallow
+[submodule "gnostr-bits"]
+	path = bits
+	url = https://github.com/gnostr-org/gnostr-bits.git
