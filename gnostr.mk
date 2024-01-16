@@ -575,15 +575,19 @@ gnostr-all:
 	$(MAKE) -j gnostr-install
 	type -P gnostr-post-event || $(MAKE) -j bins
 	#type -P gnostr-tui        || $(MAKE) -j tui
+	type -P gnostr-bins    || $(MAKE) -j gnostr-bins
+	type -P gnostr-bits    || $(MAKE) -j gnostr-bits
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
 	type -P gnostr-sha256  || $(MAKE) -j gnostr-sha256
+	type -P gnostr-tui     || $(MAKE) -j gnostr-tui
 	type -P gnostr-command || $(MAKE) -j gnostr-command
 	type -P gnostr-proxy   || $(MAKE) -j gnostr-proxy
 	type -P gnostr-query   || $(MAKE) -j gnostr-query
 	type -P gnostr-git     || $(MAKE) -j gnostr-git
 	type -P gnostr-legit   || $(MAKE) -j gnostr-legit
+	type -P gnostr-modal   || $(MAKE) -j gnostr-modal
 	type -P gnostr-client  || $(MAKE) -j gnostr-client
 	type -P gnostr-gnode   || $(MAKE) -j gnostr-gnode
 	$(MAKE) -j gnostr-build
