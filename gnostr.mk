@@ -45,7 +45,7 @@ gnostr-cli\
 gnostr-client\
 gnostr-db\
 gnostr-db-cli\
-gnostr-get-relays\
+gnostr-getrelays\
 gnostr-git-log\
 gnostr-git-reflog\
 gnostr-gnode\
@@ -282,6 +282,10 @@ gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-comma
 gnostr-bins:bins
 bins:
 	@cd bins && make cargo-b-release && make cargo-i
+.PHONY:get-relays gnostr-get-relays
+gnostr-get-relays:get-relays
+get-relays:
+	@cd get-relays && make cargo-b-release && make cargo-i
 bins-test-post-event:
 	cat test/first-gnostr-commit.json | gnostr-post-event wss://relay.damus.io
 bins-test-fetch-by-id:
