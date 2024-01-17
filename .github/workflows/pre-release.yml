@@ -59,6 +59,7 @@ jobs:
             CMakeFiles/*.dir
             $INPUT_PATH
             ~/.rustup
+            ~/.cargo
             CARGO_TARGET_DIR
           key: ${{ runner.os }}-deps
 
@@ -70,7 +71,7 @@ jobs:
       - uses: actions-rs/toolchain@v1.0.6
         #if: ${{ !env.ACT }}
         with:
-          toolchain: nightly
+          toolchain: stable
           default: true
           override: true
 
@@ -86,14 +87,17 @@ jobs:
           sudo apt-get update && sudo apt-get install virtualenv || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
 
-      - run: V=1 make detect
-      - run: python3 -m pip install virtualenv
+      - name:  apt-get update || brew install virtualenv
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          V=1 make detect
+          python3 -m pip install virtualenv
+          V=1 cmake .
+          V=1 make gnostr
+          V=1 make gnostr-all
 
-      - run: V=1 cmake .
-      - run: V=1 make gnostr
-      - run: V=1 make gnostr-all
-
-      - name: "Build release"
+      - name: "Build pre-release"
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
@@ -104,7 +108,7 @@ jobs:
       - name: Set output
         run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: "marvinpinto/action-automatic-releases@latest"
-        if: ${{ !env.ACT }}
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ matrix.os }}
@@ -117,12 +121,13 @@ jobs:
       - name: Save deps
         id: cache-deps-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         with:
           path: |
             src/nostril
             CMakeFiles/*.dir
             $INPUT_PATH
             ~/.rustup
+            ~/.cargo
             CARGO_TARGET_DIR
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
