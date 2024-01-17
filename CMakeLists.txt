@@ -121,7 +121,7 @@ add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-add_executable(gnostr-get-relays src/gnostr-get-relays.c)
+add_executable(gnostr-getrelays  src/gnostr-get-relays.c)
 add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
@@ -132,7 +132,6 @@ install(PROGRAMS template/gnostr-blockheight DESTINATION bin)
 install(PROGRAMS template/gnostr-e DESTINATION bin)
 install(PROGRAMS template/gnostr-fs DESTINATION bin)
 install(PROGRAMS template/gnostr-functions DESTINATION bin)
-install(PROGRAMS template/gnostr-get-relays DESTINATION bin)
 install(PROGRAMS template/gnostr-git-log DESTINATION bin)
 install(PROGRAMS template/gnostr-git-reflog DESTINATION bin)
 install(PROGRAMS template/gnostr-git-send DESTINATION bin)
@@ -319,10 +318,10 @@ install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-get-relays
+install(TARGETS gnostr-getrelays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays
+install(TARGETS gnostr-getrelays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
@@ -351,20 +350,6 @@ install(TARGETS gnostr-req
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS gnostr-req
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-get-relays
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-set-relays
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-set-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
