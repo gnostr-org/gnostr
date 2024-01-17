@@ -139,3 +139,8 @@
 	url = https://github.com/gnostr-org/gnostr-bits.git
   ignore = dirty
   depth = shallow
+[submodule "gnostr-get-relays"]
+	path = get-relays
+	url = https://github.com/gnostr-org/gnostr-get-relays.git
+  ignore = dirty
+  depth = shallow
