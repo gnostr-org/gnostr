@@ -39,6 +39,7 @@ jobs:
     steps:
       - name: echo test
         #if: ${{ !env.ACT }}
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           echo GNOSTR=${{ env.GNOSTR }}
           echo GNOSTR1=${{ env.GNOSTR1 }}
@@ -80,6 +81,7 @@ jobs:
           touch ~/GITHUB_TOKEN.txt
 
       - name:  apt-get update || brew install virtualenv
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           sudo apt-get update && sudo apt-get install virtualenv || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
