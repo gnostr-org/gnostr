@@ -52,6 +52,7 @@ gnostr-gnode\
 gnostr-keyconv\
 gnostr-modal\
 gnostr-post\
+gnostr-post-event\
 gnostr-query\
 gnostr-relays\
 gnostr-req\
