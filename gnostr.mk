@@ -293,6 +293,12 @@ bins-test-fetch-by-id:
 		gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq || true
 		#gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq .content || true
 
+.PHONY:ffi gnostr-ffi
+gnostr-ffi:ffi
+ffi:
+	@devtools/refresh-submodules.sh ffi
+	@cd ffi && make gnostr && cd ..
+
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
 bits:
