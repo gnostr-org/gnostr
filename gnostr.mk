@@ -23,7 +23,7 @@ ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
 #SUBMODULES                              = deps/secp256k1
-SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
+SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -162,7 +162,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git act/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -225,15 +225,16 @@ gnostr-web-deploy:
 
 
 
-deps/gnostr-git/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-git
-.PHONY:deps/gnostr-git/gnostr-git
-deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
+git/.git:
+	@devtools/refresh-submodules.sh git
+.PHONY:git/gnostr-git
+git/gnostr-git:git/.git
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
-	cd deps/gnostr-git && make && make install
-.PHONY:gnostr-git
-gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
-	cp $< $@
+	cd git && make && make install
+.PHONY:gnostr-git git
+git:gnostr-git
+gnostr-git:git/gnostr-git## 	gnostr-git
+	cp $< $@ || true
 	install $@ /usr/local/bin/
 
 
@@ -320,13 +321,15 @@ db:
 	@devtools/refresh-submodules.sh db
 	@cd db && make build-release install && cd ..
 
-deps/gnostr-legit/.git:gnostr-git
-	@devtools/refresh-submodules.sh deps/gnostr-legit
+.PHONY:legit/.git gnostr-legit legit
+legit/.git:gnostr-git
+	@devtools/refresh-submodules.sh legit
 #.PHONY:deps/gnostr-legit/release/gnostr-legit
-deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/.git
-	cd deps/gnostr-legit && \
+legit/target/release/gnostr-legit:legit/.git
+	cd legit && \
 		make cargo-b-release install
-gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
+legit:gnostr-legit
+gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
@@ -392,20 +395,21 @@ gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
 
 
 
-.PHONY:deps/gnostr-cli/.git
-deps/gnostr-cli/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-cli
-.PHONY:deps/gnostr-cli/target/release/gnostr-cli
-deps/gnostr-cli/target/release/gnostr-cli:deps/gnostr-cli
-	cd deps/gnostr-cli && \
+.PHONY:cli/.git
+cli/.git:
+	@devtools/refresh-submodules.sh cli
+.PHONY:cli/target/release/gnostr-cli
+cli/target/release/gnostr-cli:cli/.git
+	cd cli && \
 		make cargo-build-release cargo-install
 	@cp $@ gnostr-cli || echo "" 2>/dev/null
-.PHONY:gnostr-cli
+.PHONY:gnostr-cli cli
 ##gnostr-cli
 ##deps/gnostr-cli deps/gnostr-cli/.git
 ##	cd deps/gnostr-cli; \
 ##	make cargo-build-release cargo-install
-gnostr-cli:deps/gnostr-cli/target/release/gnostr-cli## 	gnostr-cli
+cli:gnostr-cli
+gnostr-cli:cli/target/release/gnostr-cli## 	gnostr-cli
 
 
 
@@ -440,10 +444,13 @@ deps/gnostr-aio/.git:
 
 
 
-deps/gnostr-act/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-act
-gnostr-act:deps/gnostr-act/.git
-	cd deps/gnostr-act && ./install-gnostr-act
+act/.git:
+	@devtools/refresh-submodules.sh act
+.PHONY:act gnostr-act act/.git
+gnostr-act:act
+act/bin/gnostr-act:act/.git
+act:act/bin/gnostr-act
+	cd act && ./install.sh || ./install-gnostr-act
 
 
 
