@@ -162,7 +162,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -225,15 +225,16 @@ gnostr-web-deploy:
 
 
 
-deps/gnostr-git/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-git
-.PHONY:deps/gnostr-git/gnostr-git
-deps/gnostr-git/gnostr-git:deps/gnostr-git/.git
+git/.git:
+	@devtools/refresh-submodules.sh git
+.PHONY:git/gnostr-git
+git/gnostr-git:git/.git
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
-	cd deps/gnostr-git && make && make install
-.PHONY:gnostr-git
-gnostr-git:deps/gnostr-git/gnostr-git## 	gnostr-git
-	cp $< $@
+	cd git && make && make install
+.PHONY:gnostr-git git
+git:gnostr-git
+gnostr-git:git/gnostr-git## 	gnostr-git
+	cp $< $@ || true
 	install $@ /usr/local/bin/
 
 
