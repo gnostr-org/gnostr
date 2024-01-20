@@ -8,11 +8,6 @@
 	url = https://github.com/gnostr-org/hyper-nostr.git
 	branch = master
 	ignore = dirty
-[submodule "deps/hyper-sdk"]
-	path = deps/hyper-sdk
-	url = https://github.com/gnostr-org/hyper-sdk.git
-	branch = master
-	ignore = dirty
 [submodule "gnostr-cat"]
 	path = deps/gnostr-cat
 	url = https://github.com/gnostr-org/gnostr-cat.git
