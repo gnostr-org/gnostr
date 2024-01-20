@@ -3,11 +3,6 @@
 	url = https://github.com/bitcoin/secp256k1.git
 	branch = master
 	ignore = dirty
-[submodule "deps/hyper-nostr"]
-	path = deps/hyper-nostr
-	url = https://github.com/gnostr-org/hyper-nostr.git
-	branch = master
-	ignore = dirty
 [submodule "gnostr-cat"]
 	path = deps/gnostr-cat
 	url = https://github.com/gnostr-org/gnostr-cat.git
@@ -139,3 +134,6 @@
 [submodule "gnostr-act"]
 	path = act
 	url = https://github.com/gnostr-org/gnostr-act.git
+[submodule "hyper-nostr"]
+	path = hyper-nostr
+	url = https://github.com/gnostr-org/hyper-nostr.git
