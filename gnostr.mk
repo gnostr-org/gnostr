@@ -162,7 +162,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/hyper-sdk/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
