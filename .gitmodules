@@ -58,11 +58,6 @@
 	url = https://github.com/gnostr-org/gnostr-sha256.git
 	branch = master
 	ignore = dirty
-[submodule "deps/gnostr-act"]
-	path = deps/gnostr-act
-	url = https://github.com/gnostr-org/gnostr-act.git
-	branch = master
-	ignore = dirty
 [submodule "deps/gnostr-lfs"]
 	path = deps/gnostr-lfs
 	url = https://github.com/gnostr-org/gnostr-lfs.git
@@ -141,3 +136,6 @@
 [submodule "gnostr-git"]
 	path = git
 	url = https://github.com/gnostr-org/gnostr-git.git
+[submodule "gnostr-act"]
+	path = act
+	url = https://github.com/gnostr-org/gnostr-act.git
