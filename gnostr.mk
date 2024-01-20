@@ -23,7 +23,7 @@ ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
 #SUBMODULES                              = deps/secp256k1
-SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio deps/gnostr-legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
+SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -162,7 +162,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-legit/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:deps/secp256k1/.git deps/gnostr-git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git deps/gnostr-act/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -320,13 +320,15 @@ db:
 	@devtools/refresh-submodules.sh db
 	@cd db && make build-release install && cd ..
 
-deps/gnostr-legit/.git:gnostr-git
-	@devtools/refresh-submodules.sh deps/gnostr-legit
+.PHONY:legit/.git gnostr-legit legit
+legit/.git:gnostr-git
+	@devtools/refresh-submodules.sh legit
 #.PHONY:deps/gnostr-legit/release/gnostr-legit
-deps/gnostr-legit/target/release/gnostr-legit:deps/gnostr-legit/.git
-	cd deps/gnostr-legit && \
+legit/target/release/gnostr-legit:legit/.git
+	cd legit && \
 		make cargo-b-release install
-gnostr-legit:deps/gnostr-legit/target/release/gnostr-legit## 	gnostr-legit
+legit:gnostr-legit
+gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
