@@ -370,48 +370,40 @@ proxy:proxy/.git
 
 
 
-#deps/gnostr-relay/.git:
-#	@devtools/refresh-submodules.sh deps/gnostr-relay
-##.PHONY:deps/gnostr-relay/gnostr-relay
-#deps/gnostr-relay:deps/gnostr-relay/.git
-#	cd deps/gnostr-relay && \
-#		make
-##gnostr-relay:deps/gnostr-relay/target/release/gnostr-relay## 	gnostr-relay
-#.PHONY:deps/gnostr-relay
-##PHONY for now...
-#gnostr-relay:deps/gnostr-relay## 	gnostr-relay
-#	cp $< $@
-
-
-deps/gnostr-cat/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-cat
-#.PHONY:deps/gnostr-cat
-deps/gnostr-cat:deps/gnostr-cat/.git
-.PHONY:deps/gnostr-cat/target/release/gnostr-cat
-deps/gnostr-cat/target/release/gnostr-cat:deps/gnostr-cat
-	cd deps/gnostr-cat && \
-		make cargo-build-release install
-	@cp $@ gnostr-cat || echo "" 2>/dev/null
-.PHONY:gnostr-cat
-gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
+.PHONY:relay gnostr-relay
+relay/.git:
+	@devtools/refresh-submodules.sh
+relay/target/release/gnostr-relay:##
+	cd relay && \
+		make cargo-build-release
+gnostr-relay:relay
+relay:relay/.git
+	cd relay && \
+		make cargo-install
 
 
 
-.PHONY:cli/.git
+.PHONY:gnostr-cat cat
+cat/.git:
+	@devtools/refresh-submodules.sh cat
+.PHONY:cat
+gnostr-cat:cat
+cat:cat/.git
+	cd cat && \
+		make cargo-install
+
+
+
+.PHONY:cli/.git gnostr-cli cli
 cli/.git:
 	@devtools/refresh-submodules.sh cli
 .PHONY:cli/target/release/gnostr-cli
-cli/target/release/gnostr-cli:cli/.git
+gnostr-cli:cli
+cli:cli/.git
 	cd cli && \
-		make cargo-build-release cargo-install
+		make cargo-install
 	@cp $@ gnostr-cli || echo "" 2>/dev/null
 .PHONY:gnostr-cli cli
-##gnostr-cli
-##deps/gnostr-cli deps/gnostr-cli/.git
-##	cd deps/gnostr-cli; \
-##	make cargo-build-release cargo-install
-cli:gnostr-cli
-gnostr-cli:cli/target/release/gnostr-cli## 	gnostr-cli
 
 
 
