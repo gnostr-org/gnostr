@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+function help(){
+
+printf "Get current bitcoin blockcount/height\n"
+printf "We try a local node first\n"
+printf "then mempool.space\n"
+printf "then blochchain.info\n"
+printf "finally docs-demo.btc.quiknode.pro\n"
+
+}
+
+declare -a BLOCKHEIGHT
+BLOCKHEIGHT=000000
+ARG=${1:-}
+
+#echo DEPTH=$DEPTH
+#echo TOPIC=$TOPIC
+
+if [[ $ARG == "-h" ]];
+then
+  help;exit;
+fi
+if [[ $ARG == "--help" ]];
+then
+  help;exit;
+fi
+if [[ $ARG == "help" ]];
+then
+  help;exit;
+fi
+if [[ $ARG == "-v" ]];
+then
+  printf "v0.0.0"; exit
+fi
+if [[ $ARG == "--version" ]];
+then
+  printf "v0.0.0"; exit
+fi
+if [[ $ARG == "version" ]];
+then
+  printf "v0.0.0"; exit
+fi
+
+function gnostr_post_commit(){
+
+DEPTH=${1:-0}
+TOPIC=${2:-gnostr}
+PROXY=ws://127.0.0.1:6102
+RELAY=${3:-ws://127.0.0.1:6102}
+
+echo DEPTH=$DEPTH TOPIC=$TOPIC PROXY=$PROXY RELAY=$RELAY
+
+gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content "#$(pwd | grep -o '[^/]*$')/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$(git diff HEAD~$DEPTH)" -t $TOPIC --tag weeble $(gnostr-weeble) | gnostr-post-event $PROXY | \
+    gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content "#$(pwd | grep -o '[^/]*$')/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$(git diff HEAD~$DEPTH)" -t $TOPIC --tag weeble $(gnostr-weeble) | gnostr-post-event $RELAY
+
+
+
+}
+gnostr_post_commit
+cat /tmp/gnostr.log
