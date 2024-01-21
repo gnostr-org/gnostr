@@ -28,11 +28,6 @@
 	url = https://github.com/gnostr-org/gnostr-proxy.git
 	branch = master
 	ignore = dirty
-[submodule "deps/gnostr-relay"]
-	path = deps/gnostr-relay
-	url = https://github.com/gnostr-org/gnostr-relay.git
-	branch = master
-	ignore = dirty
 [submodule "deps/gnostr-grep"]
 	path = deps/gnostr-grep
 	url = https://github.com/gnostr-org/gnostr-grep.git
@@ -46,11 +41,6 @@
 [submodule "nips"]
 	path = nips
 	url = https://github.com/gnostr-org/nips.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-hyp"]
-	path = deps/gnostr-hyp
-	url = https://github.com/gnostr-org/gnostr-hyp.git
 	branch = master
 	ignore = dirty
 [submodule "deps/gnostr-sha256"]
