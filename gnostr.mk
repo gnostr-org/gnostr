@@ -53,6 +53,7 @@ gnostr-keyconv\
 gnostr-modal\
 gnostr-post\
 gnostr-post-event\
+gnostr-proxy\
 gnostr-query\
 gnostr-relays\
 gnostr-req\
@@ -356,15 +357,16 @@ gnostr-org:deps/gnostr-org
 
 
 
-deps/gnostr-proxy/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-proxy
-.PHONY:deps/gnostr-proxy
-deps/gnostr-proxy:deps/gnostr-proxy/.git
-	cd deps/gnostr-proxy && \
+.PHONY:proxy
+proxy/.git:
+	@devtools/refresh-submodules.sh proxy
+
+gnostr-proxy:proxy## 	gnostr-proxy
+proxy:proxy/.git
+	install ./proxy/gnostr-proxy template
+	install ./proxy/gnostr-proxy /usr/local/bin
+	cd proxy && \
 		$(MAKE) install
-gnostr-proxy:deps/gnostr-proxy
-	install deps/gnostr-proxy/gnostr-proxy template
-	install deps/gnostr-proxy/gnostr-proxy /usr/local/bin
 
 
 
