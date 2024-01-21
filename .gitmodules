@@ -164,3 +164,13 @@
 	url = https://github.com/gnostr-org/gnostr-org.git
   ignore = dirty
   depth = shallow
+[submodule "gnostr-relay"]
+	path = relay
+	url = https://github.com/gnostr-org/gnostr-relay.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-core"]
+	path = core
+	url = https://github.com/gnostr-org/gnostr-core.git
+  ignore = dirty
+  depth = shallow
