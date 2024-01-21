@@ -9,7 +9,7 @@
 	branch = master
 	ignore = dirty
 [submodule "gnostr-cat"]
-	path = deps/gnostr-cat
+	path = cat
 	url = https://github.com/gnostr-org/gnostr-cat.git
 	branch = master
 	ignore = dirty
@@ -28,11 +28,6 @@
 	url = https://github.com/gnostr-org/gnostr-proxy.git
 	branch = master
 	ignore = dirty
-[submodule "deps/gnostr-relay"]
-	path = deps/gnostr-relay
-	url = https://github.com/gnostr-org/gnostr-relay.git
-	branch = master
-	ignore = dirty
 [submodule "deps/gnostr-grep"]
 	path = deps/gnostr-grep
 	url = https://github.com/gnostr-org/gnostr-grep.git
@@ -48,11 +43,6 @@
 	url = https://github.com/gnostr-org/nips.git
 	branch = master
 	ignore = dirty
-[submodule "deps/gnostr-hyp"]
-	path = deps/gnostr-hyp
-	url = https://github.com/gnostr-org/gnostr-hyp.git
-	branch = master
-	ignore = dirty
 [submodule "deps/gnostr-sha256"]
 	path = deps/gnostr-sha256
 	url = https://github.com/gnostr-org/gnostr-sha256.git
@@ -61,11 +51,6 @@
 [submodule "deps/gnostr-lfs"]
 	path = deps/gnostr-lfs
 	url = https://github.com/gnostr-org/gnostr-lfs.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-cat"]
-	path = deps/gnostr-cat
-	url = https://github.com/gnostr-org/gnostr-cat.git
 	branch = master
 	ignore = dirty
 [submodule "deps/gnostr-org"]
@@ -167,5 +152,15 @@
 [submodule "gnostr-org"]
 	path = org
 	url = https://github.com/gnostr-org/gnostr-org.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-relay"]
+	path = relay
+	url = https://github.com/gnostr-org/gnostr-relay.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-core"]
+	path = core
+	url = https://github.com/gnostr-org/gnostr-core.git
   ignore = dirty
   depth = shallow

@@ -1,4 +1,38 @@
 #!/usr/bin/env bash
+
+ARG=${1:-}
+
+help(){
+
+  printf "usage:\n"
+  printf "	 gnostr-proxy -h --help help\n"
+
+  printf "logging:\n"
+  printf "	tail -f /tmp/gnostr-proxy.log\n"
+  exit;
+}
+if [[ $ARG == "-h" ]];
+then
+	help;exit
+fi
+if [[ $ARG == "--help" ]];
+then
+	help;exit
+fi
+if [[ $ARG == "help" ]];
+then
+	help;exit
+fi
+if [[ $ARG == "-v" ]];
+then
+  printf "v0.0.0"; exit
+fi
+if [[ $ARG == "--version" ]];
+then
+  printf "v0.0.0"; exit
+fi
+
+
 gnostr-set-relays 2>/tmp/gnostr-proxy.log || echo
 (echo `pwd`) & clear && \
 # gnostr-proxy sub-shell process
@@ -17,10 +51,10 @@ export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/dev/null && \. "$NVM_D
 
 if ! grep -q ".gnostr/proxy" .gitignore; then echo ".gnostr/proxy" >> .gitignore; fi;\
 
-mkdir -p .gnostr >/tmp/gnostr-proxy.log;\
-[ ! -d .gnostr/proxy ] && echo "gnostr-proxy:git:installing .gnostr/proxy"
-[ ! -d .gnostr/proxy ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-proxy.git .gnostr/proxy >/tmp/gnostr-proxy.log 2>&1; \
-[   -d .gnostr/proxy ] && echo "gnostr-proxy:git:updating .gnostr/proxy"
-[   -d .gnostr/proxy ] && cd .gnostr/proxy && git reset --hard 2>/tmp/gnostr-proxy.log && git pull -f origin master 2>/tmp/gnostr-proxy.log && echo ".gnostr/proxy" >> .gitignore >/tmp/gnostr-proxy.log 2>&1 &&  make run -k > /tmp/gnostr-proxy.log 2>&1;\
-)#2>/tmp/gnostr-proxy.log;
+mkdir -p ~/.gnostr >/tmp/gnostr-proxy.log;\
+[ ! -d ~/.gnostr/proxy ] && echo "gnostr-proxy:git:installing .gnostr/proxy"
+[ ! -d ~/.gnostr/proxy ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-proxy.git ~/.gnostr/proxy >/tmp/gnostr-proxy.log 2>&1; \
+[   -d ~/.gnostr/proxy ] && echo "gnostr-proxy:git:updating .gnostr/proxy"
+[   -d ~/.gnostr/proxy ] && cd ~/.gnostr/proxy && git reset --hard 2>/tmp/gnostr-proxy.log && git pull -f origin master 2>/tmp/gnostr-proxy.log && echo ".gnostr/proxy" >> .gitignore >/tmp/gnostr-proxy.log 2>&1 &&  make run -k > /tmp/gnostr-proxy.log 2>&1;\
+)>/tmp/gnostr-proxy.log;
 

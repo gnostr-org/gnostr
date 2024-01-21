@@ -22,8 +22,7 @@ endif
 ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
-#SUBMODULES                              = deps/secp256k1
-SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
+SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -45,6 +44,7 @@ gnostr-cli\
 gnostr-client\
 gnostr-db\
 gnostr-db-cli\
+gnostr-get-relays\
 gnostr-getrelays\
 gnostr-git-log\
 gnostr-git-reflog\
@@ -53,6 +53,7 @@ gnostr-keyconv\
 gnostr-modal\
 gnostr-post\
 gnostr-post-event\
+gnostr-proxy\
 gnostr-query\
 gnostr-relays\
 gnostr-req\
@@ -162,7 +163,8 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git act/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+##submodules:deps/secp256k1/.git git/.git cat/.git py/.git act/.git proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:$(SUBMODULES).git
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
@@ -356,60 +358,53 @@ gnostr-org:deps/gnostr-org
 
 
 
-deps/gnostr-proxy/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-proxy
-.PHONY:deps/gnostr-proxy
-deps/gnostr-proxy:deps/gnostr-proxy/.git
-	cd deps/gnostr-proxy && \
+.PHONY:proxy
+proxy/.git:
+	@devtools/refresh-submodules.sh proxy
+
+gnostr-proxy:proxy## 	gnostr-proxy
+proxy:proxy/.git
+	install ./proxy/gnostr-proxy template
+	install ./proxy/gnostr-proxy /usr/local/bin
+	cd proxy && \
 		$(MAKE) install
-gnostr-proxy:deps/gnostr-proxy
-	install deps/gnostr-proxy/gnostr-proxy template
-	install deps/gnostr-proxy/gnostr-proxy /usr/local/bin
 
 
 
-#deps/gnostr-relay/.git:
-#	@devtools/refresh-submodules.sh deps/gnostr-relay
-##.PHONY:deps/gnostr-relay/gnostr-relay
-#deps/gnostr-relay:deps/gnostr-relay/.git
-#	cd deps/gnostr-relay && \
-#		make
-##gnostr-relay:deps/gnostr-relay/target/release/gnostr-relay## 	gnostr-relay
-#.PHONY:deps/gnostr-relay
-##PHONY for now...
-#gnostr-relay:deps/gnostr-relay## 	gnostr-relay
-#	cp $< $@
-
-
-deps/gnostr-cat/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-cat
-#.PHONY:deps/gnostr-cat
-deps/gnostr-cat:deps/gnostr-cat/.git
-.PHONY:deps/gnostr-cat/target/release/gnostr-cat
-deps/gnostr-cat/target/release/gnostr-cat:deps/gnostr-cat
-	cd deps/gnostr-cat && \
-		make cargo-build-release install
-	@cp $@ gnostr-cat || echo "" 2>/dev/null
-.PHONY:gnostr-cat
-gnostr-cat:deps/gnostr-cat/target/release/gnostr-cat
+.PHONY:relay gnostr-relay
+relay/.git:
+	@devtools/refresh-submodules.sh
+relay/target/release/gnostr-relay:##
+	cd relay && \
+		make cargo-build-release
+gnostr-relay:relay
+relay:relay/.git
+	cd relay && \
+		make cargo-install
 
 
 
-.PHONY:cli/.git
+.PHONY:gnostr-cat cat
+cat/.git:
+	@devtools/refresh-submodules.sh cat
+.PHONY:cat
+gnostr-cat:cat
+cat:cat/.git
+	cd cat && \
+		make cargo-install
+
+
+
+.PHONY:cli/.git gnostr-cli cli
 cli/.git:
 	@devtools/refresh-submodules.sh cli
 .PHONY:cli/target/release/gnostr-cli
-cli/target/release/gnostr-cli:cli/.git
+gnostr-cli:cli
+cli:cli/.git
 	cd cli && \
-		make cargo-build-release cargo-install
+		make cargo-install
 	@cp $@ gnostr-cli || echo "" 2>/dev/null
 .PHONY:gnostr-cli cli
-##gnostr-cli
-##deps/gnostr-cli deps/gnostr-cli/.git
-##	cd deps/gnostr-cli; \
-##	make cargo-build-release cargo-install
-cli:gnostr-cli
-gnostr-cli:cli/target/release/gnostr-cli## 	gnostr-cli
 
 
 
