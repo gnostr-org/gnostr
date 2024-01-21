@@ -127,15 +127,30 @@
 [submodule "hyper-sdk"]
 	path = hyper-sdk
 	url = https://github.com/gnostr-org/hyper-sdk.git
+  ignore = dirty
+  depth = shallow
 [submodule "gnostr-cli"]
 	path = cli
 	url = https://github.com/gnostr-org/gnostr-cli.git
+  ignore = dirty
+  depth = shallow
 [submodule "gnostr-legit"]
 	path = legit
 	url = https://github.com/gnostr-org/gnostr-legit.git
+  ignore = dirty
+  depth = shallow
 [submodule "gnostr-git"]
 	path = git
 	url = https://github.com/gnostr-org/gnostr-git.git
+  ignore = dirty
+  depth = shallow
 [submodule "gnostr-act"]
 	path = act
 	url = https://github.com/gnostr-org/gnostr-act.git
+  ignore = dirty
+  depth = shallow
+[submodule "nostr-protocol/nips"]
+	path = nips
+	url = https://github.com/nostr-protocol/nips.git
+  ignore = dirty
+  depth = shallow
