@@ -164,3 +164,6 @@
 	url = https://github.com/gnostr-org/gnostr-proxy.git
   ignore = dirty
   depth = shallow
+[submodule "gnostr-org"]
+	path = org
+	url = https://github.com/gnostr-org/gnostr-org.git
