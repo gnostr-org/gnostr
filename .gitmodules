@@ -157,3 +157,10 @@
 [submodule "gnostr-py"]
 	path = py
 	url = https://github.com/gnostr-org/gnostr-py.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-proxy"]
+	path = proxy
+	url = https://github.com/gnostr-org/gnostr-proxy.git
+  ignore = dirty
+  depth = shallow
