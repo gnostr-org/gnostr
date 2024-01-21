@@ -44,6 +44,7 @@ gnostr-cli\
 gnostr-client\
 gnostr-db\
 gnostr-db-cli\
+gnostr-get-relays\
 gnostr-getrelays\
 gnostr-git-log\
 gnostr-git-reflog\
