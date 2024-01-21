@@ -22,8 +22,7 @@ endif
 ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
-#SUBMODULES                              = deps/secp256k1
-SUBMODULES                              = deps/secp256k1 deps/git deps/gnostr-cat deps/gnostr-act deps/openssl deps/gnostr-py deps/gnostr-aio legit deps/gnostr-relay deps/gnostr-proxy deps/gnostr-relay ext/boost_1_82_0
+SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -163,7 +162,8 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:deps/secp256k1/.git git/.git deps/gnostr-cat/.git deps/gnostr-aio/.git deps/gnostr-py/.git act/.git deps/gnostr-proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+##submodules:deps/secp256k1/.git git/.git cat/.git py/.git act/.git proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+submodules:$(SUBMODULES).git
 	git submodule update --init --recursive
 
 #.PHONY:deps/secp256k1/config.log
