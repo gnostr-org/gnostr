@@ -24,8 +24,19 @@ help(){
 	exit
 }
 for ((i=1; i<=$#; i++)); do
+
 declare REPO
 REPO=$(pwd | grep -o '[^/]*$')
+
+declare WEEBLE=$(gnostr-weeble)
+WEEBLE=${WEEBLE:-0}
+
+declare BLOCKHEIGHT=$(gnostr-blockheight)
+WOBBLE=${BLOCKHEIGHT:-0}
+
+declare WOBBLE=$(gnostr-wobble)
+WOBBLE=${WOBBLE:-0}
+
 if
 	[[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
 	help
@@ -36,15 +47,15 @@ elif
 	exit
 elif
 [[ ${!i} == "--hash-list" ]] || [[ ${!i} == "-hl" ]]; then
-	gnostr-git    log      --format="$REPO/%C(auto)%H"
+  gnostr-git    log      --format="$REPO/$WEEBLE/$BLOCKHEIGHT/$WOBBLE/%C(auto)%H"
 	exit
 elif
 [[ ${!i} == "--format" ]] || [[ ${!i} == "-f" ]]; then
-	gnostr-git    log      --format="$REPO/%C(auto)%H/%<|(17)%gd/commit/%s"
+  gnostr-git reflog      --format="$REPO/$WEEBLE/$BLOCKHEIGHT/$WOBBLE/%C(auto)%H/%<|(17)%gd/commit/%s"
 	exit
 elif
 [[ ${!i} == "-gd" ]] || [[ ${!i} == "-g" ]]; then
-	gnostr-git    log      --format="$REPO/%C(auto)%H%<|(17)%gd"
+  gnostr-git reflog      --format="$REPO/$WEEBLE/$BLOCKHEIGHT/$WOBBLE/%C(auto)%H%<|(17)/%gd"
 	exit
 else
 	##silence is golden
