@@ -139,3 +139,6 @@
 	url = https://github.com/bitcoin/secp256k1.git
   ignore = dirty
   depth = shallow
+[submodule "deps/secp256k1"]
+	path = dep/secp256k1
+	url = https://github.com/bitcoin/secp256k1.git
