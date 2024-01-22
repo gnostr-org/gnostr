@@ -163,7 +163,6 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-##submodules:secp256k1/.git git/.git cat/.git py/.git act/.git proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 submodules:$(SUBMODULES).git
 	git submodule update --init --recursive
 
