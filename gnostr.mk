@@ -316,7 +316,7 @@ modal:
 gnostr-tui:tui
 tui:
 	@devtools/refresh-submodules.sh tui
-	@cd tui && make build-release install && cd ..
+	@cd tui && make cargo-i && cd ..
 .PHONY:db gnostr-db
 gnostr-db:db
 db:
