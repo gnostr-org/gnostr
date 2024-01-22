@@ -52,6 +52,8 @@ export RUSTUP_INIT_SKIP_PATH_CHECK
 export TOOLCHAIN
 export Z
 
+SUBMODULES=:$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
+
 ifeq ($(verbose),true)
 VERBOSE                                 :=-v
 else
@@ -320,6 +322,8 @@ report:## 	print make variables
 	@echo 'OS=${OS}'
 	@echo 'OS_VERSION=${OS_VERSION}'
 	@echo 'ARCH=${ARCH}'
+	@echo ''
+	@echo 'SUBMODULES=${SUBMODULES}'
 	@echo ''
 	@echo 'PYTHON=${PYTHON}'
 	@echo 'PYTHON2=${PYTHON2}'
