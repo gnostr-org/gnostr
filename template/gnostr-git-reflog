@@ -23,6 +23,8 @@ help(){
 	exit
 }
 for ((i=1; i<=$#; i++)); do
+declare REPO
+REPO=$(pwd | grep -o '[^/]*$')
 if
 	[[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
 	help
@@ -33,15 +35,15 @@ elif
 	exit
 elif
 [[ ${!i} == "--hash-list" ]] || [[ ${!i} == "-hl" ]]; then
-	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H'
+	gnostr-git reflog      --format="$REPO/%C(auto)%H"
 	exit
 elif
 [[ ${!i} == "--format" ]] || [[ ${!i} == "-f" ]]; then
-	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd/commit/%s'
+	gnostr-git reflog      --format="$REPO/%C(auto)%H/%<|(17)%gd/commit/%s"
 	exit
 elif
 [[ ${!i} == "-gd" ]] || [[ ${!i} == "-g" ]]; then
-	gnostr-git reflog      --format='wss://{RELAY}/{REPO}/%C(auto)%H%<|(17)%gd'
+	gnostr-git reflog      --format="$REPO/%C(auto)%H%<|(17)%gd"
 	exit
 else
 	##silence is golden
