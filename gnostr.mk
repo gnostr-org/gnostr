@@ -1,4 +1,4 @@
-CFLAGS                                  = -Wall -O2 -Ideps/secp256k1/include
+CFLAGS                                  = -Wall -O2 -Isecp256k1/include
 CFLAGS                                 += -I/include
 LDFLAGS                                 = -Wl -V
 GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
@@ -10,7 +10,7 @@ HEADERS                                 = $(HEADER_INCLUDE)/hex.h \
                                          $(HEADER_INCLUDE)/random.h \
                                          $(HEADER_INCLUDE)/config.h \
                                          $(HEADER_INCLUDE)/sha256.h \
-                                         deps/secp256k1/include/secp256k1.h
+                                         secp256k1/include/secp256k1.h
 
 ifneq ($(prefix),)
 	PREFIX                             :=$(prefix)
@@ -163,31 +163,31 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-##submodules:deps/secp256k1/.git git/.git cat/.git py/.git act/.git proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
+##submodules:secp256k1/.git git/.git cat/.git py/.git act/.git proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
 submodules:$(SUBMODULES).git
 	git submodule update --init --recursive
 
-#.PHONY:deps/secp256k1/config.log
+#.PHONY:secp256k1/config.log
 .ONESHELL:
-deps/secp256k1/.git:
-	devtools/refresh-submodules.sh deps/secp256k1
-deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
-#.PHONY:deps/secp256k1/configure
+secp256k1/.git:
+	devtools/refresh-submodules.sh secp256k1
+secp256k1/include/secp256k1.h: secp256k1/.git
+#.PHONY:secp256k1/configure
 ## force configure if build on host then in docker vm
-.PHONY:deps/secp256k1/configure## 	This MUST be PHONY for docker builds
-deps/secp256k1/configure: deps/secp256k1/include/secp256k1.h
-	cd deps/secp256k1 && \
+.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
+secp256k1/configure:secp256k1/include/secp256k1.h
+	cd secp256k1 && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
-.PHONY:deps/secp256k1/.libs/libsecp256k1.a
-deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
-libsecp256k1.a:deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
+.PHONY:secp256k1/.libs/libsecp256k1.a
+secp256k1/.libs/libsecp256k1.a:secp256k1/configure
+libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
 ##libsecp256k1.a
-##	deps/secp256k1/.git
-##	deps/secp256k1/include/secp256k1.h
-##	deps/secp256k1/./autogen.sh
-##	deps/secp256k1/./configure
+##	secp256k1/.git
+##	secp256k1/include/secp256k1.h
+##	secp256k1/./autogen.sh
+##	secp256k1/./configure
 
 
 deps/jq/modules/oniguruma.git:
@@ -273,14 +273,12 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 	cd build && make all install && install gnostr-tests /usr/local/bin || echo
 	$(MAKE) gnostr-install || echo
 
-deps/gnostr-command/.git:gnostr-git
-	@devtools/refresh-submodules.sh deps/gnostr-command
-deps/gnostr-command/gnostr-command:deps/gnostr-command/.git
-	cd deps/gnostr-command && \
+command/.git:gnostr-git
+	@devtools/refresh-submodules.sh command
+gnostr-command:command
+command:command/.git
+	cd command && \
 		make cargo-b-release
-deps/gnostr-command/target/release/gnostr-command:deps/gnostr-command/gnostr-command## 	gnostr-command
-gnostr-command:deps/gnostr-command/target/release/gnostr-command## 	gnostr-command
-	cp $< $@ && exit;
 
 .PHONY:bins gnostr-bins
 gnostr-bins:bins
@@ -316,7 +314,7 @@ modal:
 gnostr-tui:tui
 tui:
 	@devtools/refresh-submodules.sh tui
-	@cd tui && make build-release install && cd ..
+	@cd tui && make cargo-i && cd ..
 .PHONY:db gnostr-db
 gnostr-db:db
 db:
@@ -335,14 +333,14 @@ gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
-deps/gnostr-sha256/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-sha256
-#.PHONY:deps/gnostr-sha256/gnostr-sha256
-deps/gnostr-sha256/gnostr-sha256:deps/gnostr-sha256/.git
-	cd deps/gnostr-sha256 && \
-		make cargo-b-release install
-deps/gnostr-sha256/target/release/gnostr-sha256:deps/gnostr-sha256/gnostr-sha256## 	gnostr-sha256
-gnostr-sha256:deps/gnostr-sha256/target/release/gnostr-sha256
+.PHONY:sha256.git sha256
+sha256/.git:
+	@devtools/refresh-submodules.sh sha256
+#.PHONY:sha256/gnostr-sha256
+sha256:sha256/.git
+	cd sha256 && \
+		make install
+gnostr-sha256:sha256
 
 
 
@@ -454,7 +452,7 @@ act:act/bin/gnostr-act
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY:gnostr
-gnostr:deps/secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 ##	git submodule update --init --recursive
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
