@@ -371,10 +371,7 @@ proxy:proxy/.git
 
 .PHONY:relay gnostr-relay
 relay/.git:
-	@devtools/refresh-submodules.sh
-relay/target/release/gnostr-relay:##
-	cd relay && \
-		make cargo-build-release
+	@devtools/refresh-submodules.sh relay
 gnostr-relay:relay
 relay:relay/.git
 	cd relay && \
