@@ -1,61 +1,6 @@
-[submodule "deps/secp256k1"]
-	path = deps/secp256k1
-	url = https://github.com/bitcoin/secp256k1.git
-	branch = master
-	ignore = dirty
-[submodule "deps/hyper-nostr"]
-	path = deps/hyper-nostr
-	url = https://github.com/gnostr-org/hyper-nostr.git
-	branch = master
-	ignore = dirty
 [submodule "gnostr-cat"]
 	path = cat
 	url = https://github.com/gnostr-org/gnostr-cat.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-aio"]
-	path = deps/gnostr-aio
-	url = https://github.com/gnostr-org/gnostr-aio.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-py"]
-	path = deps/gnostr-py
-	url = https://github.com/gnostr-org/gnostr-py.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-proxy"]
-	path = deps/gnostr-proxy
-	url = https://github.com/gnostr-org/gnostr-proxy.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-grep"]
-	path = deps/gnostr-grep
-	url = https://github.com/gnostr-org/gnostr-grep.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-command"]
-	path = deps/gnostr-command
-	url = https://github.com/gnostr-org/gnostr-command.git
-	branch = master
-	ignore = dirty
-[submodule "nips"]
-	path = nips
-	url = https://github.com/gnostr-org/nips.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-sha256"]
-	path = deps/gnostr-sha256
-	url = https://github.com/gnostr-org/gnostr-sha256.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-lfs"]
-	path = deps/gnostr-lfs
-	url = https://github.com/gnostr-org/gnostr-lfs.git
-	branch = master
-	ignore = dirty
-[submodule "deps/gnostr-org"]
-	path = deps/gnostr-org
-	url = https://github.com/gnostr-org/gnostr-org.git
 	branch = master
 	ignore = dirty
 [submodule "ext/wxWidgets-3.2.2.1"]
@@ -162,5 +107,35 @@
 [submodule "gnostr-core"]
 	path = core
 	url = https://github.com/gnostr-org/gnostr-core.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-sha256"]
+	path = sha256
+	url = https://github.com/gnostr-org/gnostr-sha256.git
+  ignore = dirty
+  depth = shallow
+[submodule "hyper-nostr"]
+	path = hyper-nostr
+	url = https://github.com/gnostr-org/hyper-nostr.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-lfs"]
+	path = lfs
+	url = https://github.com/gnostr-org/gnostr-lfs.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-grep"]
+	path = grep
+	url = https://github.com/gnostr-org/gnostr-grep.git
+  ignore = dirty
+  depth = shallow
+[submodule "gnostr-command"]
+	path = command
+	url = https://github.com/gnostr-org/gnostr-command.git
+  ignore = dirty
+  depth = shallow
+[submodule "secp256k1"]
+	path = secp256k1
+	url = https://github.com/bitcoin/secp256k1.git
   ignore = dirty
   depth = shallow
