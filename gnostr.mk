@@ -273,12 +273,13 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 	cd build && make all install && install gnostr-tests /usr/local/bin || echo
 	$(MAKE) gnostr-install || echo
 
+.PHONY:command gnostr-command
 command/.git:gnostr-git
 	@devtools/refresh-submodules.sh command
 gnostr-command:command
 command:command/.git
 	cd command && \
-		make cargo-b-release
+		make cargo-br-async-std
 
 .PHONY:bins/.git bins gnostr-bins
 bins/.git:
