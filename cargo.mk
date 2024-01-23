@@ -13,6 +13,7 @@ cargo-build:### 	cargo build
 ## 	make cargo-build q=true
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
+cargo-i:cargo-install
 cargo-install:### 	cargo install --path .
 	#@. $(HOME)/.cargo/env
 	@cargo install --path $(PWD)
