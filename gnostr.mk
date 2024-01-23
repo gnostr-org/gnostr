@@ -403,23 +403,18 @@ cli:cli/.git
 		make cargo-install
 .PHONY:gnostr-cli cli
 
+.PHONY:grep/.git gnostr-grep grep
+grep/.git:
+	@devtools/refresh-submodules.sh grep
+.PHONY:grep/target/release/gnostr-grep
+gnostr-grep:grep
+grep:grep/.git
+	cd grep && \
+		make cargo-install
+.PHONY:gnostr-grep grep
 
 
-deps/gnostr-grep/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-grep
-.PHONY:deps/gnostr-grep
-deps/gnostr-grep:deps/gnostr-grep/.git
-.PHONY:deps/gnostr-grep/target/release/gnostr-grep
-deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
-	cd deps/gnostr-grep && \
-		make install
-	@cp $@ gnostr-grep || echo "" 2>/dev/null
-.PHONY:gnostr-grep
-##gnostr-grep
-##deps/gnostr-grep deps/gnostr-grep/.git
-##	cd deps/gnostr-grep; \
-##	make cargo-install
-gnostr-grep:deps/gnostr-grep/target/release/gnostr-grep## 	gnostr-grep
+
 
 
 
@@ -446,16 +441,13 @@ act:act/bin/gnostr-act
 
 
 
-%.o: %.c $(HEADERS)
+%.o: src/%.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY:gnostr
 gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
-##	git submodule update --init --recursive
-##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-#	git submodule update --init --recursive
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
 	install gnostr /usr/local/bin/
 
