@@ -403,23 +403,18 @@ cli:cli/.git
 		make cargo-install
 .PHONY:gnostr-cli cli
 
+.PHONY:grep/.git gnostr-grep grep
+grep/.git:
+	@devtools/refresh-submodules.sh grep
+.PHONY:grep/target/release/gnostr-grep
+gnostr-grep:grep
+grep:grep/.git
+	cd grep && \
+		make cargo-install
+.PHONY:gnostr-grep grep
 
 
-deps/gnostr-grep/.git:
-	@devtools/refresh-submodules.sh deps/gnostr-grep
-.PHONY:deps/gnostr-grep
-deps/gnostr-grep:deps/gnostr-grep/.git
-.PHONY:deps/gnostr-grep/target/release/gnostr-grep
-deps/gnostr-grep/target/release/gnostr-grep:deps/gnostr-grep
-	cd deps/gnostr-grep && \
-		make install
-	@cp $@ gnostr-grep || echo "" 2>/dev/null
-.PHONY:gnostr-grep
-##gnostr-grep
-##deps/gnostr-grep deps/gnostr-grep/.git
-##	cd deps/gnostr-grep; \
-##	make cargo-install
-gnostr-grep:deps/gnostr-grep/target/release/gnostr-grep## 	gnostr-grep
+
 
 
 
