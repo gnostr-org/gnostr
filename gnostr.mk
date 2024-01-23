@@ -280,9 +280,11 @@ command:command/.git
 	cd command && \
 		make cargo-b-release
 
-.PHONY:bins gnostr-bins
+.PHONY:bins/.git bins gnostr-bins
+bins/.git:
+	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
-bins:
+bins:bins/.git
 	@cd bins && make cargo-b-release && make cargo-i
 .PHONY:get-relays gnostr-get-relays
 gnostr-get-relays:get-relays
