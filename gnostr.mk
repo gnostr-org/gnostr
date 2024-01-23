@@ -163,7 +163,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:$(SUBMODULES).git
+submodules:$(SUBMODULES)
 	git submodule update --init --recursive
 
 #.PHONY:secp256k1/config.log
