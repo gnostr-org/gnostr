@@ -398,7 +398,6 @@ gnostr-cli:cli
 cli:cli/.git
 	cd cli && \
 		make cargo-install
-	@cp $@ gnostr-cli || echo "" 2>/dev/null
 .PHONY:gnostr-cli cli
 
 
