@@ -125,7 +125,7 @@ doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
 	#bash -c "for n in $(ls gnostr-* ); do [ -x $n ] &&  help2man $n > doc/$n.1 || true; done"
 
 .PHONY: version
-version: gnostr.c## 	print version
+version: src/gnostr.c## 	print version
 	@grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
 #	@cat $@
 .PHONY:GIT-VERSION-FILE git-version
