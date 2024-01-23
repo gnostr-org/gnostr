@@ -163,8 +163,7 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-##submodules:secp256k1/.git git/.git cat/.git py/.git act/.git proxy/.git #ext/boost_1_82_0/.git ## 	refresh-submodules
-submodules:$(SUBMODULES).git
+submodules:$(SUBMODULES)
 	git submodule update --init --recursive
 
 #.PHONY:secp256k1/config.log
@@ -281,9 +280,11 @@ command:command/.git
 	cd command && \
 		make cargo-b-release
 
-.PHONY:bins gnostr-bins
+.PHONY:bins/.git bins gnostr-bins
+bins/.git:
+	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
-bins:
+bins:bins/.git
 	@cd bins && make cargo-b-release && make cargo-i
 .PHONY:get-relays gnostr-get-relays
 gnostr-get-relays:get-relays
@@ -399,7 +400,6 @@ gnostr-cli:cli
 cli:cli/.git
 	cd cli && \
 		make cargo-install
-	@cp $@ gnostr-cli || echo "" 2>/dev/null
 .PHONY:gnostr-cli cli
 
 

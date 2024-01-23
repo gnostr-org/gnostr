@@ -139,3 +139,5 @@
 	url = https://github.com/bitcoin/secp256k1.git
   ignore = dirty
   depth = shallow
+[submodule "nips"]
+	url = https://github.com/gnostr-org/nips.git
