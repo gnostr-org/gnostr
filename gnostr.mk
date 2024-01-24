@@ -193,19 +193,17 @@ libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 jq/modules/oniguruma.git:
 	devtools/refresh-submodules.sh jq
 jq/.git:jq/modules/oniguruma.git
-#.PHONY:deps/jq/.libs/libjq.a
 jq/.libs/libjq.a:jq/.git
+	cd jq && \
+		autoreconf -fi && ./configure --disable-maintainer-mode && make install gnostr-jq-install && cd ../..
+jq/gnostr-jq:jq/.libs/libjq.a
 	cd jq && \
 		autoreconf -fi && ./configure --disable-maintainer-mode && make install gnostr-jq-install && cd ../..
 ##libjq.a
 ##	cp $< jq/libjq.a .
-jq/gnostr-jq:jq/.libs/libjq.a
-	cd jq && \
-		autoreconf -fi && ./configure --disable-maintainer-mode && make install gnostr-jq-install && cd ../..
-.PHONY:libjq.a jq
 libjq.a: jq/.libs/libjq.a## 	libjq.a
 	cp $< $@
-.PHONY:gnostr-jq jq/gnostr-jq
+#.PHONY:gnostr-jq jq/gnostr-jq
 gnostr-jq:jq/gnostr-jq
 	cp $< $@
 
