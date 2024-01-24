@@ -116,8 +116,7 @@ ssize_t base64_decode_quartet_using_maps(const base64_maps_t *maps,
  * @note sets errno = EDOM if src contains invalid characters
  * @note sets errno = EINVAL if src is an invalid base64 tail
  */
-ssize_t base64_decode_tail_using_maps(const base64_maps_t *maps, char *dest,
-				      const char *src, size_t srclen);
+ssize_t base64_decode_tail_using_maps(const base64_maps_t *maps, char *dest, const char *src, size_t srclen);
 
 
 /* the rfc4648 functions: */
