@@ -312,8 +312,6 @@ int system_calls(){
       std::cout << "stderr: " << line << '\n';
 
 
-    return 0;
-
     int gnostr_sha256 = system("gnostr-sha256");
     //std::cout << gnostr_sha256 << std::endl;
     int gnostr_weeble = system("gnostr-weeble");
