@@ -385,6 +385,7 @@ nvm-clean: ## 	nvm-clean
 -include venv.mk
 -include clean.mk
 -include cargo.mk
+-include tests.mk
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
