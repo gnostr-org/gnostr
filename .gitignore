@@ -183,3 +183,11 @@ gnostr-alpine
 
 #/target
 .gnostr/webview
+
+
+#test
+
+gnostr-get-relays-test
+gnostr-sha256-tests
+gnostr-test
+gnostr-tests.ld_Fyo5JH
