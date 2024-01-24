@@ -29,7 +29,9 @@ int read_lists();
 int relay_all(const std::string& json);
 int get_feed();
 int get_metadata();
-int system_calls();
+int gnostr();
+int gnostr_get_relays();
+int gnostr_sha256();
 
 std::vector<std::string> relays = { "eden.nostr.land",
   "nos.lol",
@@ -88,7 +90,9 @@ int main(int argc, char * argv[])
     }
 
     //get_metadata();
-    system_calls();
+    gnostr();
+    gnostr_get_relays();
+    gnostr_sha256();
 
     return 0;
 }
@@ -280,7 +284,7 @@ int get_metadata()
   return 0;
 }
 
-int system_calls(){
+int gnostr(){
 
     redi::ipstream proc("./gnostr", redi::pstreams::pstdout | redi::pstreams::pstderr);
     std::string line;
@@ -294,13 +298,18 @@ int system_calls(){
     while (std::getline(proc.err(), line))
       std::cout << "stderr: " << line << '\n';
 
+  return 0;
+}
+
+int gnostr_get_relays(){
+
     std::string gcc_command = "gcc ";
     gcc_command = gcc_command + " -o gnostr-get-relays " + "src/gnostr-get-relays.c";
     const char* compile = gcc_command.c_str();
     system(compile);
 
     redi::ipstream proc2("./gnostr-get-relays", redi::pstreams::pstdout | redi::pstreams::pstderr);
-    //std::string line;
+    std::string line;
     // read child's stdout
     while (std::getline(proc2.out(), line))
       std::cout << "stdout: " << line << '\n';
@@ -311,6 +320,10 @@ int system_calls(){
     while (std::getline(proc2.err(), line))
       std::cout << "stderr: " << line << '\n';
 
+  return 0;
+}
+
+int gnostr_sha256(){
 
     int gnostr_sha256 = system("gnostr-sha256");
     //std::cout << gnostr_sha256 << std::endl;
