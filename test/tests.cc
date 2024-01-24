@@ -1,19 +1,22 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'Nostr_client_relay'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
 #include <string>
 #include <vector>
-#include <fstream> 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <future>
 #include <algorithm>
 
+
+#include "../include/pstream.h"
 #include "../src/uuid.hh"
 #include "../src/log.hh"
 #include "../src/nostr.hh"
 #include "../src/argparse.hpp"
+#include "../include/sha256.h"
 
 std::string log_program_name("tests");
 
@@ -26,6 +29,7 @@ int read_lists();
 int relay_all(const std::string& json);
 int get_feed();
 int get_metadata();
+int system_calls();
 
 std::vector<std::string> relays = { "eden.nostr.land",
   "nos.lol",
@@ -83,7 +87,8 @@ int main(int argc, char * argv[])
         std::cout << std::string("port2") << std::endl;
     }
 
-    get_metadata();
+    //get_metadata();
+    system_calls();
 
     return 0;
 }
@@ -192,7 +197,9 @@ int get_feed()
 {
   std::vector<std::string> pubkeys;
   std::string uri = "nos.lol";
-  const std::string pubkey("4ea843d54a8fdab39aa45f61f19f3ff79cc19385370f6a272dda81fade0a052b");
+  //const std::string pubkey("4ea843d54a8fdab39aa45f61f19f3ff79cc19385370f6a272dda81fade0a052b");
+  //gnostr --sec $(gnostr-sha256)
+  const std::string pubkey("a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd");
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   // get_follows returns a list of pubkeys
@@ -202,7 +209,7 @@ int get_feed()
   comm::to_file("pubkeys.txt", pubkeys);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
-  // get feed returns an array of JSON events 
+  // get feed returns an array of JSON events
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   for (int idx_key = 0; idx_key < pubkeys.size(); idx_key++)
@@ -227,8 +234,9 @@ int get_metadata()
 {
   std::vector<std::string> pubkeys;
   std::string uri = "nos.lol";
-  const std::string pubkey("4ea843d54a8fdab39aa45f61f19f3ff79cc19385370f6a272dda81fade0a052b");
-
+  //const std::string pubkey("4ea843d54a8fdab39aa45f61f19f3ff79cc19385370f6a272dda81fade0a052b");
+  //gnostr --sec $(gnostr-sha256)
+  const std::string pubkey("a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd");
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   // get_follows returns a list of pubkeys
   /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,5 +278,69 @@ int get_metadata()
   }
 
   return 0;
+}
+
+int system_calls(){
+
+    redi::ipstream proc("./gnostr", redi::pstreams::pstdout | redi::pstreams::pstderr);
+    std::string line;
+    // read child's stdout
+    while (std::getline(proc.out(), line))
+      std::cout << "stdout: " << line << '\n';
+    // if reading stdout stopped at EOF then reset the state:
+    if (proc.eof() && proc.fail())
+      proc.clear();
+    // read child's stderr
+    while (std::getline(proc.err(), line))
+      std::cout << "stderr: " << line << '\n';
+
+    std::string gcc_command = "gcc ";
+    gcc_command = gcc_command + " -o gnostr-get-relays " + "src/gnostr-get-relays.c";
+    const char* compile = gcc_command.c_str();
+    system(compile);
+
+    redi::ipstream proc2("./gnostr-get-relays", redi::pstreams::pstdout | redi::pstreams::pstderr);
+    //std::string line;
+    // read child's stdout
+    while (std::getline(proc2.out(), line))
+      std::cout << "stdout: " << line << '\n';
+    // if reading stdout stopped at EOF then reset the state:
+    if (proc2.eof() && proc2.fail())
+      proc2.clear();
+    // read child's stderr
+    while (std::getline(proc2.err(), line))
+      std::cout << "stderr: " << line << '\n';
+
+
+    return 0;
+
+    int gnostr_sha256 = system("gnostr-sha256");
+    //std::cout << gnostr_sha256 << std::endl;
+    int gnostr_weeble = system("gnostr-weeble");
+    int gnostr_blockheight = system("gnostr-blockheight");
+    int gnostr_wobble = system("gnostr-wobble");
+
+    int returnCode = system("");
+    // checking if the command was executed successfully
+    if (returnCode == 0) {
+      // std::cout << "Command executed successfully." << std::endl;
+    }
+    else {
+      std::cout << "Command execution failed or returned "
+                "non-zero: "
+             << returnCode << std::endl;
+    }
+    // checking if the command was executed successfully
+    // if (returnCode == 0) {
+    //   std::cout << "Command executed successfully." << std::endl;
+    // }
+    // else {
+    //   std::cout << "Command execution failed or returned "
+    //             "non-zero: "
+    //          << returnCode << std::endl;
+    // }
+
+    return 0;
+
 }
 
