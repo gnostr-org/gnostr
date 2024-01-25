@@ -16,4 +16,5 @@ keywords = ["git", "gui", "cli", "terminal", "ui", "gnostr"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+gnostr-bins = "0.0.5"
 inline-c = "0.1.7"
