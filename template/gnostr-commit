@@ -26,8 +26,17 @@ WOBBLE=${gnostr-wobble:-}
 ##
 ###exit;
 
+## git show --oneline -q
+## --show-signature
+#GIT_SHOW_Q=$(git show -q)
+#export GIT_SHOW_Q
+#echo -e $GIT_SHOW_Q
+GIT_SHOW_HEAD=$(git show --show-signature HEAD)
+export GIT_SHOW_HEAD
+echo -e $GIT_SHOW_HEAD
+exit
 ARG=${1:-}
-CONTENT=${2:-#gnostr}
+CONTENT=${GIT_SHOW_HEAD:2}
 
 if [[ $ARG == "-h" ]];
 then
@@ -51,6 +60,9 @@ then
 fi
 
 TMP=$(mktemp)
+#echo $GNOSTR_SHOW_Q > $TMP
+echo >> $TMP
+echo $GNOSTR_SHOW_HEAD >> $TMP
 
 if [[ $ARG == "--content" ]];
 then
@@ -87,7 +99,7 @@ elif command -v git >/dev/null; then
 	fi
 fi
 
-note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#gnostr:$content")
+note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#gnostr:$(git show HEAD)")
 
 RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/[{}]/''/g' |
