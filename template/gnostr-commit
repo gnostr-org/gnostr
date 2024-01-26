@@ -34,9 +34,11 @@ WOBBLE=${gnostr-wobble:-}
 GIT_SHOW_HEAD=$(git show --show-signature HEAD)
 export GIT_SHOW_HEAD
 echo -e $GIT_SHOW_HEAD
-exit
+
+#exit
+
 ARG=${1:-}
-CONTENT=${GIT_SHOW_HEAD:2}
+CONTENT=${GIT_SHOW_HEAD:-}
 
 if [[ $ARG == "-h" ]];
 then
@@ -61,7 +63,7 @@ fi
 
 TMP=$(mktemp)
 #echo $GNOSTR_SHOW_Q > $TMP
-echo >> $TMP
+echo $(git show -q) >> $TMP
 echo $GNOSTR_SHOW_HEAD >> $TMP
 
 if [[ $ARG == "--content" ]];
