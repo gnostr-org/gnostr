@@ -22,7 +22,7 @@ WEBSITE=gnostr.org
 echo "$WEBSITE"
 DAMUS_DONATION_V2=0
 echo "$DAMUS_DONATION_V2"
-LUD06=""
+LUD06="lud06test"
 echo "$LUD06"
 DISPLAY_NAME=$(gnostr-weeble)
 echo "$DISPLAY_NAME"
@@ -31,8 +31,11 @@ echo "$ABOUT"
 NAME=$(gnostr-weeble)
 echo "$NAME"
 
+CREATED_AT=$(date +%s)
+echo $CREATED_AT
+
 #MESSAGE=message
-MESSAGE={"content":"{\"website\":\"$WEBSITE\",\"lud06\":\"\",\"damus_donation\":0,\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}","created_at":1706290679,"id":"12ab57b02dfd76dc01649510f4cccf624665b486cc6c20289dfdc9dc5713c8de","kind":0,"pubkey":"b8cc8217b24ad57f9ddc4ee31fd91da75af6f9353d8124ee292d5145fdd99d0f","sig":"a44e1e3aab3596b22905e91146d0110983029fafbf259211bde01a84c278b55507441c9c9f86b5857cb983adcb28ae42a2dca309b6b2ce8b5ae808a9250465af","tags":[]}
+MESSAGE={"content":"{\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"damus_donation\":0,\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"$NAME\"}","created_at":$CREATED_AT,"id":"12ab57b02dfd76dc01649510f4cccf624665b486cc6c20289dfdc9dc5713c8de","kind":0,"pubkey":"b8cc8217b24ad57f9ddc4ee31fd91da75af6f9353d8124ee292d5145fdd99d0f","sig":"a44e1e3aab3596b22905e91146d0110983029fafbf259211bde01a84c278b55507441c9c9f86b5857cb983adcb28ae42a2dca309b6b2ce8b5ae808a9250465af","tags":[]}
 ##MESSAGE=\
 ##"\{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"damus_donation_v2\":$DAMUS_DONATION_V2,\"lud06\":\"$LUD06",\"picture\":\"$PICTURE\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT\",\"name\":\"$NAME\"\}"
 
