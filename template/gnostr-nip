@@ -1,6 +1,35 @@
 #!/usr/bin/env bash
+#
+declare PRIVKEY
+PRIVKEY=${2:-}
+
+help(){
+
+    printf "Usage:\n"
+    printf "gnostr-nip --sec <sha256_hash>\n"
+    printf "gnostr-nip --sec $(gnostr-sha256 $$)\n"
+
+}
+
+
+nip0(){
+
+MESSAGE=\
+{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"https://gnostr.org\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}
+
+
+gnostr --sec $PRIVKEY               \
+  --kind 0                          \
+  --tag gnostr gnostr               \
+  --tag weeble $(gnostr-weeble)     \
+  --tag wobble $(gnostr-wobble)     \
+  --tag block $(gnostr-blockheight) \
+  --content "$MESSAGE"
+}
+
 if [ ! -z "$1" ]; then
   if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    help
     if [ "$2" == "0" ]; then
     echo "NIP-0: metadata: the content is set to a stringified JSON object {name: <username>, about: <string>, picture: <url, string>} describing the user who created the event. A relay may delete older events once it gets a new one for the same pubkey.";
     fi
@@ -9,6 +38,15 @@ if [ ! -z "$1" ]; then
     fi
     if [ "$2" == "2" ]; then
       echo "NIP-2:"
+    fi
+  fi
+  if [ "$1" == "--sec" ]; then
+    if [ "$2" == "" ]; then
+      echo "provide a sha256 hash for private key"
+    else
+      PRIVKEY=$2
+      ## echo "$PRIVKEY"
+      nip0
     fi
   fi
 exit
@@ -27,19 +65,6 @@ fi
 ##     "tags": []
 ##   }
 ## ]
-
-MESSAGE=\
-{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"https://gnostr.org\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}
-
-
-gnostr --sec $(gnostr-sha256)       \
-  --kind 0                          \
-  --tag gnostr gnostr               \
-  --tag weeble $(gnostr-weeble)     \
-  --tag wobble $(gnostr-wobble)     \
-  --tag block $(gnostr-blockheight) \
-  --envelope                        \
-  --content "$MESSAGE"
 
 # gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
 #
