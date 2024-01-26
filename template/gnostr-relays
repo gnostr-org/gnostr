@@ -124,6 +124,12 @@ fi
 #gnostr-git config --global --replace-all gnostr.relays "wss://relay.damus.io ws://0.0.0.0:6102"
 #git config -l | grep gnostr.relays
 #gnostr-git config --global --replace-all gnostr.relays "ws://0.0.0.0:6102" && git config -l | grep gnostr.relays
-#echo $gnostr_relayer $gnostr_relays
+#
+for r in $gnostr_relays;
+do
+echo $1
+echo $1 | $gnostr_relayer -u $r
+$gnostr_relayer -u $r<($1)
+done
 
-$gnostr_relayer $gnostr_relays
+#$gnostr_relayer $gnostr_relays
