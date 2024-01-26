@@ -9,6 +9,23 @@ WOBBLE=${gnostr-wobble:-}
 #echo $WEEBLE
 #echo $WOBBLE
 
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+if [[ ! -z "$RELAYS" ]];
+then
+  for r in $RELAYS;
+  do
+    echo #$r
+  done
+fi
+
+#exit;
+
 ARG=${1:-}
 CONTENT=${2:-#gnostr}
 
@@ -72,9 +89,20 @@ fi
 
 note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-wobble) --content "GNOSTR:$content")
 
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+#echo $RELAYS
+
+for r in $RELAYS;
+do
 ##printf "relaying:\n" >&2
 printf "$note\n"
-<<<"$note" gnostr-relays
+<<<"$note" gnostr-cat $r
 printf "done.\n" >&2
-
+done
 rm -f "$TMP"
