@@ -11,13 +11,34 @@ help(){
 
 }
 
-
 nip0(){
 
-MESSAGE=\
-{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"https://gnostr.org\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}
+BANNER=https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4
+##echo $BANNER
+PICTURE=https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4
+echo $PICTURE
+##
+WEBSITE=gnostr.org
+echo "$WEBSITE"
+DAMUS_DONATION_V2=0
+echo "$DAMUS_DONATION_V2"
+LUD06=""
+echo "$LUD06"
+DISPLAY_NAME=$(gnostr-weeble)
+echo "$DISPLAY_NAME"
+ABOUT=$(gnostr-weeble)
+echo "$ABOUT"
+NAME=$(gnostr-weeble)
+echo "$NAME"
 
+#MESSAGE=message
+MESSAGE={"content":"{\"website\":\"$WEBSITE\",\"lud06\":\"\",\"damus_donation\":0,\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}","created_at":1706290679,"id":"12ab57b02dfd76dc01649510f4cccf624665b486cc6c20289dfdc9dc5713c8de","kind":0,"pubkey":"b8cc8217b24ad57f9ddc4ee31fd91da75af6f9353d8124ee292d5145fdd99d0f","sig":"a44e1e3aab3596b22905e91146d0110983029fafbf259211bde01a84c278b55507441c9c9f86b5857cb983adcb28ae42a2dca309b6b2ce8b5ae808a9250465af","tags":[]}
+##MESSAGE=\
+##"\{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"damus_donation_v2\":$DAMUS_DONATION_V2,\"lud06\":\"$LUD06",\"picture\":\"$PICTURE\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT\",\"name\":\"$NAME\"\}"
 
+#echo $MESSAGE
+
+#exit;
 gnostr --sec $PRIVKEY               \
   --kind 0                          \
   --tag gnostr gnostr               \
@@ -45,26 +66,13 @@ if [ ! -z "$1" ]; then
       echo "provide a sha256 hash for private key"
     else
       PRIVKEY=$2
-      ## echo "$PRIVKEY"
+      echo "$PRIVKEY"
       nip0
     fi
   fi
 exit
 fi
 
-## [
-##   "EVENT",
-##   "gnostr-query",
-##   {
-##     "content": "{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"sha256()\",\"about\":\"■\",\"name\":\"sha256()\"}",
-##     "created_at": 1694667257,
-##     "id": "c6fee3d5f0b3391fb25e26624f8a36e78c686c6e0fcf97da6a736bc0188695a0",
-##     "kind": 0,
-##     "pubkey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
-##     "sig": "a5f8af02461166f01645786970c43e8a2de8e45df123d9685cf76eca83e6bf98c8b44b957accd5d3fbc4b0cc69c089b465a1682680ad7491b6f1bc759cc21dfd",
-##     "tags": []
-##   }
-## ]
 
 # gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
 #
