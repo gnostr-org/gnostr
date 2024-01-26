@@ -9,22 +9,22 @@ WOBBLE=${gnostr-wobble:-}
 #echo $WEEBLE
 #echo $WOBBLE
 
-RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
-    sed -e 's/[{}]/''/g' |
-    sed -e 's/\[/''/g' |
-    sed -e 's/\]/''/g' |
-    sed -e 's/"//g' |
-    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
-
-if [[ ! -z "$RELAYS" ]];
-then
-  for r in $RELAYS;
-  do
-    echo #$r
-  done
-fi
-
-#exit;
+##RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+##    sed -e 's/[{}]/''/g' |
+##    sed -e 's/\[/''/g' |
+##    sed -e 's/\]/''/g' |
+##    sed -e 's/"//g' |
+##    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+##
+##if [[ ! -z "$RELAYS" ]];
+##then
+##  for r in $RELAYS;
+##  do
+##    echo #$r
+##  done
+##fi
+##
+###exit;
 
 ARG=${1:-}
 CONTENT=${2:-#gnostr}
@@ -43,7 +43,7 @@ then
 fi
 if [[ $ARG == "-v" ]];
 then
-  printf "v0.0.0"; exit
+  printf "v0.0.1"; exit
 fi
 if [[ $ARG == "--version" ]];
 then
@@ -87,7 +87,7 @@ elif command -v git >/dev/null; then
 	fi
 fi
 
-note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-wobble) --content "GNOSTR:$content")
+note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#gnostr:$content")
 
 RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/[{}]/''/g' |
@@ -97,12 +97,21 @@ RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
 
 #echo $RELAYS
+#
+##printf "relaying:\n" >&2
+printf "$note\n"
+<<<"$note" gnostr-cat -1 wss://relay.damus.io || true
+#printf "done.\n" >&2
+printf "$note\n"
+<<<"$note" gnostr-cat -1 wss://nos.lol || true
+#printf "done.\n" >&2
 
 for r in $RELAYS;
 do
 ##printf "relaying:\n" >&2
 printf "$note\n"
-<<<"$note" gnostr-cat $r
-printf "done.\n" >&2
+<<<"$note" gnostr-cat -1 $r || true
+#printf "done.\n" >&2
 done
+
 rm -f "$TMP"
