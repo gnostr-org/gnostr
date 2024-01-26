@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+set -e
+#uxo pipefail
+
+##echo $1 $2
+WEEBLE=${gnostr-weeble:-}
+WOBBLE=${gnostr-wobble:-}
+#echo $WEEBLE
+#echo $WOBBLE
+
+##RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+##    sed -e 's/[{}]/''/g' |
+##    sed -e 's/\[/''/g' |
+##    sed -e 's/\]/''/g' |
+##    sed -e 's/"//g' |
+##    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+##
+##if [[ ! -z "$RELAYS" ]];
+##then
+##  for r in $RELAYS;
+##  do
+##    echo #$r
+##  done
+##fi
+##
+###exit;
+
+ARG=${1:-}
+CONTENT=${2:-#gnostr}
+
+if [[ $ARG == "-h" ]];
+then
+  printf "gnostr-post help"; exit;
+fi
+if [[ $ARG == "--help" ]];
+then
+  printf "gnostr-post help"; exit
+fi
+if [[ $ARG == "help" ]];
+then
+  printf "gnostr-post help"; exit
+fi
+if [[ $ARG == "-v" ]];
+then
+  printf "v0.0.1"; exit
+fi
+if [[ $ARG == "--version" ]];
+then
+  printf "v0.0.0"; exit
+fi
+
+TMP=$(mktemp)
+
+if [[ $ARG == "--content" ]];
+then
+  echo $CONTENT > $TMP
+fi
+
+$EDITOR "$TMP"
+
+if [ ! -f "$TMP" ]; then
+	printf "could not create temporary file\n" >&2
+	exit 1
+fi
+
+content="$(cat $TMP)"
+
+re="^[[:space:]]*$"
+if [[ "$content" =~ $re ]]; then
+	printf "note empty. aborting.\n" >&2
+	exit 2
+fi
+
+sec=""
+if command -v gnostr-git >/dev/null; then
+	key=$(gnostr-git config gnostr.secretkey) || \
+  key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
+	if [ $key != "" ]; then
+		sec="--sec $key"
+	fi
+elif command -v git >/dev/null; then
+	key=$(git config nostr.secretkey) || \
+  key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
+	if [ $key != "" ]; then
+		sec="--sec $key"
+	fi
+fi
+
+note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#gnostr:$content")
+
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+
+#echo $RELAYS
+#
+##printf "relaying:\n" >&2
+printf "$note\n"
+<<<"$note" gnostr-cat -1 wss://relay.damus.io || true
+#printf "done.\n" >&2
+printf "$note\n"
+<<<"$note" gnostr-cat -1 wss://nos.lol || true
+#printf "done.\n" >&2
+
+##for r in $RELAYS;
+##do
+####printf "relaying:\n" >&2
+##printf "$note\n"
+##<<<"$note" gnostr-cat -1 $r || true
+###printf "done.\n" >&2
+##done
+
+rm -f "$TMP"
