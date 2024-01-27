@@ -5,8 +5,7 @@ gnostr-modal \- manual page for gnostr-modal v0.0.0
 .SH DESCRIPTION
 gnostr\-modal v0.0.0
 Casey Rodarmor <casey@rodarmor.com>
-???? A 40' shipping container for the internet \-
-https://github.com/casey/intermodal
+???? A 40' shipping container for the internet \- https://github.com/casey/intermodal
 .SS "USAGE:"
 .IP
 gnostr\-modal [FLAGS] [OPTIONS] <SUBCOMMAND>
@@ -20,36 +19,33 @@ Suppress normal output.
 .TP
 \fB\-t\fR, \fB\-\-terminal\fR
 Disable automatic terminal detection and behave as if both
-standard output and standard error are connected to a
-terminal.
+standard output and standard error are connected to a terminal.
 .TP
 \fB\-u\fR, \fB\-\-unstable\fR
-Enable unstable features. To avoid premature stabilization
-and excessive version churn, unstable features are
-unavailable unless this flag is set. Unstable features are
-not bound by semantic versioning stability guarantees, and
-may be changed or removed at any time.
+Enable unstable features. To avoid premature stabilization and
+excessive version churn, unstable features are unavailable
+unless this flag is set. Unstable features are not bound by
+semantic versioning stability guarantees, and may be changed or
+removed at any time.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 Print version number.
 .SS "OPTIONS:"
 .TP
 \fB\-c\fR, \fB\-\-color\fR <WHEN>
-Print colorful output according to `WHEN`. When
-`auto`, the default, colored output is only enabled if
-imdl detects that it is connected to a terminal, the
-`NO_COLOR` environment variable is not set, and the
-`TERM` environment variable is not set to `dumb`.
-[default: auto]  [possible values: auto, always,
-never]
+Print colorful output according to `WHEN`. When `auto`, the
+default, colored output is only enabled if imdl detects
+that it is connected to a terminal, the `NO_COLOR`
+environment variable is not set, and the `TERM` environment
+variable is not set to `dumb`. [default: auto]  [possible
+values: auto, always, never]
 .SS "SUBCOMMANDS:"
 .TP
 completions
 Print shell completion scripts to standard output.
 .TP
 help
-Prints this message or the help of the given
-subcommand(s)
+Prints this message or the help of the given subcommand(s)
 .TP
 torrent
 Subcommands related to the BitTorrent protocol.
