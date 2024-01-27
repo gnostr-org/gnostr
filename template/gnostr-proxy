@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+PROCESS=$$
+echo $$ > PROCESS
+
+TERM=xterm
+
 ARG=${1:-}
 
 help(){
@@ -32,9 +37,43 @@ then
   printf "v0.0.0"; exit
 fi
 
+## var=$CI
+## if [[ -z "$var" ]]; then
+##     echo "var=$var; CI=$CI"
+## fi
+## [[ -z "$var" ]]; echo "var=$var;"
+## ## [[ -z "$CI" ]]; echo "CI=$CI"
 
 gnostr-set-relays 2>/tmp/gnostr-proxy.log || echo
-(echo `pwd`) & clear && \
+
+## CI=test
+## echo 48:CI=test
+
+## if [[   -z $CI ]];
+##   then
+##     echo "-z CI=$CI"
+## fi
+## if [[ ! -z $CI ]];
+##   then
+##     echo "! -z CI=$CI"
+## fi
+
+##CI=""
+## echo 54:CI=\"\"
+
+## if [[   -z "$CI" ]];
+##   then
+##     echo "-z CI=$CI"
+## fi
+## if [[ ! -z "$CI" ]];
+##   then
+##     echo "! -z CI=$CI"
+## fi
+
+if [[ -z "$CI" ]];
+  then
+    (echo `pwd`) & clear
+fi
 # gnostr-proxy sub-shell process
 #
 #
@@ -45,7 +84,7 @@ if ! grep -q "$NVM_VERSION" .nvmrc; then echo "$NVM_VERSION" > .nvmrc; fi;\
 touch .gitignore
 if ! grep -q ".nvmrc" .gitignore; then echo ".nvmrc" >> .gitignore; fi;\
 
-export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/dev/null && \. "$NVM_DIR/nvm.sh" >/dev/null && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && echo "gnostr-proxy:nvm:node -v $NVM_VERSION" && nvm install $NVM_VERSION >/tmp/gnostr-proxy.log 2>&1 && nvm use --silent 2>/tmp/gnostr-proxy.log \
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/dev/null && \. "$NVM_DIR/nvm.sh" >/dev/null && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && echo "$$:gnostr-proxy:nvm:node -v $NVM_VERSION" && nvm install $NVM_VERSION >/tmp/gnostr-proxy.log 2>&1 && nvm use --silent 2>/tmp/gnostr-proxy.log \
 
 (\
 
@@ -54,7 +93,7 @@ if ! grep -q ".gnostr/proxy" .gitignore; then echo ".gnostr/proxy" >> .gitignore
 mkdir -p ~/.gnostr >/tmp/gnostr-proxy.log;\
 [ ! -d ~/.gnostr/proxy ] && echo "gnostr-proxy:git:installing .gnostr/proxy"
 [ ! -d ~/.gnostr/proxy ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-proxy.git ~/.gnostr/proxy >/tmp/gnostr-proxy.log 2>&1; \
-[   -d ~/.gnostr/proxy ] && echo "gnostr-proxy:git:updating .gnostr/proxy"
+[   -d ~/.gnostr/proxy ] && echo "$$:gnostr-proxy:git:updating .gnostr/proxy"
 [   -d ~/.gnostr/proxy ] && cd ~/.gnostr/proxy && git reset --hard 2>/tmp/gnostr-proxy.log && git pull -f origin master 2>/tmp/gnostr-proxy.log && echo ".gnostr/proxy" >> .gitignore >/tmp/gnostr-proxy.log 2>&1 &&  make run -k > /tmp/gnostr-proxy.log 2>&1;\
 )>/tmp/gnostr-proxy.log;
 
