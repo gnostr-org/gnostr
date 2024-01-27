@@ -9,6 +9,16 @@ WOBBLE=${gnostr-wobble:-}
 #echo $WEEBLE
 #echo $WOBBLE
 
+declare REPO
+REPO=$(pwd | grep -o '[^/]*$')
+## echo $REPO
+declare BRANCH
+BRANCH=$(echo $(git branch --show-current) | sed -e 's/\//-/g')
+## echo $BRANCH
+declare UTC_SECS
+UTC_SECS=$(date +%s)
+## echo $UTC_SECS
+
 ##RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
 ##    sed -e 's/[{}]/''/g' |
 ##    sed -e 's/\[/''/g' |
@@ -33,7 +43,7 @@ WOBBLE=${gnostr-wobble:-}
 #echo -e $GIT_SHOW_Q
 GIT_SHOW_HEAD=$(git show --show-signature HEAD)
 export GIT_SHOW_HEAD
-echo -e $GIT_SHOW_HEAD
+##echo -e $GIT_SHOW_HEAD
 
 #exit
 
@@ -101,7 +111,7 @@ elif command -v git >/dev/null; then
 	fi
 fi
 
-note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#gnostr:$(git show HEAD)")
+note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#$REPO:$(git show HEAD)")
 
 RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/[{}]/''/g' |
