@@ -32,8 +32,8 @@ fi
 [[ -e $(which lynx) ]] && LYNX=$(which lynx) #&& echo $LYNX
 [[ -e $(which jq) ]] && JQ=$(which jq) #&& echo $JQ
 #gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) -t relays --envelope  --content "$($LYNX -dump -nolist http://localhost:6102)"| gnostr-cat wss://relay.damus.io #| $JQ || true
-#gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) -t relays --envelope  --content "$($LYNX -dump -nolist http://localhost:6102)" | gnostr-cat ws://127.0.0.1:6102 &
+gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) -t relays --envelope --content "$($LYNX -dump -nolist http://localhost:6102)" | gnostr-cat ws://127.0.0.1:6102 #> relays.html
 
-gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) --envelope --content "$(gnostr-proxy-relay-list)" | gnostr-cat ws://127.0.0.1:6102 &
+gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)           --envelope --content "$(gnostr-proxy-relay-list)" | gnostr-cat ws://127.0.0.1:6102
 
-gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) --envelope --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-cat ws://127.0.0.1:6102
+gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)           --envelope --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-cat ws://127.0.0.1:6102
