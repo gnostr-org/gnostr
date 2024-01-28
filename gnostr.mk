@@ -307,6 +307,11 @@ gnostr-ffi:ffi
 ffi:
 	@devtools/refresh-submodules.sh ffi
 	@cd ffi && make gnostr && cd ..
+.PHONY:gossip gnostr-gossip
+gnostr-ggossip:gossip
+gossip:
+	@devtools/refresh-submodules.sh gossip
+	@cargo install --path gossip
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
