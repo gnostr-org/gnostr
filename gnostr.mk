@@ -376,7 +376,9 @@ proxy/.git:
 gnostr-proxy:proxy## 	gnostr-proxy
 proxy:proxy/.git
 	install ./proxy/gnostr-proxy template
+	install ./proxy/gnostr-proxy-relay-list template
 	install ./proxy/gnostr-proxy /usr/local/bin
+	install ./proxy/gnostr-proxy-relay-list /usr/local/bin
 	cd proxy && \
 		$(MAKE) install
 
