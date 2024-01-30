@@ -89,23 +89,34 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
 }
 
 test_one(){
+
+declare REPO
+REPO=$(pwd | grep -o '[^/]*$')
+## echo $REPO
+declare BRANCH
+BRANCH=$(echo $(git branch --show-current) | sed -e 's/\//-/g')
+## echo $BRANCH
+declare UTC_SECS
+UTC_SECS=$(date +%s)
+## echo $UTC_SECS
+
 BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
 #echo $BANNER
 PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
 #echo $PICTURE
 ##exit;
 ##
-WEBSITE=gnostr.org
+WEBSITE=gnostr.org/$REPO
 #echo "$WEBSITE"
 DAMUS_DONATION_V2=0
 #echo "$DAMUS_DONATION_V2"
 LUD06=""
 #echo "$LUD06"
-DISPLAY_NAME=$(gnostr-weeble)
+DISPLAY_NAME=$REPO/$(gnostr-weeble)
 #echo "$DISPLAY_NAME"
-ABOUT_ME="#gnostr/$(gnostr-weeble)"
+ABOUT_ME="#$REPO/$(gnostr-weeble)"
 #echo "$ABOUT"
-NAME=$(gnostr-weeble)
+NAME=$REPO/$(gnostr-weeble)
 #echo "$NAME"
 
 CREATED_AT=$(date +%s)
@@ -132,6 +143,8 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
           --kind 0 \
           --pow 1 \
           -t gnostr \
+          --tag repo $REPO \
+          --tag branch $BRANCH \
           -t $(gnostr-weeble) \
           -t $(gnostr-blockheight) \
           -t $(gnostr-wobble) \
@@ -144,7 +157,7 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
           -t $(gnostr-weeble) \
           -t $(gnostr-blockheight) \
           -t $(gnostr-wobble) \
-          --content "gnostr/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$i" | \
+          --content "$REPO/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$i" | \
           gnostr-post-event
   done
   exit
