@@ -77,12 +77,23 @@ test_one(){
   TESTS=$(echo {0000000000000000000000000000000000000000000000000000000000000001..0000000000000000000000000000000000000000000000000000000000000100})
   for ms in $TESTS
   do
+      ## for i in {1..100}
+      ## do
+      ##     printf "%064d\n" $i
+      ## done
+      for i in $(seq -f "%064g" 1 100)
+      do
+          PRIVKEY=$i
+          nip0
+          ##gnostr --sec $i
+      done
+      exit
     ## echo $ms 2>/dev/null
     PRIVKEY=$ms
     nip0
     $GNOSTR \
-      --sec $ms \
-      -t $ms \
+      --sec "$ms" \
+      -t     $ms \
       -t gnostr \
       -t $(gnostr-weeble) \
       -t $(gnostr-blockheight) \
@@ -92,8 +103,8 @@ test_one(){
 
     echo PREVKEY=$PREVKEY
     $GNOSTR \
-      --sec $(gnostr-sha256 $PREVKEY) \
-      -t    $(gnostr-sha256 $PREVKEY) \
+      --sec "$(gnostr-sha256 $PREVKEY)" \
+      -t     $(gnostr-sha256 $PREVKEY) \
       -t gnostr \
       -t $(gnostr-weeble) \
       -t $(gnostr-blockheight) \
@@ -103,7 +114,7 @@ test_one(){
 
     ## current ms new PREVKEY
     PREVKEY=$ms
-  echo PREVKEY=$PREVKEY
+  echo PREVKEY="$PREVKEY"
   done
   exit
 
