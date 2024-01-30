@@ -81,11 +81,29 @@ test_one(){
       ## do
       ##     printf "%064d\n" $i
       ## done
-      for i in $(seq -f "%064g" 1 100)
+      for i in $(seq -f "%064g" 1 10)
       do
+          echo $i
           PRIVKEY=$i
-          nip0
-          ##gnostr --sec $i
+          ##nip0
+          gnostr --sec $i \
+              --kind 0 \
+              --pow 1 \
+              -t gnostr \
+              -t $(gnostr-weeble) \
+              -t $(gnostr-blockheight) \
+              -t $(gnostr-wobble) \
+              --content "$MESSAGE" | \
+              gnostr-post-event
+          gnostr --sec $i \
+              --kind 1 \
+              --pow 1 \
+              -t gnostr \
+              -t $(gnostr-weeble) \
+              -t $(gnostr-blockheight) \
+              -t $(gnostr-wobble) \
+              --content "gnostr/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$i" | \
+              gnostr-post-event
       done
       exit
     ## echo $ms 2>/dev/null
