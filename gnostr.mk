@@ -36,8 +36,8 @@ GTAR                                   :=$(shell which tar)
 endif
 export GTAR
 
+##skip gnostr-act gnostr-cat gnostr-git
 DOCS=\
-gnostr-act\
 gnostr-bits\
 gnostr-blockheight\
 gnostr-cli\
@@ -87,13 +87,13 @@ gnostr-docs:doc/gnostr.1 doc## 	docs: convert README to doc/gnostr.1
 
 doc-gnostr-act:gnostr-act
 	[ -x $(shell which gnostr-act) ] || $(MAKE) gnostr-act
-	[ -x $(shell which gnostr-act) ] && help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 #&& man doc/gnostr-act.1
+	[ -x $(shell which gnostr-act) ] && help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 && cat doc/gnostr-act.1 > $(PREFIX)/share/man/man1/gnostr-act.1
 doc-gnostr-cat:gnostr-cat
 	[ -x $(shell which gnostr-cat) ] || $(MAKE) gnostr-cat
-	[ -x $(shell which gnostr-cat) ] && help2man gnostr-cat > doc/gnostr-cat.1 #&& man doc/gnostr-cat.1
+	[ -x $(shell which gnostr-cat) ] && help2man gnostr-cat > doc/gnostr-cat.1 && cat doc/gnostr-cat.1 > $(PREFIX)/share/man/man1/gnostr-cat.1
 doc-gnostr-git:gnostr-git
 	[ -x $(shell which gnostr-git) ] || $(MAKE) gnostr-git
-	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 #&& man doc/gnostr-git.1
+	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 && cat doc/gnostr-git.1 > $(PREFIX)/share/man/man1/gnostr-git.1
 .PHONY:doc
 doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
 ##help2man < $^ > $@
@@ -190,16 +190,21 @@ libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 ##	secp256k1/./configure
 
 
-deps/jq/modules/oniguruma.git:
-	devtools/refresh-submodules.sh deps/jq
-deps/jq/.git:deps/jq/modules/oniguruma.git
-#.PHONY:deps/jq/.libs/libjq.a
-deps/jq/.libs/libjq.a:deps/jq/.git
-	cd deps/jq && \
-		autoreconf -fi && ./configure --disable-maintainer-mode && make install && cd ../..
+jq/modules/oniguruma.git:
+	devtools/refresh-submodules.sh jq
+jq/.git:jq/modules/oniguruma.git
+jq/.libs/libjq.a:jq/.git
+	cd jq && \
+		autoreconf -fi && ./configure --disable-maintainer-mode && make install gnostr-jq-install && cd ../..
+jq/gnostr-jq:jq/.libs/libjq.a
+	cd jq && \
+		autoreconf -fi && ./configure --disable-maintainer-mode && make install gnostr-jq-install && cd ../..
 ##libjq.a
-##	cp $< deps/jq/libjq.a .
-libjq.a: deps/jq/.libs/libjq.a## 	libjq.a
+##	cp $< jq/libjq.a .
+libjq.a: jq/.libs/libjq.a## 	libjq.a
+	cp $< $@
+#.PHONY:gnostr-jq jq/gnostr-jq
+gnostr-jq:jq/gnostr-jq
 	cp $< $@
 
 
@@ -302,6 +307,11 @@ gnostr-ffi:ffi
 ffi:
 	@devtools/refresh-submodules.sh ffi
 	@cd ffi && make gnostr && cd ..
+.PHONY:gossip gnostr-gossip
+gnostr-ggossip:gossip
+gossip:
+	@devtools/refresh-submodules.sh gossip
+	@cargo install --path gossip
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
@@ -366,7 +376,9 @@ proxy/.git:
 gnostr-proxy:proxy## 	gnostr-proxy
 proxy:proxy/.git
 	install ./proxy/gnostr-proxy template
+	install ./proxy/gnostr-proxy-relay-list template
 	install ./proxy/gnostr-proxy /usr/local/bin
+	install ./proxy/gnostr-proxy-relay-list /usr/local/bin
 	cd proxy && \
 		$(MAKE) install
 

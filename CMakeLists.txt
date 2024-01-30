@@ -252,6 +252,15 @@ target_link_libraries (gnostr-gnode ${lib_dep})
 add_executable(gnostr-tests test/tests.cc)
 target_link_libraries (gnostr-tests ${lib_dep})
 
+add_executable(gnostr-test test/gnostr_test.cc)
+target_link_libraries (gnostr-test ${lib_dep})
+
+add_executable(gnostr-get-relays-test test/gnostr_get_relays_test.cc)
+target_link_libraries (gnostr-get-relays-test ${lib_dep})
+
+add_executable(gnostr-sha256-tests test/gnostr_sha256_test.cc)
+target_link_libraries (gnostr-sha256-tests ${lib_dep})
+
 #//////////////////////////
 # examples
 #//////////////////////////

@@ -148,3 +148,8 @@
 	url = https://github.com/gnostr-org/gnostr-gossip.git
   ignore = dirty
   depth = shallow
+[submodule "gnostr-jq"]
+	path = jq
+	url = https://github.com/gnostr-org/gnostr-jq.git
+  ignore = dirty
+  depth = shallow

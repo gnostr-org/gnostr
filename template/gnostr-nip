@@ -1,6 +1,221 @@
 #!/usr/bin/env bash
+#
+#
+GNOSTR=$(which gnostr)
+## export GNOSTR
+## echo $GNOSTR
+
+declare PRIVKEY
+PRIVKEY=${2:-'0000000000000000000000000000000000000000000000000000000000000000'}
+
+## echo $2
+## echo '$2'
+## echo "$2"
+## exit
+## PUBKEY for 0000000000000000000000000000000000000000000000000000000000000001
+## 79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+
+
+## TESTS=$(echo {0000000000000000000000000000000000000000000000000000000000000001..0000000000000000000000000000000000000000000000000000000000001000})
+## for ms in $TESTS
+## do
+##     echo $ms 2>/dev/null
+## done
+## exit
+
+nip0(){
+
+BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $BANNER
+PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $PICTURE
+##exit;
+##
+WEBSITE=gnostr.org
+#echo "$WEBSITE"
+DAMUS_DONATION_V2=0
+#echo "$DAMUS_DONATION_V2"
+LUD06=""
+#echo "$LUD06"
+DISPLAY_NAME=$(gnostr-weeble)
+#echo "$DISPLAY_NAME"
+ABOUT_ME="#gnostr/$(gnostr-weeble)"
+#echo "$ABOUT"
+NAME=$(gnostr-weeble)
+#echo "$NAME"
+
+CREATED_AT=$(date +%s)
+#echo $CREATED_AT
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+
+$GNOSTR --sec $PRIVKEY              \
+  --kind 0                          \
+  -t gnostr                         \
+  --tag gnostr gnostr               \
+  --tag weeble $(gnostr-weeble)     \
+  --tag wobble $(gnostr-wobble)     \
+  --tag block $(gnostr-blockheight) \
+  --content "$MESSAGE"
+}
+
+
+
+test_zero(){
+
+BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $BANNER
+PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $PICTURE
+##exit;
+##
+WEBSITE=gnostr.org
+#echo "$WEBSITE"
+DAMUS_DONATION_V2=0
+#echo "$DAMUS_DONATION_V2"
+LUD06=""
+#echo "$LUD06"
+DISPLAY_NAME=$(gnostr-weeble)
+#echo "$DISPLAY_NAME"
+ABOUT_ME="#gnostr/$(gnostr-weeble)"
+#echo "$ABOUT"
+NAME=$(gnostr-weeble)
+#echo "$NAME"
+
+CREATED_AT=$(date +%s)
+#echo $CREATED_AT
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+}
+
+test_one(){
+
+declare REPO
+REPO=$(pwd | grep -o '[^/]*$')
+## echo $REPO
+declare BRANCH
+BRANCH=$(echo $(git branch --show-current) | sed -e 's/\//-/g')
+## echo $BRANCH
+declare UTC_SECS
+UTC_SECS=$(date +%s)
+## echo $UTC_SECS
+
+BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $BANNER
+PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $PICTURE
+##exit;
+##
+WEBSITE=gnostr.org/$REPO
+#echo "$WEBSITE"
+DAMUS_DONATION_V2=0
+#echo "$DAMUS_DONATION_V2"
+LUD06=""
+#echo "$LUD06"
+DISPLAY_NAME=$REPO/$(gnostr-weeble)
+#echo "$DISPLAY_NAME"
+ABOUT_ME="#$REPO/$(gnostr-weeble)"
+#echo "$ABOUT"
+NAME=$REPO/$(gnostr-weeble)
+#echo "$NAME"
+
+CREATED_AT=$(date +%s)
+#echo $CREATED_AT
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+
+
+
+
+  echo "test_one()";
+  PREVKEY=0000000000000000000000000000000000000000000000000000000000000000
+  echo PREVKEY=$PREVKEY
+  ## for i in {1..100}
+  ## do
+  ##     printf "%064d\n" $i
+  ## done
+  for i in $(seq -f "%064g" 1 10)
+  do
+      echo $i
+      PRIVKEY=$i
+      ##nip0
+      gnostr --sec $i \
+          --kind 0 \
+          --pow 1 \
+          -t gnostr \
+          --tag repo $REPO \
+          --tag branch $BRANCH \
+          -t $(gnostr-weeble) \
+          -t $(gnostr-blockheight) \
+          -t $(gnostr-wobble) \
+          --content "$MESSAGE" | \
+          gnostr-post-event
+      gnostr --sec $i \
+          --kind 1 \
+          --pow 1 \
+          -t gnostr \
+          -t $(gnostr-weeble) \
+          -t $(gnostr-blockheight) \
+          -t $(gnostr-wobble) \
+          --content "$REPO/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$i" | \
+          gnostr-post-event
+  done
+  exit
+
+  $GNOSTR --sec $PRIVKEY;
+  #$GNOSTR --sec '$PRIVKEY';##this will fail
+  $GNOSTR --sec "$PRIVKEY";
+  exit;
+}
+
+if \
+  [[ \
+  $2 \
+  == \
+  "0000000000000000000000000000000000000000000000000000000000000000" \
+  ]];
+then
+  test_zero;
+  exit;
+fi
+if \
+  [[ \
+  $2 \
+  == \
+  "0000000000000000000000000000000000000000000000000000000000000001" \
+  ]];
+then
+  test_one;
+  exit;
+fi
+
+
+test_zero(){
+  echo "test_zero()";
+  $GNOSTR --sec $2;
+  exit;
+}
+test_one(){
+  echo "test_one()";
+  $GNOSTR --sec $2;
+  exit;
+}
+
+help(){
+
+    printf "Usage:\n"
+    printf "gnostr-nip --sec <sha256_hash>\n"
+    printf "gnostr-nip --sec $(gnostr-sha256 $$)\n"
+    printf "\n"
+    printf "Test triggers:\n"
+    printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000000\""
+    printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000001\""
+
+}
+
 if [ ! -z "$1" ]; then
   if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    help
     if [ "$2" == "0" ]; then
     echo "NIP-0: metadata: the content is set to a stringified JSON object {name: <username>, about: <string>, picture: <url, string>} describing the user who created the event. A relay may delete older events once it gets a new one for the same pubkey.";
     fi
@@ -11,35 +226,19 @@ if [ ! -z "$1" ]; then
       echo "NIP-2:"
     fi
   fi
+  if [ "$1" == "--sec" ]; then
+    if [ "$2" == "" ]; then
+      echo "provide a sha256 hash for private key"
+    else
+      PRIVKEY=$2
+      mkdir -p ~/.gnostr
+      #touch ~/.gnostr/$PRIVKEY
+      nip0
+    fi
+  fi
 exit
 fi
 
-## [
-##   "EVENT",
-##   "gnostr-query",
-##   {
-##     "content": "{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"sha256()\",\"about\":\"■\",\"name\":\"sha256()\"}",
-##     "created_at": 1694667257,
-##     "id": "c6fee3d5f0b3391fb25e26624f8a36e78c686c6e0fcf97da6a736bc0188695a0",
-##     "kind": 0,
-##     "pubkey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
-##     "sig": "a5f8af02461166f01645786970c43e8a2de8e45df123d9685cf76eca83e6bf98c8b44b957accd5d3fbc4b0cc69c089b465a1682680ad7491b6f1bc759cc21dfd",
-##     "tags": []
-##   }
-## ]
-
-MESSAGE=\
-{\"banner\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"website\":\"https://gnostr.org\",\"damus_donation_v2\":0,\"lud06\":\"\",\"picture\":\"https://image.nostr.build/e594238e13cfb7e78cadbae3f6d11e060f0669ef7c739766bf3cdbee2793c92e.jpg\",\"display_name\":\"0\",\"about\":\"0\",\"name\":\"0\"}
-
-
-gnostr --sec $(gnostr-sha256)       \
-  --kind 0                          \
-  --tag gnostr gnostr               \
-  --tag weeble $(gnostr-weeble)     \
-  --tag wobble $(gnostr-wobble)     \
-  --tag block $(gnostr-blockheight) \
-  --envelope                        \
-  --content "$MESSAGE"
 
 # gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
 #
