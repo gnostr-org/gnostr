@@ -49,6 +49,6 @@ jobs:
       - run: cmake .
       - run: V=1 make detect gnostr gnostr-install
       - run: echo $(date +%s)
-      - run: DATE=$(date +%s) && gnostr --sec $(gnostr-sha256 $DATE) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content 'Somebody is developing with gnostr!' | gnostr-post-event wss://nos.lol
-      - run: DATE=$(date +%s) && gnostr --sec $(gnostr-sha256 $DATE) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content "WEEBLE:$(gnostr-weeble):BLOCKHEIGHT:$(gnostr-blockheight):WOBBLE:$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
- 
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
+
