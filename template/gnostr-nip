@@ -1,19 +1,81 @@
 #!/usr/bin/env bash
 #
+#
+GNOSTR=$(which gnostr)
+#export GNOSTR
+#echo $GNOSTR
+
 declare PRIVKEY
-PRIVKEY=${2:-}
+PRIVKEY=${2:-'0000000000000000000000000000000000000000000000000000000000000000'}
+
+echo $2
+echo '$2'
+echo "$2"
+## exit
+## PUBKEY for 0000000000000000000000000000000000000000000000000000000000000001
+## 79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+
+test_zero(){
+  echo "test_zero()";
+  $GNOSTR --sec $PRIVKEY;
+  $GNOSTR --sec '$PRIVKEY';
+  $GNOSTR --sec "$PRIVKEY";
+  exit;
+}
+test_one(){
+  echo "test_one()";
+  $GNOSTR --sec $PRIVKEY;
+  $GNOSTR --sec '$PRIVKEY';
+  $GNOSTR --sec "$PRIVKEY";
+  exit;
+}
+
+if \
+  [[ \
+  $2 \
+  == \
+  "0000000000000000000000000000000000000000000000000000000000000000" \
+  ]];
+then
+  test_zero;
+  exit;
+fi
+if \
+  [[ \
+  $2 \
+  == \
+  "0000000000000000000000000000000000000000000000000000000000000001" \
+  ]];
+then
+  test_one;
+  exit;
+fi
+
+
+test_zero(){
+  echo "test_zero()";
+  $GNOSTR --sec $2;
+  exit;
+}
+test_one(){
+  echo "test_one()";
+  $GNOSTR --sec $2;
+  exit;
+}
 
 help(){
 
     printf "Usage:\n"
     printf "gnostr-nip --sec <sha256_hash>\n"
     printf "gnostr-nip --sec $(gnostr-sha256 $$)\n"
+    printf "\n"
+    printf "Test triggers:\n"
+    printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000000\""
+    printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000001\""
 
 }
 
 nip0(){
-
-##{"content":"{\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"\",\"website\":\"\",\"name\":\"\",\"about\":\"\",\"lud06\":\"\"}"
 
 BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
 #echo $BANNER
@@ -29,7 +91,7 @@ LUD06=""
 #echo "$LUD06"
 DISPLAY_NAME=$(gnostr-weeble)
 #echo "$DISPLAY_NAME"
-ABOUT_ME="#gnostr:$(gnostr-weeble)"
+ABOUT_ME="#gnostr/$(gnostr-weeble)"
 #echo "$ABOUT"
 NAME=$(gnostr-weeble)
 #echo "$NAME"
@@ -37,15 +99,9 @@ NAME=$(gnostr-weeble)
 CREATED_AT=$(date +%s)
 #echo $CREATED_AT
 
-##MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"damus_donation_v2\":$DAMUS_DONATION_V2,\"lud06\":\"$LUD06\",\"picture\":\"$PICTURE\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT\",\"name\":\"$NAME\"\}"
-
 MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
 
-#MESSAGE="{\"content\":\"{\"picture\":\"$PICTURE\",\"display_name\":\"$DISPLAY_NAME\",\"website\":\"$WEBSITE\",\"name\":\"\",\"about\":\"$ABOUT\",\"lud06\":\"\"}"
-#echo $MESSAGE
-
-#exit;
-gnostr --sec $PRIVKEY               \
+$GNOSTR --sec $PRIVKEY              \
   --kind 0                          \
   -t gnostr                         \
   --tag gnostr gnostr               \
