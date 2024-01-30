@@ -15,8 +15,18 @@ echo "$2"
 ## PUBKEY for 0000000000000000000000000000000000000000000000000000000000000001
 ## 79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
 
+
+## TESTS=$(echo {0000000000000000000000000000000000000000000000000000000000000001..0000000000000000000000000000000000000000000000000000000000001000})
+## for ms in $TESTS
+## do
+##     echo $ms 2>/dev/null
+## done
+## exit
+
 test_zero(){
   echo "test_zero()";
+  echo "expect:"
+  echo "could not hex decode secret key"
   $GNOSTR --sec $PRIVKEY;
   $GNOSTR --sec '$PRIVKEY';
   $GNOSTR --sec "$PRIVKEY";
@@ -24,8 +34,18 @@ test_zero(){
 }
 test_one(){
   echo "test_one()";
+  TESTS=$(echo {0000000000000000000000000000000000000000000000000000000000000001..0000000000000000000000000000000000000000000000000000000000001000})
+  for ms in $TESTS
+  do
+    echo $ms 2>/dev/null
+    $GNOSTR --sec $ms -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble))" --pow 1 | $(which gnostr-post-event);
+    #$GNOSTR --sec '$PRIVKEY';##this will fail
+    #$GNOSTR --sec "$TESTS";
+  done
+  exit
+
   $GNOSTR --sec $PRIVKEY;
-  $GNOSTR --sec '$PRIVKEY';
+  #$GNOSTR --sec '$PRIVKEY';##this will fail
   $GNOSTR --sec "$PRIVKEY";
   exit;
 }
