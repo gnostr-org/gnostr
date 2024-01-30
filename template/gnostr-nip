@@ -2,15 +2,15 @@
 #
 #
 GNOSTR=$(which gnostr)
-#export GNOSTR
-#echo $GNOSTR
+## export GNOSTR
+## echo $GNOSTR
 
 declare PRIVKEY
 PRIVKEY=${2:-'0000000000000000000000000000000000000000000000000000000000000000'}
 
-echo $2
-echo '$2'
-echo "$2"
+## echo $2
+## echo '$2'
+## echo "$2"
 ## exit
 ## PUBKEY for 0000000000000000000000000000000000000000000000000000000000000001
 ## 79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
@@ -23,6 +23,44 @@ echo "$2"
 ## done
 ## exit
 
+nip0(){
+
+BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $BANNER
+PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $PICTURE
+##exit;
+##
+WEBSITE=gnostr.org
+#echo "$WEBSITE"
+DAMUS_DONATION_V2=0
+#echo "$DAMUS_DONATION_V2"
+LUD06=""
+#echo "$LUD06"
+DISPLAY_NAME=$(gnostr-weeble)
+#echo "$DISPLAY_NAME"
+ABOUT_ME="#gnostr/$(gnostr-weeble)"
+#echo "$ABOUT"
+NAME=$(gnostr-weeble)
+#echo "$NAME"
+
+CREATED_AT=$(date +%s)
+#echo $CREATED_AT
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+
+$GNOSTR --sec $PRIVKEY              \
+  --kind 0                          \
+  -t gnostr                         \
+  --tag gnostr gnostr               \
+  --tag weeble $(gnostr-weeble)     \
+  --tag wobble $(gnostr-wobble)     \
+  --tag block $(gnostr-blockheight) \
+  --content "$MESSAGE"
+}
+
+
+
 test_zero(){
   echo "test_zero()";
   echo "expect:"
@@ -34,13 +72,38 @@ test_zero(){
 }
 test_one(){
   echo "test_one()";
-  TESTS=$(echo {0000000000000000000000000000000000000000000000000000000000000001..0000000000000000000000000000000000000000000000000000000000001000})
+  PREVKEY=0000000000000000000000000000000000000000000000000000000000000000
+  echo PREVKEY=$PREVKEY
+  TESTS=$(echo {0000000000000000000000000000000000000000000000000000000000000001..0000000000000000000000000000000000000000000000000000000000000100})
   for ms in $TESTS
   do
-    echo $ms 2>/dev/null
-    $GNOSTR --sec $ms -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble))" --pow 1 | $(which gnostr-post-event);
-    #$GNOSTR --sec '$PRIVKEY';##this will fail
-    #$GNOSTR --sec "$TESTS";
+    ## echo $ms 2>/dev/null
+    PRIVKEY=$ms
+    nip0
+    $GNOSTR \
+      --sec $ms \
+      -t $ms \
+      -t gnostr \
+      -t $(gnostr-weeble) \
+      -t $(gnostr-blockheight) \
+      -t $(gnostr-wobble) \
+      --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$ms" \
+      --pow 1 | $(which gnostr-post-event);
+
+    echo PREVKEY=$PREVKEY
+    $GNOSTR \
+      --sec $(gnostr-sha256 $PREVKEY) \
+      -t    $(gnostr-sha256 $PREVKEY) \
+      -t gnostr \
+      -t $(gnostr-weeble) \
+      -t $(gnostr-blockheight) \
+      -t $(gnostr-wobble) \
+      --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):$PREVKEY" \
+      --pow 1 | $(which gnostr-post-event);
+
+    ## current ms new PREVKEY
+    PREVKEY=$ms
+  echo PREVKEY=$PREVKEY
   done
   exit
 
@@ -93,42 +156,6 @@ help(){
     printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000000\""
     printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000001\""
 
-}
-
-nip0(){
-
-BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
-#echo $BANNER
-PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
-#echo $PICTURE
-##exit;
-##
-WEBSITE=gnostr.org
-#echo "$WEBSITE"
-DAMUS_DONATION_V2=0
-#echo "$DAMUS_DONATION_V2"
-LUD06=""
-#echo "$LUD06"
-DISPLAY_NAME=$(gnostr-weeble)
-#echo "$DISPLAY_NAME"
-ABOUT_ME="#gnostr/$(gnostr-weeble)"
-#echo "$ABOUT"
-NAME=$(gnostr-weeble)
-#echo "$NAME"
-
-CREATED_AT=$(date +%s)
-#echo $CREATED_AT
-
-MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
-
-$GNOSTR --sec $PRIVKEY              \
-  --kind 0                          \
-  -t gnostr                         \
-  --tag gnostr gnostr               \
-  --tag weeble $(gnostr-weeble)     \
-  --tag wobble $(gnostr-wobble)     \
-  --tag block $(gnostr-blockheight) \
-  --content "$MESSAGE"
 }
 
 if [ ! -z "$1" ]; then
