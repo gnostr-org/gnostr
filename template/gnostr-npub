@@ -2,14 +2,14 @@
 """
     Nostr vanity pubkey generator
 
+    adapted from:
     https://github.com/kdmukai/nostr_vanity_npub
 """
 import datetime
 from threading import Event, Lock, Thread
 from typing import List
 from nostr.key import PrivateKey
-
-
+from importlib.metadata import version
 
 class ThreadsafeCounter:
     """
@@ -86,18 +86,22 @@ if __name__ == "__main__":
     import time
     from threading import Event
     from nostr import bech32
+    __version__="v0.0.0"
 
 
     parser = argparse.ArgumentParser(
-        description="********************** Nostr vanity pubkey generator **********************\n\n" + \
-            "Search for `target` in an npub such that:\n\n" + \
-            "\tnpub1[target]acd023...",
+        description="gnostr-npub " + __version__ + \
+            "\n\nSearch for `target` in an npub such that:\n\n" + \
+            "\tnpub1[target]023456789acdefghjklmnpqrstuvwxyz",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
     # Required positional arguments
     parser.add_argument('targets', type=str,
                         help="The string(s) you're looking for (comma-separated, no spaces)")
+
+    # Optional arguments
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
     # Optional arguments
     parser.add_argument('-b', '--bonus_targets',
