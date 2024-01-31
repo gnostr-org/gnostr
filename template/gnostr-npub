@@ -105,9 +105,9 @@ if __name__ == "__main__":
 
     # Optional arguments
     parser.add_argument('-b', '--bonus_targets',
-                        default="",
+                        default="gn0str",
                         dest="bonus_targets",
-                        help="Additional targets to search for, but does not end execution when found (comma-separated, no spaces)")
+                        help="Additional targets to search for, \nbut does not end execution when \nfound (comma-separated, no spaces)")
 
     parser.add_argument('-e', '--include-end',
                         action="store_true",
