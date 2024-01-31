@@ -1,2 +1,3 @@
 virtualenv
 git-archive-all
+./py/nostr
