@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #
 
-GNOSTR=$(which gnostr)
+GNOSTR=gnostr-git
+##$(which gnostr)
+export GNOSTR
 
 function gnostr-pathappend() {
   for ARG in "$@"
