@@ -1326,7 +1326,7 @@ endif()
 
 set(CMAKE_REQUIRED_FLAGS)
 
-option(ENABLE_WEBSOCKETS "Set to ON to enable EXPERIMENTAL websockets" OFF)
+option(ENABLE_WEBSOCKETS "Set to ON to enable EXPERIMENTAL websockets" ON)
 
 if(ENABLE_WEBSOCKETS)
   if(${SIZEOF_CURL_OFF_T} GREATER "4")
