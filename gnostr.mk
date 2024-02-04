@@ -480,15 +480,15 @@ act:act/bin/gnostr-act
 ##install all
 ##	install doc/gnostr.1 gnostr gnostr-query
 gnostr-install:
-	mkdir -p $(PREFIX)/bin
-	mkdir -p $(PREFIX)/include
-	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null
+	mkdir -p $(PREFIX)/bin                                                         || true
+	mkdir -p $(PREFIX)/include                                                     || true
+	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null || true
 	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
-	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc
