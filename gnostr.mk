@@ -99,7 +99,7 @@ doc-gnostr-git:gnostr-git
 ##We stream edit certain tools man pages
 ##	make goals are processed from left to right
 ##	doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
-doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
 ##help2man < $^ > $@
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
