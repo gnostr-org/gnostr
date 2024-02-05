@@ -271,7 +271,7 @@ help(){
     printf "\n"
     printf "\nContext:\n"
     printf "\n"
-    printf "gnostr-nip --sec \$(gnostr-xor 1 \$\(gnostr-sha256 \$\$\)\)\n"
+    printf "gnostr-nip --sec \$(gnostr-xor 1 \$(gnostr-sha256 \$\$\)\)\n"
     printf "\n"
     printf "gnostr-nip --sec  $(gnostr-xor 1 $(gnostr-sha256 $$))\n"
     printf "\n"
