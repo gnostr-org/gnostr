@@ -95,8 +95,9 @@ doc-gnostr-git:gnostr-git
 	[ -x $(shell which gnostr-git) ] || $(MAKE) gnostr-git
 	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 && cat doc/gnostr-git.1 > $(PREFIX)/share/man/man1/gnostr-git.1
 .PHONY:doc
-doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+doc:##doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
 ##help2man < $^ > $@
+	[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) gnostr-act
 	@(\
 	for b in $(DOCS);\
   do touch doc/$$b.1;\
@@ -445,7 +446,7 @@ deps/gnostr-aio/.git:
 
 act/.git:
 	@devtools/refresh-submodules.sh act
-.PHONY:act gnostr-act act/.git
+.PHONY:act gnostr-act
 gnostr-act:act
 act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
