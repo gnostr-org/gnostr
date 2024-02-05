@@ -51,6 +51,7 @@ gnostr-git-reflog\
 gnostr-gnode\
 gnostr-keyconv\
 gnostr-modal\
+gnostr-nip\
 gnostr-post\
 gnostr-post-event\
 gnostr-proxy\
@@ -95,9 +96,12 @@ doc-gnostr-git:gnostr-git
 	[ -x $(shell which gnostr-git) ] || $(MAKE) gnostr-git
 	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 && cat doc/gnostr-git.1 > $(PREFIX)/share/man/man1/gnostr-git.1
 .PHONY:doc
-doc:##doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+##We stream edit certain tools man pages
+##	make goals are processed from left to right
+##	doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
 ##help2man < $^ > $@
-	[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) gnostr-act
+	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
 	for b in $(DOCS);\
   do touch doc/$$b.1;\
@@ -235,11 +239,10 @@ gnostr-web-deploy:
 
 git/.git:
 	@devtools/refresh-submodules.sh git
-.PHONY:git/gnostr-git
+.PHONY:git/gnostr-git gnostr-git git
 git/gnostr-git:git/.git
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 	cd git && make && make install
-.PHONY:gnostr-git git
 git:gnostr-git
 gnostr-git:git/gnostr-git## 	gnostr-git
 	cp $< $@ || true
@@ -398,7 +401,6 @@ relay:relay/.git
 .PHONY:gnostr-cat cat
 cat/.git:
 	@devtools/refresh-submodules.sh cat
-.PHONY:cat
 gnostr-cat:cat
 cat:cat/.git
 	cd cat && \
@@ -477,7 +479,7 @@ act:act/bin/gnostr-act
 ## 	rm -f $@
 ## 	$(CC) $@.c -o $@
 
-.ONESHELL:
+.ONESHELL:gnostr-install
 ##install all
 ##	install doc/gnostr.1 gnostr gnostr-query
 gnostr-install:
