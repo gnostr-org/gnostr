@@ -256,25 +256,29 @@ default(){
   help
 }
 help(){
-  echo 259:CALLED_FROM=$CALLED_FROM
+  ## echo 259:CALLED_FROM=$CALLED_FROM
   if [[ ! -z $CALLED_FROM ]];
   then
-    echo 262:CALLED_FROM=$CALLED_FROM
+    true
+    ## echo 262:CALLED_FROM=$CALLED_FROM
   fi
 
     printf "Usage:\n"
+    printf "\n"
     printf "gnostr-nip --sec <sha256_hash>\n"
+    printf "\n"
     printf "gnostr-nip --sec $(gnostr-sha256 $$)\n"
     printf "\n"
     printf "\nContext:\n"
     printf "\n"
-    printf "gnostr-nip --sec \$(gnostr-xor 1 $(gnostr-sha256 $$))\n"
-    printf "gnostr-nip --sec                $(gnostr-xor 1 $(gnostr-sha256 $$))\n"
+    printf "gnostr-nip --sec\n\$(gnostr-xor 1 $(gnostr-sha256 $$))\n"
+    printf "gnostr-nip --sec\n                $(gnostr-xor 1 $(gnostr-sha256 $$))\n"
     printf "\n"
     printf "Test triggers:\n"
     printf "\n"
-    printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000000\""
-    printf "\ngnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000001\""
+    printf "gnostr-nip --sec\n\"0000000000000000000000000000000000000000000000000000000000000000\""
+    printf "\n"
+    printf "gnostr-nip --sec\n\"0000000000000000000000000000000000000000000000000000000000000001\""
     printf "\n"
 
 exit;
