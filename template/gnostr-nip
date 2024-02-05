@@ -6,8 +6,11 @@ GNOSTR=$(which gnostr)
 ## echo $GNOSTR
 
 declare PRIVKEY
-PRIVKEY=${2:-'0000000000000000000000000000000000000000000000000000000000000000'}
-
+declare KIND
+declare NIP
+## PRIVKEY=${PRIVKEY:-$(GNOSTR --hash)}
+PRIVKEY=${PRIVKEY:-}
+## echo 11:$PRIVKEY
 ## echo $2
 ## echo '$2'
 ## echo "$2"
@@ -23,7 +26,7 @@ PRIVKEY=${2:-'0000000000000000000000000000000000000000000000000000000000000000'}
 ## done
 ## exit
 
-nip0(){
+kinds(){
 
 BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
 #echo $BANNER
@@ -49,12 +52,29 @@ NAME=$(gnostr-weeble)
 NIP_05="gnostr@gnostr.org"
 
 CREATED_AT=$(date +%s)
-#echo $CREATED_AT
+## echo $CREATED_AT
+## echo 55:KIND=$KIND
+if [[ "$KIND" == "0" ]];
+then
 
 MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"lud16\":\"$LUD16\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
 
+fi
+if [[ "$KIND" == "1" ]];
+then
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"lud16\":\"$LUD16\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+
+fi
+if [[ "$KIND" == "2" ]];
+then
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"lud16\":\"$LUD16\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+
+fi
+echo 62:PRIVKEY=$PRIVKEY
 $GNOSTR --sec $PRIVKEY              \
-  --kind 0                          \
+  --kind $KIND                      \
   -t gnostr                         \
   --tag gnostr gnostr               \
   --tag weeble $(gnostr-weeble)     \
@@ -62,9 +82,21 @@ $GNOSTR --sec $PRIVKEY              \
   --tag block $(gnostr-blockheight) \
   --content "$MESSAGE"
 
-} ## end nip0
+} ## end kind0
 
+kind1(){
+  echo kind1 stub;
+}
 
+nips(){
+  echo nips stub;
+  if [[ "$NIP" == "0" ]];
+  then
+    echo NIP=$NIP
+  fi
+  KIND=NIP
+  echo "calling kinds instead";kinds;
+}
 
 test_zero(){
 
@@ -78,19 +110,25 @@ WEBSITE=gnostr.org
 #echo "$WEBSITE"
 DAMUS_DONATION_V2=0
 #echo "$DAMUS_DONATION_V2"
-LUD06=""
+#REF: https://github.com/lnurl/luds/blob/luds/06.md
+LUD06="randymcmillan@current.tips"
 #echo "$LUD06"
+#REF: https://github.com/lnurl/luds/blob/luds/16.md
+LUD16="randymcmillan@current.tips"
+#echo "$LUD16"
 DISPLAY_NAME=$(gnostr-weeble)
 #echo "$DISPLAY_NAME"
 ABOUT_ME="#gnostr/$(gnostr-weeble)"
 #echo "$ABOUT"
 NAME=$(gnostr-weeble)
 #echo "$NAME"
-
+PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+echo $PICTURE
+exit
 CREATED_AT=$(date +%s)
 #echo $CREATED_AT
 
-MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"nip05\":\"$NIP_05\",\"picture\":\"$PICTURE\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
 }
 
 test_one(){
@@ -143,6 +181,7 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
   do
       echo $i
       PRIVKEY=$i
+      echo PRIVKEY=$PRIVKEY
       ##nip0
       gnostr --sec $i \
           --kind 0 \
@@ -167,6 +206,7 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
   done
   exit
 
+  echo PRIVKEY=$PRIVKEY
   $GNOSTR --sec $PRIVKEY;
   #$GNOSTR --sec '$PRIVKEY';##this will fail
   $GNOSTR --sec "$PRIVKEY";
@@ -224,31 +264,31 @@ help(){
     printf "\n"
 }
 
-if [ ! -z "$1" ]; then
-  if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
-    help
-    if [ "$2" == "0" ]; then
-    echo "NIP-0: metadata: the content is set to a stringified JSON object {name: <username>, about: <string>, picture: <url, string>} describing the user who created the event. A relay may delete older events once it gets a new one for the same pubkey.";
-    fi
-    if [ "$2" == "1" ]; then
-      echo "NIP-1:"
-    fi
-    if [ "$2" == "2" ]; then
-      echo "NIP-2:"
-    fi
-  fi
-  if [ "$1" == "--sec" ]; then
-    if [ "$2" == "" ]; then
-      echo "provide a sha256 hash for private key"
-    else
-      PRIVKEY=$2
-      mkdir -p ~/.gnostr
-      #touch ~/.gnostr/$PRIVKEY
-      nip0
-    fi
-  fi
-exit
-fi
+##if [ ! -z "$1" ]; then
+##  if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+##    help
+##    if [ "$2" == "0" ]; then
+##    echo "NIP-0: metadata: the content is set to a stringified JSON object {name: <username>, about: <string>, picture: <url, string>} describing the user who created the event. A relay may delete older events once it gets a new one for the same pubkey.";
+##    fi
+##    if [ "$2" == "1" ]; then
+##      echo "NIP-1:"
+##    fi
+##    if [ "$2" == "2" ]; then
+##      echo "NIP-2:"
+##    fi
+##  fi
+##  if [ "$1" == "--sec" ]; then
+##    if [ "$2" == "" ]; then
+##      echo "provide a sha256 hash for private key"
+##    else
+##      PRIVKEY=$2
+##      mkdir -p ~/.gnostr
+##      #touch ~/.gnostr/$PRIVKEY
+##      nip0
+##    fi
+##  fi
+##exit
+##fi
 
 
 # gnostr-query -i $(gnostr-nip0  | jq .[1] | tr -d "\"" ) | gnostr-cat -u wss://nos.lol
@@ -263,3 +303,85 @@ fi
 #
 # gnostr --sec $(gnostr-sha256) --envelope --content $(echo gnostr-query -k 0 -l 1 | gnostr-cat -u wss://nos.lol | jq .[2].content ) | tr -d "\\"
 #
+for ((i=1; i<=$#; i++)); do
+
+  echo "282:i=${!i}"
+
+  ## positional                 V                       V
+  if [[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
+    help
+    exit
+  fi
+  ## positional                 V                          V
+  if [[ ${!i} == "-v" ]] || [[ $1 == "--version" ]] || [[ $1 == "version" ]]; then
+    echo v0.0.0
+    exit
+  fi
+  ## positional                 V                      V
+  ## if [[ ${!i} == "-s" ]] || [[ $1 == "--sec" ]] || [[ $1 == "sec" ]]; then
+  if [[ ${!i} == "-s" ]] || [[ ${!i} == "--sec" ]] || [[ ${!i} == "sec" ]]; then
+  ((i++))
+    ## TODO more test for hash
+    if [[ ! -z ${!i} ]]; then
+      echo  \${!i}=${!i}
+      PRIVKEY=${!i}
+      export PRIVKEY
+      echo 301:PRIVKEY=$PRIVKEY
+      ## echo "${!i} is a number"
+      ## echo DEPTH=$DEPTH
+      ((i++))
+    else
+       echo "${!i} is not a valid sha256 hash"
+       help
+    fi
+  fi
+
+  ## non-positional
+  ##       V                      V                          V
+  if [[ ${!i} == "-k" ]] || [[ ${!i} == "--kind" ]] || [[ ${!i} == "kind" ]]; then
+  ## ((i++))
+    ## if [[ ! -z ${!i} ]]; then
+  ((i++))
+    if [[ ! -z ${!i} ]] && [[ ${!i} =~ ^[0-9]+$ ]]; then
+      KIND=${!i}
+      echo 321:KIND=$KIND
+      #kinds #$PRIVKEY
+      ## echo "${!i} is a number"
+      ## echo DEPTH=$DEPTH
+      ((i++))
+    else
+       echo "${!i} is not a number"
+       help
+    fi
+  fi
+  ## non-positional
+  ##       V                      V                         V
+  if [[ ${!i} == "-n" ]] || [[ ${!i} == "--nip" ]] || [[ ${!i} == "nip" ]]; then
+  ## ((i++))
+    ## if [[ ! -z ${!i} ]]; then
+  ((i++))
+  echo 363:${!i};
+    if [[ ! -z ${!i} ]] && [[ ${!i} =~ ^[0-9]+$ ]]; then
+      NIP=${!i}
+      echo 339:NIP=$NIP
+      echo 340:kind\$NIP=kind$NIP
+      ## nip$NIP
+      ## echo "${!i} is a number"
+      ## echo DEPTH=$DEPTH
+      ((i++))
+    else
+       echo "${!i} is not a number"
+       help
+    fi
+  fi
+  if [[ ${!i} == "-2" ]] || [[ $1 == "--sha2" ]] || [[ $1 == "--sha256" ]]; then
+  ((i++))
+  SHA2=TRUE
+  echo SHA2=$SHA2
+  ## sha256
+  default
+  fi
+kinds || nips
+exit
+done
+default
