@@ -78,7 +78,7 @@ jobs:
 
       - run: python3 -m pip install virtualenv
 
-      - run: rm -rf CMakeCache.txt V=1 make detect && cmake .
+      - run: rm -rf CMakeCache.txt && V=1 make detect && cmake .
       - run: |
           V=1 make all install gnostr-install && echo $(which gnostr)
       - run: V=1 make gnostr-verify-keys
