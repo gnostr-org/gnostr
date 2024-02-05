@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 #
 #
+## echo
+## echo "# arguments called with ---->  ${@}     "
+## echo "# \$# arg count ------------>  $#       "
+## echo "# \$1 ---------------------->  $1       "
+## echo "# \$2 ---------------------->  $2       "
+## echo "# \$3 ---------------------->  $3       "
+## echo "# \$4 ---------------------->  $4       "
+## echo "# path to me --------------->  ${0}     "
+## echo "# parent path -------------->  ${0%/*}  "
+## echo "# my name ------------------>  ${0##*/} "
+## echo
+## exit
+#
+#
 GNOSTR=$(which gnostr)
 ## export GNOSTR
 ## echo $GNOSTR
@@ -263,7 +277,7 @@ help(){
     ## echo 262:CALLED_FROM=$CALLED_FROM
   fi
 
-    printf "Usage:\n"
+    printf "\nUsage:\n"
     printf "\n"
     printf "gnostr-nip --sec <sha256_hash>\n"
     printf "\n"
@@ -271,16 +285,13 @@ help(){
     printf "\n"
     printf "\nContext:\n"
     printf "\n"
-    printf "gnostr-nip --sec \$(gnostr-xor 1 \$(gnostr-sha256 \$\$\)\)\n"
+    printf "gnostr-nip --sec \$(gnostr-xor 1 \$(gnostr-sha256 \$\$))\n"
     printf "\n"
-    printf "gnostr-nip --sec  $(gnostr-xor 1 $(gnostr-sha256 $$))\n"
+    printf "gnostr-nip --sec $(gnostr-xor 1 $(gnostr-sha256 $$))\n"
     printf "\n"
     printf "Test triggers:\n"
     printf "\n"
-    printf "gnostr-nip --sec\n\"0000000000000000000000000000000000000000000000000000000000000000\""
-    printf "\n"
-    printf "gnostr-nip --sec\n\"0000000000000000000000000000000000000000000000000000000000000001\""
-    printf "\n"
+    printf "gnostr-nip --sec 0000000000000000000000000000000000000000000000000000000000000001\n"
 
 exit;
 }
