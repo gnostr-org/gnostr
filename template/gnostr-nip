@@ -5,6 +5,7 @@ GNOSTR=$(which gnostr)
 ## export GNOSTR
 ## echo $GNOSTR
 
+declare CALLED_FROM
 declare PRIVKEY
 declare KIND
 declare NIP
@@ -76,7 +77,7 @@ else
   KIND=0
   MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"lud16\":\"$LUD16\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
 fi
-echo 62:PRIVKEY=$PRIVKEY
+echo 80:PRIVKEY=$PRIVKEY
 $GNOSTR --sec $PRIVKEY              \
   --kind $KIND                      \
   -t gnostr                         \
@@ -84,7 +85,7 @@ $GNOSTR --sec $PRIVKEY              \
   --tag weeble $(gnostr-weeble)     \
   --tag wobble $(gnostr-wobble)     \
   --tag block $(gnostr-blockheight) \
-  --content "$MESSAGE" && true || help
+  --content "$MESSAGE" && true || CALLED_FROM=88 && help;exit;
 
 } ## end kind0
 
@@ -251,9 +252,15 @@ test_one(){
 }
 
 default(){
+  CALLED_FROM=default
   help
 }
 help(){
+  echo 259:CALLED_FROM=$CALLED_FROM
+  if [[ ! -z $CALLED_FROM ]];
+  then
+    echo 262:CALLED_FROM=$CALLED_FROM
+  fi
 
     printf "Usage:\n"
     printf "gnostr-nip --sec <sha256_hash>\n"
@@ -269,6 +276,8 @@ help(){
     printf "gnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000000\""
     printf "\ngnostr-nip --sec \"0000000000000000000000000000000000000000000000000000000000000001\""
     printf "\n"
+
+exit;
 }
 
 ##if [ ! -z "$1" ]; then
@@ -312,11 +321,11 @@ help(){
 #
 for ((i=1; i<=$#; i++)); do
 
-  echo "282:i=${!i}"
+  ## echo "282:i=${!i}"
 
   ## positional                 V                       V
   if [[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
-    help
+    CALLED_FROM=321 && help
     exit
   fi
   ## positional                 V                          V
@@ -325,70 +334,71 @@ for ((i=1; i<=$#; i++)); do
     exit
   fi
   ## positional                 V                      V
-  ## if [[ ${!i} == "-s" ]] || [[ $1 == "--sec" ]] || [[ $1 == "sec" ]]; then
+# if [[ ${!i} == "-s" ]] || [[ $1    == "--sec" ]] || [[ $1    == "sec" ]]; then
   if [[ ${!i} == "-s" ]] || [[ ${!i} == "--sec" ]] || [[ ${!i} == "sec" ]]; then
   ((i++))
+  echo $i
     ## TODO more test for hash
     if [[ ! -z ${!i} ]]; then
       echo  \${!i}=${!i}
       PRIVKEY=${!i}
       export PRIVKEY
-      echo 301:PRIVKEY=$PRIVKEY
+      echo 337:PRIVKEY=$PRIVKEY
       ## echo "${!i} is a number"
       ## echo DEPTH=$DEPTH
       ((i++))
     else
        echo "${!i} is not a valid sha256 hash"
-       help
+       CALLED_FROM=345 && help
     fi
-  fi
+  fi ## end if -ss --sec sec
 
   ## non-positional
   ##       V                      V                          V
   if [[ ${!i} == "-k" ]] || [[ ${!i} == "--kind" ]] || [[ ${!i} == "kind" ]]; then
-  ## ((i++))
-    ## if [[ ! -z ${!i} ]]; then
   ((i++))
     if [[ ! -z ${!i} ]] && [[ ${!i} =~ ^[0-9]+$ ]]; then
       KIND=${!i}
-      echo 321:KIND=$KIND
-      #kinds #$PRIVKEY
-      ## echo "${!i} is a number"
-      ## echo DEPTH=$DEPTH
+      echo 352:KIND=$KIND
       ((i++))
     else
        echo "${!i} is not a number"
-       help
+       CALLED_FROM=359 && help
     fi
   fi
   ## non-positional
   ##       V                      V                         V
   if [[ ${!i} == "-n" ]] || [[ ${!i} == "--nip" ]] || [[ ${!i} == "nip" ]]; then
-  ## ((i++))
-    ## if [[ ! -z ${!i} ]]; then
+  echo 365:i=${!i};
   ((i++))
-  echo 363:${!i};
+  echo 367:i=${!i};
+  ## i not empty and a number
     if [[ ! -z ${!i} ]] && [[ ${!i} =~ ^[0-9]+$ ]]; then
+      echo 370:i=${!i};
       NIP=${!i}
-      echo 339:NIP=$NIP
-      echo 340:kind\$NIP=kind$NIP
+      echo 370:NIP=$NIP
+      echo 371:kind\$NIP=kind$NIP
       ## nip$NIP
       ## echo "${!i} is a number"
       ## echo DEPTH=$DEPTH
       ((i++))
-    else
-       echo "${!i} is not a number"
-       help
+    ## else ## already tested - no need to catch
+       ## echo "${!i} is not a number"
+       ## CALLED_FROM=378 && help
     fi
   fi
   if [[ ${!i} == "-2" ]] || [[ $1 == "--sha2" ]] || [[ $1 == "--sha256" ]]; then
   ((i++))
-  SHA2=TRUE
-  echo SHA2=$SHA2
-  ## sha256
-  default
+  ## hash the next i and assign
+  SHA2=$(gnostr --hash ${!i})
+  echo $SHA2;exit;
+  ((i++))
+  ## else # no need to catch
+  ## CALLED_FROM=377 && default || help
   fi
+## calling nips first or kinds
+## TODO: print nip summary/syntax
 nips || kinds
 exit
 done
-default
+#CALLED_FROM=393 && default || help
