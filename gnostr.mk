@@ -319,8 +319,9 @@ gossip:
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
-bits:
+bits/.git:
 	@devtools/refresh-submodules.sh bits
+bits:bits/.git
 	@cd bits && make build-release install && cd ..
 .PHONY:modal gnostr-modal
 gnostr-modal:modal
