@@ -78,7 +78,7 @@ jobs:
 
       - run: python3 -m pip install virtualenv
 
-      - run: mkdir -p /home/runner/bin || true
+      - run: mkdir -p ~/bin || true
       - run: make bits
       - run: rm -rf CMakeCache.txt && V=1 make detect && cmake .
       - run: |
