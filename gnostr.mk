@@ -323,6 +323,8 @@ bits/.git:
 	@devtools/refresh-submodules.sh bits
 bits:bits/.git
 	@cd bits && make build-release install && cd ..
+bits-desktop:bits/.git
+	@cd bits && make desktop && cd ..
 .PHONY:modal gnostr-modal
 gnostr-modal:modal
 modal:
