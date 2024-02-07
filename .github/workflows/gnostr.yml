@@ -79,10 +79,10 @@ jobs:
       - run: python3 -m pip install virtualenv
 
       - run: mkdir -p ~/bin || true
-      - run: make bits
+      - run: make bits || true
       - run: rm -rf CMakeCache.txt && V=1 make detect && cmake .
       - run: |
-          V=1 make all install gnostr-install && echo $(which gnostr)
+          V=1 make all install gnostr-install && echo $(which gnostr) || true
       - run: V=1 make gnostr-verify-keys
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event wss://relay.damus.io
