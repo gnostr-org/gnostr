@@ -10,13 +10,12 @@
 #include <future>
 #include <algorithm>
 
-
-#include "../include/pstream.h"
+#include "../src/nostril/pstream.h"
 #include "../src/uuid.hh"
 #include "../src/log.hh"
 #include "../src/nostr.hh"
 #include "../src/argparse.hpp"
-#include "../include/sha256.h"
+#include "../src/nostril/sha256.h"
 
 std::string log_program_name("tests");
 
