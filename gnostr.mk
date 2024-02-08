@@ -51,6 +51,7 @@ gnostr-git-reflog\
 gnostr-gnode\
 gnostr-keyconv\
 gnostr-modal\
+gnostr-nip\
 gnostr-post\
 gnostr-post-event\
 gnostr-proxy\
@@ -95,8 +96,12 @@ doc-gnostr-git:gnostr-git
 	[ -x $(shell which gnostr-git) ] || $(MAKE) gnostr-git
 	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 && cat doc/gnostr-git.1 > $(PREFIX)/share/man/man1/gnostr-git.1
 .PHONY:doc
-doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+##We stream edit certain tools man pages
+##	make goals are processed from left to right
+##	doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
+doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
 ##help2man < $^ > $@
+	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
 	for b in $(DOCS);\
   do touch doc/$$b.1;\
@@ -234,11 +239,10 @@ gnostr-web-deploy:
 
 git/.git:
 	@devtools/refresh-submodules.sh git
-.PHONY:git/gnostr-git
+.PHONY:git/gnostr-git gnostr-git git
 git/gnostr-git:git/.git
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 	cd git && make && make install
-.PHONY:gnostr-git git
 git:gnostr-git
 gnostr-git:git/gnostr-git## 	gnostr-git
 	cp $< $@ || true
@@ -315,9 +319,12 @@ gossip:
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
-bits:
+bits/.git:
 	@devtools/refresh-submodules.sh bits
+bits:bits/.git
 	@cd bits && make build-release install && cd ..
+bits-desktop:bits/.git
+	@cd bits && make desktop && cd ..
 .PHONY:modal gnostr-modal
 gnostr-modal:modal
 modal:
@@ -397,7 +404,6 @@ relay:relay/.git
 .PHONY:gnostr-cat cat
 cat/.git:
 	@devtools/refresh-submodules.sh cat
-.PHONY:cat
 gnostr-cat:cat
 cat:cat/.git
 	cd cat && \
@@ -445,7 +451,7 @@ deps/gnostr-aio/.git:
 
 act/.git:
 	@devtools/refresh-submodules.sh act
-.PHONY:act gnostr-act act/.git
+.PHONY:act gnostr-act
 gnostr-act:act
 act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
@@ -457,11 +463,11 @@ act:act/bin/gnostr-act
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY:gnostr
-gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-##gnostr initialize
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	install gnostr /usr/local/bin/
+##.PHONY:gnostr
+##gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+####gnostr initialize
+##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
+##	install gnostr /usr/local/bin/
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
@@ -476,19 +482,19 @@ gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $
 ## 	rm -f $@
 ## 	$(CC) $@.c -o $@
 
-.ONESHELL:
+.ONESHELL:gnostr-install
 ##install all
 ##	install doc/gnostr.1 gnostr gnostr-query
 gnostr-install:
-	mkdir -p $(PREFIX)/bin
-	mkdir -p $(PREFIX)/include
-	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null
+	mkdir -p $(PREFIX)/bin                                                         || true
+	mkdir -p $(PREFIX)/include                                                     || true
+	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null || true
 	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
-	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null
-	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null
+	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc
