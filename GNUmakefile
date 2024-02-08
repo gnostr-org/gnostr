@@ -76,7 +76,7 @@ endif
 export BIND
 
 ifeq ($(token),)
-GITHUB_TOKEN                            :=$(shell cat ~/GITHUB_TOKEN.txt || echo "0")
+GITHUB_TOKEN                            :=$(shell touch ~/GITHUB_TOKEN.txt && cat ~/GITHUB_TOKEN.txt || echo "0")
 else
 GITHUB_TOKEN                            :=$(shell echo $(token))
 endif
