@@ -463,11 +463,11 @@ act:act/bin/gnostr-act
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-## .PHONY:gnostr
-## gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-## ##gnostr initialize
-## 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-## 	install gnostr /usr/local/bin/
+.PHONY:gnostr
+gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+##gnostr initialize
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
+	install gnostr /usr/local/bin/
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
