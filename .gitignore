@@ -233,3 +233,4 @@ ext/curl-8.5.0/tests/server/Makefile.inc.cmake
 ext/curl-8.5.0/tests/unit/.deps/
 ext/curl-8.5.0/tests/unit/Makefile.inc.cmake
 
+ext/curl-8.5.0/lib/libcurl.a
