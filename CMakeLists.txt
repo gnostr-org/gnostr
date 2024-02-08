@@ -124,7 +124,7 @@ add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-add_executable(gnostr-getrelays  src/gnostr-get-relays.c)
+add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
 add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
@@ -337,10 +337,10 @@ install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-getrelays
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-getrelays
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
