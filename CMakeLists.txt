@@ -40,7 +40,10 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2/include)
+include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2)
+add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
 
 if(BUILD_WEB)
 if(MSVC)
@@ -223,6 +226,13 @@ if(USE_OPENSSL)
   endif()
 endif()
 
+
+#//////////////////////////
+# gnostr
+#//////////////////////////
+
+add_executable(gnostr src/gnostr.c)
+target_link_libraries (gnostr ${lib_dep})
 
 #//////////////////////////
 # HTTP demo
