@@ -213,11 +213,18 @@ static void gnostr_sha256(int argc, const char* argv[], struct args *args)
   int status_code = execvp(command, argument_list);
 
   if (status_code == -1) {
-      printf("Try:\n");
-      printf("gnostr sha256 --hash <string>\n");
-      exit(1);
-  }
 
+    char* command = "cargo";
+    char* argument_list[] = {"cargo", "install", "gnostr-sha256", NULL};
+    int status_code2 = execvp(command, argument_list);
+    if (status_code2 == -1) {
+
+      //We are assuming this is the problem
+      printf("failed to install gnostr-sha256");
+
+      exit(1);
+    }
+  }
   //TODO:implement fail over to openssl call
   exit(0);
 }
