@@ -5,7 +5,7 @@
 #include "secp256k1_ecdh.h"
 #include "secp256k1_schnorrsig.h"
 
-#define VERSION "0.1.3"
+#define VERSION "0.0.19"
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16
 #define HAS_CREATED_AT (1<<1)
@@ -30,13 +30,14 @@ struct key
 // args
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct args 
+struct args
 {
   unsigned int flags;
   int kind;
   int difficulty;
   unsigned char encrypt_to[32];
   const char* sec;
+  const char* hash;
   const char* tags;
   const char* content;
   uint64_t created_at;
@@ -75,7 +76,7 @@ struct nostr_event
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
   int parse_num(const char* arg, uint64_t* t);
   int nostr_add_tag(struct nostr_event* ev, const char* t1, const char* t2);
   int hex_decode(const char* str, size_t slen, void* buf, size_t bufsize);

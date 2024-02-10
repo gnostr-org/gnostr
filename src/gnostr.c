@@ -102,6 +102,8 @@ void usage()
        printf("COMMAND CONTEXT:\n\n");
        printf("  gnostr --sec $(gnostr-sha256 $(curl -s https://blockchain.info/q/getblockcount)) \\\n          -t block \\\n          -t $(curl -s https://blockchain.info/q/getblockcount) \\\n          --envelope \\\n          --content \"BLOCK:$(curl -s https://blockchain.info/q/getblockcount)\"\n\n");
        printf("\n");
+//GNOSTR-GIT
+//CONFIG
        printf("GNOSTR-GIT:\n");
        printf("CONFIG:\n");
        printf("\n");
@@ -111,8 +113,12 @@ void usage()
        printf("  gnostr git config --global --get gnostr.secretkey\n");
 //printf("  5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5");
        printf("\n");
+//RELAY OPTIONS
+//
        printf("RELAY OPTIONS:\n\n");
        printf("\n");
+//NOSTR OPTIONS
+//
        printf("NOSTR OPTIONS:\n");
        printf("\n");
        printf("      --content <string>              the content of the note\n");
@@ -124,9 +130,13 @@ void usage()
        printf("\n");
        printf("  gnostr --sec $(gnostr-git config --global --get gnostr.secretkey) --envelope --content \" \"\n\n");
        printf("\n");
+//GNOSTR
+//COMMAND CONTEXT
        printf("COMMAND CONTEXT:\n\n");
        printf("  gnostr --sec $(gnostr-sha256 $(curl -s https://blockchain.info/q/getblockcount)) \\\n          -tblock \\\n          -t $(curl -s https://blockchain.info/q/getblockcount) \\\n          --envelope \\\n          --content \"BLOCK:$(curl -s https://blockchain.info/q/getblockcount)\"\n\n");
        printf("\n");
+//GNOSTR-GIT
+//COMMAND EXAMPLES
        printf("GNOSTR-GIT:\n");
        printf("CONFIG:\n");
        printf("\n");
@@ -136,8 +146,14 @@ void usage()
        printf("  gnostr git config --global --get gnostr.secretkey\n");
 //printf("  5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5");
        printf("\n");
+//RELAY OPTIONS
+//
+//
        printf("RELAY OPTIONS:\n\n");
        printf("\n");
+//NOSTR OPTIONS
+//
+//
        printf("NOSTR OPTIONS:\n");
        printf("\n");
        printf("      --content <string>              the content of the note\n");
@@ -177,11 +193,108 @@ static void try_subcommand(int argc, const char* argv[])
 {
   static char buf[128] = { 0 };
   const char* sub = argv[1];
+  //printf("buf=%s\n", buf);
+  //printf("sub=%s\n", sub);
   if (strlen(sub) >= 1 && sub[0] != '-')
   {
-    snprintf(buf, sizeof(buf) - 1, "nostril-%s", sub);
+    snprintf(buf, sizeof(buf) - 1, "gnostr-%s", sub);
     execvp(buf, (char* const*)argv + 1);
   }
+}
+static void gnostr_sha256(int argc, const char* argv[], struct args *args)
+{
+
+  char* command2 = "gnostr-sha256";
+  char* argument_list2[] = {"gnostr-sha256", args->hash, NULL};
+
+  //printf("Before calling execvp()\n");
+
+  // Calling the execvp() system call
+  int status_code2 = execvp(command2, argument_list2);
+
+  if (status_code2 == -1) {
+      printf("Process did not terminate correctly\n");
+      exit(1);
+  }
+
+  //printf("This line will not be printed if execvp() runs correctly\n");
+
+  //EXAMPLE END
+
+
+
+  static char buf[128] = { 0 };
+
+  if (argc == -1){
+  printf("-1:argc=%d\n", argc);
+  }
+  if (argc == 0){
+  printf("0:argc=%d\n", argc);
+  }
+  if (argc == 1){
+  printf("1:argc=%d\n", argc);
+  }
+
+  const char* sub0 = argv[argc + 1 ];
+  const char* sub1 = argv[argc + 1 + 1];
+  const char* sub2 = argv[argc + 1 + 1 + 1];
+
+  //printf("sub0=%s\n", sub0);
+  //printf("sub1=%s\n", sub1);
+  //printf("sub2=%s\n", sub2);
+
+  //printf("args->hash=%s\n", args->hash);
+
+  //snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
+  //snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
+  //printf("buf=%s\n", buf);
+  //printf("argv + 1 = %s\n", (char* const*)argv + 1);
+  //exit(0);
+
+  if (strlen(sub1) >= 1 && sub1[0] != '-')
+  {
+    printf("sub1[0]=%c\n", sub1[0]);
+    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256");
+    //snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
+    printf("buf=%s\n", buf);
+    printf("argv + 1 =%s\n",  (char* const*)argv + 1);
+    //execvp(buf, (char* const*)argv + 1);
+    printf("args->hash=%s\n", args->hash);
+    printf("args->hash=%s\n", &args->hash);
+    execvp(buf, (char* const*)args->hash);
+  }
+  exit(0);
+  printf("\nargv + 1 = %s", *argv + 1);
+  if (strlen(sub1) >= 1 && sub1[0] != '-')
+  {
+    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
+    printf("buf=%s\n", buf);
+    execvp(buf, (char* const*)argv + 1);
+  }
+  printf("\nargv + 1 = %s", *argv + 1);
+  if (strlen(sub1) >= 1 && sub1[0] != '-')
+  {
+    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256");
+    printf("buf=%s\n", buf);
+    execvp(buf, (char* const*)argv + 1);
+  }
+  printf("\nargv + 1 = %s", *argv + 1);
+  if (strlen(sub1) >= 1 && sub1[0] != '-')
+  {
+    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256");
+    printf("buf=%s\n", buf);
+    execvp(buf, (char* const*)argv + 2);
+  }
+}
+
+static void hash(int argc, const char* argv[], struct args *args)
+{
+       //printf("%s\n", VERSION);
+       //printf("args->hash=%s\n", args->hash);
+       //printf("reimplement --hash command\n%s\n", VERSION);
+       //try_subcommand(argc, argv);
+       gnostr_sha256(argc, argv, args);
+       exit(0);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +312,7 @@ int main(int argc, const char* argv[])
     usage();
 
   if (!init_secp_context(&ctx))
+    //TODO help error 2 is failed to initialize secp context
     return 2;
 
   try_subcommand(argc, argv);
@@ -206,6 +320,7 @@ int main(int argc, const char* argv[])
   if (!parse_args(argc, argv, &args, &ev))
   {
     usage();
+    //TODO help error 10 failed to parse sub-command
     return 10;
   }
 
@@ -313,6 +428,25 @@ int parse_args(int argc, const char* argv[], struct args* args, struct nostr_eve
     {
       usage();
     }
+    if (!strcmp(arg, "-h"))
+    {
+      usage();
+    }
+    if (!strcmp(arg, "--version"))
+    {
+      version();
+    }
+    if (!strcmp(arg, "-v"))
+    {
+      version();
+    }
+    if (!strcmp(arg, "--hash"))
+    {
+      args->hash = *argv++; argc--;
+      //printf("args->hash=%s\n", args->hash);
+      hash(argc, argv, args);
+    }
+
 
     if (!argc)
     {
