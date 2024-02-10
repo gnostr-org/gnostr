@@ -193,106 +193,41 @@ static void try_subcommand(int argc, const char* argv[])
 {
   static char buf[128] = { 0 };
   const char* sub = argv[1];
-  //printf("buf=%s\n", buf);
-  //printf("sub=%s\n", sub);
   if (strlen(sub) >= 1 && sub[0] != '-')
   {
     snprintf(buf, sizeof(buf) - 1, "gnostr-%s", sub);
     execvp(buf, (char* const*)argv + 1);
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// gnostr_sha256
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
 static void gnostr_sha256(int argc, const char* argv[], struct args *args)
 {
 
-  char* command2 = "gnostr-sha256";
-  char* argument_list2[] = {"gnostr-sha256", args->hash, NULL};
+  char* command = "gnostr-sha256";
+  char* argument_list[] = {"gnostr-sha256", (char *)args->hash, NULL};
 
-  //printf("Before calling execvp()\n");
+  int status_code = execvp(command, argument_list);
 
-  // Calling the execvp() system call
-  int status_code2 = execvp(command2, argument_list2);
-
-  if (status_code2 == -1) {
-      printf("Process did not terminate correctly\n");
+  if (status_code == -1) {
+      printf("Try:\n");
+      printf("gnostr sha256 --hash <string>\n");
       exit(1);
   }
 
-  //printf("This line will not be printed if execvp() runs correctly\n");
-
-  //EXAMPLE END
-
-
-
-  static char buf[128] = { 0 };
-
-  if (argc == -1){
-  printf("-1:argc=%d\n", argc);
-  }
-  if (argc == 0){
-  printf("0:argc=%d\n", argc);
-  }
-  if (argc == 1){
-  printf("1:argc=%d\n", argc);
-  }
-
-  const char* sub0 = argv[argc + 1 ];
-  const char* sub1 = argv[argc + 1 + 1];
-  const char* sub2 = argv[argc + 1 + 1 + 1];
-
-  //printf("sub0=%s\n", sub0);
-  //printf("sub1=%s\n", sub1);
-  //printf("sub2=%s\n", sub2);
-
-  //printf("args->hash=%s\n", args->hash);
-
-  //snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
-  //snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
-  //printf("buf=%s\n", buf);
-  //printf("argv + 1 = %s\n", (char* const*)argv + 1);
-  //exit(0);
-
-  if (strlen(sub1) >= 1 && sub1[0] != '-')
-  {
-    printf("sub1[0]=%c\n", sub1[0]);
-    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256");
-    //snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
-    printf("buf=%s\n", buf);
-    printf("argv + 1 =%s\n",  (char* const*)argv + 1);
-    //execvp(buf, (char* const*)argv + 1);
-    printf("args->hash=%s\n", args->hash);
-    printf("args->hash=%s\n", &args->hash);
-    execvp(buf, (char* const*)args->hash);
-  }
+  //TODO:implement fail over to openssl call
   exit(0);
-  printf("\nargv + 1 = %s", *argv + 1);
-  if (strlen(sub1) >= 1 && sub1[0] != '-')
-  {
-    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256 %s", args->hash);
-    printf("buf=%s\n", buf);
-    execvp(buf, (char* const*)argv + 1);
-  }
-  printf("\nargv + 1 = %s", *argv + 1);
-  if (strlen(sub1) >= 1 && sub1[0] != '-')
-  {
-    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256");
-    printf("buf=%s\n", buf);
-    execvp(buf, (char* const*)argv + 1);
-  }
-  printf("\nargv + 1 = %s", *argv + 1);
-  if (strlen(sub1) >= 1 && sub1[0] != '-')
-  {
-    snprintf(buf, sizeof(buf) - 1, "gnostr-sha256");
-    printf("buf=%s\n", buf);
-    execvp(buf, (char* const*)argv + 2);
-  }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// hash
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void hash(int argc, const char* argv[], struct args *args)
 {
-       //printf("%s\n", VERSION);
-       //printf("args->hash=%s\n", args->hash);
-       //printf("reimplement --hash command\n%s\n", VERSION);
-       //try_subcommand(argc, argv);
        gnostr_sha256(argc, argv, args);
        exit(0);
 }
