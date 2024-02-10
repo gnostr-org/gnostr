@@ -24,7 +24,9 @@ inline-c = "0.1.7"
 ## gnostr-cat = { git = "https://github.com/gnostr-org/gnostr-cat.git", version = "0.0.6" }
 ## gnostr-get-relays = { git = "https://github.com/gnostr-org/gnostr-get-relays.git", version = "0.0.0" }
 ## gnostr-grep = { git = "https://github.com/gnostr-org/gnostr-grep.git", version = "0.0.4" }
-## gnostr-legit = { git = "https://github.com/gnostr-org/gnostr-legit.git", version = "0.0.6" }
+## member1 = { git = "https://github.com/some/project" }
+gnostr-legit = { git = "https://github.com/gnostr-org/gnostr-legit.git", version = "0.0.6" }
+## gnostr-legit = { version = "0.0.6", path = "legit" }
 ## gnostr-relay = { git = "https://github.com/gnostr-org/gnostr-relay.git", version = "0.0.2" }
 ## gnostr-sha256 = { git = "https://github.com/gnostr-org/gnostr-sha256.git", version = "0.0.5" }
 gnostr-types = { package = "gnostr-types", git = "https://github.com/gnostr-org/gnostr-types", version = "0.7.1-unstable" }
