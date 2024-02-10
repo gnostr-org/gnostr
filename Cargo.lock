@@ -443,7 +443,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "gnostr-legit",
  "gnostr-types",
@@ -453,7 +453,7 @@ dependencies = [
 [[package]]
 name = "gnostr-legit"
 version = "0.0.6"
-source = "git+https://github.com/gnostr-org/gnostr-legit.git#000000e42a08c21c11bd184ea4968da2e944d66e"
+source = "git+https://github.com/gnostr-org/gnostr-legit#e524b091cfdf47a5ef44cd470a21bd7023d3904c"
 dependencies = [
  "argparse",
  "chrono",
