@@ -463,6 +463,10 @@ act:act/bin/gnostr-act
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+
+
+## REF: bypassing
+##      part of migrating to full cmake build
 ##.PHONY:gnostr
 ##gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ####gnostr initialize
