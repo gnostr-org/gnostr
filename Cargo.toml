@@ -16,5 +16,17 @@ keywords = ["git", "gui", "cli", "terminal", "ui", "gnostr"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gnostr-bins = "0.0.5"
 inline-c = "0.1.7"
+
+## gnostr-bins = { git = "https://github.com/gnostr-org/gnostr-bins.git", version = "0.0.5" }
+## gnostr-bits = { git = "https://github.com/gnostr-org/gnostr-bits.git", version = "0.0.2" }
+## gnostr-cli = { git = "https://github.com/gnostr-org/gnostr-cli.git", version = "0.0.3" }
+## gnostr-cat = { git = "https://github.com/gnostr-org/gnostr-cat.git", version = "0.0.6" }
+## gnostr-get-relays = { git = "https://github.com/gnostr-org/gnostr-get-relays.git", version = "0.0.0" }
+## gnostr-grep = { git = "https://github.com/gnostr-org/gnostr-grep.git", version = "0.0.4" }
+## gnostr-legit = { git = "https://github.com/gnostr-org/gnostr-legit.git", version = "0.0.6" }
+## gnostr-relay = { git = "https://github.com/gnostr-org/gnostr-relay.git", version = "0.0.2" }
+## gnostr-sha256 = { git = "https://github.com/gnostr-org/gnostr-sha256.git", version = "0.0.5" }
+gnostr-types = { package = "gnostr-types", git = "https://github.com/gnostr-org/gnostr-types", version = "0.7.1-unstable" }
+## nauthz-server = { git = "https://github.com/gnostr-org/gnostr-relay.git", version = "0.1.0" }
+##gnostr-command = { git = "https://github.com/gnostr-org/gnostr-command.git", version = "0.0.8" }

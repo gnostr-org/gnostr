@@ -22,6 +22,9 @@
 /// # }
 /// ```
 
+//extern crate gnostr_bins;
+//extern crate gnostr_bits;
+
 use inline_c::assert_c;
 
 fn main() {
