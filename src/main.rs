@@ -24,12 +24,12 @@
 
 extern crate gnostr_legit;
 //extern crate gnostr_bits;
-#[allow(unused_imports)]
-use gnostr_legit::gitminer::Gitminer;
-#[allow(unused_imports)]
-use gnostr_legit::worker::Worker;
-#[allow(unused_imports)]
-use gnostr_legit::repo;
+//#[allow(unused_imports)]
+//use gnostr_legit::gitminer::Gitminer;
+//#[allow(unused_imports)]
+//use gnostr_legit::worker::Worker;
+//#[allow(unused_imports)]
+//use gnostr_legit::repo;
 
 use inline_c::assert_c;
 
@@ -37,17 +37,17 @@ fn main() {
     (assert_c! {
         #include <stdio.h>
 
-        void usage(){
+        void usage(){ printf("gnostr: usage!!"); };
 
-            printf("gnostr: usage!!");
-
-        }
         int main() {
+
             int argc = 0;
 
-            if (argc < 2)
+            if (argc < 2){
+
                 usage();
-            printf("Hello, Gnostr!");
+            
+            } else { printf("Hello, Gnostr!"); }
 
             return 0;
         }
