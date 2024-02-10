@@ -22,22 +22,28 @@
 /// # }
 /// ```
 
-extern crate gnostr_legit;
-//extern crate gnostr_bits;
-//#[allow(unused_imports)]
-//use gnostr_legit::gitminer::Gitminer;
-//#[allow(unused_imports)]
-//use gnostr_legit::worker::Worker;
-//#[allow(unused_imports)]
-//use gnostr_legit::repo;
+#[allow(unused_imports)]
+use gnostr_legit::gitminer::Gitminer;
+#[allow(unused_imports)]
+use gnostr_legit::worker::Worker;
+#[allow(unused_imports)]
+use gnostr_legit::repo;
 
 use inline_c::assert_c;
 
 fn main() {
+
+    //assert_c!
+    //
     (assert_c! {
+
         #include <stdio.h>
 
-        void usage(){ printf("gnostr: usage!!"); };
+        void usage(){
+
+            printf("gnostr: usage!");
+
+        };
 
         int main() {
 
@@ -47,13 +53,14 @@ fn main() {
 
                 usage();
             
-            } else { printf("Hello, Gnostr!"); }
+            } else { /* printf("Hello, Gnostr!"); */ }
 
             return 0;
         }
     })
     .success()
-    .stdout("Hello, Gnostr!");
-    //rust
+    .stdout("gnostr: usage!"); //success is matching usage() function output. 
+                               //which isnt displayed in the terminal.
+    //rust output displayed in terminal.
     println!("Hello, Gnostr!");
 }
