@@ -382,6 +382,7 @@ nvm-clean: ## 	nvm-clean
 
 -include gnostr.mk
 -include gnostr-act.mk
+-include gnostr-bot.mk
 -include venv.mk
 -include clean.mk
 -include cargo.mk

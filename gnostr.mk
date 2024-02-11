@@ -467,7 +467,7 @@ act:act/bin/gnostr-act
 gnostr-am:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	install -m 755 -Ssv `pwd`/$@ $(PREFIX)/bin/gnostr
+	$(MAKE) gnostr-install
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
@@ -490,6 +490,7 @@ gnostr-install:
 	mkdir -p $(PREFIX)/include                                                     || true
 	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null || true
 	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
+	@install -m755 -v gnostr-am                      $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null || true
