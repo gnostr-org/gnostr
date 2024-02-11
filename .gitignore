@@ -1,5 +1,8 @@
 build
 
+#non-cmake
+gnostr-am
+
 gnostr-*.patch
 gnostr
 gnostr-act
@@ -88,6 +91,8 @@ tags
 /target
 
 *.json
+
+src/libcjson/bin/libcjson.a
 
 dist
 .dist-*
