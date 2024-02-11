@@ -30,7 +30,7 @@ function get_time(){
 get_time
 
 function get_block_height(){
-	BLOCKHEIGHT=$(curl https://blockchain.info/q/getblockcount 2>/dev/null)
+	BLOCKHEIGHT=$(curl https://blockchain.info/q/getblockcount 2>/dev/null || curl -sSL "https://mempool.space/api/blocks/tip/height")
 	return $BLOCKHEIGHT
 }
 get_block_height

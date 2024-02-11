@@ -40,7 +40,10 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2/include)
+include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2)
+add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
 
 if(BUILD_WEB)
 if(MSVC)
@@ -121,7 +124,7 @@ add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-add_executable(gnostr-getrelays  src/gnostr-get-relays.c)
+add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
 add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
@@ -223,6 +226,13 @@ if(USE_OPENSSL)
   endif()
 endif()
 
+
+#//////////////////////////
+# gnostr
+#//////////////////////////
+
+add_executable(gnostr src/gnostr.c)
+target_link_libraries (gnostr ${lib_dep})
 
 #//////////////////////////
 # HTTP demo
@@ -327,10 +337,10 @@ install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-getrelays
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-getrelays
+install(TARGETS gnostr-get-relays
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 

@@ -36,6 +36,7 @@ struct args
   int kind;
   int difficulty;
   unsigned char encrypt_to[32];
+  const char* hash;
   const char* sec;
   const char* tags;
   const char* content;
