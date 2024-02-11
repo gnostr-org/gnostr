@@ -15,7 +15,7 @@
 ## exit
 #
 #
-GNOSTR=$(which gnostr)
+GNOSTR=$(which gnostr || which gnostr-am)
 ## export GNOSTR
 ## echo $GNOSTR
 
@@ -202,7 +202,7 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
       PRIVKEY=$i
       echo PRIVKEY=$PRIVKEY
       ##nip0
-      gnostr --sec $i \
+      $GNOSTR --sec $i \
           --kind 0 \
           --pow 1 \
           -t gnostr \
@@ -213,7 +213,7 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
           -t $(gnostr-wobble) \
           --content "$MESSAGE" | \
           gnostr-post-event
-      gnostr --sec $i \
+      $GNOSTR --sec $i \
           --kind 1 \
           --pow 1 \
           -t gnostr \
