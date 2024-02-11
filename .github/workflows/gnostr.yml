@@ -78,7 +78,8 @@ jobs:
 
       - run: python3 -m pip install virtualenv
 
-      - run: V=1 make detect && cmake .
+      - run: sudo make detect
+      - run: cmake .
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr gnostr-install gnostr-verify-keys
       - run: V=1 make gnostr bins gnostr-sha256 &&  gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
