@@ -49,7 +49,7 @@ jobs:
       - run: cargo install gnostr-bins
       #- run: rm -rf CMakeCache.txt
       #- run: rm -rf CMakeFiles
-      - run: cmake .
+      - run: cmake -S .
       - run: V=1 make detect gnostr gnostr-install
       - run: echo $(date +%s)
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event
