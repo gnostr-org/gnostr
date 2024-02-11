@@ -601,7 +601,7 @@ int make_encrypted_dm(secp256k1_context* ctx, struct key* key, struct nostr_even
 // print_event
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int print_event(struct nostr_event* ev, char** json)
+int print_event(struct nostr_event* ev, char** json, struct args *args)
 {
   unsigned char buf[102400];
   char pubkey[65];
@@ -623,8 +623,15 @@ int print_event(struct nostr_event* ev, char** json)
   char str[1024];
   char out[102400];
 
+
+
+  //catch no --envelope condition
+  if (args->flags == 8){
   sprintf(str, "[\"EVENT\",");
   strcpy(out, str);
+  }
+
+
 
   sprintf(str, "{\"id\": \"%s\",", id);
   strcat(out, str);
@@ -646,10 +653,12 @@ int print_event(struct nostr_event* ev, char** json)
   sprintf(str, "\"sig\": \"%s\"}", sig);
   strcat(out, str);
 
+
+  //catch no --envelope condition
   sprintf(str, "]\n");
   strcat(out, str);
 
-  fprintf(stderr, "%s", out);
+  //fprintf(stderr, "%s", out);
   strcpy(*json, out);
   return 1;
 }
@@ -665,7 +674,23 @@ int make_message(struct args* args, struct nostr_event* ev, char** json)
   if (!init_secp_context(&ctx))
     return 2;
 
-  args->flags |= HAS_ENVELOPE;
+
+  if (args->flags > 0){
+
+    printf("args->flags=%c", args->flags);
+
+  }
+  if (args->flags){
+
+    printf("args->flags=%c", args->flags);
+
+  }
+
+  if (args->flags & HAS_ENVELOPE)
+  {
+  printf("HAS_ENVELOPE=%d", HAS_ENVELOPE);
+  }
+
   if (args->tags)
   {
     ev->explicit_tags = args->tags;
@@ -734,7 +759,7 @@ int make_message(struct args* args, struct nostr_event* ev, char** json)
     return 6;
   }
 
-  if (!print_event(ev, json))
+  if (!print_event(ev, json, args))
   {
     fprintf(stderr, "buffer too small\n");
     return 88;
