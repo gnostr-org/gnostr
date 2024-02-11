@@ -1,2 +1,4 @@
-gnostr-verify-keypair:gnostr gnostr-install
-	gnostr-verify-keypair $(shell gnostr --sec $(shell gnostr-sha256 $(shell gnostr-weeble)) | jq .pubkey | sed 's/\"//g') $(shell gnostr-sha256 $(shell gnostr-weeble)) || $(MAKE) bins
+JQ=$(shell which jq)
+export JQ
+gnostr-verify-keypair:
+	gnostr-verify-keypair a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
