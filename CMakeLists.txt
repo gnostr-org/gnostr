@@ -231,8 +231,9 @@ endif()
 # gnostr
 #//////////////////////////
 
-add_executable(gnostr src/gnostr.c)
-target_link_libraries (gnostr ${lib_dep})
+## CMAKE gnostr
+#add_executable(gnostr src/gnostr.c)
+#target_link_libraries (gnostr ${lib_dep})
 
 #//////////////////////////
 # HTTP demo
