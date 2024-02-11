@@ -188,14 +188,14 @@ static int create_key(secp256k1_context* ctx, struct key* key)
 {
   secp256k1_xonly_pubkey pubkey;
 
-  // Try to create a keypair with a valid context, it should only fail if the secret key is zero or out of range. 
+  // Try to create a keypair with a valid context, it should only fail if the secret key is zero or out of range.
   if (!secp256k1_keypair_create(ctx, &key->pair, key->secret))
     return 0;
 
   if (!secp256k1_keypair_xonly_pub(ctx, &pubkey, NULL, &key->pair))
     return 0;
 
-  // Serialize the public key. Should always return 1 for a valid public key. 
+  // Serialize the public key. Should always return 1 for a valid public key.
   return secp256k1_xonly_pubkey_serialize(ctx, key->pubkey, &pubkey);
 }
 
@@ -208,7 +208,11 @@ int decode_key(secp256k1_context* ctx, const char* secstr, struct key* key)
 {
   if (!hex_decode(secstr, strlen(secstr), key->secret, 32))
   {
-    fprintf(stderr, "could not hex decode secret key\n");
+    //we assume the string passed to --sec is meant to be
+    //converted to hex
+    print_hex((unsigned char *)secstr, 32);
+    //print_hex(secstr, 64);
+    //fprintf(stderr, "could not hex decode secret key\n");
     return 0;
   }
 
