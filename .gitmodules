@@ -156,3 +156,5 @@
 [submodule "src/libcjson"]
 	path = src/libcjson
 	url = https://github.com/gnostr-org/libcjson.git
+  ignore = dirty
+  depth = shallow
