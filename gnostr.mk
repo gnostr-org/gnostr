@@ -467,7 +467,7 @@ act:act/bin/gnostr-act
 gnostr-am:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	install gnostr-am /usr/local/bin/gnostr
+	mv ./gnostr-am /usr/local/bin/gnostr
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
