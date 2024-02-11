@@ -1,3 +1,4 @@
+!CMakeLists.txt
 #act: since act is a docker utility, we tell docker to NOT ignore the
 #
 ## WARNING gnostr-act/docker
