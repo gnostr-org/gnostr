@@ -655,8 +655,10 @@ int print_event(struct nostr_event* ev, char** json, struct args *args)
 
 
   //catch no --envelope condition
+  if (args->flags == 8){
   sprintf(str, "]\n");
   strcat(out, str);
+  }
 
   //fprintf(stderr, "%s", out);
   strcpy(*json, out);
