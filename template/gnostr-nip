@@ -15,9 +15,11 @@
 ## exit
 #
 #
-GNOSTR=$(which gnostr || which gnostr-am)
-## export GNOSTR
-## echo $GNOSTR
+#GNOSTR=$(which gnostr || which gnostr-am)
+WHICH_GNOSTR=$(which gnostr)
+GNOSTR=${WHICH_GNOSTR:-gnostr-am}
+export GNOSTR
+echo $GNOSTR
 
 declare CALLED_FROM
 declare PRIVKEY
