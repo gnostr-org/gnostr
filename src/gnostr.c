@@ -335,7 +335,7 @@ int main(int argc, const char* argv[])
   }
 
   char* json = malloc(102400);
-  if (!print_event(&ev, &json))
+  if (!print_event(&ev, &json, &args))
   {
     fprintf(stderr, "buffer too small\n");
     return 88;
@@ -426,7 +426,9 @@ int parse_args(int argc, const char* argv[], struct args* args, struct nostr_eve
     }
     else if (!strcmp(arg, "--envelope"))
     {
+      printf("args->flags=%d",args->flags);
       args->flags |= HAS_ENVELOPE;
+      printf("args->flags=%d",args->flags);
     }
     else if (!strcmp(arg, "--tags"))
     {
