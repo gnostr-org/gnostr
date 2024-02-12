@@ -79,6 +79,7 @@ jobs:
       - run: python3 -m pip install virtualenv
 
       - run: sudo make detect
+      - run: make submodules
       - run: cmake .
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr gnostr-install gnostr-verify-keys
