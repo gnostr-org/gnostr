@@ -78,6 +78,7 @@ jobs:
 
       - run: python3 -m pip install virtualenv
 
+      - run: rm -rf /home/runner/.rustup || true
       - run: sudo make detect
       - run: mkdir -p ~/bin
       - run: make submodules
