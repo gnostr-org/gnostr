@@ -38,14 +38,15 @@ fi
 
 function gnostr_blockheight(){
 
-	type -P bitcoin-cli >/tmp/gnostr.log && \
-	BLOCKHEIGHT=$(bitcoin-cli getblockcount 2>/tmp/gnostr.log) >/tmp/gnostr.log || \
+  mkdir -p ~/.gnostr
+	type -P bitcoin-cli >~/.gnostr/gnostr.log && \
+	BLOCKHEIGHT=$(bitcoin-cli getblockcount 2>/tmp/gnostr.log) >~/.gnostr/gnostr.log || \
 	BLOCKHEIGHT=$(curl -s "https://mempool.space/api/blocks/tip/height") || \
 	BLOCKHEIGHT=$(curl -s https://blockchain.info/q/getblockcount 2>/dev/null) || \
-	BLOCKHEIGHT=$(curl -s https://docs-demo.btc.quiknode.pro/   -X POST   -H "Content-Type: application/json"   --data '{ "method": "getblockcount" }' 2>/tmp/gnostr.log | jq --arg v "$result" '.result')
+	BLOCKHEIGHT=$(curl -s https://docs-demo.btc.quiknode.pro/   -X POST   -H "Content-Type: application/json"   --data '{ "method": "getblockcount" }' 2>~/.gnostr//gnostr.log | jq --arg v "$result" '.result')
 	echo $BLOCKHEIGHT
 	return $BLOCKHEIGHT
 
 }
-gnostr_blockheight
-cat /tmp/gnostr.log
+gnostr_blockheight || true
+cat ~/.gnostr/gnostr.log
