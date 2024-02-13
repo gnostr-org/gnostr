@@ -40,6 +40,7 @@ jobs:
           touch ~/GITHUB_TOKEN.txt
 
       - run: V=1 sudo make detect
+      - run: V=1 make gnostr-am
       - run: V=1 cmake .
       #- run: V=1 sudo make install
 
