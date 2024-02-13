@@ -83,7 +83,7 @@ jobs:
       - run: mkdir -p ~/bin
       - run: make gnostr-am
       - run: rustup default stable
-      - run: make submodules
+      #- run: make submodules
       - run: cmake .
       - run: V=1 make gnostr-verify-keys
       #- run: make gnostr
