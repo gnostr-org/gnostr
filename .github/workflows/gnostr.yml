@@ -86,23 +86,24 @@ jobs:
       - run: make submodules
       - run: cmake .
       - run: make gnostr
-      - run: V=1 make all
-      - run: V=1 make install || true
-      - run: V=1 make gnostr-install
-      - run: V=1 make gnostr gnostr-install gnostr-verify-keys
-      - run: V=1 make gnostr bins gnostr-sha256 &&  gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
+      - run: V=1 make install
+      #- run: V=1 make all
+      #- run: V=1 make install || true
+      #- run: V=1 make gnostr-install || true
+      - run: V=1 make gnostr-verify-keys
+      - run: V=1 gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event wss://relay.damus.io
 
-      - name: V=1 make gnostr-all
-        run: V=1 make gnostr-all
+      #- name: V=1 make gnostr-all
+      #  run: V=1 make gnostr-all
 
-      - name: V=1 make gnostr-install
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-        run: V=1 make gnostr-install
+      #- name: V=1 make gnostr-install
+      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      #  run: V=1 make gnostr-install
 
-      - name: ./build.cmake.sh
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-        run: ./build.cmake.sh
+      #- name: ./build.cmake.sh
+      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      #  run: ./build.cmake.sh
 
       - name: Save deps
         id: cache-deps-save
