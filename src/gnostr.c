@@ -27,7 +27,7 @@
 #include "../include/struct_nostr_tag.h"
 #include "../include/struct_nostr_event.h"
 
-#include "../include/openssl_hash.h"
+//#include "../include/openssl_hash.h"
 
 #define VERSION "0.0.19"
 
@@ -86,6 +86,44 @@ int is_executable_file(char const * file_path)
         (access(file_path, X_OK) == 0);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// gnostr_sha256
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void gnostr_sha256(int argc, const char* argv[], struct args *args)
+{
+
+  char* command = "gnostr-sha256";
+  char* argument_list[] = {"gnostr-sha256", (char *)args->hash, NULL};
+
+  int status_code = execvp(command, argument_list);
+
+  if (status_code == -1) {
+
+    char* command = "cargo";
+    char* argument_list[] = {"cargo", "install", "gnostr-sha256", NULL};
+    int status_code2 = execvp(command, argument_list);
+    if (status_code2 == -1) {
+
+      //We are assuming this is the problem
+      printf("failed to install gnostr-sha256");
+
+      exit(1);
+    }
+  }
+  //TODO:implement fail over to openssl call
+  exit(0);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// hash
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void hash(int argc, const char* argv[], struct args *args)
+{
+       gnostr_sha256(argc, argv, args);
+       exit(0);
+}
 void about()
 {
 	printf("gnostr: a git nostr command line utility.\n");
@@ -490,7 +528,13 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 
 		if (!strcmp(arg, "--about") || !strcmp(arg, "-a")) { about(); }
 
-		if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv, args); }
+		//if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv, args); }
+    if (!strcmp(arg, "--hash"))
+    {
+      args->hash = *argv++; argc--;
+      //printf("args->hash=%s\n", args->hash);
+      hash(argc, argv, args);
+    }
 
 		if (!argc) {
 			fprintf(stderr, "expected argument: '%s'\n", arg);
@@ -782,20 +826,24 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 	return 1;
 }
 
-static void try_subcommand(int argc, const char *argv[])
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// try_subcommand
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void try_subcommand(int argc, const char* argv[])
 {
-	static char buf[128] = {0};
-	const char *sub = argv[1];
-	if (strlen(sub) >= 1 && sub[0] != '-') {
-		snprintf(buf, sizeof(buf)-1, "gnostr-%s", sub);
-		execvp(buf, (char * const *)argv+1);
+  static char buf[128] = { 0 };
+  const char* sub = argv[1];
+  if (strlen(sub) >= 1 && sub[0] != '-')
+  {
+    snprintf(buf, sizeof(buf) - 1, "gnostr-%s", sub);
+    execvp(buf, (char* const*)argv + 1);
   } else {
 
     // printf("TODO:handle gnostr-sub-sub");
 
   }
 }
-
 
 int main(int argc, const char *argv[])
 {
