@@ -4,6 +4,7 @@ name: pre-release-matrix
 on:
   push:
     tags:
+      - "test-*"
       - "v*"
       - "v*.*.*-rc**"
 
