@@ -11,8 +11,8 @@
   ignore = dirty
   depth = shallow
 [submodule "ext/wxWidgets-3.2.2.1"]
-  path = ext/wxWidgets-3.2.2.1
-  url = https://github.com/gnostr-org/wxWidgets.git
+	path = ext/wxWidgets-3.2.2.1
+	url = https://github.com/gnostr-org/wxWidgets.git
   branch = master
   ignore = dirty
   depth = shallow
