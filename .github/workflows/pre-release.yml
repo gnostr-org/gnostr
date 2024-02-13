@@ -30,6 +30,10 @@ jobs:
         run: |
           sudo apt-get update || brew install virtualenv
       - run: python3 -m pip install virtualenv
+      - name:  apt-get update && apt-get install jq protobuf-compiler || brew install jq protobuf || true
+        run: |
+          sudo apt-get update && apt-get install automake jq protobuf-compiler || brew install automake jq protobuf || true
+          touch ~/GITHUB_TOKEN.txt
 
       - run: V=1 sudo make detect
       - run: V=1 make gnostr-am
