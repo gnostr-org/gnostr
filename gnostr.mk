@@ -22,6 +22,7 @@ endif
 ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
+
 SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
 
 VERSION                                :=$(shell cat version)
@@ -171,6 +172,7 @@ diff-log:
 submodules:
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
+	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli command core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
 #.PHONY:secp256k1/config.log
@@ -239,9 +241,9 @@ gnostr-web-deploy:
 
 
 
+.PHONY:git/gnostr-git gnostr-git git
 git/.git:
 	@devtools/refresh-submodules.sh git
-.PHONY:git/gnostr-git gnostr-git git
 git/gnostr-git:git/.git
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 	cd git && make && make install
@@ -292,7 +294,7 @@ command:command/.git
 	cd command && \
 		make cargo-br-async-std
 
-.PHONY:bins/.git bins gnostr-bins
+.PHONY:bins gnostr-bins
 bins/.git:
 	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
@@ -309,14 +311,17 @@ bins-test-fetch-by-id:
 		#gnostr-fetch-by-id wss://relay.damus.io fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c | jq .content || true
 
 .PHONY:ffi gnostr-ffi
+ffi/.git:
+	@devtools/refresh-submodules.sh ffi
 gnostr-ffi:ffi
 ffi:
-	@devtools/refresh-submodules.sh ffi
 	@cd ffi && make gnostr && cd ..
+
 .PHONY:gossip gnostr-gossip
-gnostr-ggossip:gossip
-gossip:
+gossip/.git:
 	@devtools/refresh-submodules.sh gossip
+gnostr-gossip:gossip/.git gossip
+gossip:
 	@cargo install --path gossip
 
 .PHONY:bits gnostr-bits
@@ -413,7 +418,7 @@ cat:cat/.git
 
 
 
-.PHONY:cli/.git gnostr-cli cli
+.PHONY:gnostr-cli cli
 cli/.git:
 	@devtools/refresh-submodules.sh cli
 .PHONY:cli/target/release/gnostr-cli
@@ -451,9 +456,9 @@ deps/gnostr-aio/.git:
 
 
 
+.PHONY:act gnostr-act
 act/.git:
 	@devtools/refresh-submodules.sh act
-.PHONY:act gnostr-act
 gnostr-act:act
 act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
@@ -657,4 +662,4 @@ ext/boost_1_82_0:ext/boost_1_82_0/.git
 boost:ext/boost_1_82_0
 boostr:boost
 
-.PHONY: fake
+#.PHONY: fake
