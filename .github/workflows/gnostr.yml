@@ -1,4 +1,4 @@
-name: gnostr-matrix
+name: gnostr
 
 # Controls when the action will run.
 on:
@@ -46,11 +46,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            src/nostril
-            CMakeFiles/*.dir
-            ~/.cargo
             ~/.rustup
-            CARGO_TARGET_DIR
           key: ${{ runner.os }}-deps
 
       - uses: actions/checkout@v3
@@ -111,10 +107,6 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            src/nostril
-            CMakeFiles/*.dir
-            ~/.cargo
             ~/.rustup
-            CARGO_TARGET_DIR
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
