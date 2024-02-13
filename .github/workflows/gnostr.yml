@@ -29,6 +29,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 12
+      - run: |
+          set -x
+          docker version
+          docker run --rm hello-world
       - name: echo test
         #if: ${{ !env.ACT }}
         run: |
@@ -46,8 +52,6 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            src/nostril
-            CMakeFiles/*.dir
             ~/.cargo
             ~/.rustup
             CARGO_TARGET_DIR
@@ -57,12 +61,11 @@ jobs:
         with:
           submodules: 'true'
           set-safe-directory: 'true'
-          fetch-depth: '10'
 
       - uses: actions-rs/toolchain@v1.0.6
         #if: ${{ !env.ACT }}
         with:
-          toolchain: stable
+          toolchain: nightly
           default: true
           override: true
 
@@ -71,39 +74,36 @@ jobs:
         run: |
           echo $GNOSTR
 
-      - name:  apt-get update && apt-get install jq protobuf-compiler || brew install jq protobuf || true
+      - name:  apt-get update || brew install virtualenv
         run: |
-          sudo apt-get update && apt-get install automake jq protobuf-compiler || brew install automake jq protobuf || true
+          sudo apt-get update || brew install virtualenv
           touch ~/GITHUB_TOKEN.txt
 
       - run: python3 -m pip install virtualenv
 
-      #- run: rm -rf /home/runner/.rustup || true
-      - run: sudo make detect
-      - run: mkdir -p ~/bin
-      - run: make gnostr-am
-      - run: rustup default stable
-      #- run: make submodules
-      - run: cmake .
-      - run: V=1 make gnostr-verify-keys
-      #- run: make gnostr
-      #- run: V=1 make install
-      #- run: V=1 make all
-      #- run: V=1 make install || true
-      #- run: V=1 make gnostr-install || true
-      - run: V=1 gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
-      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event wss://relay.damus.io
+      - run: V=1 make detect && cmake .
+      - run: V=1 make install
 
-      #- name: V=1 make gnostr-all
-      #  run: V=1 make gnostr-all
-
-      #- name: V=1 make gnostr-install
-      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-      #  run: V=1 make gnostr-install
-
-      #- name: ./build.cmake.sh
-      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-      #  run: ./build.cmake.sh
+      - run: V=1 make gnostr
+      - run: V=1 make gnostr-act
+      - run: V=1 make gnostr-cat
+      - run: V=1 make gnostr-cli
+      - run: V=1 make gnostr-client
+      #- run: V=1 make gnostr-command
+      #- run: V=1 make gnostr-docs
+      - run: V=1 make gnostr-get-relays
+      - run: V=1 make gnostr-git
+      - run: V=1 make gnostr-gnode
+      - run: V=1 make gnostr-grep
+      - run: V=1 make gnostr-install
+      - run: V=1 make gnostr-legit
+      - run: V=1 make gnostr-proxy
+      - run: V=1 make gnostr-query
+      #- run: V=1 make gnostr-query-test
+      - run: V=1 make gnostr-req
+      - run: V=1 make gnostr-set-relays
+      - run: V=1 make gnostr-sha256
+      - run: V=1 make gnostr-tests
 
       - name: Save deps
         id: cache-deps-save
@@ -111,8 +111,6 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            src/nostril
-            CMakeFiles/*.dir
             ~/.cargo
             ~/.rustup
             CARGO_TARGET_DIR

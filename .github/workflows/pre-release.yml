@@ -2,102 +2,68 @@ name: pre-release-matrix
 
 # Controls when the action will run.
 on:
-  pull_request:
-    branches:
-      - 'master'
-      - 'main'
-      - '!v**'
-#  push:
-#    branches:
-#      - 'master'
-#      - 'main'
-#      - '!v**'
+  push:
+    tags:
+      - "v*"
+      - "v*.*.*-rc**"
 
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
-    permissions: write-all
-    env:
-      GNOSTR: "gnostr"
-      GNOSTR_ACT: "gnostr-act"
-      GNOSTR_CAT: "gnostr-cat"
-      GNOSTR_CLI: "gnostr-cli"
-      GNOSTR_CLIENT: "gnostr-client"
-      GNOSTR_COMMAND: "gnostr-command"
-      GNOSTR_FS: "gnostr-fs"
-      GNOSTR_GIT: "gnostr-git"
-      GNOSTR_GNODE: "gnostr-gnode"
-      GNOSTR_LEGIT: "gnostr-legit"
-      GNOSTR_LFS: "gnostr-lfs"
-      GNOSTR_PROXY: "gnostr-proxy"
+  release:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: echo test
-        #if: ${{ !env.ACT }}
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-        run: |
-          echo GNOSTR=${{ env.GNOSTR }}
-          echo GNOSTR1=${{ env.GNOSTR1 }}
-        env:
-          GNOSTR1: "GNOSTR1"
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - name: Restore deps
-        id: cache-deps-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            src/nostril
-            CMakeFiles/*.dir
-            $INPUT_PATH
-            ~/.rustup
-            ~/.cargo
-            CARGO_TARGET_DIR
-          key: ${{ runner.os }}-deps
-
       - uses: actions/checkout@v3
-        with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-
-      - uses: actions-rs/toolchain@v1.0.6
-        #if: ${{ !env.ACT }}
-        with:
-          toolchain: stable
-          default: true
-          override: true
-
-      - name: echo GNOSTR
-        #if: ${{ !env.ACT }}
+      - name: "printenv"
         run: |
-          echo $GNOSTR
-          touch ~/GITHUB_TOKEN.txt
-
-      - name:  apt-get update || brew install virtualenv
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+          printenv
+      - name: "sudo apt-get update || brew install virtualenv"
         run: |
-          sudo apt-get update && sudo apt-get install virtualenv || brew install virtualenv
-          touch ~/GITHUB_TOKEN.txt
+          sudo apt-get update || brew install virtualenv
+      - run: python3 -m pip install virtualenv
 
-      - name:  apt-get update || brew install virtualenv
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      - run: V=1 make detect && cmake .
+      - run: V=1 make install
+
+      - run: V=1 make gnostr
+      - run: V=1 make gnostr-act
+      - run: V=1 make gnostr-cat
+      - run: V=1 make gnostr-cli
+      - run: V=1 make gnostr-client
+      - run: V=1 make gnostr-command
+      - run: V=1 make gnostr-docs
+      - run: V=1 make gnostr-get-relays
+      - run: V=1 make gnostr-git
+      - run: V=1 make gnostr-gnode
+      - run: V=1 make gnostr-grep
+      - run: V=1 make gnostr-install
+      - run: V=1 make gnostr-legit
+      - run: V=1 make gnostr-proxy
+      - run: V=1 make gnostr-query
+      - run: V=1 make gnostr-query-test
+      - run: V=1 make gnostr-req
+      - run: V=1 make gnostr-set-relays
+      - run: V=1 make gnostr-sha256
+      - run: V=1 make gnostr-tests
+
+      - uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 12
+      - run: |
+          set -x
+          docker version
+      - name: "make dist-test"
         run: |
-          V=1 make detect
-          python3 -m pip install virtualenv
-          V=1 cmake .
-          V=1 make gnostr
-          V=1 make gnostr-all
-
-      - name: "Build pre-release"
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+          V=1 make gnostr-docs
+          make dist-test
+      - name: "Build release"
         run: |
           mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
@@ -108,26 +74,11 @@ jobs:
       - name: Set output
         run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: "marvinpinto/action-automatic-releases@latest"
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+        if: ${{ !env.ACT }}
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ matrix.os }}
           prerelease: true
-          title: "Pre-Release Build"
+          title: "Release Build"
           files: |
-            gnostr
             gnostr-*
-
-      - name: Save deps
-        id: cache-deps-save
-        uses: actions/cache/save@v3
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-        with:
-          path: |
-            src/nostril
-            CMakeFiles/*.dir
-            $INPUT_PATH
-            ~/.rustup
-            ~/.cargo
-            CARGO_TARGET_DIR
-          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
