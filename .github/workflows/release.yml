@@ -46,7 +46,7 @@ jobs:
 
       - run: V=1 make gnostr
       - run: V=1 make all
-      - run: V=1 sudo make install
+      - run: V=1 make gnostr-install
 
       #- uses: docker-practice/actions-setup-docker@master
       #  timeout-minutes: 12
@@ -76,3 +76,5 @@ jobs:
           title: "Release Build"
           files: |
             gnostr-*
+            bin
+            ~/.cargo/bin
