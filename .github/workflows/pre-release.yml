@@ -66,11 +66,11 @@ jobs:
       - run: V=1 make gnostr-sha256
       - run: V=1 make gnostr-tests
 
-      - uses: docker-practice/actions-setup-docker@master
-        timeout-minutes: 12
-      - run: |
-          set -x
-          docker version
+      #- uses: docker-practice/actions-setup-docker@master
+      #  timeout-minutes: 12
+      #- run: |
+      #    set -x
+      #    docker version
       #- name: "make dist-test"
       #  run: |
       #    V=1 make gnostr-docs
