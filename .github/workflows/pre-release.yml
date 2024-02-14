@@ -4,8 +4,7 @@ name: pre-release-matrix
 on:
   push:
     tags:
-      - "test-*"
-      - "v*"
+      #- "test-*"
       - "v*.*.*-rc**"
 
   workflow_dispatch:
