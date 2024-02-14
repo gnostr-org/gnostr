@@ -45,26 +45,8 @@ jobs:
       #- run: V=1 sudo make install
 
       - run: V=1 make gnostr
-      - run: V=1 make gnostr-act
-      - run: V=1 make gnostr-cat
-      - run: V=1 make gnostr-cli
-      - run: V=1 make gnostr-client
-      - run: V=1 make gnostr-command
-      #- run: V=1 sudo make gnostr-docs
-      - run: V=1 make gnostr-get-relays
-      - run: V=1 make gnostr-get-relays-test
-      - run: V=1 make gnostr-git
-      - run: V=1 make gnostr-gnode
-      - run: V=1 make gnostr-grep
-      - run: V=1 make gnostr-install
-      - run: V=1 make gnostr-legit
-      - run: V=1 make gnostr-proxy
-      - run: V=1 make gnostr-query
-      - run: V=1 make gnostr-query-test
-      - run: V=1 make gnostr-req
-      - run: V=1 make gnostr-set-relays
-      - run: V=1 make gnostr-sha256
-      - run: V=1 make gnostr-tests
+      - run: V=1 make all
+      - run: V=1 sudo make install
 
       #- uses: docker-practice/actions-setup-docker@master
       #  timeout-minutes: 12
