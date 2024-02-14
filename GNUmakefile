@@ -53,6 +53,7 @@ export TOOLCHAIN
 export Z
 
 SUBMODULES=:$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
+export SUBMODULES
 
 ifeq ($(verbose),true)
 VERBOSE                                 :=-v
@@ -237,6 +238,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install glib-openssl        || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install golang              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
@@ -276,6 +278,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install expat             || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install gettext           || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install golang-go         || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install help2man          || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libcurl4-openssl-dev || echo"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libssl-dev        || echo   "
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libtool           || echo   "

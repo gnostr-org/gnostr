@@ -301,6 +301,13 @@ gnostr-bins:bins
 bins:bins/.git
 	@cd bins && make cargo-b-release && make cargo-i
 
+.PHONY:core gnostr-core
+core/.git:
+	@devtools/refresh-submodules.sh bins
+gnostr-core:core
+core:core/.git
+	@cd core && make cargo-b-release #&& make cargo-i
+
 .PHONY:py gnostr-py
 py/.git:
 	@devtools/refresh-submodules.sh py
