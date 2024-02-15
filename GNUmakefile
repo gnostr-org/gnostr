@@ -1,4 +1,3 @@
-
 ifeq ($(project),)
 PROJECT_NAME                            := $(notdir $(PWD))
 else
@@ -7,13 +6,15 @@ endif
 export PROJECT_NAME
 VERSION                                 :=$(shell cat version)
 export VERSION
+
 TIME                                    :=$(shell date +%s)
 export TIME
 
 OS                                      :=$(shell uname -s)
-export OS
 OS_VERSION                              :=$(shell uname -r)
+export OS
 export OS_VERSION
+
 ARCH                                    :=$(shell uname -m)
 export ARCH
 ifeq ($(ARCH),x86_64)
@@ -224,75 +225,77 @@ ifneq ($(shell id -u),0)
 	@echo $(shell id -u -n) 'not root'
 	@echo
 endif
-	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew update                     || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install autoconf            || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
-##	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost               || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install cmake --cask        || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install coreutils           || echo "
-	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker       || echo "
-	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gcc                || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install expat               || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gettext             || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-archive-all     || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui             || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install glib-openssl        || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install golang              || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man            || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf            || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3             || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup              || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install secp256k1           || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install virtualenv          || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                || echo "
-	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && /Applications/Docker.app/Contents/Resources/bin/docker system info || echo "
 
+	(\
+		if [[ '$(shell uname -s)' != 'Darwin' ]] && [[ '$(shell uname -s)' != 'Linux' ]]; \
+		then \
+		echo 'guessing this is windows...'; \
+		fi \
+		);
 
-
-
-
-
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew update                              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install autoconf                    || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake                    || echo "
+	#	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost                      || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install cmake --cask                || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install coreutils                   || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker               || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install expat                       || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gcc                         || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gettext                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-archive-all             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install glib-openssl                || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install golang                      || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man                    || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial                   || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14                     || echo "
+#	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc                      || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config                  || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf                    || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup                      || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install secp256k1                   || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install virtualenv                  || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv         || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                        || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && /Applications/Docker.app/Contents/Resources/bin/docker system info || echo "
 
 ## 	Linux
 ifneq ($(shell id -u),0)
+#$(info --->Linux OS)
 	@echo
 	@echo $(shell id -u -n) 'not root'
 	@echo
 endif
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && type -P brew >/tmp/gnostr.log && \
 		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get update                    || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install autoconf          || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install bison             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install build-essential   || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install cargo             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install clang             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install cmake-curses-gui  || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install cmake             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install expat             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install gettext           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install golang-go         || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install help2man          || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libcurl4-openssl-dev || echo"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libssl-dev        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libtool           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install mercurial         || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install npm               || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install pandoc            || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install pkg-config        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install protobuf-compiler || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install python3           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install python3-pip       || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install python-is-python3 || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install util-linux        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install virtualenv        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install zlib1g-dev        || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get update                       || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install autoconf             || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install bison                || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install build-essential      || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install cargo                || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install clang                || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install cmake-curses-gui     || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install cmake                || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install expat                || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install gettext              || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install golang-go            || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install libcurl4-openssl-dev || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install libssl-dev           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install libtool              || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install mercurial            || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install npm                  || echo   "
+	#bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install pandoc               || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install pkg-config           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install protobuf-compiler    || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python3              || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python3-pip          || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install python-is-python3    || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install util-linux           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install virtualenv           || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && sudo apt-get install zlib1g-dev           || echo   "
 
 ##	install gvm sequence
 	@rm -rf $(HOME)/.gvm || echo "not removing ~/.gvm"
@@ -386,10 +389,10 @@ nvm-clean: ## 	nvm-clean
 -include gnostr.mk
 -include gnostr-act.mk
 -include gnostr-bot.mk
--include venv.mk
--include clean.mk
 -include cargo.mk
+-include clean.mk
 -include tests.mk
+-include venv.mk
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
