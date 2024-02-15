@@ -24,6 +24,9 @@ LIB_ARS                                := libsecp256k1.a libgit.a
 
 
 SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
+SUBMODULE_URLS=$(shell cat .gitmodules | grep url | cut -d ' ' -f 3)
+export SUBMODULES
+export SUBMODULE_URLS
 
 VERSION                                :=$(shell cat version)
 export VERSION
@@ -171,8 +174,20 @@ diff-log:
 .PHONY:submodules
 submodules:
 ##gnostr-bits needs ~/bin
+	## (\
+	## 	for VARIABLE in 1 2 3 4 5; \
+	## 	do \
+	## 	echo $$VARIABLE; \
+	## 	done \
+	## )
+	## (\
+	## 	for sub in $(SUBMODULE_URLS); \
+	## 	do \
+	## 	cargo install --git  $$sub || true; \
+	## 	done \
+	## )
+
 	mkdir -p ~/bin
-	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli command core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
 #.PHONY:secp256k1/config.log
