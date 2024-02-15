@@ -72,6 +72,7 @@ jobs:
       - run: mkdir -p ~/bin
       - name: V=1 make submodules
         run: V=1 make submodules
+      - run: cargo b -r
 
       #- name: V=1 make gnostr-install
       #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
