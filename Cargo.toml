@@ -16,6 +16,9 @@ keywords = ["git", "gui", "cli", "terminal", "ui", "gnostr"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gnostr-bins = "0.0.5"
-gnostr-cli = { git = "https://github.com/gnostr-org/gnostr-cli.git", rev = "60e244cffdcd781f1a22c2c67f31bb3d539624f2" }
+# gnostr-bins = { git = "https://github.com/gnostr-org/gnostr-bins.git", version = "0.0.6" }
+# gnostr-cli = { git = "https://github.com/gnostr-org/gnostr-cli.git", rev = "60e244cffdcd781f1a22c2c67f31bb3d539624f2" }
+k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
+rand_core = "0.6"
+
 inline-c = "0.1.7"
