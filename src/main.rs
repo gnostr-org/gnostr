@@ -37,10 +37,12 @@ fn gen_keys(){
 use k256::schnorr::SigningKey;
 use rand_core::OsRng;
 
-    let signing_key = SigningKey::random(&mut OsRng);
-    let verifying_key = signing_key.verifying_key();
-    println!("PUBLIC: {:x}", verifying_key.to_bytes());
-    println!("PRIVATE: {:x}", signing_key.to_bytes());
+    let _signing_key = SigningKey::random(&mut OsRng);
+    let _verifying_key = _signing_key.verifying_key();
+    //println!("PUBLIC: {:x}", verifying_key.to_bytes());
+    //we only return _signing_key
+    //so it may be streamed into other utilities
+    println!("{:x}", _signing_key.to_bytes());
 
 }
 
@@ -83,8 +85,8 @@ fn command_example() {
 fn main() {
 
     let args_vector: Vec<String> = env::args().collect();
-    println!("args_vector = {:?}", args_vector);
-    println!("args_vector.len() = {:?}", args_vector.len());
+    //println!("args_vector = {:?}", args_vector);
+    //println!("args_vector.len() = {:?}", args_vector.len());
 
 
     //special case
@@ -142,6 +144,12 @@ fn main() {
       //catch genkey
       if args_vector[1] == "--genkey" {
           //println!("--genkey CALLED!");
+          gen_keys();
+          process::exit(0);
+      }
+      //catch genkeys
+      if args_vector[1] == "--genkeys" {
+          //println!("--genkeys CALLED!");
           gen_keys();
           process::exit(0);
       }
