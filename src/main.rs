@@ -44,6 +44,13 @@ use rand_core::OsRng;
 
 }
 
+fn set_kind(){
+
+  let args_vector: Vec<String> = env::args().collect();
+  println!("args_vector.len()={:x}", args_vector.len());
+
+}
+
 //COMMAND:
 //CONTEXT
 //gnostr --sec e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 | gnostr-post-event --relay wss://relay.damus.io
@@ -84,7 +91,7 @@ fn main() {
         //execute c if no other args
         //println!("args_vector = {:?}", args_vector);
         //println!("args_vector.len() = {:?}", args_vector.len());
-        //println!("default HELP!"); 
+        //println!("default HELP!");
         (assert_c! {
             #include <stdio.h>
             int main() {
@@ -99,7 +106,7 @@ fn main() {
         process::exit(0);
     }
 
-    if args_vector.len() != 1 {
+    if args_vector.len() == 1 {
     //catch help
     if args_vector[1] == "-h" {
         println!("-h HELP!");
@@ -135,12 +142,30 @@ fn main() {
         gen_keys();
         process::exit(0);
     }
-
-
-    //catch genkeys
-    if args_vector[1] == "--genkeys" {
-        //println!("--genkeys CALLED!");
-        gen_keys();
+    //catch kind
+    if args_vector[1] == "--kind" {
+        println!("--kind CALLED!");
+        if args_vector.len() == 1 {
+        println!("--kind HELP!");
+        println!("gnostr --kind <int>");
+        //process::exit(0);
+        }
+    }
+    //catch legit
+    if args_vector[1] == "--legit" {
+        println!("--legit CALLED!");
+        //gnostr_legit();
+        process::exit(0);
+    }
+    //catch example
+    if args_vector[1] == "--example" {
+        println!("--example CALLED!");
+        command_example();
+        process::exit(0);
+    }
+    //catch commit
+    if args_vector[1] == "--commit" {
+        println!("--commit CALLED!");
         process::exit(0);
     }
 
@@ -148,6 +173,29 @@ fn main() {
 
     }// end if args_vector.len() == 1
     else { println!("default HELP!"); }
+
+
+    if args_vector.len() > 1 {
+    //catch kind
+    if args_vector[1] == "--kind" {
+        if args_vector.len() > 2 {
+          println!("--kind CALLED!");
+          if args_vector[2] == "0" {
+          set_kind();
+          println!("--kind 0 CALLED!");
+          }
+          if args_vector[2] == "1" {
+          set_kind();
+          println!("--kind 1 CALLED!");
+          }
+        }
+
+        else { println!("--kind CALLED but <int> not supported!"); }
+        process::exit(0);
+
+
+    }
+    }
 
     (assert_c! {
         #include <stdio.h>
