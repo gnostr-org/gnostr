@@ -37,10 +37,19 @@ fn gen_keys(){
 use k256::schnorr::SigningKey;
 use rand_core::OsRng;
 
-    let signing_key = SigningKey::random(&mut OsRng);
-    let verifying_key = signing_key.verifying_key();
-    println!("PUBLIC: {:x}", verifying_key.to_bytes());
-    println!("PRIVATE: {:x}", signing_key.to_bytes());
+    let _signing_key = SigningKey::random(&mut OsRng);
+    let _verifying_key = _signing_key.verifying_key();
+    //println!("PUBLIC: {:x}", verifying_key.to_bytes());
+    //we only return _signing_key
+    //so it may be streamed into other utilities
+    println!("{:x}", _signing_key.to_bytes());
+
+}
+
+fn set_kind(){
+
+  let args_vector: Vec<String> = env::args().collect();
+  println!("args_vector.len()={:x}", args_vector.len());
 
 }
 
@@ -79,12 +88,15 @@ fn main() {
     //println!("args_vector = {:?}", args_vector);
     //println!("args_vector.len() = {:?}", args_vector.len());
 
+
+    //special case
+    //execute ffi c code
     if args_vector.len() == 1 {
 
         //execute c if no other args
         //println!("args_vector = {:?}", args_vector);
         //println!("args_vector.len() = {:?}", args_vector.len());
-        //println!("default HELP!"); 
+        //println!("default HELP!");
         (assert_c! {
             #include <stdio.h>
             int main() {
@@ -99,48 +111,81 @@ fn main() {
         process::exit(0);
     }
 
-    if args_vector.len() != 1 {
-    //catch help
-    if args_vector[1] == "-h" {
-        println!("-h HELP!");
+    if args_vector.len() == 2 {
+      //catch help
+      if args_vector[1] == "-h" {
+          println!("-h HELP!");
+          process::exit(0);
+      }
+      if args_vector[1] == "--help" {
+          println!("--help HELP!");
+          process::exit(0);
+      }
+      //catch version
+      if args_vector[1] == "-v" {
+          println!("-v VERSION!");
+          process::exit(0);
+      }
+      if args_vector[1] == "--version" {
+          println!("--version VERSION!");
+          process::exit(0);
+      }
+      //catch sec
+      if args_vector[1] == "--sec" {
+          println!("--sec CALLED!");
+          process::exit(0);
+      }
+      //catch gen
+      if args_vector[1] == "--gen" {
+          //println!("--gen CALLED!");
+          gen_keys();
+          process::exit(0);
+      }
+      //catch genkey
+      if args_vector[1] == "--genkey" {
+          //println!("--genkey CALLED!");
+          gen_keys();
+          process::exit(0);
+      }
+      //catch genkeys
+      if args_vector[1] == "--genkeys" {
+          //println!("--genkeys CALLED!");
+          gen_keys();
+          process::exit(0);
+      }
+      //catch kind
+      if args_vector[1] == "--kind" {
+        println!("args_vector = {:?}", args_vector);
+        println!("args_vector.len() = {:?}", args_vector.len());
+        println!("--kind CALLED!");
+        //catch missing int
+        if args_vector.len() == 2 {
+          println!("--kind HELP!");
+          println!("{:?} CALLED!", args_vector[1]);
+          println!("gnostr --kind <int>");
+          process::exit(0);
+        }
+        if args_vector.len() > 2 {
+          println!("gnostr --kind <int>");
+          println!("{:?} {:?} CALLED!", args_vector[1],args_vector[2]);
+          //process::exit(0);
+        }
+      }
+    //catch legit
+    if args_vector[1] == "--legit" {
+        println!("--legit CALLED!");
+        //gnostr_legit();
         process::exit(0);
     }
-    if args_vector[1] == "--help" {
-        println!("--help HELP!");
+    //catch example
+    if args_vector[1] == "--example" {
+        println!("--example CALLED!");
+        command_example();
         process::exit(0);
     }
-    //catch version
-    if args_vector[1] == "-v" {
-        println!("-v VERSION!");
-        process::exit(0);
-    }
-    if args_vector[1] == "--version" {
-        println!("--version VERSION!");
-        process::exit(0);
-    }
-    //catch sec
-    if args_vector[1] == "--sec" {
-        println!("--sec CALLED!");
-        process::exit(0);
-    }
-    //catch gen
-    if args_vector[1] == "--gen" {
-        //println!("--gen CALLED!");
-        gen_keys();
-        process::exit(0);
-    }
-    //catch genkey
-    if args_vector[1] == "--genkey" {
-        //println!("--genkey CALLED!");
-        gen_keys();
-        process::exit(0);
-    }
-
-
-    //catch genkeys
-    if args_vector[1] == "--genkeys" {
-        //println!("--genkeys CALLED!");
-        gen_keys();
+    //catch commit
+    if args_vector[1] == "--commit" {
+        println!("--commit CALLED!");
         process::exit(0);
     }
 
@@ -148,6 +193,28 @@ fn main() {
 
     }// end if args_vector.len() == 1
     else { println!("default HELP!"); }
+
+
+    if args_vector.len() > 1 {
+    //catch kind
+    if args_vector[1] == "--kind" {
+        if args_vector.len() >= 2 {
+          println!("--kind CALLED!");
+          if args_vector[2] == "0" {
+          set_kind();
+          println!("--kind 0 CALLED!");
+          }
+          if args_vector[2] == "1" {
+          set_kind();
+          println!("--kind 1 CALLED!");
+          }
+        }
+        else { println!("--kind CALLED but <int> not supported!"); }
+        process::exit(0);
+
+
+    }
+    }
 
     (assert_c! {
         #include <stdio.h>
