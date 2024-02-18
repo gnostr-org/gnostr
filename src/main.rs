@@ -21,7 +21,6 @@
 /// #    .stdout("Hello, Gnostr!");
 /// # }
 /// ```
-
 //use nostr_types::Event;
 use std::env;
 //use std::io::Read;
@@ -32,10 +31,9 @@ use inline_c::assert_c;
 
 use std::process::{Command, Stdio};
 
-fn gen_keys(){
-
-use k256::schnorr::SigningKey;
-use rand_core::OsRng;
+fn gen_keys() {
+    use k256::schnorr::SigningKey;
+    use rand_core::OsRng;
 
     let _signing_key = SigningKey::random(&mut OsRng);
     let _verifying_key = _signing_key.verifying_key();
@@ -43,14 +41,11 @@ use rand_core::OsRng;
     //we only return _signing_key
     //so it may be streamed into other utilities
     println!("{:x}", _signing_key.to_bytes());
-
 }
 
-fn set_kind(){
-
-  let args_vector: Vec<String> = env::args().collect();
-  println!("args_vector.len()={:x}", args_vector.len());
-
+fn set_kind() {
+    let args_vector: Vec<String> = env::args().collect();
+    println!("args_vector.len()={:x}", args_vector.len());
 }
 
 //COMMAND:
@@ -81,9 +76,8 @@ fn command_example() {
     println!("{}", post);
 }
 
-
 fn main() {
-
+    #[allow(dead_code)]
     const REF_MASTER: &str = include_str!("../.git/refs/heads/master");
     const REF: &str = include_str!("../.git/HEAD");
 
@@ -97,11 +91,9 @@ fn main() {
     //println!("args_vector = {:?}", args_vector);
     //println!("args_vector.len() = {:?}", args_vector.len());
 
-
     //special case
     //execute ffi c code
     if args_vector.len() == 1 {
-
         //execute c if no other args
         //println!("args_vector = {:?}", args_vector);
         //println!("args_vector.len() = {:?}", args_vector.len());
@@ -121,171 +113,171 @@ fn main() {
     }
 
     if args_vector.len() == 2 {
-      //catch help
-      if args_vector[1] == "-h" {
-          println!("-h HELP!");
-          process::exit(0);
-      }
-      if args_vector[1] == "--help" {
-          println!("--help HELP!");
-          process::exit(0);
-      }
-      //catch version
-      if args_vector[1] == "-v" {
-          //const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
-          const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-          println!("v{}", VERSION.unwrap_or("unknown"));
-          let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
-          assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
-          for _part in &v {
-              //println!("{}", part)
-          }
-          let v_ref: Vec<&str> = REF.split(' ').collect();
-          for _part in &v_ref {
-              //println!("{}", &v_ref[0]);
-              //println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
-              //println!("{}", part)
-              //process::exit(0);
-          }
-          if REF == "ref: refs/heads/master" {
-              //println!("{:?}", REF_MASTER);
-          } else {
-              //println!("{:?}", REF);
-          }
-          process::exit(0);
-      }
-      if args_vector[1] == "--version" {
-          //const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
-          const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-          println!("v{}", VERSION.unwrap_or("unknown"));
-          let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
-          assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
-          for _part in &v {
-              //println!("{}", part)
-          }
-          let v_ref: Vec<&str> = REF.split(' ').collect();
-          for _part in &v_ref {
-              //println!("{}", &v_ref[0]);
-              //println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
-              //println!("{}", part)
-              //process::exit(0);
-          }
-          if REF == "ref: refs/heads/master" {
-              //println!("{:?}", REF_MASTER);
-          } else {
-              //println!("{:?}", REF);
-          }
-          process::exit(0);
-      }
-      if args_vector[1] == "--ref" {
-          const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
-          //const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-          //println!("v{}", VERSION.unwrap_or("unknown"));
-          let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
-          assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
-          for _part in &v {
-              //println!("{}", part)
-          }
-          let v_ref: Vec<&str> = REF.split(' ').collect();
-          for _part in &v_ref {
-              if REF == "ref: refs/heads/master" {
-                  //println!("{:?}", REF_MASTER);
-                      println!("{}/{}", NAME.unwrap_or("unknown"), REF_MASTER);
-                  } else {
-                      println!("{}/{}", NAME.unwrap_or("unknown"), REF);
-                      //println!("{:?}", REF);
-                      }
-              //println!("{}", &v_ref[0]);
-              //println!("{}/{}", NAME.unwrap_or("unknown"), &v_ref[1]);
-              //println!("{}", part)
-              process::exit(0);
-          }
-          process::exit(0);
-      }
-      //catch sec
-      if args_vector[1] == "--sec" {
-          println!("--sec CALLED!");
-          process::exit(0);
-      }
-      //catch gen
-      if args_vector[1] == "--gen" {
-          //println!("--gen CALLED!");
-          gen_keys();
-          process::exit(0);
-      }
-      //catch genkey
-      if args_vector[1] == "--genkey" {
-          //println!("--genkey CALLED!");
-          gen_keys();
-          process::exit(0);
-      }
-      //catch genkeys
-      if args_vector[1] == "--genkeys" {
-          //println!("--genkeys CALLED!");
-          gen_keys();
-          process::exit(0);
-      }
-      //catch kind
-      if args_vector[1] == "--kind" {
-        println!("args_vector = {:?}", args_vector);
-        println!("args_vector.len() = {:?}", args_vector.len());
-        println!("--kind CALLED!");
-        //catch missing int
-        if args_vector.len() == 2 {
-          println!("--kind HELP!");
-          println!("{:?} CALLED!", args_vector[1]);
-          println!("gnostr --kind <int>");
-          process::exit(0);
+        //catch help
+        if args_vector[1] == "-h" {
+            println!("-h HELP!");
+            process::exit(0);
         }
-        if args_vector.len() > 2 {
-          println!("gnostr --kind <int>");
-          println!("{:?} {:?} CALLED!", args_vector[1],args_vector[2]);
-          //process::exit(0);
+        if args_vector[1] == "--help" {
+            println!("--help HELP!");
+            process::exit(0);
         }
-      }
-    //catch legit
-    if args_vector[1] == "--legit" {
-        println!("--legit CALLED!");
-        //gnostr_legit();
-        process::exit(0);
-    }
-    //catch example
-    if args_vector[1] == "--example" {
-        println!("--example CALLED!");
-        command_example();
-        process::exit(0);
-    }
-    //catch commit
-    if args_vector[1] == "--commit" {
-        println!("--commit CALLED!");
-        process::exit(0);
-    }
+        //catch version
+        if args_vector[1] == "-v" {
+            //const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
+            const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+            println!("v{}", VERSION.unwrap_or("unknown"));
+            let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
+            assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
+            for _part in &v {
+                //println!("{}", part)
+            }
+            let v_ref: Vec<&str> = REF.split(' ').collect();
+            for _part in &v_ref {
+                //println!("{}", &v_ref[0]);
+                //println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
+                //println!("{}", part)
+                //process::exit(0);
+            }
+            if REF == "ref: refs/heads/master" {
+                //println!("{:?}", REF_MASTER);
+            } else {
+                //println!("{:?}", REF);
+            }
+            process::exit(0);
+        }
+        if args_vector[1] == "--version" {
+            //const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
+            const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+            println!("v{}", VERSION.unwrap_or("unknown"));
+            let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
+            assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
+            for _part in &v {
+                //println!("{}", part)
+            }
+            let v_ref: Vec<&str> = REF.split(' ').collect();
+            for _part in &v_ref {
+                //println!("{}", &v_ref[0]);
+                //println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
+                //println!("{}", part)
+                //process::exit(0);
+            }
+            if REF == "ref: refs/heads/master" {
+                //println!("{:?}", REF_MASTER);
+            } else {
+                //println!("{:?}", REF);
+            }
+            process::exit(0);
+        }
+        if args_vector[1] == "--ref" {
+            const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
+            //const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+            //println!("v{}", VERSION.unwrap_or("unknown"));
+            let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
+            assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
+            for _part in &v {
+                //println!("{}", part)
+            }
+            let v_ref: Vec<&str> = REF.split(' ').collect();
+            for _part in &v_ref {
+                //if REF == "ref: refs/heads/master" {
+                //    //println!("{:?}", REF_MASTER);
+                //        println!("{}/{}", NAME.unwrap_or("unknown"), REF_MASTER);
+                //    } else {
+                //        println!("{}/{}", NAME.unwrap_or("unknown"), REF);
+                //        //println!("{:?}", REF);
+                //        }
+                //println!("{}", &v_ref[0]);
+                println!("{}/{}", NAME.unwrap_or("unknown"), &v_ref[1]);
+                //println!("{}", part)
+                process::exit(0);
+            }
+            process::exit(0);
+        }
+        //catch sec
+        if args_vector[1] == "--sec" {
+            println!("--sec CALLED!");
+            process::exit(0);
+        }
+        //catch gen
+        if args_vector[1] == "--gen" {
+            //println!("--gen CALLED!");
+            gen_keys();
+            process::exit(0);
+        }
+        //catch genkey
+        if args_vector[1] == "--genkey" {
+            //println!("--genkey CALLED!");
+            gen_keys();
+            process::exit(0);
+        }
+        //catch genkeys
+        if args_vector[1] == "--genkeys" {
+            //println!("--genkeys CALLED!");
+            gen_keys();
+            process::exit(0);
+        }
+        //catch kind
+        if args_vector[1] == "--kind" {
+            println!("args_vector = {:?}", args_vector);
+            println!("args_vector.len() = {:?}", args_vector.len());
+            println!("--kind CALLED!");
+            //catch missing int
+            if args_vector.len() == 2 {
+                println!("--kind HELP!");
+                println!("{:?} CALLED!", args_vector[1]);
+                println!("gnostr --kind <int>");
+                process::exit(0);
+            }
+            if args_vector.len() > 2 {
+                println!("gnostr --kind <int>");
+                println!("{:?} {:?} CALLED!", args_vector[1], args_vector[2]);
+                //process::exit(0);
+            }
+        }
+        //catch legit
+        if args_vector[1] == "--legit" {
+            println!("--legit CALLED!");
+            //gnostr_legit();
+            process::exit(0);
+        }
+        //catch example
+        if args_vector[1] == "--example" {
+            println!("--example CALLED!");
+            command_example();
+            process::exit(0);
+        }
+        //catch commit
+        if args_vector[1] == "--commit" {
+            println!("--commit CALLED!");
+            process::exit(0);
+        }
 
     //command_example();
-
-    }// end if args_vector.len() == 1
-    else { println!("default HELP!"); }
-
+    }
+    // end if args_vector.len() == 1
+    else {
+        println!("default HELP!");
+    }
 
     if args_vector.len() > 1 {
-    //catch kind
-    if args_vector[1] == "--kind" {
-        if args_vector.len() >= 2 {
-          println!("--kind CALLED!");
-          if args_vector[2] == "0" {
-          set_kind();
-          println!("--kind 0 CALLED!");
-          }
-          if args_vector[2] == "1" {
-          set_kind();
-          println!("--kind 1 CALLED!");
-          }
+        //catch kind
+        if args_vector[1] == "--kind" {
+            if args_vector.len() >= 2 {
+                println!("--kind CALLED!");
+                if args_vector[2] == "0" {
+                    set_kind();
+                    println!("--kind 0 CALLED!");
+                }
+                if args_vector[2] == "1" {
+                    set_kind();
+                    println!("--kind 1 CALLED!");
+                }
+            } else {
+                println!("--kind CALLED but <int> not supported!");
+            }
+            process::exit(0);
         }
-        else { println!("--kind CALLED but <int> not supported!"); }
-        process::exit(0);
-
-
-    }
     }
 
     (assert_c! {
@@ -301,5 +293,4 @@ fn main() {
     .stdout("Hello, Gnostr!");
     //rust
     println!("Hello, Gnostr!");
-
 }
