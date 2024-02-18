@@ -132,9 +132,9 @@ fn main() {
       }
       //catch version
       if args_vector[1] == "-v" {
-          const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
+          //const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
           const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-          //println!("v{}", VERSION.unwrap_or("unknown"));
+          println!("v{}", VERSION.unwrap_or("unknown"));
           let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
           assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
           for _part in &v {
@@ -143,9 +143,9 @@ fn main() {
           let v_ref: Vec<&str> = REF.split(' ').collect();
           for _part in &v_ref {
               //println!("{}", &v_ref[0]);
-              println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
+              //println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
               //println!("{}", part)
-              process::exit(0);
+              //process::exit(0);
           }
           if REF == "ref: refs/heads/master" {
               //println!("{:?}", REF_MASTER);
@@ -155,9 +155,9 @@ fn main() {
           process::exit(0);
       }
       if args_vector[1] == "--version" {
-          const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
+          //const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
           const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-          //println!("v{}", VERSION.unwrap_or("unknown"));
+          println!("v{}", VERSION.unwrap_or("unknown"));
           let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
           assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
           for _part in &v {
@@ -166,9 +166,9 @@ fn main() {
           let v_ref: Vec<&str> = REF.split(' ').collect();
           for _part in &v_ref {
               //println!("{}", &v_ref[0]);
-              println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
+              //println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
               //println!("{}", part)
-              process::exit(0);
+              //process::exit(0);
           }
           if REF == "ref: refs/heads/master" {
               //println!("{:?}", REF_MASTER);
@@ -179,7 +179,7 @@ fn main() {
       }
       if args_vector[1] == "--ref" {
           const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
-          const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+          //const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
           //println!("v{}", VERSION.unwrap_or("unknown"));
           let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
           assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
@@ -188,15 +188,17 @@ fn main() {
           }
           let v_ref: Vec<&str> = REF.split(' ').collect();
           for _part in &v_ref {
+              if REF == "ref: refs/heads/master" {
+                  //println!("{:?}", REF_MASTER);
+                      println!("{}/{}", NAME.unwrap_or("unknown"), REF_MASTER);
+                  } else {
+                      println!("{}/{}", NAME.unwrap_or("unknown"), REF);
+                      //println!("{:?}", REF);
+                      }
               //println!("{}", &v_ref[0]);
-              println!("{}/{}", NAME.unwrap_or("unknown"), &v_ref[1]);
+              //println!("{}/{}", NAME.unwrap_or("unknown"), &v_ref[1]);
               //println!("{}", part)
               process::exit(0);
-          }
-          if REF == "ref: refs/heads/master" {
-              //println!("{:?}", REF_MASTER);
-          } else {
-              //println!("{:?}", REF);
           }
           process::exit(0);
       }
