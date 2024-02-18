@@ -84,6 +84,15 @@ fn command_example() {
 
 fn main() {
 
+    const REF_MASTER: &str = include_str!("../.git/refs/heads/master");
+    const REF: &str = include_str!("../.git/HEAD");
+
+    //if REF == "ref: refs/heads/master" {
+    //    println!("REF = {:?}", REF_MASTER);
+    //} else {
+    //    println!("REF = {:?}", REF);
+    //}
+
     let args_vector: Vec<String> = env::args().collect();
     //println!("args_vector = {:?}", args_vector);
     //println!("args_vector.len() = {:?}", args_vector.len());
@@ -123,8 +132,26 @@ fn main() {
       }
       //catch version
       if args_vector[1] == "-v" {
+          const NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
           const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-          println!("v{}", VERSION.unwrap_or("unknown"));
+          //println!("v{}", VERSION.unwrap_or("unknown"));
+          let v: Vec<&str> = "Mary had a little lamb".split(' ').collect();
+          assert_eq!(v, ["Mary", "had", "a", "little", "lamb"]);
+          for _part in &v {
+              //println!("{}", part)
+          }
+          let v_ref: Vec<&str> = REF.split(' ').collect();
+          for _part in &v_ref {
+              //println!("{}", &v_ref[0]);
+              println!("{}-v{}-{}", NAME.unwrap_or("unknown"),VERSION.unwrap_or("unknown"), &v_ref[1]);
+              //println!("{}", part)
+              process::exit(0);
+          }
+          if REF == "ref: refs/heads/master" {
+              //println!("{:?}", REF_MASTER);
+          } else {
+              //println!("{:?}", REF);
+          }
           process::exit(0);
       }
       if args_vector[1] == "--version" {
