@@ -123,11 +123,13 @@ fn main() {
       }
       //catch version
       if args_vector[1] == "-v" {
-          println!("-v VERSION!");
+          const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+          println!("v{}", VERSION.unwrap_or("unknown"));
           process::exit(0);
       }
       if args_vector[1] == "--version" {
-          println!("--version VERSION!");
+          const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+          println!("v{}", VERSION.unwrap_or("unknown"));
           process::exit(0);
       }
       //catch sec
