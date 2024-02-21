@@ -39,8 +39,24 @@ use std::process::{Command, Stdio};
 
 //mod reflog;
 mod reflog_simple;
-use reflog_simple as other_reflog_simple;
 
+//inline module get_self_source
+mod get_self_source {
+use std::io::{Read};
+use reqwest::Url;
+//TODO:this will be refactored as an nostr EVENT query
+  pub fn get_self(){
+      let url = Url::parse("https://raw.githubusercontent.com/gnostr-org/gnostr/master/src/main.rs").unwrap();
+      let mut res = reqwest::blocking::get(url).unwrap();
+
+      let mut body = String::new();
+      res.read_to_string(&mut body).unwrap();
+
+      println!("{}", body);
+  }
+}//end inline module get_self_source
+//use inline module get_self_source
+pub use get_self_source::get_self;
 
 fn gen_keys(){
 
@@ -91,6 +107,8 @@ fn command_example() {
     println!("{}", post);
 }
 
+
+//reflog_simple
 pub fn reflog_simple() -> Result<(), git2::Error> {
 
   let repo = match Repository::open(".") {
@@ -107,66 +125,8 @@ revwalk.set_sorting(git2::Sort::TIME)?;
 for rev in revwalk {
     let commit = repo.find_commit(rev?)?;
     let message = commit.summary_bytes().unwrap_or_else(|| commit.message_bytes());
-    println!("{}\t{}", commit.id(), String::from_utf8_lossy(message));
+    println!("{:0>64}\n{}", commit.id(), String::from_utf8_lossy(message));
 }
-
-
-//let mut revwalk = match Revwalk::new(&repo) {
-//    Ok(revwalk) => revwalk,
-//    Err(e) => panic!("Error creating revwalk: {}", e),
-//};
-
-// Start at HEAD and show the last 10 commits
-//revwalk.set_head(repo.find_reference("HEAD")?);
-//revwalk.set_limit(10);
-
-// Walk the commit history and process each commit
-//for commit in revwalk {
-//    let commit = commit?;
-//    // Do something with the commit
-//}
-
-//process::exit(0);
-
-
-//    // Collect and parse arguments
-//    let args: Vec<String> = env::args().collect();
-//    let mut opts = Options::new();
-//    opts.optopt("r", "ref", "Specify the Git reference (default: HEAD)", "REF");
-//    opts.optopt("n", "number", "Specify the maximum number of commits to show (default: 10)", "NUMBER");
-//
-//    let matches = opts.parse(&args[1..]).unwrap();
-//
-//    // Extract and validate arguments
-//    let ref_name = matches.opt_str("r").unwrap_or("HEAD".to_string());
-//    let num_commits = matches.opt_str("n")
-//        .unwrap_or("10".to_string())
-//        .parse::<i32>();
-//        //.parse::<i32>()?;
-//
-//    println!("num_commits={:?}", num_commits);
-//    //if num_commits <= "0" {
-//    //    //return Err(git2::Error::from_str("0",git2::ErrorClass::Invalid, "Number of commits must be positive"));
-//    //    return Err(git2::Error::from_str("0"));
-//    //}
-//
-////    // Open the Git repository
-////    let repo = Repository::open_bare(".")?;
-////
-////    // Create a Revwalk object
-////    let mut revwalk = Revwalk::new(&repo)?;
-////
-////    // Set starting commit
-////    revwalk.set_head(repo.find_reference_name(&ref_name)?);
-////
-////    // Limit the number of commits
-////    revwalk.set_limit(num_commits as u32);
-//
-//    // Walk the commit history and print commit IDs
-////    for commit in revwalk {
-////        let commit = commit?;
-////        println!("{}", commit.id());
-////    }
 
     Ok(())
 }
@@ -187,7 +147,6 @@ fn main() {
     //println!("args_vector.len() = {:?}", args_vector.len());
 
 
-    let _ = reflog_simple();
     //special case
     //execute ffi c code
     if args_vector.len() == 1 {
@@ -211,6 +170,14 @@ fn main() {
     }
 
     if args_vector.len() == 2 {
+
+      //let _ = reflog_simple();
+
+      //catch dump
+      if args_vector[1] == "--dump" {
+          let _ = get_self();
+          process::exit(0);
+      }
       //catch help
       if args_vector[1] == "-h" {
           println!("-h HELP!");
@@ -286,6 +253,11 @@ fn main() {
     if args_vector[1] == "--commit" {
         println!("--commit CALLED!");
         process::exit(0);
+    }
+    //catch reflog
+    if args_vector[1] == "--reflog" {
+      let _ = reflog_simple();
+      process::exit(0);
     }
 
     //command_example();
