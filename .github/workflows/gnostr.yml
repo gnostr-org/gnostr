@@ -81,6 +81,7 @@ jobs:
       - run: rustup default stable
       #- run: make submodules
       - run: cmake .
+      - run: V=1 make bins
       - run: V=1 make gnostr-verify-keypair
       #- run: make gnostr
       #- run: V=1 make install
