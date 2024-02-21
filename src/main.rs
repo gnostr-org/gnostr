@@ -203,7 +203,6 @@ fn main() {
     //println!("args_vector.len() = {:?}", args_vector.len());
 
 
-    let _ = reflog_simple();
     //special case
     //execute ffi c code
     if args_vector.len() == 1 {
@@ -232,7 +231,6 @@ fn main() {
 
       //catch dump
       if args_vector[1] == "--dump" {
-          println!("--dump DUMP!");
           let _ = get_self();
           process::exit(0);
       }
@@ -311,6 +309,11 @@ fn main() {
     if args_vector[1] == "--commit" {
         println!("--commit CALLED!");
         process::exit(0);
+    }
+    //catch reflog
+    if args_vector[1] == "--reflog" {
+      let _ = reflog_simple();
+      process::exit(0);
     }
 
     //command_example();
