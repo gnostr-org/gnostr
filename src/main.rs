@@ -39,8 +39,24 @@ use std::process::{Command, Stdio};
 
 //mod reflog;
 mod reflog_simple;
-use reflog_simple as other_reflog_simple;
 
+//inline module get_self_source
+mod get_self_source {
+use std::io::{Read};
+use reqwest::Url;
+//TODO:this will be refactored as an nostr EVENT query
+  pub fn get_self(){
+      let url = Url::parse("https://raw.githubusercontent.com/gnostr-org/gnostr-bins/master/src/bin/gnostr-cli-example.rs").unwrap();
+      let mut res = reqwest::blocking::get(url).unwrap();
+
+      let mut body = String::new();
+      res.read_to_string(&mut body).unwrap();
+
+      println!("{}", body);
+  }
+}//end inline module get_self_source
+//use inline module get_self_source
+pub use get_self_source::get_self;
 
 fn gen_keys(){
 
@@ -211,6 +227,15 @@ fn main() {
     }
 
     if args_vector.len() == 2 {
+
+      //let _ = reflog_simple();
+
+      //catch dump
+      if args_vector[1] == "--dump" {
+          println!("--dump DUMP!");
+          let _ = get_self();
+          process::exit(0);
+      }
       //catch help
       if args_vector[1] == "-h" {
           println!("-h HELP!");
