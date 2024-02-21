@@ -46,7 +46,7 @@ use std::io::{Read};
 use reqwest::Url;
 //TODO:this will be refactored as an nostr EVENT query
   pub fn get_self(){
-      let url = Url::parse("https://raw.githubusercontent.com/gnostr-org/gnostr-bins/master/src/bin/gnostr-cli-example.rs").unwrap();
+      let url = Url::parse("https://raw.githubusercontent.com/gnostr-org/gnostr/master/src/main.rs").unwrap();
       let mut res = reqwest::blocking::get(url).unwrap();
 
       let mut body = String::new();
