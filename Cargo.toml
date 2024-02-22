@@ -26,3 +26,4 @@ sha2 = { version = "0.10.8", path = "vendor/sha2" }
 getopts = "0.2.21"
 git2 = "0.18.2"
 reqwest = { version = "0.11.24", features = ["blocking"] }
+gnostr-xq = { git = "https://github.com/gnostr-org/gnostr-xq.git", version = "0.0.0" }
