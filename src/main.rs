@@ -25,7 +25,8 @@
 extern crate getopts;
 use getopts::Options;
 use git2::{Repository, Revwalk, Commit};
-
+extern crate gnostr_xq;
+use gnostr_xq::xq_lang;
 
 //use nostr_types::Event;
 use std::env;
