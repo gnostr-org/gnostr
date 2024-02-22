@@ -1,4 +1,4 @@
-name: publish to ghcr.io
+name: publish-to-ghcr.io
 ##REF:https://github.com/docker/login-action
 
 env:
