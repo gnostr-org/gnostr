@@ -10,6 +10,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 WORKDIR /tmp
 RUN git clone --recurse-submodules -j2 --branch 1708632218/5a06443fc/0de7091c4 --depth 1 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp/gnostr
+RUN cmake .
 RUN make gnostr all gnostr-install install
 RUN cargo install --path bins --force
 RUN install ./serve /usr/local/bin || true
