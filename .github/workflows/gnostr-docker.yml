@@ -51,7 +51,7 @@ jobs:
       - run: make gnostr-am
       #- run: ./build.cmake.sh
       - run: cmake .
-      - run: make
+      - run: make gnostr gnostr-install
       #- run: cargo install --path bins --force
       - run: make bins
       - run: V=1 make gnostr && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
