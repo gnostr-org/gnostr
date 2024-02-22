@@ -4,7 +4,7 @@ LABEL org.opencontainers.image.description="gnostr-docker"
 RUN touch updated
 RUN echo $(date +%s) > updated
 RUN apt-get update
-RUN apt-get install bash libssl-dev pkg-config python-is-python3 systemd -y
+RUN apt-get install bash libssl-dev lsof pkg-config python-is-python3 systemd -y
 RUN chmod +x /usr/bin/systemctl
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 WORKDIR /tmp
