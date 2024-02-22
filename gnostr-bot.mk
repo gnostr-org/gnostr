@@ -3,7 +3,7 @@ gnostr-bot:## 	gnostr-act automated sequence
 	[[ -x "$(shell which gnostr-act)" ]] && echo $(shell which gnostr-act)
 	[[ -x "$(shell which gnostr-act)" ]] && \
 		$(shell which gnostr-act) \
-		-vr \
+		-vbr \
 		-W \
-		./gnostr-bot.yml \
+		.github/workflows/gnostr-bot.yml \
 		--container-architecture linux/amd64
