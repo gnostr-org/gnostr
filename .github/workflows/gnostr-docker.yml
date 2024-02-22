@@ -48,22 +48,25 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
-      - run: ./build.cmake.sh
+      - run: make gnostr-am
+      #- run: ./build.cmake.sh
       - run: cmake .
       - run: make
-      - run: V=1 make gnostr bins gnostr-sha256 && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
-      - run: make nvm
+      #- run: cargo install --path bins --force
       - run: make bins
-      - run: make      tui
-      - run: make gnostr-act
-      - run: make gnostr-cat
-      - run: make gnostr-cli
-      - run: make gnostr-command
-      - run: make gnostr-git
-      - run: make gnostr-grep
-      - run: make gnostr-legit
-      - run: make gnostr-proxy
-      - run: make gnostr-sha256
+      - run: V=1 make gnostr && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
+      - run: make nvm
+      #- run: make gnostr-act
+      #- run: make gnostr-bins
+      #- run: make gnostr-cat
+      #- run: make gnostr-cli
+      #- run: make gnostr-command
+      #- run: make gnostr-git
+      #- run: make gnostr-grep
+      #- run: make gnostr-legit
+      #- run: make gnostr-proxy
+      #- run: make gnostr-tui
+      #- run: make gnostr-sha256
       - run: make libsecp256k1.a
       - run: make                 gnostr-all
       - run: make                     gnostr-install
