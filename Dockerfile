@@ -13,7 +13,6 @@ WORKDIR /tmp/gnostr
 RUN cmake .
 RUN make detect
 RUN make gnostr
-RUN make        all
 RUN make            gnostr-install
 RUN make                           install
 RUN cargo install --path bins --force
