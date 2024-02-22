@@ -96,7 +96,7 @@ else
   KIND=0
   MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"lud16\":\"$LUD16\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
 fi
-echo 80:PRIVKEY=$PRIVKEY
+# echo 80:PRIVKEY=$PRIVKEY
 $GNOSTR --sec $PRIVKEY              \
   --kind $KIND                      \
   -t gnostr                         \
@@ -104,7 +104,7 @@ $GNOSTR --sec $PRIVKEY              \
   --tag weeble $(gnostr-weeble)     \
   --tag wobble $(gnostr-wobble)     \
   --tag block $(gnostr-blockheight) \
-  --content "$MESSAGE" && true || CALLED_FROM=88 && help;exit;
+  --content "$MESSAGE" && true || help;exit;
 
 } ## end kind0
 
@@ -113,13 +113,14 @@ kind1(){
 }
 
 nips(){
-  echo nips stub;
+  ## echo nips stub;
   if [[ "$NIP" == "0" ]];
   then
-    echo NIP=$NIP
+    echo ##NIP=$NIP
   fi
   KIND=NIP
-  echo "calling kinds instead";kinds;
+  echo #"calling kinds instead";
+  kinds;
 }
 
 test_zero(){
@@ -147,7 +148,7 @@ ABOUT_ME="#gnostr/$(gnostr-weeble)"
 NAME=$(gnostr-weeble)
 #echo "$NAME"
 PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
-echo $PICTURE
+#echo $PICTURE
 exit
 CREATED_AT=$(date +%s)
 #echo $CREATED_AT
@@ -194,18 +195,18 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
 
 
 
-  echo "test_one()";
+  #echo "test_one()";
   PREVKEY=0000000000000000000000000000000000000000000000000000000000000000
-  echo PREVKEY=$PREVKEY
+  #echo PREVKEY=$PREVKEY
   ## for i in {1..100}
   ## do
   ##     printf "%064d\n" $i
   ## done
   for i in $(seq -f "%064g" 1 10)
   do
-      echo $i
+      #echo $i
       PRIVKEY=$i
-      echo PRIVKEY=$PRIVKEY
+      #echo PRIVKEY=$PRIVKEY
       ##nip0
       $GNOSTR --sec $i \
           --kind 0 \
@@ -230,7 +231,7 @@ MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\
   done
   exit
 
-  echo PRIVKEY=$PRIVKEY
+  #echo PRIVKEY=$PRIVKEY
   $GNOSTR --sec $PRIVKEY;
   #$GNOSTR --sec '$PRIVKEY';##this will fail
   $GNOSTR --sec "$PRIVKEY";
@@ -260,19 +261,19 @@ fi
 
 
 test_zero(){
-  echo "test_zero()";
+  #echo "test_zero()";
   $GNOSTR --sec $2;
   exit;
 }
 test_one(){
-  echo "test_one()";
+  #echo "test_one()";
   $GNOSTR --sec $2;
   exit;
 }
 
 default(){
-  CALLED_FROM=default
-  help
+  ##CALLED_FROM=default
+  echo #help
 }
 help(){
   ## echo 259:CALLED_FROM=$CALLED_FROM
@@ -346,7 +347,8 @@ for ((i=1; i<=$#; i++)); do
 
   ## positional                 V                       V
   if [[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
-    CALLED_FROM=321 && help
+    #CALLED_FROM=321 && \
+      help
     exit
   fi
   ## positional                 V                          V
@@ -358,19 +360,20 @@ for ((i=1; i<=$#; i++)); do
 # if [[ ${!i} == "-s" ]] || [[ $1    == "--sec" ]] || [[ $1    == "sec" ]]; then
   if [[ ${!i} == "-s" ]] || [[ ${!i} == "--sec" ]] || [[ ${!i} == "sec" ]]; then
   ((i++))
-  echo $i
+  #echo $i
     ## TODO more test for hash
     if [[ ! -z ${!i} ]]; then
-      echo  \${!i}=${!i}
+      #echo  \${!i}=${!i}
       PRIVKEY=${!i}
       export PRIVKEY
-      echo 337:PRIVKEY=$PRIVKEY
+      #echo 337:PRIVKEY=$PRIVKEY
       ## echo "${!i} is a number"
       ## echo DEPTH=$DEPTH
       ((i++))
     else
-       echo "${!i} is not a valid sha256 hash"
-       CALLED_FROM=345 && help
+       echo #"${!i} is not a valid sha256 hash"
+       #CALLED_FROM=345 && \
+         ##help
     fi
   fi ## end if -ss --sec sec
 
@@ -380,32 +383,34 @@ for ((i=1; i<=$#; i++)); do
   ((i++))
     if [[ ! -z ${!i} ]] && [[ ${!i} =~ ^[0-9]+$ ]]; then
       KIND=${!i}
-      echo 352:KIND=$KIND
+      #echo 352:KIND=$KIND
       ((i++))
     else
-       echo "${!i} is not a number"
-       CALLED_FROM=359 && help
+       echo #"${!i} is not a number"
+       #CALLED_FROM=359 && \
+         #help
     fi
   fi
   ## non-positional
   ##       V                      V                         V
   if [[ ${!i} == "-n" ]] || [[ ${!i} == "--nip" ]] || [[ ${!i} == "nip" ]]; then
-  echo 365:i=${!i};
+  #echo 365:i=${!i};
   ((i++))
-  echo 367:i=${!i};
+  #echo 367:i=${!i};
   ## i not empty and a number
     if [[ ! -z ${!i} ]] && [[ ${!i} =~ ^[0-9]+$ ]]; then
-      echo 370:i=${!i};
+      #echo 370:i=${!i};
       NIP=${!i}
-      echo 370:NIP=$NIP
-      echo 371:kind\$NIP=kind$NIP
+      #echo 370:NIP=$NIP
+      #echo 371:kind\$NIP=kind$NIP
       ## nip$NIP
       ## echo "${!i} is a number"
       ## echo DEPTH=$DEPTH
       ((i++))
     ## else ## already tested - no need to catch
-       ## echo "${!i} is not a number"
-       ## CALLED_FROM=378 && help
+       echo #"${!i} is not a number"
+       ## CALLED_FROM=378 && \
+       #help
     fi
   fi
   if [[ ${!i} == "-2" ]] || [[ $1 == "--sha2" ]] || [[ $1 == "--sha256" ]]; then
