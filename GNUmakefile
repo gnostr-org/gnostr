@@ -248,6 +248,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install secp256k1           || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install tcl-tk              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install virtualenv          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                || echo "
@@ -315,6 +316,8 @@ endif
 		echo   "
 	@bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install util-linux        2>/dev/null || \
 		apk add util-linux"
+	@bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install tcl-dev           2>/dev/null || \
+		apk add tcl-dev"
 	@bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install virtualenv        2>/dev/null || \
 		apk add py3-virtualenv"
 	@bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install zlib1g-dev        2>/dev/null || \
