@@ -292,6 +292,7 @@ command/.git:gnostr-git
 gnostr-command:command
 command:command/.git
 	cd command && \
+		make rustup-install-stable && \
 		make cargo-br-async-std
 
 .PHONY:bins gnostr-bins
