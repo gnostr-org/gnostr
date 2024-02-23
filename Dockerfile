@@ -4,11 +4,12 @@ LABEL org.opencontainers.image.description="gnostr-docker"
 RUN touch updated
 RUN echo $(date +%s) > updated
 RUN apt-get update
-RUN apt-get install automake bash cmake jq make libssl-dev lsof pkg-config protobuf-compiler python-is-python3 systemd -y
+RUN apt-get install automake bash cmake jq make libssl-dev lsof pkg-config protobuf-compiler python-is-python3 systemd tcl-dev -y
 RUN chmod +x /usr/bin/systemctl
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 WORKDIR /tmp
-RUN git clone --recurse-submodules -j2 --branch 1708649039/3b67df8f5/dae700e50 --depth 1 https://github.com/gnostr-org/gnostr.git
+ARG BRANCH=1708649039/3b67df8f5/dae700e50
+RUN git clone --recurse-submodules -j2 --branch  --depth 1 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp/gnostr
 RUN make detect
 RUN make gnostr-am
