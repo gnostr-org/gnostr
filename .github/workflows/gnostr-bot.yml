@@ -51,10 +51,12 @@ jobs:
       - run: cargo install --force gnostr-bins
       ## NOTE: make gnostr-am is the non-cmake build
       - run: make gnostr-am && echo $(which gnostr-am)
-      - run: make gnostr-install
+      - run: make gnostr gnostr-install
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
       - run: echo $(date +%s)
       - run: ls -a
       - run: $(which gnostr-am) --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
       - run: $(which gnostr-am) --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
+      - run: gnostr-nip --sec $(gnostr-sha256)                                       | gnostr-post-event
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))                      | gnostr-post-event
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
