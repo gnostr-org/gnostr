@@ -82,6 +82,7 @@ jobs:
       #- run: make submodules
       - run: cmake .
       - run: V=1 make gnostr bins
+      - run: V=1 make gnostr-install
       - run: V=1 make gnostr-verify-keypair
       #- run: make gnostr
       #- run: V=1 make install
