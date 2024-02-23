@@ -172,7 +172,7 @@ diff-log:
 submodules:
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
-	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli command core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
+	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
 #.PHONY:secp256k1/config.log
@@ -269,7 +269,6 @@ gnostr-cargo-binstall:
 		--no-discover-github-token \
 		gnostr-cat \
 		gnostr-cli \
-		gnostr-command \
 		gnostr-grep \
 		gnostr-legit \
 		gnostr-sha256
@@ -286,14 +285,14 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 	cd build && make all install && install gnostr-tests /usr/local/bin || echo
 	$(MAKE) gnostr-install || echo
 
-.PHONY:command gnostr-command
-command/.git:gnostr-git
-	@devtools/refresh-submodules.sh command
-gnostr-command:command
-command:command/.git
-	cd command && \
-		make rustup-install-stable && \
-		make cargo-br-async-std
+##.PHONY:command gnostr-command
+##command/.git:gnostr-git
+##	@devtools/refresh-submodules.sh command
+##gnostr-command:command
+##command:command/.git
+##	cd command && \
+##		make rustup-install-stable && \
+##		make cargo-br-async-std
 
 .PHONY:bins gnostr-bins
 bins/.git:
@@ -631,7 +630,7 @@ gnostr-all:
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
 	type -P gnostr-sha256  || $(MAKE) -j gnostr-sha256
-	type -P gnostr-command || $(MAKE) -j gnostr-command
+#type -P gnostr-command || $(MAKE) -j gnostr-command
 	type -P gnostr-proxy   || $(MAKE) -j gnostr-proxy
 	type -P gnostr-query   || $(MAKE) -j gnostr-query
 	type -P gnostr-git     || $(MAKE) -j gnostr-git
