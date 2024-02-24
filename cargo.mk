@@ -8,6 +8,9 @@ cargo-i:
 ##make cargo-*
 cargo-help:### 	cargo-help
 	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+cargo-all:### 	cargo-all
+	bash -c "for t in */Cargo.toml;do echo $t; cargo b -r -vv --manifest-path $t; done"
+
 cargo-b:cargo-build### 	cargo b
 cargo-build:### 	cargo build
 ## 	make cargo-build q=true
