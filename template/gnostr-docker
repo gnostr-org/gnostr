@@ -13,6 +13,7 @@ WORKDIR /tmp
 RUN git clone --recurse-submodules -j4 --branch 1708649039/3b67df8f5/dae700e50  --depth 10 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp/gnostr
 RUN make detect
+RUN for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
 RUN make gnostr-am
 RUN cmake .
 RUN make gnostr all
