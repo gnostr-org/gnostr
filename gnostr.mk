@@ -252,7 +252,11 @@ gnostr-git:git/gnostr-git## 	gnostr-git
 	cp $< $@ || true
 	install $@ /usr/local/bin/
 
-
+ext/curl-8.5.0/src/curl:
+	cd ext/curl-8.5.0 && make install
+gnostr-curl:ext/curl-8.5.0/src/curl
+	cp $< $@ || true
+	install $@ /usr/local/bin/
 
 ##gnostr-get-relays:
 ##	$(CC) ./src/gnostr-get-relays.c -o gnostr-get-relays
@@ -525,6 +529,7 @@ gnostr-install:
 	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc
@@ -628,6 +633,7 @@ gnostr-all:
 	#type -P gnostr-tui        || $(MAKE) -j tui
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
+	type -P gnostr-curl    || $(MAKE) -j gnostr-curl
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
 	type -P gnostr-sha256  || $(MAKE) -j gnostr-sha256
 #type -P gnostr-command || $(MAKE) -j gnostr-command
