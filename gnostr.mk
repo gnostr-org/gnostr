@@ -299,7 +299,7 @@ bins/.git:
 	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
 bins:bins/.git
-	@cd bins && make cargo-b-release && make cargo-i
+	cargo install --path bins --force
 
 .PHONY:xq gnostr-xq
 xq/.git:
