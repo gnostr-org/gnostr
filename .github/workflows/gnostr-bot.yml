@@ -47,8 +47,8 @@ jobs:
       - run: apt-get install -y cargo-doc clang-14-doc wasi-libc cmake-doc cmake-format elpa-cmake-mode ninja-build autopoint gettext-doc libasprintf-dev libgettextpo-dev lrzip llvm-14-doc python3-setuptools python-pygments-doc
       - run: apt-get install -y lib32stdc++6 libc6-i386 lib32gcc-s1 ttf-bitstream-vera lld-14 || true
       - run: apt-get install binfmt-support cargo clang clang-14 cmake cmake-data gettext gettext-base libarchive13 libclang-common-14-dev libclang-cpp14 libclang-rt-14-dev libclang1-14 libcurl3-nss libgc1 libgit2-1.5 libhttp-parser2.9 libjsoncpp25 libllvm14 libmbedcrypto7 libmbedtls14 libmbedx509-1 libnspr4 libnss3 libobjc-12-dev libobjc4 libpfm4 libpipeline1 librhash0 libstd-rust-1.63 libstd-rust-dev libuv1 libz3-4 libz3-dev llvm-14 llvm-14-dev llvm-14-linker-tools llvm-14-runtime llvm-14-tools nss-plugin-pem python-is-python3 python3-pkg-resources python3-pygments python3-yaml rustc sudo -y
-      - run: cargo install gnostr-sha256
-      - run: cargo install gnostr-bins
+      - run: cargo install --force gnostr-sha256
+      - run: cargo install --force gnostr-bins
       ## NOTE: make gnostr-am is the non-cmake build
       - run: make gnostr-am && echo $(which gnostr-am)
       - run: make gnostr-install
