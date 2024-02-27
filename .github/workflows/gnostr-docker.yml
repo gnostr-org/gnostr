@@ -48,6 +48,7 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
+      - run: make gnostr-am
       - run: cmake .
       - run: make
       - run: V=1 make gnostr bins gnostr-sha256 && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
