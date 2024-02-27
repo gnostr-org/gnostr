@@ -62,6 +62,14 @@ jobs:
           default: true
           override: true
 
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap nostorg/nostr || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
       - run: rustup default stable
       - run: cargo search gnostr --limit 100
       - run: mkdir -p ~/bin
