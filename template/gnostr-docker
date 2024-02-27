@@ -14,8 +14,8 @@ RUN make detect
 RUN make gnostr-am
 RUN cmake .
 RUN make gnostr
-RUN make gnostr-install
 RUN make        install
+RUN make gnostr-install
 RUN cargo install --path bins --force
 RUN install ./serve /usr/local/bin || true
 ENV PATH=\$PATH:/usr/bin/systemctl
