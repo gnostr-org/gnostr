@@ -37,6 +37,7 @@ jobs:
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
       - run: printenv
+      - run: cargo search gnostr --limit 100
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
         with:
