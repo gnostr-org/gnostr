@@ -52,7 +52,7 @@ jobs:
       - run: gnostr-am --sec $(gnostr-sha256)
       - run: cmake .
       - run: make
-      - run: V=1 make gnostr bins
+      - run: V=1 make gnostr bins gnostr-install
       - run: gnostr --sec $(gnostr-sha256)
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
