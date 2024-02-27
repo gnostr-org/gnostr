@@ -74,7 +74,7 @@ jobs:
 
       ## objective: test non-cmake build gnostr-am
       - run: make gnostr-am gnostr-install
-      - run: cargo install gnostr-sha256 gnostr-bins
+      - run: make gnostr-sha256 gnostr-bins
       - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
       ## objective: test cmake build gnostr
