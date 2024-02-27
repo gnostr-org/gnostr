@@ -32,7 +32,7 @@ jobs:
     container: rust:${{ matrix.tag }}
 
     steps:
-      - run: apt-get update && apt-get install autoconf build-essential curl cmake jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
+      - run: apt-get update && apt-get install autoconf build-essential curl cmake jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release   git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
@@ -48,29 +48,26 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
-      - run: make gnostr-am
-      #- run: ./build.cmake.sh
+      - run: ./build.cmake.sh
       - run: cmake .
-      - run: make gnostr gnostr-install
-      #- run: cargo install --path bins --force
-      - run: make bins
-      - run: V=1 make gnostr && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
+      - run: make
+      - run: V=1 make gnostr bins gnostr-sha256 && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
       - run: make nvm
-      #- run: make gnostr-act
-      #- run: make gnostr-bins
-      #- run: make gnostr-cat
-      #- run: make gnostr-cli
-      #- run: make gnostr-command
-      #- run: make gnostr-git
-      #- run: make gnostr-grep
-      #- run: make gnostr-legit
-      #- run: make gnostr-proxy
-      #- run: make gnostr-tui
-      #- run: make gnostr-sha256
+      - run: make bins
+      - run: make      tui
+      - run: make gnostr-act
+      - run: make gnostr-cat
+      - run: make gnostr-cli
+      - run: make gnostr-command
+      - run: make gnostr-git
+      - run: make gnostr-grep
+      - run: make gnostr-legit
+      - run: make gnostr-proxy
+      - run: make gnostr-sha256
       - run: make libsecp256k1.a
       - run: make                 gnostr-all
       - run: make                     gnostr-install
       - run: make                         all
-      - run: sudo make                            install
+      - run: make                            install
       - run: ls /usr/local/bin
       - run: gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
