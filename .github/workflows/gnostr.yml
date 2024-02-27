@@ -68,6 +68,7 @@ jobs:
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
+      ## make detect is first for brew install sequence OR sudo make detect for apt install
       - run: make detect || sudo make detect
       - run: python3 -m pip install virtualenv
 
