@@ -81,22 +81,6 @@ fn main() {
 
     if args_vector.len() == 1 {
 
-        //execute c if no other args
-        //println!("args_vector = {:?}", args_vector);
-        //println!("args_vector.len() = {:?}", args_vector.len());
-        //println!("default HELP!"); 
-        (assert_c! {
-            #include <stdio.h>
-            int main() {
-                printf("Hello, Gnostr!");
-                return 0;
-            }
-        })
-        .success()
-        .stdout("Hello, Gnostr!");
-        //rust
-        println!("Hello, Gnostr!");
-        process::exit(0);
     }
 
     if args_vector.len() != 1 {
@@ -146,21 +130,17 @@ fn main() {
 
     //command_example();
 
-    }// end if args_vector.len() == 1
-    else { println!("default HELP!"); }
+    } else { // end if args_vector.len() == 1
+      println!("default HELP!"); }
 
     (assert_c! {
         #include <stdio.h>
-
-        int main() {
-            printf("Hello, Gnostr!");
-
-            return 0;
-        }
-    })
+        int main() { printf("1:Hello, Gnostr!"); return 0; }
+    }
+    )
     .success()
-    .stdout("Hello, Gnostr!");
+    .stdout("2:Hello, Gnostr!");
     //rust
-    println!("Hello, Gnostr!");
+    println!("3:Hello, Gnostr!");
 
 }
