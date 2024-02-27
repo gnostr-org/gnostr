@@ -139,7 +139,7 @@ fn main() {
     }
     )
     .success()
-    .stdout("2:Hello, Gnostr!");
+    .stdout("1:Hello, Gnostr!");
     //rust
     println!("3:Hello, Gnostr!");
 
