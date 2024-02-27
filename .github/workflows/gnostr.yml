@@ -94,9 +94,9 @@ jobs:
       - run: V=1 gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event wss://relay.damus.io
 
-      - name: V=1 make doc
+      - name: V=1 sudo make doc
         if: github.event_name == 'pull_request'
-        run: V=1 make doc
+        run: V=1 sudo make doc
 
       #- name: V=1 make gnostr-all
       #  run: V=1 make gnostr-all
