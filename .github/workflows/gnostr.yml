@@ -62,41 +62,33 @@ jobs:
           default: true
           override: true
 
-      - name: echo GNOSTR
-        #if: ${{ !env.ACT }}
-        run: |
-          echo $GNOSTR
-
-      - name:  apt-get update && apt-get install jq protobuf-compiler || brew install jq protobuf || true
-        run: |
-          sudo apt-get update && apt-get install automake jq protobuf-compiler || brew install automake jq protobuf || true
-          touch ~/GITHUB_TOKEN.txt
+      - run: rustup default stable
+      - run: cargo search gnostr --limit 100
+      - run: mkdir -p ~/bin
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      ## objective: ensure make detect installs all needed depends/libs/etc
+      - run: sudo make detect
       - run: python3 -m pip install virtualenv
 
-      #- run: rm -rf /home/runner/.rustup || true
-      - run: sudo make detect
-      - run: mkdir -p ~/bin
-      - run: make gnostr-am
-      - run: rustup default stable
-      #- run: make submodules
+      ## objective: test non-cmake build gnostr-am
+      - run: make gnostr-am gnostr-install
+      - run: cargo install gnostr-sha256 gnostr-bins
+      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+
+      ## objective: test cmake build gnostr
+      ## objective: test cargo build/install gnostr-bins
       - run: cmake .
-      - run: V=1 make gnostr bins
+      - run: V=1 make gnostr bins xq
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr-verify-keypair
-      #- run: make gnostr
-      #- run: V=1 make install
-      #- run: V=1 make all
-      #- run: V=1 make install || true
-      - run: V=1 make gnostr-install || true
+      ## objective: test cmake build gnostr with gnostr-nip
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-      - run: V=1 gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content '#gnostr!' -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) | gnostr-post-event wss://nos.lol
-      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event wss://relay.damus.io
+      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
       - name: V=1 sudo make cat doc
         if: github.event_name == 'pull_request'
-        run: V=1 sudo make cat doc
+        run: V=1 sudo make cat doc || true
 
       #- name: V=1 make gnostr-all
       #  run: V=1 make gnostr-all
