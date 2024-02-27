@@ -7,11 +7,16 @@ gnostr-verify-keypair:## 	with install sequence
 ##echo $(XQ)
 	[ -x "$(shell which gnostr)" ]                || \
 		$(MAKE) gnostr
-		##cargo install --path . --bin gnostr
 	[ -x "$(shell which gnostr-xq)" ]             || \
 		$(MAKE) gnostr-xq
+	[ -x "$(shell which gnostr-sha256)" ]         || \
+		cargo install --path ./bins --bin gnostr-sha256
 	[ -x "$(shell which gnostr-weeble)" ]         || \
 		cargo install --path ./bins --bin gnostr-weeble
+	[ -x "$(shell which gnostr-wobble)" ]         || \
+		cargo install --path ./bins --bin gnostr-wobble
+	[ -x "$(shell which gnostr-blockheight)" ]    || \
+		cargo install --path ./bins --bin gnostr-blockheight
 	[ -x "$(shell which cargo)" ]                 || \
 	$(MAKE) gnostr-bins
 	[ -x "$(shell which gnostr-verify-keypair)" ] || \
