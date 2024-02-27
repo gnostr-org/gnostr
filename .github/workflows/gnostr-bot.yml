@@ -51,7 +51,7 @@ jobs:
       - run: cargo install --force gnostr-bins
       ## NOTE: make gnostr-am is the non-cmake build
       - run: make gnostr-am && echo $(which gnostr-am)
-      - run: make gnostr gnostr-install
+      - run: cmake . && make gnostr gnostr-install
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
       - run: echo $(date +%s)
       - run: ls -a
