@@ -37,6 +37,7 @@ jobs:
       ## notice: additional operations can be done prior to checkout
       ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
       - run: printenv
+      - run: cargo search gnostr --limit 100
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
         with:
@@ -48,26 +49,15 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
-      - run: ./build.cmake.sh
+      ## objective: non-cmake build/install
+      - run: make gnostr-am gnostr-sha256 gnostr-install
+      ## objective: test gnostr-am with crate gnostr-sha256
+      - run: gnostr-am --sec $(gnostr-sha256)
       - run: cmake .
       - run: make
-      - run: V=1 make gnostr bins gnostr-sha256 && gnostr --sec $(gnostr-sha256) --content 'gnostr'  | gnostr-post-event wss://nos.lol
-      - run: make nvm
-      - run: make bins
-      - run: make      tui
-      - run: make gnostr-act
-      - run: make gnostr-cat
-      - run: make gnostr-cli
-      - run: make gnostr-command
-      - run: make gnostr-git
-      - run: make gnostr-grep
-      - run: make gnostr-legit
-      - run: make gnostr-proxy
-      - run: make gnostr-sha256
-      - run: make libsecp256k1.a
-      - run: make                 gnostr-all
-      - run: make                     gnostr-install
-      - run: make                         all
-      - run: make                            install
-      - run: ls /usr/local/bin
-      - run: gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
+      ## objective: cmake build/install
+      - run: V=1 make gnostr bins gnostr-install
+      ## objective: test gnostr with crate gnostr-bins gnostr-sha256
+      - run: gnostr --sec $(gnostr-sha256)
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))

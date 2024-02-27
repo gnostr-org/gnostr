@@ -11,6 +11,7 @@ gnostr-cli
 gnostr-client
 gnostr-command
 gnostr-configurator
+gnostr-curl
 gnostr-getrelays
 gnostr-get-relays
 gnostr-get-relays-c

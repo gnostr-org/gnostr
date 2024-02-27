@@ -172,7 +172,7 @@ diff-log:
 submodules:
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
-	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli command core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
+	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
 #.PHONY:secp256k1/config.log
@@ -252,7 +252,11 @@ gnostr-git:git/gnostr-git## 	gnostr-git
 	cp $< $@ || true
 	install $@ /usr/local/bin/
 
-
+ext/curl-8.5.0/src/curl:
+	cd ext/curl-8.5.0 && make install
+gnostr-curl:ext/curl-8.5.0/src/curl
+	cp $< $@ || true
+	install $@ /usr/local/bin/
 
 ##gnostr-get-relays:
 ##	$(CC) ./src/gnostr-get-relays.c -o gnostr-get-relays
@@ -269,7 +273,6 @@ gnostr-cargo-binstall:
 		--no-discover-github-token \
 		gnostr-cat \
 		gnostr-cli \
-		gnostr-command \
 		gnostr-grep \
 		gnostr-legit \
 		gnostr-sha256
@@ -286,20 +289,28 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 	cd build && make all install && install gnostr-tests /usr/local/bin || echo
 	$(MAKE) gnostr-install || echo
 
-.PHONY:command gnostr-command
-command/.git:gnostr-git
-	@devtools/refresh-submodules.sh command
-gnostr-command:command
-command:command/.git
-	cd command && \
-		make cargo-br-async-std
+##.PHONY:command gnostr-command
+##command/.git:gnostr-git
+##	@devtools/refresh-submodules.sh command
+##gnostr-command:command
+##command:command/.git
+##	cd command && \
+##		make rustup-install-stable && \
+##		make cargo-br-async-std
 
 .PHONY:bins gnostr-bins
 bins/.git:
 	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
 bins:bins/.git
-	@cd bins && make cargo-b-release && make cargo-i
+	cargo install --path bins --force
+
+.PHONY:xq gnostr-xq
+xq/.git:
+	@devtools/refresh-submodules.sh xq
+gnostr-xq:xq
+xq:xq/.git
+	@cd xq && make cargo-b-release && make cargo-i
 
 .PHONY:core gnostr-core
 core/.git:
@@ -380,8 +391,7 @@ sha256/.git:
 	@devtools/refresh-submodules.sh sha256
 #.PHONY:sha256/gnostr-sha256
 sha256:sha256/.git
-	cd sha256 && \
-		make install
+	cargo install --path sha256 --force
 gnostr-sha256:sha256
 
 
@@ -518,6 +528,7 @@ gnostr-install:
 	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc
@@ -621,9 +632,10 @@ gnostr-all:
 	#type -P gnostr-tui        || $(MAKE) -j tui
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
+	type -P gnostr-curl    || $(MAKE) -j gnostr-curl
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
 	type -P gnostr-sha256  || $(MAKE) -j gnostr-sha256
-	type -P gnostr-command || $(MAKE) -j gnostr-command
+#type -P gnostr-command || $(MAKE) -j gnostr-command
 	type -P gnostr-proxy   || $(MAKE) -j gnostr-proxy
 	type -P gnostr-query   || $(MAKE) -j gnostr-query
 	type -P gnostr-git     || $(MAKE) -j gnostr-git

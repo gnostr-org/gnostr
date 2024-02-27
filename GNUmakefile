@@ -77,7 +77,7 @@ endif
 export BIND
 
 ifeq ($(token),)
-GITHUB_TOKEN                            :=$(shell touch ~/GITHUB_TOKEN.txt && cat ~/GITHUB_TOKEN.txt || echo "0")
+GITHUB_TOKEN                             =$(shell touch ~/GITHUB_TOKEN.txt && cat ~/GITHUB_TOKEN.txt || echo "0")
 else
 GITHUB_TOKEN                            :=$(shell echo $(token))
 endif
@@ -225,6 +225,7 @@ ifneq ($(shell id -u),0)
 	@echo
 endif
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew update                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install autoconf            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
 ##	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost               || echo "
@@ -248,6 +249,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install secp256k1           || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install tcl-tk              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install virtualenv          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                || echo "
@@ -265,34 +267,90 @@ ifneq ($(shell id -u),0)
 	@echo $(shell id -u -n) 'not root'
 	@echo
 endif
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && type -P brew >/tmp/gnostr.log && \
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		type -P brew >/tmp/gnostr.log && \
 		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get update                    || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install autoconf          || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install bison             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install build-essential   || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install cargo             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install clang             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install cmake-curses-gui  || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install cmake             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install expat             || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install gettext           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install golang-go         || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install help2man          || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libcurl4-openssl-dev || echo"
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libssl-dev        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install libtool           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install mercurial         || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install npm               || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install pandoc            || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install pkg-config        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install protobuf-compiler || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install python3           || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install python3-pip       || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install python-is-python3 || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install util-linux        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install virtualenv        || echo   "
-	bash -c "[ '$(shell uname -s)' == 'Linux' ] && $(SUDO) apt-get install zlib1g-dev        || echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get update                     2>/dev/null || \
+		apk add update || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install autoconf           2>/dev/null || \
+		apk add autoconf || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install bison              2>/dev/null || \
+		apk add bison || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install build-essential    2>/dev/null || \
+		apk add alpine-sdk || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install cargo              2>/dev/null || \
+		apk add cargo || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install clang              2>/dev/null || \
+		apk add clang || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install cmake-curses-gui   2>/dev/null || \
+		apk add extra-cmake-modules || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install cmake              2>/dev/null || \
+		apk add cmake || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install expat              2>/dev/null || \
+		apk add expat || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install gettext            2>/dev/null || \
+		apk add gettext || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install golang-go          2>/dev/null || \
+		apk add go || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install help2man           2>/dev/null || \
+		apk add help2man || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libcurl4-openssl-dev 2>/dev/null || \
+		apk add curl-dev || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libssl-dev        2>/dev/null || \
+		apk add openssl-dev || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libtool           2>/dev/null || \
+		apk add libtool || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install mercurial         2>/dev/null || \
+		apk add mercurial || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install npm               2>/dev/null || \
+		apk add npm || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install pandoc            2>/dev/null || \
+		echo"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install pkg-config        2>/dev/null || \
+		apk add pkgconfig || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install protobuf-compiler 2>/dev/null || \
+		apk add protobuf || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install python3           2>/dev/null || \
+		apk add python3 || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install python3-pip       2>/dev/null || \
+		apk add py3-pip || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install python-is-python3 2>/dev/null || \
+		echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install util-linux        2>/dev/null || \
+		apk add util-linux || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install tcl-dev           2>/dev/null || \
+		apk add tcl-dev || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install virtualenv        2>/dev/null || \
+		apk add py3-virtualenv || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install zlib1g-dev        2>/dev/null || \
+		echo   "
 
 ##	install gvm sequence
 	@rm -rf $(HOME)/.gvm || echo "not removing ~/.gvm"
@@ -386,6 +444,7 @@ nvm-clean: ## 	nvm-clean
 -include gnostr.mk
 -include gnostr-act.mk
 -include gnostr-bot.mk
+-include docker.mk
 -include venv.mk
 -include clean.mk
 -include cargo.mk
