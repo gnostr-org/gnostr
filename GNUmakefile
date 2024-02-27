@@ -225,6 +225,7 @@ ifneq ($(shell id -u),0)
 	@echo
 endif
 	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew update                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install autoconf            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
 ##	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost               || echo "
