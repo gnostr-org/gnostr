@@ -48,11 +48,15 @@ jobs:
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
+      ## objective: non-cmake build/install
       - run: make gnostr-am gnostr-sha256 gnostr-install
+      ## objective: test gnostr-am with crate gnostr-sha256
       - run: gnostr-am --sec $(gnostr-sha256)
       - run: cmake .
       - run: make
+      ## objective: cmake build/install
       - run: V=1 make gnostr bins gnostr-install
+      ## objective: test gnostr with crate gnostr-bins gnostr-sha256
       - run: gnostr --sec $(gnostr-sha256)
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
