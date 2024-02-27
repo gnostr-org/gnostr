@@ -391,8 +391,7 @@ sha256/.git:
 	@devtools/refresh-submodules.sh sha256
 #.PHONY:sha256/gnostr-sha256
 sha256:sha256/.git
-	cd sha256 && \
-		make install
+	cargo install --path sha256 --force
 gnostr-sha256:sha256
 
 
