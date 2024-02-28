@@ -10,15 +10,16 @@ RUN git clone --recurse-submodules -j4 --branch  1709070216/8906a5ae7/2cfe0e22f 
 WORKDIR /tmp/gnostr
 RUN make detect
 RUN make gnostr-am
+FROM base as gnostr
 RUN cmake .
 RUN make gnostr
-RUN make gnostr-install
 RUN make        install
+RUN make gnostr-install
 RUN cargo install --path bins --force
 RUN install ./serve /usr/local/bin || true
 ENV PATH=$PATH:/usr/bin/systemctl
 RUN ps -p 1 -o comm=
 EXPOSE 80 6102 8080 ${PORT}
 VOLUME /src
-FROM base as gnostr
+FROM gnostr as gnostr-docker
 
