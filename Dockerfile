@@ -13,6 +13,7 @@ RUN make gnostr-am
 FROM base as gnostr
 RUN cmake .
 RUN make gnostr
+ENV SUDO=sudo
 RUN make        install
 RUN make gnostr-install
 RUN cargo install --path bins --force
