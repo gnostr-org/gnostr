@@ -14,9 +14,10 @@ FROM base as gnostr
 RUN cmake .
 RUN make gnostr
 ENV SUDO=sudo
-RUN make        install
 RUN make gnostr-install
 RUN cargo install --path bins --force
+RUN cargo install --path cli --force
+RUN cargo install --path tui --force
 RUN install ./serve /usr/local/bin || true
 ENV PATH=$PATH:/usr/bin/systemctl
 RUN ps -p 1 -o comm=
