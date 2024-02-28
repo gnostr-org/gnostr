@@ -6,7 +6,7 @@ RUN echo $(date +%s) > updated
 RUN apt-get update
 RUN apt-get install -y bash cmake git make tcl-dev
 WORKDIR /tmp
-RUN git clone --recurse-submodules -j4 --branch  1709070216/8906a5ae7/2cfe0e22f --depth 10 https://github.com/gnostr-org/gnostr.git
+RUN git clone --recurse-submodules -j4 --branch master --depth 10 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp/gnostr
 RUN make detect
 RUN make gnostr-am
