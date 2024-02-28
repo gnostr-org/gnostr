@@ -280,6 +280,9 @@ endif
 		$(SUDO) apt-get install bison              2>/dev/null || \
 		apk add bison || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install bsdmainutils       2>/dev/null || \
+		apk add util-linux || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install build-essential    2>/dev/null || \
 		apk add alpine-sdk || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
