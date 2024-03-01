@@ -38,7 +38,7 @@ jobs:
           sudo apt-get update && apt-get install automake jq protobuf-compiler || brew install automake jq protobuf || true
           touch ~/GITHUB_TOKEN.txt
 
-      - run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       - run: V=1 sudo make detect
       - run: V=1 make gnostr-am
       - run: cmake .
