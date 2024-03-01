@@ -940,6 +940,7 @@ dependencies = [
  "k256 0.13.3",
  "rand_core",
  "reqwest",
+ "secp256k1 0.28.2",
  "sha2 0.10.8",
 ]
 

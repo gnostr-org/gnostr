@@ -53,7 +53,7 @@ jobs:
         with:
           submodules: 'true'
           set-safe-directory: 'true'
-          fetch-depth: '10'
+          fetch-depth: '0'
 
       - uses: actions-rs/toolchain@v1.0.6
         #if: ${{ !env.ACT }}
