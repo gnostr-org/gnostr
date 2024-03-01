@@ -28,3 +28,4 @@ git2 = "0.18.2"
 reqwest = { version = "0.11.24", features = ["blocking"] }
 gnostr-xq = { git = "https://github.com/gnostr-org/gnostr-xq.git", version = "0.0.0" }
 gnostr-bins = "0.0.14"
+secp256k1 = "0.28.2"

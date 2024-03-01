@@ -41,7 +41,7 @@ jobs:
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
         with:
-          fetch-depth: '100'
+          fetch-depth: '0'
           submodules: 'true'
           set-safe-directory: 'true'
       ## notice: these are post checkout steps

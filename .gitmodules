@@ -133,11 +133,6 @@
 	url = https://github.com/gnostr-org/nips.git
     branch = master
     depth = shallow
-[submodule "secp256k1"]
-	path = secp256k1
-	url = https://github.com/bitcoin/secp256k1.git
-    branch = master
-    depth = shallow
 [submodule "src/libcjson"]
     path = src/libcjson
     url = https://github.com/gnostr-org/libcjson.git
@@ -158,3 +153,6 @@
 	url = https://github.com/gnostr-org/gnostr-xq.git
     branch = master
     depth = shallow
+[submodule "vendor/secp256k1-sys/depend/secp256k1"]
+	path = vendor/secp256k1-sys/depend/secp256k1
+	url = https://github.com/gnostr-org/secp256k1.git
