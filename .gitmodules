@@ -135,9 +135,10 @@
     depth = shallow
 [submodule "secp256k1"]
 	path = secp256k1
-	url = https://github.com/bitcoin/secp256k1.git
-    branch = master
+	url = https://github.com/gnostr-org/secp256k1.git
+    branch = 1709312085/3bf4d68f/e4af41c6-c-lang
     depth = shallow
+  ignore = dirty
 [submodule "src/libcjson"]
     path = src/libcjson
     url = https://github.com/gnostr-org/libcjson.git

@@ -185,6 +185,7 @@ secp256k1/include/secp256k1.h: secp256k1/.git
 .PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
 secp256k1/configure:secp256k1/include/secp256k1.h
 	cd secp256k1 && \
+	git fetch --all && git checkout 1709312085/3bf4d68f/e4af41c6-c-lang && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
 .PHONY:secp256k1/.libs/libsecp256k1.a
