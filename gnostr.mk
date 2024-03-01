@@ -175,12 +175,12 @@ submodules:
 	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
-#.PHONY:secp256k1/config.log
-#.ONESHELL:
-#secp256k1/.git:
-#	devtools/refresh-submodules.sh secp256k1
+.PHONY:secp256k1/config.log
+.ONESHELL:
+secp256k1/.git:
+	devtools/refresh-submodules.sh secp256k1
 secp256k1/include/secp256k1.h: #secp256k1/.git
-#.PHONY:secp256k1/configure
+.PHONY:secp256k1/configure
 ## force configure if build on host then in docker vm
 .PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
 secp256k1/configure:secp256k1/include/secp256k1.h
