@@ -176,10 +176,10 @@ submodules:
 	$(MAKE) $(SUBMODULES)
 
 #.PHONY:secp256k1/config.log
-.ONESHELL:
-secp256k1/.git:
-	devtools/refresh-submodules.sh secp256k1
-secp256k1/include/secp256k1.h: secp256k1/.git
+#.ONESHELL:
+#secp256k1/.git:
+#	devtools/refresh-submodules.sh secp256k1
+secp256k1/include/secp256k1.h: #secp256k1/.git
 #.PHONY:secp256k1/configure
 ## force configure if build on host then in docker vm
 .PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
