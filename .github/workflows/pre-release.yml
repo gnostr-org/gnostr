@@ -45,7 +45,7 @@ jobs:
       #- run: V=1 sudo make install
 
       - run: V=1 make gnostr
-      - run: V=1 make all
+      - run: V=1 make cargo-i
       - run: V=1 make gnostr-install
 
       #- uses: docker-practice/actions-setup-docker@master
