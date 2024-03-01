@@ -359,7 +359,6 @@ bash_profile.log
 comit/
 fulcrum/
 rust.html
-secp256k1
 src/blockheight.rs
 template/gnostr-reflog-test
 vendor/addr2line/
