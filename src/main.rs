@@ -90,6 +90,7 @@ pub fn relays(_program: &str, _opts: &Options) {
 
     let relays = get_relays();
     println!("{}", format!("{  }", relays.unwrap()));
+    process::exit(0);
 }
 
 pub fn print_usage(program: &str, opts: &Options) {
