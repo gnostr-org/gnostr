@@ -20,4 +20,3 @@ fn main() {
         .file("src/gnostr.c")
         .compile("libgnostr.a");
 }
-
