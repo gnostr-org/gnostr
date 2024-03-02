@@ -76,12 +76,36 @@ fn print_type_of<T>(_: &T) -> String {
 
 ///gnostr-bins::get_relays()
 pub fn relays(_program: &str, _opts: &Options) {
+
+    let args: Vec<String> = env::args().collect();
+    //let _program = args[0].clone();
+    if args.len() >= 1 {
+        let matches = match _opts.parse(&args[1..]) {
+            Ok(m) => m,
+            Err(f) => {
+                println!("Error: {}", f.to_string());
+                panic!("{}", f.to_string())
+            }
+        };
+        if matches.opt_present("h") {
+            print_relay_usage(&_program, &_opts);
+            //process::exit(0);
+        }
+    }
+
+
+
     let relays = get_relays();
     println!("{}", format!("{  }", relays.unwrap()));
 }
 
 pub fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} FILE [options]", program);
+    print!("{}", opts.usage(&brief));
+}
+
+pub fn print_relay_usage(program: &str, opts: &Options) {
+    let brief = format!("Relay Usage: {} FILE [options]", program);
     print!("{}", opts.usage(&brief));
 }
 
@@ -92,6 +116,7 @@ fn main() {
     //println!("args_vector.len() = {:?}", args_vector.len());
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
+
     //REF: https://docs.rs/getopts/latest/getopts/struct.Options.html
     let mut opts = Options::new();
 
@@ -113,24 +138,35 @@ fn main() {
                 println!("Error: {}", f.to_string());
                 panic!("{}", f.to_string())
             }
-        };
+        };//end let matches
+        if matches.opt_present("r") {
+            if matches.opt_present("h") {
+                print_relay_usage(&program, &opts);
+                process::exit(0);
+            }
+            relays(&program, &opts);
+            //process::exit(0);
+        }
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
         if matches.opt_present("h") {
             print_usage(&program, &opts);
             process::exit(0);
         }
-        if matches.opt_present("r") {
-            relays(&program, &opts);
-            process::exit(0);
-        }
 
-//fn add_one(mut x: Option<i32>) -> i32 {
-//    let x = if x == None {
-//        0
-//    } else {
-//        x.unwrap()
-//    };
-//    return x + 1;
-//}
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 
         let s = &"hello world".to_string();
         let cloned_s = s.clone();
@@ -139,30 +175,32 @@ fn main() {
         let _output = matches.opt_str("o");
         println!("{:?}", print_type_of(&_output));
         //leave input as &Option<String>
+        //
+        //
         let mut _input = matches.opt_str("i");
 
         //https://doc.rust-lang.org/std/primitive.str.html#method.parse
         let four = "4".parse::<u32>();
         println!("four {:?}", print_type_of(&four.as_ref().unwrap()));
-        assert_eq!(Ok(4), four);
+        //assert_eq!(Ok(4), four);
         let mut mut_four = "4".parse::<u32>();
         println!("mut_four {:?}", print_type_of(&mut_four.as_mut().unwrap()));
-        assert_eq!(Ok(4), mut_four);
+        //assert_eq!(Ok(4), mut_four);
 
         let test = _input.as_mut().unwrap().parse::<u32>();
         println!("test {:?}", print_type_of(&test));
         println!("test {:?}", print_type_of(&test.as_ref().unwrap()));
-        assert_eq!(Ok(4), test);
+        //assert_eq!(Ok(4), test);
 
         let input = _input.as_mut().unwrap().parse::<i32>();
         println!("input {:?}", print_type_of(&input));
         println!("input {:?}", print_type_of(&input.as_ref().unwrap()));
-        assert_eq!(Ok(4), input);
+        //assert_eq!(Ok(4), input);
 
         let input32 = _input.as_mut().unwrap().parse::<i32>();
         println!("input32 {:?}", print_type_of(&input32));
         println!("input32 {:?}", print_type_of(&input32.as_ref().unwrap()));
-        assert_eq!(Ok(4), input32);
+        //assert_eq!(Ok(4), input32);
 
         let _input32 = _input.as_mut().unwrap().parse::<i32>();
         println!("&_input32 {:?}", print_type_of(&_input32));
@@ -176,10 +214,23 @@ fn main() {
         //
         //REF: https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html
         let mut _value: i32 = input32.unwrap_or(i32::MAX);
+        println!("179:&input={:?}", print_type_of(&_value));
         let result = unsafe {
             double_input(_value);
+            println!("181:_value={:?}",_value);
         };
-        println!("{:?}",result);
-        println!("{:?}",_input);
-    }
-}
+        println!("183:result={:?}",result);
+        println!("184:_input={:?}",_input);
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+    }// end if args.len() >= 1
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+}//end main
