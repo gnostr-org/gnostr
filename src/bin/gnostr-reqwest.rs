@@ -1,5 +1,5 @@
-use std::io::{Read};
 use reqwest::Url;
+use std::io::Read;
 fn main() {
     let url = Url::parse("https://www.rust-lang.org/").unwrap();
     let mut res = reqwest::blocking::get(url).unwrap();
