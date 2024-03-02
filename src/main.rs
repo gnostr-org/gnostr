@@ -21,7 +21,6 @@
 /// #    .stdout("Hello, Gnostr!");
 /// # }
 /// ```
-
 //use nostr_types::Event;
 use std::env;
 //use std::io::Read;
@@ -57,17 +56,14 @@ extern "C" {
     fn print_hex(input: libc::c_int) -> libc::c_int;
 }
 
-
-fn gen_keys(){
-
-use k256::schnorr::SigningKey;
-use rand_core::OsRng;
+fn gen_keys() {
+    use k256::schnorr::SigningKey;
+    use rand_core::OsRng;
 
     let signing_key = SigningKey::random(&mut OsRng);
     let verifying_key = signing_key.verifying_key();
     println!("PUBLIC: {:x}", verifying_key.to_bytes());
     println!("PRIVATE: {:x}", signing_key.to_bytes());
-
 }
 
 fn print_type_of<T>(_: &T) -> String {
@@ -76,7 +72,6 @@ fn print_type_of<T>(_: &T) -> String {
 
 ///gnostr-bins::get_relays()
 pub fn relays(_program: &str, _opts: &Options) {
-
     let args: Vec<String> = env::args().collect();
     //let _program = args[0].clone();
     if args.len() >= 1 {
@@ -93,8 +88,6 @@ pub fn relays(_program: &str, _opts: &Options) {
         }
     }
 
-
-
     let relays = get_relays();
     println!("{}", format!("{  }", relays.unwrap()));
 }
@@ -102,15 +95,16 @@ pub fn relays(_program: &str, _opts: &Options) {
 pub fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} FILE [options]", program);
     print!("{}", opts.usage(&brief));
+    process::exit(0);
 }
 
 pub fn print_relay_usage(program: &str, opts: &Options) {
     let brief = format!("Relay Usage: {} FILE [options]", program);
     print!("{}", opts.usage(&brief));
+    process::exit(0);
 }
 
 fn main() {
-
     let args_vector: Vec<String> = env::args().collect();
     //println!("args_vector = {:?}", args_vector);
     //println!("args_vector.len() = {:?}", args_vector.len());
@@ -118,55 +112,76 @@ fn main() {
     let program = args[0].clone();
 
     //REF: https://docs.rs/getopts/latest/getopts/struct.Options.html
-    let mut opts = Options::new();
+    let mut top_opts = Options::new();
 
-    opts.optopt("o", "", "set output file name", "NAME");
-    opts.optopt(
+    top_opts.optopt("o", "", "set output file name", "NAME");
+    top_opts.optopt(
         "i",
         "input",
         "Specify the maximum number of commits to show (default: 10)",
         "NUMBER",
     );
 
-    opts.optflag("h", "help", "print this help menu");
-    opts.optflag("r", "relays", "print a json object of relays");
+    top_opts.optflag("h", "help", "print this help menu");
+    top_opts.optflag("r", "relays", "print a json object of relays");
 
-    if args.len() >= 1 {
-        let matches = match opts.parse(&args[1..]) {
+    if args.len() == 1 {
+        println!("129:args.len()={}",args.len());
+        print_usage(&program, &top_opts);
+    }
+
+    // -h --help -r --relays -o -i
+    if args.len() == 2 {
+        println!("135:args.len()={}",args.len());
+        let matches = match top_opts.parse(&args[1..]) {
             Ok(m) => m,
             Err(f) => {
                 println!("Error: {}", f.to_string());
                 panic!("{}", f.to_string())
             }
-        };//end let matches
+        }; //end let matches
+
         if matches.opt_present("r") {
-            if matches.opt_present("h") {
-                print_relay_usage(&program, &opts);
-                process::exit(0);
-            }
-            relays(&program, &opts);
-            //process::exit(0);
-        }
+            println!("145:args.len()={}",args.len());
+            //following -r --relays
+            if args.len() == 2 {
+                println!("148:args.len()={}",args.len());
+                let mut relay_opts = Options::new();
 
+                relay_opts.optflag("h", "help", "print relay help menu");
+                relay_opts.optflag("r", "relay", "get-relays json list");
 
+                let matches = match relay_opts.parse(&args[1..]) {
+                    Ok(m) => m,
+                    Err(f) => {
+                        println!("Error: {}", f.to_string());
+                        panic!("{}", f.to_string())
+                    }
+                }; //end let matches
 
+                if matches.opt_present("h") {
+                    println!("{}",matches.opt_present("h"));
+                    print_relay_usage(&program, &relay_opts);
+                } // end -h --help
+            relays(&program, &relay_opts);
 
+            } //end
+        } //end
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
 
         if matches.opt_present("h") {
-            print_usage(&program, &opts);
+            print_usage(&program, &top_opts);
             process::exit(0);
         }
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
 
         let s = &"hello world".to_string();
         let cloned_s = s.clone();
@@ -217,20 +232,15 @@ fn main() {
         println!("179:&input={:?}", print_type_of(&_value));
         let result = unsafe {
             double_input(_value);
-            println!("181:_value={:?}",_value);
+            println!("181:_value={:?}", _value);
         };
-        println!("183:result={:?}",result);
-        println!("184:_input={:?}",_input);
+        println!("183:result={:?}", result);
+        println!("184:_input={:?}", _input);
 
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+    } // end if args.len() >= 1
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-    }// end if args.len() >= 1
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-}//end main
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+} //end main
