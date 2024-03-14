@@ -139,8 +139,8 @@
     branch = master
     depth = shallow
 [submodule "src/libcjson"]
-    path = src/libcjson
-    url = https://github.com/gnostr-org/libcjson.git
+	path = src/libcjson
+	url = https://github.com/gnostr-org/libcjson.git
     branch = master
     depth = shallow
 [submodule "tui"]
