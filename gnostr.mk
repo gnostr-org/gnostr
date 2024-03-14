@@ -304,7 +304,7 @@ bins/.git:
 	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
 bins:bins/.git
-	cargo install --path bins --force
+	cargo install --force --path bins
 
 .PHONY:xq gnostr-xq
 xq/.git:

@@ -1,3 +1,4 @@
+workspace = { members = ["ffi"] }
 [package]
 name = "gnostr"
 version = "0.0.2"
@@ -29,3 +30,7 @@ reqwest = { version = "0.11.24", features = ["blocking"] }
 gnostr-xq = { git = "https://github.com/gnostr-org/gnostr-xq.git", version = "0.0.0" }
 gnostr-bins = "0.0.14"
 secp256k1 = "0.28.2"
+libc = "0.2.153"
+
+[build-dependencies]
+cc = { version = "1.0.88", features = ["libc"] }
