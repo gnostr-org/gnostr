@@ -14,16 +14,18 @@ repositories {
 }
 
 android {
-    compileSdk = 31
+    namespace = "rust.nostr.protocol"
+
+    compileSdk = 33
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 31
+
         consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
-        getByName("release") {
+        release {
             isMinifyEnabled = false
             proguardFiles(file("proguard-android-optimize.txt"), file("proguard-rules.pro"))
         }
