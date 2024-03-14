@@ -1,6 +1,6 @@
 .PHONY: book precommit check
 
-cli:
+ncli:
 	cargo build -p nostr-cli --release
 
 precommit: fmt check-crates check-bindings check-docs
