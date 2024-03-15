@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -e
+declare -a RELAYS
+
+if [[ $1 == "-c" ]] || [[ $1 == "--clean" ]]; then
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g' |
+    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+echo $RELAYS; exit
+fi
+
+if [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
+  echo "v0.0.1"; exit
+fi
+if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+  echo "gnostr-get-relays"
+  echo "gnostr --sec \$(gnostr --hash) -t gnostr --envelope --content '\$(gnostr get-relays)'"
+  echo "gnostr --sec \$(gnostr --hash) -t 'gnostr' --envelope --content '\$(gnostr get relays)' | gnostr-relays"
+  echo "gnostr-git config --global --replace-all gnostr.relays '\$(gnostr-get-relays)' && git config -l | grep gnostr.relays"
+  echo "gnostr-git config --global --replace-all gnostr.relays '\$(gnostr get-relays)' && git config -l | grep gnostr.relays"
+else
+RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+    sed -e 's/[{}]/''/g' |
+    sed -e 's/\[/''/g' |
+    sed -e 's/\]/''/g' |
+    sed -e 's/"//g'
+    ) 2>/dev/null
+echo $RELAYS; exit
+fi
