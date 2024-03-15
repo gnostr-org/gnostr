@@ -381,7 +381,7 @@ legit/.git:gnostr-git
 #.PHONY:deps/gnostr-legit/release/gnostr-legit
 legit/target/release/gnostr-legit:legit/.git
 	cd legit && \
-		make cargo-b-release install
+		make cargo-b-release && cargo install --force --path .
 legit:gnostr-legit
 gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
