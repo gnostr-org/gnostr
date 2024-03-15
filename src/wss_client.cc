@@ -25,13 +25,15 @@ std::vector<std::string> store;
 
 void usage()
 {
-  std::cout << "gnostr-client [OPTIONS]" << std::endl;
-  std::cout << "[OPTIONS]:" << std::endl;
-  std::cout << "  --uri <wss URI>      Wss URI to send" << std::endl;
-  std::cout << "  --req                message is a request (REQ). EVENT parameters are ignored" << std::endl;
-  std::cout << "REQ OPTIONS: These are for the REQ filter, per NIP-01" << std::endl;
-  std::cout << "  --authors <string>   a list of pubkeys or prefixes" << std::endl;
-  std::cout << "EVENT OPTIONS: These are to publish an EVENT, per NIP-01" << std::endl;
+  std::cout << "\ngnostr-client [OPTIONS]\n" << std::endl;
+  std::cout << "  [OPTIONS]:\n" << std::endl;
+  std::cout << "  --uri <wss URI>      0.0.0.0:8080" << std::endl;
+  std::cout << "\n  try:\n\n    gnostr-gnode 8080" << std::endl;
+  std::cout << "    gnostr-client --uri 0.0.0.0:8080\n                       " << std::endl;
+  std::cout << "  --req                message is a request (REQ). EVENT parameters are ignored\n" << std::endl;
+  std::cout << "  REQ OPTIONS: These are for the REQ filter, per NIP-01\n" << std::endl;
+  std::cout << "  --authors <string>   a list of pubkeys or prefixes\n" << std::endl;
+  std::cout << "  EVENT OPTIONS: These are to publish an EVENT, per NIP-01\n" << std::endl;
   std::cout << "  --content <string>   the content of the note" << std::endl;
   std::cout << "  --kind <number>      set kind" << std::endl;
   std::cout << "  --sec <hex seckey>   set the secret key for signing, otherwise one will be randomly generated" << std::endl;
@@ -106,10 +108,10 @@ int main(int argc, const char* argv[])
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 
-  comm::log(uri);
-  comm::log(content);
-  if (seckey.has_value()) comm::log(seckey.value());
-  comm::log(std::to_string(kind));
+  //comm::log(uri);
+  //comm::log(content);
+  //if (seckey.has_value()) //comm::log(seckey.value());
+  //comm::log(std::to_string(kind));
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   // generate the JSON message (REQ or EVENT)
@@ -125,7 +127,7 @@ int main(int argc, const char* argv[])
       filter.kinds.push_back(nostr::kind_1);
     }
     json = nostr::make_request(subscription_id, filter);
-    comm::json_to_file("nostro_request.json", json);
+    //comm::json_to_file("nostro_request.json", json);
   }
   else
   {
@@ -133,7 +135,7 @@ int main(int argc, const char* argv[])
     ev.content = content;
     ev.kind = kind;
     json = nostr::make_event(ev, seckey);
-    comm::json_to_file("nostro_event.json", json);
+    //comm::json_to_file("nostro_event.json", json);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,10 +152,10 @@ int main(int argc, const char* argv[])
   {
     std::stringstream ss;
     std::string str = in_message->string();
-    ss << "Received: " << str;
-    comm::log(ss.str());
+    //ss << "Received: " << str;
+    //comm::log(ss.str());
     store.push_back(str);
-    comm::json_to_file("response.txt", str);
+    //comm::json_to_file("response.txt", str);
 
     connection->send_close(1000);
   };
@@ -166,13 +168,13 @@ int main(int argc, const char* argv[])
   {
     std::stringstream ss;
     ss << "Opened connection: HTTP " << connection.get()->http_version << " , code " << connection.get()->status_code;
-    comm::log(ss.str());
+    //comm::log(ss.str());
 
     std::string message = json;
     ss.str(std::string());
     ss.clear();
     ss << "Sending: " << message;
-    comm::log(ss.str());
+    //comm::log(ss.str());
 
     connection->send(message);
   };
@@ -185,7 +187,7 @@ int main(int argc, const char* argv[])
   {
     std::stringstream ss;
     ss << "Closed: " << status;
-    comm::log(ss.str());
+    //comm::log(ss.str());
   };
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,11 +209,11 @@ int main(int argc, const char* argv[])
 
   std::stringstream ss;
   ss << "Received " << store.size() << " messages: ";
-  comm::log(ss.str());
+  //comm::log(ss.str());
 
   for (int idx = 0; idx < store.size(); idx++)
   {
-    comm::log(store.at(idx));
+    printf("%s",store.at(idx).c_str() );
   }
 
 }
