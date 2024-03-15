@@ -218,3 +218,8 @@
 [submodule "jq"]
 	path = jq
 	url = https://github.com/gnostr-org/gnostr-jq.git
+[submodule "ext/boost_1_82_0"]
+	path = ext/boost_1_82_0
+	url = https://github.com/boostorg/boost.git
+	branch = boost-1.82.0
+	ignore = dirty
