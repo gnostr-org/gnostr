@@ -351,3 +351,5 @@ vendor/unicode-normalization/
 vendor/unicode-width/
 vendor/url/
 vendor/vcpkg/
+
+ext/curl-8.5.0/lib/libcurl-d.a
