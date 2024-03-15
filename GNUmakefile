@@ -174,6 +174,7 @@ export GIT_REPO_PATH
 	@echo
 more:## 	more help
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/	/'
+	@sed -n 's/^##	//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/	/'
 	#$(MAKE) -f Makefile help
 
 -include Makefile
