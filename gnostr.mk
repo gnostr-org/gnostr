@@ -191,7 +191,7 @@ secp256k1/configure:secp256k1/include/secp256k1.h
 .PHONY:secp256k1/.libs/libsecp256k1.a
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
 secp256k1:libsecp256k1.a
-libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
+libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## 	libsecp256k1.a
 	cp $< $@
 ##libsecp256k1.a
 ##	secp256k1/.git
@@ -199,6 +199,17 @@ libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 ##	secp256k1/./autogen.sh
 ##	secp256k1/./configure
 
+.PHONY:ext/openssl-3.0.5/libcrypto.a
+## 	ext/openssl-3.0.5/libcrypto.a
+ext/openssl-3.0.5/libcrypto.a:## 	ext/openssl-3.0.5/libcrypto.a
+	cd  ext/openssl-3.0.5 && ./config && make install
+.PHONY:ext/wt-4.10.0/lib/libwt.dylib
+## 	ext/wt-4.10.0/lib/libwt.dylib
+ext/wt-4.10.0/lib/libwt.dylib:## 	ext/wt-4.10.0/lib/libwt.dylib
+	cd ext/wt-4.10.0 && cmake . && make install
+
+
+## ext/boost_1_82_0
 
 jq/modules/oniguruma.git:
 	devtools/refresh-submodules.sh jq
@@ -375,7 +386,7 @@ db:
 	@devtools/refresh-submodules.sh db
 	@cd db && make build-release install && cd ..
 
-.PHONY:legit/.git gnostr-legit legit
+.PHONY:gnostr-legit legit
 legit/.git:gnostr-git
 	@devtools/refresh-submodules.sh legit
 #.PHONY:deps/gnostr-legit/release/gnostr-legit
@@ -387,7 +398,7 @@ gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
 	cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
-.PHONY:sha256.git sha256
+.PHONY:sha256
 sha256/.git:
 	@devtools/refresh-submodules.sh sha256
 #.PHONY:sha256/gnostr-sha256
@@ -454,7 +465,7 @@ cli:cli/.git
 		make cargo-install
 .PHONY:gnostr-cli cli
 
-.PHONY:grep/.git gnostr-grep grep
+.PHONY:gnostr-grep grep
 grep/.git:
 	@devtools/refresh-submodules.sh grep
 .PHONY:grep/target/release/gnostr-grep
@@ -523,6 +534,7 @@ gnostr-install:
 	mkdir -p $(PREFIX)/include                                                     || true
 	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null || true
 	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
+	@install -m755 -v gnostr-*                       $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v gnostr-am                      $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
@@ -680,14 +692,16 @@ dist-test:submodules dist## 	dist-test
 		$(GTAR) -xf  gnostr-$(VERSION)-$(OS)-$(ARCH).tar && \
 		cd  gnostr-$(VERSION)-$(OS)-$(ARCH) && cmake . && make chmod all
 
-
-.PHONY:ext/boost_1_82_0/.git
 ext/boost_1_82_0/.git:
-	[ ! -d ext/boost_1_82_0 ] && git clone -b boost-1.82.0 --recursive https://github.com/boostorg/boost.git ext/boost_1_82_0 || cd ext/boost_1_82_0 && git reset --hard
-.PHONY:ext/boost_1_82_0
-ext/boost_1_82_0:ext/boost_1_82_0/.git
+	[ ! -d ext/boost_1_82_0 ] && \
+		git clone -b boost-1.82.0 --recursive \
+		https://github.com/boostorg/boost.git \
+		ext/boost_1_82_0 || \
+		cd ext/boost_1_82_0 && git reset --hard
+.PHONY:ext/boost_1_82_0/b2
+ext/boost_1_82_0/b2:ext/boost_1_82_0/.git
 	cd ext/boost_1_82_0 && ./bootstrap.sh && ./b2 && ./b2 headers
-boost:ext/boost_1_82_0
-boostr:boost
+boost:ext/boost_1_82_0/b2## 	boostr
+boostr:boost## 	boostr
 
 #.PHONY: fake
