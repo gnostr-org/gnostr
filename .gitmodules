@@ -135,7 +135,7 @@
     depth = shallow
 [submodule "secp256k1"]
 	path = secp256k1
-	url = https://github.com/bitcoin/secp256k1.git
+	url = https://github.com/gnostr-org/secp256k1.git
     branch = master
     depth = shallow
 [submodule "src/libcjson"]
@@ -221,5 +221,3 @@
 [submodule "ext/boost_1_82_0"]
 	path = ext/boost_1_82_0
 	url = https://github.com/boostorg/boost.git
-	branch = boost-1.82.0
-	ignore = dirty
