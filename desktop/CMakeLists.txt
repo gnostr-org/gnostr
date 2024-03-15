@@ -4,8 +4,8 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 
 #//////////////////////////
 # GUI WxWidgets, gnostro
-# /home/pvn/git/nostr_client_relay/build/ext/wxWidgets-3.2.2.1/wx-config --libs
-# wx-config --cppflags
+# ./ext/wxWidgets-3.2.2.1/wx-config --libs
+# ./ext/wxWidgets-3.2.2.1/wx-config --cppflags
 #//////////////////////////
 
 if (LINUX)
