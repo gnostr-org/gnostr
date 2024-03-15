@@ -1,4 +1,4 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'Nostr_client_relay'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
@@ -25,6 +25,9 @@ private:
   Wt::WLineEdit* m_edit_event_id;
   Wt::WLineEdit* m_edit_author;
   Wt::WComboBox* m_combo_kind;
+  Wt::WComboBox* m_combo_tag0;
+  Wt::WComboBox* m_combo_tag1;
+  Wt::WComboBox* m_combo_tag2;
   Wt::WCheckBox* m_check_raw;
   std::shared_ptr<Wt::WButtonGroup> m_button_message;
   Wt::WTable* m_table_messages;

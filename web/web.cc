@@ -1,4 +1,4 @@
-// This file is part of 'Nostr_client_relay' 
+// This file is part of 'Nostr_client_relay'
 // Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 // See file LICENSE for full license details.
 
@@ -7,7 +7,7 @@
 #include "feed.hh"
 #include "follows.hh"
 
-std::string log_program_name("wostro");
+std::string log_program_name("gnostr/web");
 
 std::string pubkey;
 
@@ -16,11 +16,16 @@ std::vector<std::string> relays = { "eden.nostr.land",
 "relay.snort.social",
 "relay.damus.io",
 "nostr.wine",
+//this is gnostr-proxy
+"127.0.0.1:6102",
+"0.0.0.0:6102",
+"127.0.0.1:2106",
+"0.0.0.0:2106",
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //main
-// --docroot=. --http-port=80 --http-address=0.0.0.0 
+// --docroot=. --http-port=80 --http-address=0.0.0.0
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env)
@@ -28,8 +33,25 @@ std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env
   return std::make_unique<NostroApplication>(env);
 }
 
+
+//REF:
+//https://webtoolkit.eu/wt/doc/reference/html/overview.html#config_wthttpd
+
 int main(int argc, char** argv)
 {
+
+  if (argc == 1){
+    printf("gnostr-web --http-address=0.0.0.0 --http-port=8080 --deploy-path=/web --docroot=.");
+  exit(0);
+  }
+    if (argc > 1){
+
+      if (argc > 2){
+
+      }
+    }
+
+
   try
   {
     comm::start_log();
@@ -52,7 +74,7 @@ NostroApplication::NostroApplication(const Wt::WEnvironment& env)
   : WApplication(env)
 {
   useStyleSheet("nostro.css");
-  setTitle("Nostro");
+  setTitle("gnostr/web");
   root()->setStyleClass("yellow-box");
 
   auto container = std::make_unique<Wt::WContainerWidget>();
