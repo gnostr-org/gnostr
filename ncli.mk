@@ -5,7 +5,7 @@ ncli:
 
 precommit: fmt check-crates check-bindings check-docs
 
-check: fmt check-crates check-crates-msrv check-bindings check-docs
+check: fmt check-crates check-crates-msrv check-bindings check-docs## 	check
 
 fmt:
 	@bash contrib/scripts/check-fmt.sh
@@ -35,7 +35,7 @@ release:
 bench:
 	RUSTFLAGS='--cfg=bench' cargo +nightly bench -p nostr
 
-clean:
+ncli-clean:
 	cargo clean
 	cd bindings/nostr-js && cargo clean
 	cd bindings/nostr-sdk-js && cargo clean
