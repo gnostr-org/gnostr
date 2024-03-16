@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-i=-1 && for p in  $(gnostr-reflog -p); do i=$((i+1)); gnostr-nip --sec $p; done
-## i=-1 && for p in  $(gnostr-reflog -p); do i=$((i+1)); gnostr-nip --sec $p; done | gnostr-post-event
-## i=-1 && for p in  $(gnostr-reflog -p); do i=$((i+1)); gnostr --sec $p --content "$p:$(git show HEAD~$i)" --pow 15 -t gnostr -t $p; done | gnostr-post-event
