@@ -158,3 +158,6 @@
 	url = https://github.com/gnostr-org/gnostr-xq.git
     branch = master
     depth = shallow
+[submodule "ext/boost_1_82_0"]
+	path = ext/boost_1_82_0
+	url = https://github.com/boostorg/boost.git
