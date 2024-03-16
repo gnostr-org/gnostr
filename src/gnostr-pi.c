@@ -123,7 +123,7 @@ void int2bin(int n, int* bin, int *bin_size, const int bits)
     }
 }
 
-void printbin();
+void printbin(int *binary);
 void printbin(int *binary){
 
     if (DEBUG2){
