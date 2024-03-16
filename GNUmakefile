@@ -457,6 +457,7 @@ nvm-clean: ## 	nvm-clean
 -include cargo.mk
 -include tests.mk
 -include ncli.mk
+-include pi.mk
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
