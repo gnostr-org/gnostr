@@ -89,7 +89,10 @@ int about(){
     printf("if π = log(10)/log(x) then x = 10^(1/π)                                 \n");
 return 0;//exit(0);
 }
-
+int version();
+int version(){
+    printf("%s", VERSION);
+}
 void int2bin(int n, int* bin, int* bin_size, const int bits);
 void int2bin(int n, int* bin, int *bin_size, const int bits)
 {
@@ -197,18 +200,18 @@ int main(int argc, char** argv) {
 */
 
   if (DEBUG2){
-  
+
      /* begin int2bin */
-  
+
      char ch;
      ch = 'A';
-  
+
      int binary[sizeof(int)*8];
      int binary_size = 0;
-  
+
      int2bin(0, binary, &binary_size, sizeof(int)-1);
      printf("case:0\n");
-  
+
      printf("sizeof(binary)=%lu\n",sizeof(binary));
      printf("sizeof(binary_size)=%lu\n",sizeof(binary_size));
      printbin(binary);printf("\n");
@@ -219,7 +222,7 @@ int main(int argc, char** argv) {
      printf("binary=%d\n",binary[(sizeof(binary)/4-5)]);
      printf("binary=%d\n",binary[(sizeof(binary)/4-6)]);
      printf("binary=%d\n",binary[(sizeof(binary)/4-7)]);
-  
+
      int2bin(ch, binary, &binary_size, 32);
      printf("case:%c\n",ch);
      printf("sizeof(binary)=%lu\n",sizeof(binary));
@@ -233,7 +236,7 @@ int main(int argc, char** argv) {
      printf("binary=%d\n",binary[(sizeof(binary)/4-5)]);
      printf("binary=%d\n",binary[(sizeof(binary)/4-6)]);
      printf("binary=%d\n",binary[(sizeof(binary)/4-7)]);
-  
+
      int2bin(1324, binary, &binary_size, 32);
      // printf("sizeof(binary)=%lu\n",sizeof(binary));
      // printf("*binary=%d\n",*binary);
@@ -244,17 +247,17 @@ int main(int argc, char** argv) {
      // printf("binary=%d\n",binary[(sizeof(binary)/4-4)]);
      // printf("binary=%d\n",binary[(sizeof(binary)/4-5)]);
      // printf("binary=%d\n",binary[(sizeof(binary)/4-6)]);
-  
+
      // static char buf[128] = {0};
      // const char *sub = argv[1];
      // if (strlen(sub) >= 1 && sub[0] != '-') {
      //     snprintf(buf, sizeof(buf)-1, "echo %s", sub);
      //     execvp(buf, (char * const *)argv+1);
      // }
-  
-  
+
+
      //exit(0);
-  
+
   /*
      end int2bin
   */
@@ -275,6 +278,18 @@ TODO:
       }
       if (!strcmp(argv[1],"help")){
           help(); exit(0);
+      }
+      if (!strcmp(argv[1],"-h")){
+          help(); exit(0);
+      }
+      if (!strcmp(argv[1],"--help")){
+          help(); exit(0);
+      }
+      if (!strcmp(argv[1],"-v")){
+          version(); exit(0);
+      }
+      if (!strcmp(argv[1],"--version")){
+          version(); exit(0);
       }
 
       /* 253 -> 1000 default number of pi digits */
