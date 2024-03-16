@@ -1,0 +1,80 @@
+name:     release-matrix
+
+# Controls when the action will run.
+on:
+  push:
+    tags:
+      - "test*"
+      - "v*"
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '10'
+      - name: "printenv"
+        run: |
+          printenv
+      - name: "sudo apt-get update || brew install virtualenv"
+        run: |
+          sudo apt-get update || brew install virtualenv
+      - run: python3 -m pip install virtualenv
+      - name:  sudo apt-get update && apt-get install jq protobuf-compiler || brew install jq protobuf || true
+        run: |
+          sudo apt-get update && sudo apt-get install automake jq protobuf-compiler || brew install automake jq protobuf || true
+          touch ~/GITHUB_TOKEN.txt
+
+      - run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      - run: V=1 sudo make detect
+      - run: V=1 make gnostr-am
+      - run: V=1 cmake .
+      #- run: V=1 sudo make install
+
+      - run: V=1 make gnostr
+      - run: V=1 make all
+      - run: V=1 make gnostr-install
+
+      #- uses: docker-practice/actions-setup-docker@master
+      #  timeout-minutes: 12
+      #- run: |
+      #    set -x
+      #    docker version
+      #- name: "make dist-test"
+      #  run: |
+      #    V=1 make gnostr-docs
+      #    make dist-test
+      - name: "Build release"
+        run: |
+          mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          ls -a
+
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }}
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ matrix.os }}
+          prerelease: false
+          title: "Release Build"
+          files: |
+            gnostr-*
+            bin
+            ~/.cargo/bin
