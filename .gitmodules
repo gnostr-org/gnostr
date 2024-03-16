@@ -115,7 +115,7 @@
     depth = shallow
 [submodule "hyper-sdk"]
 	path = hyper-sdk
-	url = https://github.com/gnostr-org/hyper-sdk
+	url = https://github.com/gnostr-org/hyper-sdk.git
     branch = master
     depth = shallow
 [submodule "modal"]
@@ -130,17 +130,17 @@
     depth = shallow
 [submodule "nips"]
 	path = nips
-	url = https://github.com/gnostr-org/gnostr-nips.git
+	url = https://github.com/gnostr-org/nips.git
     branch = master
     depth = shallow
 [submodule "secp256k1"]
 	path = secp256k1
-	url = https://github.com/gnostr-org/secp256k1.git
-  branch = c-lang
-
+	url = https://github.com/bitcoin/secp256k1.git
+    branch = master
+    depth = shallow
 [submodule "src/libcjson"]
-	path = src/libcjson
-	url = https://github.com/gnostr-org/libcjson.git
+    path = src/libcjson
+    url = https://github.com/gnostr-org/libcjson.git
     branch = master
     depth = shallow
 [submodule "tui"]
@@ -158,66 +158,3 @@
 	url = https://github.com/gnostr-org/gnostr-xq.git
     branch = master
     depth = shallow
-[submodule "act"]
-	path = act
-	url = https://github.com/gnostr-org/gnostr-act.git
-[submodule "bits"]
-	path = bits
-	url = https://github.com/gnostr-org/gnostr-bits.git
-[submodule "cat"]
-	path = cat
-	url = https://github.com/gnostr-org/gnostr-cat.git
-[submodule "cli"]
-	path = cli
-	url = https://github.com/gnostr-org/gnostr-cli.git
-[submodule "core"]
-	path = core
-	url = https://github.com/gnostr-org/gnostr-core.git
-[submodule "ffi"]
-	path = ffi
-	url = https://github.com/gnostr-org/gnostr-ffi.git
-[submodule "git"]
-	path = git
-	url = https://github.com/gnostr-org/gnostr-git.git
-[submodule "gossip"]
-	path = gossip
-	url = https://github.com/gnostr-org/gnostr-gossip.git
-[submodule "lfs"]
-	path = lfs
-	url = https://github.com/gnostr-org/gnostr-lfs.git
-[submodule "org"]
-	path = org
-	url = https://github.com/gnostr-org/gnostr-org.git
-[submodule "proxy"]
-	path = proxy
-	url = https://github.com/gnostr-org/gnostr-proxy.git
-[submodule "py"]
-	path = py
-	url = https://github.com/gnostr-org/gnostr-py.git
-[submodule "relay"]
-	path = relay
-	url = https://github.com/gnostr-org/gnostr-relay.git
-[submodule "xq"]
-	path = xq
-	url = https://github.com/gnostr-org/gnostr-xq.git
-[submodule "sha256"]
-	path = sha256
-	url = https://github.com/gnostr-org/gnostr-sha256.git
-[submodule "db"]
-	path = db
-	url = https://github.com/gnostr-org/gnostr-db.git
-[submodule "get-relays"]
-	path = get-relays
-	url = https://github.com/gnostr-org/gnostr-get-relays.git
-[submodule "legit"]
-	path = legit
-	url = https://github.com/gnostr-org/gnostr-legit.git
-[submodule "web"]
-	path = web
-	url = https://github.com/gnostr-org/gnostr-web.git
-[submodule "jq"]
-	path = jq
-	url = https://github.com/gnostr-org/gnostr-jq.git
-[submodule "ext/boost_1_82_0"]
-	path = ext/boost_1_82_0
-	url = https://github.com/boostorg/boost.git
