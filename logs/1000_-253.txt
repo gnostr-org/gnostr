@@ -1,0 +1,32 @@
+gnostr-pi - deterministic entropy v0.0.7                                   
+                                                                       
+gnostr-pi   depth                                                      
+gnostr-pi   <int>                                                      
+                                                                       
+gnostr-pi   0                                                            
+gnostr-pi   4               1415                                         
+gnostr-pi   8               14159265                                     
+gnostr-pi   12              141592653589                                 
+gnostr-pi   16              1415926535897932                             
+gnostr-pi   20              14159265358979323846                         
+gnostr-pi   24              141592653589793238462643                     
+gnostr-pi   28              1415926535897932384626433832                 
+gnostr-pi   32              14159265358979323846264338327950             
+                                                                         
+gnostr-pi   depth   offset      default 1000 digits of pi mantissa       
+                                The mantissa of π is the fractional part.
+            <int>   <int>                                                
+            0       0           14159265...64201989                      
+            0       1           offset 1*4 digits                        
+            0       2           offset 2*4 digits                        
+            0       3           offset 3*4 digits                        
+            0       4           offset 4*4 digits                        
+            0       n           offset n*4 digits                        
+                                                                         
+                                                                         
+                                                                       
+Context:                                                               
+                                                                       
+                                                                       
+gnostr-pi - deterministic entropy v0.0.7                                   
+                                                                       
