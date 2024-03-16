@@ -356,3 +356,10 @@ ext/curl-8.5.0/lib/libcurl-d.a
 
 pi-clang
 pi-gcc
+
+_secp256k1
+comit
+fulcrum
+vendor
+web/view
+
