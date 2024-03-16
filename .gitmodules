@@ -110,7 +110,7 @@
     depth = shallow
 [submodule "hyper-nostr"]
 	path = hyper-nostr
-	url = https://github.com/gnostr-org/gnostr-hyper-nostr.git
+	url = https://github.com/gnostr-org/hyper-nostr.git
     branch = master
     depth = shallow
 [submodule "hyper-sdk"]
