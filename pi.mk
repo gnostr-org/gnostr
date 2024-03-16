@@ -6,7 +6,8 @@ pi-clang:## 	pi-clang
 	@install ./$@ /usr/local/bin/ || $(shell which $@)
 pi-test:pi-gcc-test pi-clang-test gnostr-pi-test## 	pi-test
 .PHONY:gnostr-pi-test
-gnostr-pi-test:gnostr-pi
+gnostr-pi-test:
+	$(MAKE) gnostr-pi > /dev/null
 	mkdir -p logs
 	./gnostr-pi 360   > ./logs/360.txt
 	./gnostr-pi 1000  > ./logs/1000.txt
@@ -15,8 +16,9 @@ gnostr-pi-test:gnostr-pi
 	./gnostr-pi 1000 -253 > ./logs/1000_-253.txt
 	./gnostr-pi 1000 -205 > ./logs/1000_-205.txt
 	./gnostr-pi 1000 -250 > ./logs/1000_-250.txt
-	git diff logs > diff.log && cat diff.log
-pi-gcc-test:pi-gcc
+	git diff logs > diff.log #&& cat diff.log
+pi-gcc-test:
+	$(MAKE) pi-gcc > /dev/null
 	mkdir -p logs
 	./pi-gcc    360   > ./logs/360.txt
 	./pi-gcc    1000  > ./logs/1000.txt
@@ -25,8 +27,9 @@ pi-gcc-test:pi-gcc
 	./pi-gcc    1000 -253 > ./logs/1000_-253.txt
 	./pi-gcc    1000 -205 > ./logs/1000_-205.txt
 	./pi-gcc    1000 -250 > ./logs/1000_-250.txt
-	git diff    logs > diff.log && cat diff.log
-pi-clang-test:pi-clang
+	git diff    logs > diff.log #&& cat diff.log
+pi-clang-test:
+	$(MAKE) pi-clang > /dev/null
 	mkdir -p logs
 	./pi-clang  360   > ./logs/360.txt
 	./pi-clang  1000  > ./logs/1000.txt
@@ -35,7 +38,7 @@ pi-clang-test:pi-clang
 	./pi-clang  1000 -253 > ./logs/1000_-253.txt
 	./pi-clang  1000 -205 > ./logs/1000_-205.txt
 	./pi-clang  1000 -250 > ./logs/1000_-250.txt
-	git diff logs > diff.log && cat diff.log
+	git diff logs > diff.log #&& cat diff.log
 pi-gcc-test2:
 	@( \
 	bash -c "pi-gcc   11111 | sed 's/\./_/'" \
@@ -55,7 +58,7 @@ pi-clang-test3:
 	bash -c "pi-clang 11111 | sed 's/3\.//'" \
 )
 
-xor-logs:## 	xor-logs
+xor-logs:pi-test## 	xor-logs
 	gnostr-xor $(shell cat logs/1000_-250.txt) $(shell cat logs/1000_-205.txt)
 	gnostr-xor $(shell cat logs/1000_-205.txt) $(shell cat logs/1000_-250.txt) > logs/gnostr-xor.log || $(MAKE) gnostr-install
 	git add logs diff.log || true
