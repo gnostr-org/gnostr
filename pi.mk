@@ -1,9 +1,9 @@
 pi-gcc:## 	pi-gcc
-	@gcc src/gnostr-pi.c -o $@ || $(shell which $@)
-	@install ./$@ /usr/local/bin/ || $(shell which $@)
+	gcc src/gnostr-pi.c -o $@ || $(shell which gcc)
+	install $@ /usr/local/bin/ || $(shell which $@)
 pi-clang:## 	pi-clang
-	@clang src/gnostr-pi.c -o $@ || $(shell which $@)
-	@install ./$@ /usr/local/bin/ || $(shell which $@)
+	clang src/gnostr-pi.c -o $@ || $(shell which clang)
+	install ./$@ /usr/local/bin/ || $(shell which $@)
 pi-test:pi-gcc-test pi-clang-test gnostr-pi-test## 	pi-test
 .PHONY:gnostr-pi-test
 gnostr-pi-test:
@@ -63,7 +63,7 @@ xor-logs:pi-test## 	xor-logs
 	gnostr-xor $(shell cat logs/1000_-205.txt) $(shell cat logs/1000_-250.txt) > logs/gnostr-xor.log || $(MAKE) gnostr-install
 	git add logs diff.log || true
 xor-gnostr-post:## 	xor-gnostr-post
-	gnostr --sec $(shell gnostr-sha256 $(shell gnostr-weeble)) --content "$(shell make xor-logs)" -t gnostr -t gnostr-pi -t gnostr-xor -t nostr
+	gnostr --sec $(shell gnostr-sha256 $(shell gnostr-weeble)) --content "$(shell make xor-logs)" -t gnostr -t gnostr-pi -t gnostr-xor #-t nostr
 pi-clean:
 	@rm pi        2>/dev/null || true
 	@rm pi-*      2>/dev/null || true
