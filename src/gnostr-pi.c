@@ -92,6 +92,7 @@ return 0;//exit(0);
 int version();
 int version(){
     printf("%s", VERSION);
+    return 0;
 }
 void int2bin(int n, int* bin, int* bin_size, const int bits);
 void int2bin(int n, int* bin, int *bin_size, const int bits)
