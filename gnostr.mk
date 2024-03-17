@@ -703,5 +703,16 @@ ext/boost_1_82_0/b2:ext/boost_1_82_0/.git
 	cd ext/boost_1_82_0 && ./bootstrap.sh && ./b2 && ./b2 headers
 boost:ext/boost_1_82_0/b2## 	boostr
 boostr:boost## 	boostr
+src/libcjson/.git:
+	[ ! -d src/libcjson ] && \
+		git clone -b master --recursive \
+		https://github.com/gnostr-org/libcjson.git \
+		src/libcjson || \
+		cd src/libcjson && git reset --hard
+.PHONY:src/libcjson/bin/libcjson.a
+src/libcjson/bin/libcjson.a:src/libcjson/.git## 	src/libcjson/bin/libcjson.a
+	cd src/libcjson && cmake . && make
+.PHONY:src/libcjson
+src/libcjson:src/libcjson/bin/libcjson.a## 	src/libcjson
 
 #.PHONY: fake
