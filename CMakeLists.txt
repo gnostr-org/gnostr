@@ -16,12 +16,12 @@ if(BUILD_RELEASE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-option(BUILD_STATIC "BUILD_STATIC" ON)
-option(BUILD_GUI "BUILD_GUI" OFF)
+option(BUILD_STATIC "BUILD_STATIC" OFF)
+option(BUILD_GUI "BUILD_STATIC" OFF)
 option(BUILD_WEB "BUILD_WEB" OFF)
-option(USE_OPENSSL "set OFF to build without OpenSSL" OFF)
-option(DEV_MODE "DEV_MODE" ON)
-option(OPENSSL_BREW "OPENSSL_BREW" OFF)
+option(USE_OPENSSL "set OFF to build without OpenSSL" ON)
+option(DEV_MODE "DEV_MODE" OFF)
+option(OPENSSL_BREW "OPENSSL_BREW" ON)
 
 if(MSVC)
 if(BUILD_STATIC)
@@ -128,14 +128,13 @@ add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-##gnostr-get-relays migrated to gnostr-bins
-##add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
+add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
 add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
 
 install(PROGRAMS template/gnostr-add DESTINATION bin)
-#install(PROGRAMS template/gnostr-add.sh DESTINATION bin)
+install(PROGRAMS template/gnostr-add.sh DESTINATION bin)
 install(PROGRAMS template/gnostr-blockheight DESTINATION bin)
 install(PROGRAMS template/gnostr-e DESTINATION bin)
 install(PROGRAMS template/gnostr-fs DESTINATION bin)
@@ -147,7 +146,7 @@ install(PROGRAMS template/gnostr-git-show DESTINATION bin)
 install(PROGRAMS template/gnostr-hexidrome DESTINATION bin)
 install(PROGRAMS template/gnostr-iftop DESTINATION bin)
 install(PROGRAMS template/gnostr-init DESTINATION bin)
-#install(PROGRAMS template/gnostr-jsmin.c DESTINATION bin)
+install(PROGRAMS template/gnostr-jsmin.c DESTINATION bin)
 install(PROGRAMS template/gnostr-keyconv DESTINATION bin)
 install(PROGRAMS template/gnostr-nip DESTINATION bin)
 install(PROGRAMS template/gnostr-nonce DESTINATION bin)
@@ -163,13 +162,9 @@ install(PROGRAMS template/gnostr-snapshot DESTINATION bin)
 install(PROGRAMS template/gnostr-syndication DESTINATION bin)
 install(PROGRAMS template/gnostr-syndication-test DESTINATION bin)
 if(BUILD_WEB)
-if(BUILD_STATIC)
-    install(PROGRAMS web/gnostr-web DESTINATION bin)
-    install(PROGRAMS web/gnostr-web-deploy DESTINATION bin)
-else()
-    message(STATUS "Try:BUILD_STATIC ON if gnostr-web can not find wt dependency ")
+install(PROGRAMS web/gnostr-web DESTINATION bin)
 endif()
-endif()
+install(PROGRAMS web/gnostr-web-deploy DESTINATION bin)
 install(PROGRAMS template/gnostr-weeble DESTINATION bin)
 install(PROGRAMS template/gnostr-wobble DESTINATION bin)
 install(PROGRAMS template/gnostr-xor DESTINATION bin)
@@ -346,13 +341,12 @@ install(TARGETS gnostr-gnode
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 
-    ## gnostr-get-relays migrated to gnostr-bins
-    ##install(TARGETS gnostr-get-relays
-    ##        CONFIGURATIONS Debug
-    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-    ##install(TARGETS gnostr-get-relays
-    ##        CONFIGURATIONS Release
-    ##        RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS gnostr-get-relays
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-get-relays
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
 
 install(TARGETS gnostr-set-relays
         CONFIGURATIONS Debug
@@ -390,14 +384,12 @@ install(TARGETS gnostr-tests
         RUNTIME DESTINATION /usr/local/bin)
 
 if(BUILD_WEB)
-if(BUILD_STATIC)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-endif()
+  #install(TARGETS gnostr-web
+  #        CONFIGURATIONS Debug
+  #        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+  #install(TARGETS gnostr-web
+  #        CONFIGURATIONS Release
+  #        RUNTIME DESTINATION /usr/local/bin)
 endif()
 
 if (BUILD_GUI)
