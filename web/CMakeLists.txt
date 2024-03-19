@@ -2,6 +2,10 @@
 # Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
 # See file LICENSE for full license details.
 
+include_directories(${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+include_directories(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+add_definitions(-DDEV_MODE)
+
 message(STATUS "WT_INCLUDE: " ${WT_INCLUDE})
 message(STATUS "WT_CONFIG_H: " ${WT_CONFIG_H})
 message(STATUS "Source directory is " ${CMAKE_SOURCE_DIR})
@@ -22,7 +26,7 @@ set(web ${web} home.cc)
 set(web ${web} follows.hh)
 set(web ${web} follows.cc)
 
-add_executable(gnostr-web web.cc web.hh ${web})
+#add_executable(gnostr-web web.cc web.hh ${web})
 
 #//////////////////////////
 #link with libraries
@@ -40,16 +44,18 @@ if (MSVC)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options-vc143-mt-gd-x64-1_82.lib)
 endif()
 
-if(APPLE)
-  #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwt.dylib)
-  #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwthttp.dylib)
-  set(lib_web ${lib_web} /usr/local/lib/libwt.dylib)
-  set(lib_web ${lib_web} /usr/local/lib/libwthttp.dylib)
-  set(BOOST_LIB_DIRS /usr/local/lib)
+
+
+#if(APPLE)
+#set(lib_web ${lib_web} /usr/local/lib/libwt.dylib)
+#set(lib_web ${lib_web} /usr/local/lib/libwthttp.dylib)
+  set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/libwt.dylib)
+  set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/http/libwthttp.dylib)
+  set(BOOST_LIB_DIRS ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0/lib)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_filesystem-mt.a)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_thread-mt.a)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options-mt.a)
-endif()
+#endif()
 
 if (LINUX)
   #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwt.so)
@@ -63,7 +69,9 @@ if (LINUX)
 endif()
 
 set(lib_web ${lib_web} ${lib_dep})
+add_executable(gnostr-web web.cc web.hh ${web})
 target_link_libraries (gnostr-web ${lib_web})
+
 
 message(STATUS "Copying data files to: ${CMAKE_BINARY_DIR}/web")
 file(COPY "${CMAKE_SOURCE_DIR}/web/nostro.css" DESTINATION ${CMAKE_BINARY_DIR}/web)
