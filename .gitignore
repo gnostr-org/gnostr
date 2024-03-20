@@ -1,3 +1,6 @@
+pi-clang
+pi-gcc
+
 build
 
 #non-cmake
