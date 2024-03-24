@@ -56,7 +56,7 @@
 [submodule "gnostr-git"]
 	path = git
 	url = https://github.com/gnostr-org/gnostr-git.git
-    branch = master
+    branch = b2b7831e4b96716f749b5e6a23f985b34ad44410
     depth = shallow
 [submodule "gnostr-gossip"]
 	path = gossip
