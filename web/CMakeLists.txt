@@ -4,6 +4,7 @@
 
 include_directories(${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
 include_directories(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+include_directories(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/Wt)
 add_definitions(-DDEV_MODE)
 
 message(STATUS "WT_INCLUDE: " ${WT_INCLUDE})
