@@ -12,7 +12,6 @@
 	path = ext/wxWidgets-3.2.2.1
 	url = https://github.com/gnostr-org/wxWidgets.git
     branch = master
-    depth = shallow
 [submodule "gnostr-act"]
 	path = act
 	url = https://github.com/gnostr-org/gnostr-act.git
