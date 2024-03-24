@@ -181,8 +181,9 @@ secp256k1/.git:
 	devtools/refresh-submodules.sh secp256k1
 secp256k1/include/secp256k1.h: #secp256k1/.git
 ## force configure if build on host then in docker vm
-.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
-secp256k1/configure:secp256k1/include/secp256k1.h
+#.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
+secp256k1/configure:secp256k1/.git
+secp256k1/.libs/libsecp256k1.a:secp256k1/configure
 	cd secp256k1 && \
 	git fetch --all && git checkout c-lang && \
 		./autogen.sh && \
@@ -485,15 +486,19 @@ act:act/bin/gnostr-act
 
 
 
+
 %.o: src/%.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY:gnostr-am
+
+
+
 gnostr-am:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-##gnostr initialize
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	$(MAKE) gnostr-install
+	cp $< $@ && $(MAKE) gnostr-install
+
+
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
