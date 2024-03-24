@@ -175,12 +175,11 @@ submodules:
 	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
-.PHONY:secp256k1/config.log
+.PHONY:secp256k1/.git
 .ONESHELL:
 secp256k1/.git:
 	devtools/refresh-submodules.sh secp256k1
 secp256k1/include/secp256k1.h: #secp256k1/.git
-.PHONY:secp256k1/configure
 ## force configure if build on host then in docker vm
 .PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
 secp256k1/configure:secp256k1/include/secp256k1.h
@@ -188,19 +187,11 @@ secp256k1/configure:secp256k1/include/secp256k1.h
 	git fetch --all && git checkout c-lang && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
-.PHONY:secp256k1/.libs/libsecp256k1.a
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
-.PHONY:libsecp256k1.a
-.PHONY:secp256k1
-secp256k1:libsecp256k1.a
 libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
-##libsecp256k1.a
-##	secp256k1/.git
-##	secp256k1/include/secp256k1.h
-##	secp256k1/./autogen.sh
-##	secp256k1/./configure
-
+.PHONY:secp256k1
+secp256k1:libsecp256k1.a
 
 jq/modules/oniguruma.git:
 	devtools/refresh-submodules.sh jq
@@ -499,7 +490,7 @@ act:act/bin/gnostr-act
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY:gnostr-am
-gnostr-am:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+gnostr-am:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##gnostr initialize
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
 	$(MAKE) gnostr-install
