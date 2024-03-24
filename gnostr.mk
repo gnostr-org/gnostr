@@ -190,6 +190,8 @@ secp256k1/configure:secp256k1/include/secp256k1.h
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
 .PHONY:secp256k1/.libs/libsecp256k1.a
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
+.PHONY:libsecp256k1.a
+.PHONY:secp256k1
 secp256k1:libsecp256k1.a
 libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
