@@ -7,7 +7,8 @@
 	path = drives
 	url = https://github.com/gnostr-org/gnostr-drives.git
     branch = master
-    depth = shallow
+  depth = shallow
+  ignore = dirty
 [submodule "ext/wxWidgets-3.2.2.1"]
 	path = ext/wxWidgets-3.2.2.1
 	url = https://github.com/gnostr-org/wxWidgets.git
