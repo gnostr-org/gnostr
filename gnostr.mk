@@ -494,9 +494,8 @@ act:act/bin/gnostr-act
 
 
 
-gnostr-am:libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	cp $< $@ && $(MAKE) gnostr-install
+gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
 
 
