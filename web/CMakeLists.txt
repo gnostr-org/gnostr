@@ -4,6 +4,8 @@
 
 include_directories(${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
 include_directories(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##ext/wt-4.10.0/src/Wt/
+include_directories(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src)
 include_directories(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/Wt)
 add_definitions(-DDEV_MODE)
 
@@ -12,8 +14,8 @@ message(STATUS "WT_CONFIG_H: " ${WT_CONFIG_H})
 message(STATUS "Source directory is " ${CMAKE_SOURCE_DIR})
 message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 
-include_directories(${WT_INCLUDE})
-include_directories(${WT_CONFIG_H})
+#include_directories(${WT_INCLUDE})
+#include_directories(${WT_CONFIG_H})
 
 #//////////////////////////
 # common sources library
@@ -47,16 +49,17 @@ endif()
 
 
 
-#if(APPLE)
-#set(lib_web ${lib_web} /usr/local/lib/libwt.dylib)
-#set(lib_web ${lib_web} /usr/local/lib/libwthttp.dylib)
-  set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/libwt.dylib)
-  set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/http/libwthttp.dylib)
+if(APPLE)
+set(lib_web ${lib_web} /usr/local/lib/libwt.dylib)
+set(lib_web ${lib_web} /usr/local/lib/libwthttp.dylib)
+##TODO add detect both/either
+#set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/libwt.dylib)
+#set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/src/http/libwthttp.dylib)
   set(BOOST_LIB_DIRS ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0/stage/lib)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_filesystem.a)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_thread.a)
   set(lib_web ${lib_web} ${BOOST_LIB_DIRS}/libboost_program_options.a)
-#endif()
+endif()
 
 if (LINUX)
   #//set(lib_web ${lib_web} ${CMAKE_SOURCE_DIR}/ext/wt-4.10.0/lib/libwt.so)
@@ -77,3 +80,6 @@ target_link_libraries (gnostr-web ${lib_web})
 message(STATUS "Copying data files to: ${CMAKE_BINARY_DIR}/web")
 file(COPY "${CMAKE_SOURCE_DIR}/web/nostro.css" DESTINATION ${CMAKE_BINARY_DIR}/web)
 add_custom_target(css SOURCES ${CMAKE_BINARY_DIR}/web/nostro.css)
+
+message(STATUS "Copying data files to: ${CMAKE_BINARY_DIR}/web")
+file(COPY "${CMAKE_SOURCE_DIR}/web/nostro.css" DESTINATION ${CMAKE_SOURCE_DIR}/bin)
