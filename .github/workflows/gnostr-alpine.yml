@@ -46,7 +46,7 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
       ## notice: these are post checkout steps
-      - run: apk update && apk add autoconf automake build-base openssl-dev libtool make sudo
+      - run: apk update && apk add autoconf automake build-base openssl-dev libtool linux-headers make sudo
       - run: rm CMakeCache.txt || echo && cmake .
       - run: make
       - run: make clean
