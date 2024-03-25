@@ -53,7 +53,7 @@ jobs:
       - run: make help
       - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
       - run: rm gnostr || true
-      - run: make gnostr && cp gnostr gnostr-alpine
+      - run: make gnostr bins && cp gnostr gnostr-alpine
       - run: make gnostr-install
       ## TODO: add ssh config to act sequence
       - run: rm -rf .venv
