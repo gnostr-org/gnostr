@@ -236,16 +236,16 @@ gnostr-web-deploy:
 
 
 
-.PHONY:git/gnostr-git gnostr-git git
+.PHONY:git/targets/release/gnostr-git git/.git
 git/.git:
 	@devtools/refresh-submodules.sh git
-git/gnostr-git:git/.git
+git/targets/release/gnostr-git:git/.git
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
-	cd git && make && make install
+	cd git && make cargo-install
 git:gnostr-git
-gnostr-git:git/gnostr-git## 	gnostr-git
-	cp $< $@ || true
-	install $@ /usr/local/bin/
+gnostr-git:git/targets/release/gnostr-git
+	#cp $< $@ || true
+	#install $@ /usr/local/bin/
 
 ext/curl-8.5.0/src/curl:
 	cd ext/curl-8.5.0 && make install
