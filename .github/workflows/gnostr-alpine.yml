@@ -16,6 +16,8 @@ on:
       - 'master'
       - 'main'
 
+  workflow_dispatch:
+
 env:
   GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
 
@@ -35,6 +37,7 @@ jobs:
       ## notice: additional operations can be done prior to checkout
       - run: apk update && apk add bash cmake curl git make python3 && python3 -m ensurepip
       - run: printenv
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr
       - run: touch ~/GITHUB_TOKEN.txt
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
