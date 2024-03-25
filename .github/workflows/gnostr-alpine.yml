@@ -51,6 +51,7 @@ jobs:
       - run: make
       - run: make clean
       - run: make help
+      - run: make detect
       - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
       - run: rm gnostr || true
       - run: make gnostr bins && cp gnostr gnostr-alpine
