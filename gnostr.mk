@@ -175,30 +175,24 @@ submodules:
 	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
-.PHONY:secp256k1/config.log
+.PHONY:secp256k1/.git
 .ONESHELL:
 secp256k1/.git:
 	devtools/refresh-submodules.sh secp256k1
 secp256k1/include/secp256k1.h: #secp256k1/.git
-.PHONY:secp256k1/configure
 ## force configure if build on host then in docker vm
-.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
-secp256k1/configure:secp256k1/include/secp256k1.h
+#.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
+secp256k1/configure:secp256k1/.git
+secp256k1/.libs/libsecp256k1.a:secp256k1/configure
 	cd secp256k1 && \
-	git fetch --all && git checkout 1709312085/3bf4d68f/e4af41c6-c-lang && \
+	git fetch --all && git checkout c-lang && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
-.PHONY:secp256k1/.libs/libsecp256k1.a
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
-secp256k1:libsecp256k1.a
 libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
-##libsecp256k1.a
-##	secp256k1/.git
-##	secp256k1/include/secp256k1.h
-##	secp256k1/./autogen.sh
-##	secp256k1/./configure
-
+.PHONY:secp256k1
+secp256k1:libsecp256k1.a
 
 jq/modules/oniguruma.git:
 	devtools/refresh-submodules.sh jq
@@ -492,15 +486,18 @@ act:act/bin/gnostr-act
 
 
 
+
 %.o: src/%.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY:gnostr-am
-gnostr-am:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-##gnostr initialize
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	$(MAKE) gnostr-install
+
+
+
+gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+
+
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay

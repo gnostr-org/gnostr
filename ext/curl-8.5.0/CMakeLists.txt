@@ -80,7 +80,7 @@ string(REGEX REPLACE "[^0]+0x" "" CURL_VERSION_NUM ${CURL_VERSION_NUM})
 
 
 # Setup package meta-data
-# SET(PACKAGE "curl")
+SET(PACKAGE "gnostr-curl")
 message(STATUS "curl version=[${CURL_VERSION}]")
 # SET(PACKAGE_TARNAME "curl")
 # SET(PACKAGE_NAME "curl")
