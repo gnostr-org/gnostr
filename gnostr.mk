@@ -490,8 +490,13 @@ act:act/bin/gnostr-act
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-
-
+src/libcjson/.git:
+	@devtools/refresh-submodules.sh src/libcjson
+src/libcjson:src/libcjson/.git
+	cd src/libcjson && make
+src/libcjson/bin/libcjson.a:src/libcjson
+libcjson:src/libcjson/bin/libcjson.a
+	cp $^ .
 
 gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
