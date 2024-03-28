@@ -318,6 +318,7 @@ py/.git:
 	@devtools/refresh-submodules.sh py
 gnostr-py:py
 py:py/.git
+	$(MAKE) venv
 	@cd py && make ## TODO
 
 .PHONY:get-relays gnostr-get-relays
