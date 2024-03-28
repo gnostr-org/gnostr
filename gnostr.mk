@@ -342,8 +342,8 @@ gnostr-ffi:ffi
 .PHONY:gossip gnostr-gossip
 gossip/.git:
 	@devtools/refresh-submodules.sh gossip
-gnostr-gossip:gossip/.git gossip
-gossip:
+gnostr-gossip:gossip
+gossip:gossip/.git
 	@cargo install --path gossip
 
 .PHONY:bits gnostr-bits
