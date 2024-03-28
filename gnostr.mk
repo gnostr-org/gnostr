@@ -321,8 +321,10 @@ py:py/.git
 	@cd py && make ## TODO
 
 .PHONY:get-relays gnostr-get-relays
+get-relays/.git:
+	@devtools/refresh-submodules.sh get-relays
 gnostr-get-relays:get-relays
-get-relays:
+get-relays:get-relays/.git
 	@cd get-relays && make cargo-b-release && make cargo-i
 bins-test-post-event:
 	cat test/first-gnostr-commit.json | gnostr-post-event wss://relay.damus.io
