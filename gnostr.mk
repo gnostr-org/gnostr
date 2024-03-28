@@ -239,10 +239,10 @@ gnostr-web-deploy:
 git/.git:
 	@devtools/refresh-submodules.sh git
 git/targets/release/gnostr-git:git/.git
-	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 	cd git && make cargo-install
 git:gnostr-git
 gnostr-git:git/targets/release/gnostr-git
+	$(MAKE) gnostr-install
 	#cp $< $@ || true
 	#install $@ /usr/local/bin/
 
