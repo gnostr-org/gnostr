@@ -308,10 +308,10 @@ xq:xq/.git
 
 .PHONY:core gnostr-core
 core/.git:
-	@devtools/refresh-submodules.sh bins
+	@devtools/refresh-submodules.sh core
 gnostr-core:core
 core:core/.git
-	@cd core && make cargo-b-release #&& make cargo-i
+	@cd core && make cargo-br
 
 .PHONY:py gnostr-py
 py/.git:
