@@ -1,3 +1,6 @@
+# make docker-start venv py
+.venv
+
 ext/curl-8.5.0/src/tool_hugehelp.c
 
 libcjson.a
