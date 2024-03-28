@@ -172,7 +172,6 @@ diff-log:
 submodules:
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
-	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
 .PHONY:secp256k1/.git
