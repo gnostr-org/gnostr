@@ -444,7 +444,7 @@ cli/.git:
 gnostr-cli:cli
 cli:cli/.git
 	cd cli && \
-		make cargo-install
+		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
 .PHONY:grep/.git gnostr-grep grep
