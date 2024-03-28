@@ -333,9 +333,9 @@ bins-test-fetch-by-id:
 .PHONY:ffi gnostr-ffi
 ffi/.git:
 	@devtools/refresh-submodules.sh ffi
-gnostr-ffi:ffi
 ffi:
-	@cd ffi && make gnostr && cd ..
+	@cd ffi && make all && cd .. || echo "make ffi failed..."
+gnostr-ffi:ffi
 
 .PHONY:gossip gnostr-gossip
 gossip/.git:
