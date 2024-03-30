@@ -58,6 +58,7 @@ if(BUILD_WEB)
   set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
   add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
   add_definitions(-DDEV_MODE)
+  message("TRY: make wt to build gnostr-web: BUILD_WEB=" ${BUILD_WEB})
 endif()
 if(MSVC)
   set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
@@ -398,12 +399,12 @@ install(TARGETS gnostr-tests
         RUNTIME DESTINATION /usr/local/bin)
 
 if(BUILD_WEB)
-  #install(TARGETS gnostr-web
-  #        CONFIGURATIONS Debug
-  #        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-  #install(TARGETS gnostr-web
-  #        CONFIGURATIONS Release
-  #        RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS gnostr-web
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr-web
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
 endif()
 
 if (BUILD_GUI)
