@@ -534,6 +534,7 @@ gnostr-install:
 	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v web/gnostr-*                   $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc
