@@ -105,23 +105,23 @@ doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generat
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
 	for b in $(DOCS);\
-  do touch doc/$$b.1;\
-  done;\
-  exit;\
+	do touch doc/$$b.1;\
+	done;\
+	exit;\
 	)
 	(\
 	for b in $(DOCS);\
-  do echo doc/$$b.1 > /tmp/make-doc.log;\
-  done;\
-  exit;\
+	do echo doc/$$b.1 > /tmp/make-doc.log;\
+	done;\
+	exit;\
 	)
 	(\
 	for b in $(DOCS);\
-  do help2man $$b > doc/$$b.1;\
-  install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
-  echo $$b;\
-  done;\
-  exit;\
+	do help2man $$b > doc/$$b.1;\
+	install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
+	echo $$b;\
+	done;\
+	exit;\
 	)
 	#for b in $(DOCS); do echo $b; done; exit
 	#for b in $(DOCS); do touch doc/$(DOCS); done;exit
