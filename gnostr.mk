@@ -172,33 +172,26 @@ diff-log:
 submodules:
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
-	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
-.PHONY:secp256k1/config.log
+.PHONY:secp256k1/.git
 .ONESHELL:
 secp256k1/.git:
 	devtools/refresh-submodules.sh secp256k1
 secp256k1/include/secp256k1.h: #secp256k1/.git
-.PHONY:secp256k1/configure
 ## force configure if build on host then in docker vm
-.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
-secp256k1/configure:secp256k1/include/secp256k1.h
+#.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
+secp256k1/configure:secp256k1/.git
+secp256k1/.libs/libsecp256k1.a:secp256k1/configure
 	cd secp256k1 && \
-	git fetch --all && git checkout 1709312085/3bf4d68f/e4af41c6-c-lang && \
+	git fetch --all && git checkout c-lang && \
 		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
-.PHONY:secp256k1/.libs/libsecp256k1.a
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
-secp256k1:libsecp256k1.a
 libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
 	cp $< $@
-##libsecp256k1.a
-##	secp256k1/.git
-##	secp256k1/include/secp256k1.h
-##	secp256k1/./autogen.sh
-##	secp256k1/./configure
-
+.PHONY:secp256k1
+secp256k1:libsecp256k1.a
 
 jq/modules/oniguruma.git:
 	devtools/refresh-submodules.sh jq
@@ -242,16 +235,16 @@ gnostr-web-deploy:
 
 
 
-.PHONY:git/gnostr-git gnostr-git git
+.PHONY:git/targets/release/gnostr-git git/.git
 git/.git:
 	@devtools/refresh-submodules.sh git
-git/gnostr-git:git/.git
-	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
-	cd git && make && make install
+git/targets/release/gnostr-git:git/.git
+	cd git && make cargo-install
 git:gnostr-git
-gnostr-git:git/gnostr-git## 	gnostr-git
-	cp $< $@ || true
-	install $@ /usr/local/bin/
+gnostr-git:git/targets/release/gnostr-git
+	$(MAKE) gnostr-install
+	#cp $< $@ || true
+	#install $@ /usr/local/bin/
 
 ext/curl-8.5.0/src/curl:
 	cd ext/curl-8.5.0 && make install
@@ -315,21 +308,23 @@ xq:xq/.git
 
 .PHONY:core gnostr-core
 core/.git:
-	@devtools/refresh-submodules.sh bins
+	@devtools/refresh-submodules.sh core
 gnostr-core:core
 core:core/.git
-	@cd core && make cargo-b-release #&& make cargo-i
+	@cd core && make cargo-br
 
 .PHONY:py gnostr-py
 py/.git:
 	@devtools/refresh-submodules.sh py
 gnostr-py:py
-py:py/.git
-	@cd py && make ## TODO
+py:py/.git venv
+	$(. .venv/bin/activate & cd py && make)
 
 .PHONY:get-relays gnostr-get-relays
+get-relays/.git:
+	@devtools/refresh-submodules.sh get-relays
 gnostr-get-relays:get-relays
-get-relays:
+get-relays:get-relays/.git
 	@cd get-relays && make cargo-b-release && make cargo-i
 bins-test-post-event:
 	cat test/first-gnostr-commit.json | gnostr-post-event wss://relay.damus.io
@@ -340,15 +335,15 @@ bins-test-fetch-by-id:
 .PHONY:ffi gnostr-ffi
 ffi/.git:
 	@devtools/refresh-submodules.sh ffi
-gnostr-ffi:ffi
 ffi:
-	@cd ffi && make gnostr && cd ..
+	@cd ffi && make all && cd .. || echo "make ffi failed..."
+gnostr-ffi:ffi
 
 .PHONY:gossip gnostr-gossip
 gossip/.git:
 	@devtools/refresh-submodules.sh gossip
-gnostr-gossip:gossip/.git gossip
-gossip:
+gnostr-gossip:gossip
+gossip:gossip/.git
 	@cargo install --path gossip
 
 .PHONY:bits gnostr-bits
@@ -451,7 +446,7 @@ cli/.git:
 gnostr-cli:cli
 cli:cli/.git
 	cd cli && \
-		make cargo-install
+		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
 .PHONY:grep/.git gnostr-grep grep
@@ -492,15 +487,24 @@ act:act/bin/gnostr-act
 
 
 
+
 %.o: src/%.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY:gnostr-am
-gnostr-am:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-##gnostr initialize
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	$(MAKE) gnostr-install
+src/libcjson/.git:
+	@devtools/refresh-submodules.sh src/libcjson
+src/libcjson:src/libcjson/.git
+	cd src/libcjson && make
+src/libcjson/bin/libcjson.a:src/libcjson
+libcjson:src/libcjson/bin/libcjson.a
+	cp $^ .
+
+gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+	$(MAKE) secp256k1
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+
+
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay

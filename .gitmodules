@@ -7,12 +7,12 @@
 	path = drives
 	url = https://github.com/gnostr-org/gnostr-drives.git
     branch = master
-    depth = shallow
+  depth = shallow
+  ignore = dirty
 [submodule "ext/wxWidgets-3.2.2.1"]
 	path = ext/wxWidgets-3.2.2.1
 	url = https://github.com/gnostr-org/wxWidgets.git
     branch = master
-    depth = shallow
 [submodule "gnostr-act"]
 	path = act
 	url = https://github.com/gnostr-org/gnostr-act.git
@@ -97,7 +97,8 @@
 	path = py
 	url = https://github.com/gnostr-org/gnostr-py.git
     branch = master
-    depth = shallow
+  depth = shallow
+  ignore = dirty
 [submodule "gnostr-relay"]
 	path = relay
 	url = https://github.com/gnostr-org/gnostr-relay.git
@@ -134,8 +135,8 @@
     branch = master
     depth = shallow
 [submodule "src/libcjson"]
-    path = src/libcjson
-    url = https://github.com/gnostr-org/libcjson.git
+	path = src/libcjson
+	url = https://github.com/gnostr-org/libcjson.git
     branch = master
     depth = shallow
 [submodule "tui"]
@@ -156,3 +157,9 @@
 [submodule "vendor/secp256k1-sys/depend/secp256k1"]
 	path = vendor/secp256k1-sys/depend/secp256k1
 	url = https://github.com/gnostr-org/secp256k1.git
+[submodule "secp256k1"]
+	path = secp256k1
+	url = https://github.com/gnostr-org/secp256k1.git
+[submodule "ffi"]
+	path = ffi
+	url = https://github.com/gnostr-org/gnostr-ffi.git
