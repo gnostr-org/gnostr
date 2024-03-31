@@ -136,8 +136,8 @@ version: src/gnostr.c## 	print version
 #	@cat $@
 .PHONY:GIT-VERSION-FILE git-version
 git-version:GIT-VERSION-FILE
-GIT-VERSION-FILE:deps/gnostr-git/GIT-VERSION-FILE
-	@. deps/gnostr-git/GIT-VERSION-GEN
+GIT-VERSION-FILE:git/GIT-VERSION-FILE
+	@. git/GIT-VERSION-GEN
 	@grep '^GIT_VERSION' <GIT-VERSION-FILE | sed -En 's,..............([^"]+).*,\1,p' > git-version
 	@cat git-version #&& rm GIT-VERSION-FILE
 .PHONY:versions
