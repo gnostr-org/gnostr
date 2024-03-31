@@ -105,23 +105,23 @@ doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generat
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
 	for b in $(DOCS);\
-  do touch doc/$$b.1;\
-  done;\
-  exit;\
+	do touch doc/$$b.1;\
+	done;\
+	exit;\
 	)
 	(\
 	for b in $(DOCS);\
-  do echo doc/$$b.1 > /tmp/make-doc.log;\
-  done;\
-  exit;\
+	do echo doc/$$b.1 > /tmp/make-doc.log;\
+	done;\
+	exit;\
 	)
 	(\
 	for b in $(DOCS);\
-  do help2man $$b > doc/$$b.1;\
-  install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
-  echo $$b;\
-  done;\
-  exit;\
+	do help2man $$b > doc/$$b.1;\
+	install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
+	echo $$b;\
+	done;\
+	exit;\
 	)
 	#for b in $(DOCS); do echo $b; done; exit
 	#for b in $(DOCS); do touch doc/$(DOCS); done;exit
@@ -527,6 +527,7 @@ gnostr-install:
 	mkdir -p $(PREFIX)/include                                                     || true
 	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null || true
 	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
+	@install -m755 -v gnostr-client                  $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v gnostr-am                      $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
@@ -534,6 +535,7 @@ gnostr-install:
 	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v web/gnostr-*                   $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc
