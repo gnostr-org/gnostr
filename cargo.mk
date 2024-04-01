@@ -25,7 +25,7 @@ cargo-build:### 	cargo build
 cargo-i:cargo-install
 cargo-install:### 	cargo install --path .
 	#@. $(HOME)/.cargo/env
-	@cargo install --path $(PWD)
+	@cargo install --path cli
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
