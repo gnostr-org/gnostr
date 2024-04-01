@@ -914,6 +914,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "getopts"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
+dependencies = [
+ "unicode-width",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1469,6 +1478,15 @@ dependencies = [
  "log",
  "regex-automata 0.4.6",
  "regex-syntax 0.8.2",
+]
+
+[[package]]
+name = "gnostr-get-relays"
+version = "0.0.1"
+dependencies = [
+ "cc",
+ "getopts",
+ "libc",
 ]
 
 [[package]]
