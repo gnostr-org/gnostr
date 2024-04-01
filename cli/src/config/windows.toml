@@ -1,0 +1,3 @@
+[ui]
+pager = ":builtin"
+editor = "Notepad"
