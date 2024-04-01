@@ -28,11 +28,11 @@
 	url = https://github.com/gnostr-org/gnostr-cat.git
     branch = master
     depth = shallow
-[submodule "gnostr-cli"]
-	path = cli
-	url = https://github.com/gnostr-org/gnostr-cli.git
-    branch = master
-    depth = shallow
+
+
+
+
+
 [submodule "gnostr-core"]
 	path = core
 	url = https://github.com/gnostr-org/gnostr-core.git
