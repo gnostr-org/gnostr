@@ -143,7 +143,7 @@ help:##
 .ONESHELL:
 docker-start:
 	@touch requirements.txt
-	@test -d .venv || $(PYTHON3) -m virtualenv .venv
+	@test -d .venv || pipx install virtualenv && virtualenv .venv
 	@( \
 	   source .venv/bin/activate; pip install -q -r requirements.txt; \
 	   python3 -m pip install -q pipenv \
@@ -156,7 +156,7 @@ docker-start:
 	     systemctl restart docker.service;\
 	    fi;\
 	    if [[ '$(OS)' == 'Darwin' ]]; then\
-	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker;\
+	     type -P docker && open --background -a /Applications/Docker.app/Contents/MacOS/Docker\ Desktop.app/Contents/MacOS/Docker\ Desktop;\
 	    fi;\
 	sleep 1;\
 	done\
