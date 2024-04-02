@@ -12,7 +12,7 @@ PREFIX                                 ?= /usr/local
 export PREFIX
 ARS                                     = libsecp256k1.a libgit.a libjq.a libtclstub.a
 
-SUBMODULES                              = deps/secp256k1 deps/git deps/jq deps/nostcat deps/hyper-nostr deps/tcl
+SUBMODULES                              = deps/secp256k1 deps/git deps/nostcat deps/hyper-nostr deps/tcl
 
 VERSION                                :=$(shell cat version)
 export VERSION
