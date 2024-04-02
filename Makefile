@@ -164,11 +164,11 @@ nostril:initialize $(HEADERS) $(OBJS) $(ARS)## 	make nostril binary
 ##install all
 ##	install docs/nostril.1 nostril nostril-query
 install:## 	install docs/nostril.1 nostril
-	mkdir -p $(PREFIX)/bin
-	mkdir -p $(PREFIX)/include
-	install -m755 -vC include/*.*  ${PREFIX}/include/
-	install -m644 -vC doc/nostril.1 $(PREFIX)/share/man/man1/nostr.1
-	install -m755 -vC nostril       $(PREFIX)/bin/nostril
+	@mkdir -p $(PREFIX)/bin
+	@mkdir -p $(PREFIX)/include
+	@install -m755 -vC include/*.*  ${PREFIX}/include/
+	@install -m644 -vC doc/nostril.1 $(PREFIX)/share/man/man1/nostr.1
+	@install -m755 -vC nostril       $(PREFIX)/bin/nostril || $(MAKE) nostril
 
 .PHONY:config.h
 config.h: configurator
