@@ -163,7 +163,7 @@ nostril:initialize $(HEADERS) $(OBJS) $(ARS)## 	make nostril binary
 .ONESHELL:
 ##install all
 ##	install docs/nostril.1 nostril nostril-query
-install: all## 	install docs/nostril.1 nostril
+install:## 	install docs/nostril.1 nostril
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
 	install -m755 -vC include/*.*  ${PREFIX}/include/
