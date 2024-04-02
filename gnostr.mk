@@ -1,2 +1,2 @@
 weeble_wobble:## 	
-	 ./.gnostr/$@.sh 
+	 ./.gnostr/$@.sh
