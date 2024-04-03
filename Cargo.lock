@@ -2131,7 +2131,7 @@ dependencies = [
  "sha2",
  "sha256",
  "structopt",
- "time 0.1.45",
+ "time 0.3.34",
  "tokio",
  "tungstenite",
  "ureq",
