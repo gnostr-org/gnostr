@@ -2,7 +2,7 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "sha256", "get-relays", "bins", "cat"]
+members = ["jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "bins","git"]
 
 [workspace.package]
 version = "0.0.0"
@@ -47,7 +47,7 @@ dirs = "5.0.1"
 either = "1.10.0"
 esl01-renderdag = "0.3.0"
 futures = "0.3.30"
-git2 = "0.18.3"
+git2 = "^0.18.0"
 gix = { version = "0.61.0", default-features = false, features = [
     "index",
     "max-performance-safe",
