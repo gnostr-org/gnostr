@@ -60,7 +60,7 @@ jobs:
         with:
           toolchain: stable
           default: true
-          override: true
+          override: false
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
