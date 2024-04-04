@@ -36,26 +36,26 @@ jobs:
           echo GNOSTR1=${{ env.GNOSTR1 }}
         env:
           GNOSTR1: "GNOSTR1"
-      - uses: styfle/cancel-workflow-action@0.11.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
       - name: Restore deps
         id: cache-deps-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
           key: ${{ runner.os }}-deps
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
 
-      - uses: actions-rs/toolchain@v1.0.6
+      - uses: actions-rs/toolchain@v1.0.7
         #if: ${{ !env.ACT }}
         with:
           toolchain: stable
@@ -112,7 +112,7 @@ jobs:
 
       - name: Save deps
         id: cache-deps-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ !env.ACT }}
         with:
           path: |
