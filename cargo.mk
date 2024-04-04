@@ -15,7 +15,10 @@ cargo-install-all:### 	cargo-install-all
 ## 	*** cargo install -vv --force is NOT used.
 ## 	*** cargo install -vv --force --path <path>
 ## 	*** to overrite deploy cargo.io crates.
-	for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t || echo "gnostr-$$t not found"; done
+	for p in $(shell cargo search gnostr -q --limit 100 | cut -d "=" -f1); do cargo install $$p;done
+	cargo install cargo-sweep
+cargo-install-submodules:### 	cargo-install-submodules
+	for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t --force || echo "gnostr-$$t not found"; done
 
 cargo-b:cargo-build### 	cargo b
 cargo-build:### 	cargo build
