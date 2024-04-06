@@ -4,7 +4,7 @@ gnostr(1)
 
 gnostr - a git nostr utility
 
-# SYNPOSIS
+# SYNOPSIS
 
 *gnostr* [OPTIONS...]
 
