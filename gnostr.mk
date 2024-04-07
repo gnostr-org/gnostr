@@ -433,12 +433,9 @@ cat:cat/.git
 
 
 
-.PHONY:gnostr-cli cli
-cli/.git:
-	@devtools/refresh-submodules.sh cli
 .PHONY:cli/target/release/gnostr-cli
 gnostr-cli:cli
-cli:cli/.git
+cli:
 	cd cli && \
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
