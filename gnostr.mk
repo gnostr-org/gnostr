@@ -69,8 +69,8 @@ gnostr-wobble\
 gnostr\
 
 ##all:
-#all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
-all: submodules gnostr gnostr-git gnostr-get-relays ##gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+#all: submodules gnostr gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-relay gnostr-xor docs
+all: submodules gnostr gnostr-get-relays ##gnostr-docs## 	make gnostr gnostr-cat gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
@@ -235,16 +235,12 @@ gnostr-web-deploy:
 
 
 
-.PHONY:git/targets/release/gnostr-git git/.git
-git/.git:
-	@devtools/refresh-submodules.sh git
-git/targets/release/gnostr-git:git/.git
+.PHONY:git/targets/release/gnostr-git
+git/targets/release/gnostr-git:
 	cd git && make cargo-install
 git:gnostr-git
 gnostr-git:git/targets/release/gnostr-git
 	$(MAKE) gnostr-install
-	#cp $< $@ || true
-	#install $@ /usr/local/bin/
 
 ext/curl-8.5.0/src/curl:
 	cd ext/curl-8.5.0 && make install
