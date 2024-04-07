@@ -1,15 +1,15 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use gitu::{cli::Commands, term::TermBackend};
+use gnostr_git::{cli::Commands, term::TermBackend};
 use ratatui::{backend::TestBackend, Terminal};
 
 fn show(c: &mut Criterion) {
     c.bench_function("show", |b| {
         let mut terminal = Terminal::new(TermBackend::Test(TestBackend::new(80, 1000))).unwrap();
         b.iter(|| {
-            gitu::run(
-                &gitu::cli::Args {
+            gnostr_git::run(
+                &gnostr_git::cli::Args {
                     command: Some(Commands::Show {
-                        reference: "f4de01c0a12794d7b42a77b2138aa64119b90ea5".into(),
+                        reference: "f2137b4e5f6125b1097974c88e71d42ce29e0428".into(),
                     }),
                     print: true,
                     ..Default::default()
