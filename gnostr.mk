@@ -289,10 +289,8 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 ##		make cargo-br-async-std
 
 .PHONY:bins gnostr-bins
-bins/.git:
-	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
-bins:bins/.git
+bins:
 	cargo install --path bins --force
 
 .PHONY:xq gnostr-xq
