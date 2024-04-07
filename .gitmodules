@@ -48,11 +48,6 @@
 	url = https://github.com/gnostr-org/gnostr-get-relays.git
     branch = master
     depth = shallow
-[submodule "gnostr-git"]
-	path = git
-	url = https://github.com/gnostr-org/gnostr-git.git
-    branch = master
-    depth = shallow
 [submodule "gnostr-gossip"]
 	path = gossip
 	url = https://github.com/gnostr-org/gnostr-gossip.git
