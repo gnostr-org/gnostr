@@ -36,7 +36,7 @@ env_logger = "0.11.3"
 futures-lite = "2.3.0"
 getopts = "0.2.21"
 git2 = "^0.18"
-gnostr-types = "0.7.1-unstable"
+gnostr-types = { git = "http://github.com/gnostr-org/gnostr-types.git", version = "0.7.1-unstable", features = ["speedy"] }
 hex = "0.4"
 http = "0.2"
 hypercore-protocol = { git = "http://github.com/gnostr-org/gnostr-core.git", version = "0.4.2-alpha.1", features = ["async-std", "cache", "wasm-bindgen", "js_interop_tests"] }
