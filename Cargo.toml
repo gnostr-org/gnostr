@@ -2,7 +2,7 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "bins","git"]
+members = ["jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "bins","git","cli"]
 
 [workspace.package]
 version = "0.0.0"
