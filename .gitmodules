@@ -153,3 +153,6 @@
 [submodule "ffi"]
 	path = ffi
 	url = https://github.com/gnostr-org/gnostr-ffi.git
+[submodule "git/sha1collisiondetection"]
+	path = git/sha1collisiondetection
+	url = https://github.com/cr-marcstevens/sha1collisiondetection.git
