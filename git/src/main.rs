@@ -1,8 +1,11 @@
+use std::backtrace::Backtrace;
+use std::panic;
+
 use clap::Parser;
-use gnostr_git::{cli::Args, term, Res};
+use gnostr_git::cli::Args;
+use gnostr_git::{term, Res};
 use log::LevelFilter;
 use ratatui::Terminal;
-use std::{backtrace::Backtrace, panic};
 
 pub fn main() -> Res<()> {
     let args = Args::parse();
@@ -10,7 +13,10 @@ pub fn main() -> Res<()> {
     if args.version {
         // Setting cargo_suffix enables falling back to Cargo.toml for version
         // `cargo install --locked gitu` would fail otherwise, as there's no git repo
-        println!("gnostr-git {}", git_version::git_version!(cargo_suffix = ""));
+        println!(
+            "gnostr-git {}",
+            git_version::git_version!(cargo_suffix = "")
+        );
         return Ok(());
     }
 

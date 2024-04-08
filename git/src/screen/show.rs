@@ -1,18 +1,14 @@
-use std::{iter, rc::Rc};
+use std::iter;
+use std::rc::Rc;
 
-use crate::{
-    config::Config,
-    git,
-    items::{self, Item},
-    Res,
-};
 use git2::Repository;
-use ratatui::{
-    prelude::Rect,
-    text::{Line, Text},
-};
+use ratatui::prelude::Rect;
+use ratatui::text::{Line, Text};
 
 use super::Screen;
+use crate::config::Config;
+use crate::items::{self, Item};
+use crate::{git, Res};
 
 pub(crate) fn create(
     config: Rc<Config>,

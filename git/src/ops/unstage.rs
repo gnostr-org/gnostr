@@ -1,13 +1,15 @@
-use super::{cmd, cmd_arg, OpTrait};
-use crate::{
-    git::{self, diff::PatchMode},
-    items::TargetData,
-    state::State,
-    term::Term,
-    Action,
-};
+use std::process::Command;
+use std::rc::Rc;
+
 use derive_more::Display;
-use std::{process::Command, rc::Rc};
+
+use super::{cmd, cmd_arg, OpTrait};
+use crate::git::diff::PatchMode;
+use crate::git::{self};
+use crate::items::TargetData;
+use crate::state::State;
+use crate::term::Term;
+use crate::Action;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Unstage")]

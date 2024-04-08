@@ -1,17 +1,16 @@
-use super::Screen;
-use crate::{
-    config::Config,
-    git::{self, diff::Diff},
-    git2_opts,
-    items::{self, Item, TargetData},
-    Res,
-};
+use std::path::PathBuf;
+use std::rc::Rc;
+
 use git2::Repository;
-use ratatui::{
-    prelude::Rect,
-    text::{Line, Span},
-};
-use std::{path::PathBuf, rc::Rc};
+use ratatui::prelude::Rect;
+use ratatui::text::{Line, Span};
+
+use super::Screen;
+use crate::config::Config;
+use crate::git::diff::Diff;
+use crate::git::{self};
+use crate::items::{self, Item, TargetData};
+use crate::{git2_opts, Res};
 
 pub(crate) fn create(config: Rc<Config>, repo: Rc<Repository>, size: Rect) -> Res<Screen> {
     Screen::new(
@@ -185,7 +184,10 @@ fn branch_status_items(config: &Config, repo: &Repository) -> Res<Vec<Item>> {
     items.push(Item {
         id: "branch_status".into(),
         display: if ahead == 0 && behind == 0 {
-            Line::raw(format!("Your branch is up to date with '{}'.", upstream_shortname))
+            Line::raw(format!(
+                "Your branch is up to date with '{}'.",
+                upstream_shortname
+            ))
         } else if ahead > 0 && behind == 0 {
             Line::raw(format!(
                 "Your branch is ahead of '{}' by {} commit.",
@@ -197,7 +199,11 @@ fn branch_status_items(config: &Config, repo: &Repository) -> Res<Vec<Item>> {
                 upstream_shortname, behind
             ))
         } else {
-            Line::raw(format!("Your branch and '{}' have diverged,\nand have {} and {} different commits each, respectively.", upstream_shortname, ahead, behind))
+            Line::raw(format!(
+                "Your branch and '{}' have diverged,\nand have {} and {} different commits each, \
+                 respectively.",
+                upstream_shortname, ahead, behind
+            ))
         },
         depth: 1,
         unselectable: true,

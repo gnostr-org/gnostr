@@ -1,19 +1,16 @@
-use crate::config::Config;
-use crate::items::Item;
-use crate::keybinds;
-use crate::keybinds::Keybind;
-use crate::ops::Op;
-use crate::ops::SubmenuOp;
-use crate::state::State;
-use crate::CmdMetaBuffer;
-use itertools::EitherOrBoth;
-use itertools::Itertools;
+use itertools::{EitherOrBoth, Itertools};
 use ratatui::prelude::*;
 use ratatui::style::Stylize;
 use ratatui::widgets::*;
 use ratatui::Frame;
-use tui_prompts::State as _;
-use tui_prompts::TextPrompt;
+use tui_prompts::{State as _, TextPrompt};
+
+use crate::config::Config;
+use crate::items::Item;
+use crate::keybinds::Keybind;
+use crate::ops::{Op, SubmenuOp};
+use crate::state::State;
+use crate::{keybinds, CmdMetaBuffer};
 
 enum Popup<'a> {
     None,

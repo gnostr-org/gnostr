@@ -1,6 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use gnostr_git::{cli::Commands, term::TermBackend};
-use ratatui::{backend::TestBackend, Terminal};
+use gnostr_git::cli::Commands;
+use gnostr_git::term::TermBackend;
+use ratatui::backend::TestBackend;
+use ratatui::Terminal;
 
 fn show(c: &mut Criterion) {
     c.bench_function("show", |b| {

@@ -1,10 +1,9 @@
-use crate::{Res, APP_NAME};
-use figment::{
-    providers::{Format, Toml},
-    Figment,
-};
+use figment::providers::{Format, Toml};
+use figment::Figment;
 use ratatui::style::{Color, Modifier, Style};
 use serde::Deserialize;
+
+use crate::{Res, APP_NAME};
 
 const DEFAULT_CONFIG: &str = include_str!("default_config.toml");
 
@@ -100,10 +99,8 @@ pub fn init_test_config() -> Res<Config> {
 
 #[cfg(test)]
 mod tests {
-    use figment::{
-        providers::{Format, Toml},
-        Figment,
-    };
+    use figment::providers::{Format, Toml};
+    use figment::Figment;
     use ratatui::style::Color;
 
     use super::{Config, DEFAULT_CONFIG};

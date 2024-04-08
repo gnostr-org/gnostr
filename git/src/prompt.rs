@@ -1,8 +1,11 @@
+use std::borrow::Cow;
+
+use ratatui::backend::Backend;
+use ratatui::Terminal;
+use tui_prompts::{State as _, TextState};
+
 use super::Res;
 use crate::ops::Action;
-use ratatui::{backend::Backend, Terminal};
-use std::borrow::Cow;
-use tui_prompts::{State as _, TextState};
 
 pub(crate) struct PromptData {
     pub(crate) prompt_text: Cow<'static, str>,

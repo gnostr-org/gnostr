@@ -1,7 +1,7 @@
-use crate::ops::Op;
-use crate::ops::SubmenuOp;
 use crossterm::event::{self, KeyCode, KeyModifiers};
 use KeyCode::*;
+
+use crate::ops::{Op, SubmenuOp};
 
 pub(crate) struct Keybind {
     pub submenu: SubmenuOp,

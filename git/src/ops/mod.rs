@@ -1,12 +1,15 @@
+use std::ffi::{OsStr, OsString};
+use std::fmt::Display;
+use std::process::Command;
+use std::rc::Rc;
+
 use tui_prompts::State as _;
 
-use crate::{items::TargetData, prompt::PromptData, state::State, term::Term, ErrorBuffer, Res};
-use std::{
-    ffi::{OsStr, OsString},
-    fmt::Display,
-    process::Command,
-    rc::Rc,
-};
+use crate::items::TargetData;
+use crate::prompt::PromptData;
+use crate::state::State;
+use crate::term::Term;
+use crate::{ErrorBuffer, Res};
 
 pub(crate) mod checkout;
 pub(crate) mod commit;
@@ -27,8 +30,9 @@ pub(crate) mod unstage;
 pub(crate) type Action = Rc<dyn FnMut(&mut State, &mut Term) -> Res<()>>;
 
 pub(crate) trait OpTrait: Display {
-    /// Get the implementation (which may or may not exist) of the Op given some TargetData.
-    /// This indirection allows Gitu to show a contextual menu of applicable actions.
+    /// Get the implementation (which may or may not exist) of the Op given some
+    /// TargetData. This indirection allows Gitu to show a contextual menu
+    /// of applicable actions.
     fn get_action(&self, target: Option<&TargetData>) -> Option<Action>;
 
     /// This indicates whether the Op is meant to read and

@@ -1,7 +1,10 @@
+use std::process::Command;
+use std::rc::Rc;
+
+use derive_more::Display;
+
 use super::{Action, OpTrait};
 use crate::items::TargetData;
-use derive_more::Display;
-use std::{process::Command, rc::Rc};
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Fetch all")]

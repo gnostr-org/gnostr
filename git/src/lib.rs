@@ -13,13 +13,19 @@ pub mod term;
 mod tests;
 mod ui;
 
+use std::borrow::Cow;
+use std::error::Error;
+use std::iter;
+use std::path::PathBuf;
+use std::process::Command;
+use std::rc::Rc;
+
 use crossterm::event::{self};
 use git2::Repository;
 use items::Item;
 use itertools::Itertools;
 use ops::{Action, Op, SubmenuOp};
 use state::State;
-use std::{borrow::Cow, error::Error, iter, path::PathBuf, process::Command, rc::Rc};
 use term::Term;
 
 const APP_NAME: &str = "gitu";

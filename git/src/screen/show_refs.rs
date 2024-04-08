@@ -1,16 +1,14 @@
-use std::{iter, rc::Rc};
+use std::iter;
+use std::rc::Rc;
+
+use git2::{BranchType, Repository};
+use ratatui::prelude::Rect;
+use ratatui::text::{Line, Span};
 
 use super::Screen;
-use crate::{
-    config::Config,
-    items::{Item, TargetData},
-    Res,
-};
-use git2::{BranchType, Repository};
-use ratatui::{
-    prelude::Rect,
-    text::{Line, Span},
-};
+use crate::config::Config;
+use crate::items::{Item, TargetData};
+use crate::Res;
 
 pub(crate) fn create(config: Rc<Config>, repo: Rc<Repository>, size: Rect) -> Res<Screen> {
     Screen::new(

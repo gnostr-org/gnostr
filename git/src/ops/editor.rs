@@ -1,7 +1,12 @@
-use super::{Action, OpTrait, SubmenuOp};
-use crate::{items::TargetData, screen::NavMode, state::State, term::Term};
-use derive_more::Display;
 use std::rc::Rc;
+
+use derive_more::Display;
+
+use super::{Action, OpTrait, SubmenuOp};
+use crate::items::TargetData;
+use crate::screen::NavMode;
+use crate::state::State;
+use crate::term::Term;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Quit")]

@@ -1,5 +1,6 @@
-use crate::Res;
 use git2::{DiffOptions, Repository, StatusOptions};
+
+use crate::Res;
 
 pub(crate) fn status(repo: &Repository) -> Res<StatusOptions> {
     let mut opts = StatusOptions::new();

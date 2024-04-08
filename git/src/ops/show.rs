@@ -1,7 +1,12 @@
-use super::OpTrait;
-use crate::{items::TargetData, screen, Action};
+use std::path::Path;
+use std::process::Command;
+use std::rc::Rc;
+
 use derive_more::Display;
-use std::{path::Path, process::Command, rc::Rc};
+
+use super::OpTrait;
+use crate::items::TargetData;
+use crate::{screen, Action};
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Show")]

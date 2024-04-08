@@ -1,6 +1,7 @@
+use std::fs;
+
 use crossterm::event::KeyCode;
 use itertools::Itertools;
-use std::fs;
 
 mod helpers;
 mod log;
@@ -354,13 +355,12 @@ fn pull() {
 }
 
 mod stash {
-    use super::helpers::key;
-    use super::helpers::key_code;
-    use super::helpers::run;
-    use super::helpers::TestContext;
-    use crate::state::State;
-    use crossterm::event::KeyCode;
     use std::fs;
+
+    use crossterm::event::KeyCode;
+
+    use super::helpers::{key, key_code, run, TestContext};
+    use crate::state::State;
 
     fn setup() -> (TestContext, State) {
         let mut ctx = TestContext::setup_clone(80, 20);
@@ -638,13 +638,11 @@ mod stash {
 }
 
 mod discard {
-    use super::helpers::commit;
-    use super::helpers::key;
-    use super::helpers::key_code;
-    use super::helpers::run;
-    use super::helpers::TestContext;
-    use crossterm::event::KeyCode;
     use std::fs;
+
+    use crossterm::event::KeyCode;
+
+    use super::helpers::{commit, key, key_code, run, TestContext};
 
     #[test]
     pub(crate) fn discard_branch_confirm_prompt() {
@@ -748,9 +746,7 @@ mod discard {
 }
 
 mod reset {
-    use super::helpers::commit;
-    use super::helpers::key;
-    use super::helpers::TestContext;
+    use super::helpers::{commit, key, TestContext};
 
     #[test]
     pub(crate) fn reset_menu() {
@@ -822,11 +818,9 @@ fn show_refs() {
 }
 
 mod checkout {
-    use super::helpers::key;
-    use super::helpers::key_code;
-    use super::helpers::run;
-    use super::helpers::TestContext;
     use crossterm::event::KeyCode;
+
+    use super::helpers::{key, key_code, run, TestContext};
 
     #[test]
     pub(crate) fn checkout_menu() {

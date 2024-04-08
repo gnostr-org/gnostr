@@ -1,7 +1,12 @@
-use super::{Action, OpTrait};
-use crate::{items::TargetData, state::State, term::Term};
+use std::process::Command;
+use std::rc::Rc;
+
 use derive_more::Display;
-use std::{process::Command, rc::Rc};
+
+use super::{Action, OpTrait};
+use crate::items::TargetData;
+use crate::state::State;
+use crate::term::Term;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Pull")]

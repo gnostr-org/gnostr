@@ -1,7 +1,13 @@
-use super::{subscreen_arg, Action, OpTrait};
-use crate::{git, items::TargetData, state::State, term::Term};
+use std::process::Command;
+use std::rc::Rc;
+
 use derive_more::Display;
-use std::{process::Command, rc::Rc};
+
+use super::{subscreen_arg, Action, OpTrait};
+use crate::git;
+use crate::items::TargetData;
+use crate::state::State;
+use crate::term::Term;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Commit")]

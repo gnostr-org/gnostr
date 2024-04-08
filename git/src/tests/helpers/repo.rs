@@ -1,4 +1,6 @@
-use std::{env, fs, path::Path, process::Command};
+use std::path::Path;
+use std::process::Command;
+use std::{env, fs};
 
 use temp_dir::TempDir;
 

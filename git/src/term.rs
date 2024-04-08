@@ -1,20 +1,18 @@
-use crate::Res;
-use crossterm::terminal::disable_raw_mode;
-use crossterm::terminal::enable_raw_mode;
-use crossterm::terminal::EnterAlternateScreen;
-use crossterm::terminal::LeaveAlternateScreen;
+use std::fmt::Display;
+use std::io;
+use std::io::{stderr, Stderr};
+
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use crossterm::ExecutableCommand;
-use ratatui::backend::Backend;
-use ratatui::backend::CrosstermBackend;
-use ratatui::backend::TestBackend;
+use ratatui::backend::{Backend, CrosstermBackend, TestBackend};
 use ratatui::prelude::backend::WindowSize;
 use ratatui::prelude::buffer::Cell;
 use ratatui::prelude::Rect;
 use ratatui::Terminal;
-use std::fmt::Display;
-use std::io;
-use std::io::stderr;
-use std::io::Stderr;
+
+use crate::Res;
 
 pub type Term = Terminal<TermBackend>;
 

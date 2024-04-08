@@ -1,8 +1,12 @@
-use super::Screen;
-use crate::{config::Config, items::log, Res};
+use std::rc::Rc;
+
 use git2::{Oid, Repository};
 use ratatui::prelude::Rect;
-use std::rc::Rc;
+
+use super::Screen;
+use crate::config::Config;
+use crate::items::log;
+use crate::Res;
 
 pub(crate) fn create(
     config: Rc<Config>,

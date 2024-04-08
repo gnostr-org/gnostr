@@ -1,15 +1,17 @@
-use crate::{
-    cli::Args,
-    config,
-    state::State,
-    term::{Term, TermBackend},
-    tests::helpers::RepoTestContext,
-};
+use std::path::PathBuf;
+
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use git2::Repository;
-use ratatui::{backend::TestBackend, prelude::Rect, Terminal};
-use std::path::PathBuf;
+use ratatui::backend::TestBackend;
+use ratatui::prelude::Rect;
+use ratatui::Terminal;
 use temp_dir::TempDir;
+
+use crate::cli::Args;
+use crate::config;
+use crate::state::State;
+use crate::term::{Term, TermBackend};
+use crate::tests::helpers::RepoTestContext;
 
 pub struct TestContext {
     pub term: Term,

@@ -1,6 +1,8 @@
-use super::{cmd_arg, OpTrait};
-use crate::{git, items::TargetData, Action};
 use derive_more::Display;
+
+use super::{cmd_arg, OpTrait};
+use crate::items::TargetData;
+use crate::{git, Action};
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Reset soft")]

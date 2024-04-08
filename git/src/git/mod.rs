@@ -1,15 +1,18 @@
+use std::ffi::OsStr;
+use std::fs;
+use std::path::Path;
+use std::process::Command;
+use std::str::{self};
+
 use git2::Repository;
 use itertools::Itertools;
 
-use self::{commit::Commit, diff::Diff, merge_status::MergeStatus, rebase_status::RebaseStatus};
-use crate::{config::Config, git2_opts, Res};
-use std::{
-    ffi::OsStr,
-    fs,
-    path::Path,
-    process::Command,
-    str::{self},
-};
+use self::commit::Commit;
+use self::diff::Diff;
+use self::merge_status::MergeStatus;
+use self::rebase_status::RebaseStatus;
+use crate::config::Config;
+use crate::{git2_opts, Res};
 
 pub(crate) mod commit;
 pub(crate) mod diff;

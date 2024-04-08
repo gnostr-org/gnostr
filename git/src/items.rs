@@ -1,18 +1,15 @@
-use crate::config::Config;
-use crate::git::diff::Delta;
-use crate::git::diff::Diff;
-use crate::git::diff::Hunk;
-use crate::Res;
-use git2::Commit;
-use git2::Oid;
-use git2::Repository;
-use ratatui::style::Style;
-use ratatui::text::Line;
-use ratatui::text::Span;
 use std::borrow::Cow;
 use std::iter;
 use std::path::PathBuf;
 use std::rc::Rc;
+
+use git2::{Commit, Oid, Repository};
+use ratatui::style::Style;
+use ratatui::text::{Line, Span};
+
+use crate::config::Config;
+use crate::git::diff::{Delta, Diff, Hunk};
+use crate::Res;
 
 #[derive(Default, Clone, Debug)]
 pub(crate) struct Item {

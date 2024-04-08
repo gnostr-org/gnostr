@@ -1,7 +1,13 @@
-use super::{cmd, cmd_arg, Action, OpTrait};
-use crate::{git, items::TargetData, state::State, term::Term};
+use std::path::PathBuf;
+use std::rc::Rc;
+
 use derive_more::Display;
-use std::{path::PathBuf, rc::Rc};
+
+use super::{cmd, cmd_arg, Action, OpTrait};
+use crate::git;
+use crate::items::TargetData;
+use crate::state::State;
+use crate::term::Term;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Discard")]

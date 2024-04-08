@@ -1,8 +1,15 @@
-use super::{Action, OpTrait};
-use crate::{items::TargetData, prompt::PromptData, state::State, term::Term, Res};
+use std::process::Command;
+use std::rc::Rc;
+
 use derive_more::Display;
-use std::{process::Command, rc::Rc};
 use tui_prompts::State as _;
+
+use super::{Action, OpTrait};
+use crate::items::TargetData;
+use crate::prompt::PromptData;
+use crate::state::State;
+use crate::term::Term;
+use crate::Res;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Debug, Display)]
 #[display(fmt = "Stash (include untracked)")]

@@ -1,32 +1,19 @@
 use std::borrow::Cow;
-use std::process::Command;
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 use std::rc::Rc;
 
 use crossterm::event;
-use crossterm::event::Event;
-use crossterm::event::KeyEventKind;
+use crossterm::event::{Event, KeyEventKind};
 use git2::Repository;
 use ratatui::layout::Rect;
-use tui_prompts::State as _;
-use tui_prompts::Status;
+use tui_prompts::{State as _, Status};
 
-use crate::cli;
+use super::{command_args, CmdMetaBuffer, ErrorBuffer, Res};
 use crate::config::Config;
-use crate::handle_op;
-use crate::keybinds;
 use crate::ops::SubmenuOp;
-use crate::prompt;
-use crate::screen;
 use crate::screen::Screen;
-use crate::term;
 use crate::term::Term;
-use crate::ui;
-
-use super::command_args;
-use super::CmdMetaBuffer;
-use super::ErrorBuffer;
-use super::Res;
+use crate::{cli, handle_op, keybinds, prompt, screen, term, ui};
 
 pub struct State {
     pub repo: Rc<Repository>,

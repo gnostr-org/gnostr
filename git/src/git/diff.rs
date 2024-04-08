@@ -1,13 +1,17 @@
+use std::ops::Range;
+use std::path::PathBuf;
+use std::rc::Rc;
+use std::{fs, iter, str};
+
 use git2::Repository;
 use itertools::Itertools;
-use ratatui::{
-    style::Style,
-    text::{Line, Span, Text},
-};
-use similar::{udiff::UnifiedDiffHunk, Algorithm, ChangeTag, TextDiff};
-use std::{fs, iter, ops::Range, path::PathBuf, rc::Rc, str};
+use ratatui::style::Style;
+use ratatui::text::{Line, Span, Text};
+use similar::udiff::UnifiedDiffHunk;
+use similar::{Algorithm, ChangeTag, TextDiff};
 
-use crate::{config::Config, Res};
+use crate::config::Config;
+use crate::Res;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Diff {

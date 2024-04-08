@@ -1,9 +1,13 @@
+use std::borrow::Cow;
+use std::collections::HashSet;
+use std::rc::Rc;
+
 use ratatui::prelude::*;
 
-use crate::{config::Config, items::TargetData, Res};
-
 use super::Item;
-use std::{borrow::Cow, collections::HashSet, rc::Rc};
+use crate::config::Config;
+use crate::items::TargetData;
+use crate::Res;
 
 pub(crate) mod log;
 pub(crate) mod show;
@@ -48,7 +52,8 @@ impl Screen {
 
         screen.update()?;
 
-        // TODO Maybe this should be done on update. Better keep track of toggled sections rather than collapsed then.
+        // TODO Maybe this should be done on update. Better keep track of toggled
+        // sections rather than collapsed then.
         screen
             .items
             .iter()
