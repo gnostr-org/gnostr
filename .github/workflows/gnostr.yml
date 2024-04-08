@@ -46,7 +46,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.rustup
+            ~/.cargo
           key: ${{ runner.os }}-deps
 
       - uses: actions/checkout@v3
@@ -116,6 +116,6 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.rustup
+            ~/.cargo
           key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
 
