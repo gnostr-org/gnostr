@@ -18,7 +18,7 @@ criterion = "0.5.1"
 insta = "1.36.1"
 git-cliff = "1.0"
 cargo-insta = "1.37.0"
-plotters = "^0.2"
+##plotters = "^0.2"
 
 [dependencies]
 chrono = "0.4.34"

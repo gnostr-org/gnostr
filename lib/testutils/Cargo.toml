@@ -26,3 +26,4 @@ tempfile = { workspace = true }
 
 [dev-dependencies]
 insta.workspace = true
+plotters = "0.3.5"
