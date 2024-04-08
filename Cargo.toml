@@ -24,7 +24,7 @@ async-trait = "0.1.79"
 backoff = "0.4.0"
 blake2 = "0.10.6"
 bytes = "1.5.0"
-cargo_metadata = "0.17.0"
+cargo_metadata = "0.18.1"
 clap = { version = "4.5.4", features = [
     "derive",
     "deprecated",
@@ -61,17 +61,17 @@ insta = { version = "1.38.0", features = ["filters"] }
 itertools = "0.12.1"
 libc = { version = "0.2.153" }
 maplit = "1.0.2"
-minus = { version = "5.6.0", features = ["dynamic_output", "search"] }
+minus = { version = "5.6.1", features = ["dynamic_output", "search"] }
 num_cpus = "1.16.0"
 once_cell = "1.19.0"
 ouroboros = "0.18.0"
-pest = "2.7.7"
-pest_derive = "2.7.7"
+pest = "2.7.9"
+pest_derive = "2.7.9"
 pollster = "0.3.0"
 pretty_assertions = "1.4.0"
 proc-macro2 = "1.0.79"
-prost = "0.12.3"
-prost-build = "0.12.3"
+prost = "0.12.4"
+prost-build = "0.12.4"
 quote = "1.0.35"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
@@ -89,15 +89,15 @@ smallvec = { version = "1.13.2", features = [
     "const_new",
     "union",
 ] }
-strsim = "0.11.0"
-syn = "2.0.55"
+strsim = "0.11.1"
+syn = "2.0.58"
 tempfile = "3.10.1"
 test-case = "3.3.1"
 textwrap = "0.16.1"
 thiserror = "1.0.58"
 timeago = { version = "0.4.2", default-features = false }
 tokio = { version = "1.37.0" }
-toml_edit = { version = "0.19.15", features = ["serde"] }
+toml_edit = { version = "0.22.9", features = ["serde"] }
 tracing = "0.1.40"
 tracing-chrome = "0.7.2"
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [
