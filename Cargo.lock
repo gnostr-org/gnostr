@@ -795,25 +795,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-insta"
-version = "1.38.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9980e2dad1fe50994932607bba14d30b31f55079063230b918968a9f4880292f"
-dependencies = [
- "cargo_metadata 0.18.1",
- "console",
- "ignore",
- "insta",
- "proc-macro2",
- "serde",
- "serde_json",
- "structopt",
- "syn 1.0.109",
- "tempfile",
- "uuid",
-]
-
-[[package]]
 name = "cargo-platform"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -840,20 +821,6 @@ name = "cargo_metadata"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7daec1a2a2129eeba1644b220b4647ec537b0b5d4bfd6876fcc5a540056b592"
-dependencies = [
- "camino",
- "cargo-platform",
- "semver",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "cargo_metadata"
-version = "0.18.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
 dependencies = [
  "camino",
  "cargo-platform",
@@ -3116,7 +3083,6 @@ dependencies = [
 name = "gnostr-git"
 version = "0.10.0"
 dependencies = [
- "cargo-insta",
  "chrono",
  "clap 4.5.4",
  "criterion",
@@ -3136,7 +3102,6 @@ dependencies = [
  "similar",
  "simple-logging",
  "temp-dir",
- "toml 0.8.12",
  "tui-prompts",
 ]
 
@@ -3556,10 +3521,7 @@ dependencies = [
  "console",
  "lazy_static",
  "linked-hash-map",
- "pest",
- "pest_derive",
  "regex",
- "serde",
  "similar",
 ]
 

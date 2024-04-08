@@ -17,7 +17,6 @@ temp-dir = "0.1.13"
 criterion = "0.5.1"
 insta = "1.36.1"
 git-cliff = "1.0"
-cargo-insta = "1.37.0"
 ##plotters = "^0.2"
 
 [dependencies]
@@ -36,5 +35,4 @@ ratatui = { version = "0.26.1", features = ["serde"] }
 serde = { version = "1.0.152", features = ["derive"] }
 similar = { version = "2.4.0", features = ["unicode", "inline"] }
 simple-logging = "2.0.2"
-toml = "0.8.12"
 tui-prompts = "0.3.8"
