@@ -121,7 +121,7 @@ mod with_relays {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn when_latest_metadata_and_relay_list_on_all_relays() -> Result<()> {
@@ -155,7 +155,7 @@ mod with_relays {
                 mod poorly_quality_metadata_event {
                     use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn when_metadata_contains_only_display_name() -> Result<()> {
@@ -180,7 +180,7 @@ mod with_relays {
                         .await
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn when_metadata_contains_only_displayname() -> Result<()> {
@@ -219,7 +219,7 @@ mod with_relays {
                         .await
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn displays_npub_when_metadata_contains_no_name_displayname_or_display_name()
@@ -259,7 +259,7 @@ mod with_relays {
                     }
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn when_latest_metadata_and_relay_list_on_some_relays_but_others_have_none()
@@ -281,7 +281,7 @@ mod with_relays {
                     .await
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn when_latest_metadata_only_on_relay_and_relay_list_on_another() -> Result<()>
@@ -307,7 +307,7 @@ mod with_relays {
                     .await
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn when_some_relays_return_old_metadata_event() -> Result<()> {
@@ -335,7 +335,7 @@ mod with_relays {
                     .await
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn when_some_relays_return_other_users_metadata() -> Result<()> {
@@ -363,7 +363,7 @@ mod with_relays {
                     .await
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn when_some_relays_return_other_event_kinds() -> Result<()> {
@@ -395,7 +395,7 @@ mod with_relays {
                 mod when_specifying_command_line_nsec_only {
                     use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn displays_correct_name() -> Result<()> {
@@ -449,7 +449,7 @@ mod with_relays {
                 mod when_specifying_command_line_password_only {
                     use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn displays_correct_name() -> Result<()> {
@@ -514,7 +514,7 @@ mod with_relays {
                 mod when_specifying_command_line_nsec_and_password {
                     use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn displays_correct_name() -> Result<()> {
@@ -575,7 +575,7 @@ mod with_relays {
             mod when_no_metadata_found {
                 use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn warm_user_and_displays_npub() -> Result<()> {
@@ -629,7 +629,7 @@ mod with_relays {
             mod when_metadata_but_no_relay_list_found {
                 use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn warm_user_and_displays_name() -> Result<()> {
@@ -699,7 +699,7 @@ mod with_relays {
             mod uses_cache {
                 use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn dislays_logged_in_with_correct_name() -> Result<()> {
@@ -813,7 +813,7 @@ mod with_relays {
             }
 
             /// this also tests that additional relays are queried
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn displays_correct_name() -> Result<()> {
@@ -854,7 +854,7 @@ mod with_offline_flag {
     mod when_first_time_login {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn prompts_for_nsec_and_password() -> Result<()> {
@@ -863,7 +863,7 @@ mod with_offline_flag {
             after()
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn succeeds_with_text_logged_in_as_npub() -> Result<()> {
@@ -881,7 +881,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn succeeds_with_hex_secret_key_in_place_of_nsec() -> Result<()> {
@@ -902,7 +902,7 @@ mod with_offline_flag {
         mod when_invalid_nsec {
             use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             #[serial]
             fn prompts_for_nsec_until_valid() -> Result<()> {
@@ -937,7 +937,7 @@ mod with_offline_flag {
     mod when_second_time_login {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn prints_login_as_npub() -> Result<()> {
@@ -950,7 +950,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn prompts_for_password_and_succeeds_with_logged_in_as_npub() -> Result<()> {
@@ -967,7 +967,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn when_invalid_password_exit_with_error() -> Result<()> {
@@ -987,7 +987,7 @@ mod with_offline_flag {
     mod when_called_with_nsec_parameter_only {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
@@ -997,7 +997,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn forgets_identity() -> Result<()> {
@@ -1017,7 +1017,7 @@ mod with_offline_flag {
         mod when_logging_in_as_different_nsec {
             use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             #[serial]
             fn valid_nsec_param_succeeds_without_prompts_and_logs_in() -> Result<()> {
@@ -1029,7 +1029,7 @@ mod with_offline_flag {
                 })
             }
         }
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
@@ -1044,7 +1044,7 @@ mod with_offline_flag {
     mod when_called_with_nsec_and_password_parameter {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
@@ -1061,7 +1061,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn remembers_identity() -> Result<()> {
@@ -1082,7 +1082,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn parameters_can_be_called_globally() -> Result<()> {
@@ -1102,7 +1102,7 @@ mod with_offline_flag {
         mod when_logging_in_as_different_nsec {
             use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             #[serial]
             fn valid_nsec_param_succeeds_without_prompts_and_logs_in() -> Result<()> {
@@ -1121,7 +1121,7 @@ mod with_offline_flag {
                 })
             }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             #[serial]
             fn remembers_identity() -> Result<()> {
@@ -1148,7 +1148,7 @@ mod with_offline_flag {
         mod when_provided_with_new_password {
             use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             #[serial]
             fn password_changes() -> Result<()> {
@@ -1171,7 +1171,7 @@ mod with_offline_flag {
             }
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
@@ -1194,7 +1194,7 @@ mod with_offline_flag {
     mod when_called_with_password_parameter_only {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn when_nsec_stored_logs_in_without_prompts() -> Result<()> {
@@ -1206,7 +1206,7 @@ mod with_offline_flag {
             })
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         fn when_no_nsec_stored_logs_error() -> Result<()> {
@@ -1221,7 +1221,7 @@ mod with_offline_flag {
     mod when_weak_password {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         #[serial]
         // combined into a single test as it is computationally expensive to run

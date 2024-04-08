@@ -93,7 +93,7 @@ fn cli_tester_create_pr(
 mod when_main_is_checked_out {
     use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[test]
     fn cli_returns_error() -> Result<()> {
         let test_repo = GitTestRepo::default();
@@ -165,7 +165,7 @@ mod when_pr_isnt_associated_with_branch_name {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn cli_show_error() -> Result<()> {
@@ -231,7 +231,7 @@ mod when_branch_is_checked_out {
                 Ok(())
             }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn cli_show_up_to_date() -> Result<()> {
@@ -295,7 +295,7 @@ mod when_branch_is_checked_out {
                 Ok(())
             }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn cli_show_up_to_date() -> Result<()> {
@@ -397,7 +397,7 @@ mod when_branch_is_checked_out {
                 Ok(())
             }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn cli_applied_1_commit() -> Result<()> {
@@ -463,7 +463,7 @@ mod when_branch_is_checked_out {
 
             Ok((res, r55.events.clone()))
         }
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn commits_issued_as_patch_event() -> Result<()> {

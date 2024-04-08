@@ -81,7 +81,7 @@ mod when_commits_behind_ask_to_proceed {
         )
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[test]
     fn asked_with_default_no() -> Result<()> {
         let test_repo = prep_test_repo()?;
@@ -92,7 +92,7 @@ mod when_commits_behind_ask_to_proceed {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[test]
     fn when_response_is_false_aborts() -> Result<()> {
         let test_repo = prep_test_repo()?;
@@ -105,7 +105,7 @@ mod when_commits_behind_ask_to_proceed {
 
         Ok(())
     }
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[test]
     #[serial]
     fn when_response_is_true_proceeds() -> Result<()> {
@@ -275,7 +275,7 @@ async fn prep_run_create_pr(
 mod sends_cover_letter_and_2_patches_to_3_relays {
 
     use super::*;
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn only_1_pr_kind_event_sent_to_each_relay() -> Result<()> {
@@ -289,7 +289,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn only_1_pr_kind_event_sent_to_user_relays() -> Result<()> {
@@ -303,7 +303,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn only_1_pr_kind_event_sent_to_repo_relays() -> Result<()> {
@@ -317,7 +317,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn only_1_pr_kind_event_sent_to_fallback_relays() -> Result<()> {
@@ -331,7 +331,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn only_2_patch_kind_events_sent_to_each_relay() -> Result<()> {
@@ -342,7 +342,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn patch_content_contains_patch_in_email_format_with_patch_series_numbers() -> Result<()>
@@ -411,7 +411,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
     mod pr_tags {
         use super::*;
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn root_commit_as_r() -> Result<()> {
@@ -432,7 +432,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn a_tag_for_repo_event() -> Result<()> {
@@ -449,7 +449,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn p_tags_for_maintainers() -> Result<()> {
@@ -474,7 +474,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn t_tag_cover_letter() -> Result<()> {
@@ -491,7 +491,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn t_tag_root() -> Result<()> {
@@ -508,7 +508,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn pr_tags_branch_name() -> Result<()> {
@@ -539,7 +539,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(r53.events.iter().find(|e| is_patch(e)).unwrap().clone())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn commit_and_commit_r() -> Result<()> {
@@ -560,7 +560,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn parent_commit() -> Result<()> {
@@ -579,7 +579,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn root_commit_as_r() -> Result<()> {
@@ -588,7 +588,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn p_tags_for_maintainers() -> Result<()> {
@@ -609,7 +609,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn a_tag_for_repo_event() -> Result<()> {
@@ -623,7 +623,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn description_with_commit_message() -> Result<()> {
@@ -640,7 +640,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn commit_author() -> Result<()> {
@@ -657,7 +657,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn commit_committer() -> Result<()> {
@@ -674,7 +674,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn patch_tags_pr_event_as_root() -> Result<()> {
@@ -699,7 +699,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn second_patch_tags_first_with_reply() -> Result<()> {
@@ -724,7 +724,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn no_t_root_tag() -> Result<()> {
@@ -811,7 +811,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn check_cli_output() -> Result<()> {
@@ -894,7 +894,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
                 Ok(())
             }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn only_first_rejected_event_sent_to_relay() -> Result<()> {
@@ -989,7 +989,7 @@ mod sends_cover_letter_and_2_patches_to_3_relays {
                 Ok((r51, r52, r53))
             }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+            #[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn cli_show_rejection_with_comment() -> Result<()> {
@@ -1077,7 +1077,7 @@ mod sends_2_patches_without_cover_letter {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn check_cli_output() -> Result<()> {
@@ -1086,7 +1086,7 @@ mod sends_2_patches_without_cover_letter {
         }
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn no_cover_letter_event() -> Result<()> {
@@ -1100,7 +1100,7 @@ mod sends_2_patches_without_cover_letter {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn two_patch_events() -> Result<()> {
@@ -1111,7 +1111,7 @@ mod sends_2_patches_without_cover_letter {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     // TODO check this is the ancestor
@@ -1140,7 +1140,7 @@ mod sends_2_patches_without_cover_letter {
         Ok(())
     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
     #[tokio::test]
     #[serial]
     async fn second_patch_lists_first_as_root() -> Result<()> {

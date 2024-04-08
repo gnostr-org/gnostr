@@ -195,7 +195,7 @@ mod cannot_find_repo_event {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn warns_not_valid_input_and_asks_again() -> Result<()> {
@@ -203,7 +203,7 @@ mod cannot_find_repo_event {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn finds_based_on_nevent_on_embeded_relay() -> Result<()> {
@@ -211,7 +211,7 @@ mod cannot_find_repo_event {
             Ok(())
         }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+        #[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn finds_based_on_naddr_on_embeded_relay() -> Result<()> {
@@ -355,7 +355,7 @@ mod when_main_branch_is_uptodate {
                         Ok(())
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn prompts_to_choose_from_pr_titles() -> Result<()> {
@@ -364,7 +364,7 @@ mod when_main_branch_is_uptodate {
                     }
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_created_with_correct_name() -> Result<()> {
@@ -376,7 +376,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_checked_out() -> Result<()> {
@@ -388,7 +388,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_tip_is_most_recent_patch() -> Result<()> {
@@ -524,7 +524,7 @@ mod when_main_branch_is_uptodate {
                         Ok(())
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn prompts_to_choose_from_pr_titles() -> Result<()> {
@@ -533,7 +533,7 @@ mod when_main_branch_is_uptodate {
                     }
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_created_with_correct_name() -> Result<()> {
@@ -545,7 +545,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_checked_out() -> Result<()> {
@@ -557,7 +557,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_tip_is_most_recent_patch() -> Result<()> {
@@ -705,7 +705,7 @@ mod when_main_branch_is_uptodate {
                         Ok(())
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn prompts_to_choose_from_pr_titles() -> Result<()> {
@@ -714,7 +714,7 @@ mod when_main_branch_is_uptodate {
                     }
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_created_with_correct_name() -> Result<()> {
@@ -726,7 +726,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_checked_out() -> Result<()> {
@@ -738,7 +738,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_tip_is_most_recent_patch() -> Result<()> {
@@ -897,7 +897,7 @@ mod when_main_branch_is_uptodate {
                         Ok(())
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn prompts_to_choose_from_pr_titles() -> Result<()> {
@@ -906,7 +906,7 @@ mod when_main_branch_is_uptodate {
                     }
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_checked_out() -> Result<()> {
@@ -1059,7 +1059,7 @@ mod when_main_branch_is_uptodate {
                         Ok(())
                     }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                    #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                     #[tokio::test]
                     #[serial]
                     async fn prompts_to_choose_from_pr_titles() -> Result<()> {
@@ -1068,7 +1068,7 @@ mod when_main_branch_is_uptodate {
                     }
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_checked_out() -> Result<()> {
@@ -1080,7 +1080,7 @@ mod when_main_branch_is_uptodate {
                     Ok(())
                 }
 
-#[cfg_attr(not(feature = "expensive_tests"), ignore)]
+                #[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[tokio::test]
                 #[serial]
                 async fn pr_branch_tip_is_most_recent_patch() -> Result<()> {
