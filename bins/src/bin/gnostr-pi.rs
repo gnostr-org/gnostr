@@ -1,5 +1,7 @@
+use std::str::FromStr;
+use std::{env, process};
+
 use num_bigint::BigInt;
-use std::{env, process, str::FromStr};
 
 fn help() {
     println!("\ngnostr_pi\n");

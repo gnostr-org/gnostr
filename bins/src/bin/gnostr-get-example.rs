@@ -1,11 +1,9 @@
-use tokio::runtime::Runtime;
-
-use std::{io::Read, time::Instant};
+use std::io::Read;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use gnostr_bins::get_blockheight;
 use reqwest::Url;
-
-use std::time::{SystemTime, UNIX_EPOCH};
+use tokio::runtime::Runtime;
 
 //use ureq::get;
 

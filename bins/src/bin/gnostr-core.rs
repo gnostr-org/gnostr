@@ -1,4 +1,8 @@
 use core::future::Future;
+use std::collections::HashMap;
+use std::convert::TryInto;
+use std::env;
+use std::fmt::Debug;
 
 use anyhow::Result;
 use async_std::net::{TcpListener, TcpStream};
@@ -11,16 +15,11 @@ use hypercore_protocol::hypercore::{
     Hypercore, HypercoreBuilder, PartialKeypair, RequestBlock, RequestUpgrade, Storage,
     VerifyingKey,
 };
+use hypercore_protocol::schema::*;
+use hypercore_protocol::{discovery_key, Channel, Event, Message, ProtocolBuilder};
 use log::*;
 use random_access_memory::RandomAccessMemory;
 use random_access_storage::RandomAccess;
-use std::collections::HashMap;
-use std::convert::TryInto;
-use std::env;
-use std::fmt::Debug;
-
-use hypercore_protocol::schema::*;
-use hypercore_protocol::{discovery_key, Channel, Event, Message, ProtocolBuilder};
 
 fn main() {
     init_logger();
@@ -86,8 +85,8 @@ fn usage() {
 
 // The onconnection handler is called for each incoming connection (if server)
 // or once when connected (if client).
-// Unfortunately, everything that touches the hypercore_store or a hypercore has to be generic
-// at the moment.
+// Unfortunately, everything that touches the hypercore_store or a hypercore has
+// to be generic at the moment.
 async fn onconnection<T: 'static>(
     stream: TcpStream,
     is_initiator: bool,
@@ -390,7 +389,10 @@ where
                     println!();
                     println!("### Results");
                     println!();
-                    println!("Replication succeeded if this prints '0: hi', '1: ola', '2: hello' and '3: mundo':");
+                    println!(
+                        "Replication succeeded if this prints '0: hi', '1: ola', '2: hello' and \
+                         '3: mundo':"
+                    );
                     println!();
                     for i in 0..new_info.contiguous_length {
                         println!(
@@ -450,7 +452,8 @@ pub fn log_if_error(result: &Result<()>) {
     }
 }
 
-/// A simple async TCP server that calls an async function for each incoming connection.
+/// A simple async TCP server that calls an async function for each incoming
+/// connection.
 pub async fn tcp_server<F, C>(
     address: String,
     onconnection: impl Fn(TcpStream, bool, C) -> F + Send + Sync + Copy + 'static,

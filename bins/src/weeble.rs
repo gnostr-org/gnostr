@@ -1,6 +1,7 @@
-use reqwest::Url;
 use std::io::Read;
 use std::time::SystemTime;
+
+use reqwest::Url;
 
 pub fn check_curl() {
 

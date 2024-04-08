@@ -1,10 +1,8 @@
 extern crate getopts;
+use std::{env, process};
+
 use getopts::Options;
 use git2::Repository;
-
-use std::env;
-use std::process;
-
 use gnostr_bins::get_pwd;
 
 pub fn ref_hash_list_padded(_program: &str, _opts: &Options) -> Result<(), git2::Error> {
@@ -67,12 +65,12 @@ pub fn ref_hash_list_w_commit_message(_program: &str, _opts: &Options) -> Result
 mod std_input {
 
     extern crate getopts;
-    use crate::ref_hash_list;
+    use std::{env, io, process};
+
     use ascii::AsciiChar;
     use getopts::Options;
-    use std::env;
-    use std::io;
-    use std::process;
+
+    use crate::ref_hash_list;
 
     #[allow(dead_code)]
     pub fn parse_input() {
@@ -214,11 +212,15 @@ pub fn main() -> Result<(), git2::Error> {
     //gnostr_bins::hash_list();
     //process::exit(0);
     // COMMAND CONTEXT:
-    // for m in $(gnostr-reflog -p);do echo $m; for n in $(gnostr-reflog);do echo $n;done;done
-    // for m in $(gnostr-reflog -p); do gnostr --sec  $m --content "$(for n in $(gnostr-reflog); do echo $n;done)";done
-    // for m in $(gnostr-reflog -p); do gnostr --sec  $m --content "$(for n in $(gnostr-reflog); do echo $n;done)";done
-    // for m in $(gnostr-reflog -p); do gnostr --sec  $m --content "$(for n in $(gnostr-reflog); do echo $n;done)" | gnostr-xq ;done
-    // for m in $(gnostr-reflog -p); do gnostr --sec  $m --content "$(for n in $(gnostr-reflog); do echo $n;done)" | gnostr-post-event --relay wss://relay.damus.io ;done
+    // for m in $(gnostr-reflog -p);do echo $m; for n in $(gnostr-reflog);do echo
+    // $n;done;done for m in $(gnostr-reflog -p); do gnostr --sec  $m --content
+    // "$(for n in $(gnostr-reflog); do echo $n;done)";done
+    // for m in $(gnostr-reflog -p); do gnostr --sec  $m --content "$(for n in
+    // $(gnostr-reflog); do echo $n;done)";done for m in $(gnostr-reflog -p); do
+    // gnostr --sec  $m --content "$(for n in $(gnostr-reflog); do echo $n;done)" |
+    // gnostr-xq ;done for m in $(gnostr-reflog -p); do gnostr --sec  $m
+    // --content "$(for n in $(gnostr-reflog); do echo $n;done)" | gnostr-post-event
+    // --relay wss://relay.damus.io ;done
 
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();

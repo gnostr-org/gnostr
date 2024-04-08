@@ -1,6 +1,7 @@
+use std::process::Command;
+
 use ascii::AsciiChar;
 use git2::Repository;
-use std::process::Command;
 
 pub fn strip_trailing_nl(input: &mut String) {
     let new_len = input

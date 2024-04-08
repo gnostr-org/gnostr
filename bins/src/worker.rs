@@ -1,6 +1,7 @@
+use std::sync::mpsc;
+
 use crypto::digest::Digest;
 use crypto::sha1;
-use std::sync::mpsc;
 //use time;
 
 pub struct Worker {
@@ -92,34 +93,34 @@ impl Worker {
         }
 
         let raw = format!(
-			"tree {}\n\
-			parent {}\n\
-			author {} {}\n\
-			committer {} {}\n\n\
-            {}/{}/{}:{}\n\n\"tree\":\"{}\",\"parent\":\"{}\",\"weeble\":\"{:04}\",\"blockheight\":\"{:06}\",\"wobble\":\"{:}\",\"bit\":\"{:02}\",\"nonce\":\"{:08x}\",\"message\":\"{:}\"",
-
+            "tree {}\nparent {}\nauthor {} {}\ncommitter {} \
+             {}\n\n{}/{}/{}:{}\n\n\"tree\":\"{}\",\"parent\":\"{}\",\"weeble\":\"{:04}\",\"\
+             blockheight\":\"{:06}\",\"wobble\":\"{:}\",\"bit\":\"{:02}\",\"nonce\":\"{:08x}\",\"\
+             message\":\"{:}\"",
             //below are in essential format
-			self.tree,
-			self.parent,
-			self.author, tstamp, //author
-			self.author, tstamp, //committer
+            self.tree,
+            self.parent,
+            self.author,
+            tstamp, //author
+            self.author,
+            tstamp, //committer
             //above are in essential format
 
-			//first element is commit subject line
-			self.weeble.trim(),
-			self.blockheight.trim(),
-			self.wobble.trim(),
-			self.message,
-
+            //first element is commit subject line
+            self.weeble.trim(),
+            self.blockheight.trim(),
+            self.wobble.trim(),
+            self.message,
             //event body
-			self.tree,
-			self.parent,
-			self.weeble.trim(),
-			self.blockheight.trim(),
-			self.wobble.trim(),
-			self.id, value,
-			self.message
-		);
+            self.tree,
+            self.parent,
+            self.weeble.trim(),
+            self.blockheight.trim(),
+            self.wobble.trim(),
+            self.id,
+            value,
+            self.message
+        );
         if cfg!(debug_assertions) {
             print!("raw={}\n", raw);
         }

@@ -1,30 +1,45 @@
-use gnostr_types::Event;
 use std::convert::TryInto;
-use std::env;
 use std::io::Read;
-use std::process;
+use std::{env, process};
+
+use gnostr_types::Event;
 
 fn main() {
     //!
     //! Usage: in context of other gnostr utilities
     //!
-    //! gnostr --sec $(gnostr-sha256) --content 'test'  | gnostr-post-event wss://relay.damus.io
+    //! gnostr --sec $(gnostr-sha256) --content 'test'  | gnostr-post-event
+    //! wss://relay.damus.io
     //!
-    //! gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" | gnostr-post-event wss://relay.damus.io
+    //! gnostr --sec $(gnostr-sha256) --content "$(gnostr-git show HEAD)" |
+    //! gnostr-post-event wss://relay.damus.io
     //!
-    //! gnostr --sec $(gnostr-sha256) --content "$(gnostr-git-reflog -gd)" | gnostr-post-event wss://relay.damus.io
-    //!
+    //! gnostr --sec $(gnostr-sha256) --content "$(gnostr-git-reflog -gd)" |
+    //! gnostr-post-event wss://relay.damus.io
 
-    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content "test" | ./target/debug/gnostr-post-event
+    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t
+    //! gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble
+    //! $(gnostr-wobble) --content "test" | ./target/debug/gnostr-post-event
     //!
-    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content "test" | ./target/debug/gnostr-post-event | sed 's/\\//g'
+    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t
+    //! gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble
+    //! $(gnostr-wobble) --content "test" | ./target/debug/gnostr-post-event |
+    //! sed 's/\\//g'
 
     //! Usage: in context of other gnostr utilities
     //!
-    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content "gnostr\/$(gnostr-weeble)\/$(gnostr-blockheight)\/$(gnostr-wobble)" | ./target/debug/gnostr-post-event
+    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t
+    //! gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble
+    //! $(gnostr-wobble) --content
+    //! "gnostr\/$(gnostr-weeble)\/$(gnostr-blockheight)\/$(gnostr-wobble)" |
+    //! ./target/debug/gnostr-post-event
     //!
     //!
-    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --content "#gnostr/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | ./target/debug/gnostr-post-event
+    //! gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr -t
+    //! gnostr-get-relays --tag weeble $(gnostr-weeble) --tag wobble
+    //! $(gnostr-wobble) --content
+    //! "#gnostr/$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" |
+    //! ./target/debug/gnostr-post-event
     //!
     //!
     //! $(echo gnostr --sec $(gnostr-sha256)) | ./target/debug/gnostr-post-event
@@ -202,7 +217,11 @@ fn main() {
     //let _ = args.next(); // program name
     //let relay_url = match args.next() {
     //    Some(u) => u,
-    //    None => panic!("Usage:\ngnostr --sec $(gnostr-sha256) --content 'test'  | gnostr-post-event wss://relay.damus.io\ngnostr --sec $(gnostr-sha256) --content \"$(gnostr-git show HEAD)\ngnostr --sec $(gnostr-sha256) --content \"$(gnostr-git-reflog -gd)\" | gnostr-post-event wss://relay.damus.io | gnostr-post-event wss://relay.damus.io"),
+    //    None => panic!("Usage:\ngnostr --sec $(gnostr-sha256) --content 'test'
+    // | gnostr-post-event wss://relay.damus.io\ngnostr --sec $(gnostr-sha256)
+    // --content \"$(gnostr-git show HEAD)\ngnostr --sec $(gnostr-sha256)
+    // --content \"$(gnostr-git-reflog -gd)\" | gnostr-post-event
+    // wss://relay.damus.io | gnostr-post-event wss://relay.damus.io"),
     //};
 
     //let mut s: String = String::new();
