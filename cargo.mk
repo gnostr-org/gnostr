@@ -33,6 +33,8 @@ cargo-build-release:### 	cargo-build-release
 	@. $(HOME)/.cargo/env && cargo b --release $(QUIET)
 cargo-check:### 	cargo-check
 	@. $(HOME)/.cargo/env && cargo c
+cargo-nightly-fmt--all:### 	 cargo-nightly-fmt--all
+	cargo +nightly fmt --all
 cargo-bench:### 	cargo-bench
 	@. $(HOME)/.cargo/env && cargo bench
 cargo-t:cargo-test
