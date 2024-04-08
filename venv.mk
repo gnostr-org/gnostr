@@ -31,9 +31,9 @@ export PYTHON_VERSION
 
 .PHONY: venv
 venv:
-	@#rm -rf .venv
-	@#python -c 'import sys; print (sys.real_prefix)' 2>/dev/null && INVENV=1 && echo $(INVENV) || INVENV=0 && echo $(INVENV)
-	test -d .venv || $(shell which python3) -m virtualenv .venv
+	type -P pipx && pipx install virtualenv --force || true
+	python3 -m pip install -U virtualenv || true
+	$(shell which python3) -m virtualenv .venv
 	( \
 	   source .venv/bin/activate; pip install -r requirements.txt; \
 	);
