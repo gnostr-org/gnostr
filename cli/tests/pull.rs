@@ -143,6 +143,7 @@ mod when_main_is_checked_out {
             Ok(())
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn cli_show_error() -> Result<()> {
@@ -208,6 +209,7 @@ mod when_branch_doesnt_exist {
             Ok(())
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn cli_show_error() -> Result<()> {
@@ -273,6 +275,7 @@ mod when_branch_is_checked_out {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn cli_show_up_to_date() -> Result<()> {
@@ -388,6 +391,7 @@ mod when_branch_is_checked_out {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn cli_applied_1_commit() -> Result<()> {
@@ -395,6 +399,7 @@ mod when_branch_is_checked_out {
             }
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[tokio::test]
         #[serial]
         async fn pr_branch_tip_is_most_recent_patch() -> Result<()> {

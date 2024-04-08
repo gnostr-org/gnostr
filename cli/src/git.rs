@@ -839,6 +839,7 @@ mod tests {
 
     mod make_patch_from_commit {
         use super::*;
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn simple_patch_matches_string() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -875,6 +876,7 @@ mod tests {
             Ok(())
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn series_count() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -917,6 +919,7 @@ mod tests {
         use super::*;
         mod returns_main {
             use super::*;
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_it_exists() -> Result<()> {
                 let test_repo = GitTestRepo::new("main")?;
@@ -928,6 +931,7 @@ mod tests {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_it_exists_and_other_branch_checkedout() -> Result<()> {
                 let test_repo = GitTestRepo::new("main")?;
@@ -945,6 +949,7 @@ mod tests {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_exists_even_if_master_is_checkedout() -> Result<()> {
                 let test_repo = GitTestRepo::new("main")?;
@@ -963,6 +968,7 @@ mod tests {
             }
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn returns_master_if_exists_and_main_doesnt() -> Result<()> {
             let test_repo = GitTestRepo::new("master")?;
@@ -979,6 +985,7 @@ mod tests {
             assert_ne!(commit_hash, oid_to_sha1(&feature_oid));
             Ok(())
         }
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn returns_error_if_no_main_or_master() -> Result<()> {
             let test_repo = GitTestRepo::new("feature")?;
@@ -992,6 +999,7 @@ mod tests {
     mod get_origin_url {
         use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn returns_origin_url() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -1004,6 +1012,7 @@ mod tests {
     mod get_checked_out_branch_name {
         use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn returns_checked_out_branch_name() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -1027,6 +1036,7 @@ mod tests {
         mod returns_main {
             use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_on_same_commit_return_empty() -> Result<()> {
                 let test_repo = GitTestRepo::default();
@@ -1044,6 +1054,7 @@ mod tests {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_2_commit_behind() -> Result<()> {
                 let test_repo = GitTestRepo::default();
@@ -1072,6 +1083,7 @@ mod tests {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_2_commit_ahead() -> Result<()> {
                 let test_repo = GitTestRepo::default();
@@ -1098,6 +1110,7 @@ mod tests {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_2_commit_ahead_and_2_commits_behind() -> Result<()> {
                 let test_repo = GitTestRepo::default();
@@ -1137,6 +1150,7 @@ mod tests {
 
     mod create_branch_at_commit {
         use super::*;
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn doesnt_error() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -1157,6 +1171,7 @@ mod tests {
             Ok(())
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn branch_gets_created() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -1178,6 +1193,7 @@ mod tests {
             Ok(())
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         #[test]
         fn branch_created_with_correct_commit() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -1202,6 +1218,7 @@ mod tests {
         mod when_branch_already_exists {
             use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_new_tip_specified_it_is_updated() -> Result<()> {
                 let test_repo = GitTestRepo::default();
@@ -1224,6 +1241,7 @@ mod tests {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn when_same_tip_is_specified_it_doesnt_error() -> Result<()> {
                 let test_repo = GitTestRepo::default();
@@ -1306,6 +1324,7 @@ mod tests {
 
             use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature()
             -> Result<()> {
@@ -1317,6 +1336,7 @@ mod tests {
                 test_patch_applies_to_repository(generate_patch_from_head_commit(&source_repo)?)
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn signature_with_specific_author_time() -> Result<()> {
                 let source_repo = GitTestRepo::default();
@@ -1335,6 +1355,7 @@ mod tests {
                 test_patch_applies_to_repository(generate_patch_from_head_commit(&source_repo)?)
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn author_name_and_email_not_current_git_user() -> Result<()> {
                 let source_repo = GitTestRepo::default();
@@ -1353,6 +1374,7 @@ mod tests {
                 test_patch_applies_to_repository(generate_patch_from_head_commit(&source_repo)?)
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn comiiter_name_and_email_not_current_git_user_or_author() -> Result<()> {
                 let source_repo = GitTestRepo::default();
@@ -1377,6 +1399,7 @@ mod tests {
 
             // TODO: pgp signature
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[test]
             fn unique_author_and_commiter_details() -> Result<()> {
                 let source_repo = GitTestRepo::default();
@@ -1437,6 +1460,7 @@ mod tests {
             mod when_branch_root_is_tip_of_main {
                 use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_gets_created_with_name_specified_in_pr() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1452,6 +1476,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1466,6 +1491,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn patches_get_created_as_commits() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events()?;
@@ -1480,6 +1506,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events()?;
@@ -1494,6 +1521,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn previously_checked_out_branch_tip_does_not_change() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1511,6 +1539,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1526,6 +1555,7 @@ mod tests {
             mod when_branch_root_is_tip_behind_main {
                 use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_gets_created_with_name_specified_in_pr() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1543,6 +1573,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1559,6 +1590,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events()?;
@@ -1575,6 +1607,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn previously_checked_out_branch_tip_does_not_change() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1594,6 +1627,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1615,6 +1649,7 @@ mod tests {
             mod when_branch_already_checked_out {
                 use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, mut patch_events) = generate_test_repo_and_events()?;
@@ -1631,6 +1666,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events()?;
@@ -1646,6 +1682,7 @@ mod tests {
             mod when_branch_not_checked_out {
                 use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, mut patch_events) = generate_test_repo_and_events()?;
@@ -1663,6 +1700,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_checked_out() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events()?;
@@ -1680,6 +1718,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events()?;
@@ -1701,6 +1740,7 @@ mod tests {
             mod when_branch_already_checked_out {
                 use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn returns_all_patches_applied_0() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1716,6 +1756,7 @@ mod tests {
             mod when_branch_not_checked_out {
                 use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;
@@ -1733,6 +1774,7 @@ mod tests {
                     Ok(())
                 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
                 #[test]
                 fn returns_all_patches_applied_0() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events()?;

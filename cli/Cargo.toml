@@ -44,6 +44,9 @@ rexpect = "0.5.0"
 serial_test = "2.0.0"
 test_utils = { path = "test_utils" }
 
+[features]
+expensive_tests = []
+
 ## [workspace]
 ## members = [
 ##     "test_utils",

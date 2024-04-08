@@ -12,9 +12,11 @@ fn expect_msgs_first(p: &mut CliTester) -> Result<()> {
     Ok(())
 }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
 mod when_repo_not_previously_claimed {
     use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
     mod when_repo_relays_specified_as_arguments {
         use futures::join;
         use test_utils::relay::Relay;
@@ -111,6 +113,7 @@ mod when_repo_not_previously_claimed {
         mod sent_to_correct_relays {
             use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn only_1_repository_kind_event_sent_to_user_relays() -> Result<()> {
@@ -128,6 +131,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn only_1_repository_kind_event_sent_to_specified_repo_relays() -> Result<()> {
@@ -145,6 +149,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn only_1_repository_kind_event_sent_to_fallback_relays() -> Result<()> {
@@ -162,6 +167,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn only_1_repository_kind_event_sent_to_blaster_relays() -> Result<()> {
@@ -251,6 +257,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn contains_maintainers_and_relays() -> Result<()> {
@@ -262,6 +269,7 @@ mod when_repo_not_previously_claimed {
         mod tags {
             use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn d_replaceable_event_identifier_defaults_to_root_commit_id_shorthand()
@@ -284,6 +292,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn root_commit_as_reference() -> Result<()> {
@@ -301,6 +310,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn name() -> Result<()> {
@@ -322,6 +332,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn description() -> Result<()> {
@@ -339,6 +350,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn git_server() -> Result<()> {
@@ -358,6 +370,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn relays() -> Result<()> {
@@ -380,6 +393,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn web() -> Result<()> {
@@ -402,6 +416,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn current_user_in_maintainers() -> Result<()> {
@@ -490,6 +505,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn check_cli_output() -> Result<()> {
@@ -592,6 +608,7 @@ mod when_repo_not_previously_claimed {
         mod tags {
             use super::*;
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn relays_match_user_write_relays() -> Result<()> {
@@ -611,6 +628,7 @@ mod when_repo_not_previously_claimed {
             }
         }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
         mod cli_ouput {
             use super::*;
 
@@ -676,6 +694,7 @@ mod when_repo_not_previously_claimed {
                 Ok(())
             }
 
+#[cfg_attr(not(feature = "expensive_tests"), ignore)]
             #[tokio::test]
             #[serial]
             async fn check_cli_output() -> Result<()> {
