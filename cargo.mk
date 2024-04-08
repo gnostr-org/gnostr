@@ -41,6 +41,12 @@ cargo-test:### 	cargo-test
 cargo-t-wp:cargo-test-workspace
 cargo-test-workspace:### 	cargo-test-workspace
 	@. $(HOME)/.cargo/env && cargo test --workspace --verbose
+cargo-t-wp-stable:cargo-test-workspace-stable
+cargo-test-workspace-stable:### 	cargo-test-workspace-stable
+	@rustup default stable && . $(HOME)/.cargo/env && cargo test --workspace --verbose
+cargo-t-wp-nightly:cargo-test-workspace-nightly
+cargo-test-workspace-nightly:### 	cargo-test-workspace-nightly
+	@rustup default nightly && . $(HOME)/.cargo/env && cargo test --workspace --verbose
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env && cargo report future-incompatibilities --id 1
 
