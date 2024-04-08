@@ -30,21 +30,19 @@ cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
 ## 	cargo-build-release q=true
-	@. $(HOME)/.cargo/env
-	@cargo b --release $(QUIET)
+	@. $(HOME)/.cargo/env && cargo b --release $(QUIET)
 cargo-check:### 	cargo-check
-	@. $(HOME)/.cargo/env
-	@cargo c
+	@. $(HOME)/.cargo/env && cargo c
 cargo-bench:### 	cargo-bench
-	@. $(HOME)/.cargo/env
-	@cargo bench
+	@. $(HOME)/.cargo/env && cargo bench
 cargo-t:cargo-test
 cargo-test:### 	cargo-test
-	@. $(HOME)/.cargo/env
-	@cargo test --workspace --verbose
+	@. $(HOME)/.cargo/env && cargo test --verbose
+cargo-t-wp:cargo-test-workspace
+cargo-test-workspace:### 	cargo-test-workspace
+	@. $(HOME)/.cargo/env && cargo test --workspace --verbose
 cargo-report:### 	cargo-report
-	@. $(HOME)/.cargo/env
-	cargo report future-incompatibilities --id 1
+	@. $(HOME)/.cargo/env && cargo report future-incompatibilities --id 1
 
 cargo-deps-gnostr-all:cargo-deps-gnostr-cat cargo-deps-gnostr-cli cargo-deps-gnostr-command cargo-deps-gnostr-grep cargo-deps-gnostr-legit cargo-deps-gnostr-sha256### 	cargo-deps-gnostr-all
 cargo-deps-gnostr-cat:### 	cargo-deps-gnostr-cat
