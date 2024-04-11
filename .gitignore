@@ -890,3 +890,5 @@ src/nostril/configurator.out.dSYM/
 src/nostril/libnostri.a
 src/nostril/nostril
 web/wt_config.xml
+.nvmrc
+.gnostr/proxy
