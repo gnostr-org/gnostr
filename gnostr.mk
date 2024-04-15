@@ -105,23 +105,23 @@ doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generat
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
 	for b in $(DOCS);\
-  do touch doc/$$b.1;\
-  done;\
-  exit;\
+	do touch doc/$$b.1;\
+	done;\
+	exit;\
 	)
 	(\
 	for b in $(DOCS);\
-  do echo doc/$$b.1 > /tmp/make-doc.log;\
-  done;\
-  exit;\
+	do echo doc/$$b.1 > /tmp/make-doc.log;\
+	done;\
+	exit;\
 	)
 	(\
 	for b in $(DOCS);\
-  do help2man $$b > doc/$$b.1;\
-  install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
-  echo $$b;\
-  done;\
-  exit;\
+	do help2man $$b > doc/$$b.1;\
+	install -m 0644 -v doc/$$b.1 $(PREFIX)/share/man/man1/$$b.1;\
+	echo $$b;\
+	done;\
+	exit;\
 	)
 	#for b in $(DOCS); do echo $b; done; exit
 	#for b in $(DOCS); do touch doc/$(DOCS); done;exit
@@ -136,8 +136,8 @@ version: src/gnostr.c## 	print version
 #	@cat $@
 .PHONY:GIT-VERSION-FILE git-version
 git-version:GIT-VERSION-FILE
-GIT-VERSION-FILE:deps/gnostr-git/GIT-VERSION-FILE
-	@. deps/gnostr-git/GIT-VERSION-GEN
+GIT-VERSION-FILE:git/GIT-VERSION-FILE
+	@. git/GIT-VERSION-GEN
 	@grep '^GIT_VERSION' <GIT-VERSION-FILE | sed -En 's,..............([^"]+).*,\1,p' > git-version
 	@cat git-version #&& rm GIT-VERSION-FILE
 .PHONY:versions
@@ -172,7 +172,6 @@ diff-log:
 submodules:
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
-	make bins drives ext/wxWidgets-3.2.2.1 act bits cat cli core db ffi get-relays git gossip grep jq legit lfs org proxy py relay sha256 hyper-nostr hyper-sdk modal nips nips secp256k1 src/libcjson tui workspace
 	$(MAKE) $(SUBMODULES)
 
 .PHONY:secp256k1/.git
@@ -240,10 +239,10 @@ gnostr-web-deploy:
 git/.git:
 	@devtools/refresh-submodules.sh git
 git/targets/release/gnostr-git:git/.git
-	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-git.log
 	cd git && make cargo-install
 git:gnostr-git
 gnostr-git:git/targets/release/gnostr-git
+	$(MAKE) gnostr-install
 	#cp $< $@ || true
 	#install $@ /usr/local/bin/
 
@@ -309,21 +308,23 @@ xq:xq/.git
 
 .PHONY:core gnostr-core
 core/.git:
-	@devtools/refresh-submodules.sh bins
+	@devtools/refresh-submodules.sh core
 gnostr-core:core
 core:core/.git
-	@cd core && make cargo-b-release #&& make cargo-i
+	@cd core && make cargo-br
 
 .PHONY:py gnostr-py
 py/.git:
 	@devtools/refresh-submodules.sh py
 gnostr-py:py
-py:py/.git
-	@cd py && make ## TODO
+py:py/.git venv
+	$(. .venv/bin/activate & cd py && make)
 
 .PHONY:get-relays gnostr-get-relays
+get-relays/.git:
+	@devtools/refresh-submodules.sh get-relays
 gnostr-get-relays:get-relays
-get-relays:
+get-relays:get-relays/.git
 	@cd get-relays && make cargo-b-release && make cargo-i
 bins-test-post-event:
 	cat test/first-gnostr-commit.json | gnostr-post-event wss://relay.damus.io
@@ -334,15 +335,15 @@ bins-test-fetch-by-id:
 .PHONY:ffi gnostr-ffi
 ffi/.git:
 	@devtools/refresh-submodules.sh ffi
-gnostr-ffi:ffi
 ffi:
-	@cd ffi && make gnostr && cd ..
+	@cd ffi && make all && cd .. || echo "make ffi failed..."
+gnostr-ffi:ffi
 
 .PHONY:gossip gnostr-gossip
 gossip/.git:
 	@devtools/refresh-submodules.sh gossip
-gnostr-gossip:gossip/.git gossip
-gossip:
+gnostr-gossip:gossip
+gossip:gossip/.git
 	@cargo install --path gossip
 
 .PHONY:bits gnostr-bits
@@ -445,7 +446,7 @@ cli/.git:
 gnostr-cli:cli
 cli:cli/.git
 	cd cli && \
-		make cargo-install
+		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
 .PHONY:grep/.git gnostr-grep grep
@@ -491,10 +492,16 @@ act:act/bin/gnostr-act
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-
-
+src/libcjson/.git:
+	@devtools/refresh-submodules.sh src/libcjson
+src/libcjson:src/libcjson/.git
+	cd src/libcjson && make
+src/libcjson/bin/libcjson.a:src/libcjson
+libcjson:src/libcjson/bin/libcjson.a
+	cp $^ .
 
 gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+	$(MAKE) secp256k1
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
 
@@ -520,6 +527,7 @@ gnostr-install:
 	mkdir -p $(PREFIX)/include                                                     || true
 	@install -m755 -v include/*.*                    $(PREFIX)/include 2>/dev/null || true
 	@install -m755 -v gnostr                         $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
+	@install -m755 -v gnostr-client                  $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v gnostr-am                      $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
@@ -527,6 +535,7 @@ gnostr-install:
 	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
+	@install -m755 -v web/gnostr-*                   $(PREFIX)/bin     2>/dev/null || true
 
 .ONESHELL:
 ##install-doc

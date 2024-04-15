@@ -1,31 +1,132 @@
-[package]
-name = "gnostr"
-version = "0.0.2"
+cargo-features = []
+
+[workspace]
+resolver = "2"
+members = ["jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils"]
+exclude = ["sha256"]
+
+[workspace.package]
+version = "0.0.0"
+license = "Apache-2.0"
+rust-version = "1.76"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
-authors = ["gnostr <admin@gnostr.org>","extrawurst <mail@rusticorn.com>", "TODO:add more contributors"]
-description = "gnostr: a git+nostr workflow utility"
-rust-version = "1.65"
-exclude = [".github/*", ".vscode/*", "assets/*"]
-homepage = "https://github.com/gnostr-org/gnostr"
-repository = "https://github.com/gnostr-org/gnostr"
 readme = "README.md"
-license = "MIT"
-categories = ["command-line-utilities"]
-keywords = ["git", "gui", "cli", "terminal", "ui", "gnostr"]
+homepage = "https://github.com/martinvonz/jj"
+repository = "https://github.com/martinvonz/jj"
+documentation = "https://martinvonz.github.io/jj/"
+categories = ["version-control", "development-tools"]
+keywords = ["VCS", "DVCS", "SCM", "Git", "Mercurial"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace.dependencies]
+anyhow = "1.0.81"
+assert_cmd = "2.0.8"
+assert_matches = "1.5.0"
+async-trait = "0.1.79"
+backoff = "0.4.0"
+blake2 = "0.10.6"
+bytes = "1.5.0"
+cargo_metadata = "0.17.0"
+clap = { version = "4.5.4", features = [
+    "derive",
+    "deprecated",
+    "wrap_help",
+    "string",
+] }
+clap_complete = "4.5.1"
+clap_complete_nushell = "4.5.1"
+clap-markdown = "0.1.3"
+clap_mangen = "0.2.10"
+chrono = { version = "0.4.37", default-features = false, features = [
+    "std",
+    "clock",
+] }
+config = { version = "0.13.4", default-features = false, features = ["toml"] }
+criterion = "0.5.1"
+crossterm = { version = "0.27", default-features = false }
+digest = "0.10.7"
+dirs = "5.0.1"
+either = "1.10.0"
+esl01-renderdag = "0.3.0"
+futures = "0.3.30"
+git2 = "0.18.3"
+gix = { version = "0.61.0", default-features = false, features = [
+    "index",
+    "max-performance-safe",
+] }
+glob = "0.3.1"
+hex = "0.4.3"
+ignore = "0.4.20"
+indexmap = "2.2.5"
+indoc = "2.0.4"
+insta = { version = "1.38.0", features = ["filters"] }
+itertools = "0.12.1"
+libc = { version = "0.2.153" }
+maplit = "1.0.2"
+minus = { version = "5.6.0", features = ["dynamic_output", "search"] }
+num_cpus = "1.16.0"
+once_cell = "1.19.0"
+ouroboros = "0.18.0"
+pest = "2.7.7"
+pest_derive = "2.7.7"
+pollster = "0.3.0"
+pretty_assertions = "1.4.0"
+proc-macro2 = "1.0.79"
+prost = "0.12.3"
+prost-build = "0.12.3"
+quote = "1.0.35"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+rayon = "1.10.0"
+ref-cast = "1.0.22"
+regex = "1.10.3"
+rpassword = "7.3.1"
+rustix = { version = "0.38.32", features = ["fs"] }
+scm-record = "0.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.115"
+slab = "0.4.9"
+smallvec = { version = "1.13.2", features = [
+    "const_generics",
+    "const_new",
+    "union",
+] }
+strsim = "0.11.0"
+syn = "2.0.55"
+tempfile = "3.10.1"
+test-case = "3.3.1"
+textwrap = "0.16.1"
+thiserror = "1.0.58"
+timeago = { version = "0.4.2", default-features = false }
+tokio = { version = "1.37.0" }
+toml_edit = { version = "0.19.15", features = ["serde"] }
+tracing = "0.1.40"
+tracing-chrome = "0.7.2"
+tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+    "std",
+    "ansi",
+    "env-filter",
+    "fmt",
+] }
+unicode-width = "0.1.11"
+version_check = "0.9.4"
+watchman_client = { version = "0.8.0" }
+whoami = "1.5.1"
+winreg = "0.52"
+zstd = "0.12.4"
 
-[dependencies]
-# gnostr-bins = { git = "https://github.com/gnostr-org/gnostr-bins.git", version = "0.0.6" }
-# gnostr-cli = { git = "https://github.com/gnostr-org/gnostr-cli.git", rev = "60e244cffdcd781f1a22c2c67f31bb3d539624f2" }
-k256 = { version = "0.13.3", features = ["schnorr", "ecdh"], path = "vendor/k256" }
-rand_core = "0.6"
+# put all inter-workspace libraries, i.e. those that use 'path = ...' here in
+# their own (alphabetically sorted) block
 
-inline-c = "0.1.7"
-sha2 = { version = "0.10.8", path = "vendor/sha2" }
-getopts = "0.2.21"
-git2 = "0.18.2"
-reqwest = { version = "0.11.24", features = ["blocking"] }
-gnostr-xq = { git = "https://github.com/gnostr-org/gnostr-xq.git", version = "0.0.0" }
-gnostr-bins = "0.0.14"
-secp256k1 = "0.28.2"
+jj-lib = { path = "lib", version = "0.0.0" }
+jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.0" }
+testutils = { path = "lib/testutils" }
+
+# Insta suggests compiling these packages in opt mode for faster testing.
+# See https://docs.rs/insta/latest/insta/#optional-faster-runs.
+[profile.dev.package]
+insta.opt-level = 3
+similar.opt-level = 3
+
+[profile.release]
+strip = "debuginfo"
+codegen-units = 1

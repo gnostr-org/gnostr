@@ -1,0 +1,20 @@
+# The code assumes that this table exists, so don't delete it even if you remove
+# all aliases from here.
+[aliases]
+amend = ["squash"]
+co = ["checkout"]
+unamend = ["unsquash"]
+
+
+[format]
+tree-level-conflicts = true
+
+[ui]
+diff-instructions = true
+paginate = "auto"
+pager = { command = ["less", "-FRX"], env = { LESSCHARSET = "utf-8" } }
+log-word-wrap = false
+log-synthetic-elided-nodes = true
+
+[snapshot]
+max-new-file-size = "1MiB"

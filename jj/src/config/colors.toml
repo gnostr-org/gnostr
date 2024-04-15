@@ -1,0 +1,89 @@
+[colors]
+"error" = { fg = "default", bold = true }
+"error_source" = { fg = "default" }
+"warning" = { fg = "default", bold = true }
+"hint" = { fg = "default" }
+"error heading" = { fg = "red", bold = true }
+"error_source heading" = { bold = true }
+"warning heading" = { fg = "yellow", bold = true }
+"hint heading" = { fg = "cyan", bold = true }
+
+"conflict_description" = "yellow"
+"conflict_description difficult" = "red"
+
+"commit_id" = "blue"
+"change_id" = "magenta"
+
+# Unique prefixes and the rest for change & commit ids
+"prefix" = { bold = true }
+"rest" = "bright black"
+"divergent rest" = "red"
+"divergent prefix" = { fg = "red", underline = true }
+"hidden prefix" = "default"
+
+"email" = "yellow"
+"username" = "yellow"
+"timestamp" = "cyan"
+"working_copies" = "green"
+"branch" = "magenta"
+"branches" = "magenta"
+"local_branches" = "magenta"
+"remote_branches" = "magenta"
+"tags" = "magenta"
+"git_refs" = "green"
+"git_head" = "green"
+"divergent" = "red"
+"divergent change_id" = "red"
+"conflict" = "red"
+"empty" = "green"
+"placeholder" = "red"
+"description placeholder" = "yellow"
+"empty description placeholder" = "green"
+"separator" = "bright black"
+"elided" = "bright black"
+"root" = "green"
+
+"working_copy" = { bold = true }
+"working_copy commit_id" = "bright blue"
+"working_copy change_id" = "bright magenta"
+# We do not use bright yellow because of how it looks on xterm's default theme.
+# https://github.com/martinvonz/jj/issues/528
+"working_copy email" = "yellow"
+"working_copy timestamp" = "bright cyan"
+"working_copy working_copies" = "bright green"
+"working_copy branch" = "bright magenta"
+"working_copy branches" = "bright magenta"
+"working_copy local_branches" = "bright magenta"
+"working_copy remote_branches" = "bright magenta"
+"working_copy tags" = "bright magenta"
+"working_copy git_refs" = "bright green"
+"working_copy divergent" = "bright red"
+"working_copy divergent change_id" = "bright red"
+"working_copy conflict" = "bright red"
+"working_copy empty" = "bright green"
+"working_copy placeholder" = "bright red"
+"working_copy description placeholder" = "yellow"
+"working_copy empty description placeholder" = "bright green"
+
+"config_list name" = "green"
+"config_list value" = "yellow"
+"config_list overridden" = "bright black"
+"config_list overridden name" = "bright black"
+"config_list overridden value" = "bright black"
+
+"diff header" = "yellow"
+"diff empty" = "cyan"
+"diff binary" = "cyan"
+"diff file_header" = { bold = true }
+"diff hunk_header" = "cyan"
+"diff removed" = "red"
+"diff added" = "green"
+"diff modified" = "cyan"
+
+"op_log id" = "blue"
+"op_log user" = "yellow"
+"op_log time" = "cyan"
+"op_log current_operation" = { bold = true }
+"op_log current_operation id" = "bright blue"
+"op_log current_operation user" = "yellow"                    # No bright yellow, see comment above
+"op_log current_operation time" = "bright cyan"
