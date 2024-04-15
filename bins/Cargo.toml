@@ -1,0 +1,58 @@
+[package]
+name = "gnostr-bins"
+version = "0.0.16"
+edition = "2018"
+authors = ["Mike Dilger <mike@mikedilger.com>", "gnostr <admin@gnostr.org>"]
+description = "gnostr-bins: part of the gnostr workflow commands"
+repository = "https://github.com/gnostr-org/gnostr-bins"
+documentation = "https://docs.rs/gnostr-bins"
+readme = "README.md"
+keywords = ["nostr", "gnostr", "git", "nostr-watch"]
+license = "MIT"
+## [source."git+https://github.com/gnostr-org/nip44?rev=e38717f86ccccb91c25ebf07881a77d66411161c"]
+## git = "https://github.com/mikedilger/nip44"
+## version = "0.1.0"
+## rev = "e38717f86ccccb91c25ebf07881a77d66411161c"
+## replace-with = "vendored-sources"
+##
+## [source."git+https://github.com/gnostr-org/gnostr-types?rev=c9f82eb8935c51d912dcbada79c8990029114930"]
+## git = "https://github.com/mikedilger/nostr-types"
+## version = "0.7.0-unstable"
+## rev = "a7aabd3de577de87f2bf8034b24b490e4ba0aa02"
+## replace-with = "vendored-sources"
+##
+## [source.vendored-sources]
+## directory = "vendor"
+
+[dependencies]
+argparse    = "0.2.2"
+ascii = "1.1.0"
+base64 = "0.22"
+bech32 = "0.11"
+chrono = "0.4.38"
+getopts = "0.2.21"
+git2 = "^0.18"
+gnostr-types = "0.7.1-unstable"
+hex = "0.4"
+http = "1.1"
+k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
+nip44 = { package = "gnip44", git = "https://github.com/gnostr-org/gnip44", version = "0.1.1" }
+num-bigint = "0.4.4"
+pad = "0.1.6"
+rand = "0.8"
+rand_core = "0.6"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls-webpki-roots"] }
+rpassword = "7.2"
+rust-crypto = "0.2.36"
+serde = { version = "1.0", features = [ "derive" ] }
+serde_json = "1.0"
+sha1 = { version = "0.10.6", features = ["oid"] }
+sha2 = "0.10.8"
+sha256 = "1.2.2"
+structopt = "0.3.26"
+time = "0.3.34"
+tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread"] }
+tungstenite = { version = "0.21", features = [ "rustls-tls-webpki-roots" ] }
+ureq = "2.9.6"
+zeroize = "1.5"
+#crypto      = "0.4.0"
