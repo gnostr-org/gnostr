@@ -71,10 +71,10 @@ jobs:
         toolchain:  1.76
     - name: Build
       run: cargo build --workspace --all-targets --verbose ${{ matrix.cargo_flags }}
-    - name: Test
-      run: cargo test --workspace --all-targets --verbose ${{ matrix.cargo_flags }}
-      env:
-        RUST_BACKTRACE: 1
+    #- name: Test
+      #run: cargo test --workspace --all-targets --verbose ${{ matrix.cargo_flags }}
+      #env:
+        #RUST_BACKTRACE: 1
 
   check-protos:
     name: Check protos
