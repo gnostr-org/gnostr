@@ -32,15 +32,18 @@ cargo-build-release:### 	cargo-build-release
 ## 	cargo-build-release q=true
 	@. $(HOME)/.cargo/env
 	@cargo b --release $(QUIET)
+cargo-c:cargo-check
 cargo-check:### 	cargo-check
 	@. $(HOME)/.cargo/env
 	@cargo c
 cargo-bench:### 	cargo-bench
 	@. $(HOME)/.cargo/env
 	@cargo bench
+cargo-t:cargo-test
 cargo-test:### 	cargo-test
 	@. $(HOME)/.cargo/env
-	@cargo test
+	#@cargo test
+	@cargo test -p jj-cli --test runner
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1
