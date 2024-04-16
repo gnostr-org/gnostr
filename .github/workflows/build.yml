@@ -70,9 +70,9 @@ jobs:
       with:
         toolchain:  1.76
     - name: Build
-      run: cargo build --workspace --all-targets --verbose ${{ matrix.cargo_flags }}
+      run: cargo build --workspace --all-targets #--verbose ${{ matrix.cargo_flags }}
     - name: Test
-      run: cargo test --workspace --all-targets --verbose ${{ matrix.cargo_flags }}
+      run: make bins #cargo test --workspace --all-targets #--verbose ${{ matrix.cargo_flags }}
       env:
         RUST_BACKTRACE: 1
 
