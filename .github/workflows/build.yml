@@ -37,7 +37,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+        set-safe-directory: 'true'
+        fetch-depth: '0'
 
     # The default version of gpg installed on the runners is a version baked in with git
     # which only contains the components needed by git and doesn't work for our test cases. 
