@@ -148,7 +148,7 @@ chmod:## 	chmod
 ## 	find . -type f ! -name 'deps/**' -print0     | xargs -0 chmod 644
 ## 	find . -type f ! -name 'deps/**' --name *.sh | xargs -0 chmod +rwx
 ## 	find . -type d ! -name 'deps/**' -print0     | xargs -0 chmod 755
-## 	if isssues or before 'make dist'
+## 	if issues or before 'make dist'
 ##all files first
 #find . -type f -print0 -maxdepth 2
 	find . -type f -print0 -maxdepth 2 | xargs -0 chmod 0644
