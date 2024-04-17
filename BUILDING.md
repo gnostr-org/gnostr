@@ -42,7 +42,7 @@ cmake --build .
 ```
 
 This builds the software on folder named 'build'. There you can find the executables and your code editor of choice
-generated projects, like projects for Microsof Visual Studio (in Windows).
+generated projects, like projects for Microsoft Visual Studio (in Windows).
 
 ## Building for web and desktop
 
