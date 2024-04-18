@@ -58,21 +58,21 @@ export SUBMODULES
 ifeq ($(verbose),true)
 VERBOSE                                 :=-v
 else
-VERBOSE                                 :=
+VERBOSE                                 :=$(verbose)
 endif
 export VERBOSE
 
 ifeq ($(reuse),true)
 REUSE                                   :=-r
 else
-REUSE                                   :=
+REUSE                                   :=$(reuse)
 endif
 export REUSE
 
 ifeq ($(bind),true)
 BIND                                    :=-b
 else
-BIND                                    :=
+BIND                                    :=$(bind)
 endif
 export BIND
 
@@ -422,6 +422,10 @@ report:## 	print make variables
 	@echo 'GIT_REPO_ORIGIN=${GIT_REPO_ORIGIN}'
 	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
+	@echo ''
+	@echo 'VERBOSE=${VERBOSE}'
+	@echo 'REUSE=${REUSE}'
+	@echo 'BIND=${BIND}'
 
 checkbrew:## 	install brew command
 ##	install brew command
