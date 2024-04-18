@@ -28,14 +28,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [18.17.1]
+        tag: [3.19]
 
-    container: node:${{ matrix.tag }}-alpine
+    #node:lts-alpine3.19
+    container: node:lts-alpine${{ matrix.tag }}
 
     steps:
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
-      - run: apk update && apk add bash cmake curl git make python3 && python3 -m ensurepip
+      - run: apk update && apk add bash cmake curl git make pipx python3 && pipx install virtualenv
       - run: printenv
       - run: git config --global --add safe.directory /__w/gnostr/gnostr
       - run: touch ~/GITHUB_TOKEN.txt
