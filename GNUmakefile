@@ -246,6 +246,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf            || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pipx                || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install secp256k1           || echo "
@@ -326,6 +327,9 @@ endif
 		apk add npm || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pandoc            2>/dev/null || \
+		echo"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install pipx              2>/dev/null || \
 		echo"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pkg-config        2>/dev/null || \
