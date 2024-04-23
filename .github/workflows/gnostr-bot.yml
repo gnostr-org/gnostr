@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: ${{ !env.ACT }}
         with:
           fetch-depth: '0'
