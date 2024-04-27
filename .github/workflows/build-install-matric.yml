@@ -1,4 +1,4 @@
-name: ubuntu-matrix
+name: build/install-matrix
 
 # Controls when the action will run.
 on:
