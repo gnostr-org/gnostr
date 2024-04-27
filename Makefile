@@ -5,12 +5,12 @@ HEADERS = hex.h random.h config.h sha256.h
 all: nostril
 
 nostril: $(OBJS) $(HEADERS)
-	$(CC) $(OBJS) -lsecp256k1 -o $@ 
+	$(CC) $(OBJS) -lsecp256k1 -o $@
 
-config.h: configurator                                                          
-	./configurator > $@                                                     
+config.h: configurator
+	./configurator > $@
 
-configurator: configurator.c                                                    
+configurator: configurator.c
 	$(CC) $< -o $@
 
 clean:
