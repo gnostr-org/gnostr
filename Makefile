@@ -69,10 +69,10 @@ nostril: $(HEADERS) $(OBJS) $(ARS)
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
 
 install: all
-	mkdir -p $(PREFIX)/bin
-	install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1
-	install -m755 nostril $(PREFIX)/bin/nostril
-	install -m755 nostril-query $(PREFIX)/bin/nostril-query
+	mkdir -p $(PREFIX)/bin || true
+	install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1 || true
+	install -m755 nostril $(PREFIX)/bin/nostril || true
+	install -m755 nostril-query $(PREFIX)/bin/nostril-query || true
 
 config.h: configurator
 	./configurator > $@
