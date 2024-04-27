@@ -38,7 +38,7 @@ jobs:
           set-safe-directory: 'true'
       - name: printenv && brew install scdoc autoconf automake libtool || sudo apt update && sudo apt install scdoc -y
         run: |
-          printenv && brew install scdoc autoconf automake libtool || sudo apt update && sudo apt install scdoc -y
+          printenv && brew install scdoc autoconf automake libtool || sudo apt update && sudo apt install scdoc -y || true
       - name: rm -rf deps
         run: |
           rm -rf deps
