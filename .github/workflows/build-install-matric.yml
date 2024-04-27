@@ -2,6 +2,8 @@ name: build/install-matrix
 
 # Controls when the action will run.
 on:
+  schedule:
+  - cron: '0 2 * * *' # run at 2 AM UTC¬
   pull_request:
     branches:
       - '*'
@@ -59,4 +61,4 @@ jobs:
         run: |
           #pipe handles non-zero return from nostril default help
           file nostril
-          sudo ./nostril >/dev/null | echo "${PIPESTATUS[0]}"
+          sudo ./nostril --sec $(gnostr-sha256) --content "gnostr-chat:topic:$(git rev-parse HEAD)" --tag gnostr-chat $(git rev-parse HEAD) | gnostr-post-event
