@@ -51,7 +51,7 @@ jobs:
           sudo make install
       - name: man nostril
         run: |
-          man nostril
+          sudo man nostril
       - name: sudo ./nostril
         run: |
           #pipe handles non-zero return from nostril default help
