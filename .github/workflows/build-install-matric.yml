@@ -21,7 +21,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  ubuntu-build_and_test:
+  ubuntu-build_and_install:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
