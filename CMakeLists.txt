@@ -6,8 +6,8 @@ endif()
 set(CMAKE_BUILD_TYPE Debug)
 project (nostril C)
 
-include_directories(${CMAKE_SOURCE_DIR}/ext/secp256k1/include)
-add_subdirectory(${CMAKE_SOURCE_DIR}/ext/secp256k1)
+include_directories(${CMAKE_SOURCE_DIR}/deps/secp256k1/include)
+add_subdirectory(${CMAKE_SOURCE_DIR}/deps/secp256k1)
 
 #//////////////////////////
 #windows.h header file has macros for min and max, nostril defines max
@@ -45,9 +45,9 @@ endif()
 #//////////////////////////
 
 set(lib_dep ${lib_dep})
-set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/libsecp256k1.a)
+set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/src/libsecp256k1.dylib)
 if (MSVC)
-  set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/Debug/libsecp256k1.lib)
+  set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/src/Debug/libsecp256k1.lib)
   set(lib_dep ${lib_dep} Bcrypt.lib)
 endif()
 
