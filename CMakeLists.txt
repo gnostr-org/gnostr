@@ -50,7 +50,6 @@ if (MSVC)
   set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/Debug/libsecp256k1.lib)
   set(lib_dep ${lib_dep} Bcrypt.lib)
 endif()
-set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/libsecp256k1.a)
 
 
 #//////////////////////////
