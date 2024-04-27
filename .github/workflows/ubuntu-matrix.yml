@@ -49,7 +49,6 @@ jobs:
       - name: sudo make install
         run: |
           sudo make install
-          chown $(whoami):admin /usr/local/share/man/man1/nostril.1
       - name: man nostril
         run: |
           sudo man nostril
