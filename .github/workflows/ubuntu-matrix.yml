@@ -44,8 +44,8 @@ jobs:
           rm -rf deps
       - name: make
         run: |
-          sudo su mkdir -p /usr/local/share/man/man1
-          chown $(whoami):admin /usr/local/share/man/man1/
+          sudo mkdir -p /usr/local/share/man/man1 || true
+          chown $(whoami):admin /usr/local/share/man/man1/ || true
           make
       - name: sudo make install
         run: |
