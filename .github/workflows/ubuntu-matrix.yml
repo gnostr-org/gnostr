@@ -36,9 +36,9 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: printenv && sudo apt update && sudo apt install scdoc -y || brew install scdoc autoconf automake libtool
+      - name: printenv && brew install scdoc autoconf automake libtool || sudo apt update && sudo apt install scdoc -y
         run: |
-          printenv && sudo apt update && sudo apt install scdoc -y || brew install scdoc
+          printenv && brew install scdoc autoconf automake libtool || sudo apt update && sudo apt install scdoc -y
       - name: rm -rf deps
         run: |
           rm -rf deps
