@@ -45,13 +45,12 @@ endif()
 #//////////////////////////
 
 set(lib_dep ${lib_dep})
-##set(lib_dep ${lib_dep} ext/secp256k1)
+set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/libsecp256k1.a)
 if (MSVC)
   set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/Debug/libsecp256k1.lib)
   set(lib_dep ${lib_dep} Bcrypt.lib)
-else()
-  set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/libsecp256k1.a)
 endif()
+set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/ext/secp256k1/src/libsecp256k1.a)
 
 
 #//////////////////////////
