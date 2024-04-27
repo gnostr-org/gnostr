@@ -36,7 +36,7 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: printenv && sudo apt update && sudo apt install scdoc -y || brew install scdoc
+      - name: printenv && sudo apt update && sudo apt install scdoc -y || brew install scdoc autoconf
         run: |
           printenv && sudo apt update && sudo apt install scdoc -y || brew install scdoc
       - name: rm -rf deps
