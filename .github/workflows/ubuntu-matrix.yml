@@ -45,7 +45,6 @@ jobs:
       - name: make
         run: |
           sudo mkdir -p /usr/local/share/man/man1 || true
-          chown $(whoami):admin /usr/local/share/man/man1/ || true
           make
       - name: sudo make install
         run: |
