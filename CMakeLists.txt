@@ -2,7 +2,7 @@ if (MSVC)
  cmake_minimum_required(VERSION 3.26)
 else()
  cmake_minimum_required(VERSION 3.15)
-endif() 
+endif()
 set(CMAKE_BUILD_TYPE Debug)
 option(BUILD_RELEASE "BUILD_RELEASE" ON)
 if(BUILD_RELEASE)
@@ -25,23 +25,23 @@ if (MSVC)
 endif()
 
 #//////////////////////////
-#sources 
+#sources
 #//////////////////////////
 
 set(src ${src})
-set(src ${src} hex.h)
-set(src ${src} proof.h)
-set(src ${src} cursor.h)
-set(src ${src} endian.h)
-set(src ${src} random.h)
-set(src ${src} sha256.h)
-set(src ${src} sha256.c)
-set(src ${src} base64.h)
-set(src ${src} base64.c)
-set(src ${src} aes.h)
-set(src ${src} aes.c)
+set(src ${src} include/hex.h)
+set(src ${src} include/proof.h)
+set(src ${src} include/cursor.h)
+set(src ${src} include/endian.h)
+set(src ${src} include/random.h)
+set(src ${src} include/sha256.h)
+set(src ${src} src/sha256.c)
+set(src ${src} include/base64.h)
+set(src ${src} src/base64.c)
+set(src ${src} include/aes.h)
+set(src ${src} src/aes.c)
 if (MSVC)
-  set(src ${src} clock_gettime.h)
+  set(src ${src} include/clock_gettime.h)
 endif()
 
 #//////////////////////////
@@ -62,11 +62,11 @@ endif()
 #executables
 #//////////////////////////
 
-# tool to generate file 'config.h' , generate from a shell with 
-# configurator.exe > config.h
-add_executable(configurator configurator.c)
+# tool to generate file 'config.h' , generate from a shell with
+# configurator.exe > include/config.h
+add_executable(configurator src/configurator.c)
 
-add_executable(nostril ${src} nostril.c)
+add_executable(nostril ${src} src/nostril.c)
 target_link_libraries (nostril ${lib_dep})
 
 #//////////////////////////
@@ -76,9 +76,9 @@ target_link_libraries (nostril ${lib_dep})
 add_custom_command(
     TARGET configurator
     POST_BUILD
-    COMMAND configurator > config.h
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/config.h" ${CMAKE_SOURCE_DIR}
-    COMMENT "generating config.h"
+    COMMAND configurator > include/config.h
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/include/config.h" ${CMAKE_SOURCE_DIR}
+    COMMENT "generating include/config.h"
 )
 
 #//////////////////////////
