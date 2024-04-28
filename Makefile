@@ -56,6 +56,7 @@ configurator: configurator.c
 
 clean:
 	rm -f nostril *.o *.a
+	rm -rf CMakeFiles CMakeCache.txt || true
 
 tags: fake
 	ctags *.c *.h
