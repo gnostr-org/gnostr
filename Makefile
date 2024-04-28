@@ -51,12 +51,12 @@ secp256k1:libsecp256k1.a
 config.h: configurator
 	./configurator > $@
 
-configurator: configurator.c
+configurator: src/configurator.c
 	$(CC) $< -o $@
 
 clean:
-	rm -f nostril *.o *.a
-	rm -rf CMakeFiles CMakeCache.txt || true
+	rm -f nostril *.o *.a configurator
+	rm -rf CMakeFiles CMakeCache.txt configurator.out.dSYM || true
 
 tags: fake
 	ctags *.c *.h
