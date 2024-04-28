@@ -409,6 +409,7 @@
 		2C362BA760704ED8B64D5EF2 /* bench.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = bench.c; path = deps/secp256k1/src/bench.c; sourceTree = SOURCE_ROOT; };
 		303738F6A729433A8EF36EA6 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = deps/secp256k1/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 		40983CB27487415D817284E8 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = deps/secp256k1/examples/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		48DECBFF2BDEED5100F05EAE /* nostril.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = nostril.xctestplan; path = build/nostril.xctestplan; sourceTree = "<group>"; };
 		535ABD612D5E406EBA877AEB /* precomputed_ecmult.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = precomputed_ecmult.c; path = deps/secp256k1/src/precomputed_ecmult.c; sourceTree = SOURCE_ROOT; };
 		5493A1F9B3904CB4A35E61C1 /* aes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = aes.h; path = include/aes.h; sourceTree = SOURCE_ROOT; };
 		57D35FC72AD94CCC89150E7F /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = deps/secp256k1/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
@@ -660,6 +661,7 @@
 		262E0F21675647BB974D6378 = {
 			isa = PBXGroup;
 			children = (
+				48DECBFF2BDEED5100F05EAE /* nostril.xctestplan */,
 				6D281418E80C4FA398EEB23E /* configurator */,
 				9EDCEE469AAA4921880E41FC /* nostril */,
 				0B567589AAFB4E8C9A315D4A /* ALL_BUILD */,
@@ -1696,8 +1698,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -1750,7 +1755,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.internal;
 				PRODUCT_NAME = bench_internal;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -1762,8 +1769,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -1813,7 +1823,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.ecmult;
 				PRODUCT_NAME = bench_ecmult;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -1825,8 +1837,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -1876,7 +1891,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.internal;
 				PRODUCT_NAME = bench_internal;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -1888,8 +1905,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -1942,7 +1962,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench;
 				PRODUCT_NAME = bench;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -1977,8 +1999,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -2031,7 +2056,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.schnorr.example;
 				PRODUCT_NAME = schnorr_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/schnorr_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2043,8 +2070,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -2097,7 +2127,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdsa.example;
 				PRODUCT_NAME = ecdsa_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdsa_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2109,8 +2141,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -2161,7 +2196,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.tests;
 				PRODUCT_NAME = tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2219,8 +2256,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -2270,7 +2310,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.noverify.tests;
 				PRODUCT_NAME = noverify_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2305,8 +2347,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -2356,7 +2401,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.internal;
 				PRODUCT_NAME = bench_internal;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2368,8 +2415,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -2419,7 +2469,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.noverify.tests;
 				PRODUCT_NAME = noverify_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2454,8 +2506,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -2505,7 +2560,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.ecmult;
 				PRODUCT_NAME = bench_ecmult;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2540,8 +2597,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -2594,7 +2654,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdsa.example;
 				PRODUCT_NAME = ecdsa_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdsa_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2606,8 +2668,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -2633,7 +2698,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.configurator;
 				PRODUCT_NAME = configurator;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/configurator.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2725,8 +2792,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -2779,7 +2849,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdh.example;
 				PRODUCT_NAME = ecdh_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdh_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2882,8 +2954,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -2934,7 +3009,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.tests;
 				PRODUCT_NAME = tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -2946,8 +3023,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -3000,7 +3080,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdh.example;
 				PRODUCT_NAME = ecdh_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdh_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3162,6 +3244,7 @@
 				OTHER_LDFLAGS = " $(inherited)";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -3172,8 +3255,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -3199,7 +3285,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.configurator;
 				PRODUCT_NAME = configurator;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/configurator.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3280,8 +3368,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -3334,7 +3425,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.noverify.tests;
 				PRODUCT_NAME = noverify_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3346,8 +3439,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -3400,7 +3496,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench;
 				PRODUCT_NAME = bench;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3470,8 +3568,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -3521,7 +3622,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.noverify.tests;
 				PRODUCT_NAME = noverify_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3592,8 +3695,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -3619,7 +3725,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.configurator;
 				PRODUCT_NAME = configurator;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/configurator.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3644,6 +3752,7 @@
 				OTHER_LDFLAGS = " $(inherited)";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -3667,6 +3776,7 @@
 				OTHER_LDFLAGS = " $(inherited)";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -3677,8 +3787,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -3727,7 +3840,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.exhaustive.tests;
 				PRODUCT_NAME = exhaustive_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3842,8 +3957,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -3896,7 +4014,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdsa.example;
 				PRODUCT_NAME = ecdsa_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdsa_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3921,6 +4041,7 @@
 				OTHER_LDFLAGS = " $(inherited)";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -3931,8 +4052,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -3985,7 +4109,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.schnorr.example;
 				PRODUCT_NAME = schnorr_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/schnorr_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -3997,8 +4123,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -4048,7 +4177,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.ecmult;
 				PRODUCT_NAME = bench_ecmult;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4073,6 +4204,7 @@
 				OTHER_LDFLAGS = " $(inherited)";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -4083,8 +4215,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -4138,7 +4273,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.tests;
 				PRODUCT_NAME = tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4186,10 +4323,11 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostri;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril;
 				PRODUCT_NAME = nostril;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
+				SUPPORTED_PLATFORMS = macosx;
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/nostril.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -4212,8 +4350,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -4269,7 +4410,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench;
 				PRODUCT_NAME = bench;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4281,8 +4424,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -4332,7 +4478,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.internal;
 				PRODUCT_NAME = bench_internal;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4448,8 +4596,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -4505,7 +4656,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdsa.example;
 				PRODUCT_NAME = ecdsa_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdsa_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4529,8 +4682,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -4581,7 +4737,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.tests;
 				PRODUCT_NAME = tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4661,8 +4819,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -4715,7 +4876,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.schnorr.example;
 				PRODUCT_NAME = schnorr_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/schnorr_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4834,10 +4997,11 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostri;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril;
 				PRODUCT_NAME = nostril;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
+				SUPPORTED_PLATFORMS = macosx;
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/nostril.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -4848,8 +5012,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -4900,7 +5067,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.tests;
 				PRODUCT_NAME = tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -4912,8 +5081,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -4966,7 +5138,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdh.example;
 				PRODUCT_NAME = ecdh_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdh_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5011,10 +5185,11 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostri;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril;
 				PRODUCT_NAME = nostril;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
+				SUPPORTED_PLATFORMS = macosx;
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/nostril.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -5036,8 +5211,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/RelWithDebInfo;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -5090,7 +5268,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench;
 				PRODUCT_NAME = bench;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5102,8 +5282,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5156,7 +5339,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.schnorr.example;
 				PRODUCT_NAME = schnorr_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/schnorr_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5328,8 +5513,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -5379,7 +5567,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.ecmult;
 				PRODUCT_NAME = bench_ecmult;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5427,10 +5617,11 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostri;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril;
 				PRODUCT_NAME = nostril;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
+				SUPPORTED_PLATFORMS = macosx;
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/nostril.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -5441,8 +5632,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5491,7 +5685,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.exhaustive.tests;
 				PRODUCT_NAME = exhaustive_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5560,8 +5756,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -5617,7 +5816,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.schnorr.example;
 				PRODUCT_NAME = schnorr_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/schnorr_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5629,8 +5830,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -5680,7 +5884,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.noverify.tests;
 				PRODUCT_NAME = noverify_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5738,8 +5944,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5788,7 +5997,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.exhaustive.tests;
 				PRODUCT_NAME = exhaustive_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5800,8 +6011,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Release;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5854,7 +6068,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdsa.example;
 				PRODUCT_NAME = ecdsa_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdsa_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5889,8 +6105,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5943,7 +6162,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdh.example;
 				PRODUCT_NAME = ecdh_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdh_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -5978,8 +6199,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6032,7 +6256,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.ecmult;
 				PRODUCT_NAME = bench_ecmult;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6067,8 +6293,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6118,7 +6347,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench.internal;
 				PRODUCT_NAME = bench_internal;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6130,8 +6361,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6154,7 +6388,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.configurator;
 				PRODUCT_NAME = configurator;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/configurator.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6166,8 +6402,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6218,7 +6457,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.exhaustive.tests;
 				PRODUCT_NAME = exhaustive_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6230,8 +6471,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/examples/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6287,7 +6531,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.ecdh.example;
 				PRODUCT_NAME = ecdh_example;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/ecdh_example.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6322,8 +6568,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/MinSizeRel;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -6376,7 +6625,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.bench;
 				PRODUCT_NAME = bench;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6426,10 +6677,11 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostri;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril;
 				PRODUCT_NAME = nostril;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
+				SUPPORTED_PLATFORMS = macosx;
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/nostril.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "$(inherited)";
@@ -6486,8 +6738,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/deps/secp256k1/src/Debug;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6536,7 +6791,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.exhaustive.tests;
 				PRODUCT_NAME = exhaustive_tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
@@ -6628,8 +6885,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = /Users/randymcmillan/randymcmillan/dotfiles/nostril/build/Coverage;
+				DEVELOPMENT_TEAM = M684FYCYG6;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6657,7 +6917,9 @@
 					"$(inherited)",
 				);
 				OTHER_REZFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bitcoincore.nostril.configurator;
 				PRODUCT_NAME = configurator;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECTORDER_FLAGS = "";
 				TARGET_TEMP_DIR = "/Users/randymcmillan/randymcmillan/dotfiles/nostril/build/build/configurator.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
