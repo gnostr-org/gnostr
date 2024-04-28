@@ -55,7 +55,7 @@ configurator: configurator.c
 	$(CC) $< -o $@
 
 clean:
-	rm -f nostril *.o
+	rm -f nostril *.o *.a
 
 tags: fake
 	ctags *.c *.h
