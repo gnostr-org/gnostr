@@ -9,10 +9,10 @@ OBJS                                    = nostril.o \
 
 HEADER_INCLUDE                          = include
 HEADERS                                 = $(HEADER_INCLUDE)/hex.h \
-                                         $(HEADER_INCLUDE)/random.h \
-                                         $(HEADER_INCLUDE)/config.h \
-                                         $(HEADER_INCLUDE)/sha256.h \
-                                         deps/secp256k1/include/secp256k1.h
+                                          $(HEADER_INCLUDE)/random.h \
+                                          $(HEADER_INCLUDE)/config.h \
+                                          $(HEADER_INCLUDE)/sha256.h \
+                                          deps/secp256k1/include/secp256k1.h
 
 ifneq ($(prefix),)
 	PREFIX                             :=$(prefix)
@@ -22,7 +22,7 @@ endif
 #export PREFIX
 
 ARS                                    := libsecp256k1.a
-LIB_ARS                                := libsecp256k1.a libgit.a
+LIB_ARS                                := libsecp256k1.a
 
 %.o: src/%.c $(HEADERS)
 	@echo "cc $<"
@@ -32,6 +32,21 @@ all: nostril
 
 nostril: $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) -lsecp256k1 -o $@
+
+deps/secp256k1/include/secp256k1.h:
+deps/secp256k1/configure:
+deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
+	cd deps/secp256k1 && \
+		./autogen.sh && \
+		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
+deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
+libsecp256k1.a:deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
+	cp $< $@
+.PHONY:secp256k1
+secp256k1:libsecp256k1.a
+
+
+
 
 config.h: configurator
 	./configurator > $@
