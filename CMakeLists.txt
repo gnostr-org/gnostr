@@ -93,3 +93,6 @@ install(TARGETS nostril
 install(TARGETS nostril
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS nostril
+        CONFIGURATIONS RelWithDebInfo
+        RUNTIME DESTINATION /usr/local/bin)
