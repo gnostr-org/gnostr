@@ -31,7 +31,7 @@ LIB_ARS                                := libsecp256k1.a
 all: nostril
 
 nostril: $(OBJS) $(HEADERS)
-	$(CC) $(OBJS) -lsecp256k1 -o $@
+	$(CC) $(OBJS) -o $@
 
 deps/secp256k1/include/secp256k1.h:
 deps/secp256k1/configure:

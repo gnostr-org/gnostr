@@ -41,12 +41,9 @@ jobs:
       - name: printenv && brew install cmake scdoc autoconf automake rustup-init libtool || sudo apt update && sudo apt install rustup-init scdoc cmake -y
         run: |
           printenv && brew install cmake scdoc autoconf automake rustup-init libtool || sudo apt update && sudo apt install rustup-init scdoc cmake -y || true
-      - name: cargo install gnostr-bins gnostr-xq
+      - name: make libsecp256k1.a
         run: |
-          cargo install gnostr-bins gnostr-xq
-      - name: rm -rf deps
-        run: |
-          rm -rf deps
+          make libsecp256k1.a
       - name: make
         run: |
           sudo mkdir -p /usr/local/share/man/man1 || true
@@ -58,10 +55,13 @@ jobs:
       - name: man nostril
         run: |
           sudo man doc/nostril.1
+      - name: cargo install gnostr-bins gnostr-xq
+        run: |
+          cargo install gnostr-bins gnostr-xq
       - name: nostril
         run: |
-          file nostril
-          ID=$(EVENT=$(nostril --sec $(gnostr-sha256 $(git rev-parse HEAD)) --content "gnostr-chat:topic:$(git rev-parse HEAD)" --tag gnostr-chat $(git rev-parse HEAD)) && echo $EVENT | gnostr-post-event >/dev/null; echo $EVENT | gnostr-xq .id); gnostr-fetch-by-id wss://nos.lol $(echo ${ID//\"})
+          file ./nostril
+          ID=$(EVENT=$(./nostril --sec $(gnostr-sha256 $(git rev-parse HEAD)) --content "gnostr-chat:topic:$(git rev-parse HEAD)" --tag gnostr-chat $(git rev-parse HEAD)) && echo $EVENT | gnostr-post-event >/dev/null; echo $EVENT | gnostr-xq .id); gnostr-fetch-by-id wss://nos.lol $(echo ${ID//\"})
 
       - name: make xcode || true
         run: |
