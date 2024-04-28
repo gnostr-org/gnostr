@@ -78,8 +78,8 @@ target_link_libraries (nostril ${lib_dep})
 add_custom_command(
     TARGET configurator
     POST_BUILD
-    COMMAND configurator > include/config.h
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/include/config.h" ${CMAKE_SOURCE_DIR}
+    COMMAND configurator > config.h
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/config.h" ${CMAKE_SOURCE_DIR}
     COMMENT "generating include/config.h"
 )
 
