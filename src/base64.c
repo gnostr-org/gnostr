@@ -1,5 +1,5 @@
 /* Licensed under BSD-MIT - see LICENSE file for details */
-#include "base64.h"
+#include "../include/base64.h"
 
 #include <errno.h>
 #include <string.h>

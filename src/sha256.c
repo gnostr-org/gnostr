@@ -6,9 +6,9 @@
  * Distributed under the MIT software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
-#include "sha256.h"
-#include "endian.h"
-#include "compiler.h"
+#include "../include/sha256.h"
+#include "../include/endian.h"
+#include "../include/compiler.h"
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
