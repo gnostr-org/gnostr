@@ -5,4 +5,4 @@ xcodebuild:
 xcodebuild-list:
 	cd build && xcodebuild -list && cd ..
 xcodebuild-install:
-	cd build && xcodebuild -target install && cd ..
+	cd build && xcodebuild -target install -configuration Release && cd ..
