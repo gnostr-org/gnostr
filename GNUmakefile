@@ -5,7 +5,7 @@ else
 PROJECT_NAME                            := $(project)
 endif
 export PROJECT_NAME
-VERSION                                 :=$(shell cat version)
+VERSION :=$(shell cat src/nostril.c | grep VERSION | tr -d VERSION | tr -d "\#define" | tr -d " " | tr -d "\"" )
 export VERSION
 TIME                                    :=$(shell date +%s)
 export TIME
