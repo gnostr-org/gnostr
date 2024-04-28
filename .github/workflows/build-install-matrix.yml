@@ -51,14 +51,14 @@ jobs:
         run: |
           sudo mkdir -p /usr/local/share/man/man1 || true
           make
-      - name: sudo make all
+          make clean
+      - name: sudo make nostril
         run: |
-          sudo make all
           sudo make nostril
       - name: man nostril
         run: |
-          sudo man nostril
-      - name: sudo ./nostril
+          sudo man doc/nostril.1
+      - name: nostril
         run: |
           file nostril
           ID=$(EVENT=$(nostril --sec $(gnostr-sha256 $(git rev-parse HEAD)) --content "gnostr-chat:topic:$(git rev-parse HEAD)" --tag gnostr-chat $(git rev-parse HEAD)) && echo $EVENT | gnostr-post-event >/dev/null; echo $EVENT | gnostr-xq .id); gnostr-fetch-by-id wss://nos.lol $(echo ${ID//\"})
