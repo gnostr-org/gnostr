@@ -52,18 +52,27 @@ struct Cli {
 fn main() {
     println!("[Rust] Hello from Rust! 🦀");
 
+    let mut number: i32 = 42;
+    let message: String = "Hello, world!".to_string();
+
+    println!("number as i32: {}", number as i32); // Annotate with intended type
+    println!("message as String: {}", message as String);
+
+    let mut number: i8 = 42;
+    println!("number as i8: {}", number as i8); // Annotate with intended type
+
     use std::ops::Deref;
     let mut value: i8 = 42;
-    //println!("value: {}", value);
-    //my_function_free(value);
-    //println!("*value: {}", *value);
-    //my_function_free(*value);
-    //println!("value.deref(): {}", value.deref());
-    //my_function_free(value.deref());
+    println!("value: {}", value);
 
     let null_ptr: *mut i8 = ptr::null_mut();
     println!("null_ptr: {:?}", null_ptr);
     println!("null_ptr: {:#?}", null_ptr);
+    // **Unsafe! Check for null before dereferencing**
+    let dereferenced_value_i8: i8 = unsafe { *null_ptr };
+    //println!("dereferenced_value_i8: {}", dereferenced_value_i8);
+    let dereferenced_value_i32: i32 = unsafe { (*null_ptr).into() };
+    //println!("dereferenced_value_i32: {}", dereferenced_value_i32);
     //process::exit(0);
     //my_function_free(null_ptr);
     //process::exit(0);
@@ -73,8 +82,14 @@ fn main() {
     // **Unsafe! Check for null before dereferencing**
     let dereferenced_value_i8: i8 = unsafe { *raw_ptr };
     println!("dereferenced_value_i8: {}", dereferenced_value_i8);
+
+    //expected `*mut i8`, found `i8`
+    //my_function_free(dereferenced_value_i8);
+    //my_function_free(mut *dereferenced_value_i8);
+
     let dereferenced_value_i32: i32 = unsafe { (*raw_ptr).into() };
     println!("dereferenced_value_i32: {}", dereferenced_value_i32);
+    //my_function_free(dereferenced_value_i32);
 
     //let ref_to_value = &value; // Reference to value
     //println!("Referenced value: {}", ref_to_value);
