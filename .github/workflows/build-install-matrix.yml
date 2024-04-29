@@ -51,7 +51,7 @@ jobs:
           make clean
       - name: sudo make nostril
         run: |
-          sudo make nostril
+          sudo make nostril && git diff
       - name: man nostril
         run: |
           sudo man doc/nostril.1
