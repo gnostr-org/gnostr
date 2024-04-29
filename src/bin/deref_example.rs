@@ -70,6 +70,9 @@ fn main() {
     println!("null_ptr: {:#?}", null_ptr);
     // **Unsafe! Check for null before dereferencing**
     let dereferenced_value_i8: i8 = unsafe { *null_ptr };
+    if null_ptr == ptr::null_mut() {
+    println!("null_ptr == ptr::null_mut(): {}",null_ptr == ptr::null_mut())
+}
     //println!("dereferenced_value_i8: {}", dereferenced_value_i8);
     let dereferenced_value_i32: i32 = unsafe { (*null_ptr).into() };
     //println!("dereferenced_value_i32: {}", dereferenced_value_i32);
