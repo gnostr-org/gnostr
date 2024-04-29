@@ -3,6 +3,8 @@ use core::ffi::c_char;
 use core::ffi::c_int;
 use core::ffi::CStr;
 use std::ffi::CString;
+use std::process;
+use std::ptr;
 
 extern crate libc;
 use libc::{strlen, write};
@@ -33,7 +35,7 @@ pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mu
 pub extern "C" fn my_function_free(s: *mut c_char) {
     unsafe {
         let print_c_str = CString::from_raw(s);
-        println!("{:?}", print_c_str);
+        //println!("{:?}", print_c_str);
     }
 }
 
@@ -52,18 +54,37 @@ fn main() {
 
     use std::ops::Deref;
     let mut value: i8 = 42;
-    println!("value: {}", value);
+    //println!("value: {}", value);
     //my_function_free(value);
-    //println!("*value: {}", *value.deref());
+    //println!("*value: {}", *value);
     //my_function_free(*value);
+    //println!("value.deref(): {}", value.deref());
+    //my_function_free(value.deref());
 
-    let ref_to_value = &value; // Reference to value
-    println!("Referenced value: {}", ref_to_value);
+let null_ptr: *mut i8 = ptr::null_mut();
+    println!("null_ptr: {:?}", null_ptr);
+    println!("null_ptr: {:#?}", null_ptr);
+    //process::exit(0);
+    //my_function_free(null_ptr);
+    //process::exit(0);
+
+
+    let raw_ptr = &value as *const i8; // Unsafe pointer to value
+
+    // **Unsafe! Check for null before dereferencing**
+    let dereferenced_value_i8: i8 = unsafe { *raw_ptr };
+    println!("dereferenced_value_i8: {}", dereferenced_value_i8);
+    let dereferenced_value_i32: i32 = unsafe { (*raw_ptr).into() };
+    println!("dereferenced_value_i32: {}", dereferenced_value_i32);
+
+
+    //let ref_to_value = &value; // Reference to value
+    //println!("Referenced value: {}", ref_to_value);
     //my_function_free(ref_to_value);
 
     // Correct (use deref method)
-    let dereferenced_value = *ref_to_value.deref();
-    println!("Dereferenced value: {}", dereferenced_value);
+    //let dereferenced_value = *ref_to_value.deref();
+    //println!("Dereferenced value: {}", dereferenced_value);
     //my_function_free(dereferenced_value);
 
     let args = Cli::from_args();
