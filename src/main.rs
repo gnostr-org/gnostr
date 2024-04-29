@@ -8,16 +8,6 @@ extern crate libc;
 use libc::{strlen, write};
 use std::os::unix::prelude::AsRawFd;
 
-use structopt::StructOpt;
-
-#[derive(StructOpt)]
-struct Cli {
-    #[structopt(name = "input1", short = "x", help = "The first input")]
-    input1: String,
-    #[structopt(name = "input2", short = "y", help = "The second input")]
-    input2: String,
-}
-
 extern "C" {
     fn multiply(a: c_int, b: c_int) -> c_int;
 }
@@ -47,11 +37,36 @@ pub extern "C" fn my_function_free(s: *mut c_char) {
     }
 }
 
+use structopt::StructOpt;
+
+#[derive(StructOpt)]
+struct Cli {
+    #[structopt(name = "input1", short = "x", help = "The first input")]
+    input1: String,
+    #[structopt(name = "input2", short = "y", help = "The second input")]
+    input2: String,
+}
+
 fn main() {
     println!("[Rust] Hello from Rust! 🦀");
-    //my_function_free("[Rust] Hello from Rust! 🦀");
 
-    let args = Cli::from_args();//.unwrap();
+    use std::ops::Deref;
+    let mut value: i8 = 42;
+    println!("value: {}", value);
+    //my_function_free(value);
+    //println!("*value: {}", *value.deref());
+    //my_function_free(*value);
+
+    let ref_to_value = &value; // Reference to value
+    println!("Referenced value: {}", ref_to_value);
+    //my_function_free(ref_to_value);
+
+    // Correct (use deref method)
+    let dereferenced_value = *ref_to_value.deref();
+    println!("Dereferenced value: {}", dereferenced_value);
+    //my_function_free(dereferenced_value);
+
+    let args = Cli::from_args();
 
     // Process the parsed inputs
     println!("First input: {}", args.input1);
