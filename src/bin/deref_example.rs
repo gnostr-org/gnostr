@@ -46,9 +46,9 @@ struct Cli {
     #[structopt(name = "input1", short = "x", help = "The first input", default_value = "default_value")]
     input1: c_char,
     #[structopt(name = "input2", short = "y", help = "The second input", default_value = "default_value")]
-    input2: String,
+    input2: c_char,
     #[structopt(name = "input3", short = "z", help = "The third input", default_value = "1")]
-    input3: c_int,
+    input3: c_char,
 }
 
 fn main() {
@@ -115,8 +115,8 @@ fn main() {
     unsafe {
         println!("[Rust] Calling function in C..");
 
-        let result = multiply(args.input3, args.input3);
-        println!("[Rust] Result: {}", result);
+        let result = multiply(args.input3.into(), args.input3.into());
+        println!("[Rust] {}x{}={}",  args.input3, args.input3, result);
         //pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mut c_char
         //let args_input_1: *const *const c_char = args.input1.deref();
         //let result = try_subcommand(2, args_input_1);
