@@ -26,9 +26,9 @@ jobs:
           fetch-depth: '0'
           submodules: 'recursive'
           set-safe-directory: 'true'
-      - name: printenv && brew install automake libtool cmake scdoc || sudo apt update && sudo apt install scdoc -y || true
+      - name: printenv && brew install rustup-init automake libtool cmake scdoc || sudo apt update && sudo apt install scdoc -y || true
         run: |
-          printenv && brew install automake libtool cmake scdoc || sudo apt update && sudo apt install scdoc -y || true
+          printenv && brew install rustup-init automake libtool cmake scdoc || sudo apt update && sudo apt install scdoc -y || true
       - name: "Build pre-release"
         run: |
           sudo mkdir -p /usr/local/share/man/man1/nostril.1
@@ -51,3 +51,10 @@ jobs:
           title: "Development Build"
           files: |
             nostril-*
+      - name: cargo install gnostr-bins gnostr-xq
+        run: |
+          cargo install gnostr-bins gnostr-xq
+      - name: "make xcodebuild-install"
+        run: |
+          sudo make xcode xcodebuild-install
+          ./build/Release/nostril --sec $(gnostr-sha256) | gnostr-post-event
