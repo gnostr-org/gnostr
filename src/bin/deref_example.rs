@@ -43,11 +43,26 @@ use structopt::StructOpt;
 
 #[derive(StructOpt)]
 struct Cli {
-    #[structopt(name = "input1", short = "x", help = "The first input", default_value = "default_value")]
+    #[structopt(
+        name = "input1",
+        short = "x",
+        help = "The first input",
+        default_value = "1"
+    )]
     input1: c_char,
-    #[structopt(name = "input2", short = "y", help = "The second input", default_value = "default_value")]
+    #[structopt(
+        name = "input2",
+        short = "y",
+        help = "The second input",
+        default_value = "2"
+    )]
     input2: c_char,
-    #[structopt(name = "input3", short = "z", help = "The third input", default_value = "1")]
+    #[structopt(
+        name = "input3",
+        short = "z",
+        help = "The third input",
+        default_value = "3"
+    )]
     input3: c_char,
 }
 
@@ -73,8 +88,11 @@ fn main() {
     // **Unsafe! Check for null before dereferencing**
     let dereferenced_value_i8: i8 = unsafe { *null_ptr };
     if null_ptr == ptr::null_mut() {
-    println!("null_ptr == ptr::null_mut(): {}",null_ptr == ptr::null_mut())
-}
+        println!(
+            "null_ptr == ptr::null_mut(): {}",
+            null_ptr == ptr::null_mut()
+        )
+    }
     //println!("dereferenced_value_i8: {}", dereferenced_value_i8);
     let dereferenced_value_i32: i32 = unsafe { (*null_ptr).into() };
     //println!("dereferenced_value_i32: {}", dereferenced_value_i32);
@@ -116,7 +134,7 @@ fn main() {
         println!("[Rust] Calling function in C..");
 
         let result = multiply(args.input3.into(), args.input3.into());
-        println!("[Rust] {}x{}={}",  args.input3, args.input3, result);
+        println!("[Rust] {}x{}={}", args.input3, args.input3, result);
         //pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mut c_char
         //let args_input_1: *const *const c_char = args.input1.deref();
         //let result = try_subcommand(2, args_input_1);
@@ -132,9 +150,9 @@ fn main() {
     let stdout = std::io::stdout().as_raw_fd();
     for ptr in vector_cstring.into_iter() {
         unsafe {
-        //println!("LINE:135");
+            //println!("LINE:135");
             write(stdout, ptr as _, strlen(ptr as _));
-        println!("");
+            println!("");
         }
         //println!("LINE:137");
         //println!("LINE:138:ptr={:?}", ptr);
