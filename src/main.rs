@@ -8,6 +8,16 @@ extern crate libc;
 use libc::{strlen, write};
 use std::os::unix::prelude::AsRawFd;
 
+use structopt::StructOpt;
+
+#[derive(StructOpt)]
+struct Cli {
+    #[structopt(name = "input1", short = "x", help = "The first input")]
+    input1: String,
+    #[structopt(name = "input2", short = "y", help = "The second input")]
+    input2: String,
+}
+
 extern "C" {
     fn multiply(a: c_int, b: c_int) -> c_int;
 }
@@ -41,6 +51,12 @@ fn main() {
     println!("[Rust] Hello from Rust! 🦀");
     //my_function_free("[Rust] Hello from Rust! 🦀");
 
+    let args = Cli::from_args();//.unwrap();
+
+    // Process the parsed inputs
+    println!("First input: {}", args.input1);
+    println!("Second input: {}", args.input2);
+
     unsafe {
         println!("[Rust] Calling function in C..");
 
@@ -61,8 +77,8 @@ fn main() {
             write(stdout, ptr as _, strlen(ptr as _));
         }
         println!("");
-        println!("ptr={:?}",ptr);
-        println!("ptr={:?}",ptr);
+        println!("ptr={:?}", ptr);
+        println!("ptr={:?}", ptr);
         my_function_free(ptr as *mut i8);
         unsafe {
             let _ = CString::from_raw(ptr as _);
