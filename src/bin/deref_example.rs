@@ -43,10 +43,12 @@ use structopt::StructOpt;
 
 #[derive(StructOpt)]
 struct Cli {
-    #[structopt(name = "input1", short = "x", help = "The first input")]
-    input1: String,
-    #[structopt(name = "input2", short = "y", help = "The second input")]
+    #[structopt(name = "input1", short = "x", help = "The first input", default_value = "default_value")]
+    input1: c_char,
+    #[structopt(name = "input2", short = "y", help = "The second input", default_value = "default_value")]
     input2: String,
+    #[structopt(name = "input3", short = "z", help = "The third input", default_value = "1")]
+    input3: c_int,
 }
 
 fn main() {
@@ -108,16 +110,20 @@ fn main() {
     // Process the parsed inputs
     println!("First input: {}", args.input1);
     println!("Second input: {}", args.input2);
+    println!("Third input: {}", args.input3);
 
     unsafe {
         println!("[Rust] Calling function in C..");
 
-        let result = multiply(5000, 5);
+        let result = multiply(args.input3, args.input3);
         println!("[Rust] Result: {}", result);
-        //let result = try_subcommand(2, "char" as *const *const c_char);
-        //println!("[Rust] Result: {}", result);
+        //pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mut c_char
+        //let args_input_1: *const *const c_char = args.input1.deref();
+        //let result = try_subcommand(2, args_input_1);
+        //println!("[Rust] Result: {:?}", result);
     }
     let strings = vec!["hello", "world", "!"];
+    //let strings = vec![&args.input1, "world", "!"];
     let vector_cstring: Vec<*const u8> = strings
         .into_iter()
         .map(|s| CString::new(s).expect("Error creating CString").into_raw() as _)
@@ -126,11 +132,13 @@ fn main() {
     let stdout = std::io::stdout().as_raw_fd();
     for ptr in vector_cstring.into_iter() {
         unsafe {
+        //println!("LINE:135");
             write(stdout, ptr as _, strlen(ptr as _));
-        }
         println!("");
-        println!("ptr={:?}", ptr);
-        println!("ptr={:?}", ptr);
+        }
+        //println!("LINE:137");
+        //println!("LINE:138:ptr={:?}", ptr);
+        //println!("LINE:139:ptr={:?}", ptr);
         my_function_free(ptr as *mut i8);
         unsafe {
             let _ = CString::from_raw(ptr as _);
