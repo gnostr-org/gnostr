@@ -29,15 +29,17 @@ pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mu
     return output.into_raw();
 }
 
-//#[no_mangle]
-//pub extern "C" fn my_function_free(s: *mut c_char) {
-//    unsafe {
-//        CString::from_raw(s);
-//    }
-//}
+#[no_mangle]
+pub extern "C" fn my_function_free(s: *mut c_char) {
+    unsafe {
+        let print_c_str = CString::from_raw(s);
+        println!("{:?}", print_c_str);
+    }
+}
 
 fn main() {
     println!("[Rust] Hello from Rust! 🦀");
+    //my_function_free("[Rust] Hello from Rust! 🦀");
 
     unsafe {
         println!("[Rust] Calling function in C..");
@@ -59,6 +61,9 @@ fn main() {
             write(stdout, ptr as _, strlen(ptr as _));
         }
         println!("");
+        println!("ptr={:?}",ptr);
+        println!("ptr={:?}",ptr);
+        my_function_free(ptr as *mut i8);
         unsafe {
             let _ = CString::from_raw(ptr as _);
         }
