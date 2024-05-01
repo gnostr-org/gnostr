@@ -55,13 +55,6 @@ jobs:
           set-safe-directory: 'true'
           fetch-depth: '0'
 
-      - uses: actions-rs/toolchain@v1.0.6
-        #if: ${{ !env.ACT }}
-        with:
-          toolchain: stable
-          default: true
-          override: false
-
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
@@ -82,7 +75,7 @@ jobs:
 
       ## objective: test non-cmake build gnostr-am
       - run: make gnostr-am gnostr-install
-      - run: make gnostr-bins
+      - run: make gnostr-sha256 gnostr-bins
       - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
       ## objective: test cmake build gnostr
