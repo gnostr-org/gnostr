@@ -1,0 +1,80 @@
+[package]
+name = "gnostr-bins"
+version = "0.0.20"
+edition = "2018"
+authors = ["Mike Dilger <mike@mikedilger.com>", "gnostr <admin@gnostr.org>"]
+description = "gnostr-bins: part of the gnostr workflow commands"
+repository = "https://github.com/gnostr-org/gnostr-bins"
+documentation = "https://docs.rs/gnostr-bins"
+readme = "README.md"
+keywords = ["nostr", "gnostr", "git", "nostr-watch"]
+license = "MIT"
+## [source."git+https://github.com/gnostr-org/nip44?rev=e38717f86ccccb91c25ebf07881a77d66411161c"]
+## git = "https://github.com/mikedilger/nip44"
+## version = "0.1.0"
+## rev = "e38717f86ccccb91c25ebf07881a77d66411161c"
+## replace-with = "vendored-sources"
+##
+## [source."git+https://github.com/gnostr-org/gnostr-types?rev=c9f82eb8935c51d912dcbada79c8990029114930"]
+## git = "https://github.com/mikedilger/nostr-types"
+## version = "0.7.0-unstable"
+## rev = "a7aabd3de577de87f2bf8034b24b490e4ba0aa02"
+## replace-with = "vendored-sources"
+##
+## [source.vendored-sources]
+## directory = "vendor"
+
+[dependencies]
+
+crossterm = { version = "0.19", features = [ "serde" ] }
+tui = { version = "0.14", default-features = false, features = ['crossterm', 'serde'] }
+thiserror = "1.0"
+
+## anyhow.workspace = true ## gnostr-core
+argparse    = "0.2.2"
+ascii = "1.1.0"
+async-std = { version = "1.12.0", features = ["futures-core"] }
+base64 = "0.21"
+bech32 = "0.9"
+chrono = { version = "0.4.34", features = ["serde"] }
+env_logger = "0.11.3"
+futures-lite = "2.3.0"
+getopts = "0.2.21"
+git2 = "^0.18"
+gnostr-types = "0.7.1-unstable"
+hex = "0.4"
+http = "0.2"
+hypercore-protocol = { version = "0.4.2-alpha.1", package = "gnostr-core", features = ["async-std", "cache", "wasm-bindgen", "js_interop_tests"] }
+#insta.workspace = true
+k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
+log = "0.4.21"
+nostr_rust = { git = "https://github.com/gnostr-org/gnostr_rs.git", version = "0.20.3" }
+num-bigint = "0.4.4"
+pad = "0.1.6"
+rand = { version = "0.7.3", default-features = false, features = ["std"] }
+rand_core = "0.6"
+random-access-storage = "5.0.0"
+
+random-access-disk = { version = "3.0.0", default-features = false }
+random-access-memory = "3.0.0"
+
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls-webpki-roots"] }
+rpassword = "7.2"
+rust-crypto = "0.2.36"
+serde = { version = "1.0", features = [ "derive" ] }
+serde_json = "1.0"
+sha1 = { version = "0.10.6", features = ["oid"] }
+sha2 = "0.10.8"
+sha256 = "1.2.2"
+structopt = "0.3.26"
+time = "0.1.42"
+tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread"] }
+tungstenite = { version = "0.18", features = [ "rustls-tls-webpki-roots" ] }
+ureq = "2.9.6"
+zeroize = "1.5"
+libp2p = { version = "0.53.2", features = ["full"] }
+futures = { features = ["futures-executor"] }
+nip44 = { version = "0.1.1", package = "gnip44" }
+url = { version = "2.5.0", features = ["serde"] }
+#crypto      = "0.4.0"
+[workspace]
