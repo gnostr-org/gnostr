@@ -123,7 +123,7 @@ jobs:
       #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
       #  run: ./build.cmake.sh
 
-      - name: Save deps
+      - name: Save rustup
         id: cache-rustup-save
         uses: actions/cache/save@v3
         if: ${{ !env.ACT }}
