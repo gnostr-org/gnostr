@@ -77,4 +77,3 @@ futures = { features = ["futures-executor"] }
 nip44 = { version = "0.1.1", package = "gnip44" }
 url = { version = "2.5.0", features = ["serde"] }
 #crypto      = "0.4.0"
-[workspace]
