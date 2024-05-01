@@ -73,7 +73,7 @@ tungstenite = { version = "0.18", features = [ "rustls-tls-webpki-roots" ] }
 ureq = "2.9.6"
 zeroize = "1.5"
 libp2p = { version = "0.53.2", features = ["full"] }
-futures = { features = ["futures-executor"] }
+futures = { workspace = true, features = ["futures-executor"] }
 nip44 = { version = "0.1.1", package = "gnip44" }
 url = { version = "2.5.0", features = ["serde"] }
 #crypto      = "0.4.0"
