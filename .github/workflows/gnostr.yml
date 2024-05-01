@@ -40,14 +40,33 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - name: Restore deps
-        id: cache-deps-restore
+
+      - name: Restore rustup
+        id: cache-rustup-restore
         uses: actions/cache/restore@v3
         if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
-          key: ${{ runner.os }}-deps
+          key: ${{ runner.os }}-rustup
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-target
 
       - uses: actions/checkout@v3
         with:
@@ -105,11 +124,27 @@ jobs:
       #  run: ./build.cmake.sh
 
       - name: Save deps
-        id: cache-deps-save
+        id: cache-rustup-save
         uses: actions/cache/save@v3
         if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
-          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
 
