@@ -99,11 +99,6 @@
 	url = https://github.com/gnostr-org/gnostr-relay.git
     branch = master
     depth = shallow
-[submodule "gnostr-sha256"]
-	path = sha256
-	url = https://github.com/gnostr-org/gnostr-sha256.git
-    branch = master
-    depth = shallow
 [submodule "hyper-nostr"]
 	path = hyper-nostr
 	url = https://github.com/gnostr-org/hyper-nostr.git
