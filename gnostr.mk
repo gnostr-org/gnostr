@@ -370,15 +370,10 @@ db:
 	@devtools/refresh-submodules.sh db
 	@cd db && make build-release install && cd ..
 
-.PHONY:legit/.git gnostr-legit legit
-legit/.git:gnostr-git
-	@devtools/refresh-submodules.sh legit
-#.PHONY:deps/gnostr-legit/release/gnostr-legit
-legit/target/release/gnostr-legit:legit/.git
-	cd legit && \
-		make cargo-b-release install
+.PHONY:gnostr-legit legit
 legit:gnostr-legit
-gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
+gnostr-legit:## 	gnostr-legit
+	@cargo install --path ./bins --bin gnostr-legit --force
 	##cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
