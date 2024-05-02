@@ -2,19 +2,20 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "bins","git"]
+members = ["bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils","cli","cat"]
+exclude = ["sha256","get-relays","ffi","relay"]
 
 [workspace.package]
 version = "0.0.0"
 license = "Apache-2.0"
-rust-version = "1.76"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
+rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
 readme = "README.md"
-homepage = "https://github.com/martinvonz/jj"
-repository = "https://github.com/martinvonz/jj"
-documentation = "https://martinvonz.github.io/jj/"
-categories = ["version-control", "development-tools"]
-keywords = ["VCS", "DVCS", "SCM", "Git", "Mercurial"]
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
+documentation = "https://github.com/gnostr"
+categories = ["version-control", "development-tools","gnostr","nostr"]
+keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr","nostr"]
 
 [workspace.dependencies]
 anyhow = "1.0.81"
@@ -47,7 +48,7 @@ dirs = "5.0.1"
 either = "1.10.0"
 esl01-renderdag = "0.3.0"
 futures = "0.3.30"
-git2 = "^0.18.0"
+git2 = "^0.18"
 gix = { version = "0.61.0", default-features = false, features = [
     "index",
     "max-performance-safe",
@@ -112,7 +113,6 @@ watchman_client = { version = "0.8.0" }
 whoami = "1.5.1"
 winreg = "0.52"
 zstd = "0.12.4"
-
 # put all inter-workspace libraries, i.e. those that use 'path = ...' here in
 # their own (alphabetically sorted) block
 
@@ -123,8 +123,12 @@ testutils = { path = "lib/testutils" }
 # Insta suggests compiling these packages in opt mode for faster testing.
 # See https://docs.rs/insta/latest/insta/#optional-faster-runs.
 [profile.dev.package]
-insta.opt-level = 3
-similar.opt-level = 3
+
+[profile.dev.package.insta]
+opt-level = 3
+
+[profile.dev.package.similar]
+opt-level = 3
 
 [profile.release]
 strip = "debuginfo"
