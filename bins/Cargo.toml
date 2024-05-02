@@ -76,4 +76,6 @@ libp2p = { version = "0.53.2", features = ["full"] }
 futures = { workspace = true, features = ["futures-executor"] }
 nip44 = { version = "0.1.1", package = "gnip44" }
 url = { version = "2.5.0", features = ["serde"] }
+homedir = "0.2.1"
+clearscreen = "3.0.0"
 #crypto      = "0.4.0"
