@@ -33,7 +33,9 @@ export PYTHON_VERSION
 venv:
 	@#rm -rf .venv
 	@#python -c 'import sys; print (sys.real_prefix)' 2>/dev/null && INVENV=1 && echo $(INVENV) || INVENV=0 && echo $(INVENV)
-	test -d .venv || $(shell which python3) -m virtualenv .venv
+	touch requirements.txt
+	type -P pipx && pipx install virtualenv
+	test -d .venv || virtualenv .venv
 	( \
 	   source .venv/bin/activate; pip install -r requirements.txt; \
 	);
@@ -44,6 +46,7 @@ venv:
 	@echo "make venv-test"
 venv-test:
 	# insert test commands here
+	touch requirements.txt
 	test -d .venv || $(shell which python3) -m virtualenv .venv
 	( \
 	   source .venv/bin/activate; pip install -r requirements.txt; \
