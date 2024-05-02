@@ -379,7 +379,7 @@ legit/target/release/gnostr-legit:legit/.git
 		make cargo-b-release install
 legit:gnostr-legit
 gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
-	cp $< $@ && exit;
+	##cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
 .PHONY:sha256.git sha256
