@@ -2,8 +2,8 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils"]
-exclude = ["cat", "sha256","get-relays","ffi"]
+members = ["bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils","relay","cli","legit","cat"]
+exclude = ["sha256","get-relays","ffi"]
 
 [workspace.package]
 version = "0.0.0"
@@ -11,11 +11,11 @@ license = "Apache-2.0"
 rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
 readme = "README.md"
-homepage = "https://github.com/martinvonz/jj"
-repository = "https://github.com/martinvonz/jj"
-documentation = "https://martinvonz.github.io/jj/"
-categories = ["version-control", "development-tools"]
-keywords = ["VCS", "DVCS", "SCM", "Git", "Mercurial"]
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
+documentation = "https://github.com/gnostr"
+categories = ["version-control", "development-tools","gnostr","nostr"]
+keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr","nostr"]
 
 [workspace.dependencies]
 anyhow = "1.0.81"
