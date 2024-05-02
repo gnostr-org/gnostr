@@ -906,3 +906,6 @@ request.json
 response.txt
 src/nostril/libnostri.dylib
 vostro
+
+bins/identity.key
+log/
