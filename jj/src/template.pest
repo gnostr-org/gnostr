@@ -1,0 +1,89 @@
+// Copyright 2020 The Jujutsu Authors
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// https://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Example:
+// "commit: " ++ short(commit_id) ++ "\n"
+// predecessors.map(|p| "predecessor: " ++ p.commit_id)
+// parents.map(|p| p.commit_id ++ " is a parent of " ++ commit_id)
+
+whitespace = _{ " " | "\t" | "\r" | "\n" | "\x0c" }
+
+escape = @{ "\\" ~ ("t" | "r" | "n" | "0" | "\"" | "\\") }
+literal_char = @{ !("\"" | "\\") ~ ANY }
+raw_literal = @{ literal_char+ }
+literal = { "\"" ~ (raw_literal | escape)* ~ "\"" }
+
+integer_literal = {
+  ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*
+  | "0"
+}
+
+identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+concat_op = { "++" }
+logical_or_op = { "||" }
+logical_and_op = { "&&" }
+logical_not_op = { "!" }
+negate_op = { "-" }
+prefix_ops = _{ logical_not_op | negate_op }
+infix_ops = _{ logical_or_op | logical_and_op }
+
+function = { identifier ~ "(" ~ whitespace* ~ function_arguments ~ whitespace* ~ ")" }
+function_arguments = {
+  template ~ (whitespace* ~ "," ~ whitespace* ~ template)* ~ (whitespace* ~ ",")?
+  | ""
+}
+lambda = {
+  "|" ~ whitespace* ~ formal_parameters ~ whitespace* ~ "|"
+  ~ whitespace* ~ template
+}
+formal_parameters = {
+  identifier ~ (whitespace* ~ "," ~ whitespace* ~ identifier)* ~ (whitespace* ~ ",")?
+  | ""
+}
+
+primary = _{
+  ("(" ~ whitespace* ~ template ~ whitespace* ~ ")")
+  | function
+  | lambda
+  | identifier
+  | literal
+  | integer_literal
+}
+
+term = {
+  primary ~ ("." ~ function)*
+}
+
+expression = {
+  (prefix_ops ~ whitespace*)* ~ term
+  ~ (whitespace* ~ infix_ops ~ whitespace* ~ (prefix_ops ~ whitespace*)* ~ term)*
+}
+
+// Use 'term' instead of 'expression' to disallow 'x || y ++ z'. It can be
+// parsed, but the precedence isn't obvious.
+concat = _{
+  term ~ (whitespace* ~ concat_op ~ whitespace* ~ term)+
+}
+
+template = { concat | expression }
+
+program = _{ SOI ~ whitespace* ~ template? ~ whitespace* ~ EOI }
+
+function_alias_declaration = {
+  identifier ~ "(" ~ whitespace* ~ formal_parameters ~ whitespace* ~ ")"
+}
+alias_declaration = _{
+  SOI ~ (function_alias_declaration | identifier) ~ EOI
+}

@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+
+mkdir -p .gnostr
+mkdir -p .gnostr/snapshots
+
+GNOSTR_SNAPSHOTS=.gnostr/snapshots
+
+declare EMPTY_TREE_SHA1
+EMPTY_TREE_SHA1=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+
+declare EMPTY_TREE_SHA2
+EMPTY_TREE_SHA2=6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321
+
+GNOSTR_GIT=$(which gnostr-git)
+declare WEEBLE
+WEEBLE=$(gnostr-weeble)
+## echo $WEEBLE
+declare WOBBLE
+WOBBLE=$(gnostr-wobble)
+## echo $WOBBLE
+declare BLOCKHEIGHT
+BLOCKHEIGHT=$(gnostr-blockheight)
+## echo $BLOCKHEIGHT
+
+declare REPO
+REPO=$(pwd | grep -o '[^/]*$')
+## echo $REPO
+declare BRANCH
+BRANCH=$(echo $(git branch --show-current) | sed -e 's/\//-/g')
+## echo $BRANCH
+declare UTC_SECS
+UTC_SECS=$(date +%s)
+## echo $UTC_SECS
+
+declare REMOTE_PATH
+REMOTE_PATH=$GNOSTR_SNAPSHOTS/$REPO-$WEEBLE-$BLOCKHEIGHT-$WOBBLE-$BRANCH
+## echo $REMOTE_PATH
+
+help(){
+	printf "   gnostr-snapshot --help     [-h]       print help\n"
+	printf "   gnostr-snapshot --sha2     [-2]       git with sha256 hashing\n"
+	printf "   gnostr-snapshot --depth    [-d]       depth\n"
+	printf "   gnostr-snapshot --commit   [-c]       commit\n"
+	printf "   gnostr-snapshot --path     [-p] [--]  commit\n"
+	printf "   "
+	exit
+}
+
+#git using sha1
+function default(){
+
+## if [[ ! -z $COMMIT ]]; then
+##   echo $COMMIT
+## fi
+## if [[ ! -z $DEPTH ]]; then
+##   echo $DEPTH
+## fi
+## if [[ ! -z $PATH ]]; then
+##   echo $PATH
+## fi
+
+#detect sha2 flag
+if [[ "$SHA2" == "TRUE" ]]; then
+  echo $SHA2
+  touch $REMOTE_PATH.patch
+  $GNOSTR_GIT diff $EMPTY_TREE_SHA1 HEAD > $REMOTE_PATH.patch
+else
+  touch $REMOTE_PATH.patch
+  $GNOSTR_GIT diff $EMPTY_TREE_SHA1 HEAD > $REMOTE_PATH.patch
+fi
+exit;
+}
+
+## #git using sha256
+## sha256(){
+## touch gnostr-snapshot-$REMOTE_PATH.patch
+## $GNOSTR_GIT diff $EMPTY_TREE_SHA1 HEAD > $REMOTE_PATH.patch
+## exit;
+## }
+
+for ((i=1; i<=$#; i++)); do
+
+  ## echo "i=${!i}"
+
+  if [[ ${!i} == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "help" ]]; then
+    help
+    exit
+  fi
+  if [[ ${!i} == "-v" ]] || [[ $1 == "--version" ]] || [[ $1 == "version" ]]; then
+    echo v0.0.0
+    exit
+  fi
+
+  if [[ ${!i} == "-d" ]] || [[ $1 == "--depth" ]] || [[ $1 == "depth" ]]; then
+  ((i++))
+    if [[ ${!i} =~ ^[0-9]+$ ]]; then
+      declare DEPTH
+      DEPTH=${!i}
+       ## echo "${!i} is a number"
+       ## echo DEPTH=$DEPTH
+      ((i++))
+    else
+       echo "${!i} is not a number"
+       help
+    fi
+  fi
+  if [[ ${!i} == "-c" ]] || [[ $1 == "--commit" ]] || [[ $1 == "commit" ]]; then
+  ((i++))
+    if [[ ! -z ${!i} ]]; then
+      declare COMMIT
+      COMMIT=${!i}
+      echo COMMIT=$COMMIT
+      git show $COMMIT
+      ((i++))
+    else
+       ## echo "${!i} is not a number"
+       help
+    fi
+  fi
+  if [[ ${!i} == "-p" ]] || [[ $1 == "--path" ]] || [[ $1 == "--" ]]; then
+  ((i++))
+    if [[ ! -z ${!i} ]]; then
+      declare PATH
+      PATH=${!i}
+      echo PATH=$PATH
+      echo $(git diff $DEPTH  $PATH)
+      ((i++))
+    else
+       ## echo "${!i} is not a number"
+       help
+    fi
+  fi
+  if [[ ${!i} == "-2" ]] || [[ $1 == "--sha2" ]] || [[ $1 == "--sha256" ]]; then
+  ((i++))
+  SHA2=TRUE
+  echo SHA2=$SHA2
+  ## sha256
+  default
+  fi
+exit
+done
+default

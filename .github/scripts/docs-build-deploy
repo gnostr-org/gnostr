@@ -1,0 +1,22 @@
+#!/bin/sh
+# Set up a virtual environment with the required tools, build, and deploy the docs.
+#
+# Run from the root directory of the project as
+# .github/scripts/docs-build-deploy 'https://martinvonz.github.io' prerelease main
+# All arguments after the first are passed to `mike deploy`, run
+# `poetry run -- mike deploy --help` for options. Note that `mike deploy`
+# creates a commit directly on the `gh-pages` branch.
+set -ev
+
+export "SITE_URL_FOR_MKDOCS=$1"; shift
+# Affects the generation of `sitemap.xml.gz` by `mkdocs`. See
+# https://github.com/jimporter/mike/issues/103 and
+# https://reproducible-builds.org/docs/source-date-epoch/
+export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct docs/ mkdocs.yml)
+# https://github.com/python-poetry/poetry/issues/1917 and
+# https://github.com/python-poetry/poetry/issues/8623
+export PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring
+poetry install --no-root # Only really needed once per environment unless there are updates
+# TODO(ilyagr): The new default "alias-type" is symlink, we should consider
+# switching to it.
+poetry run -- mike deploy --alias-type redirect "$@"

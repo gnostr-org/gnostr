@@ -1,28 +1,143 @@
-[submodule "deps/secp256k1"]
-	path = deps/secp256k1
-	url = https://github.com/bitcoin-core/secp256k1
-	branch = master
-	ignore = dirty
-[submodule "deps/nostcat"]
-	path = deps/nostcat
-    url = git@github.com:gnostr-org/nostcat.git
-	ignore = dirty
-[submodule "deps/git"]
-	path = deps/git
-	url = git@github.com:gnostr-org/git.git
-	ignore = dirty
-[submodule "deps/tcl"]
-	path = deps/tcl
-	url = git@github.com:gnostr-org/tcl.git
-	ignore = dirty
-[submodule "deps/jq"]
-	path = deps/jq
-	url = git@github.com:gnostr-org/jq.git
-	ignore = dirty
-[submodule "deps/hyper-nostr"]
-	path = deps/hyper-nostr
-	url = git@github.com:gnostr-org/hyper-nostr.git
-	ignore = dirty
-[submodule "deps/openssl"]
-	path = deps/openssl
-	url = git@github.com:gnostr-org/openssl.git
+[submodule "drives"]
+	path = drives
+	url = https://github.com/gnostr-org/gnostr-drives.git
+    branch = master
+  depth = shallow
+  ignore = dirty
+[submodule "ext/wxWidgets-3.2.2.1"]
+	path = ext/wxWidgets-3.2.2.1
+	url = https://github.com/gnostr-org/wxWidgets.git
+    branch = master
+[submodule "gnostr-act"]
+	path = act
+	url = https://github.com/gnostr-org/gnostr-act.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-bits"]
+	path = bits
+	url = https://github.com/gnostr-org/gnostr-bits.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-cat"]
+	path = cat
+	url = https://github.com/gnostr-org/gnostr-cat.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-cli"]
+	path = cli
+	url = https://github.com/gnostr-org/gnostr-cli.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-core"]
+	path = core
+	url = https://github.com/gnostr-org/gnostr-core.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-db"]
+	path = db
+	url = https://github.com/gnostr-org/gnostr-db.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-ffi"]
+	path = ffi
+	url = https://github.com/gnostr-org/gnostr-ffi.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-get-relays"]
+	path = get-relays
+	url = https://github.com/gnostr-org/gnostr-get-relays.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-git"]
+	path = git
+	url = https://github.com/gnostr-org/gnostr-git.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-gossip"]
+	path = gossip
+	url = https://github.com/gnostr-org/gnostr-gossip.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-grep"]
+	path = grep
+	url = https://github.com/gnostr-org/gnostr-grep.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-jq"]
+	path = jq
+	url = https://github.com/gnostr-org/gnostr-jq.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-lfs"]
+	path = lfs
+	url = https://github.com/gnostr-org/gnostr-lfs.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-org"]
+	path = org
+	url = https://github.com/gnostr-org/gnostr-org.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-proxy"]
+	path = proxy
+	url = https://github.com/gnostr-org/gnostr-proxy.git
+    branch = master
+    depth = shallow
+[submodule "gnostr-py"]
+	path = py
+	url = https://github.com/gnostr-org/gnostr-py.git
+    branch = master
+  depth = shallow
+  ignore = dirty
+[submodule "gnostr-relay"]
+	path = relay
+	url = https://github.com/gnostr-org/gnostr-relay.git
+    branch = master
+    depth = shallow
+    ignore = dirty
+[submodule "hyper-nostr"]
+	path = hyper-nostr
+	url = https://github.com/gnostr-org/hyper-nostr.git
+    branch = master
+    depth = shallow
+[submodule "hyper-sdk"]
+	path = hyper-sdk
+	url = https://github.com/gnostr-org/hyper-sdk.git
+    branch = master
+    depth = shallow
+[submodule "modal"]
+	path = modal
+	url = https://github.com/gnostr-org/gnostr-modal.git
+    branch = master
+    depth = shallow
+[submodule "nips"]
+	path = nips
+	url = https://github.com/gnostr-org/nips.git
+    branch = master
+    depth = shallow
+[submodule "src/libcjson"]
+	path = src/libcjson
+	url = https://github.com/gnostr-org/libcjson.git
+    branch = master
+    depth = shallow
+[submodule "tui"]
+	path = tui
+	url = https://github.com/gnostr-org/gnostr-tui.git
+    branch = master
+    depth = shallow
+[submodule "workspace"]
+	path = workspace
+	url = https://github.com/gnostr-org/gnostr-workspace.git
+    branch = main
+    depth = shallow
+[submodule "gnostr-xq"]
+	path = xq
+	url = https://github.com/gnostr-org/gnostr-xq.git
+    branch = master
+    depth = shallow
+[submodule "vendor/secp256k1-sys/depend/secp256k1"]
+	path = vendor/secp256k1-sys/depend/secp256k1
+	url = https://github.com/gnostr-org/secp256k1.git
+[submodule "secp256k1"]
+	path = secp256k1
+	url = https://github.com/gnostr-org/secp256k1.git

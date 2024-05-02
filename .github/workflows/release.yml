@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+permissions: read-all
+
+env:
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build-release:
+    name: build-release
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [linux-musl, macos-x86_64, macos-aarch64, win-msvc]
+        include:
+        - build: linux-musl
+          os: ubuntu-20.04
+          target: x86_64-unknown-linux-musl
+        - build: macos-x86_64
+          os: macos-11
+          target: x86_64-apple-darwin
+        - build: macos-aarch64
+          os: macos-14
+          target: aarch64-apple-darwin
+        - build: win-msvc
+          os: windows-2022
+          target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+    - name: Install packages (Ubuntu)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends xz-utils liblz4-tool musl-tools
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+      with:
+        toolchain: stable
+        target: ${{ matrix.target }}
+    - name: Build release binary
+      run: cargo build --target ${{ matrix.target }} --verbose --release --features packaging,vendored-openssl
+    - name: Build archive
+      shell: bash
+      run: |
+        outdir="target/${{ matrix.target }}/release"
+        staging="jj-${{ github.event.release.tag_name }}-${{ matrix.target }}"
+        mkdir "$staging"
+        cp {README.md,LICENSE} "$staging/"
+        if [ "${{ matrix.os }}" = "windows-2022" ]; then
+          cp "$outdir/jj.exe" "$staging/"
+          cd "$staging"
+          7z a "../$staging.zip" .
+          echo "ASSET=$staging.zip" >> $GITHUB_ENV
+        else
+          cp "$outdir/jj" "$staging/"
+          tar czf "$staging.tar.gz" -C "$staging" .
+          echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+        fi
+    - name: Upload release archive
+      uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
+        asset_content_type: application/octet-stream
+
+  docs-release-archive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Install packages (Ubuntu)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xz-utils liblz4-tool musl-tools
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+        with:
+          python-version: 3.11
+      - name: Install poetry
+        uses: abatilo/actions-poetry@7b6d33e44b4f08d7021a1dee3c044e9c253d6439
+        with:
+          poetry-version: latest
+      - name: Compile docs and zip them up
+        run: |
+          poetry install --no-root
+          poetry run -- mkdocs build -f mkdocs-offline.yml
+          archive="jj-${{ github.event.release.tag_name }}-docs-html.tar.gz"
+          tar czf "$archive" -C "rendered-docs" .
+          echo "ASSET=$archive" >> $GITHUB_ENV
+      - name: Upload release archive
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.ASSET }}
+          asset_name: ${{ env.ASSET }}
+          asset_content_type: application/octet-stream
+
+  docs-deploy-website-latest-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+      - run:  "git fetch origin gh-pages --depth=1"
+      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+        with:
+          python-version: 3.11
+      - name: Install poetry
+        uses: abatilo/actions-poetry@7b6d33e44b4f08d7021a1dee3c044e9c253d6439
+        with:
+          poetry-version: latest
+      - name: Install dependencies, compile and deploy docs to the "latest release" section of the website
+        run: |
+          git config user.name 'jj-docs[bot]'
+          git config user.email 'jj-docs[bot]@users.noreply.github.io'
+          # Using the 'latest' tag below makes the website default
+          # to this version.
+          .github/scripts/docs-build-deploy 'https://martinvonz.github.io/jj' "${{ github.event.release.tag_name }}" latest --update-aliases --push
+      - name: "Show `git diff --stat`"
+        run: git diff --stat gh-pages^ gh-pages || echo "(No diffs)"

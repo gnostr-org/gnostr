@@ -1,0 +1,1 @@
+const msgs = [\n    \"Hello, Nostr\",\n    \"Hola, Nostr\",\n    \"Ciao, Nostr\", \n    \"こんにちは, Nostr\"\n]\n\nvar index = 0\n\nfunction changeMessage() {\n    // Refresh DIV with new content.\n    index = (index+1) % msgs.length\n    document.getElementById(\"msg\").innerHTML = msgs[index]\n}\nlet reload = window.setInterval('changeMessage()', 1000);
