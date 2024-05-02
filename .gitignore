@@ -1,3 +1,5 @@
+identity.key
+install_manifest.txt
 **.DS_Store
 /target/
 /rendered-docs
