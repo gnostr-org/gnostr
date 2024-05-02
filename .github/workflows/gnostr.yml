@@ -106,6 +106,10 @@ jobs:
       - run: V=1 make gnostr-verify-keypair
 
       ## objective: test cmake build gnostr with gnostr-nip
+      - run: which gnostr
+      - run: which gnostr-nip
+      - run: which gnostr-sha256
+      - run: which gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
         if: github.event_name == 'pull_request'
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
