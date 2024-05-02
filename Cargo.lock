@@ -3674,59 +3674,6 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "0.0.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19e13d12fd505ebd240db95caf8bf0b8c9f51a545b1d2f8f3251f95298678cbc"
-dependencies = [
- "anyhow",
- "argparse",
- "ascii",
- "async-std",
- "base64 0.21.7",
- "bech32",
- "chrono",
- "crossterm 0.19.0",
- "env_logger 0.11.3",
- "futures 0.3.30",
- "futures-lite 2.3.0",
- "getopts",
- "git2",
- "gnip44",
- "gnostr-core",
- "gnostr-types",
- "hex",
- "http 0.2.12",
- "k256",
- "libp2p",
- "log 0.4.21",
- "nostr_rust 0.20.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "num-bigint 0.4.4",
- "pad",
- "rand 0.7.3",
- "rand_core 0.6.4",
- "random-access-disk",
- "random-access-memory",
- "random-access-storage",
- "reqwest",
- "rpassword",
- "rust-crypto",
- "serde",
- "serde_json",
- "sha1",
- "sha2 0.10.8",
- "sha256",
- "structopt 0.3.26",
- "thiserror",
- "time 0.1.45",
- "tokio 1.37.0",
- "tui",
- "tungstenite 0.18.0",
- "ureq",
- "zeroize",
-]
-
-[[package]]
-name = "gnostr-bins"
 version = "0.0.20"
 dependencies = [
  "argparse",
@@ -3751,7 +3698,7 @@ dependencies = [
  "k256",
  "libp2p",
  "log 0.4.21",
- "nostr_rust 0.20.3 (git+https://github.com/gnostr-org/gnostr_rs.git)",
+ "nostr_rust",
  "num-bigint 0.4.4",
  "pad",
  "rand 0.7.3",
@@ -3887,22 +3834,6 @@ dependencies = [
  "sha2 0.10.8",
  "snow",
  "tracing",
-]
-
-[[package]]
-name = "gnostr-legit"
-version = "0.0.10"
-dependencies = [
- "argparse",
- "chrono",
- "git2",
- "gnostr-bins 0.0.18",
- "gnostr-types",
- "pad",
- "rust-crypto",
- "serde_json",
- "sha2 0.10.8",
- "time 0.1.45",
 ]
 
 [[package]]
@@ -6686,30 +6617,6 @@ dependencies = [
  "async-trait",
  "nostr 0.29.1",
  "thiserror",
-]
-
-[[package]]
-name = "nostr_rust"
-version = "0.20.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a9bbeae83a9e4502b7bc9293935cd86c6d92b955082a76d814bf8a17b9dcfcc"
-dependencies = [
- "aes 0.8.4",
- "base64 0.21.7",
- "bech32",
- "cbc",
- "hex",
- "rand 0.8.5",
- "reqwest",
- "secp256k1 0.26.0",
- "serde",
- "serde_derive",
- "serde_json",
- "sha256",
- "thiserror",
- "tokio-tungstenite 0.18.0",
- "tungstenite 0.18.0",
- "url 2.5.0",
 ]
 
 [[package]]
