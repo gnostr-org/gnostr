@@ -1,7 +1,7 @@
 use futures::executor::block_on;
 use url::Url;
-use gnostr_bins::watch_list;
-async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> {
+use crate::get_relays_public;
+pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> {
     let mut urls: Vec<String> = Vec::new();
     let mut part = String::new();
     let mut collected = Vec::new();
@@ -27,10 +27,11 @@ async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> {
     Ok(urls)
 }
 
-async fn print_relay_list() {
-    let vec_relay_list = parse_urls(&gnostr_bins::get_relays_public().unwrap().as_str()).await;
+pub async fn watch_list() {
+    let vec_relay_list = parse_urls(&get_relays_public().unwrap().as_str()).await;
 }
-fn main() {
-    let future = print_relay_list(); // Nothing is printed
-    block_on(future);
-}
+//pub async fn watch_list() -> Result<Vec<String>, url::ParseError> {
+//    let future = watch_list(); // Nothing is printed
+//    let list = block_on(future);
+//    Ok(list)
+//}

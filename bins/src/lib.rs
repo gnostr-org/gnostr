@@ -46,6 +46,14 @@ pub use relays::relays_offline;
 pub use relays::relays_online;
 pub use relays::relays_paid;
 pub use relays::relays_public;
+use futures::executor::block_on;
+pub mod watch_list;
+pub use watch_list::*;
+pub async fn watch_list() -> Result<Vec<String>, url::ParseError> {
+    let future = watch_list(); // Nothing is printed
+    let list = block_on(future);
+    Ok(list.unwrap())
+}
 
 pub fn strip_trailing_nl(input: &mut String) {
     let new_len = input
