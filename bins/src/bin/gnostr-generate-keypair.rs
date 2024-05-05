@@ -1,6 +1,7 @@
 // Copyright 2022-2023 nostr-bins Developers
 // Licensed under the MIT license <LICENSE-MIT or http://opensource.org/licenses/MIT>
-// This file may not be copied, modified, or distributed except according to those terms.
+// This file may not be copied, modified, or distributed except according to
+// those terms.
 
 use k256::schnorr::SigningKey;
 use rand_core::OsRng;

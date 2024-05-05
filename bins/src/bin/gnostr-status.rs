@@ -3,9 +3,10 @@
  *
  * Written by the libgit2 contributors
  *
- * To the extent possible under law, the author(s) have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
+ * To the extent possible under law, the author(s) have dedicated all
+ * copyright and related and neighboring rights to this software to the
+ * public domain worldwide. This software is distributed without any
+ * warranty.
  *
  * You should have received a copy of the CC0 Public Domain Dedication along
  * with this software. If not, see
@@ -14,9 +15,10 @@
 
 #![deny(warnings)]
 
-use git2::{Error, ErrorCode, Repository, StatusOptions, SubmoduleIgnore};
 use std::str;
 use std::time::Duration;
+
+use git2::{Error, ErrorCode, Repository, StatusOptions, SubmoduleIgnore};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -235,8 +237,7 @@ fn print_long(statuses: &git2::Statuses) {
 # Changes not staged for commit:
 #   (use \"git add{} <file>...\" to update what will be committed)
 #   (use \"git checkout -- <file>...\" to discard changes in working directory)
-#\
-                ",
+#",
                 if rm_in_workdir { "/rm" } else { "" }
             );
             header = true;
@@ -298,10 +299,7 @@ fn print_long(statuses: &git2::Statuses) {
     }
 
     if !changes_in_index && changed_in_workdir {
-        println!(
-            "no changes added to commit (use \"git add\" and/or \
-             \"git commit -a\")"
-        );
+        println!("no changes added to commit (use \"git add\" and/or \"git commit -a\")");
     }
 }
 

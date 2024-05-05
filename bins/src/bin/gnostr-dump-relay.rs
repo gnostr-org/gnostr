@@ -1,8 +1,9 @@
 // TEMPORARILY
 #![allow(clippy::uninlined_format_args)]
 
-use gnostr_types::Filter;
 use std::env;
+
+use gnostr_types::Filter;
 
 fn main() {
     let mut args = env::args();

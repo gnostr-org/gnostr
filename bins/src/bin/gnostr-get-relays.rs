@@ -1,8 +1,8 @@
+use std::io::Read;
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use gnostr_bins::get_relays;
 use reqwest::Url;
-use std::io::Read;
-
-use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
     let since_the_epoch = SystemTime::now()

@@ -1,11 +1,13 @@
 /*
- * libgit2 "init" example - shows how to initialize a new repo (also includes how to do an initial commit)
+ * libgit2 "init" example - shows how to initialize a new repo (also includes
+ * how to do an initial commit)
  *
  * Written by the libgit2 contributors
  *
- * To the extent possible under law, the author(s) have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
+ * To the extent possible under law, the author(s) have dedicated all
+ * copyright and related and neighboring rights to this software to the
+ * public domain worldwide. This software is distributed without any
+ * warranty.
  *
  * You should have received a copy of the CC0 Public Domain Dedication along
  * with this software. If not, see
@@ -14,8 +16,9 @@
 
 #![deny(warnings)]
 
-use git2::{Error, Repository, RepositoryInitMode, RepositoryInitOptions};
 use std::path::{Path, PathBuf};
+
+use git2::{Error, Repository, RepositoryInitMode, RepositoryInitOptions};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]

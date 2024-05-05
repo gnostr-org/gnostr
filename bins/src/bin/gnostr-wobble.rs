@@ -6,83 +6,83 @@
 //
 //    WEEBLE WOBBLE is a timestamping method using bitcoin blockheight, utc
 //    time and a modulus function to create a unique, decentralized, yet
-//    verifiable two part time stamp. weeble wobble was originally described in a
-//    decentrailized version control proposal known as 0x20bf. The "weeble"
-//    component of the time stamping method is simply floor(utc/block_height). The
-//    wobble part of the time stamp is where weeble:wobble has more
+//    verifiable two part time stamp. weeble wobble was originally described in
+// a    decentrailized version control proposal known as 0x20bf. The "weeble"
+//    component of the time stamping method is simply floor(utc/block_height).
+// The    wobble part of the time stamp is where weeble:wobble has more
 //    interesting functionality. utc modulus block_height (utc % block_height).
 //    utc mod block_height measures the time between bitcoin blocks and can be
 //    adjusted to a varying granularity depending on specification needs.
 //    weeble functions as a network "minute hand" and wobble functions as a
-//    network "second hand" (for example) but can be adjusted to milliseconds etc...
+//    network "second hand" (for example) but can be adjusted to milliseconds
+// etc...
 //
 //    WEEBLE WOBBLE Copyright (c) 2023 Randy McMillan
 //
-//    Permission is hereby granted, free of charge, to any person obtaining a copy
-//    of this software and associated documentation files (the "Software"), to deal
-//    in the Software without restriction, including without limitation the rights
-//    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//    copies of the Software, and to permit persons to whom the Software is
-//    furnished to do so, subject to the following conditions:
+//    Permission is hereby granted, free of charge, to any person obtaining a
+// copy    of this software and associated documentation files (the "Software"),
+// to deal    in the Software without restriction, including without limitation
+// the rights    to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell    copies of the Software, and to permit persons to whom the
+// Software is    furnished to do so, subject to the following conditions:
 //
-//    The above copyright notice and this permission notice shall be included in all
-//    copies or substantial portions of the Software.
+//    The above copyright notice and this permission notice shall be included in
+// all    copies or substantial portions of the Software.
 //
 //    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 //    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//    SOFTWARE.
+//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM,    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE    SOFTWARE.
 //
 //    gnostr Copyright (c) 2023 Randy McMillan Gnostr.org
 //
-//    Permission is hereby granted, free of charge, to any person obtaining a copy
-//    of this software and associated documentation files (the "Software"), to deal
-//    in the Software without restriction, including without limitation the rights
-//    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//    copies of the Software, and to permit persons to whom the Software is
-//    furnished to do so, subject to the following conditions:
+//    Permission is hereby granted, free of charge, to any person obtaining a
+// copy    of this software and associated documentation files (the "Software"),
+// to deal    in the Software without restriction, including without limitation
+// the rights    to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell    copies of the Software, and to permit persons to whom the
+// Software is    furnished to do so, subject to the following conditions:
 //
-//    The above copyright notice and this permission notice shall be included in all
-//    copies or substantial portions of the Software.
+//    The above copyright notice and this permission notice shall be included in
+// all    copies or substantial portions of the Software.
 //
 //    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 //    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//    SOFTWARE.
+//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM,    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE    SOFTWARE.
 //
 //    Gnostr.org Copyright (c) 2023 Randy McMillan Gnostr.org
 //
-//    Permission is hereby granted, free of charge, to any person obtaining a copy
-//    of this software and associated documentation files (the "Software"), to deal
-//    in the Software without restriction, including without limitation the rights
-//    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//    copies of the Software, and to permit persons to whom the Software is
-//    furnished to do so, subject to the following conditions:
+//    Permission is hereby granted, free of charge, to any person obtaining a
+// copy    of this software and associated documentation files (the "Software"),
+// to deal    in the Software without restriction, including without limitation
+// the rights    to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell    copies of the Software, and to permit persons to whom the
+// Software is    furnished to do so, subject to the following conditions:
 //
-//    The above copyright notice and this permission notice shall be included in all
-//    copies or substantial portions of the Software.
+//    The above copyright notice and this permission notice shall be included in
+// all    copies or substantial portions of the Software.
 //
 //    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 //    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//    SOFTWARE.
+//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM,    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE    SOFTWARE.
 
-use gnostr_bins::get_blockheight;
-use reqwest::Url;
 use std::io::Read;
-
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use futures::executor::block_on;
+use gnostr_bins::get_blockheight;
+use reqwest::Url;
 
 async fn print_wobble() {
     let since_the_epoch = SystemTime::now()

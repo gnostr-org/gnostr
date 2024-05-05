@@ -1,20 +1,23 @@
 /*
- * libgit2 "pull" example - shows how to pull remote data into a local branch.
+ * libgit2 "pull" example - shows how to pull remote data into a local
+ * branch.
  *
  * Written by the libgit2 contributors
  *
- * To the extent possible under law, the author(s) have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
+ * To the extent possible under law, the author(s) have dedicated all
+ * copyright and related and neighboring rights to this software to the
+ * public domain worldwide. This software is distributed without any
+ * warranty.
  *
  * You should have received a copy of the CC0 Public Domain Dedication along
  * with this software. If not, see
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-use git2::Repository;
 use std::io::{self, Write};
 use std::str;
+
+use git2::Repository;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -64,8 +67,7 @@ fn do_fetch<'a>(
     let stats = remote.stats();
     if stats.local_objects() > 0 {
         println!(
-            "\rReceived {}/{} objects in {} bytes (used {} local \
-             objects)",
+            "\rReceived {}/{} objects in {} bytes (used {} local objects)",
             stats.indexed_objects(),
             stats.total_objects(),
             stats.received_bytes(),
@@ -99,9 +101,9 @@ fn fast_forward(
     repo.set_head(&name)?;
     repo.checkout_head(Some(
         git2::build::CheckoutBuilder::default()
-            // For some reason the force is required to make the working directory actually get updated
-            // I suspect we should be adding some logic to handle dirty working directory states
-            // but this is just an example so maybe not.
+            // For some reason the force is required to make the working directory actually get
+            // updated I suspect we should be adding some logic to handle dirty working
+            // directory states but this is just an example so maybe not.
             .force(),
     ))?;
     Ok(())

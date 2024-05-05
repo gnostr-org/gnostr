@@ -3,9 +3,10 @@
  *
  * Written by the libgit2 contributors
  *
- * To the extent possible under law, the author(s) have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
+ * To the extent possible under law, the author(s) have dedicated all
+ * copyright and related and neighboring rights to this software to the
+ * public domain worldwide. This software is distributed without any
+ * warranty.
  *
  * You should have received a copy of the CC0 Public Domain Dedication along
  * with this software. If not, see
@@ -14,9 +15,10 @@
 
 #![deny(warnings)]
 
-use git2::{AutotagOption, FetchOptions, RemoteCallbacks, Repository};
 use std::io::{self, Write};
 use std::str;
+
+use git2::{AutotagOption, FetchOptions, RemoteCallbacks, Repository};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -89,8 +91,7 @@ fn run(args: &Args) -> Result<(), git2::Error> {
         let stats = remote.stats();
         if stats.local_objects() > 0 {
             println!(
-                "\rReceived {}/{} objects in {} bytes (used {} local \
-                 objects)",
+                "\rReceived {}/{} objects in {} bytes (used {} local objects)",
                 stats.indexed_objects(),
                 stats.total_objects(),
                 stats.received_bytes(),

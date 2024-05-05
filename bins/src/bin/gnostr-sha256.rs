@@ -1,18 +1,16 @@
-use std::env;
 use std::io::Result;
-use std::process;
+use std::{env, process};
 
 //time functions
 extern crate chrono;
 extern crate time;
-use chrono::{DateTime, Utc};
-use std::time::{SystemTime, UNIX_EPOCH};
-
 #[cfg(debug_assertions)]
 use std::path::PathBuf;
 #[cfg(not(debug_assertions))]
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 
+use chrono::{DateTime, Utc};
 #[allow(unused_imports)]
 use gnostr_bins::run;
 #[allow(unused_imports)]
@@ -127,8 +125,9 @@ fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use sha256::digest;
+
+    use super::*;
 
     #[test]
     fn strip_newline_works() {

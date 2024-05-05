@@ -1,9 +1,8 @@
-use git2::Oid;
-use git2::{IndexAddOption, Repository};
-use std::env;
 use std::ffi::OsString;
 use std::path::Path;
-use std::process;
+use std::{env, process};
+
+use git2::{IndexAddOption, Oid, Repository};
 
 fn car_cdr(s: &str) -> (&str, &str) {
     for i in 1..5 {
@@ -19,8 +18,8 @@ fn car_cdr(s: &str) -> (&str, &str) {
 
 pub fn oid_to_str(oid: &Oid) -> Result<String, &'static str> {
     // Use the format!("{:x}", oid) for full 40-character hex string.
-    // For a shorter representation, use oid.short_id() which returns a Result<Buf, Error>
-    // and needs further conversion to String.
+    // For a shorter representation, use oid.short_id() which returns a Result<Buf,
+    // Error> and needs further conversion to String.
     Ok(format!("{:#x?}", oid))
     //Ok(format!("{:}", oid))
 }
