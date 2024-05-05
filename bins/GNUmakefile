@@ -47,6 +47,12 @@ cargo-i:## 	cargo-i
 cargo-publish:## cargo publish
 	cargo publish --registry crates-io
 
+test-loop-back:##  test-loop-back
+	gnostr-fetch-metadata wss://relay.damus.io a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd | gnostr-post-event
+test-gnostr-fetch-watch-list:## 	test-gnostr-fetch-watch-list
+	for relay in $$(gnostr-fetch-watch-list); do echo $$relay;done
+test-gnostr-fetch-watch-list-interator:## 	test-gnostr-fetch-watch-list-interator
+	for relay in $$(gnostr-fetch-watch-list-iterator); do echo $$relay;done
 test-gnostr-post-duplicate:## 	test-gnostr-post-duplicate
 	@[ -x $(shell which cat) ] && \
 		cat tests/event.ab0d7c747e0d6651814f8092287f9a58c9cc7a48ce700e2cf743c082577f7850 | gnostr-post-event --relay wss://relay.damus.io
