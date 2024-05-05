@@ -1,17 +1,14 @@
-use std::env;
 use std::iter::Peekable;
+use std::str::FromStr;
+use std::sync::{Arc, Mutex};
+use std::{env, thread};
+
+use nostr_rust::events::extract_events_ws;
+use nostr_rust::nostr_client::Client;
+use nostr_rust::req::ReqFilter;
+use nostr_rust::utils::parse_content_tags;
+use nostr_rust::{Identity, Message};
 use structopt::StructOpt;
-
-use std::{
-    str::FromStr,
-    sync::{Arc, Mutex},
-    thread,
-};
-
-use nostr_rust::{
-    events::extract_events_ws, nostr_client::Client, req::ReqFilter, utils::parse_content_tags,
-    Identity, Message,
-};
 
 fn handle_message(relay_url: &String, message: &Message) -> Result<(), String> {
     println!("Received message from {}: {:?}", relay_url, message);
@@ -87,10 +84,10 @@ fn main() {
         .unsubscribe(&subscription_id)
         .unwrap();
 
-    // You can use the parse content tags method to get the content and the tags from a string
-    // let tags = parse_content_tags("hello #world", vec![], Some(nostr_rust::DEFAULT_HASHTAG), true, true);
-    // assert_eq!(tags.content, "hello #world");
-    //  assert_eq!(tags.tags, vec![vec!["t", "world"]]);
+    // You can use the parse content tags method to get the content and the tags
+    // from a string let tags = parse_content_tags("hello #world", vec![],
+    // Some(nostr_rust::DEFAULT_HASHTAG), true, true); assert_eq!(tags.content,
+    // "hello #world");  assert_eq!(tags.tags, vec![vec!["t", "world"]]);
 
     // Publish a text note
     nostr_client

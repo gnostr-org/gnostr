@@ -2,40 +2,31 @@
 #![allow(unused)]
 #![allow(dead_code)]
 extern crate chrono;
-use chrono::offset::Utc;
-use chrono::DateTime;
-use std::process::Command;
 //use std::time::SystemTime;
 use std::any::type_name;
 use std::convert::TryInto;
-use std::env;
 use std::io::Result;
+use std::path::PathBuf;
+use std::process::Command;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{env, io, thread};
+
 //use std::mem::size_of;
 use argparse::{ArgumentParser, Store};
+use chrono::offset::Utc;
+use chrono::DateTime;
 use git2::*;
 use gitminer::Gitminer;
 use pad::{Alignment, PadStr};
-use sha2::{Digest, Sha256};
-use std::{io, thread};
-
-use std::path::PathBuf; //for get_current_dir
+use sha2::{Digest, Sha256}; //for get_current_dir
 
 extern crate gnostr_bins;
-use gnostr_bins::get_blockheight;
-use gnostr_bins::get_pwd;
-use gnostr_bins::get_weeble;
-use gnostr_bins::get_wobble;
-use gnostr_bins::gitminer;
-use gnostr_bins::post_event;
-use gnostr_bins::repo;
-use gnostr_bins::worker;
+use gnostr_bins::{
+    blockheight, get_blockheight, get_pwd, get_weeble, get_wobble, gitminer, post_event, repo,
+    weeble, wobble, worker,
+};
 use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, SubscriptionId};
-
-use gnostr_bins::blockheight;
-use gnostr_bins::weeble;
-use gnostr_bins::wobble;
 
 //fn type_of<T>(_: T) -> &'static str {
 //    type_name::<T>()
@@ -153,14 +144,16 @@ fn main() -> io::Result<()> {
     //    sed -e 's/\[/''/g' |
     //    sed -e 's/\]/''/g' |
     //    sed -e 's/"//g' |
-    //    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
+    //    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}')
+    // 2>/dev/null
 
     //echo $RELAYS
     //}
     //gnostr-get-relays
 
     //#!/bin/bash
-    //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
+    //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)"
+    // #&& git config -l | grep gnostr.relays
     #[allow(clippy::if_same_then_else)]
     let set_relays = if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -323,13 +316,15 @@ fn main() -> io::Result<()> {
     //println!("&hash before: {:?}", &hash);
     //println!("&hash after pad: {:?}", &hash);
     //println!("gnostr_sec before pad: {:?}", gnostr_sec);
-    //println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
-    //println!("&gnostr_sec before pad: {:?}", &gnostr_sec);
-    //println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64, '0', Alignment::Right, true));
+    //println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0',
+    // Alignment::Right, true)); println!("&gnostr_sec before pad: {:?}",
+    // &gnostr_sec); println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64,
+    // '0', Alignment::Right, true));
 
     //let s = "12345".pad(64, '0', Alignment::Right, true);
     //println!("s: {:?}", s);
-    // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
+    // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed
+    // 's/SHA2-256(stdin)= //g'
     //
     //
     //shell test
@@ -355,32 +350,48 @@ fn main() -> io::Result<()> {
     //println!("351:{:?}", gnostr_bins::get_blockheight());
     let event = if cfg!(target_os = "windows") {
         Command::new("cmd")
-                .args(["/C",
-                  "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git diff HEAD~1 || git diff)\" "
-                ])
-                .output()
-                .expect("failed to execute process")
+            .args([
+                "/C",
+                "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble \
+                 $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) \
+                 --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git \
+                 diff HEAD~1 || git diff)\" ",
+            ])
+            .output()
+            .expect("failed to execute process")
     } else if cfg!(target_os = "macos") {
         Command::new("sh")
-                .args(["-c",
-                  "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git diff HEAD~1 || git diff)\" "
-                ])
-                .output()
-                .expect("failed to execute process")
+            .args([
+                "-c",
+                "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble \
+                 $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) \
+                 --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git \
+                 diff HEAD~1 || git diff)\" ",
+            ])
+            .output()
+            .expect("failed to execute process")
     } else if cfg!(target_os = "linux") {
         Command::new("sh")
-                .args(["-c",
-                  "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git diff HEAD~1 || git diff)\" "
-                ])
-                .output()
-                .expect("failed to execute process")
+            .args([
+                "-c",
+                "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble \
+                 $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) \
+                 --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git \
+                 diff HEAD~1 || git diff)\" ",
+            ])
+            .output()
+            .expect("failed to execute process")
     } else {
         Command::new("sh")
-                .args(["-c",
-                  "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git diff HEAD~1 || git diff)\" "
-                ])
-                .output()
-                .expect("failed to execute process")
+            .args([
+                "-c",
+                "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble \
+                 $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) \
+                 --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(git \
+                 diff HEAD~1 || git diff)\" ",
+            ])
+            .output()
+            .expect("failed to execute process")
     };
 
     let gnostr_event = String::from_utf8(event.stdout)
@@ -395,14 +406,17 @@ fn main() -> io::Result<()> {
     //to enable nested commands
     //REF:
     //gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD")
-    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD"))
-    //Example:
-    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "#gnostr will exist!")) --envelope --content "$(git log -n 1)" | gnostr-cat -u wss://relay.damus.io
+    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse
+    // --verify HEAD")) Example:
+    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "#gnostr will
+    // exist!")) --envelope --content "$(git log -n 1)" | gnostr-cat -u
+    // wss://relay.damus.io
     //
     //
     //
     let duration = time::get_time() - start;
-    //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
+    //println!("Success! Generated commit {} in {} seconds", hash,
+    // duration.num_seconds());
     //
     //
     //let relay_url = "wss://nos.lol";
@@ -419,9 +433,9 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     ap.stop_on_first_argument(false);
 
     //ap.refer(&mut opts.repo)
-    //    //.add_argument("repository-path", Store, "Path to your git repository (required)");
-    //    .add_argument("repository-path", Store, "Path to your git repository");
-    //    //.required();
+    //    //.add_argument("repository-path", Store, "Path to your git repository
+    // (required)");    .add_argument("repository-path", Store, "Path to your
+    // git repository");    //.required();
     ap.refer(&mut opts.repo)
         .add_argument("repository-path", Store, "Path to your git repository");
 
@@ -446,7 +460,8 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     //.required();
 
     //ap.refer(&mut opts.timestamp)
-    //    .add_option(&["--timestamp"], Store, "Commit timestamp to use (default now)");
+    //    .add_option(&["--timestamp"], Store, "Commit timestamp to use (default
+    // now)");
 
     ap.parse_args_or_exit();
 }

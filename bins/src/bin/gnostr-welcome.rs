@@ -1,30 +1,24 @@
-use chrono::prelude::*;
-use crossterm::{
-    event::{self, Event as CEvent, KeyCode},
-    terminal::{disable_raw_mode, enable_raw_mode},
-};
-use rand::{distributions::Alphanumeric, prelude::*};
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::io;
-use std::process;
 use std::sync::mpsc;
-use std::thread;
 use std::time::{Duration, Instant};
-use thiserror::Error;
-use tui::{
-    backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{
-        Block, BorderType, Borders, Cell, List, ListItem, ListState, Paragraph, Row, Table, Tabs,
-    },
-    Terminal,
-};
+use std::{fs, io, process, thread};
 
+use chrono::prelude::*;
+use crossterm::event::{self, Event as CEvent, KeyCode};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use homedir::get_my_home;
-const APP_NAME:&str = env!("CARGO_PKG_NAME");
+use rand::distributions::Alphanumeric;
+use rand::prelude::*;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+use tui::backend::CrosstermBackend;
+use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans};
+use tui::widgets::{
+    Block, BorderType, Borders, Cell, List, ListItem, ListState, Paragraph, Row, Table, Tabs,
+};
+use tui::Terminal;
+const APP_NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const ICON_FONT_SIZE: u16 = 12;
@@ -105,7 +99,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-
     //MENU TITLES
 
     let menu_titles = vec!["Home", "Relays", "Add", "Delete", "Quit"];
@@ -130,14 +123,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .split(size);
 
-            let copyright = Paragraph::new(format!(" {} FOOTER",APP_NAME))
+            let copyright = Paragraph::new(format!(" {} FOOTER", APP_NAME))
                 .style(Style::default().fg(Color::LightCyan))
                 .alignment(Alignment::Left)
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
                         .style(Style::default().fg(Color::White))
-                        .title(format!(" {} v{}",APP_NAME,VERSION))
+                        .title(format!(" {} v{}", APP_NAME, VERSION))
                         .border_type(BorderType::Plain),
                 );
 
@@ -180,7 +173,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     //footer not persist after quit here
                     rect.render_widget(copyright.clone(), chunks[2]);
-
                 }
             }
         })?;
@@ -234,136 +226,213 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn render_home<'a>() -> Paragraph<'a> {
     let home = Paragraph::new(vec![
+        //REF: Unicode Character “█” (U+2588)
 
-//REF: Unicode Character “█” (U+2588)
-
-//center line
-//Spans::from(vec![Span::raw("
-//███████████████████████████████████████•███████████████████████████████████████
-//")]),
-Spans::from(vec![Span::raw("")]),
-Spans::from(vec![Span::raw("")]),
-Spans::from(vec![Span::raw("")]),
-Spans::from(vec![Span::raw("
- █•█ ")]),
-Spans::from(vec![Span::raw("
- ███•███ ")]),
-Spans::from(vec![Span::raw("
- █████•█████ ")]),
-Spans::from(vec![Span::raw("
- ███████•███████ ")]),
-Spans::from(vec![Span::raw("
- █████████•█████████ ")]),
-Spans::from(vec![Span::raw("
-   ██████████•███████████ ")]),
-Spans::from(vec![Span::raw("
-█    ████████•█████████████")]),
-Spans::from(vec![Span::raw("
- ████     ██████•███████████████")]),
-Spans::from(vec![Span::raw("
- ████████      ███•█████████████████")]),
-Spans::from(vec![Span::raw("
- ████████████      █•███████████████████")]),
-Spans::from(vec![Span::raw("
-  ████████████████         ██████████████████  ")]),
-Spans::from(vec![Span::raw("
+        //center line
+        //Spans::from(vec![Span::raw("
+        //███████████████████████████████████████•███████████████████████████████████████
+        //")]),
+        Spans::from(vec![Span::raw("")]),
+        Spans::from(vec![Span::raw("")]),
+        Spans::from(vec![Span::raw("")]),
+        Spans::from(vec![Span::raw(
+            "
+ █•█ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ███•███ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ █████•█████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ███████•███████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ █████████•█████████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+   ██████████•███████████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+█    ████████•█████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ████     ██████•███████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ████████      ███•█████████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ████████████      █•███████████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+  ████████████████         ██████████████████  ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ██████████████████           ██████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ███████████████████             ███████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 █████████████████████             █████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ████████████████████████           ████████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
  ████████████████████████████           ████████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ███████████████████████████████     █      ████████████████████████
-")]),
-Spans::from(vec![Span::raw("
- ██████████████████████████████████     ███        ██████████████████████  ")]),
-Spans::from(vec![Span::raw("
-████████████████████████████████████     █████          ████████████████████")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ██████████████████████████████████     ███        ██████████████████████  ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+████████████████████████████████████     █████          ████████████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 █████████████████████████████████████     ███████           ██████████████████
-")]),
-//vim command to find center
-//:exe 'normal '.(virtcol('$')/2).'|'
-// █
-// ▉ ▊ ▋ ▌ ▍ ▎ ▏ ▐ ▔ ▕ ▀ ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ▉ ▊ ▋ ▌ ▍ ▎ ▏ ▐ ▔ ▕
-// █
-// █
-//FULL BLOCK
-//Unicode: U+2588, UTF-8: E2 96 88
+",
+        )]),
+        //vim command to find center
+        //:exe 'normal '.(virtcol('$')/2).'|'
+        // █
+        // ▉ ▊ ▋ ▌ ▍ ▎ ▏ ▐ ▔ ▕ ▀ ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ▉ ▊ ▋ ▌ ▍ ▎ ▏ ▐ ▔ ▕
+        // █
+        // █
+        //FULL BLOCK
+        //Unicode: U+2588, UTF-8: E2 96 88
 
-//center line
-Spans::from(vec![Span::raw("
+        //center line
+        Spans::from(vec![Span::raw(
+            "
 █████████████████████████████████████  •  ███████            █████████████████
-")]),
-
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ████████████████████████████████████     ████████           ████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ██████████████████████████████████     ██████████        ███████████████
-")]),
-Spans::from(vec![Span::raw("
-████████████████████████████████     ███████████████████████████████")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+████████████████████████████████     ███████████████████████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ███████████████████████████████     ██████████████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 █████████████████████████████     ████████████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ██████████████████████████       █████████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ██████████████████████           █████████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ███████████████████             ██████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 █████████████████             ████████████████
-")]),
-Spans::from(vec![Span::raw("
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
 ████████████████           ███████████████
-")]),
-Spans::from(vec![Span::raw("
-████████████████       ███████████████")]),
-Spans::from(vec![Span::raw("
- ████████████████•████████████████ ")]),
-Spans::from(vec![Span::raw("
- ██████████████•██████████████ ")]),
-Spans::from(vec![Span::raw("
- ████████████•████████████ ")]),
-Spans::from(vec![Span::raw("
- █████████•█████████ ")]),
-Spans::from(vec![Span::raw("
- ███████•███████ ")]),
-Spans::from(vec![Span::raw("
- █████•█████ ")]),
-Spans::from(vec![Span::raw("
- ███•███ ")]),
-Spans::from(vec![Span::raw("
- █•█ ")]),
-//center line
-//Spans::from(vec![Span::raw("
-//███████████████████████████████████████•███████████████████████████████████████
-//")]),
-
-
+",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+████████████████       ███████████████",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ████████████████•████████████████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ██████████████•██████████████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ████████████•████████████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ █████████•█████████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ███████•███████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ █████•█████ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ ███•███ ",
+        )]),
+        Spans::from(vec![Span::raw(
+            "
+ █•█ ",
+        )]),
+        //center line
+        //Spans::from(vec![Span::raw("
+        //███████████████████████████████████████•███████████████████████████████████████
+        //")]),
         Spans::from(vec![Span::styled(
             "    ",
             Style::default().fg(Color::LightBlue),
         )]),
         Spans::from(vec![Span::raw("")]),
-        //Spans::from(vec![Span::raw("Press 'p' to access pets, 'a' to add random new pets and 'd' to delete the currently selected pet.")]),
+        //Spans::from(vec![Span::raw("Press 'p' to access pets, 'a' to add random new pets and 'd'
+        // to delete the currently selected pet.")]),
     ])
     .alignment(Alignment::Center)
     .block(

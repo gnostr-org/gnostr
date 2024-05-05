@@ -3,9 +3,10 @@
  *
  * Written by the libgit2 contributors
  *
- * To the extent possible under law, the author(s) have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
+ * To the extent possible under law, the author(s) have dedicated all
+ * copyright and related and neighboring rights to this software to the
+ * public domain worldwide. This software is distributed without any
+ * warranty.
  *
  * You should have received a copy of the CC0 Public Domain Dedication along
  * with this software. If not, see
@@ -14,9 +15,12 @@
 
 #![deny(warnings)]
 
-use git2::{Blob, Diff, DiffOptions, Error, Object, ObjectType, Oid, Repository};
-use git2::{DiffDelta, DiffFindOptions, DiffFormat, DiffHunk, DiffLine};
 use std::str;
+
+use git2::{
+    Blob, Diff, DiffDelta, DiffFindOptions, DiffFormat, DiffHunk, DiffLine, DiffOptions, Error,
+    Object, ObjectType, Oid, Repository,
+};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]

@@ -1,10 +1,9 @@
-use gnostr_types::{EventKind, Filter, PublicKeyHex};
 use std::env;
 
+use gnostr_types::{EventKind, Filter, PublicKeyHex};
+
 fn main() {
-
-
-println!("{:#}",gnostr_bins::get_relays_public().unwrap());
+    println!("{:#}", gnostr_bins::get_relays_public().unwrap());
     let mut args = env::args();
     let _ = args.next(); // program name
     let relay_url = match args.next() {

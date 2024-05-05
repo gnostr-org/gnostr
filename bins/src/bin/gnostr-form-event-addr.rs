@@ -1,12 +1,17 @@
-use gnostr_types::{EventAddr, EventKind, NostrUrl, PublicKey, UncheckedUrl};
 use std::env;
+
+use gnostr_types::{EventAddr, EventKind, NostrUrl, PublicKey, UncheckedUrl};
 
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name
 
     let usage = |msg| -> ! {
-        panic!("{}\nUsage: form_event_addr <kind_number> <author_pubkeyhex> <d-identifier> [<relay_url> ...]", msg);
+        panic!(
+            "{}\nUsage: form_event_addr <kind_number> <author_pubkeyhex> <d-identifier> \
+             [<relay_url> ...]",
+            msg
+        );
     };
 
     let kind: EventKind = match args.next() {
