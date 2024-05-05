@@ -27,11 +27,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> 
     Ok(urls)
 }
 
-pub async fn watch_list() {
+pub async fn print_watch_list() -> Result<Vec<String>, url::ParseError> {
     let vec_relay_list = parse_urls(&get_relays_public().unwrap().as_str()).await;
+    vec_relay_list//.expect("REASON")
 }
-//pub async fn watch_list() -> Result<Vec<String>, url::ParseError> {
-//    let future = watch_list(); // Nothing is printed
-//    let list = block_on(future);
-//    Ok(list)
-//}
