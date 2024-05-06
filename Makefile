@@ -39,34 +39,13 @@ dist: docs version
 	cp CHANGELOG dist/CHANGELOG.txt
 	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-ext/secp256k1/.git:
-	#@devtools/refresh-submodules.sh $(SUBMODULES)
-
-ext/secp256k1/include/secp256k1.h: ext/secp256k1/.git
-
-ext/secp256k1/configure: ext/secp256k1/.git
-	cd ext/secp256k1; \
-	./autogen.sh && \
-	./configure && \
-	automake --add-missing; \
-	autoreconf; \
-
-ext/secp256k1/config.log: ext/secp256k1/configure
-	cd ext/secp256k1; \
-	./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
-
-ext/secp256k1/.libs/libsecp256k1.a: ext/secp256k1/config.log
-	cd ext/secp256k1; \
-	make -j libsecp256k1.la
-
-libsecp256k1.a: ext/secp256k1/.libs/libsecp256k1.a
-	cp $< $@
 
 %.o: %.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-nostril: $(HEADERS) $(OBJS) $(ARS)
+nostril: $(HEADERS) $(OBJS)
+	#$(MAKE) $(ARS)
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
 
 install: all
@@ -83,7 +62,7 @@ configurator: configurator.c
 
 clean:
 	rm -f nostril *.o *.a
-	rm -rf ext/secp256k1
+	rm -rf ext/secp256k1/.lib
 
 tags: fake
 	ctags *.c *.h
