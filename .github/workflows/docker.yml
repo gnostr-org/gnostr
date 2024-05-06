@@ -1,0 +1,63 @@
+name: gnostr-docker
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        tag: ["latest", "slim-bullseye"]
+    runs-on: ${{ matrix.os }}
+    container: rust:${{ matrix.tag }}
+
+    steps:
+      - run: apt-get update && apt-get install autoconf build-essential curl cmake jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release   git make nodejs npm pkg-config python3 python-is-python3 sudo tcl zlib1g-dev -y
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      ## - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
+      - run: printenv
+      - run: cargo search gnostr --limit 100
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          submodules: 'true'
+          set-safe-directory: 'true'
+      ## notice: these are post checkout steps
+      ## - run: apk update && apk add autoconf automake build-base openssl-dev libtool make
+      - run: touch ~/GITHUB_TOKEN.txt
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
+      - run: make detect
+      ## objective: non-cmake build/install
+      - run: make gnostr-am gnostr-sha256 gnostr-install
+      ## objective: test gnostr-am with crate gnostr-sha256
+      - run: gnostr-am --sec $(gnostr-sha256)
+      - run: cmake .
+      - run: make
+      ## objective: cmake build/install
+      - run: V=1 make gnostr bins gnostr-install
+      ## objective: test gnostr with crate gnostr-bins gnostr-sha256
+      - run: gnostr --sec $(gnostr-sha256)
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))

@@ -1,5 +1,5 @@
 [submodule "deps/secp256k1"]
-	path = deps/secp256k1
+	path = ext/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1
 	ignore = dirty
 	branch = master

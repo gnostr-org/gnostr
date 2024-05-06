@@ -41,7 +41,7 @@ jobs:
       - name: printenv && brew install scdoc autoconf automake rustup-init libtool || sudo apt update && sudo apt install rustup-init scdoc -y
         run: |
           printenv && brew install scdoc autoconf automake rustup-init libtool || sudo apt update && sudo apt install rustup-init scdoc -y || true
-      - name: cargo install gnostr-bins
+      - name: cargo install gnostr-bins gnostr-cat gnostr-xq
         run: |
           cargo install gnostr-bins
       - name: rm -rf deps
@@ -61,4 +61,5 @@ jobs:
         run: |
           #pipe handles non-zero return from nostril default help
           file nostril
-          sudo ./nostril --sec $(gnostr-sha256) --content "gnostr-chat:topic:$(git rev-parse HEAD)" --tag gnostr-chat $(git rev-parse HEAD) | gnostr-post-event
+          sudo ./nostril --sec $(gnostr-sha256) --content "gnostr-chat:topic:$(git rev-parse HEAD)" -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) -t gnostr-chat -t $(git rev-parse HEAD) | gnostr-post-event
+          sudo ./nostril --sec $(gnostr-sha256) --content "gnostr-chat:topic:$(git rev-parse HEAD)" -t gnostr-chat -t $(git rev-parse HEAD) | gnostr-post-event
