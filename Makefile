@@ -45,8 +45,8 @@ dist: docs version
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 nostril: $(HEADERS) $(OBJS)
-	#$(MAKE) $(ARS)
-	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@
+	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@ || $(MAKE) $(ARS)
+	git checkout ext
 
 install: all
 	mkdir -p $(PREFIX)/bin || true
