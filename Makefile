@@ -1,11 +1,11 @@
 
-CFLAGS = -Wall -O2 -Ideps/secp256k1/include
+CFLAGS = -Wall -O2 -Iext/secp256k1/include
 OBJS = sha256.o nostril.o aes.o base64.o
-HEADERS = hex.h random.h config.h sha256.h deps/secp256k1/include/secp256k1.h
+HEADERS = hex.h random.h config.h sha256.h ext/secp256k1/include/secp256k1.h
 PREFIX ?= /usr/local
 ARS = libsecp256k1.a
 
-SUBMODULES = deps/secp256k1
+SUBMODULES = ext/secp256k1
 
 default:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -39,26 +39,27 @@ dist: docs version
 	cp CHANGELOG dist/CHANGELOG.txt
 	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
-deps/secp256k1/.git:
-	@devtools/refresh-submodules.sh $(SUBMODULES)
+ext/secp256k1/.git:
+	#@devtools/refresh-submodules.sh $(SUBMODULES)
 
-deps/secp256k1/include/secp256k1.h: deps/secp256k1/.git
+ext/secp256k1/include/secp256k1.h: ext/secp256k1/.git
 
-deps/secp256k1/configure: deps/secp256k1/.git
-	cd deps/secp256k1; \
+ext/secp256k1/configure: ext/secp256k1/.git
+	cd ext/secp256k1; \
+	./autogen.sh && \
+	./configure && \
 	automake --add-missing; \
 	autoreconf; \
-	./autogen.sh
 
-deps/secp256k1/config.log: deps/secp256k1/configure
-	cd deps/secp256k1; \
+ext/secp256k1/config.log: ext/secp256k1/configure
+	cd ext/secp256k1; \
 	./configure --disable-shared --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys
 
-deps/secp256k1/.libs/libsecp256k1.a: deps/secp256k1/config.log
-	cd deps/secp256k1; \
+ext/secp256k1/.libs/libsecp256k1.a: ext/secp256k1/config.log
+	cd ext/secp256k1; \
 	make -j libsecp256k1.la
 
-libsecp256k1.a: deps/secp256k1/.libs/libsecp256k1.a
+libsecp256k1.a: ext/secp256k1/.libs/libsecp256k1.a
 	cp $< $@
 
 %.o: %.c $(HEADERS)
@@ -82,7 +83,7 @@ configurator: configurator.c
 
 clean:
 	rm -f nostril *.o *.a
-	rm -rf deps/secp256k1
+	rm -rf ext/secp256k1
 
 tags: fake
 	ctags *.c *.h
