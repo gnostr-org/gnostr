@@ -1,3 +1,6 @@
+**.jj
+cert.pem
+local_key
 identity.key
 install_manifest.txt
 **.DS_Store
