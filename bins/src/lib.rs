@@ -5,10 +5,9 @@ mod internal;
 use internal::*;
 
 mod reflog_simple;
-use crate::reflog_simple::pwd;
-use crate::reflog_simple::ref_hash_list;
-use crate::reflog_simple::ref_hash_list_padded;
-use crate::reflog_simple::ref_hash_list_w_commit_message;
+use crate::reflog_simple::{
+    pwd, ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message,
+};
 
 pub mod weeble;
 pub use weeble::weeble;
@@ -41,12 +40,8 @@ pub use worker::*;
 /// Offline Relays: https://api.nostr.watch/v1/offline
 /// Relays by supported NIP: https://api.nostr.watch/v1/nip/X Use NIP ids without leading zeros - for example: https://api.nostr.watch/v1/nip/1
 pub mod relays;
-pub use relays::relays;
-pub use relays::relays_offline;
-pub use relays::relays_online;
-pub use relays::relays_paid;
-pub use relays::relays_public;
 use futures::executor::block_on;
+pub use relays::{relays, relays_offline, relays_online, relays_paid, relays_public};
 pub mod watch_list;
 pub use watch_list::*;
 pub async fn watch_list() -> Result<Vec<String>, url::ParseError> {
@@ -173,9 +168,10 @@ pub fn print_event(event: &Event) {
         serde_json::to_string(event).expect("Cannot serialize event to JSON")
     );
 }
-use sha256::digest;
 use std::error::Error;
 use std::process;
+
+use sha256::digest;
 
 pub struct Config {
     pub query: String,

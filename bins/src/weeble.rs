@@ -1,6 +1,7 @@
-use reqwest::Url;
 use std::io::Read;
 use std::time::SystemTime;
+
+use reqwest::Url;
 
 pub fn weeble() -> Result<f64, ascii::AsciiChar> {
     let since_the_epoch = SystemTime::now()

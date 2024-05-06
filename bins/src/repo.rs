@@ -1,7 +1,7 @@
 extern crate git2;
-use git2::Repository;
-use git2::RepositoryState;
 use std::process::Command;
+
+use git2::{Repository, RepositoryState};
 
 pub trait ToString {
     fn to_string(&self) -> String;
