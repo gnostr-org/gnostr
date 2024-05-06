@@ -1,5 +1,6 @@
-use reqwest::Url;
 use std::io::Read;
+
+use reqwest::Url;
 
 pub fn relays() -> Result<String, ascii::AsciiChar> {
     let url = Url::parse("https://api.nostr.watch/v1/online").unwrap();

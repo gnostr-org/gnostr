@@ -1,5 +1,6 @@
 use futures::executor::block_on;
 use url::Url;
+
 use crate::get_relays_public;
 pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> {
     let mut urls: Vec<String> = Vec::new();
@@ -16,7 +17,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> 
                 Some(',') | Some(' ') => {
                     if !part.is_empty() {
                         collected.push(part.clone());
-                        print!("{}\n", format!("{}",part.clone().replace("\"", "")));
+                        print!("{}\n", format!("{}", part.clone().replace("\"", "")));
                         part = String::new();
                     }
                 }
@@ -29,5 +30,5 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>, url::ParseError> 
 
 pub async fn print_watch_list() -> Result<Vec<String>, url::ParseError> {
     let vec_relay_list = parse_urls(&get_relays_public().unwrap().as_str()).await;
-    vec_relay_list//.expect("REASON")
+    vec_relay_list //.expect("REASON")
 }
