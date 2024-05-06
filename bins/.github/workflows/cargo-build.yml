@@ -1,0 +1,122 @@
+name: cargo-build-matrix
+
+# Controls when the action will run.
+on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  ubuntu-build_and_test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest] ## add targets here
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }} ## checkout https://github.com/nektos/act local CI
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          submodules: 'recursive'
+          set-safe-directory: 'true'
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo
+
+      - name: printenv
+        run: |
+          printenv
+          which make
+
+      - name: install rustup
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env"
+
+      - name: sudo apt-get install -y make
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y make
+
+      - name: make rustup-install
+        run: |
+          make rustup-install || true
+
+      - name: cargo-c
+        run: |
+          source "$HOME/.cargo/env" && cargo c --config workspace=0 --config anyhow.workspace=0
+      - name: cargo b --config workspace=1
+        run: |
+          source "$HOME/.cargo/env" && cargo b --config workspace=0 --config anyhow.workspace=0
+
+      - name: cargo-b-release
+        run: |
+          source "$HOME/.cargo/env" && cargo b -r --config workspace=0 --config anyhow.workspace=0
+          #make cargo-b-release
+          ./target/release/gnostr-pi -h
+          ./target/release/gnostr-pi -v
+          ./target/release/gnostr-pi 10
+          ./target/release/gnostr-pi 10 0
+          ./target/release/gnostr-pi 10 1
+          ./target/release/gnostr-pi 10 2
+          ./target/release/gnostr-pi 10 3
+          ./target/release/gnostr-pi 10 4
+          ./target/release/gnostr-pi 10 5
+          ./target/release/gnostr-pi 100
+          ./target/release/gnostr-pi 100 0
+          ./target/release/gnostr-pi 100 1
+          ./target/release/gnostr-pi 100 2
+          ./target/release/gnostr-pi 100 3
+          ./target/release/gnostr-pi 100 4
+          ./target/release/gnostr-pi 100 5
+
+      - name: Run tests
+        run: source "$HOME/.cargo/env" && cargo test --verbose
+
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
+

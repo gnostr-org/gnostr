@@ -148,7 +148,7 @@ chmod:## 	chmod
 ## 	find . -type f ! -name 'deps/**' -print0     | xargs -0 chmod 644
 ## 	find . -type f ! -name 'deps/**' --name *.sh | xargs -0 chmod +rwx
 ## 	find . -type d ! -name 'deps/**' -print0     | xargs -0 chmod 755
-## 	if isssues or before 'make dist'
+## 	if issues or before 'make dist'
 ##all files first
 #find . -type f -print0 -maxdepth 2
 	find . -type f -print0 -maxdepth 2 | xargs -0 chmod 0644
@@ -293,10 +293,10 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 ##		make cargo-br-async-std
 
 .PHONY:bins gnostr-bins
-bins/.git:
-	@devtools/refresh-submodules.sh bins
+#bins/.git:
+#	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
-bins:bins/.git
+bins:#bins/.git
 	cargo install --path bins --force
 
 .PHONY:xq gnostr-xq
@@ -370,16 +370,11 @@ db:
 	@devtools/refresh-submodules.sh db
 	@cd db && make build-release install && cd ..
 
-.PHONY:legit/.git gnostr-legit legit
-legit/.git:gnostr-git
-	@devtools/refresh-submodules.sh legit
-#.PHONY:deps/gnostr-legit/release/gnostr-legit
-legit/target/release/gnostr-legit:legit/.git
-	cd legit && \
-		make cargo-b-release install
+.PHONY:gnostr-legit legit
 legit:gnostr-legit
-gnostr-legit:legit/target/release/gnostr-legit## 	gnostr-legit
-	cp $< $@ && exit;
+gnostr-legit:## 	gnostr-legit
+	@cargo install --path ./bins --bin gnostr-legit --force
+	##cp $< $@ && exit;
 	install -v template/gnostr-* /usr/local/bin >/tmp/gnostr-legit.log
 
 .PHONY:sha256.git sha256
