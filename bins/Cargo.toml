@@ -4,7 +4,7 @@ version = "0.0.20"
 edition = "2018"
 authors = ["Mike Dilger <mike@mikedilger.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr-bins: part of the gnostr workflow commands"
-repository = "https://github.com/gnostr-org/gnostr-bins"
+repository = "https://github.com/gnostr-org/gnostr"
 documentation = "https://docs.rs/gnostr-bins"
 readme = "README.md"
 keywords = ["nostr", "gnostr", "git", "nostr-watch"]
@@ -78,4 +78,7 @@ tungstenite = { version = "0.18", features = [ "rustls-tls-webpki-roots" ] }
 ureq = "2.9.6"
 url = { version = "2.5.0", features = ["serde"] }
 zeroize = "1.5"
+
+[dev-dependencies]
+cargo-dist = "0.14.0"
 #crypto      = "0.4.0"
