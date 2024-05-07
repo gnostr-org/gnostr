@@ -32,6 +32,38 @@ jobs:
     container: rust:${{ matrix.tag }}
 
     steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-target
+
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
         if: ${{ !env.ACT }}
@@ -39,6 +71,7 @@ jobs:
           fetch-depth: '1'
           submodules: 'true'
           set-safe-directory: 'true'
+
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: printenv
       - run: make detect
@@ -52,9 +85,7 @@ jobs:
       - run: cargo install --force gnostr-bins
       ## NOTE: make gnostr-am is the non-cmake build
       - run: make gnostr-am && echo $(which gnostr-am)
-      - run: cmake . && make gnostr gnostr-install
-      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-      ## objective: test cmake build gnostr with gnostr-nip
+      - run: make gnostr gnostr-install && echo $(which gnostr)
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
         if: github.event_name == 'pull_request'
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
@@ -71,3 +102,29 @@ jobs:
       - run: gnostr-nip --sec $(gnostr-sha256)                                       | gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))                      | gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
+      - run: cmake . && make gnostr gnostr-install
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
