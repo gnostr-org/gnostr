@@ -31,13 +31,13 @@ version: nostril.c
 
 dist: docs version
 	@mkdir -p dist
-	git ls-files --recurse-submodules | tar --transform 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
+	git ls-files --recurse-submodules | $(shell which gtar || which tar) --transform 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
 	@ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist;\
 	sha256sum *.tar.gz > SHA256SUMS.txt;\
-	gpg -u 0x8A478B64FFE30F1095A8736BF5F27EFD1B38DABB --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
+	gpg -u $(shell gpg --list-signatures --with-colons | grep 'sig' | grep 'E616FA7221A1613E5B99206297966C06BB06757B' | head -n 1 | cut -d':' -f5) --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
 	cp CHANGELOG dist/CHANGELOG.txt
-	rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
+	#rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
 
 %.o: %.c $(HEADERS)
@@ -46,7 +46,7 @@ dist: docs version
 
 nostril: $(HEADERS) $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@ || $(MAKE) $(ARS)
-	git checkout ext
+	@git checkout ext 2>/dev/null
 
 install: all
 	mkdir -p $(PREFIX)/bin || true
