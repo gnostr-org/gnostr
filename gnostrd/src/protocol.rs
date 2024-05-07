@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 use futures::{io, AsyncRead, AsyncWrite};
-use libp2p::{
-    core::upgrade::{read_length_prefixed, write_length_prefixed},
-    request_response, StreamProtocol,
-};
+use libp2p::core::upgrade::{read_length_prefixed, write_length_prefixed};
+use libp2p::{request_response, StreamProtocol};
 
 // Simple file exchange protocol
 
