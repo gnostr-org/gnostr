@@ -444,6 +444,26 @@ cli:cli/.git
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
+.PHONY:gnostr-gnostrd gnostrd
+gnostrd/.git:
+	@devtools/refresh-submodules.sh cli
+.PHONY:gnostrd/target/release/gnostrd
+gnostr-gnostrd:gnostrd
+gnostrd:gnostrd/.git
+	cd gnostrd && \
+		make cargo-build-release cargo-i
+.PHONY:gnostr-gnostr gnostr
+.PHONY:gnostr-chat gnostr-chat
+gnostrd/.git:
+	@devtools/refresh-submodules.sh cli
+.PHONY:gnostrd/target/release/gnostr-chat
+gnostr-chat:chat
+chat:gnostrd/.git
+	cd gnostrd && \
+		cargo b -r --bin gnostr-chat && \
+		cargo install --bin gnostr-chat --path .
+.PHONY:gnostr-gnostr gnostr
+
 .PHONY:grep/.git gnostr-grep grep
 grep/.git:
 	@devtools/refresh-submodules.sh grep
