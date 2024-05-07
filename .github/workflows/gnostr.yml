@@ -100,7 +100,7 @@ jobs:
 
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
-      - run: cmake .
+      ## - run: cmake .
       - run: V=1 make gnostr bins xq cargo-br cargo-i
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr-verify-keypair
