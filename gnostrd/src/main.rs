@@ -53,10 +53,10 @@ const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
 const LOCAL_KEY_PATH: &str = "./local_key";
 const LOCAL_CERT_PATH: &str = "./cert.pem";
-//const GOSSIPSUB_CHAT_TOPIC: &str = "gnostr";
+const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
 const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 const BOOTSTRAP_NODES: [&str; 5] = [
-    "/dnsaddr/universal-connectiviy.fly.io/p2p/12D3KooWGahRw3ZnM4gAyd9FK75v4Bp5keFYTvkcAwhpEm28wbV3",
+    "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
@@ -83,15 +83,14 @@ struct Opt {
     #[clap(
         long,
         //default_value = "/dns/gnostr-connect.fly.dev/udp/9091/quic-v1",
-        //default_value = GNOSTR_CONNECT_DEFAULT_SEEDER,
-        default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1",
+        //default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1",
+        default_value = BOOTSTRAP_NODES.into_iter().next(),
     )]
     connect: Vec<Multiaddr>,
     /// Topic
     #[clap(
         long,
-        //default_value = "/dns/gnostr-connect.fly.dev/udp/9091/quic-v1"
-        default_value = "gnostr"
+        default_value = GOSSIPSUB_CHAT_TOPIC,
     )]
     topic: String,
     // Tick
@@ -159,6 +158,7 @@ async fn main() -> Result<()> {
     let address_webrtc = Multiaddr::from(opt.listen_address)
         .with(Protocol::Udp(PORT_WEBRTC))
         .with(Protocol::WebRTCDirect);
+    info!("{}",address_webrtc);
 
     let address_quic = Multiaddr::from(opt.listen_address)
         .with(Protocol::Udp(PORT_QUIC))
@@ -172,6 +172,7 @@ async fn main() -> Result<()> {
         .expect("listen on quic");
 
     for addr in opt.connect {
+        print!("{}\n", addr);
         if let Err(e) = swarm.dial(addr.clone()) {
             //debug!("Failed to dial {addr}: {e}");
             trace!("Failed to dial {addr}: {e}");
@@ -206,7 +207,7 @@ async fn main() -> Result<()> {
                     }
 
                     let p2p_address = address.with(Protocol::P2p(*swarm.local_peer_id()));
-                    print!("Listening on {p2p_address}");
+                    print!("\nListening on:\n{p2p_address}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     debug!("Connected to {peer_id}");
