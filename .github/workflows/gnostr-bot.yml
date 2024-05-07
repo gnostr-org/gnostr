@@ -41,6 +41,7 @@ jobs:
           set-safe-directory: 'true'
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: printenv
+      - run: make detect
       - run: apt-get update && apt-get install apt -y
       - run: apt-get install cmake make sudo -y #&& cmake -S .
       - run: apt-get install golang-1.19-go golang-1.19-src golang-go golang-src
