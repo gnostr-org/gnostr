@@ -1,3 +1,6 @@
+use gnostrd::protocol::FileRequest;
+use gnostrd::protocol::FileExchangeCodec;
+
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::io::Write;
@@ -15,7 +18,7 @@ use clap::Parser;
 use duration_str::parse;
 use futures::future::{select, Either};
 use futures::StreamExt;
-use gnostr_chat::protocol::*;
+// use gnostr_chat::protocol::*;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::kad::record::store::MemoryStore;
 use libp2p::kad::{Kademlia, KademliaConfig};

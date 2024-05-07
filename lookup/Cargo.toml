@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-lookup"
-version = "0.0.1"
+version = "0.0.20"
 authors = ["gnostr <admin@gnostr.org>","Max Inden <mail@max-inden.de>"]
 edition = "2021"
 license = "MIT"
