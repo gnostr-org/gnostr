@@ -37,7 +37,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           fetch-depth: '1'
-          submodules: 'false'
+          submodules: 'true'
           set-safe-directory: 'true'
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: printenv
