@@ -298,6 +298,14 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 gnostr-bins:bins
 bins:#bins/.git
 	cargo install --path bins --force
+.PHONY:lookup gnostr-lookup
+#lookup/.git:
+#	@devtools/refresh-submodules.sh lookup
+gnostr-lookup:lookup
+lookup:#bins/.git
+	cargo install --path lookup --force
+
+.PHONY:xq gnostr-xq
 
 .PHONY:xq gnostr-xq
 xq/.git:
