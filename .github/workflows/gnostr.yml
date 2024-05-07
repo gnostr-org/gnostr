@@ -100,20 +100,10 @@ jobs:
 
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
-      ## - run: cmake .
+      - run: cmake .
       - run: V=1 make gnostr bins xq cargo-br cargo-i
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr-verify-keypair
-
-      ## objective: test cmake build gnostr with gnostr-nip
-      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
-        if: github.event_name == 'pull_request'
 
       - run: V=1 sudo make cat doc || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
