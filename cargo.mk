@@ -65,6 +65,7 @@ cargo-deps-gnostr-legit:### 	cargo-deps-gnostr-legit
 cargo-deps-gnostr-sha256:### 	cargo-deps-gnostr-sha256
 	cargo -Z unstable-options  -C deps/gnostr-sha256 install --path .
 ##===============================================================================
-
+cargo-dist:### 	cargo-dist -h
+	cargo dist -h
 # vim: set noexpandtab:
 # vim: set setfiletype make
