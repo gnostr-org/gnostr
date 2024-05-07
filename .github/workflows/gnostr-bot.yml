@@ -53,6 +53,16 @@ jobs:
       - run: make gnostr-am && echo $(which gnostr-am)
       - run: cmake . && make gnostr gnostr-install
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+      ## objective: test cmake build gnostr with gnostr-nip
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+        if: github.event_name == 'pull_request'
+
       - run: echo $(date +%s)
       - run: ls -a
       - run: $(which gnostr-am) --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
