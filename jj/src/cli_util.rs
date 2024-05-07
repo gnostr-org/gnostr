@@ -1240,7 +1240,8 @@ See https://github.com/martinvonz/jj/blob/main/docs/working-copy.md#stale-workin
         // filtering here. That way, we can afford to evaluate the revset even if there
         // are millions of commits added to the repo, assuming the revset engine can
         // efficiently skip non-conflicting commits. Filter out empty commits mostly so
-        // `gnostr new <conflicted commit>` doesn't result in a message about new conflicts.
+        // `gnostr new <conflicted commit>` doesn't result in a message about new
+        // conflicts.
         let conflicts = RevsetExpression::filter(RevsetFilterPredicate::HasConflict)
             .intersection(&RevsetExpression::filter(RevsetFilterPredicate::File(None)));
         let removed_conflicts_expr = new_heads.range(&old_heads).intersection(&conflicts);
@@ -1348,7 +1349,11 @@ See https://github.com/martinvonz/jj/blob/main/docs/working-copy.md#stale-workin
                     )?;
                 }
                 for commit in root_conflict_commits {
-                    writeln!(fmt, "  gnostr new {}", short_change_hash(commit.change_id()))?;
+                    writeln!(
+                        fmt,
+                        "  gnostr new {}",
+                        short_change_hash(commit.change_id())
+                    )?;
                 }
                 writeln!(
                     fmt,
@@ -1466,8 +1471,8 @@ fn map_workspace_load_error(err: WorkspaceLoadError, workspace_path: Option<&str
             if git_dir.is_dir() {
                 user_error_with_hint(
                     message,
-                    "It looks like this is a git repo. You can create a gnostr repo backed by it by \
-                     running this:
+                    "It looks like this is a git repo. You can create a gnostr repo backed by it \
+                     by running this:
 gnostr git init --colocate",
                 )
             } else {
@@ -2195,7 +2200,8 @@ fn resolve_default_command(
                 )?;
                 writeln!(
                     ui.hint_no_heading(),
-                    "Run `gnostr config set --user ui.default-command log` to disable this message."
+                    "Run `gnostr config set --user ui.default-command log` to disable this \
+                     message."
                 )?;
             }
             let default_command = args.unwrap_or_else(|| vec!["log".to_string()]);
