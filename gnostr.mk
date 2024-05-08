@@ -1,6 +1,6 @@
 CFLAGS                                  = -Wall -O2 -Isecp256k1/include
 CFLAGS                                 += -I/include
-LDFLAGS                                 = -Wl -V
+LDFLAGS                                 = -Wl
 GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
 #GNOSTR_RELAY_OBJS                       = gnostr-relay.o sha256.o aes.o base64.o
@@ -22,6 +22,7 @@ endif
 ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
+
 SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
 
 VERSION                                :=$(shell cat version)
@@ -36,8 +37,8 @@ GTAR                                   :=$(shell which tar)
 endif
 export GTAR
 
+##skip gnostr-act gnostr-cat gnostr-git
 DOCS=\
-gnostr-act\
 gnostr-bits\
 gnostr-blockheight\
 gnostr-cli\
@@ -99,7 +100,7 @@ doc-gnostr-git:gnostr-git
 ##We stream edit certain tools man pages
 ##	make goals are processed from left to right
 ##	doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
-docs:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
+doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
 ##help2man < $^ > $@
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
@@ -297,14 +298,6 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 gnostr-bins:bins
 bins:#bins/.git
 	cargo install --path bins --force
-.PHONY:lookup gnostr-lookup
-#lookup/.git:
-#	@devtools/refresh-submodules.sh lookup
-gnostr-lookup:lookup
-lookup:#bins/.git
-	cargo install --path lookup --force
-
-.PHONY:xq gnostr-xq
 
 .PHONY:xq gnostr-xq
 xq/.git:
@@ -451,22 +444,6 @@ cli:cli/.git
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
-.PHONY:target/release/gnostrd
-target/release/gnostrd:
-	cd d && \
-		cargo b -r --bin gnostrd && \
-		cargo install --bin gnostrd --path . --force
-d:target/release/gnostrd
-	cargo install --path ./d --force
-
-.PHONY:target/release/gnostr-chat
-target/release/gnostr-chat:
-	cd d && \
-		cargo b -r --bin gnostr-chat && \
-		cargo install --bin gnostr-chat --path . --force
-gnostr-chat:chat d
-chat:target/release/gnostr-chat
-
 .PHONY:grep/.git gnostr-grep grep
 grep/.git:
 	@devtools/refresh-submodules.sh grep
@@ -505,18 +482,25 @@ act:act/bin/gnostr-act
 
 
 
-%.o: %.c $(HEADERS)
+
+%.o: src/%.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY:gnostr
-gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-##gnostr initialize
-##	git submodule update --init --recursive
-##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-#	git submodule update --init --recursive
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
-	install gnostr /usr/local/bin/
+src/libcjson/.git:
+	@devtools/refresh-submodules.sh src/libcjson
+src/libcjson:src/libcjson/.git
+	cd src/libcjson && make
+src/libcjson/bin/libcjson.a:src/libcjson
+libcjson:src/libcjson/bin/libcjson.a
+	cp $^ .
+
+## gnostr-am
+gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+	$(MAKE) secp256k1
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+
+
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
@@ -708,4 +692,4 @@ ext/boost_1_82_0:ext/boost_1_82_0/.git
 boost:ext/boost_1_82_0
 boostr:boost
 
-.PHONY: fake
+#.PHONY: fake
