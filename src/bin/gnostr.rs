@@ -13,7 +13,23 @@
 // limitations under the License.
 
 use jj_cli::cli_util::CliRunner;
+use std::process::*;
+use std::process::ExitCode;
 
-fn main() -> std::process::ExitCode {
-    CliRunner::init().version(env!("JJ_VERSION")).run()
+fn gnostr_git() -> std::process::ExitCode {
+    //CliRunner::init().version(env!("JJ_VERSION")).run()
+      
+      
+      
+      
+      
+      
+      
+    let exit: ExitCode = 0.into();
+    exit
+}
+fn main() {
+    print!("main");
+    let _exit_code: std::process::ExitCode= gnostr_git();
+    _exit_code;
 }
