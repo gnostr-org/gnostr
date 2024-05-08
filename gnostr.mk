@@ -452,18 +452,21 @@ cli:cli/.git
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
-.PHONY:gnostrd/target/release/gnostrd
-gnostrd/target/release/gnostrd:
-	cd gnostrd && \
+.PHONY:target/release/gnostrd
+target/release/gnostrd:
+	cd d && \
 		cargo b -r --bin gnostrd && \
 		cargo install --bin gnostrd --path . --force
-.PHONY:gnostrd/target/release/gnostr-chat
-gnostrd/target/release/gnostr-chat:
-	cd gnostrd && \
+d:target/release/gnostrd
+	cargo install --path ./d --force
+
+.PHONY:target/release/gnostr-chat
+target/release/gnostr-chat:
+	cd d && \
 		cargo b -r --bin gnostr-chat && \
 		cargo install --bin gnostr-chat --path . --force
-gnostr-chat:chat gnostrd
-chat:gnostrd/target/release/gnostr-chat
+gnostr-chat:chat d
+chat:target/release/gnostr-chat
 
 .PHONY:grep/.git gnostr-grep grep
 grep/.git:
