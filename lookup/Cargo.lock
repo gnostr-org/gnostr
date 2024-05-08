@@ -1107,6 +1107,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-lookup"
+version = "0.0.20"
+dependencies = [
+ "ansi_term",
+ "async-std",
+ "env_logger",
+ "futures",
+ "libp2p",
+ "libp2p-mplex",
+ "libp2p-quic",
+ "log",
+ "structopt",
+ "thiserror",
+]
+
+[[package]]
 name = "group"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1542,22 +1558,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libp2p-lookup"
-version = "0.6.4"
-dependencies = [
- "ansi_term",
- "async-std",
- "env_logger",
- "futures",
- "libp2p",
- "libp2p-mplex",
- "libp2p-quic",
- "log",
- "structopt",
- "thiserror",
-]
-
-[[package]]
 name = "libp2p-mdns"
 version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1938,14 +1938,14 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "mio"
-version = "0.8.6"
+version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b9d9a46eff5b4ff64b45a9e316a6d1e0bc719ef429cbec4dc630684212bfdf9"
+checksum = "a4a650543ca06a924e8b371db273b2756685faae30f8487da1b56505a8f78b0c"
 dependencies = [
  "libc",
  "log",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "windows-sys 0.45.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
