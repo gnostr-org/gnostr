@@ -2,11 +2,11 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils","cli","cat", "gnostrd"]
-exclude = ["sha256","get-relays","ffi","relay"]
+members = ["bins", "gnostrd", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
+exclude = ["cat", "cli", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.0.20"
 license = "Apache-2.0"
 rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
@@ -14,8 +14,8 @@ readme = "README.md"
 homepage = "https://github.com/gnostr-org/gnostr"
 repository = "https://github.com/gnostr-org/gnostr"
 documentation = "https://github.com/gnostr"
-categories = ["version-control", "development-tools","gnostr","nostr"]
-keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr","nostr"]
+categories = ["version-control", "development-tools", "gnostr", "nostr"]
+keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr", "nostr"]
 
 [workspace.dependencies]
 anyhow = "1.0.81"
@@ -116,8 +116,8 @@ zstd = "0.12.4"
 # put all inter-workspace libraries, i.e. those that use 'path = ...' here in
 # their own (alphabetically sorted) block
 
-jj-lib = { path = "lib", version = "0.0.0" }
-jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.0" }
+jj-lib = { path = "lib", version = "0.0.20" }
+jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.20" }
 testutils = { path = "lib/testutils" }
 
 # Insta suggests compiling these packages in opt mode for faster testing.
@@ -133,3 +133,36 @@ opt-level = 3
 [profile.release]
 strip = "debuginfo"
 codegen-units = 1
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.14.0"
+# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
+rust-toolchain-version = "1.67.1"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell", "homebrew"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# A GitHub repo to push Homebrew formulas to
+tap = "gnostr-org/homebrew-gnostr-org"
+# The archive format to use for windows builds (defaults .zip)
+windows-archive = ".tar.gz"
+# The archive format to use for non-windows builds (defaults .tar.xz)
+unix-archive = ".tar.gz"
+# Publish jobs to run in CI
+publish-jobs = ["homebrew"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = false
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+[workspace.metadata.release]
+tag-prefix = ""

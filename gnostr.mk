@@ -100,7 +100,7 @@ doc-gnostr-git:gnostr-git
 ##We stream edit certain tools man pages
 ##	make goals are processed from left to right
 ##	doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
-doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
+docs:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
 ##help2man < $^ > $@
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
@@ -298,6 +298,14 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 gnostr-bins:bins
 bins:#bins/.git
 	cargo install --path bins --force
+.PHONY:lookup gnostr-lookup
+#lookup/.git:
+#	@devtools/refresh-submodules.sh lookup
+gnostr-lookup:lookup
+lookup:#bins/.git
+	cargo install --path lookup --force
+
+.PHONY:xq gnostr-xq
 
 .PHONY:xq gnostr-xq
 xq/.git:
@@ -443,6 +451,19 @@ cli:cli/.git
 	cd cli && \
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
+
+.PHONY:gnostrd/target/release/gnostrd
+gnostrd/target/release/gnostrd:
+	cd gnostrd && \
+		cargo b -r --bin gnostrd && \
+		cargo install --bin gnostrd --path . --force
+.PHONY:gnostrd/target/release/gnostr-chat
+gnostrd/target/release/gnostr-chat:
+	cd gnostrd && \
+		cargo b -r --bin gnostr-chat && \
+		cargo install --bin gnostr-chat --path . --force
+gnostr-chat:chat gnostrd
+chat:gnostrd/target/release/gnostr-chat
 
 .PHONY:grep/.git gnostr-grep grep
 grep/.git:

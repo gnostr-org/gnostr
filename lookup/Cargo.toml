@@ -1,0 +1,23 @@
+[package]
+name = "gnostr-lookup"
+version = "0.0.20"
+authors = ["gnostr <admin@gnostr.org>","Max Inden <mail@max-inden.de>"]
+edition = "2021"
+license = "MIT"
+description = "Lookup a gnostr-peer by id."
+repository = "https://github.com/gnostr-org/gnostr"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ansi_term = "0.12.1"
+async-std = { version = "1.12.0", features = ["attributes"] }
+env_logger = "0.10.1"
+futures = "0.3.30"
+libp2p = { version = "0.52.1", default-features = false, features = ["dns", "async-std", "noise", "tcp", "yamux", "identify", "kad", "ping", "relay", "rsa", "macros", "secp256k1", "ecdsa", "websocket"] }
+libp2p-mplex = "0.40"
+libp2p-quic = { version = "0.8.0-alpha", features = ["async-std"] }
+log = "0.4"
+#libp2p-quic = { git = "https://github.com/libp2p/rust-libp2p", branch = "master", version = "0.8.0-alpha", default-features = false, features = ["async-std"] }
+#libp2p-mplex = { git = "https://github.com/libp2p/rust-libp2p", branch = "master", version = "0.40", default-features = false }
+structopt = "0.3.26"
+thiserror = "1"

@@ -18,6 +18,10 @@ name = "jj"
 path = "src/main.rs"
 
 [[bin]]
+name = "gnostr-cli"
+path = "src/main.rs"
+
+[[bin]]
 name = "gnostr"
 path = "../src/bin/gnostr.rs"
 

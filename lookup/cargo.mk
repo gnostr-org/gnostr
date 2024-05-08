@@ -23,9 +23,9 @@ cargo-build:### 	cargo build
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-i:cargo-install
-cargo-install:### 	cargo install --path jj
+cargo-install:### 	cargo install --path .
 	#@. $(HOME)/.cargo/env
-	@cargo install --path jj
+	@cargo install --path .
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
@@ -42,30 +42,10 @@ cargo-bench:### 	cargo-bench
 cargo-t:cargo-test
 cargo-test:### 	cargo-test
 	@. $(HOME)/.cargo/env
-	#@cargo test
-	@cargo test -p jj-cli --test runner
+	@cargo test
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1
 
-cargo-deps-gnostr-all:cargo-deps-gnostr-cat cargo-deps-gnostr-cli cargo-deps-gnostr-command cargo-deps-gnostr-grep cargo-deps-gnostr-legit cargo-deps-gnostr-sha256### 	cargo-deps-gnostr-all
-cargo-deps-gnostr-cat:### 	cargo-deps-gnostr-cat
-	rustup-init -y -q --default-toolchain $(TOOLCHAIN) && \
-    source "$(HOME)/.cargo/env" && \
-    cd deps/gnostr-cat && $(MAKE) cargo-build-release cargo-install
-    ## cargo $(Z) deps/gnostr-cat install --path .
-cargo-deps-gnostr-cli:### 	cargo-deps-gnostr-cli
-	cargo -Z unstable-options  -C deps/gnostr-cli install --path .
-cargo-deps-gnostr-command:### 	cargo-deps-gnostr-command
-	cargo -Z unstable-options  -C deps/gnostr-command install --path .
-cargo-deps-gnostr-grep:### 	cargo-deps-gnostr-grep
-	cargo -Z unstable-options  -C deps/gnostr-grep install --path .
-cargo-deps-gnostr-legit:### 	cargo-deps-gnostr-legit
-	cargo -Z unstable-options  -C deps/gnostr-legit install --path .
-cargo-deps-gnostr-sha256:### 	cargo-deps-gnostr-sha256
-	cargo -Z unstable-options  -C deps/gnostr-sha256 install --path .
-##===============================================================================
-cargo-dist:### 	cargo-dist -h
-	cargo dist -h
 # vim: set noexpandtab:
 # vim: set setfiletype make

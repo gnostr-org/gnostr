@@ -2,44 +2,39 @@ mod protocol;
 
 //  use std::time::Instant;
 //  use tokio::time::Instant;
-use crate::protocol::FileRequest;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use std::io::Write;
+use std::iter;
+use std::net::IpAddr;
+use std::path::Path;
+use std::time::Duration;
+#[cfg(test)]
+use std::{println as debug, println as error, println as info, println as trace, println as warn};
+
 use anyhow::{Context, Result};
 use clap::Parser;
+use duration_str::parse;
 use futures::future::{select, Either};
 use futures::StreamExt;
+use libp2p::core::muxing::StreamMuxerBox;
+use libp2p::kad::record::store::MemoryStore;
+use libp2p::kad::{Kademlia, KademliaConfig};
+use libp2p::multiaddr::{Multiaddr, Protocol};
 use libp2p::request_response::{self, ProtocolSupport};
+use libp2p::swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent};
 use libp2p::{
-    core::muxing::StreamMuxerBox,
-    dns, gossipsub, identify, identity,
-    kad::record::store::MemoryStore,
-    kad::{Kademlia, KademliaConfig},
-    memory_connection_limits,
-    multiaddr::{Multiaddr, Protocol},
-    quic, relay,
-    swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
-    PeerId, StreamProtocol, Transport,
+    dns, gossipsub, identify, identity, memory_connection_limits, quic, relay, PeerId,
+    StreamProtocol, Transport,
 };
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 #[cfg(not(test))]
 use log::{debug, error, info, trace, warn};
-
 use protocol::FileExchangeCodec;
-use std::io::Write;
-use std::iter;
-use std::net::IpAddr;
-use std::path::Path;
-use std::{
-    collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
-    time::Duration,
-};
-use duration_str::parse;
-
 use tokio::fs;
 
-#[cfg(test)]
-use std::{println as debug, println as error, println as info, println as trace, println as warn}; // Workaround to use prinltn! for logs.
+use crate::protocol::FileRequest; // Workaround to use prinltn! for logs.
 
 #[cfg(not(debug_assertions))]
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
@@ -53,10 +48,10 @@ const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
 const LOCAL_KEY_PATH: &str = "./local_key";
 const LOCAL_CERT_PATH: &str = "./cert.pem";
-//const GOSSIPSUB_CHAT_TOPIC: &str = "gnostr";
+const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
 const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 const BOOTSTRAP_NODES: [&str; 5] = [
-    "/dnsaddr/universal-connectiviy.fly.io/p2p/12D3KooWGahRw3ZnM4gAyd9FK75v4Bp5keFYTvkcAwhpEm28wbV3",
+    "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
@@ -64,9 +59,12 @@ const BOOTSTRAP_NODES: [&str; 5] = [
 ];
 
 //const GNOSTR_CONNECT_DEFAULT_SEEDER: &str =
-//  "/ip4/37.16.6.234/udp/9091/quic-v1/p2p/12D3KooWSAXQZuzHEKgau7HtyPc3EzArc8VG3Nh9TTYx4Sumip89";
-///ip4/37.16.6.234/udp/9091/quic-v1/p2p/12D3KooWSAXQZuzHEKgau7HtyPc3EzArc8VG3Nh9TTYx4Sumip89
-///dns/gnostr-connect.fly.dev/udp/9091/quic-v1/p2p/12D3KooWSAXQZuzHEKgau7HtyPc3EzArc8VG3Nh9TTYx4Sumip89
+//  "/ip4/37.16.6.234/udp/9091/quic-v1/p2p/
+// 12D3KooWSAXQZuzHEKgau7HtyPc3EzArc8VG3Nh9TTYx4Sumip89";
+///ip4/37.16.6.234/udp/9091/quic-v1/p2p/
+/// 12D3KooWSAXQZuzHEKgau7HtyPc3EzArc8VG3Nh9TTYx4Sumip89 dns/gnostr-connect.fly.
+/// dev/udp/9091/quic-v1/p2p/
+/// 12D3KooWSAXQZuzHEKgau7HtyPc3EzArc8VG3Nh9TTYx4Sumip89
 
 #[derive(Debug, Parser)]
 #[clap(name = "gnostr-chat")]
@@ -75,7 +73,8 @@ struct Opt {
     #[clap(long, default_value = "0.0.0.0")]
     listen_address: IpAddr,
 
-    /// If known, the external address of this node. Will be used to correctly advertise our external address across all transports.
+    /// If known, the external address of this node. Will be used to correctly
+    /// advertise our external address across all transports.
     #[clap(long, env)]
     external_address: Option<IpAddr>,
 
@@ -83,24 +82,19 @@ struct Opt {
     #[clap(
         long,
         //default_value = "/dns/gnostr-connect.fly.dev/udp/9091/quic-v1",
-        //default_value = GNOSTR_CONNECT_DEFAULT_SEEDER,
-        default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1",
+        //default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1",
+        default_value = BOOTSTRAP_NODES.into_iter().next(),
     )]
     connect: Vec<Multiaddr>,
     /// Topic
     #[clap(
         long,
-        //default_value = "/dns/gnostr-connect.fly.dev/udp/9091/quic-v1"
-        default_value = "gnostr"
+        default_value = GOSSIPSUB_CHAT_TOPIC,
     )]
     topic: String,
     // Tick
-    #[clap(
-        long,
-        default_value = "10"
-    )]
+    #[clap(long, default_value = "10")]
     tick: String,
-
 }
 
 fn init_logger() {
@@ -138,10 +132,12 @@ async fn main() -> Result<()> {
 
     //#[cfg(debug_assertions)]
     //env_logger::builder()
-    //  .format(|buf, record| writeln!(buf, "{}: {}", record.level(), record.args()))
+    //  .format(|buf, record| writeln!(buf, "{}: {}", record.level(),
+    // record.args()))
     //.init();
     //#[cfg(not(debug_assertions))]
-    //env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
+    //env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("
+    // info"))
     //.format_timestamp(None)
     //.init();
     let opt = Opt::parse();
@@ -159,6 +155,7 @@ async fn main() -> Result<()> {
     let address_webrtc = Multiaddr::from(opt.listen_address)
         .with(Protocol::Udp(PORT_WEBRTC))
         .with(Protocol::WebRTCDirect);
+    info!("{}", address_webrtc);
 
     let address_quic = Multiaddr::from(opt.listen_address)
         .with(Protocol::Udp(PORT_QUIC))
@@ -172,6 +169,7 @@ async fn main() -> Result<()> {
         .expect("listen on quic");
 
     for addr in opt.connect {
+        print!("{}\n", addr);
         if let Err(e) = swarm.dial(addr.clone()) {
             //debug!("Failed to dial {addr}: {e}");
             trace!("Failed to dial {addr}: {e}");
@@ -187,7 +185,8 @@ async fn main() -> Result<()> {
         }
     }
 
-    //let chat_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC).hash();
+    //let chat_topic_hash =
+    // gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC).hash();
     let chat_topic_hash = gossipsub::IdentTopic::new(opt.topic).hash();
     let file_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC).hash();
 
@@ -206,7 +205,7 @@ async fn main() -> Result<()> {
                     }
 
                     let p2p_address = address.with(Protocol::P2p(*swarm.local_peer_id()));
-                    print!("Listening on {p2p_address}");
+                    print!("\nListening on:\n{p2p_address}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     debug!("Connected to {peer_id}");
@@ -234,7 +233,8 @@ async fn main() -> Result<()> {
                 )) => {
                     //`source`, `data`, `sequence_number`, `topic`
                     //nanoseconds
-                    //println!("message.sequence_number={:?}",message.sequence_number.unwrap() / 1000000000 );
+                    //println!("message.sequence_number={:?}",message.sequence_number.unwrap() /
+                    // 1000000000 );
                     if message.topic == chat_topic_hash {
                         debug!("message.topic={}", message.topic);
                         debug!("chat_topic_hash={}", chat_topic_hash);
@@ -319,9 +319,13 @@ async fn main() -> Result<()> {
                             libp2p::swarm::StreamUpgradeError::Timeout => {
                                 // When a browser tab closes, we don't get a swarm event
                                 // maybe there's a way to get this with TransportEvent
-                                // but for now remove the peer from routing table if there's an Identify timeout
+                                // but for now remove the peer from routing table if there's an
+                                // Identify timeout
                                 swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
-                                debug!("Removed {peer_id} from the routing table (if it was in there).");
+                                debug!(
+                                    "Removed {peer_id} from the routing table (if it was in \
+                                     there)."
+                                );
                             }
                             _ => {
                                 debug!("{error}");
@@ -380,7 +384,8 @@ async fn main() -> Result<()> {
                             "request_response::Message::Response: size:{}",
                             response.file_body.len()
                         );
-                        // TODO: store this file (in memory or disk) and provider it via Kademlia
+                        // TODO: store this file (in memory or disk) and
+                        // provider it via Kademlia
                     }
                 },
                 SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
@@ -400,7 +405,7 @@ async fn main() -> Result<()> {
             Either::Right(_) => {
                 //TICK
                 //
-		tick = futures_timer::Delay::new(parse(opt.tick.clone()).expect("REASON"));
+                tick = futures_timer::Delay::new(parse(opt.tick.clone()).expect("REASON"));
 
                 //TODO format for nostr EVENT syndication
                 trace!(
@@ -413,15 +418,14 @@ async fn main() -> Result<()> {
                 }
 
                 //NOW
-                //help: if used in a formatting string, curly braces are escaped with `{{` and `}}`
+                //help: if used in a formatting string, curly braces are escaped with `{{` and
+                // `}}`
 
                 //debug!("{peer_id} subscribed to {topic}");
                 let now = tokio::time::Instant::now();
-                let message = format!(
-                    "gnostr-chat ping: {:4}s",now.elapsed().as_secs_f64()
-                );
+                let message = format!("gnostr-chat ping: {:4}s", now.elapsed().as_secs_f64());
 
-                //TODO 
+                //TODO
                 //TODO format for nostr EVENT syndication
                 // swarm.behaviour_mut().gosssip.publish(...
                 if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
@@ -431,7 +435,7 @@ async fn main() -> Result<()> {
                     //error!("Failed to publish periodic message: {err}")
                     info!("Failed to publish periodic message: {err}")
                 }
-            }// END EITHER::Right
+            } // END EITHER::Right
         }
     }
 }
@@ -454,7 +458,8 @@ fn create_swarm(
     let local_peer_id = PeerId::from(local_key.public());
     debug!("Local peer id: {local_peer_id}");
 
-    // To content-address message, we can take the hash of message and use it as an ID.
+    // To content-address message, we can take the hash of message and use it as an
+    // ID.
     let message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
         message.data.hash(&mut s);
@@ -496,7 +501,8 @@ fn create_swarm(
 
     let identify_config = identify::Behaviour::new(
         identify::Config::new("/ipfs/0.1.0".into(), local_key.public())
-            .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
+            .with_interval(Duration::from_secs(60)), /* do this so we can get timeouts for
+                                                      * dropped WebRTC connections */
     );
 
     // Create a Kademlia behaviour.
@@ -586,13 +592,13 @@ pub fn greeting_hello(name: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #[cfg(test)]
+    use std::{println as info, println as warn};
 
     #[cfg(not(test))]
     use log::{info, warn}; // Use log crate when building application
 
-    #[cfg(test)]
-    use std::{println as info, println as warn}; // Workaround to use prinltn! for logs.
+    use super::*; // Workaround to use prinltn! for logs.
 
     #[test]
     fn it_works() {
