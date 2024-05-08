@@ -13,4 +13,4 @@ if [[ $1 = "-v" ]] || [[ $1 = "--version" ]]; then
 
 exit;
 fi
-gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
+git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
