@@ -32,10 +32,13 @@ jobs:
     container: rust:${{ matrix.tag }}
 
     steps:
-      - uses: styfle/cancel-workflow-action@0.11.0
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
         if: ${{ !env.ACT }}
         with:
-          access_token: ${{ github.token }}
+          fetch-depth: '0'
+          submodules: 'true'
+          set-safe-directory: 'true'
 
       - name: Restore rustup
         id: cache-rustup-restore
@@ -61,20 +64,11 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.cargo
+            ./target
           key: ${{ runner.os }}-target
-
-      - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
-        if: ${{ !env.ACT }}
-        with:
-          fetch-depth: '0'
-          submodules: 'true'
-          set-safe-directory: 'true'
 
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: printenv
-      - run: make detect
       - run: apt-get update && apt-get install apt -y
       - run: apt-get install cmake make sudo -y #&& cmake -S .
       - run: apt-get install golang-1.19-go golang-1.19-src golang-go golang-src
@@ -85,16 +79,8 @@ jobs:
       - run: cargo install --force gnostr-bins
       ## NOTE: make gnostr-am is the non-cmake build
       - run: make gnostr-am && echo $(which gnostr-am)
-      - run: make gnostr gnostr-install && echo $(which gnostr)
+      - run: cmake . && make gnostr gnostr-install
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
-        if: github.event_name == 'pull_request'
-
       - run: echo $(date +%s)
       - run: ls -a
       - run: $(which gnostr-am) --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
@@ -102,7 +88,6 @@ jobs:
       - run: gnostr-nip --sec $(gnostr-sha256)                                       | gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))                      | gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
-      - run: cmake . && make gnostr gnostr-install
 
       - name: Save rustup
         id: cache-rustup-save
@@ -126,5 +111,4 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+            ./target
