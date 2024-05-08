@@ -3,7 +3,27 @@
 
 if [[ $1 = "-h" ]] || [[ $1 = "--help" ]]; then
 
-  echo ""help""
+  #echo ""help""
+  printf  "     \ngnostr-set-relays\n\n"
+  printf  "     gnostr-set-relays -h  --help\n"
+  printf  "     gnostr-set-relays -v  --version\n"
+  printf  "     gnostr-set-relays -vv --verbose\n"
+
+  printf  "     git config --get gnostr.relay-0\n"
+  printf  "     git config --get gnostr.relay-1\n"
+  printf  "     git config --get gnostr.relay-#\n"
+
+  printf  "     \nmore usage:\n\n"
+  printf  "     declare count=0\n"
+  printf  "     for relay in \$(gnostr-fetch-watch-list-iterator); do\n"
+  printf  "     git config --global --replace gnostr.relay-\$count \"\$relay\";\n"
+  printf  "     count=$((count + 1))\n"
+  printf  "     #echo \$count\n"
+  printf  "     done\n"
+  printf  "     if [[ $1 = "-vv" ]] || [[ $1 = "--verbose" ]]; then\n"
+  printf  "         git config --global -l | grep gnostr\n"
+  printf  "     fi\n"
+
 
 exit;
 fi
@@ -13,4 +33,13 @@ if [[ $1 = "-v" ]] || [[ $1 = "--version" ]]; then
 
 exit;
 fi
-gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
+declare count=0
+for relay in $(gnostr-fetch-watch-list-iterator); do
+#echo "gnostr.relay-$count=$relay"
+git config --global --replace gnostr.relay-$count "$relay";
+count=$((count + 1))
+#echo $count
+done
+if [[ $1 = "-vv" ]] || [[ $1 = "--verbose" ]]; then
+    git config --global -l | grep gnostr
+fi

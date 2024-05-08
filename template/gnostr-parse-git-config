@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+declare -A git_config
+
+# Parse git config into an associative array
+while IFS='=' read -r k v; do
+  git_config["$k"]="$v"
+done < <(git config --list)
+
+# Print-out of the parsed config
+
+printf '%-40s %s\n' 'Git config keys' 'Values'
+printf '=%.0s' {1..120}
+echo
+for k in "${!git_config[@]}"; do
+  printf '%-40q %q\n' "$k" "${git_config["$k"]}"
+done

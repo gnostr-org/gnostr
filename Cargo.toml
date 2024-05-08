@@ -2,8 +2,8 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "gnostrd", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
-exclude = ["cat", "cli", "ffi", "get-relays", "relay", "sha256"]
+members = ["bins", "d", "cli", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
+exclude = ["cat", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
 version = "0.0.20"
