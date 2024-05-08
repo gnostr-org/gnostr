@@ -1,6 +1,6 @@
 CFLAGS                                  = -Wall -O2 -Isecp256k1/include
 CFLAGS                                 += -I/include
-#LDFLAGS                                 = -W, -V
+LDFLAGS                                 = -Wl -V
 GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
 #GNOSTR_RELAY_OBJS                       = gnostr-relay.o sha256.o aes.o base64.o
@@ -22,7 +22,6 @@ endif
 ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
-
 SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
 
 VERSION                                :=$(shell cat version)
@@ -37,8 +36,8 @@ GTAR                                   :=$(shell which tar)
 endif
 export GTAR
 
-##skip gnostr-act gnostr-cat gnostr-git
 DOCS=\
+gnostr-act\
 gnostr-bits\
 gnostr-blockheight\
 gnostr-cli\
@@ -506,24 +505,18 @@ act:act/bin/gnostr-act
 
 
 
-
-%.o: src/%.c $(HEADERS)
+%.o: %.c $(HEADERS)
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-src/libcjson/.git:
-	@devtools/refresh-submodules.sh src/libcjson
-src/libcjson:src/libcjson/.git
-	cd src/libcjson && make
-src/libcjson/bin/libcjson.a:src/libcjson
-libcjson:src/libcjson/bin/libcjson.a
-	cp $^ .
-
-gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(MAKE) secp256k1
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
-
-
+.PHONY:gnostr
+gnostr:secp256k1/.libs/libsecp256k1.a libsecp256k1.a $(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+##gnostr initialize
+##	git submodule update --init --recursive
+##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
+#	git submodule update --init --recursive
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@
+	install gnostr /usr/local/bin/
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
@@ -715,4 +708,4 @@ ext/boost_1_82_0:ext/boost_1_82_0/.git
 boost:ext/boost_1_82_0
 boostr:boost
 
-#.PHONY: fake
+.PHONY: fake
