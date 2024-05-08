@@ -64,17 +64,8 @@ jobs:
             target
           key: ${{ runner.os }}-target
 
-      - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
-        if: ${{ !env.ACT }}
-        with:
-          fetch-depth: '1'
-          submodules: 'true'
-          set-safe-directory: 'true'
-
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: printenv
-      - run: make detect
       - run: apt-get update && apt-get install apt -y
       - run: apt-get install cmake make sudo -y #&& cmake -S .
       - run: apt-get install golang-1.19-go golang-1.19-src golang-go golang-src
@@ -102,7 +93,6 @@ jobs:
       - run: gnostr-nip --sec $(gnostr-sha256)                                       | gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))                      | gnostr-post-event
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
-      - run: cmake . && make gnostr gnostr-install
 
       - name: Save rustup
         id: cache-rustup-save
