@@ -1,14 +1,17 @@
 [package]
 name = "gnostr-bins"
-version = "0.0.20"
-edition = "2018"
-authors = ["Mike Dilger <mike@mikedilger.com>", "gnostr <admin@gnostr.org>"]
-description = "gnostr-bins: part of the gnostr workflow commands"
-repository = "https://github.com/gnostr-org/gnostr"
-documentation = "https://docs.rs/gnostr-bins"
-readme = "README.md"
-keywords = ["nostr", "gnostr", "git", "nostr-watch"]
-license = "MIT"
+authors = { workspace = true }
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+readme = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+keywords = { workspace = true }
+
 ## [source."git+https://github.com/gnostr-org/nip44?rev=e38717f86ccccb91c25ebf07881a77d66411161c"]
 ## git = "https://github.com/mikedilger/nip44"
 ## version = "0.1.0"
@@ -25,6 +28,7 @@ license = "MIT"
 ## directory = "vendor"
 
 [dependencies]
+anstream = { version = "0.6.14", features = ["wincon"] }
 
 ## anyhow.workspace = true ## gnostr-core
 argparse    = "0.2.2"
@@ -36,8 +40,8 @@ chrono = { version = "0.4.34", features = ["serde"] }
 clearscreen = "3.0.0"
 
 crossterm = { version = "0.19", features = [ "serde" ] }
-env_logger = "0.11.3"
 futures = { workspace = true, features = ["futures-executor"] }
+
 futures-lite = "2.3.0"
 getopts = "0.2.21"
 git2 = "^0.18"

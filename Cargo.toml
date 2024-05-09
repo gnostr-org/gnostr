@@ -6,9 +6,9 @@ members = ["bins", "d", "cli", "jj", "lib", "lib/gen-protos", "lib/proc-macros",
 exclude = ["cat", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
-version = "0.0.20"
+version = "0.0.21"
 license = "Apache-2.0"
-rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
+rust-version = "1.73"
 edition = "2021"
 readme = "README.md"
 homepage = "https://github.com/gnostr-org/gnostr"
@@ -16,6 +16,10 @@ repository = "https://github.com/gnostr-org/gnostr"
 documentation = "https://github.com/gnostr"
 categories = ["version-control", "development-tools", "gnostr", "nostr"]
 keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr", "nostr"]
+description = "git+nostr workflow utility"
+authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>"]
+
+
 
 [workspace.dependencies]
 anyhow = "1.0.81"
@@ -65,7 +69,6 @@ maplit = "1.0.2"
 minus = { version = "5.6.0", features = ["dynamic_output", "search"] }
 num_cpus = "1.16.0"
 once_cell = "1.19.0"
-ouroboros = "0.18.0"
 pest = "2.7.7"
 pest_derive = "2.7.7"
 pollster = "0.3.0"
@@ -116,18 +119,11 @@ zstd = "0.12.4"
 # put all inter-workspace libraries, i.e. those that use 'path = ...' here in
 # their own (alphabetically sorted) block
 
-jj-lib = { path = "lib", version = "0.0.20" }
-jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.20" }
+jj-lib = { path = "lib", version = "0.0.21" }
+jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.21" }
 testutils = { path = "lib/testutils" }
 
-# Insta suggests compiling these packages in opt mode for faster testing.
-# See https://docs.rs/insta/latest/insta/#optional-faster-runs.
-[profile.dev.package]
-
 [profile.dev.package.insta]
-opt-level = 3
-
-[profile.dev.package.similar]
 opt-level = 3
 
 [profile.release]
@@ -136,10 +132,10 @@ codegen-units = 1
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
+# Skip checking whether the specified configuration files are up to date
+allow-dirty = ["ci", "msi"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.14.0"
-# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
+cargo-dist-version = "0.14.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
