@@ -175,5 +175,6 @@ openssl:ext/openssl cmake## 	openssl
 ##openssl
 
 ## include Makefile if exists
+-include gnostr.mk
 -include Makefile
 -include act.mk
