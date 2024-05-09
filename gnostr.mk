@@ -1,7 +1,7 @@
 CFLAGS                                  = -Wall -O2 -Isecp256k1/include
 CFLAGS                                 += -I/include
 LDFLAGS                                 = -Wl
-GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
+GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
 #GNOSTR_RELAY_OBJS                       = gnostr-relay.o sha256.o aes.o base64.o
 #GNOSTR_XOR_OBJS                         = gnostr-xor.o   sha256.o aes.o base64.o libsecp256k1.a
@@ -100,7 +100,7 @@ doc-gnostr-git:gnostr-git
 ##We stream edit certain tools man pages
 ##	make goals are processed from left to right
 ##	doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install##
-doc:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
+docs:doc-gnostr-act doc-gnostr-cat doc-gnostr-git gnostr-install## 	doc - generate man pages
 ##help2man < $^ > $@
 	##[[ -x "$(shell which gnostr-act)" ]] || $(MAKE) doc-gnostr-act
 	@(\
@@ -298,6 +298,14 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 gnostr-bins:bins
 bins:#bins/.git
 	cargo install --path bins --force
+.PHONY:lookup gnostr-lookup
+#lookup/.git:
+#	@devtools/refresh-submodules.sh lookup
+gnostr-lookup:lookup
+lookup:#bins/.git
+	cargo install --path lookup --force
+
+.PHONY:xq gnostr-xq
 
 .PHONY:xq gnostr-xq
 xq/.git:
@@ -444,6 +452,19 @@ cli:cli/.git
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
+.PHONY:gnostrd/target/release/gnostrd
+gnostrd/target/release/gnostrd:
+	cd gnostrd && \
+		cargo b -r --bin gnostrd && \
+		cargo install --bin gnostrd --path . --force
+.PHONY:gnostrd/target/release/gnostr-chat
+gnostrd/target/release/gnostr-chat:
+	cd gnostrd && \
+		cargo b -r --bin gnostr-chat && \
+		cargo install --bin gnostr-chat --path . --force
+gnostr-chat:chat gnostrd
+chat:gnostrd/target/release/gnostr-chat
+
 .PHONY:grep/.git gnostr-grep grep
 grep/.git:
 	@devtools/refresh-submodules.sh grep
@@ -495,7 +516,6 @@ src/libcjson/bin/libcjson.a:src/libcjson
 libcjson:src/libcjson/bin/libcjson.a
 	cp $^ .
 
-## gnostr-am
 gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 	$(MAKE) secp256k1
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
