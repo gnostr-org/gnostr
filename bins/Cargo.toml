@@ -28,6 +28,7 @@ keywords = { workspace = true }
 ## directory = "vendor"
 
 [dependencies]
+anstream = { version = "0.6.14", features = ["wincon"] }
 
 ## anyhow.workspace = true ## gnostr-core
 argparse    = "0.2.2"
