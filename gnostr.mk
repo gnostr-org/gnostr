@@ -501,13 +501,6 @@ act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
 	cd act && ./install.sh || ./install-gnostr-act
 
-
-
-
-%.o: src/%.c $(HEADERS)
-	@echo "cc $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
-
 src/libcjson/.git:
 	@devtools/refresh-submodules.sh src/libcjson
 src/libcjson:src/libcjson/.git
@@ -711,5 +704,12 @@ ext/boost_1_82_0:ext/boost_1_82_0/.git
 	cd ext/boost_1_82_0 && ./bootstrap.sh && ./b2 && ./b2 headers
 boost:ext/boost_1_82_0
 boostr:boost
+
+
+
+%.o: src/%.c $(HEADERS)
+	@echo "cc $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
 
 #.PHONY: fake
