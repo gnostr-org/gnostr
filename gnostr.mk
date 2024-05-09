@@ -178,18 +178,44 @@ submodules:
 .ONESHELL:
 secp256k1/.git:
 	devtools/refresh-submodules.sh secp256k1
-secp256k1/include/secp256k1.h: #secp256k1/.git
+secp256k1/include/secp256k1.h:secp256k1/.git
 ## force configure if build on host then in docker vm
 #.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
 secp256k1/configure:secp256k1/.git
-secp256k1/.libs/libsecp256k1.a:secp256k1/configure
+secp256k1/.libs/libsecp256k1.a:
+
+secp256k1/configure:
 	cd secp256k1 && \
 	git fetch --all && git checkout c-lang && \
-		./autogen.sh && \
-		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
+		./autogen.sh
+
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
-libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
-	cp $< $@
+	cd secp256k1 && \
+	git fetch --all && \
+	git checkout c-lang && \
+		./configure \
+		--enable-module-ecdh \
+		--enable-module-schnorrsig \
+		--enable-module-extrakeys \
+		--disable-benchmark \
+		--disable-tests && \
+		make -j
+
+secp256k1/src/libsecp256k1.a:secp256k1/configure
+	cd secp256k1 && \
+	git fetch --all && \
+	git checkout c-lang && \
+		./configure \
+		--enable-module-ecdh \
+		--enable-module-schnorrsig \
+		--enable-module-extrakeys \
+		--disable-benchmark \
+		--disable-tests && \
+		make -j
+
+libsecp256k1.a:secp256k1/.libs/libsecp256k1.a
+	cp $< $@ #|| $(MAKE) secp256k1/src/libsecp256k1.a || $(MAKE) secp256k1/.libs/libsecp256k1.a
+
 .PHONY:secp256k1
 secp256k1:libsecp256k1.a
 
@@ -511,13 +537,11 @@ libcjson:src/libcjson/bin/libcjson.a
 
 #gnostr-am
 #gnostr-am
-gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(MAKE) secp256k1
+gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 #gnostr
 #gnostr
 gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(MAKE) secp256k1
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
 
