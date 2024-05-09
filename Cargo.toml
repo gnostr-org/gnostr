@@ -143,7 +143,7 @@ codegen-units = 1
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.14.0"
+cargo-dist-version = "0.14.1"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
 rust-toolchain-version = "1.67.1"
 # CI backends to support
