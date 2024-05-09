@@ -6,7 +6,7 @@ members = ["bins", "d", "cli", "jj", "lib", "lib/gen-protos", "lib/proc-macros",
 exclude = ["cat", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
-version = "0.0.20"
+version = "0.0.25"
 license = "Apache-2.0"
 rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
@@ -16,6 +16,10 @@ repository = "https://github.com/gnostr-org/gnostr"
 documentation = "https://github.com/gnostr"
 categories = ["version-control", "development-tools", "gnostr", "nostr"]
 keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr", "nostr"]
+description = "git+nostr workflow utility"
+authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>"]
+
+
 
 [workspace.dependencies]
 anyhow = "1.0.81"
@@ -116,8 +120,8 @@ zstd = "0.12.4"
 # put all inter-workspace libraries, i.e. those that use 'path = ...' here in
 # their own (alphabetically sorted) block
 
-jj-lib = { path = "lib", version = "0.0.20" }
-jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.20" }
+jj-lib = { path = "lib", version = "0.0.25" }
+jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.25" }
 testutils = { path = "lib/testutils" }
 
 # Insta suggests compiling these packages in opt mode for faster testing.
