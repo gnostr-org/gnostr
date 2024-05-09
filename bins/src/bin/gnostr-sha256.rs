@@ -33,20 +33,6 @@ fn get_current_working_dir() -> std::io::Result<PathBuf> {
     env::current_dir()
 }
 
-//debug
-#[cfg(debug_assertions)]
-fn example() {
-
-    //println!("Debugging enabled");
-    //println!("cwd={:?}", get_current_working_dir());
-}
-#[cfg(not(debug_assertions))]
-fn example() {
-
-    //println!("Debugging disabled");
-    //println!("cwd={:?}", get_current_working_dir());
-}
-
 #[allow(unused)] //remove later
 #[allow(dead_code)]
 fn strip_trailing_newline(input: &str) -> &str {
@@ -57,39 +43,47 @@ fn strip_trailing_newline(input: &str) -> &str {
 }
 
 fn main() -> Result<()> {
-    //#[cfg(debug_assertions)]
-    //    println!("Debugging enabled");
-    //
-    //#[cfg(not(debug_assertions))]
-    //    //println!("Debugging disabled");
+    let args: Vec<String> = env::args().collect();
+    let _appname = &args[0];
+    //catch empty query first
+    if args.len()== 1 {
+        use sha256::digest;
+        let query = digest("");
+        print!("{}",query);
+        process::exit(0);
+    }
 
     let start = time::get_time();
-    //#[cfg(debug_assertions)]
-    //println!("start={:#?}", start);
-
     let _epoch = get_epoch_ms();
     let _system_time = SystemTime::now();
     let _datetime: DateTime<Utc> = _system_time.into();
+
+    //let version = env!("CARGO_PKG_VERSION");
+    //let name = env!("CARGO_PKG_NAME");
+    //let crate_name = env!("CARGO_CRATE_NAME");
+    //let author = env!("CARGO_PKG_AUTHORS");
+
+    //println!("Program Name: {}", name);
+    //println!("Crate Name: {}", crate_name.replace("_","-"));
+    //println!("Program Version: {}", version);
+    //println!("Program Autor: {}", author);
 
     #[cfg(debug_assertions)]
     let cwd = get_current_working_dir();
     #[cfg(debug_assertions)]
     println!("cwd={:#?}", cwd);
 
-    let args: Vec<String> = env::args().collect();
-    let _dirname = &args[0];
-
-    if cfg!(debug_assertions) {
-
-        //#[cfg(debug_assertions)]
-        //println!("Debugging enabled");
-    } else {
-
-        //#[cfg(not(debug_assertions))]
-        //println!("Debugging disabled");
+    if args[1] == "-h" || args[1] == "--help"{
+        let crate_name = env!("CARGO_CRATE_NAME");
+        print!("{}", crate_name.replace("_","-"));
+        print!("           gnostr-sha256 <file_path>\n");
+        process::exit(0);
     }
+    if args[1] == "-v" || args[1] == "--version"{
 
-    example();
+        print!("{}",env!("CARGO_PKG_VERSION"));
+        process::exit(0);
+    }
 
     let config = gnostr_bins::Config::build(&args).unwrap_or_else(|_err| {
         println!("Usage: gnostr-sha256 <string>");

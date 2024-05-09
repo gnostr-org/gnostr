@@ -1,7 +1,7 @@
 CFLAGS                                  = -Wall -O2 -Isecp256k1/include
 CFLAGS                                 += -I/include
-LDFLAGS                                 = -Wl -V
-GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o libsecp256k1.a
+LDFLAGS                                 = -Wl
+GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
 #GNOSTR_RELAY_OBJS                       = gnostr-relay.o sha256.o aes.o base64.o
 #GNOSTR_XOR_OBJS                         = gnostr-xor.o   sha256.o aes.o base64.o libsecp256k1.a
@@ -169,27 +169,54 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:
+submodules:### recursively initialize git submodules
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
+	git submodule update --init --recursive || echo "install git..."
 	$(MAKE) $(SUBMODULES)
 
 .PHONY:secp256k1/.git
 .ONESHELL:
 secp256k1/.git:
 	devtools/refresh-submodules.sh secp256k1
-secp256k1/include/secp256k1.h: #secp256k1/.git
+secp256k1/include/secp256k1.h:secp256k1/.git
 ## force configure if build on host then in docker vm
 #.PHONY:secp256k1/configure## 	This MUST be PHONY for docker builds
 secp256k1/configure:secp256k1/.git
-secp256k1/.libs/libsecp256k1.a:secp256k1/configure
+secp256k1/.libs/libsecp256k1.a:
+
+secp256k1/configure:
 	cd secp256k1 && \
 	git fetch --all && git checkout c-lang && \
-		./autogen.sh && \
-		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
+		./autogen.sh
+
 secp256k1/.libs/libsecp256k1.a:secp256k1/configure
-libsecp256k1.a:secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
-	cp $< $@
+	cd secp256k1 && \
+	git fetch --all && \
+	git checkout c-lang && \
+		./configure \
+		--enable-module-ecdh \
+		--enable-module-schnorrsig \
+		--enable-module-extrakeys \
+		--disable-benchmark \
+		--disable-tests && \
+		make -j
+
+secp256k1/src/libsecp256k1.a:secp256k1/configure
+	cd secp256k1 && \
+	git fetch --all && \
+	git checkout c-lang && \
+		./configure \
+		--enable-module-ecdh \
+		--enable-module-schnorrsig \
+		--enable-module-extrakeys \
+		--disable-benchmark \
+		--disable-tests && \
+		make -j
+
+libsecp256k1.a:secp256k1/.libs/libsecp256k1.a
+	cp $< $@ #|| $(MAKE) secp256k1/src/libsecp256k1.a || $(MAKE) secp256k1/.libs/libsecp256k1.a
+
 .PHONY:secp256k1
 secp256k1:libsecp256k1.a
 
@@ -501,13 +528,6 @@ act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
 	cd act && ./install.sh || ./install-gnostr-act
 
-
-
-
-%.o: src/%.c $(HEADERS)
-	@echo "cc $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
-
 src/libcjson/.git:
 	@devtools/refresh-submodules.sh src/libcjson
 src/libcjson:src/libcjson/.git
@@ -516,8 +536,13 @@ src/libcjson/bin/libcjson.a:src/libcjson
 libcjson:src/libcjson/bin/libcjson.a
 	cp $^ .
 
-gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(MAKE) secp256k1
+#gnostr-am
+#gnostr-am
+gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+#gnostr
+#gnostr
+gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
 
@@ -711,5 +736,12 @@ ext/boost_1_82_0:ext/boost_1_82_0/.git
 	cd ext/boost_1_82_0 && ./bootstrap.sh && ./b2 && ./b2 headers
 boost:ext/boost_1_82_0
 boostr:boost
+
+
+
+%.o: src/%.c $(HEADERS)
+	@echo "cc $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
 
 #.PHONY: fake

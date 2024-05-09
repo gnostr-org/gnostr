@@ -10,12 +10,14 @@ cargo-release-all:### 	cargo-release-all
 cargo-clean-all:### 	cargo-clean-all - clean release artifacts
 ## 	cargo-clean-all 	recursively cargo clean --release
 	for t in */Cargo.toml;  do echo $$t; cargo clean --release -vv --manifest-path $$t; done
-cargo-install-all:### 	cargo-install-all
+
+cargo-install-bins:### 	cargo-install-bins
 ## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
 ## 	*** cargo install -vv --force is NOT used.
 ## 	*** cargo install -vv --force --path <path>
 ## 	*** to overwrite deploy cargo.io crates.
-	for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t || echo "gnostr-$$t not found"; done
+	export RUSTFLAGS=-Awarning;  for t in $(SUBMODULES); do echo $$t; cargo install --bins --path  $$t -vv 2>/dev/null || echo ""; done
+	#for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t --force || echo ""; done
 
 cargo-b:cargo-build### 	cargo b
 cargo-build:### 	cargo build
@@ -25,7 +27,8 @@ cargo-build:### 	cargo build
 cargo-i:cargo-install
 cargo-install:### 	cargo install --path jj
 	#@. $(HOME)/.cargo/env
-	@cargo install --path jj
+	#@cargo install --path jj
+	for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t --force 2>/dev/null || echo "gnostr-$$t not found"; done
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
