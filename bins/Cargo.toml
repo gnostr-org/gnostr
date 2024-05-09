@@ -40,8 +40,9 @@ chrono = { version = "0.4.34", features = ["serde"] }
 clearscreen = "3.0.0"
 
 crossterm = { version = "0.19", features = [ "serde" ] }
-env_logger = "0.11.3"
+env_logger = { workspace = true, version = "0.11"}
 futures = { workspace = true, features = ["futures-executor"] }
+
 futures-lite = "2.3.0"
 getopts = "0.2.21"
 git2 = "^0.18"
