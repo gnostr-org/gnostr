@@ -44,12 +44,12 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 
 include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
-include_directories(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2/include)
+include_directories(${CMAKE_SOURCE_DIR}/secp256k1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
 
 include_directories(${CMAKE_SOURCE_DIR}/src/libcjson/include)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2)
+add_subdirectory(${CMAKE_SOURCE_DIR}/secp256k1)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/libcjson)

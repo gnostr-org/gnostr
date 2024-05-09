@@ -1,9 +1,14 @@
+
 ifeq ($(project),)
 PROJECT_NAME                            := $(notdir $(PWD))
 else
 PROJECT_NAME                            := $(project)
 endif
 export PROJECT_NAME
+VERSION                                 :=$(shell cat version)
+export VERSION
+TIME                                    :=$(shell date +%s)
+export TIME
 
 OS                                      :=$(shell uname -s)
 export OS
@@ -24,25 +29,57 @@ TRIPLET                                 :=aarch64-linux-gnu
 export TRIPLET
 endif
 
-CLANG=$(shell which clang)
+HOMEBREW                                :=$(shell which brew || false)
+
+RUSTUP_INIT_SKIP_PATH_CHECK=yes
+TOOLCHAIN=stable
+Z=	##
+ifneq ($(toolchain),)
+
+ifeq ($(toolchain),nightly)
+TOOLCHAIN=nightly
+Z=-Z unstable-options
+endif
+
+ifeq ($(toolchain),stable)
+TOOLCHAIN=stable
+Z=	##
+endif
+
+endif
+
+export RUSTUP_INIT_SKIP_PATH_CHECK
+export TOOLCHAIN
+export Z
+
+SUBMODULES=:$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
+export SUBMODULES
+
+ifeq ($(verbose),true)
+VERBOSE                                 :=-v
+else
+VERBOSE                                 :=$(verbose)
+endif
+export VERBOSE
 
 ifeq ($(reuse),true)
 REUSE                                   :=-r
 else
-REUSE                                   :=	
+REUSE                                   :=$(reuse)
 endif
 export REUSE
+
 ifeq ($(bind),true)
 BIND                                    :=-b
 else
-BIND                                    :=      
+BIND                                    :=$(bind)
 endif
 export BIND
 
 ifeq ($(token),)
-GITHUB_TOKEN                        :=$(shell cat ~/GITHUB_TOKEN.txt || echo "0")
+GITHUB_TOKEN                             =$(shell touch ~/GITHUB_TOKEN.txt && cat ~/GITHUB_TOKEN.txt || echo "0")
 else
-GITHUB_TOKEN                        :=$(shell echo $(token))
+GITHUB_TOKEN                            :=$(shell echo $(token))
 endif
 export GITHUB_TOKEN
 
@@ -129,19 +166,253 @@ export GIT_REPO_NAME
 GIT_REPO_PATH                           := $(HOME)/$(GIT_REPO_NAME)
 export GIT_REPO_PATH
 
+
+
 .PHONY:- help
 -:
-	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-help-verbose:###	more verbose help
-	@awk 'BEGIN {FS = ":.*?##"} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo
+more:## 	more help
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/	/'
+	#$(MAKE) -f Makefile help
 
-report:###	report
+-include Makefile
+
+##initialize
+##	git submodule update --init --recursive
+initialize:## 	ensure submodules exist
+	git submodule update --init --recursive
+
+.ONESHELL:
+docker-start:venv
+##docker-start
+##	start docker on Linux or Darwin
+	@echo CI=$(CI)
+	@touch requirements.txt && $(PYTHON3) -m pip install    -q -r requirements.txt
+	@touch requirements.txt && $(PYTHON3) -m pip install -U       virtualenv
+	@test -d .venv || $(PYTHON3) -m virtualenv .venv
+	@( \
+	   . .venv/bin/activate; pip install -q -r requirements.txt; \
+	   python3 -m pip install -q pipenv \
+	   pip install -q --upgrade pip; \
+	);
+	@( \
+	    while ! docker system info > /dev/null 2>&1; do\
+	    echo 'Waiting for docker to start...';\
+	    if [[ '$(OS)' == 'Linux' ]]; then\
+	     type -P systemctl && systemctl restart docker.service || type -P service && service restart docker;\
+	    fi;\
+	    if [[ '$(OS)' == 'Darwin' ]]; then\
+	    echo $(CI);\
+	    if [[ '$(CI)' != 'True' ]]; then\
+	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker || brew install --cask docker;\
+	    fi;\
+	    fi;\
+	sleep 1;\
+	done\
+	)
+
+detect:## 	install sequence got Darwin and Linux
+##detect
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && type -P brew >/tmp/gnostr.log && \
+		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
+##	detect uname -s uname -m uname -p and install sequence
+
+## 	Darwin
+ifneq ($(shell id -u),0)
+	@echo
+	@echo $(shell id -u -n) 'not root'
+	@echo
+endif
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew update                     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install autoconf            || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install automake            || echo "
+##	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install boost               || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install cmake --cask        || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install coreutils           || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install --cask docker       || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gcc                || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install expat               || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install gettext             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-archive-all     || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install git-gui             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install glib-openssl        || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install golang              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man            || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf            || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pipx                || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install python3             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install rustup              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install secp256k1           || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install tcl-tk              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install virtualenv          || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew link --overwrite virtualenv || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install zlib                || echo "
+	#bash -c "[ '$(shell uname -s)' == 'Darwin' ] && /Applications/Docker.app/Contents/Resources/bin/docker system info || echo "
+
+
+
+
+
+
+
+## 	Linux
+ifneq ($(shell id -u),0)
+	@echo
+	@echo $(shell id -u -n) 'not root'
+	@echo
+endif
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		type -P brew >/tmp/gnostr.log && \
+		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get update                     2>/dev/null || \
+		apk add update || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install autoconf           2>/dev/null || \
+		apk add autoconf || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install bison              2>/dev/null || \
+		apk add bison || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install bsdmainutils       2>/dev/null || \
+		apk add util-linux || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install build-essential    2>/dev/null || \
+		apk add alpine-sdk || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install cargo              2>/dev/null || \
+		apk add cargo || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install clang              2>/dev/null || \
+		apk add clang || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install cmake-curses-gui   2>/dev/null || \
+		apk add extra-cmake-modules || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install cmake              2>/dev/null || \
+		apk add cmake || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install expat              2>/dev/null || \
+		apk add expat || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install gettext            2>/dev/null || \
+		apk add gettext || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install golang-go          2>/dev/null || \
+		apk add go || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install help2man           2>/dev/null || \
+		apk add help2man || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libcurl4-openssl-dev 2>/dev/null || \
+		apk add curl-dev || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libssl-dev        2>/dev/null || \
+		apk add openssl-dev || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libtool           2>/dev/null || \
+		apk add libtool || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install mercurial         2>/dev/null || \
+		apk add mercurial || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install npm               2>/dev/null || \
+		apk add npm || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install pandoc            2>/dev/null || \
+		echo"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install pipx              2>/dev/null || \
+		echo"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install pkg-config        2>/dev/null || \
+		apk add pkgconfig || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install protobuf-compiler 2>/dev/null || \
+		apk add protobuf || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install python3           2>/dev/null || \
+		apk add python3 || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install python3-pip       2>/dev/null || \
+		apk add py3-pip || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install python-is-python3 2>/dev/null || \
+		echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install tcl-dev           2>/dev/null || \
+		echo   "
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install util-linux        2>/dev/null || \
+		apk add util-linux || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install tcl-dev           2>/dev/null || \
+		apk add tcl-dev || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install virtualenv        2>/dev/null || \
+		apk add py3-virtualenv || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install zlib1g-dev        2>/dev/null || \
+		echo   "
+
+##	install gvm sequence
+	@rm -rf $(HOME)/.gvm || echo "not removing ~/.gvm"
+	@bash -c "bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer) || echo 'not installing gvm...'"
+	bash -c "[ '$(shell uname -m)' == 'x86_64' ] && echo 'is x86_64' || echo 'not x86_64';"
+	bash -c "[ '$(shell uname -m)' == 'arm64' ] && [ '$(shell uname -s)' == 'Darwin' ] && type -P brew && brew install pandoc || echo 'not arm64 AND Darwin';"
+	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
+
+##	install rustup sequence
+	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default #& . "$(HOME)/.cargo/env"
+
+##	install nvm sequence
+	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
+
+	bash -c "which autoconf                   || echo "
+	bash -c "which automake                   || echo "
+	bash -c "which brew                       || echo "
+	bash -c "which cargo                      || echo "
+	bash -c "which cmake                      || echo "
+	bash -c "which go                         || echo "
+	bash -c "which node                       || echo "
+	bash -c "which rustup                     || echo "
+
+.PHONY: report
+report:## 	print make variables
+##	print make variables
 	@echo ''
+	@echo 'TIME=${TIME}'
 	@echo 'PROJECT_NAME=${PROJECT_NAME}'
+	@echo 'VERSION=${VERSION}'
 	@echo ''
-	@echo 'CLANG=${CLANG}'
+	@echo 'OS=${OS}'
+	@echo 'OS_VERSION=${OS_VERSION}'
+	@echo 'ARCH=${ARCH}'
+	@echo ''
+	@echo 'SUBMODULES=${SUBMODULES}'
+	@echo ''
+	@echo 'PYTHON=${PYTHON}'
+	@echo 'PYTHON2=${PYTHON2}'
+	@echo 'PYTHON3=${PYTHON3}'
+	@echo ''
+	@echo 'PIP=${PIP}'
+	@echo 'PIP2=${PIP2}'
+	@echo 'PIP3=${PIP3}'
+	@echo ''
+	@echo 'PYTHON_VENV=${PYTHON_VENV}'
+	@echo 'PYTHON3_VENV=${PYTHON3_VENV}'
 	@echo ''
 	@echo 'GIT_USER_NAME=${GIT_USER_NAME}'
+	@echo 'GH_USER_REPO=${GH_USER_REPO}'
+	@echo 'GH_USER_SPECIAL_REPO=${GH_USER_SPECIAL_REPO}'
+	@echo 'KB_USER_REPO=${KB_USER_REPO}'
 	@echo 'GIT_USER_EMAIL=${GIT_USER_EMAIL}'
 	@echo 'GIT_SERVER=${GIT_SERVER}'
 	@echo 'GIT_PROFILE=${GIT_PROFILE}'
@@ -151,30 +422,47 @@ report:###	report
 	@echo 'GIT_REPO_ORIGIN=${GIT_REPO_ORIGIN}'
 	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
+	@echo ''
+	@echo 'VERBOSE=${VERBOSE}'
+	@echo 'REUSE=${REUSE}'
+	@echo 'BIND=${BIND}'
 
-extra:## 	additional
-##extra
-	@echo "example: add additional make commands"
-submodules:###	recursively initialize git submodules
-##submodules
-	git submodule update --init --recursive || echo "install git..."
+checkbrew:## 	install brew command
+##	install brew command
+ifeq ($(HOMEBREW),)
+	@/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+else
+	@type -P brew && brew install wxWidgets openssl@3.0 gettext
+	$(MAKE) detect
+##	brew install wxWidgets openssl@3.0 gettext
+##	make detect
+endif
 
-cmake:submodules## 	cmake .
-##cmake
-	cmake -S . -B build && cd build && make all
-.PHONY:ext/openssl
-ext/openssl:
-##ext/openssl
-	cd $(PWD)/$@-3.0.5 && \
-		./Configure \
-		--prefix=/usr/local/ssl \
-		--openssldir=/usr/local/ssl \
-		'-Wl,-rpath,$(LIBRPATH)' && $(MAKE) all
-.PHONY:openssl
-openssl:ext/openssl cmake## 	openssl
-##openssl
+tag:## 	git tag & git push
+tags:tag
+##tag
+##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+	@git push -f --tags || echo "unable to push tags..."
 
-## include Makefile if exists
+.PHONY: nvm
+.ONESHELL:
+nvm: ## 	nvm
+	@echo "$(NODE_VERSION)" > .nvmrc
+	@curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash || git pull -C $(HOME)/.nvm && export NVM_DIR="$(HOME)/.nvm" && [ -s "$(NVM_DIR)/nvm.sh" ] && \. "$(NVM_DIR)/nvm.sh" && [ -s "$(NVM_DIR)/bash_completion" ] && \. "$(NVM_DIR)/bash_completion"  && nvm install $(NODE_VERSION) && nvm use $(NODE_VERSION)
+	@source ~/.bashrc && nvm alias $(NODE_ALIAS) $(NODE_VERSION) &
+
+nvm-clean: ## 	nvm-clean
+	@rm -rf ~/.nvm
+
 -include gnostr.mk
--include Makefile
--include act.mk
+-include gnostr-act.mk
+-include gnostr-bot.mk
+-include docker.mk
+-include venv.mk
+-include clean.mk
+-include cargo.mk
+-include tests.mk
+
+# vim: set noexpandtab:
+# vim: set setfiletype make
