@@ -76,6 +76,10 @@ cargo-deps-gnostr-sha256:### 	cargo-deps-gnostr-sha256
 ##===============================================================================
 cargo-dist:### 	cargo-dist -h
 	cargo dist -h
+cargo-dist-build:### 	cargo-dist-build
+	cargo dist build
+cargo-dist-manifest-global:### 	cargo dist manifest --artifacts=all
+	cargo dist manifest --artifacts=all
 # vim: set noexpandtab:
 # vim: set setfiletype make
 >>>>>>> 43c74bc4a (cargo.mk:cargo-deps-gnostr-cli/grep)
