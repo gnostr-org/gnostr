@@ -18,7 +18,7 @@ name = "jj"
 path = "src/main.rs"
 
 [[bin]]
-name = "gnostr-cli"
+name = "gnostr-jj"
 path = "src/main.rs"
 
 [[bin]]
@@ -28,12 +28,12 @@ path = "../src/bin/gnostr.rs"
 [[bin]]
 name = "fake-editor"
 path = "testing/fake-editor.rs"
-required-features = ["test-fakes"]
+#required-features = ["test-fakes"]
 
 [[bin]]
 name = "fake-diff-editor"
 path = "testing/fake-diff-editor.rs"
-required-features = ["test-fakes"]
+#required-features = ["test-fakes"]
 
 [[test]]
 name = "runner"
@@ -96,6 +96,7 @@ test-case = { workspace = true }
 testutils = { workspace = true }
 # https://github.com/rust-lang/cargo/issues/2911#issuecomment-1483256987
 jj-cli = { path = ".", features = ["test-fakes"], default-features = false }
+#jj-cli = { path = ".", features = ["test-fakes"] }
 
 [features]
 default = ["watchman"]

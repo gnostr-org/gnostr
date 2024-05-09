@@ -1,12 +1,16 @@
 [package]
 name = "gnostr-lookup"
-version = "0.0.20"
-authors = ["gnostr <admin@gnostr.org>","Max Inden <mail@max-inden.de>"]
-edition = "2021"
-license = "MIT"
-description = "Lookup a gnostr-peer by id."
-repository = "https://github.com/gnostr-org/gnostr"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = { workspace = true }
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+readme = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+keywords = { workspace = true }
 
 [dependencies]
 ansi_term = "0.12.1"
