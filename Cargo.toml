@@ -2,8 +2,8 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "gnostrd", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
-exclude = ["cat", "cli", "ffi", "get-relays", "relay", "sha256"]
+members = ["bins", "d", "cli", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
+exclude = ["cat", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
 version = "0.0.20"
@@ -16,6 +16,10 @@ repository = "https://github.com/gnostr-org/gnostr"
 documentation = "https://github.com/gnostr"
 categories = ["version-control", "development-tools", "gnostr", "nostr"]
 keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr", "nostr"]
+description = "git+nostr workflow utility"
+authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>"]
+
+
 
 [workspace.dependencies]
 anyhow = "1.0.81"
@@ -46,6 +50,8 @@ crossterm = { version = "0.27", default-features = false }
 digest = "0.10.7"
 dirs = "5.0.1"
 either = "1.10.0"
+#env_logger = { version = "0.11.3",features = ["anstream"] } ??
+env_logger = { version = "0.11"}
 esl01-renderdag = "0.3.0"
 futures = "0.3.30"
 git2 = "^0.18"
@@ -136,6 +142,7 @@ codegen-units = 1
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
+allow-dirty = ["ci", "msi"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.14.1"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
@@ -143,9 +150,9 @@ rust-toolchain-version = "1.67.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "powershell", "homebrew"]
+installers = ["shell", "homebrew"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"]
 # A GitHub repo to push Homebrew formulas to
 tap = "gnostr-org/homebrew-gnostr-org"
 # The archive format to use for windows builds (defaults .zip)
