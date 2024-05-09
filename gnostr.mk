@@ -169,9 +169,10 @@ diff-log:
 	@gnostr-git-reflog -h > tests/gnostr-git-reflog-h.log
 	@gnostr-relay -h > tests/gnostr-relay-h.log
 .PHONY:submodules
-submodules:
+submodules:### recursively initialize git submodules
 ##gnostr-bits needs ~/bin
 	mkdir -p ~/bin
+	git submodule update --init --recursive || echo "install git..."
 	$(MAKE) $(SUBMODULES)
 
 .PHONY:secp256k1/.git
