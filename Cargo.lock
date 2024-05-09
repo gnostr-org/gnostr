@@ -174,15 +174,16 @@ dependencies = [
 
 [[package]]
 name = "anstream"
-version = "0.6.13"
+version = "0.6.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d96bd03f33fe50a863e394ee9718a706f988b9079b20c3784fb726e7678b62fb"
+checksum = "418c75fa768af9c03be99d17643f93f79bbba589895012a80e3452a19ddda15b"
 dependencies = [
  "anstyle",
  "anstyle-parse",
  "anstyle-query",
  "anstyle-wincon",
  "colorchoice",
+ "is_terminal_polyfill",
  "utf8parse",
 ]
 
@@ -1286,7 +1287,7 @@ dependencies = [
  "chrono",
  "clap 4.5.4",
  "encoding_rs_io",
- "env_logger 0.10.2",
+ "env_logger",
  "itertools 0.11.0",
  "lazy_static",
  "log 0.4.21",
@@ -2621,16 +2622,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_filter"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a009aa4810eb158359dda09d0c87378e4bbb89b5a801f016885a4707ba24f7ea"
-dependencies = [
- "log 0.4.21",
- "regex",
-]
-
-[[package]]
 name = "env_logger"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2641,19 +2632,6 @@ dependencies = [
  "log 0.4.21",
  "regex",
  "termcolor",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38b35839ba51819680ba087cd351788c9a3c476841207e0b8cee0b04722343b9"
-dependencies = [
- "anstream",
- "anstyle",
- "env_filter",
- "humantime",
- "log 0.4.21",
 ]
 
 [[package]]
@@ -3103,7 +3081,7 @@ checksum = "8f5f3913fa0bfe7ee1fd8248b6b9f42a5af4b9d65ec2dd2c3c26132b950ecfc2"
 
 [[package]]
 name = "gen-protos"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "prost-build",
 ]
@@ -3740,8 +3718,9 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
+ "anstream",
  "argparse",
  "ascii",
  "async-std",
@@ -3751,7 +3730,6 @@ dependencies = [
  "chrono",
  "clearscreen",
  "crossterm 0.19.0",
- "env_logger 0.11.3",
  "futures 0.3.30",
  "futures-lite 2.3.0",
  "getopts",
@@ -3794,7 +3772,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-cli"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3851,11 +3829,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-lookup"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "ansi_term",
  "async-std",
- "env_logger 0.10.2",
+ "env_logger",
  "futures 0.3.30",
  "libp2p 0.52.4",
  "libp2p-mplex",
@@ -3905,13 +3883,13 @@ dependencies = [
 
 [[package]]
 name = "gnostrd"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "anyhow",
  "async-trait",
  "clap 4.5.4",
  "duration-str",
- "env_logger 0.10.2",
+ "env_logger",
  "futures 0.3.30",
  "futures-timer",
  "libp2p 0.52.4",
@@ -4727,6 +4705,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7655c9839580ee829dfacba1d1278c2b7883e50a277ff7541299489d6bdfdc45"
 
 [[package]]
+name = "is_terminal_polyfill"
+version = "1.70.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8478577c03552c21db0e2724ffb8986a5ce7af88107e6be5d2ee6e158c12800"
+
+[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4761,7 +4745,7 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
 name = "jj-cli"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -4817,7 +4801,7 @@ dependencies = [
 
 [[package]]
 name = "jj-lib"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -4873,7 +4857,7 @@ dependencies = [
 
 [[package]]
 name = "jj-lib-proc-macros"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -10297,7 +10281,7 @@ dependencies = [
 
 [[package]]
 name = "testutils"
-version = "0.0.20"
+version = "0.0.21"
 dependencies = [
  "async-trait",
  "config",

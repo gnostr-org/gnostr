@@ -2,15 +2,16 @@
 name = "jj-lib"
 description = "Library for Jujutsu - an experimental version control system"
 autotests = false
-
+authors = { workspace = true }
 version = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+readme = { workspace = true }
 homepage = { workspace = true }
 repository = { workspace = true }
 documentation = { workspace = true }
-readme = { workspace = true }
+keywords = { workspace = true }
 
 [[test]]
 name = "runner"
