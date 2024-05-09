@@ -1287,7 +1287,7 @@ dependencies = [
  "chrono",
  "clap 4.5.4",
  "encoding_rs_io",
- "env_logger 0.10.2",
+ "env_logger",
  "itertools 0.11.0",
  "lazy_static",
  "log 0.4.21",
@@ -2622,16 +2622,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_filter"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a009aa4810eb158359dda09d0c87378e4bbb89b5a801f016885a4707ba24f7ea"
-dependencies = [
- "log 0.4.21",
- "regex",
-]
-
-[[package]]
 name = "env_logger"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2642,19 +2632,6 @@ dependencies = [
  "log 0.4.21",
  "regex",
  "termcolor",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38b35839ba51819680ba087cd351788c9a3c476841207e0b8cee0b04722343b9"
-dependencies = [
- "anstream",
- "anstyle",
- "env_filter",
- "humantime",
- "log 0.4.21",
 ]
 
 [[package]]
@@ -3104,18 +3081,18 @@ checksum = "8f5f3913fa0bfe7ee1fd8248b6b9f42a5af4b9d65ec2dd2c3c26132b950ecfc2"
 
 [[package]]
 name = "gen-protos"
-version = "0.0.26"
+version = "0.0.2
 dependencies = [
- "prost-build",
+ "prost-build"
 ]
 
 [[package]]
-name = "generic-array"
+name = "genec-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
- "typenum",
+ "typen
  "version_check",
  "zeroize",
 ]
@@ -3753,7 +3730,6 @@ dependencies = [
  "chrono",
  "clearscreen",
  "crossterm 0.19.0",
- "env_logger 0.11.3",
  "futures 0.3.30",
  "futures-lite 2.3.0",
  "getopts",
@@ -3857,7 +3833,7 @@ version = "0.0.26"
 dependencies = [
  "ansi_term",
  "async-std",
- "env_logger 0.10.2",
+ "env_logger",
  "futures 0.3.30",
  "libp2p 0.52.4",
  "libp2p-mplex",
@@ -3913,7 +3889,7 @@ dependencies = [
  "async-trait",
  "clap 4.5.4",
  "duration-str",
- "env_logger 0.10.2",
+ "env_logger",
  "futures 0.3.30",
  "futures-timer",
  "libp2p 0.52.4",
@@ -4769,7 +4745,7 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
 name = "jj-cli"
-version = "0.0.26"
+verion = "0.0.26"
 dependencies = [
  "anyhow",
  "assert_cmd",
