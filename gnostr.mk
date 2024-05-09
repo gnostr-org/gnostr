@@ -509,7 +509,14 @@ src/libcjson/bin/libcjson.a:src/libcjson
 libcjson:src/libcjson/bin/libcjson.a
 	cp $^ .
 
+#gnostr-am
+#gnostr-am
 gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+	$(MAKE) secp256k1
+	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+#gnostr
+#gnostr
+gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 	$(MAKE) secp256k1
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
