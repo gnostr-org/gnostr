@@ -5,18 +5,11 @@ use hyper::{
     Body, Request, Server,
 };
 use gnostr_bins::serve::*;
-//use gnostr_bins::handler;
-//use gnostr_bins::router;
 use gnostr_bins::router;
 use gnostr_bins::router::Router;
 use gnostr_bins::handler;
 use gnostr_bins::router::Handler;
 use gnostr_bins::serve::AppState;
-
-//use async_std::io::Error;
-//use async_std::io::Error;
-//use hyper::Error;
-//use serde_json::Error;
 
 use route_recognizer::Params;
 use std::sync::Arc;
@@ -115,38 +108,6 @@ async fn route(
     Ok(resp)
 }
 
-//Context
-#[derive(Debug)]
-pub struct Context {
-    pub state: AppState,
-    pub req: Request<Body>,
-    pub params: Params,
-    body_bytes: Option<Bytes>,
-}
-
-impl Context {
-    pub fn new(state: AppState, req: Request<Body>, params: Params) -> Context {
-        Context {
-            state,
-            req,
-            params,
-            body_bytes: None,
-        }
-    }
-
-    pub async fn body_json<T: serde::de::DeserializeOwned>(&mut self) -> Result<T, Error> {
-        let body_bytes = match self.body_bytes {
-            Some(ref v) => v,
-            _ => {
-                let body = to_bytes(self.req.body_mut()).await?;
-                self.body_bytes = Some(body);
-                self.body_bytes.as_ref().expect("body_bytes was set above")
-            }
-        };
-        Ok(serde_json::from_slice(&body_bytes)?)
-    }
-}
-//Context
 
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
