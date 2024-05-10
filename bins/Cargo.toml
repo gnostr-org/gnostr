@@ -34,16 +34,18 @@ anstream = { version = "0.6.14", features = ["wincon"] }
 argparse    = "0.2.2"
 ascii = "1.1.0"
 async-std = { version = "1.12.0", features = ["futures-core"] }
+async-trait = "0.1"
 base64 = "0.21"
 bech32 = "0.9"
+#bytes = "0.5"
 chrono = { version = "0.4.34", features = ["serde"] }
 clearscreen = "3.0.0"
 
 crossterm = { version = "0.19", features = [ "serde" ] }
 env_logger = { workspace = true, version = "0.11"}
-futures = { workspace = true, features = ["futures-executor"] }
 
 futures-lite = "2.3.0"
+#futures = { workspace = true, default-features = false, features = ["async-await","futures-executor"] }
 getopts = "0.2.21"
 git2 = "^0.18"
 gnostr-types = "0.7.1-unstable"
@@ -51,6 +53,7 @@ hex = "0.4"
 homedir = "0.2.1"
 http = "0.2"
 hypercore-protocol = { version = "0.4.2-alpha.1", package = "gnostr-core", features = ["async-std", "cache", "wasm-bindgen", "js_interop_tests"] }
+hyper = "0.13"
 #insta.workspace = true
 k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 libp2p = { version = "0.53.2", features = ["full"] }
@@ -67,6 +70,7 @@ random-access-memory = "3.0.0"
 random-access-storage = "5.0.0"
 
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls-webpki-roots"] }
+route-recognizer = "0.2"
 rpassword = "7.2"
 rust-crypto = "0.2.36"
 serde = { version = "1.0", features = [ "derive" ] }
@@ -77,12 +81,18 @@ sha256 = "1.2.2"
 structopt = "0.3.26"
 thiserror = "1.0"
 time = "0.1.42"
-tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread"] }
+#tokio = { version = "1.37", features = ["rt", "macros", "rt-multi-thread"] }
 tui = { version = "0.14", default-features = false, features = ['crossterm', 'serde'] }
 tungstenite = { version = "0.18", features = [ "rustls-tls-webpki-roots" ] }
 ureq = "2.9.6"
 url = { version = "2.5.0", features = ["serde"] }
 zeroize = "1.5"
+
+bytes = "0.5"
+futures = { version = "0.3.6", default-features = false, features = ["async-await"] }
+tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
+
+
 
 [dev-dependencies]
 cargo-dist = "0.14.0"
