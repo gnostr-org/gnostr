@@ -374,12 +374,10 @@ ffi:
 	@cd ffi && make all && cd .. || echo "make ffi failed..."
 gnostr-ffi:ffi
 
-.PHONY:gossip gnostr-gossip
-gossip/.git:
-	@devtools/refresh-submodules.sh gossip
-gnostr-gossip:gossip
-gossip:gossip/.git
-	@cargo install --path gossip
+.PHONY:gui gnostr-gui
+gnostr-gui:gui
+gui:
+	@cargo install --path gui
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
