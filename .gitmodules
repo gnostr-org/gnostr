@@ -53,11 +53,6 @@
 	url = https://github.com/gnostr-org/gnostr-git.git
     branch = master
     depth = shallow
-[submodule "gnostr-gossip"]
-	path = gossip
-	url = https://github.com/gnostr-org/gnostr-gossip.git
-    branch = master
-    depth = shallow
 [submodule "gnostr-grep"]
 	path = grep
 	url = https://github.com/gnostr-org/gnostr-grep.git
