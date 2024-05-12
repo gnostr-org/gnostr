@@ -145,8 +145,8 @@ add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
 add_executable(gnostr-pi src/gnostr-pi.c)
 
-install(PROGRAMS template/gnostr-add DESTINATION bin)
-install(PROGRAMS template/gnostr-add.sh DESTINATION bin)
+#install(PROGRAMS template/gnostr-add DESTINATION bin)
+#install(PROGRAMS template/gnostr-add.sh DESTINATION bin)
 install(PROGRAMS template/gnostr-blockheight DESTINATION bin)
 install(PROGRAMS template/gnostr-e DESTINATION bin)
 install(PROGRAMS template/gnostr-fs DESTINATION bin)
