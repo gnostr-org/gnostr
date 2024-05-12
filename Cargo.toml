@@ -2,11 +2,11 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "d", "cli", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
+members = ["bins", "d", "cli","gui" ,"jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup"]
 exclude = ["cat", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
-version = "0.0.28"
+version = "0.0.29"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
@@ -17,8 +17,7 @@ documentation = "https://github.com/gnostr"
 categories = ["version-control", "development-tools", "gnostr", "nostr"]
 keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr", "nostr"]
 description = "git+nostr workflow utility"
-authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>"]
-
+authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>","fiatjaf <fiatjaf@gmail.com>", "Nate Levin <natelevincycling@gmail.com>", "Nethanja Focking <nethanja@nethanja.de>", "Daniele Tonon <tonon@vitamino.it>", "jeremyd (@jeremyd)"]
 
 
 [workspace.dependencies]
@@ -121,8 +120,8 @@ zstd = "0.12.4"
 # put all inter-workspace libraries, i.e. those that use 'path = ...' here in
 # their own (alphabetically sorted) block
 
-jj-lib = { path = "lib", version = "0.0.28" }
-jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.28" }
+jj-lib = { path = "lib", version = "0.0.29" }
+jj-lib-proc-macros = { path = "lib/proc-macros", version = "0.0.29" }
 testutils = { path = "lib/testutils" }
 
 [profile.dev.package.insta]
