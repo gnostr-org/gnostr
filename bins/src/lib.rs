@@ -166,6 +166,12 @@ pub fn post_event(url: &str, event: Event) {
     let wire = event_to_wire(event);
     post(host, uri, wire)
 }
+use gnostr_types::EventV2;
+pub fn post_event_v2(url: &str, event: EventV2) {
+    let (host, uri) = url_to_host_and_uri(url);
+    let wire = event_to_wire(event);
+    post(host, uri, wire)
+}
 
 pub fn print_event(event: &Event) {
     println!(
