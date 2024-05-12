@@ -1,6 +1,7 @@
 [package]
 name = "gnostr-gui"
-authors = { workspace = true }
+#authors = { workspace = true }
+authors = ["admin <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>", "fiatjaf <fiatjaf@gmail.com>", "Nate Levin <natelevincycling@gmail.com>", "Nethanja Focking <nethanja@nethanja.de>", "Daniele Tonon <tonon@vitamino.it>", "jeremyd (@jeremyd)"]
 version = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
@@ -11,7 +12,6 @@ repository = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
 keywords = { workspace = true }
-#authors = ["admin <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>", "fiatjaf <fiatjaf@gmail.com>", "Nate Levin <natelevincycling@gmail.com>", "Nethanja Focking <nethanja@nethanja.de>", "Daniele Tonon <tonon@vitamino.it>", "jeremyd (@jeremyd)"]
 
 [features]
 default = ["rustls-tls"]
@@ -21,11 +21,11 @@ video-ffmpeg = ["egui-video", "sdl2"]
 native-tls = ["reqwest/native-tls", "tungstenite/native-tls", "tokio-tungstenite/native-tls"]
 rustls-tls = ["reqwest/rustls-tls", "tungstenite/rustls-tls-webpki-roots", "tokio-tungstenite/rustls-tls-webpki-roots"]
 
-[patch.crates-io]
-# override egui crate for egui_video dependency
-egui = { git = "https://github.com/mikedilger/egui", rev = "538088439c7c507fe49c730eab84ddd85e147391" }
-# Use the master branch of SDL2 to include a fix related to clang (and XCode after 14.2)
-sdl2 = { git = "https://github.com/Rust-SDL2/rust-sdl2", rev = "27cd1fd67c811e06b9d997a77bb6089a1b65070d" }
+## [patch.crates-io]
+## # override egui crate for egui_video dependency
+## egui = { git = "https://github.com/mikedilger/egui", rev = "538088439c7c507fe49c730eab84ddd85e147391" }
+## # Use the master branch of SDL2 to include a fix related to clang (and XCode after 14.2)
+## sdl2 = { git = "https://github.com/Rust-SDL2/rust-sdl2", rev = "27cd1fd67c811e06b9d997a77bb6089a1b65070d" }
 
 [dependencies]
 async-recursion = "1.0"
@@ -82,11 +82,11 @@ zeroize = "1.6"
 [target.'cfg(windows)'.dependencies]
 normpath = "1.1"
 
-# Force scrypt to build with release-like speed even in dev mode
-[profile.dev.package.scrypt]
-opt-level = 3
-debug-assertions = false
-overflow-checks = false
+## # Force scrypt to build with release-like speed even in dev mode
+## [profile.dev.package.scrypt]
+## opt-level = 3
+## debug-assertions = false
+## overflow-checks = false
 
 [package.metadata.deb]
 section = "web"
