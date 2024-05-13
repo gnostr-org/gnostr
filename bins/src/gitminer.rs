@@ -39,7 +39,7 @@ impl Gitminer {
         };
 
         let author = Gitminer::load_author(&repo)?;
-        let relays = Gitminer::load_gnostr_relays(&repo)?;
+        let relays = "wss://relay.damus.io, wss://nos.lol"; //Gitminer::load_gnostr_relays(&repo)?;
         let pwd_hash = Default::default();
 
         Ok(Gitminer {
@@ -47,7 +47,7 @@ impl Gitminer {
             repo,
             author,
             pwd_hash,
-            relays,
+            relays: relays.to_string(),
         })
     }
 
@@ -205,23 +205,23 @@ impl Gitminer {
         Ok(format!("{} <{}>", name, email))
     }
 
-    fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static str> {
-        let cfg = match repo.config() {
-            Ok(c) => c,
-            Err(_) => {
-                return Err("Failed to load git config gnostr.relays");
-            }
-        };
+    //fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static str> {
+    //    let cfg = match repo.config() {
+    //        Ok(c) => c,
+    //        Err(_) => {
+    //            return Err("Failed to load git config gnostr.relays");
+    //        }
+    //    };
 
-        let relays = match cfg.get_string("gnostr.relays") {
-            Ok(s) => s,
-            Err(_) => {
-                return Err("Failed to find git config gnostr.relays");
-            }
-        };
+    //    let relays = match cfg.get_string("gnostr.relays") {
+    //        Ok(s) => s,
+    //        Err(_) => {
+    //            return Err("Failed to find git config gnostr.relays");
+    //        }
+    //    };
 
-        Ok(relays)
-    }
+    //    Ok(relays)
+    //}
 
     fn revparse_0(repo: &mut git2::Repository) -> Result<String, &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
