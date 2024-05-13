@@ -154,31 +154,37 @@ fn main() -> io::Result<()> {
     //#!/bin/bash
     //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)"
     // #&& git config -l | grep gnostr.relays
-    #[allow(clippy::if_same_then_else)]
-    let set_relays = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "gnostr-set-relays"])
-            .output()
-            .expect("try:\ngit config -l | grep gnostr.relays")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-set-relays")
-            .output()
-            .expect("try:\ngit config -l | grep gnostr.relays")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-set-relays")
-            .output()
-            .expect("try:\ngit config -l | grep gnostr.relays")
-    } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-set-relays")
-            .output()
-            .expect("try:\ngit config -l | grep gnostr.relays")
-    };
+
+//TODO:
+//fix this
+//git config --global --replace-all gnostr.relays $(gnostr-get-relays)
+
+
+    //#[allow(clippy::if_same_then_else)]
+    //let set_relays = if cfg!(target_os = "windows") {
+    //    Command::new("cmd")
+    //        .args(["/C", "gnostr-set-relays"])
+    //        .output()
+    //        .expect("try:\ngit config -l | grep gnostr.relays")
+    //} else if cfg!(target_os = "macos") {
+    //    Command::new("sh")
+    //        .arg("-c")
+    //        .arg("gnostr-set-relays")
+    //        .output()
+    //        .expect("try:\ngit config -l | grep gnostr.relays")
+    //} else if cfg!(target_os = "linux") {
+    //    Command::new("sh")
+    //        .arg("-c")
+    //        .arg("gnostr-set-relays")
+    //        .output()
+    //        .expect("try:\ngit config -l | grep gnostr.relays")
+    //} else {
+    //    Command::new("sh")
+    //        .arg("-c")
+    //        .arg("gnostr-set-relays")
+    //        .output()
+    //        .expect("try:\ngit config -l | grep gnostr.relays")
+    //};
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
