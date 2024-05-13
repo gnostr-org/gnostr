@@ -183,34 +183,34 @@ more:## 	more help
 initialize:## 	ensure submodules exist
 	git submodule update --init --recursive
 
-.ONESHELL:
-docker-start:venv
-##docker-start
-##	start docker on Linux or Darwin
-	@echo CI=$(CI)
-	@touch requirements.txt && $(PYTHON3) -m pip install    -q -r requirements.txt
-	@touch requirements.txt && $(PYTHON3) -m pip install -U       virtualenv
-	@test -d .venv || $(PYTHON3) -m virtualenv .venv
-	@( \
-	   . .venv/bin/activate; pip install -q -r requirements.txt; \
-	   python3 -m pip install -q pipenv \
-	   pip install -q --upgrade pip; \
-	);
-	@( \
-	    while ! docker system info > /dev/null 2>&1; do\
-	    echo 'Waiting for docker to start...';\
-	    if [[ '$(OS)' == 'Linux' ]]; then\
-	     type -P systemctl && systemctl restart docker.service || type -P service && service restart docker;\
-	    fi;\
-	    if [[ '$(OS)' == 'Darwin' ]]; then\
-	    echo $(CI);\
-	    if [[ '$(CI)' != 'True' ]]; then\
-	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker || brew install --cask docker;\
-	    fi;\
-	    fi;\
-	sleep 1;\
-	done\
-	)
+## .ONESHELL:
+## docker-start:venv
+## ##docker-start
+## ##	start docker on Linux or Darwin
+## 	@echo CI=$(CI)
+## 	@touch requirements.txt && $(PYTHON3) -m pip install    -q -r requirements.txt
+## 	@touch requirements.txt && $(PYTHON3) -m pip install -U       virtualenv
+## 	@test -d .venv || $(PYTHON3) -m virtualenv .venv
+## 	@( \
+## 	   . .venv/bin/activate; pip install -q -r requirements.txt; \
+## 	   python3 -m pip install -q pipenv \
+## 	   pip install -q --upgrade pip; \
+## 	);
+## 	@( \
+## 	    while ! docker system info > /dev/null 2>&1; do\
+## 	    echo 'Waiting for docker to start...';\
+## 	    if [[ '$(OS)' == 'Linux' ]]; then\
+## 	     type -P systemctl && systemctl restart docker.service || type -P service && service restart docker;\
+## 	    fi;\
+## 	    if [[ '$(OS)' == 'Darwin' ]]; then\
+## 	    echo $(CI);\
+## 	    if [[ '$(CI)' != 'True' ]]; then\
+## 	     type -P docker && open --background -a /./Applications/Docker.app/Contents/MacOS/Docker || brew install --cask docker;\
+## 	    fi;\
+## 	    fi;\
+## 	sleep 1;\
+## 	done\
+## 	)
 
 detect:## 	install sequence got Darwin and Linux
 ##detect
