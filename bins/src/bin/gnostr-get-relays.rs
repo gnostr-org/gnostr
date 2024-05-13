@@ -1,6 +1,8 @@
 use futures::executor::block_on;
 use gnostr_bins::print_watch_list;
+use gnostr_bins::get_watch_list;
 fn main() {
-    let future = print_watch_list(); // Nothing is printed
-    block_on(future);
+    //let future = print_watch_list(); // Nothing is printed
+    let future = get_watch_list(); // Nothing is printed
+    let _ = block_on(future);
 }
