@@ -159,25 +159,25 @@ fn main() -> io::Result<()> {
         Command::new("cmd")
             .args(["/C", "gnostr-set-relays"])
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     } else if cfg!(target_os = "macos") {
         Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     } else if cfg!(target_os = "linux") {
         Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     } else {
         Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     };
 
     let count = thread::available_parallelism()?.get();
