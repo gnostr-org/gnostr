@@ -1,3 +1,16 @@
+**target/**
+ext/**
+*.o
+*.a
+./bin/*
+*vendor/**
+**.zip
+
+*node_modules*
+proxy/node_modules/**
+gnostr-am
+gnostr-act
+
 !CMakeLists.txt
 !test*
 #act: since act is a docker utility, we tell docker to NOT ignore the
