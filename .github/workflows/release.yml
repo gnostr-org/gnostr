@@ -59,6 +59,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: '0'
       - name: Install Rust
         run: rustup update "1.70" --no-self-update && rustup default "1.70"
       - name: Install cargo-dist
