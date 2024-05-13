@@ -155,10 +155,9 @@ fn main() -> io::Result<()> {
     //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)"
     // #&& git config -l | grep gnostr.relays
 
-//TODO:
-//fix this
-//git config --global --replace-all gnostr.relays $(gnostr-get-relays)
-
+    //TODO:
+    //fix this
+    //git config --global --replace-all gnostr.relays $(gnostr-get-relays)
 
     //#[allow(clippy::if_same_then_else)]
     //let set_relays = if cfg!(target_os = "windows") {

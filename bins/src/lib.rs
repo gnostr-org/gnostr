@@ -26,8 +26,8 @@ pub mod worker;
 pub use worker::*;
 
 //gnostr-server
-pub mod router;
 pub mod handler;
+pub mod router;
 pub mod serve;
 
 /// REF: https://api.nostr.watch

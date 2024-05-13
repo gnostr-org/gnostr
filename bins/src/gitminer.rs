@@ -205,8 +205,8 @@ impl Gitminer {
         Ok(format!("{} <{}>", name, email))
     }
 
-    //fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static str> {
-    //    let cfg = match repo.config() {
+    //fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static
+    // str> {    let cfg = match repo.config() {
     //        Ok(c) => c,
     //        Err(_) => {
     //            return Err("Failed to load git config gnostr.relays");

@@ -1,14 +1,12 @@
-use bytes::Bytes;
-use hyper::{
-    body::to_bytes,
-    service::{make_service_fn, service_fn},
-    Body, Request, Server,
-};
-use route_recognizer::Params;
-use std::sync::Arc;
-
 use std::env;
 use std::process::exit;
+use std::sync::Arc;
+
+use bytes::Bytes;
+use hyper::body::to_bytes;
+use hyper::service::{make_service_fn, service_fn};
+use hyper::{Body, Request, Server};
+use route_recognizer::Params;
 
 //#[tokio::main]
 //async fn main() {
@@ -156,9 +154,9 @@ fn bad_add(a: i32, b: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
-
     use std::process::Command;
+
+    use super::*;
 
     #[test]
     fn curl_test() {
