@@ -91,7 +91,7 @@ normpath = "1.1"
 [package.metadata.deb]
 section = "web"
 assets = [
-    ["target/release/gossip", "/usr/bin/", "755"],
+    ["target/release/gnostr-gui", "/usr/bin/", "755"],
     ["packaging/debian/gossip.desktop", "/usr/share/applications/gossip.desktop", "644"],
 ]
 features = ["lang-cjk"]
