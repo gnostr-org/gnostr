@@ -12,7 +12,6 @@ struct Relay {
 }
 
 pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
-    let mut urls: Vec<String> = Vec::new();
     let mut part = String::new();
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
@@ -29,11 +28,12 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
                 }
                 Some(',') | Some(' ') => {
                     if !part.is_empty() {
-                    let relay = Relay {
-                        url: part.to_owned(),
-                    };
-                    let j = serde_json::to_string(&relay)?;
-                    print!("{},", format!("{}", j.clone().replace("\\\"", "")));
+                        collected.push(part.clone());
+                        let relay = Relay {
+                            url: part.to_owned(),
+                        };
+                        let j = serde_json::to_string(&relay)?;
+                        print!("{},", format!("{}", j.clone().replace("\\\"", "")));
                         collected.push(part.clone());
                         part = String::new();
                     } //end if !part.is_empty()
@@ -42,10 +42,9 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
             } //end match
         } //end loop
     }
-    Ok(urls)
+    Ok(collected)
 }
 pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
-    let mut urls: Vec<String> = Vec::new();
     let mut part = String::new();
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
@@ -68,10 +67,9 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
             }
         } //end loop
     }
-    Ok(urls)
+    Ok(collected)
 }
 pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
-    let mut urls: Vec<String> = Vec::new();
     let mut part = String::new();
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
@@ -86,6 +84,7 @@ pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
                 Some(' ') | Some(',') => {
                     if !part.is_empty() {
                         collected.push(part.clone());
+                        //print!("{}:{}",collected.len(),collected[collected.len()-1]);
                         print!("{} ",
                             format!("{}",
                                 part.clone()
@@ -102,7 +101,7 @@ pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
             }
         } //end loop
     }
-    Ok(urls)
+    Ok(collected)
 }
 
 pub async fn print_watch_list() -> Result<Vec<String>> {
