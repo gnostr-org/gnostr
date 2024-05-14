@@ -1,4 +1,5 @@
 use futures::executor::block_on;
+use gnostr_bins::get_stripped_urls;
 use gnostr_bins::print_watch_list;
 use gnostr_bins::get_watch_list;
 use gnostr_bins::get_watch_list_json;
@@ -26,6 +27,13 @@ pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::E
         "-g" => get(),
         "--get" => get(),
         "get" => get(),
+        //stripped
+        "-s" => stripped(),
+        "--stripped" => stripped(),
+        "stripped" => stripped(),
+
+
+
         //version
         "-V" => version(),
         //support help2man
@@ -59,6 +67,10 @@ fn get() {
     let future = get_watch_list();
     let _ = block_on(future);
 }
+fn stripped() {
+    let future = get_stripped_urls();
+    let _ = block_on(future);
+}
 fn help(){
     use std::process;
 
@@ -69,6 +81,7 @@ fn help(){
     print!("	version\n");
     print!("	json (default)\n");
     print!("	print\n");
+    print!("	stripped\n");
     print!("	get\n");
     process::exit(0);
 }
