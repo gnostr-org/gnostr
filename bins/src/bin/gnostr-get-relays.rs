@@ -1,8 +1,7 @@
-use futures::executor::block_on;
-use gnostr_bins::print_watch_list;
-use gnostr_bins::get_watch_list;
-use gnostr_bins::get_watch_list_json;
 use std::env;
+
+use futures::executor::block_on;
+use gnostr_bins::{get_stripped_urls, get_watch_list, get_watch_list_json, print_watch_list};
 
 pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::Error>> {
     let _ = args.next(); // program name
@@ -26,6 +25,11 @@ pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::E
         "-g" => get(),
         "--get" => get(),
         "get" => get(),
+        //stripped
+        "-s" => stripped(),
+        "--stripped" => stripped(),
+        "stripped" => stripped(),
+
         //version
         "-V" => version(),
         //support help2man
@@ -37,12 +41,11 @@ pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::E
         "--help" => help(),
         "help" => help(),
         //other
-         other => println!("Unknown command {}", other),
-
+        other => println!("Unknown command {}", other),
     }
     Ok(true)
 }
-fn default(){
+fn default() {
     json();
     use std::process;
     process::exit(0);
@@ -59,45 +62,54 @@ fn get() {
     let future = get_watch_list();
     let _ = block_on(future);
 }
-fn help(){
+//TODO: return length in watch_list?
+fn stripped() {
+    let future = get_stripped_urls();
+    let length = block_on(future);
+    //print!("{}",format!("{:?}",length.unwrap()));
+    print!("{}", format!("{:?}", length.expect("REASON").len()));
+}
+fn help() {
     use std::process;
 
     let crate_name = env!("CARGO_CRATE_NAME");
-    print!("{}\n", crate_name.replace("_", "-"));
-    print!("\n COMMANDS:\n");
-    print!("	help\n");
-    print!("	version\n");
-    print!("	json (default)\n");
-    print!("	print\n");
-    print!("	get\n");
+    let version = env!("CARGO_PKG_VERSION");
+    print!("\n{} v{}\n\n", crate_name.replace("_", "-"), version);
+    print!("{} get\n", crate_name.replace("_", "-"));
+    print!("       <csv_relay_list>\n");
+    print!("{} json\n", crate_name.replace("_", "-"));
+    print!("       <json_relay_list>\n");
+    print!("{} stripped\n", crate_name.replace("_", "-"));
+    print!("       <string_relay_list> <int_length_last>\n");
     process::exit(0);
 }
-fn version(){
+fn version() {
     use std::process;
 
     print!("");
 
-let version = env!("CARGO_PKG_VERSION");
-let crate_name = env!("CARGO_CRATE_NAME");
-//let name = env!("CARGO_PKG_NAME");
-//let author = env!("CARGO_PKG_AUTHORS");
+    let version = env!("CARGO_PKG_VERSION");
+    let crate_name = env!("CARGO_CRATE_NAME");
+    //let name = env!("CARGO_PKG_NAME");
+    //let author = env!("CARGO_PKG_AUTHORS");
 
-//println!("Program Name: {}", name);
-//println!("Program Version: {}", version);
-println!("{} v{}", crate_name.replace("_", "-"),version);
-//println!("Program Version: {}", version);
-//println!("Program Author: {}", author);
+    //println!("Program Name: {}", name);
+    //println!("Program Version: {}", version);
+    println!("{} v{}", crate_name.replace("_", "-"), version);
+    //println!("Program Version: {}", version);
+    //println!("Program Author: {}", author);
 
     process::exit(0);
 }
 fn main() {
-
     use std::process;
     // If we were handed a command, execute the command and return
     let args = env::args();
     if args.len() > 1 {
-    let _ =  handle_command(env::args());
-    } else {default();}
+        let _ = handle_command(env::args());
+    } else {
+        default();
+    }
     //if args.len() > 1 {
     //    for arg in args {
     //        if arg == "json" {json();process::exit(0)}

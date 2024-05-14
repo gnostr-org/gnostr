@@ -6,7 +6,7 @@ members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-m
 exclude = ["cat", "ffi", "get-relays", "relay", "sha256"]
 
 [workspace.package]
-version = "0.0.32"
+version = "0.0.35"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
@@ -15,7 +15,7 @@ homepage = "https://github.com/gnostr-org/gnostr"
 repository = "https://github.com/gnostr-org/gnostr"
 documentation = "https://github.com/gnostr"
 categories = ["version-control", "development-tools", "gnostr", "nostr"]
-keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr", "nostr"]
+keywords = ["git", "gnostr", "nostr"]
 description = "git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>","fiatjaf <fiatjaf@gmail.com>", "Nate Levin <natelevincycling@gmail.com>", "Nethanja Focking <nethanja@nethanja.de>", "Daniele Tonon <tonon@vitamino.it>", "jeremyd (@jeremyd)"]
 
