@@ -49,7 +49,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
     let mut part = String::new();
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
-    for url_str in urls_str.chars() {
+    for _ in urls_str.chars() {
         if char_iter.next() == Some('[') {}
         loop {
             match char_iter.next() {
@@ -59,7 +59,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
                 Some(',') | Some(' ') => {
                     if !part.is_empty() {
                         collected.push(part.clone());
-                        print!("char_iter.next()={}, ", format!("{}", part.clone().replace("\"", "")));
+                        print!("{}, ", format!("{}", part.clone().replace("\"", "")));
                         part = String::new();
                     }
                 },
@@ -67,10 +67,6 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
                 x => part.push(x.expect("REASON")),
             }
         } //end loop
-    for relay in collected {
-    print!("{}, ", format!("relay.clone()={}", relay.clone()));
-    
-    }
     }
     Ok(urls)
 }
