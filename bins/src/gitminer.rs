@@ -5,7 +5,7 @@ use std::process::Command;
 use std::sync::mpsc::channel;
 use std::{process, thread};
 
-use git2::Repository;
+use git2::*;
 
 use super::worker::Worker;
 
@@ -39,7 +39,7 @@ impl Gitminer {
         };
 
         let author = Gitminer::load_author(&repo)?;
-        let relays = "wss://relay.damus.io, wss://nos.lol"; //Gitminer::load_gnostr_relays(&repo)?;
+        let relays = Gitminer::load_gnostr_relays(&repo)?;
         let pwd_hash = Default::default();
 
         Ok(Gitminer {
@@ -47,7 +47,7 @@ impl Gitminer {
             repo,
             author,
             pwd_hash,
-            relays: relays.to_string(),
+            relays,
         })
     }
 
@@ -91,7 +91,7 @@ impl Gitminer {
     }
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
-        let _ = Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
             .output();
@@ -115,10 +115,11 @@ impl Gitminer {
             .unwrap_or_else(|| panic!("Failed to write temporary file {}", &tmpfile));
 
         //write the commit
-        let _ = Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}",
+                "cd {} && gnostr-git hash-object -t commit -w --stdin < {} && gnostr-git reset \
+                 --hard {}",
                 self.opts.repo, tmpfile, hash
             ))
             .output();
@@ -126,7 +127,7 @@ impl Gitminer {
         //.expect("Failed to generate commit");
 
         //write the blob
-        let _ = Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg(format!(
                 "cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > \
@@ -163,18 +164,24 @@ impl Gitminer {
         // e.g. when merging in a commit; thus, in case the assumed-untracked file is
         // changed upstream, you will need to handle the situation manually.
 
-        //let _ = Command::new("sh")
-        //    .arg("-c")
-        //    .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && git
-        // reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' >
-        // .gnostr/reflog", self.opts.repo, "{RELAY}", "{REPO}"))    .output();
-        ////.ok()
-        ////.expect("Failed to write .gnostr/reflog");
-        //let _ = Command::new("sh")
-        //    .arg("-c")
-        //    .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && git
-        // update-index --assume-unchaged .gnostr/reflog", self.opts.repo))
-        //    .output();
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git reflog \
+                 --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog",
+                self.opts.repo, "{RELAY}", "{REPO}"
+            ))
+            .output();
+        //.ok()
+        //.expect("Failed to write .gnostr/reflog");
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git update-index \
+                 --assume-unchaged .gnostr/reflog",
+                self.opts.repo
+            ))
+            .output();
         //.ok()
         //.expect("Failed to write .gnostr/reflog");
         Ok(())
@@ -205,25 +212,25 @@ impl Gitminer {
         Ok(format!("{} <{}>", name, email))
     }
 
-    //fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static
-    // str> {    let cfg = match repo.config() {
-    //        Ok(c) => c,
-    //        Err(_) => {
-    //            return Err("Failed to load git config gnostr.relays");
-    //        }
-    //    };
+    fn load_gnostr_relays(repo: &git2::Repository) -> Result<String, &'static str> {
+        let cfg = match repo.config() {
+            Ok(c) => c,
+            Err(_) => {
+                return Err("Failed to load git config gnostr.relays");
+            }
+        };
 
-    //    let relays = match cfg.get_string("gnostr.relays") {
-    //        Ok(s) => s,
-    //        Err(_) => {
-    //            return Err("Failed to find git config gnostr.relays");
-    //        }
-    //    };
+        let relays = match cfg.get_string("gnostr.relays") {
+            Ok(s) => s,
+            Err(_) => {
+                return Err("Failed to find git config gnostr.relays");
+            }
+        };
 
-    //    Ok(relays)
-    //}
+        Ok(relays)
+    }
 
-    fn revparse_0(repo: &mut git2::Repository) -> Result<String, &'static str> {
+    fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
         let head = repo.revparse_single("HEAD").unwrap();
@@ -231,7 +238,7 @@ impl Gitminer {
 
         Ok(head_2)
     }
-    fn revparse_1(repo: &mut git2::Repository) -> Result<String, &'static str> {
+    fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
         let head = repo.revparse_single("HEAD~1").unwrap();

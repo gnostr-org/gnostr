@@ -21,7 +21,7 @@ pub fn state() -> RepositoryState {
             .expect("failed to execute process")
     };
 
-    let _pwd = String::from_utf8(get_pwd.stdout)
+    let pwd = String::from_utf8(get_pwd.stdout)
         .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
         .unwrap();
     //println!("pwd={:?}", pwd);
@@ -49,7 +49,7 @@ pub fn state() -> RepositoryState {
                 .expect("failed to execute process")
         };
 
-        let _state = String::from_utf8(repo_state.stdout)
+        let state = String::from_utf8(repo_state.stdout)
             .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
             .unwrap();
         //println!("state={:?}", state);
