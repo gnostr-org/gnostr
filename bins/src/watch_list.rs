@@ -16,39 +16,28 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
     let mut part = String::new();
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
-    for url_str in urls_str.chars() {
+    for _ in urls_str.chars() {
         if char_iter.next() == Some('[') {
-
+        print!("[\"RELAYS\", ");
         }
-        //if char_iter.last() == Some(',') {}
         loop {
             match char_iter.next() {
                 Some(']') => {
-                    print!("{{\"url\":\"wss://relay.gnostr.org\"}},\n");
-                    print!("{{\"url\":\"wss://proxy.gnostr.org\"}}");
+                    print!("{{\"url\":\"wss://relay.gnostr.org\"}},");
+                    print!("{{\"url\":\"wss://proxy.gnostr.org\"}}]");
                     return std::result::Result::Ok(collected);
                 }
                 Some(',') | Some(' ') => {
                     if !part.is_empty() {
-
-
                     let relay = Relay {
                         url: part.to_owned(),
                     };
-
-                    // Serialize it to a JSON string.
                     let j = serde_json::to_string(&relay)?;
-                    //println!("{}, ", j);
                     print!("{},", format!("{}", j.clone().replace("\\\"", "")));
-
-
                         collected.push(part.clone());
-//print!("parse_json:char_iter.next()={} ", format!("{}", part.clone().replace("\"", "")));
                         part = String::new();
-
                     } //end if !part.is_empty()
                 },
-                //None => todo!(),
                 x => part.push(x.expect("REASON")),
             } //end match
         } //end loop
