@@ -46,7 +46,6 @@ gnostr-client\
 gnostr-db\
 gnostr-db-cli\
 gnostr-get-relays\
-gnostr-getrelays\
 gnostr-git-log\
 gnostr-git-reflog\
 gnostr-gnode\
@@ -69,8 +68,8 @@ gnostr-wobble\
 gnostr\
 
 ##all:
-#all: submodules gnostr gnostr-git gnostr-get-relays gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
-all: submodules gnostr gnostr-git gnostr-get-relays ##gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+#all: submodules gnostr gnostr-git gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
+all: submodules gnostr gnostr-git ##gnostr-docs## 	make gnostr gnostr-cat gnostr-git gnostr-relay gnostr-xor docs
 ##	build gnostr tool and related dependencies
 
 ##gnostr-docs:
@@ -279,13 +278,6 @@ gnostr-curl:ext/curl-8.5.0/src/curl
 	cp $< $@ || true
 	install $@ /usr/local/bin/
 
-##gnostr-get-relays:
-##	$(CC) ./src/gnostr-get-relays.c -o gnostr-get-relays
-##
-##gnostr-set-relays:
-##	$(CC) ./src/gnostr-set-relays.c -o gnostr-set-relays
-
-
 gnostr-cargo-binstall:
 	type -P cargo && \
 		cargo install cargo-binstall && \
@@ -355,12 +347,6 @@ gnostr-py:py
 py:py/.git venv
 	$(. .venv/bin/activate & cd py && make)
 
-.PHONY:get-relays gnostr-get-relays
-get-relays/.git:
-	@devtools/refresh-submodules.sh get-relays
-gnostr-get-relays:get-relays
-get-relays:get-relays/.git
-	@cd get-relays && make cargo-b-release && make cargo-i
 bins-test-post-event:
 	cat test/first-gnostr-commit.json | gnostr-post-event wss://relay.damus.io
 bins-test-fetch-by-id:
@@ -570,7 +556,6 @@ gnostr-install:
 	@install -m755 -v gnostr-am                      $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
-	@install -m755 -v template/gnostr-get-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
