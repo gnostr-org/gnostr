@@ -1,21 +1,15 @@
-use bytes::Bytes;
-use hyper::{
-    body::to_bytes,
-    service::{make_service_fn, service_fn},
-    Body, Request, Server,
-};
-use gnostr_bins::serve::*;
-use gnostr_bins::router;
-use gnostr_bins::router::Router;
-use gnostr_bins::handler;
-use gnostr_bins::router::Handler;
-use gnostr_bins::serve::AppState;
-
-use route_recognizer::Params;
-use std::sync::Arc;
-
 use std::env;
 use std::process::exit;
+use std::sync::Arc;
+
+use bytes::Bytes;
+use gnostr_bins::router::{Handler, Router};
+use gnostr_bins::serve::{AppState, *};
+use gnostr_bins::{handler, router};
+use hyper::body::to_bytes;
+use hyper::service::{make_service_fn, service_fn};
+use hyper::{Body, Request, Server};
+use route_recognizer::Params;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -62,9 +56,9 @@ async fn main() {
         println!("curl http://localhost:{}/test", &str_port);
         println!("curl http://localhost:{}/params/1234", &str_port);
         println!(
-        "curl -X POST http://localhost:{}/send -d '{{\"name\": \"chip\", \"active\": true}}'",
-        &str_port
-    );
+            "curl -X POST http://localhost:{}/send -d '{{\"name\": \"chip\", \"active\": true}}'",
+            &str_port
+        );
     }
     let some_state = "state".to_string();
 
@@ -103,11 +97,14 @@ async fn route(
     let found_handler = router.route(req.uri().path(), req.method());
     let resp = found_handler
         .handler
-        .invoke(gnostr_bins::serve::Context::new(app_state, req, found_handler.params))
+        .invoke(gnostr_bins::serve::Context::new(
+            app_state,
+            req,
+            found_handler.params,
+        ))
         .await;
     Ok(resp)
 }
-
 
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
@@ -123,9 +120,9 @@ fn bad_add(a: i32, b: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
-
     use std::process::Command;
+
+    use super::*;
 
     #[test]
     fn curl_test() {

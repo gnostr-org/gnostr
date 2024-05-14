@@ -6,7 +6,6 @@ use gnostr_types::Event;
 
 static DEFAULT_RELAY_URL: &str = "wss://nos.lol";
 fn main() {
-
     let mut relay_url = DEFAULT_RELAY_URL;
     if relay_url == DEFAULT_RELAY_URL {}
     let args_vector: Vec<String> = env::args().collect();
@@ -28,7 +27,7 @@ fn main() {
                 let event: Event = serde_json::from_str(&s).unwrap();
                 relay_url = DEFAULT_RELAY_URL;
                 //always reprint s for further piping
-                println!("{}",s);
+                println!("{}", s);
                 gnostr_bins::post_event(&relay_url, event);
             };
             if args_vector.len() == 2 {
@@ -60,7 +59,7 @@ fn main() {
                     std::io::stdin().read_to_string(&mut s).unwrap();
                     let event: Event = serde_json::from_str(&s).unwrap();
                     //always reprint s for further piping
-                    println!("{}",s);
+                    println!("{}", s);
                     gnostr_bins::post_event(relay_url, event);
                     process::exit(0);
                 }
@@ -73,7 +72,7 @@ fn main() {
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 let event: Event = serde_json::from_str(&s).unwrap();
                 //always reprint s for further piping
-                println!("{}",s);
+                println!("{}", s);
                 gnostr_bins::post_event(relay_url, event);
                 process::exit(0);
             };
@@ -86,7 +85,7 @@ fn main() {
                     std::io::stdin().read_to_string(&mut s).unwrap();
                     let event: Event = serde_json::from_str(&s).unwrap();
                     //always reprint s for further piping
-                    println!("{}",s);
+                    println!("{}", s);
                     gnostr_bins::post_event(relay_url, event);
                     process::exit(0);
                 }
@@ -94,7 +93,7 @@ fn main() {
                 let mut s: String = String::new();
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 //always reprint s for further piping
-                println!("{}",s);
+                println!("{}", s);
                 let event: Event = serde_json::from_str(&s).unwrap();
                 gnostr_bins::post_event(relay_url, event);
             };

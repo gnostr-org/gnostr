@@ -46,10 +46,10 @@ fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let _appname = &args[0];
     //catch empty query first
-    if args.len()== 1 {
+    if args.len() == 1 {
         use sha256::digest;
         let query = digest("");
-        print!("{}",query);
+        print!("{}", query);
         process::exit(0);
     }
 
@@ -73,15 +73,14 @@ fn main() -> Result<()> {
     #[cfg(debug_assertions)]
     println!("cwd={:#?}", cwd);
 
-    if args[1] == "-h" || args[1] == "--help"{
+    if args[1] == "-h" || args[1] == "--help" {
         let crate_name = env!("CARGO_CRATE_NAME");
-        print!("{}", crate_name.replace("_","-"));
+        print!("{}", crate_name.replace("_", "-"));
         print!("           gnostr-sha256 <file_path>\n");
         process::exit(0);
     }
-    if args[1] == "-v" || args[1] == "--version"{
-
-        print!("{}",env!("CARGO_PKG_VERSION"));
+    if args[1] == "-v" || args[1] == "--version" {
+        print!("{}", env!("CARGO_PKG_VERSION"));
         process::exit(0);
     }
 

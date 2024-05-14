@@ -1,8 +1,8 @@
-use crate::serve;
-use crate::serve::Context;
-use crate::serve::Response;
 use hyper::StatusCode;
 use serde::Deserialize;
+
+use crate::serve;
+use crate::serve::{Context, Response};
 
 pub async fn test_handler(ctx: Context) -> String {
     format!("test called, state_thing was: {}", ctx.state.state_thing)
