@@ -1,0 +1,47 @@
+name: gnostr-tui-docker
+
+on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [3.18]
+
+    container: ghcr.io/gnostr-org/gnostr-tui:latest
+
+    steps:
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      - run: apt-get update && apt-get install -y bash cmake git
+      - run: printenv
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '10'
+          submodules: 'true'
+          set-safe-directory: 'true'
+      ## notice: these are post checkout steps
+      - run: apt-get update && apt-get -y install autoconf automake libssl-dev libtool make pkg-config
+      - run: touch ~/GITHUB_TOKEN.txt
+      - run: make cargo-b-release

@@ -1,0 +1,21 @@
+[package]
+name = "git2-testing"
+authors = ["extrawurst <mail@rusticorn.com>"]
+description = "convenience functions to write unittests on top of git2-rs"
+readme = "README.md"
+categories = ["development-tools"]
+
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+documentation = { workspace = true }
+keywords = { workspace = true }
+
+[dependencies]
+env_logger = "0.10"
+git2 = ">=0.17"
+log = "0.4"
+tempfile = "3.4"

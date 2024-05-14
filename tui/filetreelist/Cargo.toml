@@ -1,0 +1,21 @@
+[package]
+name = "filetreelist"
+authors = ["extrawurst <mail@rusticorn.com>"]
+description = "filetree abstraction based on a sorted path list, supports key based navigation events, folding, scrolling and more"
+readme = "README.md"
+categories = ["command-line-utilities"]
+
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+documentation = { workspace = true }
+keywords = { workspace = true }
+
+[dependencies]
+thiserror = "1.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
