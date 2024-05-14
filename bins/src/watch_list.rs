@@ -70,6 +70,40 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
     }
     Ok(urls)
 }
+pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
+    let mut urls: Vec<String> = Vec::new();
+    let mut part = String::new();
+    let mut collected = Vec::new();
+    let mut char_iter = urls_str.chars();
+    for _ in urls_str.chars() {
+        if char_iter.next() == Some('[') {}
+        if char_iter.next() == Some(',') {}
+        loop {
+            match char_iter.next() {
+                Some(']') => {
+                    return std::result::Result::Ok(collected);
+                }
+                Some(' ') | Some(',') => {
+                    if !part.is_empty() {
+                        collected.push(part.clone());
+                        print!("{} ",
+                            format!("{}",
+                                part.clone()
+                                .replace("}},","")
+                                .replace(",","\u{a0}")
+                                .replace("\"", "")
+                                )
+                            );
+                        part = String::new();
+                    }
+                },
+                //None => todo!(),
+                x => part.push(x.expect("REASON")),
+            }
+        } //end loop
+    }
+    Ok(urls)
+}
 
 pub async fn print_watch_list() -> Result<Vec<String>> {
     let vec_relay_list = parse_urls(&get_relays_public().unwrap().as_str()).await;
@@ -81,5 +115,9 @@ pub async fn get_watch_list() -> Result<Vec<String>> {
 }
 pub async fn get_watch_list_json() -> Result<Vec<String>> {
     let vec_relay_list = parse_json(&get_relays_public().unwrap().as_str()).await;
+    vec_relay_list //.expect("REASON")
+}
+pub async fn get_stripped_urls() -> Result<Vec<String>> {
+    let vec_relay_list = stripped_urls(&get_relays_public().unwrap().as_str()).await;
     vec_relay_list //.expect("REASON")
 }
