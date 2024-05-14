@@ -17,7 +17,7 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
     let mut char_iter = urls_str.chars();
     for _ in urls_str.chars() {
         if char_iter.next() == Some('[') {
-        print!("[\"RELAYS\", ");
+            print!("[\"RELAYS\", ");
         }
         loop {
             match char_iter.next() {
@@ -37,7 +37,7 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
                         collected.push(part.clone());
                         part = String::new();
                     } //end if !part.is_empty()
-                },
+                }
                 x => part.push(x.expect("REASON")),
             } //end match
         } //end loop
@@ -63,7 +63,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
                         print!("{}, ", format!("{}", part.clone().replace("\"", "")));
                         part = String::new();
                     }
-                },
+                }
                 //None => todo!(),
                 x => part.push(x.expect("REASON")),
             }
@@ -87,17 +87,19 @@ pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
                     if !part.is_empty() {
                         collected.push(part.clone());
                         //print!("{}:{}",collected.len(),collected[collected.len()-1]);
-                        print!("{} ",
-                            format!("{}",
+                        print!(
+                            "{} ",
+                            format!(
+                                "{}",
                                 part.clone()
-                                .replace("}},","")
-                                .replace(",","\u{a0}")
-                                .replace("\"", "")
-                                )
-                            );
+                                    .replace("}},", "")
+                                    .replace(",", "\u{a0}")
+                                    .replace("\"", "")
+                            )
+                        );
                         part = String::new();
                     }
-                },
+                }
                 //None => todo!(),
                 x => part.push(x.expect("REASON")),
             }
