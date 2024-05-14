@@ -67,22 +67,25 @@ fn get() {
     let future = get_watch_list();
     let _ = block_on(future);
 }
+//TODO: return length in watch_list?
 fn stripped() {
     let future = get_stripped_urls();
-    let _ = block_on(future);
+    let length = block_on(future);
+    //print!("{}",format!("{:?}",length.unwrap()));
+    print!("{}",format!("{:?}",length.expect("REASON").len()));
 }
 fn help(){
     use std::process;
 
     let crate_name = env!("CARGO_CRATE_NAME");
-    print!("{}\n", crate_name.replace("_", "-"));
-    print!("\n COMMANDS:\n");
-    print!("	help\n");
-    print!("	version\n");
-    print!("	json (default)\n");
-    print!("	print\n");
-    print!("	stripped\n");
-    print!("	get\n");
+let version = env!("CARGO_PKG_VERSION");
+    print!("\n{} v{}\n\n", crate_name.replace("_", "-"),version);
+    print!("{} get\n", crate_name.replace("_", "-"));
+    print!("       <csv_relay_list>\n");
+    print!("{} json\n", crate_name.replace("_", "-"));
+    print!("       <json_relay_list>\n");
+    print!("{} stripped\n", crate_name.replace("_", "-"));
+    print!("       <string_relay_list> <int_length_last>\n");
     process::exit(0);
 }
 fn version(){
