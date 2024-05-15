@@ -90,7 +90,7 @@ jobs:
       - run: ./nostril --sec $(gnostr-sha256)
       - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
-      - run: for relay in $(gnostr-get-relays -s);do ./nostril --sec $(gnostr-sha256) --tag r $relay -t gnostr -t $(gnostr-wobble) --content "$relay" | gnostr-post-event --relay $relay & sleep 1; done
+      - run: ./nip-0034
 
 
       - name: Save rustup

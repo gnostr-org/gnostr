@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+for relay in $(gnostr-get-relays -s);do
+echo $relay
+./gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$(gnostr-wobble)) | gnostr-post-event --relay $relay & sleep 1 || true
+nostril --sec $(gnostr-sha256) \
+--kind 30617 \
+--tag d "<repo-id>" \
+--tag name "<human-readable project name>" \
+--tag description "brief human-readable project description>" \
+--tag web "<url for browsing>" \
+--tag web "<url for browsing>" \
+--tag clone "<url for git-cloning>" \
+--tag clone "<url for git-cloning>" \
+--tag relays "$relay" \
+--tag r $(git rev-parse --short HEAD~0) \
+--tag r $(git rev-parse         HEAD~0) \
+--tag maintainers "<other-recognized-maintainer>" \
+--tag maintainers "<other-recognized-maintainer>"  \
+-t gnostr \
+-t $(gnostr-weeble) \
+-t $(gnostr-blockheight) \
+-t $(gnostr-wobble) \
+--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)/$(git rev-parse HEAD~0)" | \
+gnostr-post-event --relay $relay & sleep 1; \
+done
