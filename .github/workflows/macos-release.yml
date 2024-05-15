@@ -23,11 +23,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: "printenv"
         run: |
-          brew install libtool autoconf automake help2man
+          brew install libtool autoconf automake help2man scdoc
           printenv
       - name: "Build release"
         run: |
-          make all || sudo make all
+          make all nostril || sudo make all nostril
           mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
