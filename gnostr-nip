@@ -16,7 +16,7 @@
 #
 #
 #GNOSTR=$(which gnostr || which gnostr-am)
-WHICH_GNOSTR=$(which gnostr)
+WHICH_GNOSTR=$(which nostril)
 WHICH_GNOSTR_AM=$(which gnostr-am)
 export WHICH_GNOSTR_AM
 
@@ -28,8 +28,19 @@ declare CALLED_FROM
 declare PRIVKEY
 declare KIND
 declare NIP
+
 ## PRIVKEY=${PRIVKEY:-$(GNOSTR --hash)}
 PRIVKEY=${PRIVKEY:-}
+if [ "$1" == "--sec" ]; then
+  if [ "$2" == "" ]; then
+    echo "provide a sha256 hash for private key"
+  else
+    PRIVKEY=$2
+  fi
+fi
+
+
+
 ## echo 11:$PRIVKEY
 ## echo $2
 ## echo '$2'

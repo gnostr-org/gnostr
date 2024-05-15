@@ -22,5 +22,5 @@ nostril --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$relay) \
 -t $(gnostr-blockheight) \
 -t $(gnostr-wobble) \
 --content "$(gnostr-weeble)/$(gnostr-blockheight)/$relay/$(git rev-parse HEAD~0)" | \
-gnostr-post-event --relay $relay & sleep 1; \
+gnostr-post-event --relay $relay & sleep 2; \
 done
