@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
 for relay in $(gnostr-get-relays -s);do
-echo $relay
-./gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$relay) | gnostr-post-event --relay $relay & sleep 1 || true
-nostril --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$relay) \
+WEEBLE=$(gnostr-weeble)
+WOBBLE=$(gnostr-wobble)
+BLOCK_HEIGHT=$(gnostr-blockheight)
+echo $relay$WEEBLE$BLOCK_HEIGHT
+PRIV_KEY=$(gnostr-sha256 $relay$WEEBLE$BLOCK_HEIGHT)
+echo $PRIV_KEY
+./gnostr-nip --sec $PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
+nostril --sec $PRIV_KEY \
 --kind 30617 \
+--pow 8 \
 --tag d "$(gnostr-sha256 nostril)" \
 --tag name "<human-readable project name>" \
 --tag description "brief human-readable project description>" \
@@ -24,6 +30,6 @@ nostril --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$relay) \
 -t $(gnostr-weeble) \
 -t $(gnostr-blockheight) \
 -t $(gnostr-wobble) \
---content "$(gnostr-weeble)/$(gnostr-blockheight)/$relay/$(git rev-parse HEAD~0)" | \
-gnostr-post-event --relay $relay & sleep 2; \
+--content "$relay/$(gnostr-weeble)/$(gnostr-blockheight)/$(git rev-parse HEAD~0):$(gnostr-diff)" | \
+gnostr-post-event --relay $relay & sleep 3; \
 done
