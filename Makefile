@@ -26,6 +26,7 @@ doc/nostril.1: README.md## 	doc/nostril.1
 	@scdoc < $^ > $@ || help2man ./nostril > doc/nostril.1
 
 version: nostril.c## 	version
+	@git fetch --all --tags -f
 	@grep '^#define VERSION' $< | sed -En 's,.*"([^"]+)".*,\1,p' > $@
 
 dist: docs version## 	dist
