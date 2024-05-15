@@ -636,7 +636,7 @@ static int mine_event(struct nostr_event *ev, int difficulty)
 			return 0;
 
 		if ((res = count_leading_zero_bits(ev->id)) >= difficulty) {
-			fprintf(stderr, "mined %d bits\n", res);
+			//fprintf(stderr, "mined %d bits\n", res);
 			return 1;
 		}
 	}
