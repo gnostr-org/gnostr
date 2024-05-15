@@ -2,8 +2,8 @@
 
 for relay in $(gnostr-get-relays -s);do
 echo $relay
-./gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$(gnostr-wobble)) | gnostr-post-event --relay $relay & sleep 1 || true
-nostril --sec $(gnostr-sha256) \
+./gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$relay) | gnostr-post-event --relay $relay & sleep 1 || true
+nostril --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$relay) \
 --kind 30617 \
 --tag d "<repo-id>" \
 --tag name "<human-readable project name>" \
@@ -21,6 +21,6 @@ nostril --sec $(gnostr-sha256) \
 -t $(gnostr-weeble) \
 -t $(gnostr-blockheight) \
 -t $(gnostr-wobble) \
---content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)/$(git rev-parse HEAD~0)" | \
+--content "$(gnostr-weeble)/$(gnostr-blockheight)/$relay/$(git rev-parse HEAD~0)" | \
 gnostr-post-event --relay $relay & sleep 1; \
 done
