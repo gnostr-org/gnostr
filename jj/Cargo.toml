@@ -13,21 +13,41 @@ repository = { workspace = true }
 documentation = { workspace = true }
 keywords = { workspace = true }
 
+
+## command pass through
 [[bin]]
 name = "jj"
 path = "src/main.rs"
 
+## git gnostr-jj
 [[bin]]
-name = "gnostr-jj"
+name = "git-gnostr-jj"
 path = "src/main.rs"
 
+## gnostr
+## command handler
 [[bin]]
 name = "gnostr"
 path = "../src/bin/gnostr.rs"
 
+## git gnostr pass through
 [[bin]]
-name = "gnostr-jj-gui"
+name = "git-gnostr"
+path = "../src/bin/gnostr.rs"
+
+[[bin]]
+name = "gnostr-gui"
 path = "../gui/src/main.rs"
+
+## git gnostr-gui
+[[bin]]
+name = "git-gnostr-gui"
+path = "../gui/src/main.rs"
+
+## ## git-legit
+## [[bin]]
+## name = "git-legit"
+## path = "../bins/src/bin/gnostr-legit.rs"
 
 
 [[bin]]
@@ -140,6 +160,7 @@ tungstenite = { version = "0.19", default-features = false }
 url = "2.4"
 vecmap-rs = "0.1"
 zeroize = "1.6"
+gnostr-bins = { version = "0.0.39", path = "../bins" }
 
 
 
