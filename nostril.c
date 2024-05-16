@@ -1,3 +1,4 @@
+#define VERSION "0.3.5"
 
 #include <stdio.h>
 #include <time.h>
@@ -26,8 +27,6 @@
 #include "sha256.h"
 #include "random.h"
 #include "proof.h"
-
-#define VERSION "0.3.4"
 
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16
