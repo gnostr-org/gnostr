@@ -31,7 +31,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: "https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz"
+        goversion: "https://dl.google.com/go/go1.22.3.linux-amd64.tar.gz"
         project_path: "./go"
         binary_name: "gnostr-go-chat"
         extra_files: LICENSE README.md
