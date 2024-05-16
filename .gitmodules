@@ -106,6 +106,7 @@
 	url = https://github.com/gnostr-org/nips.git
     branch = master
     depth = shallow
+    ignore = dirty
 [submodule "src/libcjson"]
 	path = src/libcjson
 	url = https://github.com/gnostr-org/libcjson.git
