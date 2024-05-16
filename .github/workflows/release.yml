@@ -41,7 +41,10 @@ on:
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
+      - '**test**'
+      - '**-rc**'
   pull_request:
+  workflow_dispatch:
 
 jobs:
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
@@ -139,6 +142,8 @@ jobs:
           # Actually do builds and make zips and whatnot
           cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
+          make go && ls
+          echo "make go ran successfully"
       - id: cargo-dist
         name: Post-build
         # We force bash here just because github makes it really hard to get values up
