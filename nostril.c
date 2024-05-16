@@ -1,4 +1,4 @@
-#define VERSION "0.3.5"
+#define VERSION "0.3.6"
 
 #include <stdio.h>
 #include <time.h>
