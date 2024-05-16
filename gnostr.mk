@@ -312,11 +312,14 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 ##		make cargo-br-async-std
 
 .PHONY:bins gnostr-bins
-#bins/.git:
-#	@devtools/refresh-submodules.sh bins
 gnostr-bins:bins
-bins:#bins/.git
-	cargo install --path bins --force
+bins:
+	cargo install --path $@
+.PHONY:cat gnostr-cat
+gnostr-cat:cat
+cat:
+	cargo install --path $@
+
 .PHONY:lookup gnostr-lookup
 #lookup/.git:
 #	@devtools/refresh-submodules.sh lookup
@@ -431,7 +434,9 @@ proxy:proxy/.git
 	cd proxy && \
 		$(MAKE) install
 
-
+.PHONY:nips
+nips:
+	cargo install --path $@
 
 .PHONY:relay gnostr-relay
 relay/.git:
@@ -440,16 +445,6 @@ gnostr-relay:relay
 relay:relay/.git
 	cd relay && \
 		make cargo-install
-
-
-
-.PHONY:gnostr-cat cat
-gnostr-cat:cat
-cat:
-	cd cat && \
-		make cargo-install
-
-
 
 .PHONY:gnostr-cli cli
 cli/.git:
@@ -461,14 +456,19 @@ cli:cli/.git
 		make cargo-build-release cargo-i
 .PHONY:gnostr-cli cli
 
+.PHONY:gnostrd d
+gnostrd:d
+d:
+	cargo install --path $@
+
 .PHONY:gnostrd/target/release/gnostrd
 gnostrd/target/release/gnostrd:
-	cd gnostrd && \
+	cd d && \
 		cargo b -r --bin gnostrd && \
 		cargo install --bin gnostrd --path . --force
 .PHONY:gnostrd/target/release/gnostr-chat
 gnostrd/target/release/gnostr-chat:
-	cd gnostrd && \
+	cd d && \
 		cargo b -r --bin gnostr-chat && \
 		cargo install --bin gnostr-chat --path . --force
 gnostr-chat:chat gnostrd
