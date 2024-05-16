@@ -45,3 +45,4 @@ jobs:
           title: "Release Build"
           files: |
             nostril-*
+            libsecp256k1.a
