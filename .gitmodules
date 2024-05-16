@@ -106,15 +106,11 @@
 	url = https://github.com/gnostr-org/nips.git
     branch = master
     depth = shallow
+    ignore = dirty
 [submodule "src/libcjson"]
 	path = src/libcjson
 	url = https://github.com/gnostr-org/libcjson.git
     branch = master
-    depth = shallow
-[submodule "workspace"]
-	path = workspace
-	url = https://github.com/gnostr-org/gnostr-workspace.git
-    branch = main
     depth = shallow
 [submodule "gnostr-xq"]
 	path = xq
