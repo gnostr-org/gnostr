@@ -37,6 +37,8 @@ jobs:
           shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 nostril-query-$RUNNER_OS-$RUNNER_ARCH > nostril-query-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          mv libsecp256k1.a libsecp256k1.a-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 libsecp256k1.a-$RUNNER_OS-$RUNNER_ARCH > libsecp256k1.a-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           ls -a
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
@@ -51,3 +53,4 @@ jobs:
           title: "Release Build"
           files: |
             nostril-*
+            libsecp256k1.a*
