@@ -2,4 +2,5 @@
 gnostr-go-chat:go-chat## go
 go:go-chat
 go-chat:
-		cd go && go build -v -o /usr/local/bin/gnostr-go-chat && cd ..
+	cd go && make &&  go build -v -o /usr/local/bin/gnostr-go-chat && cd ..
+	cp ./go/gnostr-go-chat .
