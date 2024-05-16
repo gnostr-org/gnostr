@@ -7479,6 +7479,7 @@ dependencies = [
  "futures-util",
  "git2",
  "gix 0.61.0",
+ "gnostr-bins",
  "gossip-relay-picker",
  "heed",
  "hex",
