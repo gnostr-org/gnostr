@@ -29,7 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: |
-        cp ./go/* .
+        make go
     - uses: wangyoucao577/go-release-action@v1.50
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
