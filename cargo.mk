@@ -10,6 +10,9 @@ cargo-release-all:### 	cargo-release-all
 cargo-clean-all:### 	cargo-clean-all - clean release artifacts
 ## 	cargo-clean-all 	recursively cargo clean --release
 	for t in */Cargo.toml;  do echo $$t; cargo clean --release -vv --manifest-path $$t; done
+cargo-publish-all:### 	cargo-publish-all
+## 	cargo-clean-all 	recursively publish rust projects
+	for t in */Cargo.toml;  do echo $$t; cargo publish -vv --manifest-path $$t; done
 
 cargo-install-bins:### 	cargo-install-bins
 ## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
