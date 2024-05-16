@@ -444,10 +444,8 @@ relay:relay/.git
 
 
 .PHONY:gnostr-cat cat
-cat/.git:
-	@devtools/refresh-submodules.sh cat
 gnostr-cat:cat
-cat:cat/.git
+cat:
 	cd cat && \
 		make cargo-install
 
