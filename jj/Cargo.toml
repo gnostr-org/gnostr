@@ -160,7 +160,7 @@ tungstenite = { version = "0.19", default-features = false }
 url = "2.4"
 vecmap-rs = "0.1"
 zeroize = "1.6"
-gnostr-bins = { version = "0.0.39", path = "../bins" }
+gnostr-bins = { path = "../bins" }
 
 
 
