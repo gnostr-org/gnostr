@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for universal-connectivity-rust-peer on 2023-09-24T16:20:25+10:00
+# fly.toml app configuration file generated for gnostrd on 2024-05-18T11:51:32-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "gnostr-connect"
-primary_region = "syd"
+app = 'gnostrd'
+primary_region = 'mia'
 
 [experimental]
 # Resolve the special `fly-global-services` address before starting the container, see https://fly.io/docs/app-guides/udp-and-tcp/#the-fly-global-services-address.
