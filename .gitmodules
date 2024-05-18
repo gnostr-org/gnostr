@@ -107,11 +107,6 @@
 	url = https://github.com/gnostr-org/libcjson.git
     branch = master
     depth = shallow
-[submodule "gnostr-xq"]
-	path = xq
-	url = https://github.com/gnostr-org/gnostr-xq.git
-    branch = master
-    depth = shallow
 [submodule "vendor/secp256k1-sys/depend/secp256k1"]
 	path = vendor/secp256k1-sys/depend/secp256k1
 	url = https://github.com/gnostr-org/secp256k1.git

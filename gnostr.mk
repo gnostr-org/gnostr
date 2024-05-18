@@ -330,11 +330,9 @@ lookup:#bins/.git
 .PHONY:xq gnostr-xq
 
 .PHONY:xq gnostr-xq
-xq/.git:
-	@devtools/refresh-submodules.sh xq
 gnostr-xq:xq
-xq:xq/.git
-	@cd xq && make cargo-b-release && make cargo-i
+xq:
+	@cargo install --path xq
 
 .PHONY:core gnostr-core
 core/.git:

@@ -2,7 +2,7 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup","tui" ,"tui/asyncgit", "tui/filetreelist", "tui/git2-hooks", "tui/git2-testing", "tui/scopetime", "nips", "cat"]
+members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup","tui" ,"tui/asyncgit", "tui/filetreelist", "tui/git2-hooks", "tui/git2-testing", "tui/scopetime", "nips", "cat","xq"]
 exclude = ["ffi", "relay"]
 
 [workspace.package]
