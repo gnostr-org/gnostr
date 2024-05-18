@@ -10,6 +10,9 @@ cargo-release-all:### 	cargo-release-all
 cargo-clean-all:### 	cargo-clean-all - clean release artifacts
 ## 	cargo-clean-all 	recursively cargo clean --release
 	for t in */Cargo.toml;  do echo $$t; cargo clean --release -vv --manifest-path $$t; done
+cargo-publish-all:### 	cargo-publish-all
+## 	cargo-clean-all 	recursively publish rust projects
+	for t in */Cargo.toml;  do echo $$t; cargo publish -vv --manifest-path $$t; done
 
 cargo-install-bins:### 	cargo-install-bins
 ## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
@@ -26,9 +29,12 @@ cargo-build:### 	cargo build
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-i:cargo-install
 cargo-install:### 	cargo install --path jj
-	#@. $(HOME)/.cargo/env
-	#@cargo install --path jj
-	for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t --force 2>/dev/null || echo "gnostr-$$t not found"; done
+	@. $(HOME)/.cargo/env
+	@cargo install --path jj $(FORCE)
+	@cargo install --path bins $(FORCE)
+	@cargo install --path cli $(FORCE)
+	@cargo install --path tui $(FORCE)
+	@cargo install --path gui $(FORCE)
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
