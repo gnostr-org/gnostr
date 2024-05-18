@@ -15,6 +15,12 @@ repository = { workspace = true }
 documentation = { workspace = true }
 keywords = { workspace = true }
 
+## git gnostr-tui
+[[bin]]
+name = "git-tui"
+path = "src/main.rs"
+
+
 [dependencies]
 anyhow = "1.0"
 asyncgit = { path = "./asyncgit", default-features = false }
