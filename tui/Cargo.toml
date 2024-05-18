@@ -15,11 +15,15 @@ repository = { workspace = true }
 documentation = { workspace = true }
 keywords = { workspace = true }
 
-## git gnostr-tui
+## git tui
 [[bin]]
 name = "git-tui"
 path = "src/main.rs"
 
+## gnostr-tui
+[[bin]]
+name = "gnostr-tui"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0"
