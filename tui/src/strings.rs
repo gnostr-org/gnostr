@@ -65,7 +65,7 @@ pub fn title_index(_key_config: &SharedKeyConfig) -> String {
 }
 pub fn tab_welcome(key_config: &SharedKeyConfig) -> String {
 	format!(
-		"Welcome [{}]",
+		"Gnostr [{}]",
 		key_config.get_hint(key_config.keys.tab_welcome)
 	)
 }
