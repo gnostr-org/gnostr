@@ -29,9 +29,12 @@ cargo-build:### 	cargo build
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-i:cargo-install
 cargo-install:### 	cargo install --path jj
-	#@. $(HOME)/.cargo/env
-	#@cargo install --path jj
-	for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t $(FORCE) 2>/dev/null || echo "gnostr-$$t not found"; done
+	@. $(HOME)/.cargo/env
+	@cargo install --path jj $(FORCE)
+	@cargo install --path bins $(FORCE)
+	@cargo install --path cli $(FORCE)
+	@cargo install --path tui $(FORCE)
+	@cargo install --path gui $(FORCE)
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
