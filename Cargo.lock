@@ -9871,6 +9871,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
 
 [[package]]
+name = "markdown"
+version = "1.0.0-alpha.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21e27d6220ce21f80ce5c4201f23a37c6f1ad037c72c9d1ff215c2919605a5d6"
+dependencies = [
+ "log 0.4.21",
+ "serde",
+ "unicode-id",
+]
+
+[[package]]
 name = "markdown2html-converter"
 version = "1.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10550,6 +10561,8 @@ version = "0.0.43"
 dependencies = [
  "comrak 0.23.0",
  "include_dir",
+ "indicatif",
+ "markdown",
  "markdown2html-converter",
 ]
 
@@ -16725,6 +16738,12 @@ name = "unicode-bom"
 version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7eec5d1121208364f6793f7d2e222bf75a915c19557537745b195b253dd64217"
+
+[[package]]
+name = "unicode-id"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1b6def86329695390197b82c1e244a54a131ceb66c996f2088a3876e2ae083f"
 
 [[package]]
 name = "unicode-ident"
