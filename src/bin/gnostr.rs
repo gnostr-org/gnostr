@@ -20,17 +20,17 @@ fn main() -> io::Result<()> {
     app = &args_vec[0];
     sec = &args_vec[1];
     }
+    println!("app={}", &app);
+    println!("sec={}", &sec);
     if args_vec.len() >= 3 {
     private_key = &args_vec[2];
     }
-
-    //println!("app={}", &app);
-    //println!("sec={}", &sec);
-    //println!("private_key={}", &private_key);
+    println!("private_key={}", &private_key);
 
     //skip git-nostril --sec <private_key>
     //and capture everything else
     let args: Vec<String> = env::args().skip(3).collect();
+    println!("args={:?}", &args);
     let which_nostril = Command::new("which")
         .arg("nostril")
         .output()
@@ -40,8 +40,8 @@ fn main() -> io::Result<()> {
         .unwrap();
 
     let event = Command::new("nostril")
-        //.arg("--sec")
-        //.arg(&private_key)
+        .arg(&sec)
+        .arg(&private_key)
         .args(&args)
         .output()
         .expect("failed to execute process");
