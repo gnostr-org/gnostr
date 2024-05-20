@@ -67,7 +67,7 @@ configurator: configurator.c
 
 clean:
 	rm -f nostril *.o *.a
-	rm -rf deps/secp256k1
+	$(MAKE) clean-most #rm -rf deps/secp256k1
 
 tags: fake
 	ctags *.c *.h
