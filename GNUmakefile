@@ -14,3 +14,4 @@ clean-most:
 
 -include nostril.mk
 -include Makefile
+-include cargo.mk

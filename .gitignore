@@ -43,3 +43,10 @@ scripts/nostr-req
 scripts/subnote
 /dist
 /version
+
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+/target
