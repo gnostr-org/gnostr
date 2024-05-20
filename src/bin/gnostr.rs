@@ -24,9 +24,9 @@ fn main() -> io::Result<()> {
     private_key = &args_vec[2];
     }
 
-    println!("app={}", &app);
-    println!("sec={}", &sec);
-    println!("private_key={}", &private_key);
+    //println!("app={}", &app);
+    //println!("sec={}", &sec);
+    //println!("private_key={}", &private_key);
 
     //skip git-nostril --sec <private_key>
     //and capture everything else
