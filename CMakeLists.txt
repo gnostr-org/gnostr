@@ -2,7 +2,7 @@ if (MSVC)
  cmake_minimum_required(VERSION 3.26)
 else()
  cmake_minimum_required(VERSION 3.15)
-endif() 
+endif()
 set(CMAKE_BUILD_TYPE Debug)
 project (nostril C)
 
@@ -20,7 +20,7 @@ if (MSVC)
 endif()
 
 #//////////////////////////
-#sources 
+#sources
 #//////////////////////////
 
 set(src ${src})
@@ -45,7 +45,7 @@ endif()
 #//////////////////////////
 
 set(lib_dep ${lib_dep})
-set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/src/libsecp256k1.dylib)
+set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/.libs/libsecp256k1.a)
 if (MSVC)
   set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/src/Debug/libsecp256k1.lib)
   set(lib_dep ${lib_dep} Bcrypt.lib)
@@ -56,7 +56,7 @@ endif()
 #executables
 #//////////////////////////
 
-# tool to generate file 'config.h' , generate from a shell with 
+# tool to generate file 'config.h' , generate from a shell with
 # configurator.exe > config.h
 add_executable(configurator configurator.c)
 
@@ -70,7 +70,7 @@ target_link_libraries (nostril ${lib_dep})
 add_custom_command(
     TARGET configurator
     POST_BUILD
-    COMMAND configurator > config.h 
+    COMMAND configurator > config.h
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/config.h" ${CMAKE_SOURCE_DIR}
     COMMENT "generating config.h"
 )
