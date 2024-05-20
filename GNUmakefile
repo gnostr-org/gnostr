@@ -6,5 +6,10 @@ default:libsecp256k1.a
 	@git update-index --assume-unchanged deps/secp256k1
 	@git update-index --assume-unchanged Makefile
 	@$(MAKE) libsecp256k1.a >/dev/null || $(MAKE) secp256k1 >/dev/null
+
+clean-most:
+	cd deps/secp256k1 && make clean
+	rm -rf CMakeCache.txt CMakeFiles Makefile deps/secp256k1/.libs deps/secp256k1/configure
+
 -include nostril.mk
 -include Makefile
