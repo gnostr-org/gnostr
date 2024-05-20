@@ -7,6 +7,7 @@ default:libsecp256k1.a
 	@git update-index --assume-unchanged Makefile
 	@$(MAKE) libsecp256k1.a >/dev/null || $(MAKE) secp256k1 >/dev/null
 	$(MAKE) nostril
+	cargo install --bins --path . --force
 
 clean-most:
 	cd deps/secp256k1 && make clean
