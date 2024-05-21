@@ -12,6 +12,15 @@ fn main() -> std::io::Result<()> {
 
     Command::new("git")
         .args(&[
+            "submodule",
+            "update",
+            "--init",
+            "--recursive",
+        ])
+        .status()
+        .unwrap();
+    Command::new("git")
+        .args(&[
             "remote",
             "add",
             "randymcmillan/nostril",

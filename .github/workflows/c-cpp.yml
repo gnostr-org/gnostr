@@ -13,5 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: make 
-      run: make 
+    - name: apt-get install cmake
+      run: sudo apt-get install cmake
+    - name: make
+      run: cmake . && make

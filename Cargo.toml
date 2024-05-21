@@ -1,4 +1,22 @@
-[workspace]
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.14.1"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "homebrew"]
+# A GitHub repo to push Homebrew formulas to
+tap = "gnostr-org/homebrew-gnostr-org"
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+# Publish jobs to run in CI
+publish-jobs = ["homebrew"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = true
 [package]
 name = "gnostr"
 version = "0.0.44"
@@ -25,3 +43,8 @@ markdown = { version = "1.0.0-alpha.17", features = ["json", "log", "serde"] }
 cc = "1.0.98"
 include_dir = { version = "0.7.3", features = ["glob", "metadata"] }
 markdown = { version = "1.0.0-alpha.17", features = ["json", "log", "serde"] }
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
