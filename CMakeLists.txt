@@ -23,7 +23,6 @@ endif()
 
 option(DEV_MODE "DEV_MODE" ON)
 option(BUILD_STATIC "BUILD_STATIC" ON)
-option(BUILD_GUI "BUILD_GUI" OFF)
 option(BUILD_WEB "BUILD_WEB" OFF)
 option(USE_OPENSSL "set OFF to build without OpenSSL" ON)
 option(OPENSSL_BREW "OPENSSL_BREW" ON)
@@ -326,13 +325,6 @@ file(COPY "${CMAKE_SOURCE_DIR}/resources/server.crt" DESTINATION ${CMAKE_BINARY_
 file(COPY "${CMAKE_SOURCE_DIR}/database/database.json" DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY "${CMAKE_SOURCE_DIR}/resources/wt_config.xml" DESTINATION ${CMAKE_BINARY_DIR}/web)
 
-#//////////////////////////
-# Wt desktop
-#//////////////////////////
-
-if (BUILD_GUI)
-  add_subdirectory(desktop)
-endif()
 
 #//////////////////////////
 # Wt web
