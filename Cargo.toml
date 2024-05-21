@@ -1,0 +1,51 @@
+[package]
+name = "gnostr"
+version = "0.0.44"
+license = "Apache-2.0"
+rust-version = "1.76"
+edition = "2021"
+readme = "README.md"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
+documentation = "https://github.com/gnostr"
+categories = ["version-control", "development-tools", "gnostr", "nostr"]
+keywords = ["git", "gnostr", "nostr"]
+description = "git+nostr workflow utility"
+authors = ["gnostr <admin@gnostr.org>","Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>","fiatjaf <fiatjaf@gmail.com>", "Nate Levin <natelevincycling@gmail.com>", "Nethanja Focking <nethanja@nethanja.de>", "Daniele Tonon <tonon@vitamino.it>", "jeremyd (@jeremyd)"]
+
+exclude = [".github", "deps", "scripts", "docs"]
+
+[build-dependencies]
+cc = { version = "1.0.98", features = ["libc"] }
+include_dir = { version = "0.7.3", features = ["glob", "metadata"] }
+markdown = { version = "1.0.0-alpha.17", features = ["json", "log", "serde"] }
+
+[dependencies]
+cc = "1.0.98"
+include_dir = { version = "0.7.3", features = ["glob", "metadata"] }
+markdown = { version = "1.0.0-alpha.17", features = ["json", "log", "serde"] }
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.14.1"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "homebrew"]
+# A GitHub repo to push Homebrew formulas to
+tap = "gnostr-org/homebrew-gnostr-org"
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+# Publish jobs to run in CI
+publish-jobs = ["homebrew"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = true
+
