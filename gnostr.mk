@@ -503,8 +503,9 @@ gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
 .PHONY:gnostr/target/release/gnostr
 gnostr/target/release/gnostr:
 	cd gnostr && \
-	cargo install --path . $(FORCE)
-	#cargo install --bin gnostr --path . $(FORCE)
+	cargo install --path . $(FORCE) && \
+	cargo install --path . --bin     gnostr $(FORCE) && \
+	cargo install --path . --bin git-gnostr $(FORCE)
 .PHONY:gnostr
 gnostr:gnostr/target/release/gnostr
 	cargo install --bin gnostr --path jj $(FORCE)
