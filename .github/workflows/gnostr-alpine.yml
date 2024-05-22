@@ -48,7 +48,7 @@ jobs:
           set-safe-directory: 'true'
       ## notice: these are post checkout steps
       - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
-      - run: rm CMakeCache.txt || echo && cmake .
+      - run: cmake .
       - run: make
       - run: make clean
       - run: make help
