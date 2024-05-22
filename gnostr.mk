@@ -286,9 +286,6 @@ gnostr-cargo-binstall:
 		--no-discover-github-token \
 		gnostr-cat \
 		gnostr-cli \
-		gnostr-grep \
-		gnostr-legit \
-		gnostr-sha256
 
 .PHONY:gnostr-build
 gnostr-build:## 	gnostr-build
@@ -417,14 +414,15 @@ gnostr-org:deps/gnostr-org
 	install deps/gnostr-org/gnostr-org template
 	install deps/gnostr-org/gnostr-org /usr/local/bin
 
-
+nvm-use:
+	. ~/.nvm/nvm.sh || true
 
 .PHONY:proxy
 proxy/.git:
 	@devtools/refresh-submodules.sh proxy
 
 gnostr-proxy:proxy## 	gnostr-proxy
-proxy:proxy/.git
+proxy:proxy/.git nvm-use
 	install ./proxy/gnostr-proxy template
 	install ./proxy/gnostr-proxy-relay-list template
 	install ./proxy/gnostr-proxy /usr/local/bin
@@ -472,21 +470,6 @@ gnostrd/target/release/gnostr-chat:
 gnostr-chat:chat gnostrd
 chat:gnostrd/target/release/gnostr-chat
 
-.PHONY:grep/.git gnostr-grep grep
-grep/.git:
-	@devtools/refresh-submodules.sh grep
-.PHONY:grep/target/release/gnostr-grep
-gnostr-grep:grep
-grep:grep/.git
-	cd grep && \
-		make cargo-install
-.PHONY:gnostr-grep grep
-
-
-
-
-
-
 #deps/hyper-sdk/.git:
 #	@devtools/refresh-submodules.sh deps/hyper-sdk
 #deps/hyper-nostr/.git:
@@ -508,24 +491,24 @@ act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
 	cd act && ./install.sh || ./install-gnostr-act
 
-src/libcjson/.git:
-	@devtools/refresh-submodules.sh src/libcjson
-src/libcjson:src/libcjson/.git
-	cd src/libcjson && make
-src/libcjson/bin/libcjson.a:src/libcjson
-libcjson:src/libcjson/bin/libcjson.a
-	cp $^ .
-
 #gnostr-am
 #gnostr-am
 gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 #gnostr
 #gnostr
-gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+##gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
-
+.PHONY:gnostr/target/release/gnostr
+gnostr/target/release/gnostr:
+	cd gnostr && \
+	cargo install --path . $(FORCE) && \
+	cargo install --path . --bin     gnostr $(FORCE) && \
+	cargo install --path . --bin git-gnostr $(FORCE)
+.PHONY:gnostr
+gnostr:gnostr/target/release/gnostr
+	cargo install --bin gnostr --path jj $(FORCE)
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
