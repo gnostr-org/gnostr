@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
     branches:
       - '*'
       - '*/*'
@@ -21,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        tag: ["latest", "slim-bullseye"]
+        tag: ["latest", "slim-bullseye","slim-bullseye","slim-bookworm"]
     runs-on: ${{ matrix.os }}
     container: rust:${{ matrix.tag }}
 
@@ -44,9 +43,9 @@ jobs:
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: make detect
       ## objective: non-cmake build/install
-      - run: make gnostr-am gnostr-install
+      - run: make gnostr gnostr-install
       ## objective: test gnostr-am with crate gnostr-sha256
-      - run: gnostr-am --sec $(gnostr-sha256)
+      - run: gnostr --sec $(gnostr-sha256)
       - run: cmake .
       - run: make
       ## objective: cmake build/install

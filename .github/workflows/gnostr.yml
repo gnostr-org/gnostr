@@ -97,12 +97,13 @@ jobs:
       - run: pipx install virtualenv || true
 
       ## objective: test non-cmake build gnostr-am
-      - run: make gnostr-am gnostr-install
+      - run: FORCE=--force make gnostr gnostr-install
+      - run: which nostril
+      - run: which gnostr
       - run: make gnostr-bins
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+      - run: $(which gnostr)
+      #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
-      ## objective: test cmake build gnostr
-      ## objective: test cargo build/install gnostr-bins
       - run: cmake .
       - run: V=1 make gnostr bins xq cargo-br cargo-i
       - run: V=1 make gnostr-install
@@ -110,11 +111,6 @@ jobs:
 
       - run: V=1 sudo make cat doc || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-
-      #TODO mode build script testing
-      #- name: ./build.cmake.sh
-      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-      #  run: ./build.cmake.sh
 
       - name: Save rustup
         id: cache-rustup-save
