@@ -248,8 +248,9 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@18             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pango               || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pipx                || echo "
@@ -334,6 +335,9 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pandoc            2>/dev/null || \
 		apk add pandoc || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libpangocairo-1.0-0 2>/dev/null || \
+		apk add pango || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pipx              2>/dev/null || \
 		apk add pipx || true"
