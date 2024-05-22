@@ -10775,7 +10775,6 @@ dependencies = [
  "markdown",
  "markdown2html-converter",
  "pango",
- "pango-sys 0.19.5",
  "tinyfiledialogs",
  "urlencoding 1.3.3",
  "webview-sys",
