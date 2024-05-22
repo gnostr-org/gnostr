@@ -327,10 +327,10 @@ endif
 		apk add npm || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pandoc            2>/dev/null || \
-		echo"
+		apk add pandoc || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pipx              2>/dev/null || \
-		echo"
+		apk add pipx || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pkg-config        2>/dev/null || \
 		apk add pkgconfig || true"
