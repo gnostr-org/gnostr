@@ -48,6 +48,12 @@ endif
 
 endif
 
+ifeq ($(force),)
+FORCE=--force
+else
+FORCE=$(force)
+endif
+
 export RUSTUP_INIT_SKIP_PATH_CHECK
 export TOOLCHAIN
 export Z
@@ -426,6 +432,8 @@ report:## 	print make variables
 	@echo 'VERBOSE=${VERBOSE}'
 	@echo 'REUSE=${REUSE}'
 	@echo 'BIND=${BIND}'
+	@echo ''
+	@echo 'FORCE=${FORCE}'
 
 checkbrew:## 	install brew command
 ##	install brew command
