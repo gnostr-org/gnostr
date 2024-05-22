@@ -137,6 +137,12 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
+
+      - name: make detect
+        shell: bash
+        run: |
+               make detect
+
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
