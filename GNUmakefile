@@ -48,6 +48,12 @@ endif
 
 endif
 
+ifeq ($(force),)
+FORCE=--force
+else
+FORCE=$(force)
+endif
+
 export RUSTUP_INIT_SKIP_PATH_CHECK
 export TOOLCHAIN
 export Z
@@ -242,8 +248,9 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@18             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pango               || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pipx                || echo "
@@ -327,10 +334,13 @@ endif
 		apk add npm || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pandoc            2>/dev/null || \
-		echo"
+		apk add pandoc || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libpangocairo-1.0-0 2>/dev/null || \
+		apk add pango || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pipx              2>/dev/null || \
-		echo"
+		apk add pipx || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install pkg-config        2>/dev/null || \
 		apk add pkgconfig || true"
@@ -426,6 +436,8 @@ report:## 	print make variables
 	@echo 'VERBOSE=${VERBOSE}'
 	@echo 'REUSE=${REUSE}'
 	@echo 'BIND=${BIND}'
+	@echo ''
+	@echo 'FORCE=${FORCE}'
 
 checkbrew:## 	install brew command
 ##	install brew command
