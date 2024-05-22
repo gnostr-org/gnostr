@@ -186,7 +186,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install Rust
-        run: rustup update "1.70" --no-self-update && rustup default "1.70" && sudo apt-get install libssl-dev libpangocairo-1.0-0 -y
+        run: rustup update "1.70" --no-self-update && rustup default "1.70" && sudo apt-get install libssl-dev -y
       - name: Install cargo-dist
         shell: bash
         run: |
