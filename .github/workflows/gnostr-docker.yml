@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        tag: ["latest", "slim-bullseye"]
+        tag: ["latest", "slim-bullseye","slim-bullseye","slim-bookworm"]
     runs-on: ${{ matrix.os }}
     container: rust:${{ matrix.tag }}
 
