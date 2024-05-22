@@ -180,7 +180,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install Rust
-        run: rustup update "1.70" --no-self-update && rustup default "1.70" && sudo apt-get install libssl-dev -y
+        run: rustup update "1.70" --no-self-update && rustup default "1.70" && sudo apt-get install libssl-dev libpangocairo-1.0-0 -y
       - name: Install cargo-dist
         shell: bash
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.14.1/cargo-dist-installer.sh | sh"
