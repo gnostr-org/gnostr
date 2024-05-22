@@ -499,13 +499,15 @@ gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
 #gnostr
 ##gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
-.PHONY:gnostr
-gnostr:
+
+.PHONY:gnostr/target/release/gnostr
+gnostr/target/release/gnostr:
 	cd gnostr && \
-		./script.sh && cd ..
-	cargo install --path ./gnostr $(FORCE)
-
-
+	cargo install --path . $(FORCE)
+	#cargo install --bin gnostr --path . $(FORCE)
+.PHONY:gnostr
+gnostr:gnostr/target/release/gnostr
+	cargo install --bin gnostr --path jj $(FORCE)
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
