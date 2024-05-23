@@ -96,7 +96,7 @@ jobs:
       - run: which gnostr-weeble
       - run: which gnostr-wobble
       - run: which gnostr-blockheight
-      - run: ls /usr/local/bin && which nostril
+      - run: ls /usr/local/bin #&& which nostril
       - run: $(which gnostr)
       #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
