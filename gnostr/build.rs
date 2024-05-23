@@ -42,6 +42,11 @@ fn main() -> std::io::Result<()> {
     //     .include("deps/secp256k1/include/secp256k1.h")
     //     .compile("nostril");
 
+    Command::new("mkdir")
+        .args(&["-p", "/usr/local/bin"])
+        .spawn()
+        //.status()
+        .unwrap();
     Command::new("git")
         .args(&["submodule", "update", "--init", "--recursive"])
         .spawn()
