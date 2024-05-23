@@ -137,6 +137,12 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
+
+      - name: make detect
+        shell: bash
+        run: |
+               make detect
+
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
@@ -183,7 +189,9 @@ jobs:
         run: rustup update "1.70" --no-self-update && rustup default "1.70" && sudo apt-get install libssl-dev -y
       - name: Install cargo-dist
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.14.1/cargo-dist-installer.sh | sh"
+        run: |
+               "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.14.1/cargo-dist-installer.sh | sh"
+               make detect
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -210,6 +218,8 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
+            ./gnostr/nostril
+
   # Determines if we should publish/announce
   host:
     needs:
