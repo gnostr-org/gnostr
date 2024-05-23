@@ -508,7 +508,7 @@ gnostr/target/release/gnostr:gnostr/nostril
 	cargo install --path . --bin git-gnostr $(FORCE) $(VERBOSE)
 .PHONY:gnostr
 gnostr:gnostr/target/release/gnostr
-	cargo install --bin gnostr --path jj $(FORCE)
+	cargo install --bin gnostr --path gnostr $(FORCE)
 
 .PHONY:gnostr/nostril
 gnostr/nostril:nostril
