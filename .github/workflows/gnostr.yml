@@ -89,7 +89,7 @@ jobs:
       - run: rustup default stable
       - run: cargo search gnostr --limit 100
       - run: mkdir -p ~/bin
-      - run: sudo su make gnostr
+      - run: sudo su $(whoami) make gnostr
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: which gnostr
       - run: which gnostr-sha256
