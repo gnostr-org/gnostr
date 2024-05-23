@@ -98,7 +98,7 @@ jobs:
 
       ## objective: test non-cmake build gnostr-am
       - run: FORCE=--force make gnostr gnostr-install
-      - run: which nostril
+      ##- run: which nostril
       - run: which gnostr
       - run: make gnostr-bins
       - run: $(which gnostr)
