@@ -6,7 +6,7 @@ members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-m
 exclude = ["ffi", "relay"]
 
 [workspace.package]
-version = "0.0.44"
+version = "0.0.45"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
