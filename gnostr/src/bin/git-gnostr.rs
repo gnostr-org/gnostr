@@ -1,10 +1,7 @@
-
 use std::process::Command;
 use std::{env, io};
 
-
 //use std::path::Path;
-
 
 //static PROJECT_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR");
 
@@ -24,16 +21,16 @@ fn empty_case() -> io::Result<()> {
 fn main() -> io::Result<()> {
     let args_vec: Vec<String> = env::args().collect();
     if args_vec.len() == 1 {
-        empty_case();
+        let _ = empty_case();
     }
 
-    let mut app: &String = &("").to_string();
+    let mut _app: &String = &("").to_string();
     let mut sec: &String = &("--sec").to_string();
     let mut private_key: &String = &("$(gnostr-sha256)").to_string();
 
     //capture git-nostril --sec <private_key>
     if args_vec.len() > 2 {
-        app = &args_vec[0];
+        _app = &args_vec[0];
         sec = &args_vec[1];
     }
     //println!("app={}", &app);
