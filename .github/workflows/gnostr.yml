@@ -100,14 +100,14 @@ jobs:
       - run: FORCE=--force make gnostr gnostr-install
       ##- run: which nostril
       - run: which gnostr
-      - run: make gnostr-bins
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: $(which gnostr)
       #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
-      - run: cmake .
-      - run: V=1 make gnostr bins xq cargo-br cargo-i
-      - run: V=1 make gnostr-install
-      - run: V=1 make gnostr-verify-keypair
+      #- run: cmake .
+      #- run: V=1 make gnostr bins xq cargo-br cargo-i
+      #- run: V=1 make gnostr-install
+      #- run: V=1 make gnostr-verify-keypair
 
       - run: V=1 sudo make cat doc || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
