@@ -54,6 +54,12 @@ else
 FORCE=$(force)
 endif
 
+ifeq ($(verbose),)
+VERBOSE=-vv
+else
+VERBOSE=$(verbose)
+endif
+
 export RUSTUP_INIT_SKIP_PATH_CHECK
 export TOOLCHAIN
 export Z
