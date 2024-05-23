@@ -40,7 +40,7 @@ jobs:
       ## notice: these are post checkout steps
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
-      - run: cargo install gnostr-bins
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: FORCE=--force VERBOSE=-vv make detect
       ## objective: non-cmake build/install
       - run: FORCE=--force VERBOSE=-vv make detect gnostr gnostr-install
