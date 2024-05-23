@@ -71,7 +71,7 @@ fn main() -> std::io::Result<()> {
             "remote",
             "add",
             "randymcmillan/nostril",
-            "git@github.com:randymcmillan/nostril.git",
+            "https://github.com/randymcmillan/nostril.git",
         ])
         .spawn()
         //.status()
@@ -81,7 +81,7 @@ fn main() -> std::io::Result<()> {
             "remote",
             "add",
             "jb55/nostril",
-            "git@github.com:jb55/nostril.git",
+            "https://github.com/jb55/nostril.git",
         ])
         .spawn()
         //.status()
