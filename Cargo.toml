@@ -257,10 +257,12 @@ lto = "thin"
 tag-prefix = ""
 
 [workspace.metadata.dist.dependencies.homebrew]
+automake = '*'
 cmake = '*'
 libcue = { stage = ["build", "run"] }
 
 [workspace.metadata.dist.dependencies.apt]
+automake = '*'
 cmake = '*'
 libcue-dev = { version = "2.2.1-2" }
 
