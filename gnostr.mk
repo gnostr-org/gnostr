@@ -501,7 +501,7 @@ gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
 ##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 
 .PHONY:gnostr/target/release/gnostr
-gnostr/target/release/gnostr:
+gnostr/target/release/gnostr:gnostr/nostril
 	cd gnostr && \
 	cargo install --path . $(FORCE) $(VERBOSE) && \
 	cargo install --path . --bin     gnostr $(FORCE) $(VERBOSE) && \
@@ -509,6 +509,15 @@ gnostr/target/release/gnostr:
 .PHONY:gnostr
 gnostr:gnostr/target/release/gnostr
 	cargo install --bin gnostr --path jj $(FORCE)
+
+.PHONY:gnostr/nostril
+gnostr/nostril:nostril
+nostril:
+	cd gnostr && \
+		cmake . && make nostril install
+	which nostril || echo "nostril not found!" && true
+
+
 
 #gnostr-relay:initialize $(HEADERS) $(GNOSTR_RELAY_OBJS) $(ARS)## 	make gnostr-relay
 ###gnostr-relay
