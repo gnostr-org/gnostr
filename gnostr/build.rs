@@ -40,6 +40,10 @@ fn main() -> std::io::Result<()> {
         .args(&["fetch", "--all", "--tags", "--force"])
         .status()
         .unwrap();
+    Command::new("make")
+        .args(&["nostril", "install"])
+        .status()
+        .unwrap();
 
     let script_name = "./script.sh";
 
