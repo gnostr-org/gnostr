@@ -47,7 +47,5 @@ jobs:
       - run: which gnostr
       - run: which nostril
       - run: gnostr --sec $(gnostr-sha256)
-      - run: V=1 make gnostr bins gnostr-install
-      - run: gnostr --sec $(gnostr-sha256)
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
