@@ -257,14 +257,16 @@ lto = "thin"
 tag-prefix = ""
 
 [workspace.metadata.dist.dependencies.homebrew]
+autoconf = '*'
 automake = '*'
 cmake = '*'
-libcue = { stage = ["build", "run"] }
+##libcue = { stage = ["build", "run"] }
 
 [workspace.metadata.dist.dependencies.apt]
+autoconf = '*'
 automake = '*'
 cmake = '*'
-libcue-dev = { version = "2.2.1-2" }
+##libcue-dev = { version = "2.2.1-2" }
 
 [workspace.metadata.dist.dependencies.chocolatey]
 lftp = '*'
