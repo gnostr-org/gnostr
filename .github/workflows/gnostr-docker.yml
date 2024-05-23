@@ -42,7 +42,9 @@ jobs:
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: FORCE=--force VERBOSE=-vv make detect
-      - run: FORCE=--force VERBOSE=-vv make detect gnostr gnostr-install
+      - run: FORCE=--force VERBOSE=-vv make gnostr gnostr-install
+      - run: which gnostr
+      - run: which nostril
       - run: gnostr --sec $(gnostr-sha256)
       - run: V=1 make gnostr bins gnostr-install
       - run: gnostr --sec $(gnostr-sha256)
