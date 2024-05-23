@@ -255,3 +255,15 @@ lto = "thin"
 
 [workspace.metadata.release]
 tag-prefix = ""
+
+[workspace.metadata.dist.dependencies.homebrew]
+cmake = '*'
+libcue = { stage = ["build", "run"] }
+
+[workspace.metadata.dist.dependencies.apt]
+cmake = '*'
+libcue-dev = { version = "2.2.1-2" }
+
+[workspace.metadata.dist.dependencies.chocolatey]
+lftp = '*'
+cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
