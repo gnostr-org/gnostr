@@ -41,7 +41,7 @@ fn main() -> std::io::Result<()> {
         .status()
         .unwrap();
     Command::new("cmake")
-        .args(&["."])
+        .args(&["`pwd`"])
         .status()
         .unwrap();
     Command::new("make")
