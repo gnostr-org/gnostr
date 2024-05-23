@@ -68,7 +68,8 @@ jobs:
           key: ${{ runner.os }}-target
 
       - run: printenv
-      - run: make detect
+      - run: type -P cmake || make detect
+      - run: type -P cargo || make detect
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: cmake .
       - run: make gnostr gnostr-install
