@@ -69,7 +69,7 @@ jobs:
 
       - run: printenv
       - run: type -P cmake || sudo -S make detect
-      - run: type -P cargo || make -S detect
+      - run: type -P cargo || sudo -S make detect
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: make gnostr gnostr-install
       - run: which gnostr
