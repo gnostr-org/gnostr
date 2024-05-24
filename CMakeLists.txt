@@ -1,77 +1,325 @@
+# This file is part of 'Nostr_client_relay'
+# Copyright (c) 2023, Space Research Software LLC, Pedro Vicente. All rights reserved.
+# See file LICENSE for full license details.
+
 if (MSVC)
  cmake_minimum_required(VERSION 3.26)
 else()
  cmake_minimum_required(VERSION 3.15)
 endif()
 set(CMAKE_BUILD_TYPE Debug)
-project (nostril C)
+project (nostr_client_relay LANGUAGES CXX C)
 
-include_directories(${CMAKE_SOURCE_DIR}/deps/secp256k1/include)
-add_subdirectory(${CMAKE_SOURCE_DIR}/deps/secp256k1)
+
+SET(VERSION_SERIES 0)
+SET(VERSION_MAJOR 0)
+SET(VERSION_MINOR 24)
+
+option(BUILD_RELEASE "BUILD_RELEASE" ON)
+
+if(BUILD_RELEASE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+option(DEV_MODE "DEV_MODE" ON)
+option(BUILD_STATIC "BUILD_STATIC" ON)
+option(BUILD_WEB "BUILD_WEB" OFF)
+option(USE_OPENSSL "set OFF to build without OpenSSL" ON)
+option(OPENSSL_BREW "OPENSSL_BREW" ON)
+
+## if(MSVC)
+## if(BUILD_STATIC)
+##   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+## endif()
+## endif()
+
+message("-- nostr_client_relay static build: " ${BUILD_STATIC})
+message(STATUS "Source directory is " ${CMAKE_SOURCE_DIR})
+message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
+
+## #//////////////////////////
+## # external dependencies
+## #//////////////////////////
+##
+## include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
+## include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
+## include_directories(${CMAKE_SOURCE_DIR}/secp256k1/include)
+## include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
+##
+## include_directories(${CMAKE_SOURCE_DIR}/src/libcjson/include)
+##
+## add_subdirectory(${CMAKE_SOURCE_DIR}/secp256k1)
+## add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
+##
+## add_subdirectory(${CMAKE_SOURCE_DIR}/src/libcjson)
+##
+## if(BUILD_WEB)
+##   set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+##   add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##   add_definitions(-DDEV_MODE)
+##   message("TRY: make wt to build gnostr-web: BUILD_WEB=" ${BUILD_WEB})
+## endif()
+## if(MSVC)
+##   set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+##   add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##   add_definitions(-DDEV_MODE)
+## endif()
+## if(DEV_MODE)
+##     #set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+##     #add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##     #add_definitions(-DDEV_MODE)
+## endif()
+
+## #//////////////////////////
+## # nostril
+## #//////////////////////////
+##
+## add_subdirectory(${CMAKE_SOURCE_DIR}/src/nostril)
+## include_directories(${CMAKE_SOURCE_DIR}/src/nostril)
+
+include_directories(src)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #//////////////////////////
-#windows.h header file has macros for min and max, nostril defines max
+# Asio definitions
 #//////////////////////////
 
+set(CMAKE_CXX_STANDARD 17)
+add_definitions(-DASIO_STANDALONE)
+add_definitions(-DASIO_HAS_STD_ADDRESSOF)
+add_definitions(-DASIO_HAS_STD_ARRAY)
+add_definitions(-DASIO_HAS_CSTDINT)
+add_definitions(-DASIO_HAS_STD_SHARED_PTR)
+add_definitions(-DASIO_HAS_STD_TYPE_TRAITS)
+add_definitions(-DASIO_HAS_VARIADIC_TEMPLATES)
+add_definitions(-DASIO_HAS_STD_FUNCTION)
+add_definitions(-DASIO_HAS_STD_CHRONO)
+add_definitions(-DBOOST_ALL_NO_LIB)
 if (MSVC)
-  add_definitions(-DNOMINMAX)
+  add_definitions(-D_WIN32_WINNT=0x0501)
+  add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
 endif()
 
 #//////////////////////////
-#sources
+# Linux/Mac
+#//////////////////////////
+
+if(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wno-deprecated -Wno-deprecated-declarations -Wno-nonnull -Wno-psabi")
+  message(STATUS "Compiler flags: ${CMAKE_CXX_FLAGS}")
+endif()
+
+if(UNIX AND APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wno-deprecated -Wno-deprecated-declarations -Wno-nonnull")
+  message(STATUS "Compiler flags: ${CMAKE_CXX_FLAGS}")
+endif()
+
+#//////////////////////////
+# Nostr library
 #//////////////////////////
 
 set(src ${src})
-set(src ${src} hex.h)
-set(src ${src} proof.h)
-set(src ${src} cursor.h)
-set(src ${src} endian.h)
-set(src ${src} random.h)
-set(src ${src} sha256.h)
-set(src ${src} sha256.c)
-set(src ${src} base64.h)
-set(src ${src} base64.c)
-set(src ${src} aes.h)
-set(src ${src} aes.c)
-if (MSVC)
-  set(src ${src} clock_gettime.h)
+## set(src ${src} src/log.hh)
+## set(src ${src} src/log.cc)
+## set(src ${src} src/nostr.hh)
+## set(src ${src} src/nostr.cc)
+## set(src ${src} src/relay.hh)
+## set(src ${src} src/relay.cc)
+## set(src ${src} src/uuid.cc)
+## set(src ${src} src/uuid.hh)
+## set(src ${src} src/database.hh)
+## set(src ${src} src/database.cc)
+
+## add_library(nostr ${src})
+## add_dependencies(nostr configurator)
+
+##TODO:rename to gnostr-get-relays
+##     once tools are stable
+## add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
+## add_executable(gnostr-set-relays src/gnostr-set-relays.c)
+
+## add_executable(gnostr-pi src/gnostr-pi.c)
+
+install(PROGRAMS template/gnostr-blockheight DESTINATION bin)
+install(PROGRAMS template/gnostr-e DESTINATION bin)
+install(PROGRAMS template/gnostr-fs DESTINATION bin)
+install(PROGRAMS template/gnostr-functions DESTINATION bin)
+install(PROGRAMS template/gnostr-git-log DESTINATION bin)
+install(PROGRAMS template/gnostr-git-reflog DESTINATION bin)
+install(PROGRAMS template/gnostr-git-send DESTINATION bin)
+install(PROGRAMS template/gnostr-git-show DESTINATION bin)
+install(PROGRAMS template/gnostr-hexidrome DESTINATION bin)
+install(PROGRAMS template/gnostr-iftop DESTINATION bin)
+install(PROGRAMS template/gnostr-init DESTINATION bin)
+install(PROGRAMS template/gnostr-jsmin.c DESTINATION bin)
+install(PROGRAMS template/gnostr-keyconv DESTINATION bin)
+install(PROGRAMS template/gnostr-nip DESTINATION bin)
+install(PROGRAMS template/gnostr-nonce DESTINATION bin)
+install(PROGRAMS template/gnostr-nvm DESTINATION bin)
+install(PROGRAMS template/gnostr-org DESTINATION bin)
+install(PROGRAMS template/gnostr-post DESTINATION bin)
+install(PROGRAMS template/gnostr-proxy DESTINATION bin)
+install(PROGRAMS template/gnostr-proxy-test DESTINATION bin)
+install(PROGRAMS template/gnostr-query DESTINATION bin)
+install(PROGRAMS template/gnostr-relays DESTINATION bin)
+install(PROGRAMS template/gnostr-send DESTINATION bin)
+install(PROGRAMS template/gnostr-snapshot DESTINATION bin)
+install(PROGRAMS template/gnostr-syndication DESTINATION bin)
+install(PROGRAMS template/gnostr-syndication-test DESTINATION bin)
+if(BUILD_WEB)
+install(PROGRAMS web/gnostr-web DESTINATION bin)
+endif()
+install(PROGRAMS web/gnostr-web-deploy DESTINATION bin)
+install(PROGRAMS template/gnostr-weeble DESTINATION bin)
+install(PROGRAMS template/gnostr-wobble DESTINATION bin)
+install(PROGRAMS template/gnostr-xor DESTINATION bin)
+
+
+## #//////////////////////////
+## # link with libraries
+## # lib_dep contains a cascade definition of all the libraries needed to link
+## #//////////////////////////
+##
+## set(lib_dep ${lib_dep})
+## set(lib_dep ${lib_dep} nostr)
+## set(lib_dep ${lib_dep} secp256k1)
+## set(lib_dep ${lib_dep} nostri)
+## if (MSVC)
+##   set(lib_dep ${lib_dep} Ws2_32.lib)
+##   set(lib_dep ${lib_dep} Bcrypt.lib)
+## endif()
+##
+## #//////////////////////////
+## # LINUX
+## # order of the link libraries matters; pthread dl
+## #//////////////////////////
+##
+## if(LINUX)
+##   set(lib_dep ${lib_dep} pthread dl)
+##   set(lib_dep ${lib_dep} stdc++fs)
+##   find_program(LSB_RELEASE_EXEC lsb_release)
+##   execute_process(COMMAND ${LSB_RELEASE_EXEC} -is OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+##   message(STATUS "Building in " ${LSB_RELEASE_ID_SHORT})
+## endif()
+##
+## #//////////////////////////
+## #OpenSSL
+## #//////////////////////////
+##
+## if(USE_OPENSSL)
+##   include_directories(${CMAKE_SOURCE_DIR}/ext/Simple-WebSocket-Server-v2.0.2)
+##   add_definitions(-DUSE_STANDALONE_ASIO)
+##   set (ASIO_PATH ${CMAKE_SOURCE_DIR}/ext/asio-1.18.1)
+## endif()
+
+## if(USE_OPENSSL)
+##
+## 	set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
+## 	find_package(OpenSSL REQUIRED)
+## 	message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+## 	message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+## 	include_directories(${OPENSSL_INCLUDE_DIR})
+## 	set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
+##
+##   if (MSVC)
+##     set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
+##     message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+##   endif()
+##   find_package(OpenSSL REQUIRED)
+##   message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+##   message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+##   include_directories(${OPENSSL_INCLUDE_DIR})
+##   set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
+##   if (MSVC)
+##     set(lib_dep ${lib_dep} crypt32.lib)
+##   endif()
+## endif()
+
+
+#//////////////////////////
+# gnostr
+#//////////////////////////
+
+## add_executable(gnostr src/gnostr.c)
+## target_link_libraries (gnostr ${lib_dep})
+
+
+#//////////////////////////
+# IDE project virtual folders
+#//////////////////////////
+
+## set_target_properties(nostril PROPERTIES FOLDER "nostril")
+## set_target_properties(configurator PROPERTIES FOLDER "nostril")
+## set_target_properties(secp256k1 PROPERTIES FOLDER "nostril")
+## set_target_properties(secp256k1_precomputed PROPERTIES FOLDER "nostril")
+
+
+#//////////////////////////
+# Install
+#//////////////////////////
+
+##install(TARGETS gnostr-gnode
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-gnode
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
+
+##install(TARGETS gnostr-get-relays
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-get-relays
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
+
+##install(TARGETS gnostr-set-relays
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-set-relays
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
+
+##install(TARGETS gnostr-client
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-client
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
+
+##install(TARGETS gnostr-pi
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-pi
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
+
+##install(TARGETS gnostr-req
+    ##         CONFIGURATIONS Debug
+    ##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-req
+    ##         CONFIGURATIONS Release
+    ##         RUNTIME DESTINATION /usr/local/bin)
+
+##install(TARGETS gnostr-tests
+    ##         CONFIGURATIONS Debug
+    ##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-tests
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
+
+if(BUILD_WEB)
+    ## install(TARGETS gnostr-web
+    ##         CONFIGURATIONS Debug
+    ##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+    ## install(TARGETS gnostr-web
+    ##         CONFIGURATIONS Release
+    ##         RUNTIME DESTINATION /usr/local/bin)
 endif()
 
-#//////////////////////////
-#link with libraries
-#lib_dep contains a cascade definition of all the libraries needed to link
-#//////////////////////////
+if (BUILD_GUI)
 
-set(lib_dep ${lib_dep})
-set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/.libs/libsecp256k1.a)
-if (MSVC)
-  set(lib_dep ${lib_dep} ${CMAKE_SOURCE_DIR}/deps/secp256k1/src/Debug/libsecp256k1.lib)
-  set(lib_dep ${lib_dep} Bcrypt.lib)
 endif()
-
-
-#//////////////////////////
-#executables
-#//////////////////////////
-
-# tool to generate file 'config.h' , generate from a shell with
-# configurator.exe > config.h
-add_executable(configurator configurator.c)
-
-add_executable(nostril ${src} nostril.c)
-target_link_libraries (nostril ${lib_dep})
-
-#//////////////////////////
-# generate  config.h
-#//////////////////////////
-
-add_custom_command(
-    TARGET configurator
-    POST_BUILD
-    COMMAND configurator > config.h
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/config.h" ${CMAKE_SOURCE_DIR}
-    COMMENT "generating config.h"
-)
-

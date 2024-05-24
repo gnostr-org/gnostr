@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+(echo `pwd`) & clear && \
+NVM_VERSION=v16.20.2
+touch .nvmrc
+echo $NVM_VERSION > .nvmrc
+if ! grep -q "$NVM_VERSION" .nvmrc; then echo "$NVM_VERSION" > .nvmrc; fi;\
+touch .gitignore
+if ! grep -q ".nvmrc"     .gitignore; then echo ".nvmrc" >> .gitignore; fi;\
+if ! grep -q ".gitignore" .gitignore; then echo ".gitignore" >> .gitignore; fi;\
+
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] >/tmp/install-nvm.log && \. "$NVM_DIR/nvm.sh" >/tmp/install-nvm.log && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && echo "install-nvm:node -v $NVM_VERSION" && nvm install $NVM_VERSION >/tmp/install-nvm.log 2>&1 && nvm use --silent 2>/tmp/install-nvm.log;

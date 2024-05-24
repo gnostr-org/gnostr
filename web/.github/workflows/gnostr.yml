@@ -1,0 +1,167 @@
+name: gnostr-matrix
+
+# Controls when the action will run.
+on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  run:
+    env:
+      GNOSTR: "gnostr"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+          all_but_latest: true
+      - name: Restore deps
+        id: cache-deps-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+          key: ${{ runner.os }}-run
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+
+      - uses: actions-rs/toolchain@v1.0.6
+        #if: ${{ !env.ACT }}
+        with:
+          toolchain: nightly
+          default: true
+          override: true
+
+      - name: echo GNOSTR
+        #if: ${{ !env.ACT }}
+        run: |
+          echo $GNOSTR
+
+      - name:  apt-get update || brew install virtualenv
+        run: |
+          sudo apt-get update || brew install virtualenv
+          touch ~/GITHUB_TOKEN.txt
+
+      - run: python3 -m pip install virtualenv
+      - run: npm install -g @pnpm/exe
+      - run: make
+
+      - name: Save deps
+        id: cache-deps-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+          key: ${{ steps.cache-run-restore.outputs.cache-primary-key }}
+
+
+
+  build:
+    needs: run
+    env:
+      GNOSTR: "gnostr"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+          all_but_latest: true
+      - name: Restore deps
+        id: cache-deps-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+          key: ${{ runner.os }}-deps
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+
+      - uses: actions-rs/toolchain@v1.0.6
+        #if: ${{ !env.ACT }}
+        with:
+          toolchain: nightly
+          default: true
+          override: true
+
+      - name: echo GNOSTR
+        #if: ${{ !env.ACT }}
+        run: |
+          echo $GNOSTR
+
+      - name:  apt-get update || brew install virtualenv
+        run: |
+          sudo apt-get update || brew install virtualenv
+          touch ~/GITHUB_TOKEN.txt
+
+      - run: python3 -m pip install virtualenv
+
+      - run: cargo install gnostr-cat
+      - run: V=1 make
+
+      - name: Save deps
+        id: cache-deps-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+          key: ${{ steps.cache-deps-restore.outputs.cache-primary-key }}
+

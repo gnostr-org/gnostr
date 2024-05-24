@@ -1,0 +1,53 @@
+name: gnostr-alpine
+
+on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+  workflow_dispatch:
+
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [3.19]
+
+    #node:lts-alpine3.19
+    container: node:lts-alpine${{ matrix.tag }}
+
+    steps:
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      - run: apk update && apk add bash cmake curl git make pipx python3 && pipx install virtualenv
+      - run: printenv
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr
+      - run: touch ~/GITHUB_TOKEN.txt
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '10'
+          submodules: 'true'
+          set-safe-directory: 'true'
+      ## notice: these are post checkout steps
+      - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
+      - run: make gnostr
+      - run: cmake .
+      - run: make all || true

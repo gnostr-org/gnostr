@@ -1,0 +1,56 @@
+name: gnostr-alpine
+
+on:
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [18.17.1]
+
+    container: node:${{ matrix.tag }}-alpine
+
+    steps:
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      - run: apk update && apk add bash cmake git python3 && python3 -m ensurepip
+      - run: printenv
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '10'
+          submodules: 'true'
+          set-safe-directory: 'true'
+      ## notice: these are post checkout steps
+      - run: apk update && apk add autoconf automake binutils build-base coreutils curl findutils git grep libtool make openssl-dev util-linux
+      - run: git config --global --add safe.directory /__w/gnostr-web/gnostr-web
+      - run: touch ~/GITHUB_TOKEN.txt
+      - run: make
+      - run: make help
+      - run: make install
+      ## TODO: add ssh config to act sequence
+      - run: rm -rf .venv

@@ -1,0 +1,10 @@
+#!/bin/sh -ev
+tmp_branch=__tmp_empty_root
+git symbolic-ref HEAD refs/heads/$tmp_branch
+git rm --cached -r . || true
+git clean -f #-d
+touch -t '19700101 UTC' .
+GIT_COMMITTER_DATE='1970-01-01T00:00:00 +0000' git commit \
+    --date='1970-01-01T00:00:00 +0000' --allow-empty -m "gnostr:init"
+git rebase --committer-date-is-author-date --onto $tmp_branch --root master
+git branch -d $tmp_branch

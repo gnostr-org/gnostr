@@ -1,0 +1,13 @@
+[submodule "ctags"]
+	path = ctags
+	url = https://github.com/universal-ctags/ctags.git
+	branch = master
+	shallow = true
+	ignore = dirty
+[submodule "pnpm"]
+	path = pnpm
+	url = https://github.com/pnpm/pnpm.git
+[submodule "view"]
+	path = view
+  url = https://github.com/gnostr-org/gnostr-webview.git
+  ignore = dirty

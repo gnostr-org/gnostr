@@ -1,0 +1,14 @@
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/mikedilger/nip44?rev=e38717f86ccccb91c25ebf07881a77d66411161c"]
+git = "https://github.com/mikedilger/nip44"
+rev = "e38717f86ccccb91c25ebf07881a77d66411161c"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/mikedilger/nostr-types"]
+git = "https://github.com/mikedilger/nostr-types"
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"

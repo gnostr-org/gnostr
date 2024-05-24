@@ -1,0 +1,36 @@
+[package]
+name = "gnostrd"
+authors = { workspace = true }
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+readme = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+keywords = { workspace = true }
+
+
+[package.metadata.wix]
+upgrade-guid = "041EE90F-FCA6-405A-BCB0-37BBCA63FE1C"
+path-guid = "4F34D323-CE75-4F07-920E-6A06ACF18864"
+license = false
+eula = false
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1.68"
+clap = { version = "4.1.11", features = ["derive", "env"] }
+duration-str = "0.9.1"
+env_logger = "0.10.0"
+futures = "0.3.27"
+futures-timer = "3.0.2"
+libp2p = { version = "0.52.3", features = ["identify", "ping", "tokio", "gossipsub", "macros", "relay", "kad", "rsa", "ed25519", "quic", "request-response", "dns", "memory-connection-limits"] }
+libp2p-webrtc = { version = "0.6.0-alpha", features = ["tokio", "pem"] }
+log = { version = "0.4.17", features = ["kv"] }
+rand = "0.8.5"
+tokio = { version = "1.27.0", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full"] }
