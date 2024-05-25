@@ -18,6 +18,14 @@ fn empty_case() -> io::Result<()> {
     Ok(())
 }
 
+fn is_hex_char(c: char) -> bool {
+    c.is_ascii_hexdigit()
+}
+
+fn is_hex_string(s: &str) -> bool {
+    s.chars().all(is_hex_char)
+}
+
 fn main() -> io::Result<()> {
     let args_vec: Vec<String> = env::args().collect();
     if args_vec.len() == 1 {
@@ -26,13 +34,35 @@ fn main() -> io::Result<()> {
 
     let mut _app: &String = &("").to_string();
     let mut sec: &String = &("--sec").to_string();
-    let mut private_key: &String = &("$(gnostr-sha256)").to_string();
+    let mut private_key: &String = &("").to_string();
 
     //capture git-nostril --sec <private_key>
     if args_vec.len() > 2 {
         _app = &args_vec[0];
         sec = &args_vec[1];
     }
+    if args_vec.len() >= 3 {
+        private_key = &args_vec[2];
+    }
+
+    //let valid_hex = "FF0011";
+    //let invalid_hex = "Hello";
+
+    //println!("Is '{}' hex? {}", valid_hex, is_hex_string(valid_hex));
+    //println!("Is '{}' hex? {}", invalid_hex, is_hex_string(invalid_hex));
+    //println!("Is '{}' hex? {}", private_key, is_hex_string(private_key));
+    //println!("Is '{}' hex? {}", private_key, is_hex_string(private_key));
+
+    if !is_hex_string(private_key) {
+        //TODO take hash of --sec <string>
+        print!(
+            "!is_hex_string(private_key)={}",
+            !is_hex_string(private_key)
+        );
+    } else {
+        print!("is_hex_string(private_key)={}", is_hex_string(private_key));
+    }
+
     //println!("app={}", &app);
     //println!("sec={}", &sec);
     if args_vec.len() >= 3 {
