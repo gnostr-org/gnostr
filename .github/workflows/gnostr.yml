@@ -27,6 +27,7 @@ jobs:
     env:
       GNOSTR: "gnostr"
       FORCE: "--force"
+      VERBOSE: "-vv"
     strategy:
       matrix:
         os: [ubuntu-latest]#, macos-latest]
@@ -100,8 +101,12 @@ jobs:
       - run: $(which gnostr)
       #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
-      #- run: V=1 sudo make cat doc || true
-      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+      - run: V=1 sudo make docs && git diff || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-matrix'
+
+      ## IF PR AND CLOSED AND MERGED AND UBUNTU
+      ## - run: make
+      ## if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
 
       - name: Save rustup
         id: cache-rustup-save
