@@ -34,11 +34,9 @@ fn main() -> std::io::Result<()> {
         println!("cargo:rerun-if-changed=../.git/HEAD");
     }
 
-
-// aes.h           clock_gettime.h config.h        endian.h        proof.h         sha256.h
-// base64.h        compiler.h      cursor.h        hex.h           random.h
-
-
+    // aes.h           clock_gettime.h config.h        endian.h        proof.h
+    // sha256.h base64.h        compiler.h      cursor.h        hex.h
+    // random.h
 
     //cc::Build::new()
     //
