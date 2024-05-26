@@ -46,9 +46,9 @@ gnostr-client\
 gnostr-db\
 gnostr-db-cli\
 gnostr-get-relays\
+gnostr-git\
 gnostr-git-log\
 gnostr-git-reflog\
-gnostr-gnode\
 gnostr-keyconv\
 gnostr-modal\
 gnostr-nip\
@@ -57,11 +57,9 @@ gnostr-post-event\
 gnostr-proxy\
 gnostr-query\
 gnostr-relays\
-gnostr-req\
 gnostr-send\
 gnostr-set-relays\
 gnostr-sha256\
-gnostr-tests\
 gnostr-tui\
 gnostr-weeble\
 gnostr-wobble\
@@ -543,8 +541,6 @@ gnostr-install:
 	@install -m755 -v gnostr-client                  $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v gnostr-am                      $(PREFIX)/bin     2>/dev/null || echo "Try:\nmake gnostr"
 	@install -m755 -v template/gnostr-*              $(PREFIX)/bin     2>/dev/null || true
-	@install -m755 -v template/gnostr-query          $(PREFIX)/bin     2>/dev/null || true
-	@install -m755 -v template/gnostr-set-relays     $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v template/gnostr-*-*            $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v ext/curl-8.5.0/src/gnostr-curl $(PREFIX)/bin     2>/dev/null || true
 	@install -m755 -v web/gnostr-*                   $(PREFIX)/bin     2>/dev/null || true
@@ -597,18 +593,12 @@ install-doc:## 	install-doc
 		echo "doc/gnostr-relays.1 failed to install..."
 	@install -m 0644 -v doc/gnostr-repo.1 $(PREFIX)/share/man/man1/gnostr-repo.1 || \
 		echo "doc/gnostr-repo.1 failed to install..."
-	@install -m 0644 -v doc/gnostr-req.1 $(PREFIX)/share/man/man1/gnostr-req.1 || \
-		echo "doc/gnostr-req.1 failed to install..."
 	@install -m 0644 -v doc/gnostr-send.1 $(PREFIX)/share/man/man1/gnostr-send.1 || \
 		echo "doc/gnostr-send.1 failed to install..."
 	@install -m 0644 -v doc/gnostr-set-relays.1 $(PREFIX)/share/man/man1/gnostr-set-relays.1 || \
 		echo "doc/gnostr-set-relays.1 failed to install..."
 	@install -m 0644 -v doc/gnostr-sha256.1 $(PREFIX)/share/man/man1/gnostr-sha256.1 || \
 		echo "doc/gnostr-sha256.1 failed to install..."
-	@install -m 0644 -v doc/gnostr-tests.1 $(PREFIX)/share/man/man1/gnostr-tests.1 || \
-		echo "doc/gnostr-tests.1 failed to install..."
-	@install -m 0644 -v doc/gnostr-web.1 $(PREFIX)/share/man/man1/gnostr-web.1 || \
-		echo "doc/gnostr-web.1 failed to install..."
 	@install -m 0644 -v doc/gnostr-weeble.1 $(PREFIX)/share/man/man1/gnostr-weeble.1 || \
 		echo "doc/gnostr-weeble.1 failed to install..."
 	@install -m 0644 -v doc/gnostr-wobble.1 $(PREFIX)/share/man/man1/gnostr-wobble.1 || \
