@@ -24,7 +24,7 @@ if (MSVC)
   set(src ${src} clock_gettime.h)
 endif()
 
-set(src ${src} ${CMAKE_SOURCE_DIR}/ext/secp256k1-0.3.2/include/secp256k1.h)
+set(src ${src} ${CMAKE_SOURCE_DIR}/gnostr/deps/secp256k1/include/secp256k1.h)
 
 #//////////////////////////
 # link with libraries
