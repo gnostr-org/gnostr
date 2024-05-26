@@ -44,12 +44,12 @@ message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 
 include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
-include_directories(${CMAKE_SOURCE_DIR}/secp256k1/include)
+include_directories(${CMAKE_SOURCE_DIR}/gnostr/deps/secp256k1/include)
 include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
 
 include_directories(${CMAKE_SOURCE_DIR}/src/libcjson/include)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/secp256k1)
+add_subdirectory(${CMAKE_SOURCE_DIR}/gnostr/deps/secp256k1)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/libcjson)
@@ -245,65 +245,65 @@ endif()
 # gnostr
 #//////////////////////////
 
-add_executable(gnostr src/gnostr.c)
-target_link_libraries (gnostr ${lib_dep})
+#add_executable(gnostr gnostr/src/gnostr.c)
+#target_link_libraries (gnostr ${lib_dep})
 
 #//////////////////////////
 # HTTP demo
 #//////////////////////////
 
-add_executable(http_client src/http/http.hh src/http/http.cc src/http/http_client.cc)
-add_executable(http_relay src/http/http.hh src/http/http.cc src/http/http_relay.cc)
-target_link_libraries (http_client ${lib_dep})
-target_link_libraries (http_relay ${lib_dep})
+#add_executable(http_client src/http/http.hh src/http/http.cc src/http/http_client.cc)
+#add_executable(http_relay src/http/http.hh src/http/http.cc src/http/http_relay.cc)
+#target_link_libraries (http_client ${lib_dep})
+#target_link_libraries (http_relay ${lib_dep})
 
 #//////////////////////////
 # executables
 #//////////////////////////
 
-add_executable(gnostr-client src/wss_client.cc)
-add_executable(gnostr-req src/wss_req.cc)
-add_executable(gnostr-gnode src/wss_relay.cc)
+#add_executable(gnostr-client src/wss_client.cc)
+#add_executable(gnostr-req src/wss_req.cc)
+#add_executable(gnostr-gnode src/wss_relay.cc)
 
-target_link_libraries (gnostr-client ${lib_dep})
-target_link_libraries (gnostr-req ${lib_dep})
-target_link_libraries (gnostr-gnode ${lib_dep})
+#target_link_libraries (gnostr-client ${lib_dep})
+#target_link_libraries (gnostr-req ${lib_dep})
+#target_link_libraries (gnostr-gnode ${lib_dep})
 
 #//////////////////////////
 # tests
 #//////////////////////////
 
-add_executable(gnostr-tests test/tests.cc)
-target_link_libraries (gnostr-tests ${lib_dep})
+#add_executable(gnostr-tests test/tests.cc)
+#target_link_libraries (gnostr-tests ${lib_dep})
 
-add_executable(gnostr-test test/gnostr_test.cc)
-target_link_libraries (gnostr-test ${lib_dep})
+#add_executable(gnostr-test test/gnostr_test.cc)
+#target_link_libraries (gnostr-test ${lib_dep})
 
-add_executable(gnostr-get-relays-test test/gnostr_get_relays_test.cc)
-target_link_libraries (gnostr-get-relays-test ${lib_dep})
+#add_executable(gnostr-get-relays-test test/gnostr_get_relays_test.cc)
+#target_link_libraries (gnostr-get-relays-test ${lib_dep})
 
-add_executable(gnostr-sha256-tests test/gnostr_sha256_test.cc)
-target_link_libraries (gnostr-sha256-tests ${lib_dep})
+#add_executable(gnostr-sha256-tests test/gnostr_sha256_test.cc)
+#target_link_libraries (gnostr-sha256-tests ${lib_dep})
 
 #//////////////////////////
 # examples
 #//////////////////////////
 if(UNIX AND NOT APPLE AND NOT LINUX)
-add_executable(examples examples/examples.cc)
-target_link_libraries (examples ${lib_dep})
+#add_executable(examples examples/examples.cc)
+#target_link_libraries (examples ${lib_dep})
 endif()
 
 #//////////////////////////
 # IDE project virtual folders
 #//////////////////////////
 
-set_target_properties(http_client PROPERTIES FOLDER "http")
-set_target_properties(http_relay PROPERTIES FOLDER "http")
-set_target_properties(nostri PROPERTIES FOLDER "nostril")
-set_target_properties(nostril PROPERTIES FOLDER "nostril")
-set_target_properties(configurator PROPERTIES FOLDER "nostril")
-set_target_properties(secp256k1 PROPERTIES FOLDER "nostril")
-set_target_properties(secp256k1_precomputed PROPERTIES FOLDER "nostril")
+#set_target_properties(http_client PROPERTIES FOLDER "http")
+#set_target_properties(http_relay PROPERTIES FOLDER "http")
+#set_target_properties(nostri PROPERTIES FOLDER "nostril")
+#set_target_properties(nostril PROPERTIES FOLDER "nostril")
+#set_target_properties(configurator PROPERTIES FOLDER "nostril")
+#set_target_properties(secp256k1 PROPERTIES FOLDER "nostril")
+#set_target_properties(secp256k1_precomputed PROPERTIES FOLDER "nostril")
 
 if(BUILD_WEB)
     message(STATUS "BUILD_WEB: ${BUILD_WEB}")
@@ -343,68 +343,68 @@ if (BUILD_WEB)
 endif()
 
 
-#//////////////////////////
-# Install
-#//////////////////////////
-
-install(TARGETS gnostr-gnode
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-gnode
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-get-relays
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-set-relays
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-set-relays
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-client
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-client
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-pi
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-pi
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-req
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-req
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-install(TARGETS gnostr-tests
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-tests
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-
-if(BUILD_WEB)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
-endif()
-
-if (BUILD_GUI)
-
-endif()
+## #//////////////////////////
+## # Install
+## #//////////////////////////
+##
+## install(TARGETS gnostr-gnode
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-gnode
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## install(TARGETS gnostr-get-relays
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-get-relays
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## install(TARGETS gnostr-set-relays
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-set-relays
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## install(TARGETS gnostr-client
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-client
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## install(TARGETS gnostr-pi
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-pi
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## install(TARGETS gnostr-req
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-req
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## install(TARGETS gnostr-tests
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-tests
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+##
+## if(BUILD_WEB)
+## install(TARGETS gnostr-web
+##         CONFIGURATIONS Debug
+##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+## install(TARGETS gnostr-web
+##         CONFIGURATIONS Release
+##         RUNTIME DESTINATION /usr/local/bin)
+## endif()
+##
+## if (BUILD_GUI)
+##
+## endif()
