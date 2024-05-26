@@ -1,3 +1,4 @@
+ext/wt-4.10.0/WtInstall.cmake
 gnostr-go-chat
 go/gnostr-go-chat
 plan-dist-manifest.json
