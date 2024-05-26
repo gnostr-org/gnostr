@@ -6,7 +6,11 @@ import sys
 import argparse
 import json
 
+__version_info__ = ('2013','03','14')
+__version__ = '-'.join(__version_info__)
+
 parser = argparse.ArgumentParser(prog = 'gnostr-query', description = 'Construct gnostr queries')
+
 parser.add_argument('-v', '--version',action='store_true')
 parser.add_argument('-a', '--authors')
 parser.add_argument('-p', '--mentions')
