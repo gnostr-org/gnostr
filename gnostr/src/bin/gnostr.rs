@@ -37,9 +37,16 @@ fn main() -> io::Result<()> {
     let mut private_key: &String = &("").to_string();
 
     //capture git-nostril --sec <private_key>
-    if args_vec.len() > 2 {
+    if args_vec.len() >= 2 {
         _app = &args_vec[0];
         sec = &args_vec[1];
+        if &args_vec[1] == "-v" || &args_vec[1] == "--version" {
+
+            print!("{}",&"v0.0.0");
+            std::process::exit(0);
+
+
+        }
     }
     if args_vec.len() >= 3 {
         private_key = &args_vec[2];
@@ -55,12 +62,12 @@ fn main() -> io::Result<()> {
 
     if !is_hex_string(private_key) {
         //TODO take hash of --sec <string>
-        print!(
-            "!is_hex_string(private_key)={}",
-            !is_hex_string(private_key)
-        );
+        //print!(
+        //    "!is_hex_string(private_key)={}",
+        //    !is_hex_string(private_key)
+        //);
     } else {
-        print!("is_hex_string(private_key)={}", is_hex_string(private_key));
+       // print!("is_hex_string(private_key)={}", is_hex_string(private_key));
     }
 
     //println!("app={}", &app);
