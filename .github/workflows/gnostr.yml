@@ -87,14 +87,17 @@ jobs:
       - run: brew tap nostorg/nostr || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
-      - run: rustup default stable
+      - name: rustup default stable
+        run: rustup default stable
       - run: cargo search gnostr --limit 100
       - run: mkdir -p ~/bin
-      - run: source $HOME/.cargo/env && which gnostr
+      - name: sudo -S . $HOME/.cargo/env && which gnostr
+        run: sudo -S . $HOME/.cargo/env && which gnostr
       - run: rm $(which gnostr)
       - run: sudo -S make detect gnostr
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
-      - run: sudo source $HOME/.cargo/env && which gnostr
+      - name: sudo -S . $HOME/.cargo/env && which gnostr
+        run: sudo -S . $HOME/.cargo/env && which gnostr
       - run: rm $(which gnostr)
       - run: which gnostr-sha256
       - run: which gnostr-weeble
