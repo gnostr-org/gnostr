@@ -2,11 +2,11 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup","tui" ,"tui/asyncgit", "tui/filetreelist", "tui/git2-hooks", "tui/git2-testing", "tui/scopetime", "nips", "cat","xq"]
+members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup","tui" ,"tui/asyncgit", "tui/filetreelist", "tui/git2-hooks", "tui/git2-testing", "tui/scopetime", "cat","xq"]
 exclude = ["ffi", "relay"]
 
 [workspace.package]
-version = "0.0.43"
+version = "0.0.44"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
