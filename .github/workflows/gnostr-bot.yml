@@ -1,8 +1,9 @@
-name: gnostr-bot
+name: gnostr
 
+# Controls when the action will run.
 on:
   schedule:
-    - cron: '0 * * * *' # “At minute zero.”
+    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
     branches:
       - '*'
@@ -18,28 +19,32 @@ on:
       - 'master'
       - 'main'
 
-env:
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+  workflow_dispatch:
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
+    env:
+      GNOSTR: "gnostr"
+      FORCE: "--force"
+      VERBOSE: "-vv"
     strategy:
-      fail-fast: false
       matrix:
-        os: ["ubuntu-latest"]
-        tag: ["latest"]
+        os: [ubuntu-latest]#, macos-latest]
     runs-on: ${{ matrix.os }}
-    container: rust:${{ matrix.tag }}
-
     steps:
-      - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
+      - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
-          fetch-depth: '0'
-          submodules: 'true'
-          set-safe-directory: 'true'
-      - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
+          access_token: ${{ github.token }}
+
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
@@ -67,34 +72,56 @@ jobs:
             target
           key: ${{ runner.os }}-target
 
-      - run: printenv
-      - run: apt-get update && apt-get install apt -y
-      - run: apt-get install cmake make sudo -y #&& cmake -S .
-      - run: apt-get install golang-1.19-go golang-1.19-src golang-go golang-src
-      - run: apt-get install -y cargo-doc clang-14-doc wasi-libc cmake-doc cmake-format elpa-cmake-mode ninja-build autopoint gettext-doc libasprintf-dev libgettextpo-dev lrzip llvm-14-doc python3-setuptools python-pygments-doc
-      - run: apt-get install -y lib32stdc++6 libc6-i386 lib32gcc-s1 ttf-bitstream-vera lld-14 || true
-      - run: apt-get install binfmt-support cargo clang clang-14 cmake cmake-data gettext gettext-base libarchive13 libclang-common-14-dev libclang-cpp14 libclang-rt-14-dev libclang1-14 libcurl3-nss libgc1 libgit2-1.5 libhttp-parser2.9 libjsoncpp25 libllvm14 libmbedcrypto7 libmbedtls14 libmbedx509-1 libnspr4 libnss3 libobjc-12-dev libobjc4 libpfm4 libpipeline1 librhash0 libstd-rust-1.63 libstd-rust-dev libuv1 libz3-4 libz3-dev llvm-14 llvm-14-dev llvm-14-linker-tools llvm-14-runtime llvm-14-tools nss-plugin-pem python-is-python3 python3-pkg-resources python3-pygments python3-yaml rustc sudo -y
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
-      ## NOTE: make gnostr-am is the non-cmake build
-      - run: make gnostr gnostr-install
-      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-      ## objective: test cmake build gnostr with gnostr-nip
-      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
-        if: github.event_name == 'pull_request'
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: false
 
-      - run: echo $(date +%s)
-      - run: ls -a
-      - run: $(which gnostr) --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
-      - run: $(which gnostr-am) --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
-      - run: gnostr-nip --sec $(gnostr-sha256)                                       | gnostr-post-event
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))                      | gnostr-post-event
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap nostorg/nostr || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      - name: rustup default stable
+        run: rustup default stable
+      - run: cargo search gnostr --limit 100
+      - run: rm /home/runner/.cargo/bin/gnostr || true
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
+      - run: mkdir -p ~/bin
+      - name: which gnostr
+        run: which gnostr
+      #- run: rm $(which gnostr)
+      - run: FORCE=--force sudo -S make detect gnostr
+      - name: exec bash
+        run: exec bash
+      - name: which gnostr
+        run: which gnostr
+      - run: which gnostr-sha256
+      - run: gnostr -h
+      - run: gnostr -v
+      - run: gnostr --sec $(gnostr-sha256)
+      - run: which gnostr-weeble
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
+      - run: which gnostr-blockheight
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
+      - run: which gnostr-wobble
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$(gnostr-wobble))
+      - run: ls /usr/local/bin && which nostril || true
+      #- run: $(which gnostr)
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+
+      - run: V=1 sudo make docs && git diff || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-matrix'
+
+      ## IF PR AND CLOSED AND MERGED AND UBUNTU
+      ## - run: make
+      ## if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+
       - name: Save rustup
         id: cache-rustup-save
         uses: actions/cache/save@v3
@@ -119,3 +146,4 @@ jobs:
           path: |
             target
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+
