@@ -100,12 +100,17 @@ jobs:
         run: exec bash
       - name: which gnostr
         run: which gnostr
-      - run: gnostr
       - run: which gnostr-sha256
+      - run: gnostr -h
+      - run: gnostr -v
+      - run: gnostr --sec $(gnostr-sha256)
       - run: which gnostr-weeble
-      - run: which gnostr-wobble
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: which gnostr-blockheight
-      - run: ls /usr/local/bin #&& which nostril
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
+      - run: which gnostr-wobble
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$(gnostr-wobble))
+      - run: ls /usr/local/bin && which nostril || true
       #- run: $(which gnostr)
       #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
