@@ -90,12 +90,12 @@ jobs:
       - name: rustup default stable
         run: rustup default stable
       - run: cargo search gnostr --limit 100
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: mkdir -p ~/bin
       - name: which gnostr
         run: which gnostr
       #- run: rm $(which gnostr)
       - run: sudo -S make detect gnostr
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - name: exec bash
         run: exec bash
       - name: which gnostr
