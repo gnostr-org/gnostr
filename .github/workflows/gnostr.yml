@@ -27,9 +27,10 @@ jobs:
     env:
       GNOSTR: "gnostr"
       FORCE: "--force"
+      VERBOSE: "-vv"
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]#, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -86,35 +87,39 @@ jobs:
       - run: brew tap nostorg/nostr || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
-      - run: rustup default stable
+      - name: rustup default stable
+        run: rustup default stable
       - run: cargo search gnostr --limit 100
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
       - run: mkdir -p ~/bin
+      - name: which gnostr
+        run: which gnostr
+      #- run: rm $(which gnostr)
+      - run: FORCE=--force sudo -S make detect gnostr
+      - name: exec bash
+        run: exec bash
+      - name: which gnostr
+        run: which gnostr
+      - run: which gnostr-sha256
+      - run: gnostr -h
+      - run: gnostr -v
+      - run: gnostr --sec $(gnostr-sha256)
+      - run: which gnostr-weeble
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
+      - run: which gnostr-blockheight
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
+      - run: which gnostr-wobble
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)$(gnostr-wobble))
+      - run: ls /usr/local/bin && which nostril || true
+      #- run: $(which gnostr)
+      #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
-      #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
-      ## objective: ensure make detect installs all needed depends/libs/etc
-      ## make detect is first for brew install sequence OR sudo make detect for apt install
-      - run: make detect || sudo make detect
-      - run: pipx install virtualenv || true
+      - run: V=1 sudo make docs && git diff || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-matrix'
 
-      ## objective: test non-cmake build gnostr-am
-      - run: make gnostr-am gnostr-install
-      - run: make gnostr-bins
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
-
-      ## objective: test cmake build gnostr
-      ## objective: test cargo build/install gnostr-bins
-      - run: cmake .
-      - run: V=1 make gnostr bins xq cargo-br cargo-i
-      - run: V=1 make gnostr-install
-      - run: V=1 make gnostr-verify-keypair
-
-      - run: V=1 sudo make cat doc || true
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-
-      #TODO mode build script testing
-      #- name: ./build.cmake.sh
-      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-      #  run: ./build.cmake.sh
+      ## IF PR AND CLOSED AND MERGED AND UBUNTU
+      ## - run: make
+      ## if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
 
       - name: Save rustup
         id: cache-rustup-save
