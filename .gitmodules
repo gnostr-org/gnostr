@@ -109,6 +109,10 @@
 [submodule "hyper/nostr"]
 	path = hyper/nostr
 	url = https://github.com/gnostr-org/hyper-nostr.git
+    ignore = dirty
+    branch = master
 [submodule "hyper/sdk"]
 	path = hyper/sdk
 	url = https://github.com/gnostr-org/hyper-sdk.git
+    ignore = dirty
+    branch = master
