@@ -52,15 +52,15 @@ CONTENT=${GIT_SHOW_HEAD:-}
 
 if [[ $ARG == "-h" ]];
 then
-  printf "gnostr-post help"; exit;
+  printf "gnostr-commit help"; exit;
 fi
 if [[ $ARG == "--help" ]];
 then
-  printf "gnostr-post help"; exit
+  printf "gnostr-commit help"; exit
 fi
 if [[ $ARG == "help" ]];
 then
-  printf "gnostr-post help"; exit
+  printf "gnostr-commit help"; exit
 fi
 if [[ $ARG == "-v" ]];
 then
