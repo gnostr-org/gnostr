@@ -38,7 +38,11 @@ jobs:
         run: |
           echo GNOSTR=${{ env.GNOSTR }}
           echo GNOSTR1=${{ env.GNOSTR1 }}
-        env:
+      - name: rm /home/runner/.cargo/bin/gnostr
+        #if: ${{ !env.ACT }}
+        run: |
+          rm /home/runner/.cargo/bin/gnostr || true
+        env: 
           GNOSTR1: "GNOSTR1"
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
