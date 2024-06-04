@@ -40,6 +40,7 @@
 	url = https://github.com/gnostr-org/gnostr-git.git
     branch = master
     depth = shallow
+    ignore = dirty
 [submodule "gnostr-jq"]
 	path = jq
 	url = https://github.com/gnostr-org/gnostr-jq.git
@@ -60,6 +61,7 @@
 	url = https://github.com/gnostr-org/gnostr-proxy.git
     branch = master
     depth = shallow
+    ignore = dirty
 [submodule "gnostr-py"]
 	path = py
 	url = https://github.com/gnostr-org/gnostr-py.git
