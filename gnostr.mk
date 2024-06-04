@@ -286,9 +286,6 @@ gnostr-cargo-binstall:
 		--no-discover-github-token \
 		gnostr-cat \
 		gnostr-cli \
-		gnostr-grep \
-		gnostr-legit \
-		gnostr-sha256
 
 .PHONY:gnostr-build
 gnostr-build:## 	gnostr-build
@@ -319,6 +316,14 @@ bins:
 gnostr-cat:cat
 cat:
 	cargo install --path $@
+
+.PHONY:chat gnostr-chat
+gnostr-chat:chat## chat
+chat:
+	cd chat && make &&  go build -v -o /usr/local/bin/gnostr-chat && cd ..
+	cd chat && make &&  go build -v -o /usr/local/bin/git-chat && cd ..
+	cd chat && make &&  go build -v -o gnostr-chat && cd ..
+	cp ./chat/gnostr-chat .
 
 .PHONY:lookup gnostr-lookup
 #lookup/.git:
@@ -364,7 +369,7 @@ gnostr-ffi:ffi
 .PHONY:gui gnostr-gui
 gnostr-gui:gui
 gui:
-	@cargo install --path gui
+	@cargo install --path gui $(FORCE)
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
@@ -417,14 +422,15 @@ gnostr-org:deps/gnostr-org
 	install deps/gnostr-org/gnostr-org template
 	install deps/gnostr-org/gnostr-org /usr/local/bin
 
-
+nvm-use:
+	. ~/.nvm/nvm.sh || true
 
 .PHONY:proxy
 proxy/.git:
 	@devtools/refresh-submodules.sh proxy
 
 gnostr-proxy:proxy## 	gnostr-proxy
-proxy:proxy/.git
+proxy:proxy/.git nvm-use
 	install ./proxy/gnostr-proxy template
 	install ./proxy/gnostr-proxy-relay-list template
 	install ./proxy/gnostr-proxy /usr/local/bin
@@ -469,23 +475,6 @@ gnostrd/target/release/gnostr-chat:
 	cd d && \
 		cargo b -r --bin gnostr-chat && \
 		cargo install --bin gnostr-chat --path . --force
-gnostr-chat:chat gnostrd
-chat:gnostrd/target/release/gnostr-chat
-
-.PHONY:grep/.git gnostr-grep grep
-grep/.git:
-	@devtools/refresh-submodules.sh grep
-.PHONY:grep/target/release/gnostr-grep
-gnostr-grep:grep
-grep:grep/.git
-	cd grep && \
-		make cargo-install
-.PHONY:gnostr-grep grep
-
-
-
-
-
 
 #deps/hyper-sdk/.git:
 #	@devtools/refresh-submodules.sh deps/hyper-sdk
@@ -508,22 +497,31 @@ act/bin/gnostr-act:act/.git
 act:act/bin/gnostr-act
 	cd act && ./install.sh || ./install-gnostr-act
 
-src/libcjson/.git:
-	@devtools/refresh-submodules.sh src/libcjson
-src/libcjson:src/libcjson/.git
-	cd src/libcjson && make
-src/libcjson/bin/libcjson.a:src/libcjson
-libcjson:src/libcjson/bin/libcjson.a
-	cp $^ .
-
 #gnostr-am
 #gnostr-am
 gnostr-am:$(HEADERS) $(GNOSTR_OBJS) $(ARS) ## 	make gnostr binary
 	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
 #gnostr
 #gnostr
-gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
-	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+##gnostr:$(HEADERS) $(GNOSTR_OBJS) $(ARS)## 	make gnostr binary
+##	$(CC) $(CFLAGS) $(GNOSTR_OBJS) $(ARS) -o $@ && $(MAKE) gnostr-install
+
+.PHONY:gnostr/target/release/gnostr
+gnostr/target/release/gnostr:gnostr/nostril
+	cd gnostr && \
+	cargo install --path . $(FORCE) $(VERBOSE) && \
+	cargo install --path . --bin     gnostr $(FORCE) $(VERBOSE) && \
+	cargo install --path . --bin git-gnostr $(FORCE) $(VERBOSE)
+.PHONY:gnostr
+gnostr:gnostr/target/release/gnostr
+	cargo install --bin gnostr --path gnostr $(FORCE)
+
+.PHONY:gnostr/nostril
+gnostr/nostril:nostril
+nostril:
+	cd gnostr && \
+		cmake . && make nostril install
+	which nostril || echo "nostril not found!" && true
 
 
 
@@ -658,6 +656,7 @@ gnostr-all:
 	type -P gnostr-post-event || $(MAKE) -j bins
 	#type -P gnostr-tui        || $(MAKE) -j tui
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
+	type -P gnostr-chat    || $(MAKE) -j gnostr-chat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
 	type -P gnostr-curl    || $(MAKE) -j gnostr-curl
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep
