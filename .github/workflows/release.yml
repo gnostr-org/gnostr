@@ -124,9 +124,9 @@ jobs:
           submodules: recursive
       - name: make detect OR
         run: |
-          make detect || \
+          brew install pango || true
           sudo -S apt-get update && \
-          sudo apt-get -y install libcogl-pango-dev
+          sudo apt-get -y install gdk-3.0 libcogl-pango-dev || true
       - name: Install Rust
         run: rustup update "1.70" --no-self-update && rustup default "1.70"
       - uses: swatinem/rust-cache@v2
