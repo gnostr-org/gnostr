@@ -34,13 +34,27 @@ fn main() -> std::io::Result<()> {
         println!("cargo:rerun-if-changed=../.git/HEAD");
     }
 
-    // let library_path = Path::new("libsecp256k1.a");
-    // cc::Build::new()
+
+// aes.h           clock_gettime.h config.h        endian.h        proof.h         sha256.h
+// base64.h        compiler.h      cursor.h        hex.h           random.h
+
+
+
+    //cc::Build::new()
     //
-    //     .file("nostril.c")
-    //     .include(library_path)
-    //     .include("deps/secp256k1/include/secp256k1.h")
-    //     .compile("nostril");
+    //    .file("aes.c")
+    //    .include("aes.h")
+    //    .compile("libaes.a");
+
+    //let library_path = Path::new("libsecp256k1.a");
+    //cc::Build::new()
+    //
+    //    .file("nostril.c")
+    //    .include(library_path)
+    //    .include("deps/secp256k1/include/secp256k1.h")
+    //    .include("*.h")
+    //    .include("libsecp256k1.a")
+    //    .compile("nostril");
 
     Command::new("mkdir")
         .args(&["-p", "/usr/local/bin"])
@@ -57,7 +71,7 @@ fn main() -> std::io::Result<()> {
             "remote",
             "add",
             "randymcmillan/nostril",
-            "git@github.com:randymcmillan/nostril.git",
+            "https://github.com/randymcmillan/nostril.git",
         ])
         .spawn()
         //.status()
@@ -67,7 +81,7 @@ fn main() -> std::io::Result<()> {
             "remote",
             "add",
             "jb55/nostril",
-            "git@github.com:jb55/nostril.git",
+            "https://github.com/jb55/nostril.git",
         ])
         .spawn()
         //.status()
@@ -83,6 +97,8 @@ fn main() -> std::io::Result<()> {
         //.status()
         .unwrap();
     Command::new("cmake").args(&["`pwd`"]).status().unwrap();
+    Command::new("make").args(&["nostril"]).status().unwrap();
+    Command::new("make").args(&["install"]).status().unwrap();
     Command::new("make").args(&["&"]).status().unwrap();
     //Command::new("make")
     //    .args(&["nostril"])

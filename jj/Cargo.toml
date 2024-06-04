@@ -23,15 +23,17 @@ path = "src/main.rs"
 name = "git-gnostr-jj"
 path = "src/main.rs"
 
-## gnostr## command handler
-[[bin]]
-name = "gnostr"
-path = "../gnostr/src/bin/gnostr.rs"
-
-## git gnostr pass through
-[[bin]]
-name = "git-gnostr"
-path = "../gnostr/src/bin/gnostr.rs"
+## TODO build sequence for nostril
+## until then - build gnostr from ../gnostr only
+## ## gnostr## command handler
+## [[bin]]
+## name = "gnostr"
+## path = "../gnostr/src/bin/gnostr.rs"
+## 
+## ## git gnostr pass through
+## [[bin]]
+## name = "git-gnostr"
+## path = "../gnostr/src/bin/gnostr.rs"
 
 ## [[bin]]
 ## name = "gnostr-gui"
