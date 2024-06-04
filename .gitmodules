@@ -4,11 +4,6 @@
     branch = master
   depth = shallow
   ignore = dirty
-[submodule "ext/wxWidgets-3.2.2.1"]
-	path = ext/wxWidgets-3.2.2.1
-	url = https://github.com/gnostr-org/wxWidgets.git
-    branch = master
-  ignore = dirty
 [submodule "gnostr-act"]
 	path = act
 	url = https://github.com/gnostr-org/gnostr-act.git
@@ -45,11 +40,7 @@
 	url = https://github.com/gnostr-org/gnostr-git.git
     branch = master
     depth = shallow
-[submodule "gnostr-grep"]
-	path = grep
-	url = https://github.com/gnostr-org/gnostr-grep.git
-    branch = master
-    depth = shallow
+    ignore = dirty
 [submodule "gnostr-jq"]
 	path = jq
 	url = https://github.com/gnostr-org/gnostr-jq.git
@@ -70,6 +61,7 @@
 	url = https://github.com/gnostr-org/gnostr-proxy.git
     branch = master
     depth = shallow
+    ignore = dirty
 [submodule "gnostr-py"]
 	path = py
 	url = https://github.com/gnostr-org/gnostr-py.git
@@ -82,16 +74,6 @@
     branch = master
     depth = shallow
     ignore = dirty
-[submodule "hyper-nostr"]
-	path = hyper-nostr
-	url = https://github.com/gnostr-org/hyper-nostr.git
-    branch = master
-    depth = shallow
-[submodule "hyper-sdk"]
-	path = hyper-sdk
-	url = https://github.com/gnostr-org/hyper-sdk.git
-    branch = master
-    depth = shallow
 [submodule "modal"]
 	path = modal
 	url = https://github.com/gnostr-org/gnostr-modal.git
@@ -103,11 +85,6 @@
     branch = master
     depth = shallow
     ignore = dirty
-[submodule "src/libcjson"]
-	path = src/libcjson
-	url = https://github.com/gnostr-org/libcjson.git
-    branch = master
-    depth = shallow
 [submodule "vendor/secp256k1-sys/depend/secp256k1"]
 	path = vendor/secp256k1-sys/depend/secp256k1
 	url = https://github.com/gnostr-org/secp256k1.git
@@ -115,3 +92,13 @@
 	path = secp256k1
 	url = https://github.com/gnostr-org/secp256k1.git
     ignore = dirty
+[submodule "gnostr/deps/secp256k1"]
+	path = gnostr/deps/secp256k1
+	url = https://github.com/bitcoin-core/secp256k1
+    ignore = dirty
+[submodule "hyper/nostr"]
+	path = hyper/nostr
+	url = https://github.com/gnostr-org/hyper-nostr.git
+[submodule "hyper/sdk"]
+	path = hyper/sdk
+	url = https://github.com/gnostr-org/hyper-sdk.git

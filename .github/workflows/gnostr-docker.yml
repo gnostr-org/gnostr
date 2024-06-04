@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
     branches:
       - '*'
       - '*/*'
@@ -21,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        tag: ["latest", "slim-bullseye"]
+        tag: ["latest", "slim-bullseye","slim-bullseye","slim-bookworm"]
     runs-on: ${{ matrix.os }}
     container: rust:${{ matrix.tag }}
 
@@ -39,19 +38,32 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
       ## notice: these are post checkout steps
-      ## - run: apk update && apk add autoconf automake build-base openssl-dev libtool make
       - run: touch ~/GITHUB_TOKEN.txt
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
-      - run: make detect
-      ## objective: non-cmake build/install
-      - run: make gnostr-am gnostr-install
-      ## objective: test gnostr-am with crate gnostr-sha256
-      - run: gnostr-am --sec $(gnostr-sha256)
-      - run: cmake .
-      - run: make
-      ## objective: cmake build/install
-      - run: V=1 make gnostr bins gnostr-install
-      ## objective: test gnostr with crate gnostr-bins gnostr-sha256
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.43/gnostr-bins-installer.sh | sh
+      - run: FORCE=--force VERBOSE=-vv make detect
+      - run: sudo mkdir -p /usr/local/share/man/man1
+      - run: FORCE=--force VERBOSE=-vv make gnostr gnostr-install
+      - run: which gnostr
+      - run: which nostril
       - run: gnostr --sec $(gnostr-sha256)
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+      ## objective: test cmake build gnostr with gnostr-nip
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr     --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+        if: github.event_name == 'pull_request'
+
+      - run: echo $(date +%s)
+      - run: ls -a
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) -t gnostr --tag weeble $(gnostr-weeble) --tag wobble $(gnostr-wobble) --tag blockheight $(gnostr-blockheight) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event wss://relay.damus.io
+      - run: gnostr-nip --sec $(gnostr-sha256)                                       | gnostr-post-event
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble))                      | gnostr-post-event
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
