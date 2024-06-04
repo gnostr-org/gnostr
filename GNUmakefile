@@ -327,6 +327,9 @@ endif
 		$(SUDO) apt-get install libcurl4-openssl-dev 2>/dev/null || \
 		apk add curl-dev || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
+		$(SUDO) apt-get install libpango1.0-udeb 2>/dev/null || \
+		apk add pango || true"
+	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
 		$(SUDO) apt-get install libssl-dev        2>/dev/null || \
 		apk add openssl-dev || true"
 	bash -c "[ '$(shell uname -s)' == 'Linux' ] && \
