@@ -936,7 +936,7 @@ dependencies = [
 
 [[package]]
 name = "asyncgit"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "bitflags 1.3.2",
  "crossbeam-channel",
@@ -1221,7 +1221,7 @@ dependencies = [
  "gazenot",
  "homedir",
  "miette",
- "reqwest 0.12.4",
+ "reqwest 0.11.27",
  "serde",
  "temp-dir",
  "thiserror",
@@ -4528,7 +4528,7 @@ dependencies = [
 
 [[package]]
 name = "filetreelist"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "pretty_assertions",
  "thiserror",
@@ -4873,7 +4873,7 @@ dependencies = [
  "backon",
  "camino",
  "miette",
- "reqwest 0.12.4",
+ "reqwest 0.11.27",
  "schemars",
  "serde",
  "serde_json",
@@ -4921,7 +4921,7 @@ dependencies = [
 
 [[package]]
 name = "gen-protos"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "prost-build",
 ]
@@ -5051,7 +5051,7 @@ dependencies = [
 
 [[package]]
 name = "git-version"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "assert2",
  "git-version-macro",
@@ -5095,7 +5095,7 @@ dependencies = [
 
 [[package]]
 name = "git2-hooks"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "git2",
  "git2-testing",
@@ -5108,7 +5108,7 @@ dependencies = [
 
 [[package]]
 name = "git2-testing"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "env_logger 0.10.2",
  "git2",
@@ -6294,7 +6294,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anstream",
  "argparse",
@@ -6352,7 +6352,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-cat"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anymap",
  "argon2",
@@ -6406,7 +6406,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-cli"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6463,7 +6463,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-gui"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "async-recursion",
  "async-trait",
@@ -6520,7 +6520,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-lookup"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "ansi_term",
  "async-std",
@@ -6536,7 +6536,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-tui"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anyhow",
  "asyncgit",
@@ -6555,7 +6555,7 @@ dependencies = [
  "filetreelist",
  "fuzzy-matcher",
  "gh-emoji",
- "git-version 0.0.45",
+ "git-version 0.0.47",
  "git2",
  "indexmap 1.9.3",
  "itertools 0.12.1",
@@ -6621,7 +6621,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-xq"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -6659,7 +6659,7 @@ dependencies = [
 
 [[package]]
 name = "gnostrd"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7297,7 +7297,7 @@ dependencies = [
  "httpdate 1.0.3",
  "itoa 1.0.11",
  "pin-project-lite 0.2.14",
- "socket2 0.5.7",
+ "socket2 0.4.10",
  "tokio 1.37.0",
  "tower-service",
  "tracing",
@@ -7440,7 +7440,7 @@ dependencies = [
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
- "windows-core 0.52.0",
+ "windows-core 0.51.1",
 ]
 
 [[package]]
@@ -7772,7 +7772,7 @@ checksum = "ee87fd093563344074bacf24faa0bb0227fb6969fb223e922db798516de924d6"
 
 [[package]]
 name = "invalidstring"
-version = "0.0.45"
+version = "0.0.47"
 
 [[package]]
 name = "io-close"
@@ -7911,7 +7911,7 @@ dependencies = [
 
 [[package]]
 name = "jj-cli"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -8012,7 +8012,7 @@ dependencies = [
 
 [[package]]
 name = "jj-lib"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -8068,7 +8068,7 @@ dependencies = [
 
 [[package]]
 name = "jj-lib-proc-macros"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "proc-macro2 1.0.83",
  "quote 1.0.36",
@@ -10678,7 +10678,7 @@ dependencies = [
 
 [[package]]
 name = "nips"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "boxfnonce",
  "comrak 0.23.0",
@@ -12527,7 +12527,7 @@ checksum = "22505a5c94da8e3b7c2996394d1c933236c4d743e81a410bcca4e6989fc066a4"
 dependencies = [
  "bytes 1.6.0",
  "heck 0.5.0",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "log 0.4.21",
  "multimap",
  "once_cell",
@@ -12547,7 +12547,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "proc-macro2 1.0.83",
  "quote 1.0.36",
  "syn 2.0.65",
@@ -13318,7 +13318,6 @@ version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "566cafdd92868e0939d3fb961bd0dc25fcfaaed179291093b3d43e6b3150ea10"
 dependencies = [
- "async-compression",
  "base64 0.22.1",
  "bytes 1.6.0",
  "futures-core",
@@ -13345,7 +13344,6 @@ dependencies = [
  "sync_wrapper",
  "tokio 1.37.0",
  "tokio-rustls 0.25.0",
- "tokio-util 0.7.11",
  "tower-service",
  "url 2.5.0",
  "wasm-bindgen",
@@ -13993,7 +13991,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scopetime"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "log 0.4.21",
 ]
@@ -15668,7 +15666,7 @@ dependencies = [
 
 [[package]]
 name = "testutils"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "async-trait",
  "config",
@@ -16891,7 +16889,7 @@ version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
- "cfg-if 1.0.0",
+ "cfg-if 0.1.10",
  "static_assertions",
 ]
 
@@ -18818,7 +18816,7 @@ dependencies = [
 
 [[package]]
 name = "xq-lang"
-version = "0.0.45"
+version = "0.0.47"
 dependencies = [
  "derive_more",
  "lalrpop",

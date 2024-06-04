@@ -6,7 +6,7 @@ members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-m
 exclude = ["ffi", "relay"]
 
 [workspace.package]
-version = "0.0.45"
+version = "0.0.47"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
@@ -228,7 +228,8 @@ codegen-units = 1
 # Skip checking whether the specified configuration files are up to date
 allow-dirty = ["ci", "msi"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.14.0"
+cargo-dist-version = "0.14.1"
+description = "git+nostr workflow utility"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
@@ -260,6 +261,7 @@ tag-prefix = ""
 autoconf = '*'
 automake = '*'
 cmake = '*'
+description = "git+nostr workflow utility"
 ##libcue = { stage = ["build", "run"] }
 
 [workspace.metadata.dist.dependencies.apt]
