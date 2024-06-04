@@ -317,6 +317,14 @@ gnostr-cat:cat
 cat:
 	cargo install --path $@
 
+.PHONY:chat gnostr-chat
+gnostr-chat:chat## chat
+chat:
+	cd chat && make &&  go build -v -o /usr/local/bin/gnostr-chat && cd ..
+	cd chat && make &&  go build -v -o /usr/local/bin/git-chat && cd ..
+	cd chat && make &&  go build -v -o gnostr-chat && cd ..
+	cp ./chat/gnostr-chat .
+
 .PHONY:lookup gnostr-lookup
 #lookup/.git:
 #	@devtools/refresh-submodules.sh lookup
@@ -467,8 +475,6 @@ gnostrd/target/release/gnostr-chat:
 	cd d && \
 		cargo b -r --bin gnostr-chat && \
 		cargo install --bin gnostr-chat --path . --force
-gnostr-chat:chat gnostrd
-chat:gnostrd/target/release/gnostr-chat
 
 #deps/hyper-sdk/.git:
 #	@devtools/refresh-submodules.sh deps/hyper-sdk
@@ -650,6 +656,7 @@ gnostr-all:
 	type -P gnostr-post-event || $(MAKE) -j bins
 	#type -P gnostr-tui        || $(MAKE) -j tui
 	type -P gnostr-cat     || $(MAKE) -j gnostr-cat
+	type -P gnostr-chat    || $(MAKE) -j gnostr-chat
 	type -P gnostr-cli     || $(MAKE) -j gnostr-cli
 	type -P gnostr-curl    || $(MAKE) -j gnostr-curl
 	type -P gnostr-grep    || $(MAKE) -j gnostr-grep

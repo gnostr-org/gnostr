@@ -29,13 +29,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: |
-        make go
+        make chat
     - uses: wangyoucao577/go-release-action@v1.50
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: "https://dl.google.com/go/go1.22.3.linux-amd64.tar.gz"
-        project_path: "go"
-        binary_name: "gnostr-go-chat"
+        goversion: "https://dl.google.com/go/go1.22.2.linux-amd64.tar.gz"
+        project_path: "chat"
+        binary_name: "gnostr-chat"
         extra_files: LICENSE README.md
