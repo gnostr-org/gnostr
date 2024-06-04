@@ -361,7 +361,7 @@ gnostr-ffi:ffi
 .PHONY:gui gnostr-gui
 gnostr-gui:gui
 gui:
-	@cargo install --path gui
+	@cargo install --path gui $(FORCE)
 
 .PHONY:bits gnostr-bits
 gnostr-bits:bits
