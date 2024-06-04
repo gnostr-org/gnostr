@@ -261,7 +261,6 @@ tag-prefix = ""
 autoconf = '*'
 automake = '*'
 cmake = '*'
-description = "git+nostr workflow utility"
 ##libcue = { stage = ["build", "run"] }
 
 [workspace.metadata.dist.dependencies.apt]
