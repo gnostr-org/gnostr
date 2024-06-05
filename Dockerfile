@@ -5,12 +5,11 @@ RUN touch updated
 RUN echo $(date +%s) > updated
 RUN apt-get update
 RUN apt-get install -y bash cmake git libssl-dev make tcl-dev
-RUN git clone --branch master --depth 1 https://github.com/gnostr-org/gnostr.git
+RUN git clone --branch $(git describe --tags "$(git rev-list --tags --max-count=1)") --depth 10 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp
-RUN git clone --recurse-submodules -j4 --branch master --depth 10 https://github.com/gnostr-org/gnostr.git
+RUN git clone --recurse-submodules -j4 --branch $(git describe --tags "$(git rev-list --tags --max-count=1)") --depth 10 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp/gnostr
 RUN make detect
-RUN make gnostr-am
 FROM base as gnostr
 RUN cmake .
 RUN make gnostr
