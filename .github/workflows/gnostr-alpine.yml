@@ -48,13 +48,6 @@ jobs:
           set-safe-directory: 'true'
       ## notice: these are post checkout steps
       - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
-      - run: rm CMakeCache.txt || echo && cmake .
-      - run: make
-      - run: make clean
-      - run: make help
-      - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
-      - run: rm gnostr || true
-      - run: make gnostr bins && cp gnostr gnostr-alpine
-      - run: make gnostr-install
-      ## TODO: add ssh config to act sequence
-      - run: rm -rf .venv
+      - run: make gnostr
+      - run: cmake .
+      - run: make all || true
