@@ -23,60 +23,59 @@ endif()
 
 option(DEV_MODE "DEV_MODE" ON)
 option(BUILD_STATIC "BUILD_STATIC" ON)
-option(BUILD_GUI "BUILD_GUI" OFF)
 option(BUILD_WEB "BUILD_WEB" OFF)
 option(USE_OPENSSL "set OFF to build without OpenSSL" ON)
 option(OPENSSL_BREW "OPENSSL_BREW" ON)
 
-if(MSVC)
-if(BUILD_STATIC)
-  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
-endif()
+## if(MSVC)
+## if(BUILD_STATIC)
+##   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+## endif()
+## endif()
 
 message("-- nostr_client_relay static build: " ${BUILD_STATIC})
 message(STATUS "Source directory is " ${CMAKE_SOURCE_DIR})
 message(STATUS "Build directory is " ${CMAKE_CURRENT_BINARY_DIR})
 
-#//////////////////////////
-# external dependencies
-#//////////////////////////
+## #//////////////////////////
+## # external dependencies
+## #//////////////////////////
+##
+## include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
+## include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
+## include_directories(${CMAKE_SOURCE_DIR}/secp256k1/include)
+## include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
+##
+## include_directories(${CMAKE_SOURCE_DIR}/src/libcjson/include)
+##
+## add_subdirectory(${CMAKE_SOURCE_DIR}/secp256k1)
+## add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
+##
+## add_subdirectory(${CMAKE_SOURCE_DIR}/src/libcjson)
+##
+## if(BUILD_WEB)
+##   set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+##   add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##   add_definitions(-DDEV_MODE)
+##   message("TRY: make wt to build gnostr-web: BUILD_WEB=" ${BUILD_WEB})
+## endif()
+## if(MSVC)
+##   set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+##   add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##   add_definitions(-DDEV_MODE)
+## endif()
+## if(DEV_MODE)
+##     #set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
+##     #add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
+##     #add_definitions(-DDEV_MODE)
+## endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/ext/asio-1.18.1/include)
-include_directories(${CMAKE_SOURCE_DIR}/ext/json-3.11.2/single_include)
-include_directories(${CMAKE_SOURCE_DIR}/secp256k1/include)
-include_directories(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0/include/curl)
-
-include_directories(${CMAKE_SOURCE_DIR}/src/libcjson/include)
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/secp256k1)
-add_subdirectory(${CMAKE_SOURCE_DIR}/ext/curl-8.5.0)
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/libcjson)
-
-if(BUILD_WEB)
-  set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
-  add_definitions(-DDEV_MODE)
-  message("TRY: make wt to build gnostr-web: BUILD_WEB=" ${BUILD_WEB})
-endif()
-if(MSVC)
-  set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
-  add_definitions(-DDEV_MODE)
-endif()
-if(DEV_MODE)
-    #set(BOOST_PREFIX ${CMAKE_SOURCE_DIR}/ext/boost_1_82_0)
-    #add_subdirectory(${CMAKE_SOURCE_DIR}/ext/wt-4.10.0)
-    #add_definitions(-DDEV_MODE)
-endif()
-
-#//////////////////////////
-# nostril
-#//////////////////////////
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/nostril)
-include_directories(${CMAKE_SOURCE_DIR}/src/nostril)
+## #//////////////////////////
+## # nostril
+## #//////////////////////////
+##
+## add_subdirectory(${CMAKE_SOURCE_DIR}/src/nostril)
+## include_directories(${CMAKE_SOURCE_DIR}/src/nostril)
 
 include_directories(src)
 
@@ -124,26 +123,26 @@ endif()
 #//////////////////////////
 
 set(src ${src})
-set(src ${src} src/log.hh)
-set(src ${src} src/log.cc)
-set(src ${src} src/nostr.hh)
-set(src ${src} src/nostr.cc)
-set(src ${src} src/relay.hh)
-set(src ${src} src/relay.cc)
-set(src ${src} src/uuid.cc)
-set(src ${src} src/uuid.hh)
-set(src ${src} src/database.hh)
-set(src ${src} src/database.cc)
+## set(src ${src} src/log.hh)
+## set(src ${src} src/log.cc)
+## set(src ${src} src/nostr.hh)
+## set(src ${src} src/nostr.cc)
+## set(src ${src} src/relay.hh)
+## set(src ${src} src/relay.cc)
+## set(src ${src} src/uuid.cc)
+## set(src ${src} src/uuid.hh)
+## set(src ${src} src/database.hh)
+## set(src ${src} src/database.cc)
 
-add_library(nostr ${src})
-add_dependencies(nostr configurator)
+## add_library(nostr ${src})
+## add_dependencies(nostr configurator)
 
 ##TODO:rename to gnostr-get-relays
 ##     once tools are stable
-add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
-add_executable(gnostr-set-relays src/gnostr-set-relays.c)
+## add_executable(gnostr-get-relays  src/gnostr-get-relays.c)
+## add_executable(gnostr-set-relays src/gnostr-set-relays.c)
 
-add_executable(gnostr-pi src/gnostr-pi.c)
+## add_executable(gnostr-pi src/gnostr-pi.c)
 
 install(PROGRAMS template/gnostr-blockheight DESTINATION bin)
 install(PROGRAMS template/gnostr-e DESTINATION bin)
@@ -180,229 +179,145 @@ install(PROGRAMS template/gnostr-wobble DESTINATION bin)
 install(PROGRAMS template/gnostr-xor DESTINATION bin)
 
 
-#//////////////////////////
-# link with libraries
-# lib_dep contains a cascade definition of all the libraries needed to link
-#//////////////////////////
+## #//////////////////////////
+## # link with libraries
+## # lib_dep contains a cascade definition of all the libraries needed to link
+## #//////////////////////////
+##
+## set(lib_dep ${lib_dep})
+## set(lib_dep ${lib_dep} nostr)
+## set(lib_dep ${lib_dep} secp256k1)
+## set(lib_dep ${lib_dep} nostri)
+## if (MSVC)
+##   set(lib_dep ${lib_dep} Ws2_32.lib)
+##   set(lib_dep ${lib_dep} Bcrypt.lib)
+## endif()
+##
+## #//////////////////////////
+## # LINUX
+## # order of the link libraries matters; pthread dl
+## #//////////////////////////
+##
+## if(LINUX)
+##   set(lib_dep ${lib_dep} pthread dl)
+##   set(lib_dep ${lib_dep} stdc++fs)
+##   find_program(LSB_RELEASE_EXEC lsb_release)
+##   execute_process(COMMAND ${LSB_RELEASE_EXEC} -is OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+##   message(STATUS "Building in " ${LSB_RELEASE_ID_SHORT})
+## endif()
+##
+## #//////////////////////////
+## #OpenSSL
+## #//////////////////////////
+##
+## if(USE_OPENSSL)
+##   include_directories(${CMAKE_SOURCE_DIR}/ext/Simple-WebSocket-Server-v2.0.2)
+##   add_definitions(-DUSE_STANDALONE_ASIO)
+##   set (ASIO_PATH ${CMAKE_SOURCE_DIR}/ext/asio-1.18.1)
+## endif()
 
-set(lib_dep ${lib_dep})
-set(lib_dep ${lib_dep} nostr)
-set(lib_dep ${lib_dep} secp256k1)
-set(lib_dep ${lib_dep} nostri)
-if (MSVC)
-  set(lib_dep ${lib_dep} Ws2_32.lib)
-  set(lib_dep ${lib_dep} Bcrypt.lib)
-endif()
-
-#//////////////////////////
-# LINUX
-# order of the link libraries matters; pthread dl
-#//////////////////////////
-
-if(LINUX)
-  set(lib_dep ${lib_dep} pthread dl)
-  set(lib_dep ${lib_dep} stdc++fs)
-  find_program(LSB_RELEASE_EXEC lsb_release)
-  execute_process(COMMAND ${LSB_RELEASE_EXEC} -is OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
-  message(STATUS "Building in " ${LSB_RELEASE_ID_SHORT})
-endif()
-
-#//////////////////////////
-#OpenSSL
-#//////////////////////////
-
-if(USE_OPENSSL)
-  include_directories(${CMAKE_SOURCE_DIR}/ext/Simple-WebSocket-Server-v2.0.2)
-  add_definitions(-DUSE_STANDALONE_ASIO)
-  set (ASIO_PATH ${CMAKE_SOURCE_DIR}/ext/asio-1.18.1)
-endif()
-
-if(USE_OPENSSL)
-
-	set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
-	find_package(OpenSSL REQUIRED)
-	message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
-	message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-	include_directories(${OPENSSL_INCLUDE_DIR})
-	set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
-
-  if (MSVC)
-    set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
-    message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
-  endif()
-  find_package(OpenSSL REQUIRED)
-  message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
-  message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-  include_directories(${OPENSSL_INCLUDE_DIR})
-  set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
-  if (MSVC)
-    set(lib_dep ${lib_dep} crypt32.lib)
-  endif()
-endif()
+## if(USE_OPENSSL)
+##
+## 	set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
+## 	find_package(OpenSSL REQUIRED)
+## 	message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+## 	message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+## 	include_directories(${OPENSSL_INCLUDE_DIR})
+## 	set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
+##
+##   if (MSVC)
+##     set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/openssl-3.0.5")
+##     message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+##   endif()
+##   find_package(OpenSSL REQUIRED)
+##   message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+##   message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+##   include_directories(${OPENSSL_INCLUDE_DIR})
+##   set(lib_dep ${lib_dep} ${OPENSSL_LIBRARIES})
+##   if (MSVC)
+##     set(lib_dep ${lib_dep} crypt32.lib)
+##   endif()
+## endif()
 
 
 #//////////////////////////
 # gnostr
 #//////////////////////////
 
-add_executable(gnostr src/gnostr.c)
-target_link_libraries (gnostr ${lib_dep})
+## add_executable(gnostr src/gnostr.c)
+## target_link_libraries (gnostr ${lib_dep})
 
-#//////////////////////////
-# HTTP demo
-#//////////////////////////
-
-add_executable(http_client src/http/http.hh src/http/http.cc src/http/http_client.cc)
-add_executable(http_relay src/http/http.hh src/http/http.cc src/http/http_relay.cc)
-target_link_libraries (http_client ${lib_dep})
-target_link_libraries (http_relay ${lib_dep})
-
-#//////////////////////////
-# executables
-#//////////////////////////
-
-add_executable(gnostr-client src/wss_client.cc)
-add_executable(gnostr-req src/wss_req.cc)
-add_executable(gnostr-gnode src/wss_relay.cc)
-
-target_link_libraries (gnostr-client ${lib_dep})
-target_link_libraries (gnostr-req ${lib_dep})
-target_link_libraries (gnostr-gnode ${lib_dep})
-
-#//////////////////////////
-# tests
-#//////////////////////////
-
-add_executable(gnostr-tests test/tests.cc)
-target_link_libraries (gnostr-tests ${lib_dep})
-
-add_executable(gnostr-test test/gnostr_test.cc)
-target_link_libraries (gnostr-test ${lib_dep})
-
-add_executable(gnostr-get-relays-test test/gnostr_get_relays_test.cc)
-target_link_libraries (gnostr-get-relays-test ${lib_dep})
-
-add_executable(gnostr-sha256-tests test/gnostr_sha256_test.cc)
-target_link_libraries (gnostr-sha256-tests ${lib_dep})
-
-#//////////////////////////
-# examples
-#//////////////////////////
-if(UNIX AND NOT APPLE AND NOT LINUX)
-add_executable(examples examples/examples.cc)
-target_link_libraries (examples ${lib_dep})
-endif()
 
 #//////////////////////////
 # IDE project virtual folders
 #//////////////////////////
 
-set_target_properties(http_client PROPERTIES FOLDER "http")
-set_target_properties(http_relay PROPERTIES FOLDER "http")
-set_target_properties(nostri PROPERTIES FOLDER "nostril")
-set_target_properties(nostril PROPERTIES FOLDER "nostril")
-set_target_properties(configurator PROPERTIES FOLDER "nostril")
-set_target_properties(secp256k1 PROPERTIES FOLDER "nostril")
-set_target_properties(secp256k1_precomputed PROPERTIES FOLDER "nostril")
-
-if(BUILD_WEB)
-    message(STATUS "BUILD_WEB: ${BUILD_WEB}")
-if(MSVC)
-    message(STATUS "MSVC: ${MSVC}")
-if(DEV_MODE)
-    message(STATUS "DEV_MODE: ${DEV_MODE}")
-    set_target_properties(wt PROPERTIES FOLDER "wt")
-    set_target_properties(wthttp PROPERTIES FOLDER "wt")
-    set_target_properties(wtisapi PROPERTIES FOLDER "wt")
-endif()
-endif()
-endif()
-
-message(STATUS "Copying data files to: ${CMAKE_BINARY_DIR}")
-file(COPY "${CMAKE_SOURCE_DIR}/test/list_01.txt" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "${CMAKE_SOURCE_DIR}/test/list_02.txt" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "${CMAKE_SOURCE_DIR}/resources/server.key" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "${CMAKE_SOURCE_DIR}/resources/server.crt" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "${CMAKE_SOURCE_DIR}/database/database.json" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "${CMAKE_SOURCE_DIR}/resources/wt_config.xml" DESTINATION ${CMAKE_BINARY_DIR}/web)
-
-#//////////////////////////
-# Wt desktop
-#//////////////////////////
-
-if (BUILD_GUI)
-  add_subdirectory(desktop)
-endif()
-
-#//////////////////////////
-# Wt web
-#//////////////////////////
-
-if (BUILD_WEB)
- add_subdirectory(web)
-endif()
+## set_target_properties(nostril PROPERTIES FOLDER "nostril")
+## set_target_properties(configurator PROPERTIES FOLDER "nostril")
+## set_target_properties(secp256k1 PROPERTIES FOLDER "nostril")
+## set_target_properties(secp256k1_precomputed PROPERTIES FOLDER "nostril")
 
 
 #//////////////////////////
 # Install
 #//////////////////////////
 
-install(TARGETS gnostr-gnode
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-gnode
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-gnode
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-gnode
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-get-relays
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-get-relays
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-get-relays
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-get-relays
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-set-relays
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-set-relays
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-set-relays
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-set-relays
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-client
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-client
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-client
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-client
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-pi
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-pi
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-pi
+    ##        CONFIGURATIONS Debug
+    ##        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-pi
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-req
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-req
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-req
+    ##         CONFIGURATIONS Debug
+    ##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-req
+    ##         CONFIGURATIONS Release
+    ##         RUNTIME DESTINATION /usr/local/bin)
 
-install(TARGETS gnostr-tests
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-tests
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+##install(TARGETS gnostr-tests
+    ##         CONFIGURATIONS Debug
+    ##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+##install(TARGETS gnostr-tests
+    ##        CONFIGURATIONS Release
+    ##        RUNTIME DESTINATION /usr/local/bin)
 
 if(BUILD_WEB)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS gnostr-web
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /usr/local/bin)
+    ## install(TARGETS gnostr-web
+    ##         CONFIGURATIONS Debug
+    ##         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+    ## install(TARGETS gnostr-web
+    ##         CONFIGURATIONS Release
+    ##         RUNTIME DESTINATION /usr/local/bin)
 endif()
 
 if (BUILD_GUI)

@@ -15,12 +15,7 @@
 ## exit
 #
 #
-#GNOSTR=$(which gnostr || which gnostr-am)
-WHICH_GNOSTR=$(which gnostr)
-WHICH_GNOSTR_AM=$(which gnostr-am)
-export WHICH_GNOSTR_AM
-
-GNOSTR=${WHICH_GNOSTR:-$WHICH_GNOSTR_AM}
+GNOSTR=$(which gnostr || which nostril)
 export GNOSTR
 #echo $GNOSTR
 
