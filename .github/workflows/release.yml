@@ -208,7 +208,7 @@ jobs:
         shell: bash
         run: |
                "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.14.1/cargo-dist-installer.sh | sh"
-               make detect
+               make detect all
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -359,6 +359,6 @@ jobs:
           artifacts: "artifacts/*"
 
       # append go release sequence
-      - name: make go
+      - name: make chat
         run: |
-          make go
+          make chat
