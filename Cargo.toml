@@ -16,6 +16,12 @@ authors = ["gnostr <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>", "Da
 exclude = [".github", "deps", "scripts", "docs", "CMakeFiles", "configurator"]
 include = ["*"]
 
+[package.metadata.wix]
+upgrade-guid = "CDC6F142-B6F9-47CA-AF22-29F66C5DDC2A"
+path-guid = "517300DD-635C-473A-8E9F-C284D8D3A72F"
+license = false
+eula = false
+
 [[bin]]
 name = "gnostr"
 path = "src/bin/gnostr.rs"
@@ -48,15 +54,19 @@ cargo-dist-version = "0.14.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "homebrew"]
+installers = ["shell", "powershell", "npm", "homebrew", "msi"]
 # A GitHub repo to push Homebrew formulas to
 tap = "gnostr-org/homebrew-gnostr-org"
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
 # Publish jobs to run in CI
 publish-jobs = ["homebrew"]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
 # Whether to install an updater program
 install-updater = true
+# The archive format to use for windows builds (defaults .zip)
+windows-archive = ".tar.gz"
+# The archive format to use for non-windows builds (defaults .tar.xz)
+unix-archive = ".tar.gz"
 
