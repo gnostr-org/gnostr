@@ -13,6 +13,6 @@ clean-most:
 	cd deps/secp256k1 && make clean
 	rm -rf CMakeCache.txt CMakeFiles Makefile deps/secp256k1/.libs deps/secp256k1/configure
 
--include nostril.mk
+#-include nostril.mk
 -include Makefile
 -include cargo.mk
