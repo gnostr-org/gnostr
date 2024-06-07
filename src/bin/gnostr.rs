@@ -25,10 +25,8 @@ fn main() -> io::Result<()> {
     if args_vec.len() < 3 {
         help();
     }
-    if args_vec.len() == 3 {
+    if args_vec.len() >= 3 {
         _private_key = &args_vec[2];
-    } else {
-        help();
     }
     //println!("_private_key={}", &_private_key);
 
