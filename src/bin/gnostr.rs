@@ -1,6 +1,6 @@
+use std::env;
 use std::io;
 use std::process::Command;
-use std::env;
 
 //use std::env::args;
 
@@ -17,7 +17,7 @@ fn main() -> io::Result<()> {
     let args_vec: Vec<String> = env::args().collect();
     let mut _app: &String = &("").to_string();
     let mut _sec: &String = &("").to_string();
-    let mut private_key: &String = &("").to_string();
+    let mut _private_key: &String = &("").to_string();
     _app = &args_vec[0]; //gnostr
     _sec = &args_vec[1]; //--sec
                          //println!("_app={}", &_app);
@@ -26,11 +26,11 @@ fn main() -> io::Result<()> {
         help();
     }
     if args_vec.len() == 3 {
-        private_key = &args_vec[2];
+        _private_key = &args_vec[2];
     } else {
         help();
     }
-    //println!("private_key={}", &private_key);
+    //println!("_private_key={}", &_private_key);
 
     //skip gnostr --sec <private_key>
     //and capture everything else
@@ -40,7 +40,6 @@ fn main() -> io::Result<()> {
     //let args = args.join(" ");  // Join with space as separator
 
     //println!("{}", args); // Output: hello world
-
 
     let which_nostril = Command::new("which")
         .arg("nostril")
