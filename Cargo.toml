@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.46"
+version = "0.0.47"
 license = "Apache-2.0"
 rust-version = "1.76"
 edition = "2021"
