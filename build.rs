@@ -54,5 +54,6 @@ fn main() -> std::io::Result<()> {
         .current_dir(".")
         .spawn()
         .expect("script.sh command failed to start");
+
     Ok(())
 }

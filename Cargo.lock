@@ -19,7 +19,7 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "gnostr"
-version = "0.0.44"
+version = "0.0.45"
 dependencies = [
  "cc",
  "include_dir",
