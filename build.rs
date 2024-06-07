@@ -1,9 +1,9 @@
 use std::process::Command;
-use std::{env, fs};
+use std::env;
 
-use include_dir::{include_dir, Dir};
+//use include_dir::{include_dir, Dir};
 //use std::path::Path;
-use markdown::to_html;
+//use markdown::to_html;
 
 //static PROJECT_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR");
 
@@ -11,12 +11,7 @@ fn main() -> std::io::Result<()> {
     let _out_dir = env::var("OUT_DIR").unwrap();
 
     Command::new("git")
-        .args(&[
-            "submodule",
-            "update",
-            "--init",
-            "--recursive",
-        ])
+        .args(&["submodule", "update", "--init", "--recursive"])
         .status()
         .unwrap();
     Command::new("git")
