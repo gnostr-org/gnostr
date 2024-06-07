@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+function docs(){
 for doc in $(ls *.md);do \
 echo $doc; \
 pandoc --ascii           $doc | \
@@ -19,3 +20,14 @@ type -P cmake || echo "installing cmake amy be helpful"
 
 make nostril install
 exit
+}
+case "$OSTYPE" in
+  linux*)   docs ;;
+  darwin*)  docs ;;
+  win*)     docs echo "Windows" ;;
+  msys*)    docs echo "MSYS / MinGW / Git Bash" ;;
+  cygwin*)  docs echo "Cygwin" ;;
+  bsd*)     docs ;;
+  solaris*) docs ;;
+  *)        echo "unknown: $OSTYPE" && docs ;;
+esac
