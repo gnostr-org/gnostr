@@ -14,6 +14,7 @@ description = "git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>", "DanConwayDev <DanConwayDev@protonmail.com>", "Max Inden <mail@max-inden.de>", "fiatjaf <fiatjaf@gmail.com>", "Nate Levin <natelevincycling@gmail.com>", "Nethanja Focking <nethanja@nethanja.de>", "Daniele Tonon <tonon@vitamino.it>", "jeremyd (@jeremyd)"]
 
 exclude = [".github", "deps", "scripts", "docs", "CMakeFiles", "configurator", "xcode", "deps/secp256k1"]
+include = ["nostril"]
 
 [package.metadata.wix]
 upgrade-guid = "CDC6F142-B6F9-47CA-AF22-29F66C5DDC2A"

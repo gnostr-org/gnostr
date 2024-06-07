@@ -19,6 +19,8 @@ type -P make || echo "install make"
 type -P cmake || echo "installing cmake amy be helpful"
 
 make nostril install
+which nostril
+which gnostr
 exit
 }
 case "$OSTYPE" in
