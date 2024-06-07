@@ -81,7 +81,7 @@ struct nostr_event {
 
 void usage()
 {
-	printf("usage: nostril [OPTIONS]\n");
+	printf("usage: gnostr [OPTIONS]\n");
 	printf("\n");
 	printf("  OPTIONS\n");
 	printf("\n");
