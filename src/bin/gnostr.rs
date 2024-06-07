@@ -32,10 +32,16 @@ fn main() -> io::Result<()> {
     }
     //println!("private_key={}", &private_key);
 
-    //skip git-nostril --sec <private_key>
+    //skip gnostr --sec <private_key>
     //and capture everything else
-    let args: Vec<String> = env::args().skip(3).collect();
-    //println!("args={:?}", &args);
+    let args: Vec<String> = env::args().skip(1).collect();
+    //print!("args={:}", format!("{:?}",&args));
+
+    //let args = args.join(" ");  // Join with space as separator
+
+    //println!("{}", args); // Output: hello world
+
+
     let which_nostril = Command::new("which")
         .arg("nostril")
         .output()
@@ -44,9 +50,9 @@ fn main() -> io::Result<()> {
         .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
         .unwrap();
 
+    //print!("{}",_nostril);
+
     let event = Command::new("nostril")
-        .arg(&_sec)
-        .arg(&private_key)
         .args(&args)
         .output()
         .expect("failed to execute process");
