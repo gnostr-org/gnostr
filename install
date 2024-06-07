@@ -19,7 +19,7 @@ type -P make || echo "install make"
 type -P cmake || echo "installing cmake amy be helpful"
 
 make nostril install
-which nostril
+which nostril && install ./nostril /usr/local/bin/
 which gnostr
 exit
 }
