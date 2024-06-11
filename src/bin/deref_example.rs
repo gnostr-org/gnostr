@@ -45,30 +45,47 @@ use structopt::StructOpt;
 struct Cli {
     #[structopt(
         name = "input1",
-        short = "x",
+        short = "w",
         help = "The first input",
         default_value = "1"
     )]
     input1: c_char,
     #[structopt(
         name = "input2",
-        short = "y",
+        short = "x",
         help = "The second input",
         default_value = "2"
     )]
     input2: c_char,
     #[structopt(
         name = "input3",
-        short = "z",
+        short = "y",
         help = "The third input",
         default_value = "3"
     )]
     input3: c_char,
+    #[structopt(
+        name = "input4",
+        short = "z",
+        help = "The fourth input",
+        default_value = "4"
+    )]
+    input4: c_char,
 }
 
 fn main() {
+    let args = Cli::from_args();
     println!("[Rust] Hello from Rust! 🦀");
 
+    let copyx_result = unsafe {
+        Some(copyx(
+            &args.input1,
+            &args.input2,
+            &args.input3,
+            &args.input4,
+        ));
+    };
+    println!("{:?}", copyx_result);
     let mut number: i32 = 42;
     let message: String = "Hello, world!".to_string();
 
@@ -122,8 +139,6 @@ fn main() {
     //let dereferenced_value = *ref_to_value.deref();
     //println!("Dereferenced value: {}", dereferenced_value);
     //my_function_free(dereferenced_value);
-
-    let args = Cli::from_args();
 
     // Process the parsed inputs
     println!("First input: {}", args.input1);

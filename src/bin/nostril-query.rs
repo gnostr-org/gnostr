@@ -78,7 +78,7 @@ fn empty_case() -> io::Result<()> {
 }
 
 fn main() {
-    //println!("[Rust] Hello from Rust! 🦀");
+    println!("[Rust] Hello from Rust! 🦀");
 
     use std::ops::Deref;
     let mut value: i8 = 42;
@@ -100,9 +100,9 @@ fn main() {
 
     // **Unsafe! Check for null before dereferencing**
     let dereferenced_value_i8: i8 = unsafe { *raw_ptr };
-    //println!("dereferenced_value_i8: {}", dereferenced_value_i8);
+    println!("dereferenced_value_i8: {}", dereferenced_value_i8);
     let dereferenced_value_i32: i32 = unsafe { (*raw_ptr).into() };
-    //println!("dereferenced_value_i32: {}", dereferenced_value_i32);
+    println!("dereferenced_value_i32: {}", dereferenced_value_i32);
 
     //let ref_to_value = &value; // Reference to value
     //println!("Referenced value: {}", ref_to_value);
@@ -138,27 +138,24 @@ fn main() {
 
     //skip git-nostril --sec <private_key>
     //and capture everything else
-    //let args: Vec<String> = env::args().skip(3).collect();
-    let args: Vec<String> = env::args().skip(1).collect();
+    let args: Vec<String> = env::args().skip(3).collect();
     println!("args={:?}", &args);
 
     unsafe {
         //println!("[Rust] Calling function in C..");
 
         let result = multiply(5000, 5);
-        //println!("\nmultiply:{}", result);
-
+        println!("multiply:{}", result);
         //let result = try_subcommand(2, "char" as *const *const c_char);
         //println!("[Rust] Result: {}", result);
 
         //pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mut c_char {
-        print!("\nargs.len()={}\n",args.len());
         let result = try_subcommand(args.len().try_into().unwrap(), args);
         println!("try_subcommand_result: {:?}", result.get(0));
-        println!("try_subcommand_result: {:?}", result.get(1));
+        //println!("try_subcommand_result: {:}", *result);
+        //println!("try_subcommand_result: {:?}", *result);
+        //println!("try_subcommand_result: {:?}", *result);
     }
-    std::process::exit(0);
-
     let strings = vec!["hello", "world", "!"];
     let vector_cstring: Vec<*const u8> = strings
         .into_iter()
