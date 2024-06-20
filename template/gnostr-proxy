@@ -94,6 +94,6 @@ mkdir -p ~/.gnostr >/tmp/gnostr-proxy.log;\
 [ ! -d ~/.gnostr/proxy ] && echo "gnostr-proxy:git:installing .gnostr/proxy"
 [ ! -d ~/.gnostr/proxy ] && git clone --depth 1 --branch master https://github.com/gnostr-org/gnostr-proxy.git ~/.gnostr/proxy >/tmp/gnostr-proxy.log 2>&1; \
 [   -d ~/.gnostr/proxy ] && echo "$$:gnostr-proxy:git:updating .gnostr/proxy"
-[   -d ~/.gnostr/proxy ] && cd ~/.gnostr/proxy && git reset --hard 2>/tmp/gnostr-proxy.log && git pull -f origin master 2>/tmp/gnostr-proxy.log && echo ".gnostr/proxy" >> .gitignore >/tmp/gnostr-proxy.log 2>&1 &&  make run -k > /tmp/gnostr-proxy.log 2>&1;\
+[   -d ~/.gnostr/proxy ] && cd ~/.gnostr/proxy && make run -k 2>/tmp/gnostr-proxy.log || git reset --hard 2>/tmp/gnostr-proxy.log && git pull -f origin master 2>/tmp/gnostr-proxy.log && echo ".gnostr/proxy" >> .gitignore >/tmp/gnostr-proxy.log 2>&1 &&  make run -k #> /tmp/gnostr-proxy.log 2>&1;\
 )>/tmp/gnostr-proxy.log;
 
