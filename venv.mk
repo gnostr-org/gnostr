@@ -34,7 +34,7 @@ venv:
 	@#rm -rf .venv
 	@#python -c 'import sys; print (sys.real_prefix)' 2>/dev/null && INVENV=1 && echo $(INVENV) || INVENV=0 && echo $(INVENV)
 	touch requirements.txt
-	test -d .venv || $(shell which python3) -m virtualenv .venv
+	test -d .venv || $(shell which python3) -m virtualenv .venv || pipx install virtualenv && virtualenv .venv
 	( \
 	   source .venv/bin/activate; pip install -r requirements.txt; \
 	);
