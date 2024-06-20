@@ -140,6 +140,8 @@ publish-jobs = ["homebrew"]
 pr-run-mode = "plan"
 # Whether to install an updater program
 install-updater = true
+# Skip checking whether the specified configuration files are up to date
+allow-dirty = ["ci", "msi"]
 
 # Insta suggests compiling these packages in opt mode for faster testing.
 # See https://docs.rs/insta/latest/insta/#optional-faster-runs.
