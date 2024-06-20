@@ -17,7 +17,7 @@ documentation = "https://gnostr-org.github.io/gnostr/"
 categories = ["version-control", "development-tools"]
 keywords = ["VCS", "DVCS", "SCM", "Git", "gnostr"]
 authors = [""]
-description = ""
+description = "gnostr:a git+nostr workflow utility"
 
 [workspace.dependencies]
 anyhow = "1.0.81"
