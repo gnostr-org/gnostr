@@ -2,7 +2,7 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils"]
+members = ["gnostr", "bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils"]
 exclude = ["cat", "sha256","get-relays","ffi"]
 
 [workspace.package]
