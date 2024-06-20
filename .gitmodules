@@ -163,3 +163,6 @@
 [submodule "ffi"]
 	path = ffi
 	url = https://github.com/gnostr-org/gnostr-ffi.git
+[submodule "gnostr/deps/secp256k1"]
+	path = gnostr/deps/secp256k1
+	url = https://github.com/gnostr-org/secp256k1.git
