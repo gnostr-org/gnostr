@@ -48,6 +48,13 @@ endif
 
 endif
 
+ifeq ($(backtrace),)
+RUST_BACKTRACE=all
+else
+RUST_BACKTRACE=$(backtrace)
+endif
+
+export RUST_BACKTRACE
 export RUSTUP_INIT_SKIP_PATH_CHECK
 export TOOLCHAIN
 export Z
