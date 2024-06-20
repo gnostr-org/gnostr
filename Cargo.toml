@@ -6,7 +6,7 @@ members = ["gnostr", "bins", "cli", "jj", "lib", "lib/gen-protos", "lib/proc-mac
 exclude = ["cat", "sha256","get-relays","ffi"]
 
 [workspace.package]
-version = "0.0.45"
+version = "0.0.46"
 license = "Apache-2.0"
 rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
