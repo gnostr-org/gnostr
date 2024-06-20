@@ -292,6 +292,10 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 ##		make rustup-install-stable && \
 ##		make cargo-br-async-std
 
+.PHONY:gnostr
+gnostr:
+	cargo install --path gnostr --force
+
 .PHONY:bins gnostr-bins
 bins/.git:
 	@devtools/refresh-submodules.sh bins
