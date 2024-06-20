@@ -78,8 +78,8 @@ jobs:
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
       - run: make detect || sudo make detect
-      - run: make venv || python3 -m pip install virtualenv
-      - run: make subodules
+      - run: make venv || python3 -m pip install virtualenv || true
+      - run: make submodules || true
 
       ## objective: test non-cmake build gnostr-am
       - run: make gnostr-am gnostr-install
