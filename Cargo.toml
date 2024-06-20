@@ -6,7 +6,7 @@ members = ["bins", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testut
 exclude = ["cat", "sha256","get-relays","ffi"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.0.45"
 license = "Apache-2.0"
 rust-version = "1.71"                                 # NOTE: remember to update CI, contributing.md, changelog.md, and flake.nix
 edition = "2021"
@@ -16,6 +16,8 @@ repository = "https://github.com/martinvonz/jj"
 documentation = "https://martinvonz.github.io/jj/"
 categories = ["version-control", "development-tools"]
 keywords = ["VCS", "DVCS", "SCM", "Git", "Mercurial"]
+authors = [""]
+description = ""
 
 [workspace.dependencies]
 anyhow = "1.0.81"
