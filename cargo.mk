@@ -47,6 +47,9 @@ cargo-test:### 	cargo-test
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1
+cargo-dist-build:### 	cargo-dist-build
+	@. $(HOME)/.cargo/env
+	cargo dist build --artifacts=global
 
 cargo-deps-gnostr-all:cargo-deps-gnostr-cat cargo-deps-gnostr-cli cargo-deps-gnostr-command cargo-deps-gnostr-grep cargo-deps-gnostr-legit cargo-deps-gnostr-sha256### 	cargo-deps-gnostr-all
 cargo-deps-gnostr-cat:### 	cargo-deps-gnostr-cat
