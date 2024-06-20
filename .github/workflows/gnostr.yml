@@ -24,6 +24,7 @@ jobs:
   build:
     env:
       GNOSTR: "gnostr"
+      RUST_BACKTRACE: "all"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
