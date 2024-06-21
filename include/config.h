@@ -4,7 +4,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* Always use GNU extensions. */
 #endif
-#define CCAN_COMPILER "gcc"
+#define CCAN_COMPILER "cc"
 #define CCAN_CFLAGS "-g3 -ggdb -Wall -Wundef -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wold-style-definition"
 #define CCAN_OUTPUT_EXE_CFLAG "-o"
 
