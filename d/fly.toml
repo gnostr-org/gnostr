@@ -1,28 +1,42 @@
-# fly.toml app configuration file generated for universal-connectivity-rust-peer on 2023-09-24T16:20:25+10:00
+# fly.toml app configuration file generated for gnostrd-morning-tree-6987 on 2024-05-18T12:38:30-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "gnostr-connect"
-primary_region = "syd"
+app = 'gnostrd'
+primary_region = 'mia'
 
-[experimental]
-# Resolve the special `fly-global-services` address before starting the container, see https://fly.io/docs/app-guides/udp-and-tcp/#the-fly-global-services-address.
-cmd = ["/bin/sh", "-c", "set -ex; LISTEN_ADDRESS=$(getent hosts fly-global-services | cut -d' ' -f1) && gnostr-chat"]
+#[experimental]
+#  cmd = ['/bin/sh', '-c', "set -ex; LISTEN_ADDRESS=$(getent hosts fly-global-services | cut -d' ' -f1) && gnostrd"]
 
-[env]
-EXTERNAL_ADDRESS="37.16.6.234" # TODO: Remove this in favor of an AutoNAT setup.
+[build]
+
+#[env]
+#  EXTERNAL_ADDRESS = '66.241.125.69'
+
+## [http_service]
+##   internal_port = 9090
+##   force_https = true
+##   auto_stop_machines = true
+##   auto_start_machines = true
+##   min_machines_running = 0
+##   processes = ['app']
 
 [[services]]
-internal_port = 9090
-protocol = "udp"
+  protocol = 'udp'
+  internal_port = 9090
 
-[[services.ports]]
-port = "9090"
+  [[services.ports]]
+    port = 9090
 
 [[services]]
-internal_port = 9091
-protocol = "udp"
+  protocol = 'udp'
+  internal_port = 9091
 
-[[services.ports]]
-port = "9091"
+  [[services.ports]]
+    port = 9091
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
