@@ -1,3 +1,7 @@
+nostril
+configurator
+configurator.out.dSYM/
+
 gnostr-go-chat
 go/gnostr-go-chat
 plan-dist-manifest.json
