@@ -1,5 +1,5 @@
 CFLAGS                                  = -Wall -O2 -Isecp256k1/include
-CFLAGS                                 += -I/include
+CFLAGS                                 += -Iinclude
 LDFLAGS                                 = -Wl
 GNOSTR_OBJS                             = gnostr.o       sha256.o aes.o base64.o
 #GNOSTR_GIT_OBJS                         = gnostr-git.o   sha256.o aes.o base64.o libgit.a
