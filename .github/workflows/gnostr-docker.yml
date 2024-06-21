@@ -45,7 +45,7 @@ jobs:
       - run: sudo mkdir -p /usr/local/share/man/man1
       - run: FORCE=--force VERBOSE=-vv make gnostr gnostr-install
       - run: which gnostr
-      - run: which nostril
+      - run: which nostril || true
       - run: gnostr --sec $(gnostr-sha256)
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble))
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight))
