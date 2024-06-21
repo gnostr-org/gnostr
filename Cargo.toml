@@ -225,16 +225,14 @@ codegen-units = 1
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# Skip checking whether the specified configuration files are up to date
-allow-dirty = ["ci", "msi"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.14.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "homebrew"]
+installers = ["shell", "homebrew", "msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
 # A GitHub repo to push Homebrew formulas to
 tap = "gnostr-org/homebrew-gnostr-org"
 # The archive format to use for windows builds (defaults .zip)
@@ -247,6 +245,10 @@ publish-jobs = ["homebrew"]
 pr-run-mode = "plan"
 # Whether to install an updater program
 install-updater = false
+# Skip checking whether the specified configuration files are up to date
+allow-dirty = ["ci", "msi"]
+build-command = ["make"]
+
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
