@@ -3,9 +3,6 @@ name: gnostr-alpine
 on:
   pull_request:
     branches:
-      - '*'
-      - '*/*'
-      - '**'
       - 'master'
       - 'main'
   push:
@@ -13,9 +10,11 @@ on:
       - '*'
       - '*/*'
       - '**'
-      - 'master'
-      - 'main'
-
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
+      - '**test**'
+      - '**-rc**'
+  pull_request:
   workflow_dispatch:
 
 env:
