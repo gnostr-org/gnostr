@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: ${{ !env.ACT }}
         with:
           fetch-depth: '0'
@@ -42,7 +42,7 @@ jobs:
       - run: git config --global --add safe.directory /__w/gnostr/gnostr || true
       - name: Restore rustup
         id: cache-rustup-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: ${{ !env.ACT }}
         with:
           path: |
@@ -51,7 +51,7 @@ jobs:
 
       - name: Restore cargo
         id: cache-cargo-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: ${{ !env.ACT }}
         with:
           path: |
@@ -60,7 +60,7 @@ jobs:
 
       - name: Restore target
         id: cache-target-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: ${{ !env.ACT }}
         with:
           path: |
@@ -100,7 +100,7 @@ jobs:
       - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
       - name: Save rustup
         id: cache-rustup-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ !env.ACT }}
         with:
           path: |
@@ -108,7 +108,7 @@ jobs:
           key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
       - name: Save cargo
         id: cache-cargo-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ !env.ACT }}
         with:
           path: |
@@ -116,7 +116,7 @@ jobs:
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
       - name: Save target
         id: cache-target-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ !env.ACT }}
         with:
           path: |
