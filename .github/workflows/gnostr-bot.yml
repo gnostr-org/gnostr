@@ -75,7 +75,7 @@ jobs:
       - run: cargo install --force gnostr-sha256
       - run: cargo install --force gnostr-bins
       ## NOTE: make gnostr-am is the non-cmake build
-      - run: make gnostr-am && echo $(which gnostr-am)
+      - run: make gnostr && echo $(which gnostr)
       - run: make gnostr gnostr-install && echo $(which gnostr)
       - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
         if: github.event_name == 'pull_request'
