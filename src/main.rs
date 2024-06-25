@@ -19,17 +19,23 @@ use libc::{strlen, write};
 use std::os::unix::prelude::AsRawFd;
 
 extern "C" {
+    //unsafe {
     fn multiply(a: c_int, b: c_int) -> c_int;
+//}
 }
 extern "C" {
     #[allow(dead_code)]
+    //unsafe {
     fn copyx(a: &c_char, b: &c_char, c: &c_char, d: &c_char) -> c_int;
+//}
 }
 
 #[no_mangle]
 //src/nostril.c
 //static void try_subcommand(int argc, const char *argv[])
 pub extern "C" fn try_subcommand(argc: c_int, argv: Vec<String>) -> Vec<String> {
+
+    unsafe {
     if argc > 1 {
         if argv.len() > 1 {
             let arg_zero = Some(argv.get(0));
@@ -40,6 +46,7 @@ pub extern "C" fn try_subcommand(argc: c_int, argv: Vec<String>) -> Vec<String> 
             }
         }
     } else {}
+}
     let output = Some(argv);
     return output.unwrap();
 }
@@ -82,8 +89,11 @@ fn main() {
 
     use std::ops::Deref;
     let mut value: i8 = 42;
-    //println!("value: {}", value);
-    //my_function_free(value);
+    println!("value: {}", value);
+//expected `*mut i8`, found `i8`
+    unsafe {
+    //my_function_free(*value);
+    }
     //println!("*value: {}", *value);
     //my_function_free(*value);
     //println!("value.deref(): {}", value.deref());
@@ -146,10 +156,11 @@ fn main() {
         //println!("[Rust] Calling function in C..");
 
         let result = multiply(5000, 5);
-        //println!("\nmultiply:{}", result);
+        println!("\nmultiply:{}", result);
 
         //let result = try_subcommand(2, "char" as *const *const c_char);
-        //println!("[Rust] Result: {}", result);
+        let result = try_subcommand(2, args.clone());
+        println!("result={:}", format!("{:?}",result));
 
         //pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mut c_char {
         print!("\nargs.len()={}\n",args.len());
@@ -157,8 +168,9 @@ fn main() {
         println!("try_subcommand_result: {:?}", result.get(0));
         println!("try_subcommand_result: {:?}", result.get(1));
     }
-    std::process::exit(0);
+    //std::process::exit(0);
 
+    unsafe {
     let strings = vec!["hello", "world", "!"];
     let vector_cstring: Vec<*const u8> = strings
         .into_iter()
@@ -167,9 +179,9 @@ fn main() {
 
     let stdout = std::io::stdout().as_raw_fd();
     for ptr in vector_cstring.into_iter() {
-        unsafe {
+//        unsafe {
             write(stdout, ptr as _, strlen(ptr as _));
-        }
+  //      }
         //println!("");
         //println!("ptr={:?}", ptr);
         println!("\nptr={:?}", ptr);
@@ -177,5 +189,6 @@ fn main() {
         unsafe {
             let _ = CString::from_raw(ptr as _);
         }
+    }
     }
 }
