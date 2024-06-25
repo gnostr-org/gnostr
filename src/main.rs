@@ -126,13 +126,32 @@ fn main() {
     //let args = Cli::from_args();
 
     let args_vec: Vec<String> = env::args().collect();
+    print!("args_vec.len()={}\n",args_vec.len());
+    let count_limit = args_vec.len()-1;
+    print!("count_limit={}\n",count_limit);
     if args_vec.len() == 1 {
         empty_case();
     }
 
     if args_vec.len() > 1 {
+        let mut count = 1;
 	for arg in &args_vec[1..args_vec.len()] {
-            println!("Argument: {}", arg);
+            print!("count={}\n",count);
+            print!("arg={}\n", arg);
+            if arg == "--sec" {}
+            if arg == "-s" {}
+            if arg == "-t" {}
+            if arg == "--tag" {}
+            if arg == "--dm" {}
+            if arg == "--kind" {}
+            if arg == "-e" {}
+            if arg == "-p" {}
+            if arg == "--pow" {}
+            if arg == "--mine-pubkey" {}
+            if arg == "--created-at" {}
+            if arg == "--envelope" {}
+            if arg == "--content" {}
+            count = count + 1;
         }
     } else {
         println!("No arguments provided.");
