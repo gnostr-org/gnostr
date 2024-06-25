@@ -38,10 +38,10 @@ pub extern "C" fn try_subcommand(argc: c_int, argv: Vec<String>) -> Vec<String> 
         if argc > 1 {
             if argv.len() > 1 {
                 let arg_zero = Some(argv.get(0));
-                print!("arg_zero={:?}\n", arg_zero);
+                print!("LINE:41:arg_zero={:?}\n", arg_zero);
                 if argv.len() > 2 {
                     let arg_one = Some(argv.get(1));
-                    print!("argv.get(0)={:?}\n", arg_one);
+                    print!("LINE:44:argv.get(0)={:?}\n", arg_one);
                 }
             }
         } else {
@@ -55,7 +55,7 @@ pub extern "C" fn try_subcommand(argc: c_int, argv: Vec<String>) -> Vec<String> 
 pub extern "C" fn my_function_free(s: *mut c_char) {
     unsafe {
         let print_c_str = CString::from_raw(s);
-        println!("{:?}", print_c_str);
+        println!("LINE:58:print_c_str={:?}", print_c_str);
     }
 }
 
@@ -80,7 +80,7 @@ fn empty_case() -> io::Result<()> {
         .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
         .unwrap();
 
-    println!("{}", nostril_event);
+    println!("LINE:83:nostril_event={}", nostril_event);
     Ok(())
 }
 
@@ -89,7 +89,7 @@ fn main() {
 
     use std::ops::Deref;
     let mut value: i8 = 42;
-    println!("value: {}", value);
+    println!("LINE:92:value={}", value);
     //expected `*mut i8`, found `i8`
     unsafe {
         //my_function_free(*value);
@@ -144,29 +144,29 @@ fn main() {
     if args_vec.len() >= 3 {
         private_key = &args_vec[2];
     }
-    //println!("private_key={}", &private_key);
+    println!("LINE:147:private_key={}", &private_key);
 
     //skip git-nostril --sec <private_key>
     //and capture everything else
     //let args: Vec<String> = env::args().skip(3).collect();
     let args: Vec<String> = env::args().skip(1).collect();
-    println!("args={:?}", &args);
+    println!("LINE:153:args={:?}", &args);
 
     unsafe {
         //println!("[Rust] Calling function in C..");
 
         let result = multiply(5000, 5);
-        println!("\nmultiply:{}", result);
+        println!("\nLINE:159:multiply:{}", result);
 
         //let result = try_subcommand(2, "char" as *const *const c_char);
         let result = try_subcommand(2, args.clone());
-        println!("result={:}", format!("{:?}", result));
+        println!("LINE:163:result={:}", format!("{:?}", result));
 
         //pub extern "C" fn try_subcommand(argc: c_int, argv: *const *const c_char) -> *mut c_char {
         print!("\nargs.len()={}\n", args.len());
         let result = try_subcommand(args.len().try_into().unwrap(), args);
-        println!("try_subcommand_result: {:?}", result.get(0));
-        println!("try_subcommand_result: {:?}", result.get(1));
+        println!("LINE:168:try_subcommand_result: {:?}", result.get(0));
+        println!("LINE:169:try_subcommand_result: {:?}", result.get(1));
     }
     //std::process::exit(0);
 
@@ -180,15 +180,17 @@ fn main() {
         let stdout = std::io::stdout().as_raw_fd();
         for ptr in vector_cstring.into_iter() {
             //        unsafe {
+            println!("LINE:183:ptr={:?}", ptr);
             write(stdout, ptr as _, strlen(ptr as _));
             //      }
             //println!("");
             //println!("ptr={:?}", ptr);
-            println!("\nptr={:?}", ptr);
-            my_function_free(ptr as *mut i8);
-            unsafe {
-                let _ = CString::from_raw(ptr as _);
-            }
-        }
-    }
+            println!("\nLINE:187:ptr={:?}", ptr);
+            let free_result = my_function_free(ptr as *mut i8);
+            print!("\nLINE:189:free_result={:?}\n",free_result);
+            //unsafe {
+              //  let _ = CString::from_raw(ptr as _);
+            //}//end unsafe
+        }//end for
+    }//end unsafe
 }
