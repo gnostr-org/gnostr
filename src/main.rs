@@ -130,6 +130,15 @@ fn main() {
         empty_case();
     }
 
+    if args_vec.len() > 1 {
+	for arg in &args_vec[1..args_vec.len()] {
+            println!("Argument: {}", arg);
+        }
+    } else {
+        println!("No arguments provided.");
+    }
+
+
     let mut app: &String = &("").to_string();
     let mut sec: &String = &("--sec").to_string();
     let mut private_key: &String = &("$(gnostr-sha256)").to_string();
