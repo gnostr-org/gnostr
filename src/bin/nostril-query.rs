@@ -39,7 +39,8 @@ pub extern "C" fn try_subcommand(argc: c_int, argv: Vec<String>) -> Vec<String> 
                 print!("argv.get(0)={:?}\n", arg_one);
             }
         }
-    } else {}
+    } else {
+    }
     let output = Some(argv);
     return output.unwrap();
 }
