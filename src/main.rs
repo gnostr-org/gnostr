@@ -138,7 +138,11 @@ fn main() {
 	for arg in &args_vec[1..args_vec.len()] {
             print!("count={}\n",count);
             print!("arg={}\n", arg);
-            if arg == "--sec" {}
+            if arg == "--sec" {
+            print!("count={}\n",count);
+            print!("args_vec[{}]={}\n", count, args_vec[count]);
+            print!("args_vec[{}]={}\n", count+1, args_vec[count+1]);
+            }
             if arg == "-s" {}
             if arg == "-t" {}
             if arg == "--tag" {}
