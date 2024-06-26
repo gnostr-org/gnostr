@@ -126,6 +126,13 @@ jobs:
       #- run: V=1 sudo make cat doc || true
       #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
 
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
+        if: github.event_name == 'pull_request'
+
       - name: Save rustup
         id: cache-rustup-save
         uses: actions/cache/save@v3
