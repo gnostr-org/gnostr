@@ -6,7 +6,7 @@ members = ["bins", "d", "cli", "jj", "gui", "lib", "lib/gen-protos", "lib/proc-m
 exclude = ["ffi", "relay"]
 
 [workspace.package]
-version = "0.0.46"
+version = "0.0.47"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
@@ -31,6 +31,17 @@ sdl2 = { git = "https://github.com/Rust-SDL2/rust-sdl2", rev = "27cd1fd67c811e06
 opt-level = 3
 debug-assertions = false
 overflow-checks = false
+
+[profile.release]
+lto = true
+opt-level = 'z'   # Optimize for size.
+codegen-units = 1
+
+# make debug build as fast as release
+# usage of utf8 encoding inside tui
+# makes their debug profile slow
+[profile.dev.package."ratatui"]
+opt-level = 3
 
 [workspace.dependencies]
 anyhow = "1.0.81"
@@ -219,10 +230,6 @@ testutils = { path = "lib/testutils" }
 [profile.dev.package.insta]
 opt-level = 3
 
-[profile.release]
-strip = "debuginfo"
-codegen-units = 1
-
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
@@ -257,3 +264,5 @@ lto = "thin"
 
 [workspace.metadata.release]
 tag-prefix = ""
+strip = "debuginfo"
+codegen-units = 1
