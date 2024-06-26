@@ -1,8 +1,9 @@
 name: gnostr-bot
 
+# Controls when the action will run.
 on:
   schedule:
-    - cron: '0 * * * *' # “At minute zero.”
+    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
     branches:
       - '*'
@@ -17,6 +18,14 @@ on:
       - '**'
       - 'master'
       - 'main'
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
+      - '**test**'
+      - '**-rc**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 env:
   GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
