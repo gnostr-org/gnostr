@@ -32,7 +32,7 @@ jobs:
       - run: printenv
       - run: cargo search gnostr --limit 100
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: '0'
           submodules: 'true'
