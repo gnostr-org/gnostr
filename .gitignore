@@ -53,3 +53,6 @@ xcode/deps/secp256k1/examples/
 xcode/deps/secp256k1/src/libsecp256k1-config-version.cmake
 xcode/deps/secp256k1/src/libsecp256k1-config.cmake
 xcode/deps/secp256k1/src/libsecp256k1.pc
+xcode/deps/secp256k1/src/Debug/
+xcode/nostril.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+xcode/nostril.xcodeproj/xcshareddata/
