@@ -97,6 +97,7 @@ echo PARENT_ID=$PARENT_ID
 echo ID=$ID
 gnostr --sec $padded_commit_hash \
 --pow $POW \
+-t gnostr \
 --tag repo $REPO \
 --tag branch $BRANCH \
 --tag origin $GIT_ORIGIN \
@@ -107,6 +108,7 @@ gnostr --sec $padded_commit_hash \
 -t $padded_commit_hash \
 --tag commit $commit_hash \
 --tag parent $PARENT \
+--tag p $PARENT_ID \
 --content "$(git show $commit_hash || exit)" | gnostr-post-event --relay $RELAY || echo "$commit_hash failed!"
 ##echo $commit_hash;
 	#for commit_padded_hash in $(gnostr-reflog -p);do
