@@ -48,6 +48,7 @@ ext/secp256k1/src/cmake_install.cmake
 install_manifest.txt
 
 # cmake
+xcode/deps/secp256k1/src/Release
 xcode/deps/secp256k1/examples/
 xcode/deps/secp256k1/src/libsecp256k1-config-version.cmake
 xcode/deps/secp256k1/src/libsecp256k1-config.cmake
