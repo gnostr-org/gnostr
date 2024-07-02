@@ -95,7 +95,7 @@ gnostr --sec $padded_commit_hash \
 --tag block $BLOCK \
 --tag wobble $WOBBLE \
 -t $padded_commit_hash \
---tag nip_commit $commit_hash \
+--tag commit $commit_hash \
 --content "$(git show $commit_hash || exit)" | gnostr-post-event --relay $RELAY || echo "$commit_hash failed!"
 ##echo $commit_hash;
 	#for commit_padded_hash in $(gnostr-reflog -p);do
