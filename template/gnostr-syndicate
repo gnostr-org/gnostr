@@ -65,7 +65,7 @@ INIT_COMMIT=$(git rev-list --all --max-parents=0)
 ## ((var++))
 
 #count=0
-for commit_hash in $(git rev-list master);do
+for commit_hash in $(git rev-list $BRANCH);do
 
 padded_commit_hash=`printf '%064s' "$commit_hash"`
 #echo $padded_commit_hash
