@@ -79,12 +79,19 @@ export COUNT=$count
 
 #new_count = 0
 for commit_hash in $(gnostr-reflog);do
+PARENT=$(git rev-parse $commit_hash^1)
+echo $PARENT
 #echo $commit_hash
+padded_parent_hash=`printf '%064s' "$PARENT"`
+echo padded_parent_hash=$padded_parent_hash
 padded_commit_hash=`printf '%064s' "$commit_hash"`
-#echo $padded_commit_hash
+echo padded_commit_hash=$padded_commit_hash
 export NEW_COUNT=$new_count
 #n=`printf '%064s' "$(git rev-parse HEAD~$count)"`
-echo $n
+#echo $n
+ID=$(gnostr --sec $padded_commit_hash | gnostr-xq .pubkey)
+ID=${ID//\"/}
+#echo $ID
 gnostr --sec $padded_commit_hash \
 --pow $POW \
 --tag repo $REPO \
@@ -96,6 +103,7 @@ gnostr --sec $padded_commit_hash \
 --tag wobble $WOBBLE \
 -t $padded_commit_hash \
 --tag commit $commit_hash \
+--tag parent $PARENT \
 --content "$(git show $commit_hash || exit)" | gnostr-post-event --relay $RELAY || echo "$commit_hash failed!"
 ##echo $commit_hash;
 	#for commit_padded_hash in $(gnostr-reflog -p);do
