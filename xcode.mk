@@ -2,7 +2,11 @@
 xcode:## 	xcode
 	cmake -G Xcode -S . -B xcode
 xcodebuild: xcode## 	xcodebuild
+## 	make xcode/Release/nostril
 	cd xcode && xcodebuild -configuration Release && cd ..
+
+xcode/Release/nostril:xcodebuild## 	xcode/Release/nostril
+
 xcodebuild-list: xcode## 	xcodebuild-list
 	cd xcode && xcodebuild -list && cd ..
 xcodebuild-install: xcode## 	xcodebuild-install
