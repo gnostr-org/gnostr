@@ -1,8 +1,8 @@
 xcode:## 	xcode
-	cmake -G Xcode -S . -B build
-xcodebuild:## 	xcodebuild
-	cd build && xcodebuild -configuration Release && cd ..
-xcodebuild-list:## 	xcodebuild-list
-	cd build && xcodebuild -list && cd ..
-xcodebuild-install:## 	xcodebuild-install
-	cd build && xcodebuild -target install -configuration Release && cd ..
+	cmake -G Xcode -S . -B xcode
+xcodebuild: xcode## 	xcodebuild
+	cd xcode && xcodebuild -configuration Release && cd ..
+xcodebuild-list: xcode## 	xcodebuild-list
+	cd xcode && xcodebuild -list && cd ..
+xcodebuild-install: xcode## 	xcodebuild-install
+	cd xcode && xcodebuild -target install -configuration Release && cd ..
