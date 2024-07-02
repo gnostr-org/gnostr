@@ -1,3 +1,4 @@
+.PHONY:xcode
 xcode:## 	xcode
 	cmake -G Xcode -S . -B xcode
 xcodebuild: xcode## 	xcodebuild
