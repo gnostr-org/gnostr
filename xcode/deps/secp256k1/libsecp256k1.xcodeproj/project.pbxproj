@@ -1,0 +1,3625 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		1C0F9E7347154A1083910776 /* ALL_BUILD */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 777AEDFF156140C287ADC3E7 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildPhases = (
+				0EF55C50372A97B5351BB7CD /* Generate CMakeFiles/ALL_BUILD */,
+			);
+			dependencies = (
+				9B6174DD0322455BAEA984CC /* PBXTargetDependency */,
+				FAB83CB05F2E4113B44887E1 /* PBXTargetDependency */,
+				E7C6C844F9AF48F1BF46CCCD /* PBXTargetDependency */,
+				FB25758DB13C4E8A80D06F94 /* PBXTargetDependency */,
+				75B9829575EC4D1BA294EDCA /* PBXTargetDependency */,
+				B4ACC7376EE14145AF359911 /* PBXTargetDependency */,
+				C65DFEF9FF734778AD0666B0 /* PBXTargetDependency */,
+				405258538979454B9DE6EEED /* PBXTargetDependency */,
+			);
+			name = ALL_BUILD;
+			productName = ALL_BUILD;
+		};
+		4E53444D7B084E0C9DB9B7EB /* Experimental */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = CB953A1B6DCF465C87AA7A38 /* Build configuration list for PBXAggregateTarget "Experimental" */;
+			buildPhases = (
+				F8028504C861E36085F31371 /* Generate CMakeFiles/Experimental */,
+			);
+			dependencies = (
+				84957D4D2DCD4FE88126BA07 /* PBXTargetDependency */,
+			);
+			name = Experimental;
+			productName = Experimental;
+		};
+		9C4729DA24D54E478C058058 /* ZERO_CHECK */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 1F1277CC7BC3464A9174FDF8 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildPhases = (
+				FA0D8DDE556717DF2B24A695 /* Generate CMakeFiles/ZERO_CHECK */,
+			);
+			dependencies = (
+			);
+			name = ZERO_CHECK;
+			productName = ZERO_CHECK;
+		};
+		D5AC2CA14DBE4944911AC6C0 /* Nightly */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 030A6AB869384E108529CB1E /* Build configuration list for PBXAggregateTarget "Nightly" */;
+			buildPhases = (
+				D8D0A06F9811C203E84610B8 /* Generate CMakeFiles/Nightly */,
+			);
+			dependencies = (
+				86F0D6D5CBD246C2945841E7 /* PBXTargetDependency */,
+			);
+			name = Nightly;
+			productName = Nightly;
+		};
+		D9DBF4717DE2431D8E579DC1 /* install */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 09BB77F68E724098A6F7FD77 /* Build configuration list for PBXAggregateTarget "install" */;
+			buildPhases = (
+				93426DA6A4AC2C2AC9CE883C /* CMake PostBuild Rules */,
+			);
+			dependencies = (
+				30885E8E84D84A5DBE879C2D /* PBXTargetDependency */,
+			);
+			name = install;
+			productName = install;
+		};
+		DE08B5102CE54D44BE461550 /* Continuous */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 0A41FAC651A5482C9968C4C0 /* Build configuration list for PBXAggregateTarget "Continuous" */;
+			buildPhases = (
+				9A977ED1F51A4B99656028D2 /* Generate CMakeFiles/Continuous */,
+			);
+			dependencies = (
+				3370C7E6F3934BD1A38BC0EB /* PBXTargetDependency */,
+			);
+			name = Continuous;
+			productName = Continuous;
+		};
+		ED0AFA0F38534563AD28283A /* NightlyMemoryCheck */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 239ED2106D0C40F6B141A4E7 /* Build configuration list for PBXAggregateTarget "NightlyMemoryCheck" */;
+			buildPhases = (
+				6E8D95F9F0EA0AC864FA7AA4 /* Generate CMakeFiles/NightlyMemoryCheck */,
+			);
+			dependencies = (
+				AE79E40122B842DA9057F082 /* PBXTargetDependency */,
+			);
+			name = NightlyMemoryCheck;
+			productName = NightlyMemoryCheck;
+		};
+		F6BA9603171D4AA5A76F892C /* check */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = A2861FE263864B459145A5F6 /* Build configuration list for PBXAggregateTarget "check" */;
+			buildPhases = (
+				35DFFC815623C134E0DEE9EC /* Generate CMakeFiles/check */,
+			);
+			dependencies = (
+				AC3A8B751C0545EDA4C5A177 /* PBXTargetDependency */,
+			);
+			name = check;
+			productName = check;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		15C8ACF75B9643F093BD47A4 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests_exhaustive.c */ = {isa = PBXBuildFile; fileRef = 83B49405BF724031B2DB18D0 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests_exhaustive.c */; };
+		1BA6E8B2ECF644CD98702835 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = CE4460F6A2134020847B8F0D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		3583CB291CCB436C9E09AE17 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 29AEF8C89F42440E903A1182 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		51F97E9F8F7B4363A64C017E /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = F1F4441D1CFC45649C1958A3 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		66CD33DBF9E44D9DBFDF6C36 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_ecmult.c */ = {isa = PBXBuildFile; fileRef = A529056021D24650BB8299E8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_ecmult.c */; };
+		6B72AD5E1EE24CD28893134F /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */ = {isa = PBXBuildFile; fileRef = 72640454E9174890AE211E73 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */; };
+		6BA310E9C0404C94B7EF81A4 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/secp256k1.c */ = {isa = PBXBuildFile; fileRef = 3A10157208E04BF2BE9CFCD8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/secp256k1.c */; };
+		7303927657B140D78032F63A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_internal.c */ = {isa = PBXBuildFile; fileRef = 7B359A54B172442CAB33BABB /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_internal.c */; };
+		736987F580654F0593A25567 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 78C0B999A66643FC98A3A153 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		788FEB966E1A44CFA13B09C1 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult_gen.c */ = {isa = PBXBuildFile; fileRef = A7956B15920147EFA22804B1 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult_gen.c */; };
+		90DED2C0C9574B00AF07F394 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 816EB7F7DBF54CF3888D111E /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		ABF0BF16A459476EBEBB4E54 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 0050AED649FF49529261FE4A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		B168D043DF004BD098AC8C6B /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 885E5EA653EA4053A04A2027 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+		C644960DDCEA489A9AFC8F0F /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult.c */ = {isa = PBXBuildFile; fileRef = 9E8F8C7600924F5FA00B1DA0 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult.c */; };
+		DFC853EA9B844C94B5181892 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */ = {isa = PBXBuildFile; fileRef = 7A7F65EC5EB543049692126D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */; };
+		EF865ABFC12F4A22A844FB40 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench.c */ = {isa = PBXBuildFile; fileRef = 02FFA53D288E47F1A98AA147 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench.c */; };
+		FAD0466808474BA69EDEA2F8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = D5EA503805354081936198BA /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		581D616CE4B64029B17E5E62 /* MinSizeRel */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = MinSizeRel;
+		};
+		832002FC37034BA28282A434 /* Debug */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		9F732B1BE33E46558868045A /* RelWithDebInfo */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = RelWithDebInfo;
+		};
+		A40EA72A0C454985AE823513 /* Release */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Release;
+		};
+		FE21CA356D4446CE9396A2A8 /* Coverage */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Coverage;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+		090A9A4A5B464033AA43C650 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C4729DA24D54E478C058058;
+			remoteInfo = ZERO_CHECK;
+		};
+		1F07F261033A4F40AEC2FCF2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D05A56A824C24C1EA169AD57;
+			remoteInfo = secp256k1;
+		};
+		20301494086344A0955CC871 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C4729DA24D54E478C058058;
+			remoteInfo = ZERO_CHECK;
+		};
+		21EDBF36A395461FAD25727A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AC54E58E93F94B538E47D83A;
+			remoteInfo = bench_ecmult;
+		};
+		26161B7A420647819AE5527F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD252574EAB949C69D091CAE;
+			remoteInfo = secp256k1_precomputed;
+		};
+		38F781415CDB4105AAE69A8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C4729DA24D54E478C058058;
+			remoteInfo = ZERO_CHECK;
+		};
+		42616072998242F583323731 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1C0F9E7347154A1083910776;
+			remoteInfo = ALL_BUILD;
+		};
+		621AC882673C4FC5AB2A2BDE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 09CC5D8600D54282AD374E6B;
+			remoteInfo = bench;
+		};
+		69BD202E399745738C28ECC4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD252574EAB949C69D091CAE;
+			remoteInfo = secp256k1_precomputed;
+		};
+		75FC49913F004F77917260F1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C4729DA24D54E478C058058;
+			remoteInfo = ZERO_CHECK;
+		};
+		85F7E73348404722A80913B3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 826D3C73011741AF80CC2411;
+			remoteInfo = noverify_tests;
+		};
+		8667D0B3C2EB4C4BA87CE228 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8BA2E23C6B8C474C9CBB3BC8;
+			remoteInfo = tests;
+		};
+		87B925DBA32C4F4F8FF0557B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C4729DA24D54E478C058058;
+			remoteInfo = ZERO_CHECK;
+		};
+		8FEFE7DD856640FE8CC9D69E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C4729DA24D54E478C058058;
+			remoteInfo = ZERO_CHECK;
+		};
+		957B0A2F79EF4923A6B4C57F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 29B2506B09D049EDB61B14D3;
+			remoteInfo = bench_internal;
+		};
+		D6FDACDA197542CA88B9D73B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D05A56A824C24C1EA169AD57;
+			remoteInfo = secp256k1;
+		};
+		D7F43A5452894A069DC15AD6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD252574EAB949C69D091CAE;
+			remoteInfo = secp256k1_precomputed;
+		};
+		D907796308AB4F399D5352B3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD252574EAB949C69D091CAE;
+			remoteInfo = secp256k1_precomputed;
+		};
+		DCD84D4F676548D4940BE544 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB358A0C92004AF7B869DC8F;
+			remoteInfo = exhaustive_tests;
+		};
+		F2730594F98E49F5B3CC002E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 528EC101AB994FFA9BA56BC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD252574EAB949C69D091CAE;
+			remoteInfo = secp256k1_precomputed;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0050AED649FF49529261FE4A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		02FFA53D288E47F1A98AA147 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = bench.c; path = src/bench.c; sourceTree = SOURCE_ROOT; };
+		0694512EB29D49ABAA4D5C2D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		222A6D5240B444C489611E2B /* exhaustive_tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = exhaustive_tests; sourceTree = BUILT_PRODUCTS_DIR; };
+		29AEF8C89F42440E903A1182 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		3A10157208E04BF2BE9CFCD8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/secp256k1.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = secp256k1.c; path = src/secp256k1.c; sourceTree = SOURCE_ROOT; };
+		45BA2E06CD41463DBF494AE8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		4FBAA6C089A344F494435F2A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		6EB198DBA7154F6DA1550AE9 /* noverify_tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = noverify_tests; sourceTree = BUILT_PRODUCTS_DIR; };
+		7066059686A542669B49438F /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		7172BC7BEEB5421BA5BACD9C /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		72640454E9174890AE211E73 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = tests.c; path = src/tests.c; sourceTree = SOURCE_ROOT; };
+		78C0B999A66643FC98A3A153 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		7A7F65EC5EB543049692126D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = tests.c; path = src/tests.c; sourceTree = SOURCE_ROOT; };
+		7B359A54B172442CAB33BABB /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_internal.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = bench_internal.c; path = src/bench_internal.c; sourceTree = SOURCE_ROOT; };
+		7EE8718B3B9A4005AB95DE70 /* secp256k1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libsecp256k1.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		816EB7F7DBF54CF3888D111E /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		83B49405BF724031B2DB18D0 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests_exhaustive.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = tests_exhaustive.c; path = src/tests_exhaustive.c; sourceTree = SOURCE_ROOT; };
+		84063D2E4ECC4C0D8E5CE7E5 /* tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = tests; sourceTree = BUILT_PRODUCTS_DIR; };
+		885E5EA653EA4053A04A2027 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		926174864CCC4889AEA3441C /* bench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = bench; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D510FEEAA704252A8E65404 /* secp256k1_precomputed */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libsecp256k1_precomputed.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		9E8F8C7600924F5FA00B1DA0 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = precomputed_ecmult.c; path = src/precomputed_ecmult.c; sourceTree = SOURCE_ROOT; };
+		A529056021D24650BB8299E8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_ecmult.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = bench_ecmult.c; path = src/bench_ecmult.c; sourceTree = SOURCE_ROOT; };
+		A7956B15920147EFA22804B1 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult_gen.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = precomputed_ecmult_gen.c; path = src/precomputed_ecmult_gen.c; sourceTree = SOURCE_ROOT; };
+		B9955404EC9A4DF7AEE03CF7 /* bench_internal */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = bench_internal; sourceTree = BUILT_PRODUCTS_DIR; };
+		BCB501ACDDBE453C928B1A51 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		C514BC4132564AF3BC1265BC /* bench_ecmult */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = bench_ecmult; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE4460F6A2134020847B8F0D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		D5EA503805354081936198BA /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		F1F4441D1CFC45649C1958A3 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = src/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0355D222DC784F92859BB17F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		21D63DAA5D3A4F5784146B55 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5285629F88274C4ABFFCE166 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		578800C3D20044489DAD4B2B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		775922879895475A864CB4F9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9DBC21E6D5814527B8A5EDBF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A9CEC12D1E5F419FA6D755CD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B495E12D86AD4FB7A4FD3A63 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02E03A18B8C84D4C91006D1F /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				7B359A54B172442CAB33BABB /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_internal.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		099CFA7101924AA5AA4BB444 /* Nightly */ = {
+			isa = PBXGroup;
+			children = (
+				8CF5D5CB18E54D07BC734E5E /* CMake Rules */,
+				0694512EB29D49ABAA4D5C2D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */,
+			);
+			name = Nightly;
+			sourceTree = "<group>";
+		};
+		1A843163B1AD4B359BC634CC /* bench */ = {
+			isa = PBXGroup;
+			children = (
+				ED5AEE1865F247CD94B66D60 /* Source Files */,
+				29AEF8C89F42440E903A1182 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = bench;
+			sourceTree = "<group>";
+		};
+		208E14BAA60647F3948DB3B0 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		260A390577FE41CBB6BFB76B /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		285A7404F3AB49C98E0E3207 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		29FA749324DF4166B3BBBD0B /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				7A7F65EC5EB543049692126D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		36C2F13E68734FF3BFE79904 /* secp256k1_precomputed */ = {
+			isa = PBXGroup;
+			children = (
+				F36478FB2753448F99A8BCAC /* Source Files */,
+				CE4460F6A2134020847B8F0D /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = secp256k1_precomputed;
+			sourceTree = "<group>";
+		};
+		3790EE8A1E994F7B988F016E /* Experimental */ = {
+			isa = PBXGroup;
+			children = (
+				260A390577FE41CBB6BFB76B /* CMake Rules */,
+				7172BC7BEEB5421BA5BACD9C /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */,
+			);
+			name = Experimental;
+			sourceTree = "<group>";
+		};
+		4984B8E4A6EC449AB4F3F017 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				A529056021D24650BB8299E8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_ecmult.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		558BCD6B34634BB8B6F7E7AE /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		5765913AC3454E159E70F90A /* NightlyMemoryCheck */ = {
+			isa = PBXGroup;
+			children = (
+				558BCD6B34634BB8B6F7E7AE /* CMake Rules */,
+				45BA2E06CD41463DBF494AE8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */,
+			);
+			name = NightlyMemoryCheck;
+			sourceTree = "<group>";
+		};
+		6A8947EA4BC94EA59B59E6AE /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				72640454E9174890AE211E73 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		6B6F2B6A52834FD6B0F2D656 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		70C93B8CD9CE407E98A118B8 /* check */ = {
+			isa = PBXGroup;
+			children = (
+				208E14BAA60647F3948DB3B0 /* CMake Rules */,
+				7066059686A542669B49438F /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */,
+			);
+			name = check;
+			sourceTree = "<group>";
+		};
+		7116EFCC833344E397B65276 /* bench_ecmult */ = {
+			isa = PBXGroup;
+			children = (
+				4984B8E4A6EC449AB4F3F017 /* Source Files */,
+				816EB7F7DBF54CF3888D111E /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = bench_ecmult;
+			sourceTree = "<group>";
+		};
+		8CF5D5CB18E54D07BC734E5E /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		94271F1E66584395976CB018 /* bench_internal */ = {
+			isa = PBXGroup;
+			children = (
+				02E03A18B8C84D4C91006D1F /* Source Files */,
+				78C0B999A66643FC98A3A153 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = bench_internal;
+			sourceTree = "<group>";
+		};
+		94FF85E919F6482FB3414D86 /* secp256k1 */ = {
+			isa = PBXGroup;
+			children = (
+				D8660896E72D428D8C2660D7 /* Source Files */,
+				0050AED649FF49529261FE4A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = secp256k1;
+			sourceTree = "<group>";
+		};
+		A711582CF46C473394B3313D = {
+			isa = PBXGroup;
+			children = (
+				3790EE8A1E994F7B988F016E /* Experimental */,
+				099CFA7101924AA5AA4BB444 /* Nightly */,
+				D068AFF73A26402580027CC4 /* Continuous */,
+				5765913AC3454E159E70F90A /* NightlyMemoryCheck */,
+				70C93B8CD9CE407E98A118B8 /* check */,
+				E554927395ED490CB2D619FF /* ALL_BUILD */,
+				36C2F13E68734FF3BFE79904 /* secp256k1_precomputed */,
+				94FF85E919F6482FB3414D86 /* secp256k1 */,
+				1A843163B1AD4B359BC634CC /* bench */,
+				94271F1E66584395976CB018 /* bench_internal */,
+				7116EFCC833344E397B65276 /* bench_ecmult */,
+				C9CEF32950554D0D86D3B4DF /* noverify_tests */,
+				C2B63C8FB91D43CBBB61C49F /* tests */,
+				E99B9C3378E84832A51D44E8 /* exhaustive_tests */,
+				DBEE98EDCB12493BBBB01240 /* Products */,
+				285A7404F3AB49C98E0E3207 /* Frameworks */,
+				E372667AB3DE4F06AD77A382 /* Resources */,
+			);
+			sourceTree = "<group>";
+		};
+		C2B63C8FB91D43CBBB61C49F /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				6A8947EA4BC94EA59B59E6AE /* Source Files */,
+				885E5EA653EA4053A04A2027 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = tests;
+			sourceTree = "<group>";
+		};
+		C9CEF32950554D0D86D3B4DF /* noverify_tests */ = {
+			isa = PBXGroup;
+			children = (
+				29FA749324DF4166B3BBBD0B /* Source Files */,
+				D5EA503805354081936198BA /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = noverify_tests;
+			sourceTree = "<group>";
+		};
+		D068AFF73A26402580027CC4 /* Continuous */ = {
+			isa = PBXGroup;
+			children = (
+				6B6F2B6A52834FD6B0F2D656 /* CMake Rules */,
+				4FBAA6C089A344F494435F2A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */,
+			);
+			name = Continuous;
+			sourceTree = "<group>";
+		};
+		D6B466CED4584376B5A40DD0 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				83B49405BF724031B2DB18D0 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests_exhaustive.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		D8660896E72D428D8C2660D7 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				3A10157208E04BF2BE9CFCD8 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/secp256k1.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		DBEE98EDCB12493BBBB01240 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				926174864CCC4889AEA3441C /* bench */,
+				C514BC4132564AF3BC1265BC /* bench_ecmult */,
+				B9955404EC9A4DF7AEE03CF7 /* bench_internal */,
+				222A6D5240B444C489611E2B /* exhaustive_tests */,
+				6EB198DBA7154F6DA1550AE9 /* noverify_tests */,
+				7EE8718B3B9A4005AB95DE70 /* secp256k1 */,
+				9D510FEEAA704252A8E65404 /* secp256k1_precomputed */,
+				84063D2E4ECC4C0D8E5CE7E5 /* tests */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E372667AB3DE4F06AD77A382 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		E554927395ED490CB2D619FF /* ALL_BUILD */ = {
+			isa = PBXGroup;
+			children = (
+				FE65E74363474BBCB6E0CDDA /* CMake Rules */,
+				BCB501ACDDBE453C928B1A51 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt */,
+			);
+			name = ALL_BUILD;
+			sourceTree = "<group>";
+		};
+		E99B9C3378E84832A51D44E8 /* exhaustive_tests */ = {
+			isa = PBXGroup;
+			children = (
+				D6B466CED4584376B5A40DD0 /* Source Files */,
+				F1F4441D1CFC45649C1958A3 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt */,
+			);
+			name = exhaustive_tests;
+			sourceTree = "<group>";
+		};
+		ED5AEE1865F247CD94B66D60 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				02FFA53D288E47F1A98AA147 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		F36478FB2753448F99A8BCAC /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				9E8F8C7600924F5FA00B1DA0 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult.c */,
+				A7956B15920147EFA22804B1 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult_gen.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		FE65E74363474BBCB6E0CDDA /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		09CC5D8600D54282AD374E6B /* bench */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6A0FE2AA65664D74AFF19975 /* Build configuration list for PBXNativeTarget "bench" */;
+			buildPhases = (
+				39D43F18FFB7464BA3FE6155 /* Sources */,
+				775922879895475A864CB4F9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1F59A42D12964B7196946EA8 /* PBXTargetDependency */,
+			);
+			name = bench;
+			productName = bench;
+			productReference = 926174864CCC4889AEA3441C /* bench */;
+			productType = "com.apple.product-type.tool";
+		};
+		29B2506B09D049EDB61B14D3 /* bench_internal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6227E451AD1A4BC9B5236CE6 /* Build configuration list for PBXNativeTarget "bench_internal" */;
+			buildPhases = (
+				6F046804DA1A4678BE47D1FE /* Sources */,
+				21D63DAA5D3A4F5784146B55 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9FCB4142A5E64735BEDBC66D /* PBXTargetDependency */,
+			);
+			name = bench_internal;
+			productName = bench_internal;
+			productReference = B9955404EC9A4DF7AEE03CF7 /* bench_internal */;
+			productType = "com.apple.product-type.tool";
+		};
+		826D3C73011741AF80CC2411 /* noverify_tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C59AD22BC4454A328070E71E /* Build configuration list for PBXNativeTarget "noverify_tests" */;
+			buildPhases = (
+				4BA6BCB761904FA8BE6155D3 /* Sources */,
+				5285629F88274C4ABFFCE166 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5A57FFE232A645B99B725EA0 /* PBXTargetDependency */,
+			);
+			name = noverify_tests;
+			productName = noverify_tests;
+			productReference = 6EB198DBA7154F6DA1550AE9 /* noverify_tests */;
+			productType = "com.apple.product-type.tool";
+		};
+		8BA2E23C6B8C474C9CBB3BC8 /* tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A25BD65704E14B39AC273E74 /* Build configuration list for PBXNativeTarget "tests" */;
+			buildPhases = (
+				7A9A7A6C04F3409584F688E9 /* Sources */,
+				B495E12D86AD4FB7A4FD3A63 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				79435E0AB83440629733AE4D /* PBXTargetDependency */,
+			);
+			name = tests;
+			productName = tests;
+			productReference = 84063D2E4ECC4C0D8E5CE7E5 /* tests */;
+			productType = "com.apple.product-type.tool";
+		};
+		AC54E58E93F94B538E47D83A /* bench_ecmult */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 774065139C5B4CF284A6D5CD /* Build configuration list for PBXNativeTarget "bench_ecmult" */;
+			buildPhases = (
+				23A76A1F4586490695630C2E /* Sources */,
+				578800C3D20044489DAD4B2B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				847CF619699248D3ABC176B3 /* PBXTargetDependency */,
+			);
+			name = bench_ecmult;
+			productName = bench_ecmult;
+			productReference = C514BC4132564AF3BC1265BC /* bench_ecmult */;
+			productType = "com.apple.product-type.tool";
+		};
+		AD252574EAB949C69D091CAE /* secp256k1_precomputed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 09E2EA6EB670418E957F852A /* Build configuration list for PBXNativeTarget "secp256k1_precomputed" */;
+			buildPhases = (
+				C69E8E07D03A46B5B4F270CD /* Sources */,
+				A9CEC12D1E5F419FA6D755CD /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = secp256k1_precomputed;
+			productName = secp256k1_precomputed;
+			productReference = 9D510FEEAA704252A8E65404 /* secp256k1_precomputed */;
+			productType = "com.apple.product-type.library.static";
+		};
+		D05A56A824C24C1EA169AD57 /* secp256k1 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2E76ECBFE8D4FBF92D9BE16 /* Build configuration list for PBXNativeTarget "secp256k1" */;
+			buildPhases = (
+				C8CAF81A1BEF46D09A22A289 /* Sources */,
+				9DBC21E6D5814527B8A5EDBF /* Frameworks */,
+				76D98E7E9DEA945818204144 /* CMake PostBuild Rules */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0EC3C170A8C348539A029AAC /* PBXTargetDependency */,
+			);
+			name = secp256k1;
+			productName = secp256k1;
+			productReference = 7EE8718B3B9A4005AB95DE70 /* secp256k1 */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		EB358A0C92004AF7B869DC8F /* exhaustive_tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1B9BBFAE9AB54395AEF76F75 /* Build configuration list for PBXNativeTarget "exhaustive_tests" */;
+			buildPhases = (
+				9CF427A265B6469D90395A17 /* Sources */,
+				0355D222DC784F92859BB17F /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = exhaustive_tests;
+			productName = exhaustive_tests;
+			productReference = 222A6D5240B444C489611E2B /* exhaustive_tests */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		528EC101AB994FFA9BA56BC3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1520;
+			};
+			buildConfigurationList = 803724D359AF481C9E37545B /* Build configuration list for PBXProject "libsecp256k1" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				9F732B1BE33E46558868045A /* RelWithDebInfo */,
+				A40EA72A0C454985AE823513 /* Release */,
+				832002FC37034BA28282A434 /* Debug */,
+				581D616CE4B64029B17E5E62 /* MinSizeRel */,
+				FE21CA356D4446CE9396A2A8 /* Coverage */,
+			);
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			mainGroup = A711582CF46C473394B3313D;
+			projectDirPath = /Users/Shared/dotfiles/nostril/deps/secp256k1;
+			projectRoot = "";
+			targets = (
+				1C0F9E7347154A1083910776 /* ALL_BUILD */,
+				DE08B5102CE54D44BE461550 /* Continuous */,
+				4E53444D7B084E0C9DB9B7EB /* Experimental */,
+				D5AC2CA14DBE4944911AC6C0 /* Nightly */,
+				ED0AFA0F38534563AD28283A /* NightlyMemoryCheck */,
+				9C4729DA24D54E478C058058 /* ZERO_CHECK */,
+				09CC5D8600D54282AD374E6B /* bench */,
+				AC54E58E93F94B538E47D83A /* bench_ecmult */,
+				29B2506B09D049EDB61B14D3 /* bench_internal */,
+				F6BA9603171D4AA5A76F892C /* check */,
+				EB358A0C92004AF7B869DC8F /* exhaustive_tests */,
+				D9DBF4717DE2431D8E579DC1 /* install */,
+				826D3C73011741AF80CC2411 /* noverify_tests */,
+				D05A56A824C24C1EA169AD57 /* secp256k1 */,
+				AD252574EAB949C69D091CAE /* secp256k1_precomputed */,
+				8BA2E23C6B8C474C9CBB3BC8 /* tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		09FB783FD30DC6E66DF354AF = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		0EF55C50372A97B5351BB7CD /* Generate CMakeFiles/ALL_BUILD */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/ALL_BUILD";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/ALL_BUILD			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  echo Build\\ all\\ projects
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		23E0E19C1FE635DB84934AD9 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		323E6CE94951678BF055CC89 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		35DFFC815623C134E0DEE9EC /* Generate CMakeFiles/check */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/check";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/check			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C RelWithDebInfo
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Release
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Debug
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C MinSizeRel
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Coverage
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		3C0110FC8322DE7E50886E21 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		6E8D95F9F0EA0AC864FA7AA4 /* Generate CMakeFiles/NightlyMemoryCheck */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/NightlyMemoryCheck";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/NightlyMemoryCheck			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C RelWithDebInfo -D NightlyMemoryCheck
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Release -D NightlyMemoryCheck
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Debug -D NightlyMemoryCheck
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C MinSizeRel -D NightlyMemoryCheck
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Coverage -D NightlyMemoryCheck
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		76D98E7E9DEA945818204144 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -E cmake_symlink_library /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo/libsecp256k1.dylib
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -E cmake_symlink_library /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release/libsecp256k1.dylib
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -E cmake_symlink_library /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug/libsecp256k1.dylib
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -E cmake_symlink_library /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel/libsecp256k1.dylib
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -E cmake_symlink_library /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage/libsecp256k1.2.dylib /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage/libsecp256k1.dylib
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		87AF4882E018677E2624B544 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		93426DA6A4AC2C2AC9CE883C /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -DBUILD_TYPE=$CONFIGURATION$EFFECTIVE_PLATFORM_NAME -P cmake_install.cmake
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -DBUILD_TYPE=$CONFIGURATION$EFFECTIVE_PLATFORM_NAME -P cmake_install.cmake
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -DBUILD_TYPE=$CONFIGURATION$EFFECTIVE_PLATFORM_NAME -P cmake_install.cmake
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -DBUILD_TYPE=$CONFIGURATION$EFFECTIVE_PLATFORM_NAME -P cmake_install.cmake
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/cmake -DBUILD_TYPE=$CONFIGURATION$EFFECTIVE_PLATFORM_NAME -P cmake_install.cmake
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		9A977ED1F51A4B99656028D2 /* Generate CMakeFiles/Continuous */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/Continuous";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/Continuous			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C RelWithDebInfo -D Continuous
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Release -D Continuous
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Debug -D Continuous
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C MinSizeRel -D Continuous
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Coverage -D Continuous
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		9B50530E35CC49C82C2FACCF = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		A68D7F74133ED74D8658B427 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		BF5118F54E13CAF93CF2DF3C = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		D8D0A06F9811C203E84610B8 /* Generate CMakeFiles/Nightly */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/Nightly";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/Nightly			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C RelWithDebInfo -D Nightly
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Release -D Nightly
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Debug -D Nightly
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C MinSizeRel -D Nightly
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Coverage -D Nightly
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		F8028504C861E36085F31371 /* Generate CMakeFiles/Experimental */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/Experimental";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/Experimental			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C RelWithDebInfo -D Experimental
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Release -D Experimental
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Debug -D Experimental
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C MinSizeRel -D Experimental
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  /usr/local/Cellar/cmake/3.29.2/bin/ctest -C Coverage -D Experimental
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		FA0D8DDE556717DF2B24A695 /* Generate CMakeFiles/ZERO_CHECK */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate CMakeFiles/ZERO_CHECK";
+			outputPaths = (
+/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeFiles/ZERO_CHECK			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  make -f /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  make -f /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  make -f /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  make -f /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"Coverage\"; then :
+  cd /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+  make -f /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/CMakeScripts/ReRunCMake.make
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		23A76A1F4586490695630C2E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66CD33DBF9E44D9DBFDF6C36 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_ecmult.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		39D43F18FFB7464BA3FE6155 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EF865ABFC12F4A22A844FB40 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4BA6BCB761904FA8BE6155D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DFC853EA9B844C94B5181892 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F046804DA1A4678BE47D1FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7303927657B140D78032F63A /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/bench_internal.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A9A7A6C04F3409584F688E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B72AD5E1EE24CD28893134F /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CF427A265B6469D90395A17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15C8ACF75B9643F093BD47A4 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/tests_exhaustive.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C69E8E07D03A46B5B4F270CD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C644960DDCEA489A9AFC8F0F /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult.c */,
+				788FEB966E1A44CFA13B09C1 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/precomputed_ecmult_gen.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C8CAF81A1BEF46D09A22A289 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6BA310E9C0404C94B7EF81A4 /* /Users/Shared/dotfiles/nostril/deps/secp256k1/src/secp256k1.c */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0EC3C170A8C348539A029AAC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD252574EAB949C69D091CAE /* secp256k1_precomputed */;
+			targetProxy = 26161B7A420647819AE5527F /* PBXContainerItemProxy */;
+		};
+		1F59A42D12964B7196946EA8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D05A56A824C24C1EA169AD57 /* secp256k1 */;
+			targetProxy = D6FDACDA197542CA88B9D73B /* PBXContainerItemProxy */;
+		};
+		30885E8E84D84A5DBE879C2D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1C0F9E7347154A1083910776 /* ALL_BUILD */;
+			targetProxy = 42616072998242F583323731 /* PBXContainerItemProxy */;
+		};
+		3370C7E6F3934BD1A38BC0EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C4729DA24D54E478C058058 /* ZERO_CHECK */;
+			targetProxy = 20301494086344A0955CC871 /* PBXContainerItemProxy */;
+		};
+		405258538979454B9DE6EEED /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C4729DA24D54E478C058058 /* ZERO_CHECK */;
+			targetProxy = 75FC49913F004F77917260F1 /* PBXContainerItemProxy */;
+		};
+		5A57FFE232A645B99B725EA0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD252574EAB949C69D091CAE /* secp256k1_precomputed */;
+			targetProxy = D907796308AB4F399D5352B3 /* PBXContainerItemProxy */;
+		};
+		75B9829575EC4D1BA294EDCA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 826D3C73011741AF80CC2411 /* noverify_tests */;
+			targetProxy = 85F7E73348404722A80913B3 /* PBXContainerItemProxy */;
+		};
+		79435E0AB83440629733AE4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD252574EAB949C69D091CAE /* secp256k1_precomputed */;
+			targetProxy = F2730594F98E49F5B3CC002E /* PBXContainerItemProxy */;
+		};
+		847CF619699248D3ABC176B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD252574EAB949C69D091CAE /* secp256k1_precomputed */;
+			targetProxy = 69BD202E399745738C28ECC4 /* PBXContainerItemProxy */;
+		};
+		84957D4D2DCD4FE88126BA07 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C4729DA24D54E478C058058 /* ZERO_CHECK */;
+			targetProxy = 87B925DBA32C4F4F8FF0557B /* PBXContainerItemProxy */;
+		};
+		86F0D6D5CBD246C2945841E7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C4729DA24D54E478C058058 /* ZERO_CHECK */;
+			targetProxy = 8FEFE7DD856640FE8CC9D69E /* PBXContainerItemProxy */;
+		};
+		9B6174DD0322455BAEA984CC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D05A56A824C24C1EA169AD57 /* secp256k1 */;
+			targetProxy = 1F07F261033A4F40AEC2FCF2 /* PBXContainerItemProxy */;
+		};
+		9FCB4142A5E64735BEDBC66D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD252574EAB949C69D091CAE /* secp256k1_precomputed */;
+			targetProxy = D7F43A5452894A069DC15AD6 /* PBXContainerItemProxy */;
+		};
+		AC3A8B751C0545EDA4C5A177 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C4729DA24D54E478C058058 /* ZERO_CHECK */;
+			targetProxy = 090A9A4A5B464033AA43C650 /* PBXContainerItemProxy */;
+		};
+		AE79E40122B842DA9057F082 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C4729DA24D54E478C058058 /* ZERO_CHECK */;
+			targetProxy = 38F781415CDB4105AAE69A8F /* PBXContainerItemProxy */;
+		};
+		B4ACC7376EE14145AF359911 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8BA2E23C6B8C474C9CBB3BC8 /* tests */;
+			targetProxy = 8667D0B3C2EB4C4BA87CE228 /* PBXContainerItemProxy */;
+		};
+		C65DFEF9FF734778AD0666B0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB358A0C92004AF7B869DC8F /* exhaustive_tests */;
+			targetProxy = DCD84D4F676548D4940BE544 /* PBXContainerItemProxy */;
+		};
+		E7C6C844F9AF48F1BF46CCCD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 29B2506B09D049EDB61B14D3 /* bench_internal */;
+			targetProxy = 957B0A2F79EF4923A6B4C57F /* PBXContainerItemProxy */;
+		};
+		FAB83CB05F2E4113B44887E1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 09CC5D8600D54282AD374E6B /* bench */;
+			targetProxy = 621AC882673C4FC5AB2A2BDE /* PBXContainerItemProxy */;
+		};
+		FB25758DB13C4E8A80D06F94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AC54E58E93F94B538E47D83A /* bench_ecmult */;
+			targetProxy = 21EDBF36A395461FAD25727A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		01DFC1AEF59E472EA16ABEE1 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -Wl,-search_paths_first -Wl,-headerpad_max_install_names","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = exhaustive_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		041C1FD1A7F947848CA9697E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("    '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_internal;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		0A303085C0F5476C83D998E8 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				DYLIB_COMPATIBILITY_VERSION = 4.0.0;
+				DYLIB_CURRENT_VERSION = 4.2.0;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",secp256k1_EXPORTS,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "@rpath";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -dynamiclib -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1.2;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		0AD9D653DBE5425DAAB76754 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Experimental;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		0B9FD980D5CC4E00BA1B49A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = ("   '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LIBTOOLFLAGS = ("");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1_precomputed;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		0BF42ACBB2404E809FDA1772 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = /Users/Shared/dotfiles/nostril/xcode/build;
+			};
+			name = Coverage;
+		};
+		0D8EF06768194161964465BD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		0E5C19EAD7614404994EAB7D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Nightly;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		0F749FB9ACA5481982CA1416 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage,"$(inherited)");
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage/libsecp256k1.2.dylib,"$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		120E08F6EA2742DEA2546EA9 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		123BFC58C63945788CCBB599 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = NightlyMemoryCheck;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		221B93AC8C5F4B7A9CC3DDE5 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Nightly;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		253A4F610AFA472695AD962A /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = ("        '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LIBTOOLFLAGS = ("");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1_precomputed;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		26CE1C63739B40FC9F4CFA20 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Continuous;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		2E31078F52574B64917A8DE5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Nightly;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		2EDF6136C3E34991B7E6B38B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Experimental;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		2FF8F815CBD74594B34A71EF /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("     '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_internal;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		3219018977B04A7097DFFDC4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Experimental;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		32894CD80B774548A6E5990A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("   '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = exhaustive_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		33FC467DC3B64A0A89857C20 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				DYLIB_COMPATIBILITY_VERSION = 4.0.0;
+				DYLIB_CURRENT_VERSION = 4.2.0;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",secp256k1_EXPORTS,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "@rpath";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CFLAGS = ("        '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -dynamiclib -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1.2;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		39B59D7EA2274B8AB5AB5573 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Continuous;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		3A6691D76AAC4DCB90309442 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				DYLIB_COMPATIBILITY_VERSION = 4.0.0;
+				DYLIB_CURRENT_VERSION = 4.2.0;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",secp256k1_EXPORTS,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "@rpath";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CFLAGS = ("   '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -dynamiclib -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1.2;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		3BD8D15EDFAA4B879056D94A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Nightly;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		3D6FE28E92A04BFA9DCB2685 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release,"$(inherited)");
+				OTHER_CFLAGS = ("    '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release/libsecp256k1.2.dylib,"$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		4168B0584C1D44C0AA28C6BA /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo,"$(inherited)");
+				OTHER_CFLAGS = ("        '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo/libsecp256k1.2.dylib,"$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		4233F26B4625443DB166C365 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		44510CEAF7BF45929909CFFE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		470017F266A4490AB31F9089 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = noverify_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		5008DAE9AEF74BA2A5F821B8 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("     '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = exhaustive_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		50C8626E19BC4A0FA6BFABED /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel,"$(inherited)");
+				OTHER_CFLAGS = ("     '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel/libsecp256k1.2.dylib,"$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		52D6B98283374039825FFA0D /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("     '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		56477B0E8E684DE1B23FDB95 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Continuous;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		56A96A42BBA04664A52D2186 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = NightlyMemoryCheck;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		57BA256AAFF0418293ED7323 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		57E1DDF16E154639ABD4C7BE /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		5C0F13BE09D44A78B0B957A5 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = check;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		5E163CE350C242E18B3E5F71 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("        '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_internal;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		6086D0CBFCDA49419F94F0F1 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = ("     '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LIBTOOLFLAGS = ("");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1_precomputed;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		6254BB2D52614B738C7DD61D /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = NightlyMemoryCheck;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		6E4D04DF5C414A6D9B578235 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("        '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_ecmult;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		6E8AED21CF8340FDBE6B041C /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_internal;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		7006E1AEC5574F35B8411CE4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("   '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = noverify_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		73DEFBB2EE094487A33FBA29 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Experimental;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		745FAB0F3C964ECDBBDB671B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("   '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_ecmult;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		773D963D03AE4A3BAA8FBF2D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		77B50C87DFC74E7B8C90009D /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("     '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_ecmult;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		7EA65D3B90E64E6A9B6279E8 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = /Users/Shared/dotfiles/nostril/xcode/build;
+			};
+			name = MinSizeRel;
+		};
+		800B45724EB54D32A972D464 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = NightlyMemoryCheck;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		8E1956C0A1424B5C91F94422 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		94ED49C2C2F34BAAB7D66978 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = check;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		9C6250C33FC14AB1ADEDEC7D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		A37104E276224557B861AC61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = NightlyMemoryCheck;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		ABA3D5A4E6E64EC8913A9CEB /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = check;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		B1064C0500E348AD9ABFF37D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("        '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = noverify_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		B38A3156407B4C71A47DC946 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("   '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_internal;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_internal.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		B39E9B8EC9254F428728E939 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("    '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = exhaustive_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		B4439E0AFFA34F7BB6090FA3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug,"$(inherited)");
+				OTHER_CFLAGS = ("   '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug/libsecp256k1.2.dylib,"$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		B706EEA5AC13477C99716ACD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = check;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		B7D681A18DF74EF59679A137 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		B813FB1623C145ADA6640483 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		BBED00A93FC44B528A9BF12D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		BDC64E8BA5FC4BF19B08D72D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				DYLIB_COMPATIBILITY_VERSION = 4.0.0;
+				DYLIB_CURRENT_VERSION = 4.2.0;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",secp256k1_EXPORTS,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "@rpath";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CFLAGS = ("    '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -dynamiclib -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1.2;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		C146224946004117A3B73C02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("    '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_ecmult;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		C22019C89580458F99C64C3E /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Nightly;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		C27EC94D48CF4F9C8EA3106D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		C71745BC35A64D10B74D2167 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("    '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = noverify_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		CA06B054B1634984B84BBE35 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		CD8651E746274B06A0DAE052 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk;
+				SYMROOT = /Users/Shared/dotfiles/nostril/xcode/build;
+			};
+			name = Debug;
+		};
+		D011D9C623124E45A4C1DA2E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("    '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		D46DBBB7CAEB4B078C2C4E02 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		DB0D1C543C6140AEBDF3EBE9 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("     '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = noverify_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/noverify_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		DE68D3CAD71544B3A83161EE /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Continuous;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		E3654B9F82C045F6B6300341 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = /Users/Shared/dotfiles/nostril/xcode/build;
+			};
+			name = Release;
+		};
+		E369F69B33CF428B8ED55AB0 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/MinSizeRel;
+				DYLIB_COMPATIBILITY_VERSION = 4.0.0;
+				DYLIB_CURRENT_VERSION = 4.2.0;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",secp256k1_EXPORTS,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "@rpath";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CFLAGS = ("     '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -dynamiclib -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1.2;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		E3A17F8D9EC149F4A0221232 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bench_ecmult;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/bench_ecmult.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		E902CBC2BBB343539AA4FCE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("   '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		E9EE5EC2699C48F2BAB994E6 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/Coverage;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" --coverage -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		EDC6BE0CE0324A0C82EDFEA4 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = /Users/Shared/dotfiles/nostril/xcode/build;
+			};
+			name = RelWithDebInfo;
+		};
+		EDF4974634214A27B5895D4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = ("    '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LIBTOOLFLAGS = ("");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1_precomputed;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		EE62A22B1E714C75849BE461 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("        '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = exhaustive_tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/exhaustive_tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		EF13613F01E74F1F95A702C7 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Experimental;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		EF98A5F3641F400CB1E1C8B7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = check;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		F11E37AF6C144E28899CFE28 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Continuous;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		F24EE879DDAA4334A996E447 /* Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = ("            -DCOVERAGE=1 --coverage '-std=c90' -fPIC -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LIBTOOLFLAGS = ("");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = secp256k1_precomputed;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Coverage;
+		};
+		FA651C0A94854FC3BB0A9D81 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1/src/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",VERIFY,"'ENABLE_MODULE_ELLSWIFT=1'","'ENABLE_MODULE_SCHNORRSIG=1'","'ENABLE_MODULE_EXTRAKEYS=1'","'ENABLE_MODULE_ECDH=1'","'ECMULT_WINDOW_SIZE=15'","'COMB_BLOCKS=11'","'COMB_TEETH=6'","'USE_ASM_X86_64=1'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/Shared/dotfiles/nostril/deps/secp256k1/include,"$(inherited)");
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = ("        '-std=c90' -fvisibility=hidden -pedantic -Wall -Wcast-align -Wconditional-uninitialized -Wextra -Wnested-externs -Wno-long-long -Wno-overlength-strings -Wno-unused-function -Wreserved-identifier -Wshadow -Wstrict-prototypes -Wundef ","$(inherited)");
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult.o","/Users/Shared/dotfiles/nostril/xcode/build/secp256k1_precomputed.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(OBJECT_FILE_DIR_normal:base)/x86_64/precomputed_ecmult_gen.o","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tests;
+				SECTORDER_FLAGS = "";
+				TARGET_TEMP_DIR = "/Users/Shared/dotfiles/nostril/xcode/build/tests.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		030A6AB869384E108529CB1E /* Build configuration list for PBXAggregateTarget "Nightly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E5C19EAD7614404994EAB7D /* RelWithDebInfo */,
+				2E31078F52574B64917A8DE5 /* Release */,
+				3BD8D15EDFAA4B879056D94A /* Debug */,
+				221B93AC8C5F4B7A9CC3DDE5 /* MinSizeRel */,
+				C22019C89580458F99C64C3E /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		09BB77F68E724098A6F7FD77 /* Build configuration list for PBXAggregateTarget "install" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				773D963D03AE4A3BAA8FBF2D /* RelWithDebInfo */,
+				BBED00A93FC44B528A9BF12D /* Release */,
+				B7D681A18DF74EF59679A137 /* Debug */,
+				B813FB1623C145ADA6640483 /* MinSizeRel */,
+				D46DBBB7CAEB4B078C2C4E02 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		09E2EA6EB670418E957F852A /* Build configuration list for PBXNativeTarget "secp256k1_precomputed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				253A4F610AFA472695AD962A /* RelWithDebInfo */,
+				EDF4974634214A27B5895D4D /* Release */,
+				0B9FD980D5CC4E00BA1B49A5 /* Debug */,
+				6086D0CBFCDA49419F94F0F1 /* MinSizeRel */,
+				F24EE879DDAA4334A996E447 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		0A41FAC651A5482C9968C4C0 /* Build configuration list for PBXAggregateTarget "Continuous" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56477B0E8E684DE1B23FDB95 /* RelWithDebInfo */,
+				26CE1C63739B40FC9F4CFA20 /* Release */,
+				39B59D7EA2274B8AB5AB5573 /* Debug */,
+				F11E37AF6C144E28899CFE28 /* MinSizeRel */,
+				DE68D3CAD71544B3A83161EE /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		1B9BBFAE9AB54395AEF76F75 /* Build configuration list for PBXNativeTarget "exhaustive_tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE62A22B1E714C75849BE461 /* RelWithDebInfo */,
+				B39E9B8EC9254F428728E939 /* Release */,
+				32894CD80B774548A6E5990A /* Debug */,
+				5008DAE9AEF74BA2A5F821B8 /* MinSizeRel */,
+				01DFC1AEF59E472EA16ABEE1 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		1F1277CC7BC3464A9174FDF8 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9C6250C33FC14AB1ADEDEC7D /* RelWithDebInfo */,
+				8E1956C0A1424B5C91F94422 /* Release */,
+				CA06B054B1634984B84BBE35 /* Debug */,
+				57BA256AAFF0418293ED7323 /* MinSizeRel */,
+				57E1DDF16E154639ABD4C7BE /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		239ED2106D0C40F6B141A4E7 /* Build configuration list for PBXAggregateTarget "NightlyMemoryCheck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				800B45724EB54D32A972D464 /* RelWithDebInfo */,
+				A37104E276224557B861AC61 /* Release */,
+				123BFC58C63945788CCBB599 /* Debug */,
+				56A96A42BBA04664A52D2186 /* MinSizeRel */,
+				6254BB2D52614B738C7DD61D /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		6227E451AD1A4BC9B5236CE6 /* Build configuration list for PBXNativeTarget "bench_internal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5E163CE350C242E18B3E5F71 /* RelWithDebInfo */,
+				041C1FD1A7F947848CA9697E /* Release */,
+				B38A3156407B4C71A47DC946 /* Debug */,
+				2FF8F815CBD74594B34A71EF /* MinSizeRel */,
+				6E8AED21CF8340FDBE6B041C /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		6A0FE2AA65664D74AFF19975 /* Build configuration list for PBXNativeTarget "bench" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4168B0584C1D44C0AA28C6BA /* RelWithDebInfo */,
+				3D6FE28E92A04BFA9DCB2685 /* Release */,
+				B4439E0AFFA34F7BB6090FA3 /* Debug */,
+				50C8626E19BC4A0FA6BFABED /* MinSizeRel */,
+				0F749FB9ACA5481982CA1416 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		774065139C5B4CF284A6D5CD /* Build configuration list for PBXNativeTarget "bench_ecmult" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E4D04DF5C414A6D9B578235 /* RelWithDebInfo */,
+				C146224946004117A3B73C02 /* Release */,
+				745FAB0F3C964ECDBBDB671B /* Debug */,
+				77B50C87DFC74E7B8C90009D /* MinSizeRel */,
+				E3A17F8D9EC149F4A0221232 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		777AEDFF156140C287ADC3E7 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C27EC94D48CF4F9C8EA3106D /* RelWithDebInfo */,
+				44510CEAF7BF45929909CFFE /* Release */,
+				0D8EF06768194161964465BD /* Debug */,
+				4233F26B4625443DB166C365 /* MinSizeRel */,
+				120E08F6EA2742DEA2546EA9 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		803724D359AF481C9E37545B /* Build configuration list for PBXProject "libsecp256k1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EDC6BE0CE0324A0C82EDFEA4 /* RelWithDebInfo */,
+				E3654B9F82C045F6B6300341 /* Release */,
+				CD8651E746274B06A0DAE052 /* Debug */,
+				7EA65D3B90E64E6A9B6279E8 /* MinSizeRel */,
+				0BF42ACBB2404E809FDA1772 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		A25BD65704E14B39AC273E74 /* Build configuration list for PBXNativeTarget "tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA651C0A94854FC3BB0A9D81 /* RelWithDebInfo */,
+				D011D9C623124E45A4C1DA2E /* Release */,
+				E902CBC2BBB343539AA4FCE6 /* Debug */,
+				52D6B98283374039825FFA0D /* MinSizeRel */,
+				E9EE5EC2699C48F2BAB994E6 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		A2861FE263864B459145A5F6 /* Build configuration list for PBXAggregateTarget "check" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C0F13BE09D44A78B0B957A5 /* RelWithDebInfo */,
+				EF98A5F3641F400CB1E1C8B7 /* Release */,
+				B706EEA5AC13477C99716ACD /* Debug */,
+				94ED49C2C2F34BAAB7D66978 /* MinSizeRel */,
+				ABA3D5A4E6E64EC8913A9CEB /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		C59AD22BC4454A328070E71E /* Build configuration list for PBXNativeTarget "noverify_tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1064C0500E348AD9ABFF37D /* RelWithDebInfo */,
+				C71745BC35A64D10B74D2167 /* Release */,
+				7006E1AEC5574F35B8411CE4 /* Debug */,
+				DB0D1C543C6140AEBDF3EBE9 /* MinSizeRel */,
+				470017F266A4490AB31F9089 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		CB953A1B6DCF465C87AA7A38 /* Build configuration list for PBXAggregateTarget "Experimental" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EF13613F01E74F1F95A702C7 /* RelWithDebInfo */,
+				2EDF6136C3E34991B7E6B38B /* Release */,
+				3219018977B04A7097DFFDC4 /* Debug */,
+				0AD9D653DBE5425DAAB76754 /* MinSizeRel */,
+				73DEFBB2EE094487A33FBA29 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+		D2E76ECBFE8D4FBF92D9BE16 /* Build configuration list for PBXNativeTarget "secp256k1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33FC467DC3B64A0A89857C20 /* RelWithDebInfo */,
+				BDC64E8BA5FC4BF19B08D72D /* Release */,
+				3A6691D76AAC4DCB90309442 /* Debug */,
+				E369F69B33CF428B8ED55AB0 /* MinSizeRel */,
+				0A303085C0F5476C83D998E8 /* Coverage */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = RelWithDebInfo;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 528EC101AB994FFA9BA56BC3 /* Project object */;
+}
