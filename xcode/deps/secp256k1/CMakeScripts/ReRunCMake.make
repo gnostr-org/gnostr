@@ -5,13 +5,13 @@ empty:=
 space:= $(empty) $(empty)
 spaceplus:= $(empty)\ $(empty)
 
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/CMakeLists.txt))
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/cmake/AllTargetsCompileOptions.cmake))
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/cmake/CheckStringOptionValue.cmake))
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/cmake/CheckX86_64Assembly.cmake))
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/cmake/FindValgrind.cmake))
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/cmake/TryAppendCFlags.cmake))
-TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/dotfiles/nostril/deps/secp256k1/src/CMakeLists.txt))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/CMakeLists.txt))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/cmake/AllTargetsCompileOptions.cmake))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/cmake/CheckStringOptionValue.cmake))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/cmake/CheckX86_64Assembly.cmake))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/cmake/FindValgrind.cmake))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/cmake/TryAppendCFlags.cmake))
+TARGETS += $(subst $(space),$(spaceplus),$(wildcard /Users/Shared/nostril/deps/secp256k1/src/CMakeLists.txt))
 TARGETS += $(subst $(space),$(spaceplus),$(wildcard /usr/local/Cellar/cmake/3.29.2/share/cmake/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake))
 TARGETS += $(subst $(space),$(spaceplus),$(wildcard /usr/local/Cellar/cmake/3.29.2/share/cmake/Modules/CTest.cmake))
 TARGETS += $(subst $(space),$(spaceplus),$(wildcard /usr/local/Cellar/cmake/3.29.2/share/cmake/Modules/CTestTargets.cmake))
@@ -26,5 +26,5 @@ TARGETS += $(subst $(space),$(spaceplus),$(wildcard /usr/local/Cellar/cmake/3.29
 TARGETS += $(subst $(space),$(spaceplus),$(wildcard /usr/local/Cellar/cmake/3.29.2/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake))
 TARGETS += $(subst $(space),$(spaceplus),$(wildcard /usr/local/Cellar/cmake/3.29.2/share/cmake/Modules/Internal/CheckSourceCompiles.cmake))
 
-/Users/Shared/dotfiles/nostril/xcode/CMakeFiles/cmake.check_cache: $(TARGETS)
-	/usr/local/Cellar/cmake/3.29.2/bin/cmake -S/Users/Shared/dotfiles/nostril -B/Users/Shared/dotfiles/nostril/xcode
+/Users/Shared/nostril/xcode/CMakeFiles/cmake.check_cache: $(TARGETS)
+	/usr/local/Cellar/cmake/3.29.2/bin/cmake -S/Users/Shared/nostril -B/Users/Shared/nostril/xcode

@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /Users/Shared/dotfiles/nostril/deps/secp256k1
-BuildDirectory: /Users/Shared/dotfiles/nostril/xcode/deps/secp256k1
+SourceDirectory: /Users/Shared/nostril/deps/secp256k1
+BuildDirectory: /Users/Shared/nostril/xcode/deps/secp256k1
 
 # Where to place the cost data store
 CostDataFile: 
@@ -27,7 +27,7 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/usr/local/Cellar/cmake/3.29.2/bin/cmake" "/Users/Shared/dotfiles/nostril/deps/secp256k1"
+ConfigureCommand: "/usr/local/Cellar/cmake/3.29.2/bin/cmake" "/Users/Shared/nostril/deps/secp256k1"
 MakeCommand: /usr/local/Cellar/cmake/3.29.2/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
