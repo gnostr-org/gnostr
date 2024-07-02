@@ -89,9 +89,12 @@ echo padded_commit_hash=$padded_commit_hash
 export NEW_COUNT=$new_count
 #n=`printf '%064s' "$(git rev-parse HEAD~$count)"`
 #echo $n
+PARENT_ID=$(gnostr --sec $padded_parent_hash | gnostr-xq .pubkey)
 ID=$(gnostr --sec $padded_commit_hash | gnostr-xq .pubkey)
+PARENT_ID=${PARENT_ID//\"/}
 ID=${ID//\"/}
-#echo $ID
+echo PARENT_ID=$PARENT_ID
+echo ID=$ID
 gnostr --sec $padded_commit_hash \
 --pow $POW \
 --tag repo $REPO \
