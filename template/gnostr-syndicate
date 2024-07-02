@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+
+some_path=$PWD
+REPO=$(basename $some_path)
+PARENT_REPO=$(basename $(dirname $some_path))
+##GRANDPARENT_REPO=$(basename $(dirname $(dirname $some_path)))
+
+
+
+IS_REPO=$(git rev-parse --is-inside-work-tree)
+#exit
+#echo $IS_REPO
+if $IS_REPO;then
+#echo 1 $IS_REPO=$REPO
+REPO=$(basename $some_path);
+else
+#echo 2 $IS_REPO=$REPO
+REPO=$(basename $(dirname $some_path));
+fi
+
+BRANCH=`git rev-parse --abbrev-ref HEAD` #&& echo $BRANCH
+
+GIT_ORIGIN=$(git config --get remote.origin.url)
+echo $GIT_ORIGIN
+#exit;
+
+RELAY=${1:-wss://nos.lol}
+echo $RELAY
+POW=${2:-12}
+echo $POW
+GNOSTR_WEEBLE=$(gnostr-weeble)
+WEEBLE=${3:-$GNOSTR_WEEBLE}
+echo $WEEBLE
+BLOCK=${4:-$(gnostr-blockheight)}
+echo $BLOCK
+WOBBLE=${5:-$(gnostr-wobble)}
+echo $WOBBLE
+count=0;
+new_count=0;
+INIT_COMMIT=$(git rev-list --all --max-parents=0)
+#echo $INIT_COMMIT;#exit
+##git log -1 --skip 2 --pretty=format:"%h"
+##git rev-parse --short=256 HEAD~2
+#exit
+## n=`printf '%016s' "$(git rev-parse --short=4 HEAD~2)"`
+#n=`printf '%064s' "$(git rev-parse HEAD~0)"`
+#echo $n
+## exit
+
+## branch=master
+## for commit in $(git rev-list $branch)
+## do
+##     ## if git ls-tree --name-only -r $commit | grep -q '\.hbm\.xml$'; then
+##     if git ls-tree --name-only -r $commit; then
+## 
+##         ##echo $commit
+##         exit 0
+##     fi
+## done
+## exit;
+
+## var=$((var+1))
+## ((var=var+1))
+## ((var+=1))
+## ((var++))
+
+#count=0
+for commit_hash in $(git rev-list master);do
+
+padded_commit_hash=`printf '%064s' "$commit_hash"`
+#echo $padded_commit_hash
+#exit
+#echo $commit_hash
+count=$((count+1))
+done
+#exit
+export COUNT=$count
+#exit
+
+#new_count = 0
+for commit_hash in $(gnostr-reflog);do
+#echo $commit_hash
+padded_commit_hash=`printf '%064s' "$commit_hash"`
+#echo $padded_commit_hash
+export NEW_COUNT=$new_count
+#n=`printf '%064s' "$(git rev-parse HEAD~$count)"`
+echo $n
+gnostr --sec $padded_commit_hash \
+--pow $POW \
+--tag repo $REPO \
+--tag branch $BRANCH \
+--tag origin $GIT_ORIGIN \
+--tag weeble $WEEBLE \
+--tag weeble $WEEBLE \
+--tag block $BLOCK \
+--tag wobble $WOBBLE \
+-t $padded_commit_hash \
+--tag nip_commit $commit_hash \
+--content "$(git show $commit_hash || exit)" | gnostr-post-event --relay $RELAY || echo "$commit_hash failed!"
+##echo $commit_hash;
+	#for commit_padded_hash in $(gnostr-reflog -p);do
+	##echo $commit_padded_hash;
+	#	gnostr --sec $commit_padded_hash --content "$(git show $commit_hash)"
+	#done
+if [[ "$commit_hash" == "$INIT_COMMIT" ]]; then
+exit;
+fi
+new_count=$((new_count+1))
+#echo $count & wait
+#echo $new_count & wait
+#exit
+done
+exit;
