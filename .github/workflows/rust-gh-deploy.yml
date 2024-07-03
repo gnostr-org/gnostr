@@ -1,0 +1,108 @@
+name: Continuous Integration
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # At 00:00 on day-of-month 1.
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+  push:
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'master'
+      - 'main'
+
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Compile and Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - nightly
+          - stable
+          # MSRV
+          - 1.56.1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --workspace --verbose
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --workspace --verbose
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --workspace --verbose --no-default-features
+      - name: Test (default features)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --workspace --verbose
+      - name: Test (glob feature)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --workspace --verbose --no-default-features --features glob
+      - name: Test (metadata feature)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --workspace --verbose --no-default-features --features metadata
+      - name: Test (nightly feature)
+        uses: actions-rs/cargo@v1
+        if: matrix.rust == 'nightly'
+        with:
+          command: test
+          args: --workspace --verbose --no-default-features --features nightly
+      - name: Test (all features)
+        uses: actions-rs/cargo@v1
+        if: matrix.rust == 'nightly'
+        with:
+          command: test
+          args: --workspace --verbose --all-features
+
+  api-docs:
+    name: Publish API Docs to GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --workspace --verbose --all-features
+      - name: Redirect top-level GitHub Pages
+        run: "echo '<meta http-equiv=\"refresh\" content=\"0; url=include_dir/index.html\" />' > target/doc/index.html"
+        shell: bash
+      - name: Upload API Docs
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        if: github.ref == 'refs/heads/master'
+        with:
+          branch: gh-pages
+          folder: target/doc
