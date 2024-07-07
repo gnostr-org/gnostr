@@ -1,3 +1,4 @@
+*xcuserdata*
 .DS_Store
 /target
 main
@@ -46,3 +47,13 @@ ext/secp256k1/src/CMakeFiles/
 ext/secp256k1/src/CTestTestfile.cmake
 ext/secp256k1/src/cmake_install.cmake
 install_manifest.txt
+
+# cmake
+xcode/deps/secp256k1/src/Release
+xcode/deps/secp256k1/examples/
+xcode/deps/secp256k1/src/libsecp256k1-config-version.cmake
+xcode/deps/secp256k1/src/libsecp256k1-config.cmake
+xcode/deps/secp256k1/src/libsecp256k1.pc
+xcode/deps/secp256k1/src/Debug/
+xcode/nostril.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+xcode/nostril.xcodeproj/xcshareddata/
