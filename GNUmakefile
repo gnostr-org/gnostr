@@ -191,9 +191,8 @@ docker-start: venv
 ##docker-start
 ##	start docker on Linux or Darwin
 	@echo CI=$(CI)
-	@touch requirements.txt && $(shell which python3) -m pip install    -q -r requirements.txt
-	@touch requirements.txt && $(shell which python3) -m pip install -U       virtualenv
-	@test -d .venv || $(shell which python3) -m virtualenv .venv
+	@touch requirements.txt
+	@test -d .venv || virtualenv .venv
 	@( \
 	   . .venv/bin/activate; pip install -q -r requirements.txt; \
 	   python3 -m pip install -q pipenv \
