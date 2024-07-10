@@ -39,10 +39,10 @@ name = "git-gnostr"
 path = "../src/bin/gnostr.rs"
 doc = false
 
-[[bin]]
-name = "gnostr-gui"
-path = "../gui/src/main.rs"
-doc = false
+## [[bin]]
+## name = "gnostr-gui"
+## path = "../gui/src/main.rs"
+## doc = false
 
 
 ## git gnostr-gui
