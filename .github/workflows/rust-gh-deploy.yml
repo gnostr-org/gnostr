@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: rust-gh-deploy.yml
 
 on:
   schedule:
@@ -32,9 +32,9 @@ jobs:
           - nightly
           - stable
           # MSRV
-          - 1.56.1
+          - 1.76
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
