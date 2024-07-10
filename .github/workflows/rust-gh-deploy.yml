@@ -98,8 +98,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: default
-          toolchain: stable
+          toolchain: nightly
           override: true
+      - run: cargo +nightly update -Zmsrv-polic
       - uses: actions-rs/cargo@v1
         with:
           command: doc
