@@ -11,7 +11,6 @@ repository = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
 keywords = { workspace = true }
-
 ## [source."git+https://github.com/gnostr-org/nip44?rev=e38717f86ccccb91c25ebf07881a77d66411161c"]
 ## git = "https://github.com/mikedilger/nip44"
 ## version = "0.1.0"
@@ -37,11 +36,14 @@ async-std = { version = "1.12.0", features = ["futures-core"] }
 async-trait = "0.1"
 base64 = "0.21"
 bech32 = "0.9"
+
+bytes = "0.5"
 #bytes = "0.5"
 chrono = { version = "0.4.34", features = ["serde"] }
 clearscreen = "3.0.0"
 
 crossterm = { version = "0.19", features = [ "serde" ] }
+futures = { version = "0.3.6", default-features = false, features = ["async-await"] }
 #env_logger = { workspace = true, version = "0.11"}
 
 futures-lite = "2.3.0"
@@ -52,8 +54,8 @@ gnostr-types = "0.7.1-unstable"
 hex = "0.4"
 homedir = "0.2.1"
 http = "0.2"
-hypercore-protocol = { version = "0.4.2-alpha.1", package = "gnostr-core", features = ["async-std", "cache", "wasm-bindgen", "js_interop_tests"] }
 hyper = "0.13"
+hypercore-protocol = { version = "0.4.2-alpha.1", package = "gnostr-core", features = ["async-std", "cache", "wasm-bindgen", "js_interop_tests"] }
 #insta.workspace = true
 k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 libp2p = { version = "0.53.2", features = ["full"] }
@@ -81,18 +83,13 @@ sha256 = "1.2.2"
 structopt = "0.3.26"
 thiserror = "1.0"
 time = "0.1.42"
+tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
 #tokio = { version = "1.37", features = ["rt", "macros", "rt-multi-thread"] }
 tui = { version = "0.14", default-features = false, features = ['crossterm', 'serde'] }
 tungstenite = { version = "0.18", features = [ "rustls-tls-webpki-roots" ] }
 ureq = "2.9.6"
 url = { version = "2.5.0", features = ["serde"] }
 zeroize = "1.5"
-
-bytes = "0.5"
-futures = { version = "0.3.6", default-features = false, features = ["async-await"] }
-tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
-
-
 
 [dev-dependencies]
 cargo-dist = "0.14.0"
