@@ -18,11 +18,13 @@ keywords = { workspace = true }
 [[bin]]
 name = "jj"
 path = "src/main.rs"
+doc = false
 
 ## git gnostr-jj
 [[bin]]
 name = "git-gnostr-jj"
 path = "src/main.rs"
+doc = false
 
 ## gnostr
 ## command handler
@@ -39,10 +41,12 @@ path = "../src/bin/gnostr.rs"
 name = "gnostr-gui"
 path = "../gui/src/main.rs"
 
+
 ## git gnostr-gui
 [[bin]]
 name = "git-gnostr-gui"
 path = "../gui/src/main.rs"
+doc = false
 
 ## ## git-legit
 ## [[bin]]
