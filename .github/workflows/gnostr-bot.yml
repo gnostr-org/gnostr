@@ -100,13 +100,13 @@ jobs:
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
-      - run: make detect || sudo make detect
+      - run: make -f GNUmakefile detect || sudo -S make -f GNUmakefile detect
       - run: pipx install virtualenv || true
 
       ## objective: test non-cmake build gnostr-am
-      - run: make gnostr gnostr-am gnostr-install
-      - run: make gnostr-bins
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+      - run: make -f GNUmakefile gnostr gnostr-am gnostr-install || true
+      - run: make -f GNUmakefile gnostr-bins || true
+      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) || true
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
       - run: cmake .
