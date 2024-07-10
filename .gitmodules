@@ -1,119 +1,136 @@
 [submodule "drives"]
 	path = drives
 	url = https://github.com/gnostr-org/gnostr-drives.git
-    branch = master
-  depth = shallow
-  ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "ext/wxWidgets-3.2.2.1"]
 	path = ext/wxWidgets-3.2.2.1
 	url = https://github.com/gnostr-org/wxWidgets.git
-    branch = master
-  ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-act"]
 	path = act
 	url = https://github.com/gnostr-org/gnostr-act.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-bits"]
 	path = bits
 	url = https://github.com/gnostr-org/gnostr-bits.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-cli"]
 	path = cli
 	url = https://github.com/gnostr-org/gnostr-cli.git
-    branch = master
-    depth = shallow
-    ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-core"]
 	path = core
 	url = https://github.com/gnostr-org/gnostr-core.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-db"]
 	path = db
 	url = https://github.com/gnostr-org/gnostr-db.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-ffi"]
 	path = ffi
 	url = https://github.com/gnostr-org/gnostr-ffi.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-git"]
 	path = git
 	url = https://github.com/gnostr-org/gnostr-git.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-grep"]
 	path = grep
 	url = https://github.com/gnostr-org/gnostr-grep.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-jq"]
 	path = jq
 	url = https://github.com/gnostr-org/gnostr-jq.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-lfs"]
 	path = lfs
 	url = https://github.com/gnostr-org/gnostr-lfs.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-org"]
 	path = org
 	url = https://github.com/gnostr-org/gnostr-org.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-proxy"]
 	path = proxy
 	url = https://github.com/gnostr-org/gnostr-proxy.git
-    branch = master
-    depth = shallow
-    ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-py"]
 	path = py
 	url = https://github.com/gnostr-org/gnostr-py.git
-    branch = master
-  depth = shallow
-  ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "gnostr-relay"]
 	path = relay
 	url = https://github.com/gnostr-org/gnostr-relay.git
-    branch = master
-    depth = shallow
-    ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "hyper-nostr"]
 	path = hyper-nostr
 	url = https://github.com/gnostr-org/hyper-nostr.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "hyper-sdk"]
 	path = hyper-sdk
 	url = https://github.com/gnostr-org/hyper-sdk.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "modal"]
 	path = modal
 	url = https://github.com/gnostr-org/gnostr-modal.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "nips"]
 	path = nips
 	url = https://github.com/gnostr-org/nips.git
-    branch = master
-    depth = shallow
-    ignore = dirty
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "src/libcjson"]
 	path = src/libcjson
 	url = https://github.com/gnostr-org/libcjson.git
-    branch = master
-    depth = shallow
+	branch = master
+	depth = shallow
+	ignore = dirty
 [submodule "vendor/secp256k1-sys/depend/secp256k1"]
 	path = vendor/secp256k1-sys/depend/secp256k1
 	url = https://github.com/gnostr-org/secp256k1.git
-    ignore = dirty
+	depth = shallow
+	ignore = dirty
 [submodule "secp256k1"]
 	path = secp256k1
 	url = https://github.com/gnostr-org/secp256k1.git
-    ignore = dirty
+	depth = shallow
+	ignore = dirty
