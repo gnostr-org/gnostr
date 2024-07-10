@@ -1,4 +1,4 @@
-name: gnostr
+name: gnostr-bot
 
 # Controls when the action will run.
 on:
@@ -18,6 +18,8 @@ on:
       - '**'
       - 'master'
       - 'main'
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
