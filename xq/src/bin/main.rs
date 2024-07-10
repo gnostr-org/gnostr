@@ -7,8 +7,8 @@ use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use clap_verbosity_flag::Verbosity;
 use cli::input::Input;
-use is_terminal::IsTerminal;
 use gnostr_xq::{module_loader::PreludeLoader, run_query, InputError, Value};
+use is_terminal::IsTerminal;
 
 use crate::cli::input::Tied;
 
