@@ -40,7 +40,7 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: false
+          fetch-tags: 'true'
       - uses: actions-rs/toolchain@v1
         with:
           profile: default
@@ -94,7 +94,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get update && sudo apt-get install -y libavutil-dev
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'true'
       - uses: actions-rs/toolchain@v1
         with:
           profile: default
