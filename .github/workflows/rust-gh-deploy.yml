@@ -34,6 +34,7 @@ jobs:
           # MSRV
           - 1.76
     steps:
+      - run: apt-get update && apt-get install -y libavutil-dev
       - uses: actions/checkout@v3
         with:
           submodules: 'true'
