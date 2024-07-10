@@ -101,7 +101,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --workspace --verbose --all-features
+          args: --workspace --verbose --all-features --no-deps
       - name: Redirect top-level GitHub Pages
         run: "echo '<meta http-equiv=\"refresh\" content=\"0; url=include_dir/index.html\" />' > target/doc/index.html"
         shell: bash
