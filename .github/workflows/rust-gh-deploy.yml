@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: rust-gh-deploy.yml
 
 on:
   schedule:
@@ -34,7 +34,14 @@ jobs:
           # MSRV
           - 1.56.1
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        if: ${{ !env.ACT }}
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: false
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
