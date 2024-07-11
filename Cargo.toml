@@ -76,8 +76,8 @@ timing = ["scopetime/enabled"]
 trace-libgit = ["asyncgit/trace-libgit"]
 vendor-openssl = ["asyncgit/vendor-openssl"]
 
-[workspace]
-members = ["asyncgit", "filetreelist", "git2-hooks", "git2-testing", "scopetime"]
+# [workspace]
+# members = ["asyncgit", "filetreelist", "git2-hooks", "git2-testing", "scopetime"]
 
 [profile.release]
 lto = true
@@ -87,5 +87,5 @@ codegen-units = 1
 # make debug build as fast as release
 # usage of utf8 encoding inside tui
 # makes their debug profile slow
-[profile.dev.package."ratatui"]
-opt-level = 3
+# [profile.dev.package."ratatui"]
+# opt-level = 3
