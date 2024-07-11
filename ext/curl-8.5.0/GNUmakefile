@@ -1,4 +1,4 @@
-.PHONY:configure
+.PHONY: configure
 default:
 	git update-index --assume-unchanged configure
 	[ -x $(shell which cmake) ] && cmake . && $(MAKE) all install
