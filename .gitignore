@@ -1,3 +1,9 @@
+## gnostr-git needs libcurl.a build for MacOS 13.0
+ext/curl-8.5.0/lib/libcurl.4.8.0.dylib
+ext/curl-8.5.0/lib/libcurl.4.dylib
+ext/curl-8.5.0/lib/libcurl.dylib
+ext/curl-8.5.0/src/gnostr-curl
+
 gnostr-go-chat
 go/gnostr-go-chat
 plan-dist-manifest.json
