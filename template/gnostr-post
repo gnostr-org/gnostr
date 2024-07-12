@@ -49,10 +49,7 @@ fi
 
 TMP=$(mktemp)
 
-##if [[ ! -z $3 ]];
-##then
-  echo $CONTENT > $TMP
-##fi
+echo $CONTENT > $TMP
 
 $EDITOR "$TMP"
 
