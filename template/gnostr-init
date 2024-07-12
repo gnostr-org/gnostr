@@ -1,10 +1,43 @@
-#!/bin/sh -ev
+#!/bin/sh -e
+DATE=$(date +%s)
+site='mempool.space'
+until $(ping -q -c1 ${site} > /dev/null 2>&1)
+do
+    echo "${site} is unreachable. Retrying"
+    # continue
+done
+
+echo "${site} online"
+
+while :
+    do
+        socat /dev/null TCP4:google.com:443,connect-timeout=2 && break
+        sleep 1
+    done
+
+WEEBLE=$(gnostr-weeble)
+BLOCK=$(gnostr-blockheight)
+WOBBLE=$(gnostr-wobble)
+#git init 2>/dev/null
+if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+git checkout -b  gnostr 2>/dev/null && git switch -t gnostr 2>/dev/null || true
+else
+git init 2>/dev/null
+git checkout -b gnostr 2>/dev/null && git switch -t gnostr 2>/dev/null || true
+fi
+git config --local init.defaultBranch gnostr
+git config --local commit.gpgsign false
+MESSAGE=${1:-"gnostr:init"}
+MESSAGE2=${2:-""}
 tmp_branch=__tmp_empty_root
 git symbolic-ref HEAD refs/heads/$tmp_branch
-git rm --cached -r . || true
-git clean -f #-d
+for file in $(ls);do git rm --cached -rf ./$file 2>/dev/null;done || true
+git clean -f || true
+git clean -f -d || true
 touch -t '19700101 UTC' .
 GIT_COMMITTER_DATE='1970-01-01T00:00:00 +0000' git commit \
-    --date='1970-01-01T00:00:00 +0000' --allow-empty -m "gnostr:init"
-git rebase --committer-date-is-author-date --onto $tmp_branch --root master
+    --date='1970-01-01T00:00:00 +0000' --allow-empty -m "$MESSAGE" -m "$MESSAGE2" -m "$WEEBLE/$BLOCK/$WOBBLE"
+git rebase --committer-date-is-author-date --onto $tmp_branch --root gnostr
 git branch -d $tmp_branch
+git checkout gnostr
+

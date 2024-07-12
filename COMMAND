@@ -1,0 +1,1 @@
+for relay in $(gnostr-fetch-watch-list-iterator);do gnostr --sec $(gnostr-sha256 $relay-$(echo date +%s)) --tag     date $(date +%s) --tag $relay $(gnostr-sha256 $relay) --tag r $relay --content $relay --pow 20 | gnostr-post-event;done
