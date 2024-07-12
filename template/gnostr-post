@@ -4,37 +4,54 @@ set -e
 #uxo pipefail
 
 ##echo $1 $2
-WEEBLE=${gnostr-weeble:-}
-WOBBLE=${gnostr-wobble:-}
-#echo $WEEBLE
-#echo $WOBBLE
+WEEBLE=$(gnostr-weeble || 0)
+BLOCK=$(gnostr-blockheight || 0)
+WOBBLE=$(gnostr-wobble || 0)
+echo $WEEBLE
+echo $BLOCK
+echo $WOBBLE
 
 ## gnostr-post
 ## gnostr-post --sec
 ARG=${1:-}
 ## gnostr-post --sec $(gnostr-sha256)
-SEC=${2:-0000000000000000000000000000000000000000000000000000000000000000}
+SEC=${2:-0000000000000000000000000000000000000000000000000000000000000001}
 ## gnostr-post --sec $(gnostr-sha256) --content "this is a message"
 ARG2=${3:-}
+
+version(){
+
+  printf "v0.0.0";
+exit;
+}
+help(){
+
+  printf "gnostr-post -h --help\n";
+  printf "            -v --version\n";
+  printf "            \n";
+  printf "            --sec <sha256>\n";
+  printf "            --sec <sha256> --content \"<string>\"\n";
+exit;
+}
 if [[ $ARG == "-h" ]];
 then
-  printf "gnostr-post help"; exit;
+help
 fi
 if [[ $ARG == "--help" ]];
 then
-  printf "gnostr-post help"; exit
+help
 fi
 if [[ $ARG == "help" ]];
 then
-  printf "gnostr-post help"; exit
+help
 fi
 if [[ $ARG == "-v" ]];
 then
-  printf "v0.0.1"; exit
+  version
 fi
 if [[ $ARG == "--version" ]];
 then
-  printf "v0.0.0"; exit
+  version
 fi
 if [[ $ARG == "--sec" ]];
 then
@@ -44,12 +61,12 @@ fi
 ## gnostr-post --sec  $(gnostr-sha256) --content "this is a message"
 if [[ $ARG2 == "--content" ]];
 then
- CONTENT=$4
+ ARG_CONTENT=$4
 fi
 
 TMP=$(mktemp)
 
-echo $CONTENT > $TMP
+echo $ARG_CONTENT > $TMP
 
 $EDITOR "$TMP"
 
@@ -81,15 +98,14 @@ fi
 ## 	fi
 ## fi
 
-note=$(gnostr --sec $SEC "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$CONTENT")
+note=$(gnostr --sec $SEC "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$content")
 
-RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+RELAYS=$(gnostr-get-relays -s) || $(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/[{}]/''/g' |
     sed -e 's/\[/''/g' |
     sed -e 's/\]/''/g' |
     sed -e 's/"//g' |
     awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
-
 #echo $RELAYS
 #
 ##printf "relaying:\n" >&2
