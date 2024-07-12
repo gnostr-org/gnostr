@@ -4,58 +4,69 @@ set -e
 #uxo pipefail
 
 ##echo $1 $2
-WEEBLE=${gnostr-weeble:-}
-WOBBLE=${gnostr-wobble:-}
-#echo $WEEBLE
-#echo $WOBBLE
+WEEBLE=$(gnostr-weeble || 0)
+BLOCK=$(gnostr-blockheight || 0)
+WOBBLE=$(gnostr-wobble || 0)
+echo $WEEBLE
+echo $BLOCK
+echo $WOBBLE
 
-##RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
-##    sed -e 's/[{}]/''/g' |
-##    sed -e 's/\[/''/g' |
-##    sed -e 's/\]/''/g' |
-##    sed -e 's/"//g' |
-##    awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
-##
-##if [[ ! -z "$RELAYS" ]];
-##then
-##  for r in $RELAYS;
-##  do
-##    echo #$r
-##  done
-##fi
-##
-###exit;
-
+## gnostr-post
+## gnostr-post --sec
 ARG=${1:-}
-CONTENT=${2:-#gnostr}
+## gnostr-post --sec $(gnostr-sha256)
+SEC=${2:-0000000000000000000000000000000000000000000000000000000000000001}
+## gnostr-post --sec $(gnostr-sha256) --content "this is a message"
+ARG2=${3:-}
 
+version(){
+
+  printf "v0.0.0";
+exit;
+}
+help(){
+
+  printf "gnostr-post -h --help\n";
+  printf "            -v --version\n";
+  printf "            \n";
+  printf "            --sec <sha256>\n";
+  printf "            --sec <sha256> --content \"<string>\"\n";
+exit;
+}
 if [[ $ARG == "-h" ]];
 then
-  printf "gnostr-post help"; exit;
+help
 fi
 if [[ $ARG == "--help" ]];
 then
-  printf "gnostr-post help"; exit
+help
 fi
 if [[ $ARG == "help" ]];
 then
-  printf "gnostr-post help"; exit
+help
 fi
 if [[ $ARG == "-v" ]];
 then
-  printf "v0.0.1"; exit
+  version
 fi
 if [[ $ARG == "--version" ]];
 then
-  printf "v0.0.0"; exit
+  version
+fi
+if [[ $ARG == "--sec" ]];
+then
+ SEC=$2
+fi
+               ##ARG1 ##SEC            ##ARG2     ##CONTENT
+## gnostr-post --sec  $(gnostr-sha256) --content "this is a message"
+if [[ $ARG2 == "--content" ]];
+then
+ ARG_CONTENT=$4
 fi
 
 TMP=$(mktemp)
 
-if [[ $ARG == "--content" ]];
-then
-  echo $CONTENT > $TMP
-fi
+echo $ARG_CONTENT > $TMP
 
 $EDITOR "$TMP"
 
@@ -72,45 +83,44 @@ if [[ "$content" =~ $re ]]; then
 	exit 2
 fi
 
-sec=""
-if command -v gnostr-git >/dev/null; then
-	key=$(gnostr-git config gnostr.secretkey) || \
-  key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
-	if [ $key != "" ]; then
-		sec="--sec $key"
-	fi
-elif command -v git >/dev/null; then
-	key=$(git config nostr.secretkey) || \
-  key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
-	if [ $key != "" ]; then
-		sec="--sec $key"
-	fi
-fi
+## sec=""
+## if command -v gnostr-git >/dev/null; then
+## 	key=$(gnostr-git config gnostr.secretkey) || \
+##   key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
+## 	if [ $key != "" ]; then
+## 		sec="--sec $key"
+## 	fi
+## elif command -v git >/dev/null; then
+## 	key=$(git config nostr.secretkey) || \
+##   key=0000000000000000000000000000000000000000000000000000000000000000 ##technically an invalid secretkey
+## 	if [ $key != "" ]; then
+## 		sec="--sec $key"
+## 	fi
+## fi
 
-note=$(gnostr --envelope $sec "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "#gnostr:$content")
+note=$(gnostr --sec $SEC "$@" -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$content")
 
-RELAYS=$(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
+RELAYS=$(gnostr-get-relays -s) || $(curl  'https://api.nostr.watch/v1/online' 2>/dev/null |
     sed -e 's/[{}]/''/g' |
     sed -e 's/\[/''/g' |
     sed -e 's/\]/''/g' |
     sed -e 's/"//g' |
     awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}') 2>/dev/null
-
 #echo $RELAYS
 #
 ##printf "relaying:\n" >&2
 printf "$note\n"
-<<<"$note" gnostr-cat -1 wss://relay.damus.io || true
+<<<"$note" gnostr-post-event wss://relay.damus.io || true
 #printf "done.\n" >&2
 printf "$note\n"
-<<<"$note" gnostr-cat -1 wss://nos.lol || true
+<<<"$note" gnostr-post-event wss://nos.lol || true
 #printf "done.\n" >&2
 
 for r in $RELAYS;
 do
 ##printf "relaying:\n" >&2
 printf "$note\n"
-<<<"$note" gnostr-cat -1 $r || true
+<<<"$note" gnostr-post-event $r || true
 #printf "done.\n" >&2
 done
 
