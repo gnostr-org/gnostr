@@ -1,5 +1,5 @@
 { pkgs ? import <nixpkgs> {} }:
 with pkgs;
 mkShell {
-  buildInputs = [ secp256k1 gdb autoreconfHook ];
+  buildInputs = [ autoreconfHook cmake gdb git python3 secp256k1 vim ];
 }
