@@ -24,7 +24,7 @@ GIT_ORIGIN=$(git config --get remote.origin.url)
 echo $GIT_ORIGIN
 #exit;
 
-RELAY=${1:-wss://nos.lol}
+RELAY=${1:-wss://e.nos.lol}
 echo $RELAY
 POW=${2:-12}
 echo $POW
