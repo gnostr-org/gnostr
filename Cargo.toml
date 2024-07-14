@@ -2,8 +2,8 @@ cargo-features = []
 
 [workspace]
 resolver = "2"
-members = ["bins", "d", "jj", "git", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup", "nips", "tui", "tui/asyncgit", "tui/filetreelist", "tui/git2-hooks", "tui/git2-testing", "tui/scopetime"]
-exclude = ["ffi", "relay"]
+members = ["bins", "d", "jj", "lib", "lib/gen-protos", "lib/proc-macros", "lib/testutils", "lookup", "nips", "tui", "tui/asyncgit", "tui/filetreelist", "tui/git2-hooks", "tui/git2-testing", "tui/scopetime"]
+exclude = ["ffi", "git", "relay"]
 
 [workspace.package]
 version = "0.0.47"
