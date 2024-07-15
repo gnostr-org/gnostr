@@ -347,7 +347,7 @@ impl App {
 				theme.clone(),
 				key_config.clone(),
 			),
-            //tab 
+            //tab
 			stashlist_tab: StashList::new(
 				repo.clone(),
 				&queue,
