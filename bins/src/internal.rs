@@ -120,6 +120,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
     let (mut websocket, _response) =
         tungstenite::connect(request).expect("Could not connect to relay");
 
+    print!("{}\n", wire);
     websocket
         .write_message(Message::Text(wire))
         .expect("Could not send message to relay");
