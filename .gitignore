@@ -924,3 +924,5 @@ vostro
 
 bins/identity.key
 log/
+.nvmrc
+.gnostr/proxy
