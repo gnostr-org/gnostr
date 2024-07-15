@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+help(){
+
+echo "USAGE:"
+echo    "gnostr-syndicate wss://e.nos.lol 1"
+exit;
+}
+
+if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+    help
+fi
+
 some_path=$PWD
 REPO=$(basename $some_path)
 PARENT_REPO=$(basename $(dirname $some_path))
@@ -21,20 +32,20 @@ fi
 BRANCH=`git rev-parse --abbrev-ref HEAD` #&& echo $BRANCH
 
 GIT_ORIGIN=$(git config --get remote.origin.url)
-echo $GIT_ORIGIN
+#echo $GIT_ORIGIN
 #exit;
 
-RELAY=${1:-wss://nos.lol}
-echo $RELAY
-POW=${2:-12}
-echo $POW
+RELAY=${1:-wss://e.nos.lol}
+#echo $RELAY
+POW=${2:-1}
+#echo $POW
 GNOSTR_WEEBLE=$(gnostr-weeble)
 WEEBLE=${3:-$GNOSTR_WEEBLE}
-echo $WEEBLE
+#echo $WEEBLE
 BLOCK=${4:-$(gnostr-blockheight)}
-echo $BLOCK
+#echo $BLOCK
 WOBBLE=${5:-$(gnostr-wobble)}
-echo $WOBBLE
+#echo $WOBBLE
 count=0;
 new_count=0;
 INIT_COMMIT=$(git rev-list --all --max-parents=0)
@@ -80,12 +91,12 @@ export COUNT=$count
 #new_count = 0
 for commit_hash in $(gnostr-reflog);do
 PARENT=$(git rev-parse $commit_hash^1)
-echo $PARENT
+#echo $PARENT
 #echo $commit_hash
 padded_parent_hash=`printf '%064s' "$PARENT"`
-echo padded_parent_hash=$padded_parent_hash
+#echo padded_parent_hash=$padded_parent_hash
 padded_commit_hash=`printf '%064s' "$commit_hash"`
-echo padded_commit_hash=$padded_commit_hash
+#echo padded_commit_hash=$padded_commit_hash
 export NEW_COUNT=$new_count
 #n=`printf '%064s' "$(git rev-parse HEAD~$count)"`
 #echo $n
@@ -93,8 +104,8 @@ PARENT_ID=$(gnostr --sec $padded_parent_hash | gnostr-xq .pubkey)
 ID=$(gnostr --sec $padded_commit_hash | gnostr-xq .pubkey)
 PARENT_ID=${PARENT_ID//\"/}
 ID=${ID//\"/}
-echo PARENT_ID=$PARENT_ID
-echo ID=$ID
+#echo PARENT_ID=$PARENT_ID
+#echo ID=$ID
 gnostr --sec $padded_commit_hash \
 --pow $POW \
 -t gnostr \
