@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use jj_cli::cli_util::CliRunner;
-use std::process::*;
-use std::process::ExitCode;
-
 use std::env;
+use std::process::{ExitCode, *};
 
 use futures::executor::block_on;
 use gnostr_bins::{get_stripped_urls, get_watch_list, get_watch_list_json, print_watch_list};
+use jj_cli::cli_util::CliRunner;
 
 pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::Error>> {
     let _ = args.next(); // program name
@@ -31,7 +29,6 @@ pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::E
     println!("*** COMMAND = {} ***\n", command);
 
     match &*command {
-
         //sec nostr private ley
         "sec" => gnostr_sec(),
         "--sec" => gnostr_sec(),
@@ -115,7 +112,11 @@ fn help() {
     let package_name = env!("CARGO_PKG_NAME");
     let crate_name = env!("CARGO_CRATE_NAME");
     let version = env!("CARGO_PKG_VERSION");
-    print!("\n1:{} v{}\n\n", package_name.replace("jj-cli", "gnostr"), version);
+    print!(
+        "\n1:{} v{}\n\n",
+        package_name.replace("jj-cli", "gnostr"),
+        version
+    );
     print!("\n{} v{}\n\n", crate_name.replace("git_", ""), version);
     print!("3:{} get\n", crate_name.replace("git_", ""));
     print!("4:       <csv_relay_list>\n");
@@ -137,24 +138,20 @@ fn version() {
 
     //println!("Program Name: {}", name);
     //println!("Program Version: {}", version);
-    println!("{} v{}", crate_name.replace("git_gnostr", "gnostr"), version);
+    println!(
+        "{} v{}",
+        crate_name.replace("git_gnostr", "gnostr"),
+        version
+    );
     //println!("Program Version: {}", version);
     //println!("Program Author: {}", author);
 
     process::exit(0);
 }
 
-
-
 fn gnostr_git() -> std::process::ExitCode {
     //CliRunner::init().version(env!("JJ_VERSION")).run()
-      
-      
-      
-      
-      
-      
-      
+
     let exit: ExitCode = 0.into();
     exit
 }
@@ -180,6 +177,6 @@ fn main() {
     //    }
     //}
 
-    let _exit_code: std::process::ExitCode= gnostr_git();
+    let _exit_code: std::process::ExitCode = gnostr_git();
     _exit_code;
 }
