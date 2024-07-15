@@ -99,9 +99,10 @@ gnostr --sec $padded_commit_hash \
 --pow $POW \
 -t gnostr \
 --tag repo $REPO \
+--tag relay $RELAY \
+--tag r $RELAY \
 --tag branch $BRANCH \
 --tag origin $GIT_ORIGIN \
---tag weeble $WEEBLE \
 --tag weeble $WEEBLE \
 --tag block $BLOCK \
 --tag wobble $WOBBLE \
