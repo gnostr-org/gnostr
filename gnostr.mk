@@ -433,10 +433,12 @@ proxy:proxy/.git
 		$(MAKE) install
 
 .PHONY:nips
-nips:
+nips/.git:
+	@devtools/refresh-submodules.sh nips
+nips: nips/.git
 	cargo install --path $@
 
-.PHONY:relay gnostr-relay
+.PHONY: relay gnostr-relay
 relay/.git:
 	@devtools/refresh-submodules.sh relay
 gnostr-relay:relay
