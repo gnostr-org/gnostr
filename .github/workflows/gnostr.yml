@@ -106,9 +106,8 @@ jobs:
 
       ## objective: test non-cmake build gnostr-am
       - run: cat Makefile
-      - run: mkdir -p /usr/local/bins && rm -rf /usr/local/bins/gnostr*
       - run: make gnostr-am gnostr-install
-      - run: make gnostr-bins
+      - run: make gnostr-bins && cargo b -r --bin gnostr-add
       - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
       ## objective: test cmake build gnostr
