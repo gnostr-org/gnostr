@@ -3,9 +3,7 @@ LABEL org.opencontainers.image.source="https://github.com/gnostr-org/gnostr"
 LABEL org.opencontainers.image.description="gnostr-docker"
 RUN touch updated
 RUN echo $(date +%s) > updated
-RUN apt-get update
-RUN apt-get install -y bash cmake git libssl-dev make tcl-dev
-RUN apt-get update && apt-get install autoconf bash build-         essential cmake curl git jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release make nodejs npm pkg-config python3 python-   is-python3 sudo tcl-dev zlib1g-dev -y¬
+RUN apt-get update && apt-get install autoconf bash build-essential cmake curl git jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release make nodejs npm pkg-config python3 python-is-python3 sudo tcl-dev zlib1g-dev -y
 
 RUN git clone --branch master --depth 1 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp
