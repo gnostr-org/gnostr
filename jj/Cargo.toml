@@ -30,7 +30,7 @@ doc = false
 ## command handler
 [[bin]]
 name = "gnostr"
-path = "../src/bin/gnostr.rs"
+path = "../src/bin/__gnostr.rs"
 doc = false
 
 ## git gnostr pass through
