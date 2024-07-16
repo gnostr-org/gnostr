@@ -940,7 +940,7 @@ dependencies = [
 
 [[package]]
 name = "asyncgit"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "bitflags 1.3.2",
  "crossbeam-channel",
@@ -4067,7 +4067,7 @@ dependencies = [
 
 [[package]]
 name = "filetreelist"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "pretty_assertions",
  "thiserror",
@@ -4431,7 +4431,7 @@ checksum = "8f5f3913fa0bfe7ee1fd8248b6b9f42a5af4b9d65ec2dd2c3c26132b950ecfc2"
 
 [[package]]
 name = "gen-protos"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "prost-build",
 ]
@@ -4528,7 +4528,7 @@ checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 
 [[package]]
 name = "git-version"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "assert2",
  "git-version-macro",
@@ -4572,7 +4572,7 @@ dependencies = [
 
 [[package]]
 name = "git2-hooks"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "git2",
  "git2-testing",
@@ -4585,7 +4585,7 @@ dependencies = [
 
 [[package]]
 name = "git2-testing"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "env_logger",
  "git2",
@@ -5761,7 +5761,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "anstream",
  "argparse",
@@ -5819,7 +5819,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-cli"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -5876,7 +5876,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-lookup"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "ansi_term",
  "async-std",
@@ -5892,7 +5892,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-tui"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "anyhow",
  "asyncgit",
@@ -5911,7 +5911,7 @@ dependencies = [
  "filetreelist",
  "fuzzy-matcher",
  "gh-emoji",
- "git-version 0.0.48",
+ "git-version 0.0.49",
  "git2",
  "indexmap 1.9.3",
  "itertools 0.12.1",
@@ -5977,7 +5977,7 @@ dependencies = [
 
 [[package]]
 name = "gnostrd"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6987,7 +6987,7 @@ checksum = "ee87fd093563344074bacf24faa0bb0227fb6969fb223e922db798516de924d6"
 
 [[package]]
 name = "invalidstring"
-version = "0.0.48"
+version = "0.0.49"
 
 [[package]]
 name = "io-close"
@@ -7111,7 +7111,7 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
 name = "jj-cli"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7209,7 +7209,7 @@ dependencies = [
 
 [[package]]
 name = "jj-lib"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -7265,7 +7265,7 @@ dependencies = [
 
 [[package]]
 name = "jj-lib-proc-macros"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -9715,7 +9715,7 @@ dependencies = [
 
 [[package]]
 name = "nips"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "comrak 0.23.0",
  "include_dir",
@@ -12656,7 +12656,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scopetime"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "log 0.4.22",
 ]
@@ -14099,7 +14099,7 @@ dependencies = [
 
 [[package]]
 name = "testutils"
-version = "0.0.48"
+version = "0.0.49"
 dependencies = [
  "async-trait",
  "config",
