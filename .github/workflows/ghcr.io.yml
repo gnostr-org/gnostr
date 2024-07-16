@@ -6,18 +6,9 @@ env:
 
 on:
   push:
-    branches:
-      - master
     tags:
-      - v0.**
-      - v1.**
-      - v2.**
-      - v3.**
-      - v4.**
-    #branches-ignore:
-    #  - 'releases/**-alpha'
-    #tags-ignore:
-    #  - v999.**
+      - '**[0-9]+.[0-9]+.[0-9]+*'
+
   workflow_dispatch:
 
 jobs:
@@ -39,6 +30,5 @@ jobs:
 
           - name: 'Build gnostr image'
             run: |
-              make all gnostr-install
               docker build . --tag ghcr.io/gnostr-org/gnostr:latest
               docker push ghcr.io/gnostr-org/gnostr:latest

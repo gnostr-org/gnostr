@@ -5,9 +5,11 @@ RUN touch updated
 RUN echo $(date +%s) > updated
 RUN apt-get update
 RUN apt-get install -y bash cmake git libssl-dev make tcl-dev
+RUN apt-get update && apt-get install autoconf bash build-         essential cmake curl git jq libexpat1-dev libcurl4-openssl-dev libssl-dev libtool lsb-release make nodejs npm pkg-config python3 python-   is-python3 sudo tcl-dev zlib1g-dev -y¬
+
 RUN git clone --branch master --depth 1 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp
-RUN git clone --recurse-submodules -j4 --branch master --depth 10 https://github.com/gnostr-org/gnostr.git
+RUN git clone --recurse-submodules -j4 --branch master --depth 1 https://github.com/gnostr-org/gnostr.git
 WORKDIR /tmp/gnostr
 RUN make detect
 RUN make gnostr-am
@@ -24,4 +26,3 @@ RUN ps -p 1 -o comm=
 EXPOSE 80 6102 8080 ${PORT}
 VOLUME /src
 FROM gnostr as gnostr-docker
-
