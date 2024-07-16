@@ -12,7 +12,7 @@ WORKDIR /tmp/gnostr
 RUN make detect
 RUN make gnostr-am
 FROM base as gnostr
-RUN cmake .
+#RUN cmake .
 RUN make gnostr
 ENV SUDO=sudo
 RUN make gnostr-install
