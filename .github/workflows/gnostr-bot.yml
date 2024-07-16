@@ -1,6 +1,5 @@
-name: gnostr
+name: gnostr-bot
 
-# Controls when the action will run.
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
