@@ -64,7 +64,7 @@ jobs:
 
       ## notice: this is a pre checkout step
       ## notice: additional operations can be done prior to checkout
-      - run: apk update && apk add bash cmake curl git libcrypto3 make musl-dev pipx python3 && pipx install virtualenv
+      - run: apk update && apk add bash cmake curl git libcrypto3 make musl-dev perl-utils pipx python3 && pipx install virtualenv
       - run: printenv
       - run: git config --global --add safe.directory /__w/gnostr/gnostr
       - run: touch ~/GITHUB_TOKEN.txt
@@ -120,12 +120,12 @@ jobs:
           path: |
             target
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+
       - name: "Build release"
         run: |
+          ls -a
           cp ./gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
-          ls -a
-          ls -a ~/.cargo/bin
 
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE

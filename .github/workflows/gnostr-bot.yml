@@ -1,5 +1,6 @@
-name: gnostr-bot
+name: gnostr
 
+# Controls when the action will run.
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
@@ -20,17 +21,29 @@ on:
 
   workflow_dispatch:
 
-env:
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
-
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
-    runs-on: ubuntu-20.04
-
+    env:
+      GNOSTR: "gnostr"
+      FORCE: "--force"
+      GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
     strategy:
-      fail-fast: false
       matrix:
-        tag: [3.19]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: echo test
+        #if: ${{ !env.ACT }}
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo GNOSTR1=${{ env.GNOSTR1 }}
+        env:
+          GNOSTR1: "GNOSTR1"
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
 
       - name: Restore rustup
         id: cache-rustup-restore
