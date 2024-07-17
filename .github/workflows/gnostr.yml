@@ -32,6 +32,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        curl: ["v0.0.45", "v0.0.43]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -94,6 +95,15 @@ jobs:
       - run: rustup default stable
       - run: cargo search gnostr --limit 100
       - run: mkdir -p ~/bin
+
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-bins-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostrd-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-cli-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-gui-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-lookup-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-tui-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/nips-installer.sh | sh
+
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
