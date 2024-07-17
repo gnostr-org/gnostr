@@ -83,6 +83,7 @@ jobs:
       - run: make gnostr-install
       - run: cmake .
       - run: make all
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
       - run: make gnostr-install
       - run: make clean
       ## TODO: add ssh config to act sequence
