@@ -141,6 +141,7 @@ jobs:
           prerelease: true
           title: "Pre-Release Build"
           files: |
-            gnostr*
+            gnostr
+            gnostr-*
             bin
             ~/.cargo/bin
