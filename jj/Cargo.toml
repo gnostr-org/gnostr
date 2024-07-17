@@ -24,7 +24,7 @@ doc = false
 [[bin]]
 name = "git-gnostr-jj"
 path = "src/main.rs"
-doc = false
+doc = true
 
 ## gnostr
 ## command handler
@@ -33,11 +33,11 @@ name = "gnostr"
 path = "../src/bin/__gnostr.rs"
 doc = false
 
-## git gnostr pass through
-[[bin]]
-name = "git-gnostr"
-path = "../src/bin/gnostr.rs"
-doc = false
+## ## git gnostr pass through
+## [[bin]]
+## name = "git-gnostr"
+## path = "../src/bin/gnostr.rs"
+## doc = false
 
 ## [[bin]]
 ## name = "gnostr-gui"
@@ -45,11 +45,11 @@ doc = false
 ## doc = false
 
 
-## git gnostr-gui
-[[bin]]
-name = "git-gnostr-gui"
-path = "../gui/src/main.rs"
-doc = false
+## ## git gnostr-gui
+## [[bin]]
+## name = "git-gnostr-gui"
+## path = "../gui/src/main.rs"
+## doc = false
 
 ## ## git-legit
 ## [[bin]]
