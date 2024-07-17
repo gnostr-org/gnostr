@@ -141,5 +141,6 @@ jobs:
           prerelease: true
           title: "Pre-Release Build"
           files: |
-            gnostr
+            gnostr-$RUNNER_OS-$RUNNER_ARCH
+            gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
             $CARGO_HOME/bin
