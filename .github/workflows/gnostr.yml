@@ -138,7 +138,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ matrix.os }}
+          automatic_release_tag: ${{ matrix.os }}-$(date +s%)
           prerelease: true
           title: "Pre-Release Build"
           files: |
