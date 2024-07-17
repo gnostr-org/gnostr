@@ -1,9 +1,6 @@
 name: gnostr
 
-# Controls when the action will run.
 on:
-  schedule:
-    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
     branches:
       - '*'
@@ -18,180 +15,121 @@ on:
       - '**'
       - 'master'
       - 'main'
-    tags:
-      - '**[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
 jobs:
   build:
-    env:
-      GNOSTR: "gnostr"
-      FORCE: "--force"
-    matrix:
-      os: [ubuntu-latest, macos-latest]
-      curl: ["v0.0.45", "v0.0.43"]
-      runs-on: ${{ matrix.os }}
-  steps:
-    - name: echo test
-      #if: ${{ !env.ACT }}
-      run: |
-        echo GNOSTR=${{ env.GNOSTR }}
-        echo GNOSTR1=${{ env.GNOSTR1 }}
-      env:
-        GNOSTR1: "GNOSTR1"
-    - uses: styfle/cancel-workflow-action@0.11.0
-      if: ${{ !env.ACT }}
-      with:
-        access_token: ${{ github.token }}
+    runs-on: ubuntu-20.04
 
-    - name: Restore rustup
-      id: cache-rustup-restore
-      uses: actions/cache/restore@v3
-      if: ${{ !env.ACT }}
-      with:
-        path: |
-          ~/.rustup
-        key: ${{ runner.os }}-rustup
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [3.20]
 
-    - name: Restore cargo
-      id: cache-cargo-restore
-      uses: actions/cache/restore@v3
-      if: ${{ !env.ACT }}
-      with:
-        path: |
-          ~/.cargo
-        key: ${{ runner.os }}-cargo
+    container: rust:alpine${{ matrix.tag }}
 
-    - name: Restore target
-      id: cache-target-restore
-      uses: actions/cache/restore@v3
-      if: ${{ !env.ACT }}
-      with:
-        path: |
-          target
-        key: ${{ runner.os }}-target
+    steps:
+-
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup
 
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'true'
-        set-safe-directory: 'true'
-        fetch-depth: '0'
-        fetch-tags: false
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo
 
-    - run: brew install automake autoconf
-      if: matrix.os == 'macos-latest'
-
-    ## objective: streamline gnostr installation on macos/brewlinux
-    - run: brew tap gnostr-org/homebrew-gnostr-org || true
-      if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
-
-    ## objective: streamline gnostr installation on macos/brewlinux
-    - run: brew tap nostorg/nostr || true
-      if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
-
-    - run: rustup default stable
-    - run: cargo search gnostr --limit 100
-    - run: mkdir -p ~/bin
-
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-bins-installer.sh | sh
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostrd-installer.sh | sh
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-cli-installer.sh | sh
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-gui-installer.sh | sh
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-lookup-installer.sh | sh
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-tui-installer.sh | sh
-    - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/nips-installer.sh | sh
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target
 
 
-    #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
-    ## objective: ensure make detect installs all needed depends/libs/etc
-    ## make detect is first for brew install sequence OR sudo make detect for apt install
-    #
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      - run: apk update && apk add bash cmake curl git make pipx python3 && pipx install virtualenv
+      - run: printenv
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr
+      - run: touch ~/GITHUB_TOKEN.txt
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '10'
+          submodules: 'true'
+          set-safe-directory: 'true'
+      ## notice: these are post checkout steps
+      - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
+      - run: rm CMakeCache.txt || echo && cmake .
+      - run: make
+      - run: make clean
+      - run: make help
+      - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
+      - run: rm gnostr || true
+      - run: make gnostr bins && cp gnostr gnostr-alpine
+      - run: make gnostr-install
+      ## TODO: add ssh config to act sequence
+      - run: rm -rf .venv
 
-    - run: make detect || sudo make detect
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+      - name: "Build release"
+        run: |
+          mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          ls -a
+          ls -a ~/.cargo/bin
 
-    - run: pipx install virtualenv || true
-
-    ## objective: test non-cmake build gnostr-am
-    - run: cat Makefile
-    - run: make gnostr-am gnostr-install
-    - run: make gnostr-bins && cargo b -r --bin gnostr-add
-    - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
-
-    ## objective: test cmake build anything in make cargo-br cargo-i
-    - run: cmake .
-    - run: cat Makefile
-    - run: V=1 make gnostr cargo-br cargo-i
-    - run: V=1 make gnostr-install
-    - run: V=1 make gnostr-verify-keypair
-
-    ## objective build docs when PR merged
-    - run: V=1 sudo make doc || true
-      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-
-    ## a merge if condition example
-    #- name: merge if condition example
-    #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    #  run: ./build.cmake.sh
-
-    ## a merge if condition example
-    - name: merge if condition example
-      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-      run: |
-        which gnostr
-        which gnostr-xq
-        which gnostr-post-event
-        which gnostr-sha256
-        which gnostr-get-relays
-        which gnostr-reflog
-        which gnostr-weeble
-        which gnostr-blockheight
-        which gnostr-wobble
-
-    - name: Save rustup
-      id: cache-rustup-save
-      uses: actions/cache/save@v3
-      if: ${{ !env.ACT }}
-      with:
-        path: |
-          ~/.rustup
-        key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
-    - name: Save cargo
-      id: cache-cargo-save
-      uses: actions/cache/save@v3
-      if: ${{ !env.ACT }}
-      with:
-        path: |
-          ~/.cargo
-        key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
-    - name: Save target
-      id: cache-target-save
-      uses: actions/cache/save@v3
-      if: ${{ !env.ACT }}
-      with:
-        path: |
-          target
-        key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
-    - name: "Build release"
-      run: |
-        mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
-        shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
-        ls -a
-        ls -a ~/.cargo/bin
-
-    - name: Save state
-      run: echo "{name}={value}" >> $GITHUB_STATE
-    - name: Set output
-      run: echo "{name}={value}" >> $GITHUB_OUTPUT
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      if: ${{ !env.ACT }}
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: ${{ matrix.os }}
-        prerelease: true
-        title: "Pre-Release Build"
-        files: |
-          gnostr*
-          bin
-          ~/.cargo/bin
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }}
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ matrix.os }}
+          prerelease: true
+          title: "Pre-Release Build"
+          files: |
+            gnostr*
+            bin
+            ~/.cargo/bin
