@@ -142,4 +142,4 @@ jobs:
           title: "Pre-Release Build"
           files: |
             gnostr
-            gnostr-*
+            $CARGO_HOME/bin
