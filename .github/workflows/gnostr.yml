@@ -127,6 +127,7 @@ jobs:
         run: |
           printenv
           ls -a
+          cp gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
 
       - name: Save state
@@ -142,5 +143,5 @@ jobs:
           title: "Pre-Release Build"
           files: |
             gnostr
-            gnostr-*.txt
-            $CARGO_HOME/bin
+            gnostr-$RUNNER_OS-$RUNNER_ARCH
+            gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
