@@ -83,7 +83,7 @@ jobs:
       - run: make gnostr-install
       - run: cmake .
       - run: make all
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+        if: github.event_name == 'pull_request'
       - run: make gnostr-install
       - run: make clean
       ## TODO: add ssh config to act sequence
@@ -123,7 +123,7 @@ jobs:
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
       - name: "Build release"
         run: |
-          mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
+          cp ./gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           ls -a
           ls -a ~/.cargo/bin
