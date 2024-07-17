@@ -30,8 +30,8 @@ jobs:
       GNOSTR: "gnostr"
       FORCE: "--force"
     matrix:
-        os: [ubuntu-latest, macos-latest]
-        curl: ["v0.0.45", "v0.0.43]
+      os: [ubuntu-latest, macos-latest]
+      curl: ["v0.0.45", "v0.0.43]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
