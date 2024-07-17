@@ -143,5 +143,3 @@ jobs:
           files: |
             gnostr
             gnostr-*
-            bin
-            ~/.cargo/bin
