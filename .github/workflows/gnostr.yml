@@ -81,13 +81,12 @@ jobs:
       - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
       - run: make gnostr gnostr-am && cp gnostr gnostr-alpine
       - run: make gnostr-install
+      - run: ls
       - run: cmake .
       - run: make all
         if: github.event_name == 'pull_request'
       - run: make gnostr-install
-      - run: make clean
       ## TODO: add ssh config to act sequence
-      - run: rm -rf .venv
 
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-bins-installer.sh | sh
       - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostrd-installer.sh | sh
