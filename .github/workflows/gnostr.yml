@@ -80,6 +80,9 @@ jobs:
           fetch-depth: '0'
           fetch-tags: false
 
+      - run: brew install automake autoconf
+        if: matrix.os == 'macos-latest'
+
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
@@ -99,9 +102,6 @@ jobs:
 
       - run: make detect || sudo make detect
 
-      - run: brew install automake autoconf
-        if: matrix.os == 'macos-latest'
-
       - run: pipx install virtualenv || true
 
       ## objective: test non-cmake build gnostr-am
@@ -110,20 +110,35 @@ jobs:
       - run: make gnostr-bins && cargo b -r --bin gnostr-add
       - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
 
-      ## objective: test cmake build gnostr
-      ## objective: test cargo build/install gnostr-bins
+      ## objective: test cmake build anything in make cargo-br cargo-i
       - run: cmake .
-      - run: V=1 make gnostr bins xq cargo-br cargo-i
+      - run: cat Makefile
+      - run: V=1 make gnostr cargo-br cargo-i
       - run: V=1 make gnostr-install
       - run: V=1 make gnostr-verify-keypair
 
-      - run: V=1 sudo make cat doc || true
+      ## objective build docs when PR merged
+      - run: V=1 sudo make doc || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
 
-      #TODO mode build script testing
-      #- name: ./build.cmake.sh
+      ## a merge if condition example
+      #- name: merge if condition example
       #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
       #  run: ./build.cmake.sh
+
+      ## a merge if condition example
+      - name: merge if condition example
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          which gnostr
+          which gnostr-xq
+          which gnostr-post-event
+          which gnostr-sha256
+          which gnostr-get-relays
+          which gnostr-reflog
+          which gnostr-weeble
+          which gnostr-blockheight
+          which gnostr-wobble
 
       - name: Save rustup
         id: cache-rustup-save
@@ -149,4 +164,25 @@ jobs:
           path: |
             target
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+      - name: "Build release"
+        run: |
+          mv gnostr gnostr-$RUNNER_OS-$RUNNER_ARCH
+          shasum -a 256 gnostr-$RUNNER_OS-$RUNNER_ARCH > gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+          ls -a
+          ls -a ~/.cargo/bin
 
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }}
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ matrix.os }}
+          prerelease: true
+          title: "Pre-Release Build"
+          files: |
+            gnostr*
+            bin
+            ~/.cargo/bin

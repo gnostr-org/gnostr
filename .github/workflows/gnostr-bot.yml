@@ -32,32 +32,60 @@ jobs:
       matrix:
         tag: [3.19]
 
-    #node:lts-alpine3.19
-    container: node:lts-alpine${{ matrix.tag }}
-
-    steps:
-      ## notice: this is a pre checkout step
-      ## notice: additional operations can be done prior to checkout
-      - run: apk update && apk add bash cmake curl git make pipx python3 && pipx install virtualenv
-      - run: printenv
-      - run: git config --global --add safe.directory /__w/gnostr/gnostr
-      - run: touch ~/GITHUB_TOKEN.txt
-      - name: checkout@v3 fetch-depth submodules set-safe-dir true
-        uses: actions/checkout@v3
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
         with:
-          fetch-depth: '10'
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target
+
           submodules: 'true'
           set-safe-directory: 'true'
-      ## notice: these are post checkout steps
-      - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
-      - run: rm CMakeCache.txt || echo && cmake .
-      - run: make
-      - run: make clean
-      - run: make help
-      - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
-      - run: rm gnostr || true
-      - run: make gnostr bins && cp gnostr gnostr-alpine
-      - run: make gnostr-install
-      - run: gnostr
-      ## TODO: add ssh config to act sequence
-      - run: rm -rf .venv
+          fetch-depth: '0'
+          fetch-tags: false
+
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
