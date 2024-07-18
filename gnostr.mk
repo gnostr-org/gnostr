@@ -313,7 +313,7 @@ gnostr-build-install:gnostr-build## 	gnostr-build-install
 
 .PHONY:bins gnostr-bins
 gnostr-bins:bins
-bins:
+bins: cli/.git nips/.git
 	cargo install --path $@
 .PHONY:cat gnostr-cat
 gnostr-cat:cat
