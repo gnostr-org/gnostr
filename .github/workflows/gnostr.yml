@@ -137,6 +137,14 @@ jobs:
           shasum -a 256 gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}} > \
           gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}.txt
 
+
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'alpine'
+
+      - run: gnostr-syndicate
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'alpine'
+
+
       - name: Save state
         run: echo "{name}={value}" >> $GITHUB_STATE
       - name: Set output
@@ -152,9 +160,3 @@ jobs:
             gnostr
             gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}
             gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}.txt
-
-      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'alpine'
-
-      - run: gnostr-syndicate
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'alpine'
