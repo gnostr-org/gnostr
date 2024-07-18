@@ -6,7 +6,7 @@ members = ["bins", "cli", "d", "jj", "lib", "lib/gen-protos", "lib/proc-macros",
 exclude = ["ffi", "git", "relay","gui"]
 
 [workspace.package]
-version = "0.0.49"
+version = "0.0.50"
 license = "Apache-2.0"
 rust-version = "1.73"
 edition = "2021"
@@ -229,12 +229,10 @@ opt-level = 3
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.14.1"
-# CI backends to support
-ci = "github"
 # The installers to generate for each app
-installers = ["shell", "powershell", "homebrew", "msi"]
+installers = ["shell", "homebrew", "msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"]
 # A GitHub repo to push Homebrew formulas to
 tap = "gnostr-org/homebrew-gnostr-org"
 # The archive format to use for windows builds (defaults .zip)
@@ -250,6 +248,8 @@ install-updater = false
 # Skip checking whether the specified configuration files are up to date
 allow-dirty = ["ci", "msi"]
 build-command = ["make"]
+# CI backends to support
+ci = "github"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
