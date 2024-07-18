@@ -143,12 +143,15 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ matrix.os }}
-          prerelease: true
-          title: "Pre-Release Build"
+          prerelease: false
+          title: "Release Build"
           files: |
             gnostr
             gnostr-$RUNNER_OS-$RUNNER_ARCH
             gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
 
       - run: gnostr-syndicate
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
