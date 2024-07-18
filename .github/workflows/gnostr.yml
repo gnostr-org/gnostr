@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        host: ["ubuntu-latest", "macos-latest"]
+        host: ["ubuntu-latest"]#, "macos-latest"]
         prefix: ["", "1.79.0-"]
         os: ["alpine"]
         tag: ["3.19", "3.20"]
