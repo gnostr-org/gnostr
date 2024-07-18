@@ -140,6 +140,7 @@ jobs:
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
+          # cargo dist build --artifacts=global --verbose trace
           cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
           make go && ls
@@ -155,8 +156,8 @@ jobs:
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
+
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v4
         with:
