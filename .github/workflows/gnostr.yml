@@ -144,7 +144,7 @@ jobs:
         if: ${{ !env.ACT }} && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}
+          automatic_release_tag: ${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}
           prerelease: false
           title: "Release Build"
           files: |
