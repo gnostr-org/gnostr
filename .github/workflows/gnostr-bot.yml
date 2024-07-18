@@ -1,9 +1,8 @@
-name: gnostr-bot
+name: gnostr
 
-# Controls when the action will run.
 on:
   schedule:
-    - cron: '0 2 * * *' # run at 2 AM UTC
+    - cron: '*/10 * * * *'
   pull_request:
     branches:
       - '*'
@@ -12,6 +11,8 @@ on:
       - 'master'
       - 'main'
   push:
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
     branches:
       - '*'
       - '*/*'
@@ -21,30 +22,24 @@ on:
 
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+env:
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
+
 jobs:
   build:
-    env:
-      GNOSTR: "gnostr"
-      FORCE: "--force"
-      GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: echo test
-        #if: ${{ !env.ACT }}
-        run: |
-          echo GNOSTR=${{ env.GNOSTR }}
-          echo GNOSTR1=${{ env.GNOSTR1 }}
-        env:
-          GNOSTR1: "GNOSTR1"
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
-        with:
-          access_token: ${{ github.token }}
+    runs-on: ubuntu-20.04
 
+    strategy:
+      fail-fast: false
+      matrix:
+        prefix: ["", "1.79.0-"]
+        os: ["alpine"]
+        tag: ["3.19", "3.20"]
+        curl: ["0.0.45", "0.0.43"]
+
+    container: rust:${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}
+
+    steps:
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
@@ -72,66 +67,42 @@ jobs:
             target
           key: ${{ runner.os }}-target
 
-      - uses: actions/checkout@v3
-        if: ${{ !env.ACT }}
+
+      ## notice: this is a pre checkout step
+      ## notice: additional operations can be done prior to checkout
+      - run: apk update && apk add bash cmake curl git libcrypto3 make musl-dev perl-utils pipx python3 && pipx install virtualenv
+      - run: printenv
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr
+      - run: touch ~/GITHUB_TOKEN.txt
+      - name: checkout@v3 fetch-depth submodules set-safe-dir true
+        uses: actions/checkout@v3
         with:
+          fetch-depth: '1'
           submodules: 'true'
           set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: false
-
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
-
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew tap nostorg/nostr || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
-
-      - run: rustup default stable
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: cargo search gnostr --limit 100
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: mkdir -p ~/bin
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-
-      #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
-      ## objective: ensure make detect installs all needed depends/libs/etc
-      ## make detect is first for brew install sequence OR sudo make detect for apt install
-      - run: make detect || sudo make detect
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: pipx install virtualenv || true
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-
-      ## objective: test non-cmake build gnostr-am
-      - run: make gnostr gnostr-am gnostr-install
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: make gnostr-bins
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: gnostr-am --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      ## objective: test cmake build gnostr
-      ## objective: test cargo build/install gnostr-bins
+      ## notice: these are post checkout steps
+      - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
+      - run: make detect || true
+      - run: rm -rf CMakeCache.txt CMakeFiles Makefile || echo
+      - run: make help
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr
+      - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
+      - run: make gnostr gnostr-am && cp gnostr gnostr-alpine
+      - run: make gnostr-install
+      - run: ls
       - run: cmake .
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: V=1 make gnostr bins xq cargo-br cargo-i
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: V=1 make gnostr-install
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: V=1 make gnostr-verify-keypair
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-      - run: which gnostr
-        #if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+      - run: make all
+        if: github.event_name == 'pull_request'
+      - run: make gnostr-install
+      ## TODO: add ssh config to act sequence
 
-      #- run: V=1 sudo make cat doc || true
-      #  if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
-
-      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
-      - run: gnostr-nip --sec $(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)) | gnostr-post-event
-        if: github.event_name == 'pull_request'
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-bins-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostrd-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-cli-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-gui-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-lookup-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-tui-installer.sh | sh
+      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/nips-installer.sh | sh
 
       - name: Save rustup
         id: cache-rustup-save
@@ -157,3 +128,35 @@ jobs:
           path: |
             target
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+
+      - name: "Build release"
+        run: |
+          printenv
+          ls -a
+          cp gnostr gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}
+          shasum -a 256 gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}} > \
+          gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}.txt
+
+
+      - run: gnostr-nip --sec $(gnostr-sha256) | gnostr-post-event
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'alpine'
+
+      - run: gnostr-syndicate
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'alpine'
+
+
+      - name: Save state
+        run: echo "{name}={value}" >> $GITHUB_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }} && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}
+          prerelease: false
+          title: "Release Build"
+          files: |
+            gnostr
+            gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}
+            gnostr-${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}-${{matrix.curl}}.txt
