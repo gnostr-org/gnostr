@@ -149,3 +149,6 @@ jobs:
             gnostr
             gnostr-$RUNNER_OS-$RUNNER_ARCH
             gnostr-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
+
+      - run: gnostr-syndicate
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
