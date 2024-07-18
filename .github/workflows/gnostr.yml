@@ -82,8 +82,10 @@ jobs:
           set-safe-directory: 'true'
       ## notice: these are post checkout steps
       - run: apk update && apk add autoconf automake build-base cargo openssl-dev libtool linux-headers make sudo
+      - run: make detect || true
       - run: rm -rf CMakeCache.txt CMakeFiles Makefile || echo
       - run: make help
+      - run: git config --global --add safe.directory /__w/gnostr/gnostr
       - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
       - run: make gnostr gnostr-am && cp gnostr gnostr-alpine
       - run: make gnostr-install
