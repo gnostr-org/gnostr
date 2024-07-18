@@ -1,6 +1,8 @@
 name: gnostr
 
 on:
+  schedule:
+    - cron: '*/10 * * * *'
   pull_request:
     branches:
       - '*'
