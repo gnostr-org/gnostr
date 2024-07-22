@@ -71,6 +71,9 @@ add_executable(configurator src/configurator.c)
 add_executable(nostril ${src} src/nostril.c)
 target_link_libraries (nostril ${lib_dep})
 
+add_executable(gnostr ${src} src/nostril.c)
+target_link_libraries (gnostr ${lib_dep})
+
 #//////////////////////////
 # generate  config.h
 #//////////////////////////
