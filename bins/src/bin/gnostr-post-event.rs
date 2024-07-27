@@ -4,7 +4,7 @@ use std::{env, process};
 
 use gnostr_types::Event;
 
-static DEFAULT_RELAY_URL: &str = "wss://e.nos.lol";
+static DEFAULT_RELAY_URL: &str = "wss://nos.lol";
 fn main() {
     let mut relay_url = DEFAULT_RELAY_URL;
     if relay_url == DEFAULT_RELAY_URL {}
@@ -16,7 +16,7 @@ fn main() {
             process::exit(i.try_into().unwrap());
         } else {
             if args_vector.len() == 0 {
-                print!("args_vector.len() = {}", 0);
+                println!("args_vector.len() = {}", 0);
             };
             if args_vector.len() == 1 {
                 //no args case
@@ -27,28 +27,26 @@ fn main() {
                 let event: Event = serde_json::from_str(&s).unwrap();
                 relay_url = DEFAULT_RELAY_URL;
                 //always reprint s for further piping
-                print!("{}\n", s);
+                println!("{}", s);
                 gnostr_bins::post_event(&relay_url, event);
             };
             if args_vector.len() == 2 {
                 //catch help
                 if args_vector[1] == "-h" {
-                    print!("gnostr --sec <priv_key> | gnostr-post-event --relay {}",DEFAULT_RELAY_URL);
+                    println!("-h HELP!");
                     process::exit(0);
                 }
                 if args_vector[1] == "--help" {
-                    print!("gnostr --sec <priv_key> | gnostr-post-event --relay {}",DEFAULT_RELAY_URL);
+                    println!("--help HELP!");
                     process::exit(0);
                 }
                 //catch version
                 if args_vector[1] == "-v" {
-                    const VERSION: &str = env!("CARGO_PKG_VERSION");
-                    print!("v{}", VERSION);
+                    println!("-v VERSION!");
                     process::exit(0);
                 }
                 if args_vector[1] == "--version" {
-                    const VERSION: &str = env!("CARGO_PKG_VERSION");
-                    print!("v{}", VERSION);
+                    println!("--version VERSION!");
                     process::exit(0);
                 }
                 //catch missing url
@@ -61,7 +59,7 @@ fn main() {
                     std::io::stdin().read_to_string(&mut s).unwrap();
                     let event: Event = serde_json::from_str(&s).unwrap();
                     //always reprint s for further piping
-                    print!("{}\n", s);
+                    println!("{}", s);
                     gnostr_bins::post_event(relay_url, event);
                     process::exit(0);
                 }
@@ -74,7 +72,7 @@ fn main() {
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 let event: Event = serde_json::from_str(&s).unwrap();
                 //always reprint s for further piping
-                print!("{}\n", s);
+                println!("{}", s);
                 gnostr_bins::post_event(relay_url, event);
                 process::exit(0);
             };
@@ -87,7 +85,7 @@ fn main() {
                     std::io::stdin().read_to_string(&mut s).unwrap();
                     let event: Event = serde_json::from_str(&s).unwrap();
                     //always reprint s for further piping
-                    print!("{}\n", s);
+                    println!("{}", s);
                     gnostr_bins::post_event(relay_url, event);
                     process::exit(0);
                 }
@@ -95,7 +93,7 @@ fn main() {
                 let mut s: String = String::new();
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 //always reprint s for further piping
-                print!("{}\n", s);
+                println!("{}", s);
                 let event: Event = serde_json::from_str(&s).unwrap();
                 gnostr_bins::post_event(relay_url, event);
             };
