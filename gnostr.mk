@@ -339,7 +339,7 @@ core/.git:
 	@devtools/refresh-submodules.sh core
 gnostr-core:core
 core:core/.git
-	@cd core && make cargo-br
+	@cd core && CARGOFLAGS=-vv make install
 
 .PHONY:py gnostr-py
 py/.git:
