@@ -31,6 +31,9 @@ endif
 
 HOMEBREW                                :=$(shell which brew || false)
 
+NODE_VERSION                            :=$(shell cat .nvmrc || 18)
+export NODE_VERSION
+
 RUSTUP_INIT_SKIP_PATH_CHECK=yes
 TOOLCHAIN=stable
 Z=	##
@@ -394,6 +397,8 @@ report:## 	print make variables
 	@echo 'OS_VERSION=${OS_VERSION}'
 	@echo 'ARCH=${ARCH}'
 	@echo ''
+	@echo 'NODE_VERSION=${NODE_VERSION}'
+	@echo ''
 	@echo 'SUBMODULES=${SUBMODULES}'
 	@echo ''
 	@echo 'PYTHON=${PYTHON}'
@@ -443,7 +448,7 @@ tag:
 nvm: ## 	nvm
 	@echo "$(NODE_VERSION)" > .nvmrc
 	@curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash || git pull -C $(HOME)/.nvm && export NVM_DIR="$(HOME)/.nvm" && [ -s "$(NVM_DIR)/nvm.sh" ] && \. "$(NVM_DIR)/nvm.sh" && [ -s "$(NVM_DIR)/bash_completion" ] && \. "$(NVM_DIR)/bash_completion"  && nvm install $(NODE_VERSION) && nvm use $(NODE_VERSION)
-	@source ~/.bashrc && nvm alias $(NODE_ALIAS) $(NODE_VERSION) &
+	#. ~/.nvm/nvm.sh && nvm install $(NODE_VERSION) && nvm use $(NODE_VERSION) &
 
 nvm-clean: ## 	nvm-clean
 	@rm -rf ~/.nvm
