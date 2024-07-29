@@ -465,6 +465,7 @@ nvm-clean: ## 	nvm-clean
 -include cargo.mk
 -include tests.mk
 -include xcode.mk
+-include nix.mk
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
