@@ -179,6 +179,9 @@ more:## 	more help
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/	/'
 	#$(MAKE) -f Makefile help
 
+install: nostril
+	install ./nostril /usr/local/bin/
+
 -include Makefile
 
 ##initialize
