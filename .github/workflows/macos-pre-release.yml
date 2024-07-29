@@ -56,5 +56,5 @@ jobs:
           cargo install gnostr-bins gnostr-xq
       - name: "make xcodebuild-install"
         run: |
-          sudo make xcode xcodebuild-install
+          sudo make xcode xcodebuild xcodebuild-install
           ./build/Release/nostril --sec $(gnostr-sha256) | gnostr-post-event
