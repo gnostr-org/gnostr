@@ -171,7 +171,7 @@ export GIT_REPO_PATH
 
 
 
-.PHONY:- help
+.PHONY: - help
 -:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo
@@ -217,7 +217,7 @@ docker-start: venv
 	done\
 	)
 
-detect:## 	install sequence got Darwin and Linux
+detect: ## 	install sequence got Darwin and Linux
 ##detect
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && type -P brew >/tmp/gnostr.log && \
 		export LIBRARY_PATH='$(LIBRARY_PATH):$(brew --prefix)/lib' || echo"
@@ -386,7 +386,7 @@ endif
 	bash -c "which rustup                     || echo "
 
 .PHONY: report
-report:## 	print make variables
+report: ## 	print make variables
 ##	print make variables
 	@echo ''
 	@echo 'TIME=${TIME}'
@@ -426,7 +426,7 @@ report:## 	print make variables
 	@echo 'GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo 'GIT_REPO_PATH=${GIT_REPO_PATH}'
 
-checkbrew:## 	install brew command
+checkbrew: ## 	install brew command
 ##	install brew command
 ifeq ($(HOMEBREW),)
 	@/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
