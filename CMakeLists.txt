@@ -1,7 +1,7 @@
 if (MSVC)
  cmake_minimum_required(VERSION 3.26)
 else()
- cmake_minimum_required(VERSION 3.15)
+ cmake_minimum_required(VERSION 3.29)
 endif()
 set(CMAKE_BUILD_TYPE Debug)
 option(BUILD_RELEASE "BUILD_RELEASE" ON)
@@ -41,6 +41,7 @@ set(src ${src} include/base64.h)
 set(src ${src} src/base64.c)
 set(src ${src} include/aes.h)
 set(src ${src} src/aes.c)
+set(src ${src} src/simple.c)
 if (MSVC)
   set(src ${src} include/clock_gettime.h)
 endif()
@@ -63,6 +64,9 @@ endif()
 #//////////////////////////
 #executables
 #//////////////////////////
+
+add_executable(simple ${src} ${CMAKE_SOURCE_DIR}/src/simple.c)
+target_link_libraries (simple ${lib_dep})
 
 # tool to generate file 'config.h' , generate from a shell with
 # configurator.exe > include/config.h

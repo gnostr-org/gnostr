@@ -1,3 +1,4 @@
+# https://book.divnix.com/ch06-01-simple-c-program.html
 { pkgs ? import <nixpkgs> {} }:
 
 with pkgs;
@@ -7,7 +8,17 @@ stdenv.mkDerivation {
 
   src = ./.;
 
-  makeFlags = [ "PREFIX=$(out)" ];
+    buildInputs = [ autoconf cargo cmake gcc gdb git python3 rustup secp256k1 vim ];
+    buildPhase = ''
+      make simple
+    '';
 
-  buildInputs = [ secp256k1 ];
+    installPhase = ''
+      mkdir -p $out/bin
+      cp simple  $out/bin/simple
+    '';
+
+
+  #makeFlags = [ "PREFIX=$(out)" ];
+
 }
