@@ -36,9 +36,10 @@ nostril: $(OBJS) $(HEADERS)
 deps/secp256k1/include/secp256k1.h:
 	git submodule update --init --recursive
 deps/secp256k1/configure:deps/secp256k1/include/secp256k1.h
+	cd deps/secp256k1 && \
+		./autogen.sh
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 	cd deps/secp256k1 && \
-		./autogen.sh && \
 		./configure --enable-module-ecdh --enable-module-schnorrsig --enable-module-extrakeys --disable-benchmark --disable-tests && make -j
 deps/secp256k1/.libs/libsecp256k1.a:deps/secp256k1/configure
 libsecp256k1.a:deps/secp256k1/.libs/libsecp256k1.a## libsecp256k1.a
