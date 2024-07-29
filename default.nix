@@ -8,17 +8,19 @@ stdenv.mkDerivation {
 
   src = ./.;
 
+    #makeFlags = [ "PREFIX=$(out)" ];
+
     buildInputs = [ autoconf cargo cmake gcc gdb git python3 rustup secp256k1 vim ];
     buildPhase = ''
-      make simple
+      rm -rf CMakeFiles CMakeCache.txt || true
+      make simple nostril gnostr
     '';
 
     installPhase = ''
       mkdir -p $out/bin
       cp simple  $out/bin/simple
+      cp nostril  $out/bin/nostril
+      cp gnostr  $out/bin/gnostr
     '';
-
-
-  #makeFlags = [ "PREFIX=$(out)" ];
 
 }

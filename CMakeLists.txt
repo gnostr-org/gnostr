@@ -41,7 +41,7 @@ set(src ${src} include/base64.h)
 set(src ${src} src/base64.c)
 set(src ${src} include/aes.h)
 set(src ${src} src/aes.c)
-set(src ${src} src/simple.c)
+## set(src ${src} src/simple.c)
 if (MSVC)
   set(src ${src} include/clock_gettime.h)
 endif()
@@ -70,12 +70,12 @@ target_link_libraries (simple ${lib_dep})
 
 # tool to generate file 'config.h' , generate from a shell with
 # configurator.exe > include/config.h
-add_executable(configurator src/configurator.c)
+add_executable(configurator ${CMAKE_SOURCE_DIR}/src/configurator.c)
 
-add_executable(nostril ${src} src/nostril.c)
+add_executable(nostril ${src} ${CMAKE_SOURCE_DIR}/src/nostril.c)
 target_link_libraries (nostril ${lib_dep})
 
-add_executable(gnostr ${src} src/nostril.c)
+add_executable(gnostr ${src} ${CMAKE_SOURCE_DIR}/src/nostril.c)
 target_link_libraries (gnostr ${lib_dep})
 
 #//////////////////////////
@@ -94,6 +94,16 @@ add_custom_command(
 # Install
 #//////////////////////////
 
+install(TARGETS simple
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS simple
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS simple
+        CONFIGURATIONS RelWithDebInfo
+        RUNTIME DESTINATION /usr/local/bin)
+
 install(TARGETS nostril
         CONFIGURATIONS Debug
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
@@ -101,5 +111,15 @@ install(TARGETS nostril
         CONFIGURATIONS Release
         RUNTIME DESTINATION /usr/local/bin)
 install(TARGETS nostril
+        CONFIGURATIONS RelWithDebInfo
+        RUNTIME DESTINATION /usr/local/bin)
+
+install(TARGETS gnostr
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS gnostr
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS gnostr
         CONFIGURATIONS RelWithDebInfo
         RUNTIME DESTINATION /usr/local/bin)
