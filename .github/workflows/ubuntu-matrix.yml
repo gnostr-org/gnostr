@@ -49,9 +49,9 @@ jobs:
       - name: sudo make install
         run: |
           sudo make install
-      - name: man nostril
+      - name: man doc/nostril.1
         run: |
-          sudo man nostril
+          sudo man doc/nostril.1
       - name: sudo ./nostril
         run: |
           #pipe handles non-zero return from nostril default help
