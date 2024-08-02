@@ -35,7 +35,7 @@ jobs:
           - 1.76
     steps:
       - run: sudo apt-get update && sudo apt-get install -y libavutil-dev libtool pkg-config
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
           set-safe-directory: 'true'
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get update && sudo apt-get install -y libavutil-dev libtool pkg-config
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
           set-safe-directory: 'true'
@@ -114,7 +114,7 @@ jobs:
         run: "echo '<meta http-equiv=\"refresh\" content=\"0; url=include_dir/index.html\" />' > target/doc/index.html"
         shell: bash
       - name: Upload API Docs
-        uses: JamesIves/github-pages-deploy-action@4.1.1
+        uses: JamesIves/github-pages-deploy-action@v4.6.3
         if: github.ref == 'refs/heads/master'
         with:
           branch: gh-pages
