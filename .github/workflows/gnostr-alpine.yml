@@ -103,7 +103,7 @@ jobs:
       - run: cargo-binstall gnostr-gui
       - run: cargo-binstall gnostr-lookup
       - run: cargo-binstall gnostr-tui
-      - run: cargo-bindstall nips
+      - run: cargo-binstall nips
 
       - name: Save rustup
         id: cache-rustup-save
