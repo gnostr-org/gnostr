@@ -16,9 +16,14 @@ FROM base as gnostr
 RUN make gnostr
 ENV SUDO=sudo
 RUN make gnostr-install
-RUN cargo install gnostr-bins --force
-RUN cargo install gnostr-cli --force
-RUN install ./serve /usr/local/bin || true
+RUN cargo install cargo-binstall --force
+RUN cargo-binstall gnostr-bins --force
+RUN cargo-binstall gnostrd --force
+RUN cargo-binstall gnostr-cli --force
+RUN cargo-binstall gnostr-gui --force
+RUN cargo-binstall gnostr-lookup --force
+RUN cargo-binstall gnostr-tui --force
+RUN cargo-binstall nips --force
 ENV PATH=$PATH:/usr/bin/systemctl
 RUN ps -p 1 -o comm=
 EXPOSE 80 6102 8080 ${PORT}
