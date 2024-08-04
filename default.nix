@@ -1,13 +1,23 @@
+# https://book.divnix.com/ch06-01-simple-c-program.html
 { pkgs ? import <nixpkgs> {} }:
 
 with pkgs;
 stdenv.mkDerivation {
-  pname = "nostril";
-  version = "0.2.1";
+  pname = "gnostr";
+  version = "0.0.1";
 
   src = ./.;
 
-  makeFlags = [ "PREFIX=$(out)" ];
+    #makeFlags = [ "PREFIX=$(out)" ];
 
-  buildInputs = [ secp256k1 ];
+    buildInputs = [ autoconf cargo coreutils gcc gdb git openssl python3 rustup secp256k1 vim ];
+    buildPhase = ''
+      make gnostr
+    '';
+
+    installPhase = ''
+      mkdir -p $out/bin
+      cp gnostr  $out/bin/gnostr
+    '';
+
 }
