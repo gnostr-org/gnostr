@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+GNOSTR_XQ=$(which gnostr-xq)
+type -P $GNOSTR_XQ &>/dev/null || cargo install gnostr-xq
+GNOSTR_REFLOG=$(which gnostr-reflog)
+type -P $GNOSTR_REFLOG  &>/dev/null || cargo install gnostr-bins
+GNOSTR_POST_EVENT=$(which gnostr-post-event)
+type -P $GNOSTR_POST_EVENT  &>/dev/null || cargo install gnostr-bins
+GNOSTR_GET_RELAYS=$(which gnostr-get-relays)
+type -P $GNOSTR_GET_RELAYS  &>/dev/null || cargo install gnostr-bins
+
 help(){
 
 echo "USAGE:"
@@ -44,13 +53,13 @@ count=$((count+1))
 done
 export COUNT=$count
 
-for commit_hash in $(gnostr-reflog);do
+for commit_hash in $($GNOSTR_REFLOG);do
 
 PARENT=$(git rev-parse $commit_hash^1)
 padded_parent_hash=`printf '%064s' "$PARENT"`
 padded_commit_hash=`printf '%064s' "$commit_hash"`
 export NEW_COUNT=$new_count
-PARENT_ID=$(gnostr --sec $padded_parent_hash | gnostr-xq .pubkey)
+PARENT_ID=$(gnostr --sec $padded_parent_hash | $GNOSTR_XQ .pubkey)
 ID=$(gnostr --sec $padded_commit_hash | gnostr-xq .pubkey)
 PARENT_ID=${PARENT_ID//\"/}
 ID=${ID//\"/}
@@ -58,7 +67,7 @@ ID=${ID//\"/}
 
 if [[ "$1" == "--list" ]];
 then
-for relays in $(gnostr-get-relays -s);
+for relays in $($GNOSTR_GET_RELAYS -s);
 do
 echo $relays
 gnostr --sec $padded_commit_hash \
@@ -76,7 +85,7 @@ gnostr --sec $padded_commit_hash \
 --tag commit $commit_hash \
 --tag parent $PARENT \
 --tag p $PARENT_ID \
---content "$(git show $commit_hash || exit)" | gnostr-post-event $relays || echo "$commit_hash failed!"
+--content "$(git show $commit_hash || exit)" | $GNOSTR_POST_EVENT $relays || echo "$commit_hash failed!"
 done
 else
 gnostr --sec $padded_commit_hash \
@@ -94,7 +103,7 @@ gnostr --sec $padded_commit_hash \
 --tag commit $commit_hash \
 --tag parent $PARENT \
 --tag p $PARENT_ID \
---content "$(git show $commit_hash || exit)" | gnostr-post-event $RELAY || echo "$commit_hash failed!"
+--content "$(git show $commit_hash || exit)" | $GNOSTR_POST_EVENT $RELAY || echo "$commit_hash failed!"
 fi
 
 if [[ "$commit_hash" == "$INIT_COMMIT" ]]; then
