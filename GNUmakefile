@@ -52,8 +52,9 @@ export RUSTUP_INIT_SKIP_PATH_CHECK
 export TOOLCHAIN
 export Z
 
-SUBMODULES=:$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
-export SUBMODULES
+#SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3)
+#| sed \'s/cli//g\' | sed \'s/bits//g\')
+#export SUBMODULES
 
 ifeq ($(verbose),true)
 VERBOSE                                 :=-v

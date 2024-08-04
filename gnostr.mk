@@ -23,7 +23,7 @@ ARS                                    := libsecp256k1.a
 LIB_ARS                                := libsecp256k1.a libgit.a
 
 
-SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3 | sed 's/bits//g')
+SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3 | sed 's/bits//g' | sed 's/cli//g')
 
 VERSION                                :=$(shell cat version)
 export VERSION
