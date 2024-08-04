@@ -35,7 +35,7 @@ jobs:
         prefix: ["", "1.79.0-"]
         os: ["alpine"]
         tag: ["3.19", "3.20"]
-        curl: ["0.0.45", "0.0.43"]
+        curl: ["0.0.50", "0.0.49"]
 
     container: rust:${{ matrix.prefix }}${{ matrix.os }}${{ matrix.tag }}
 
@@ -91,7 +91,7 @@ jobs:
       - run: make gnostr-install
       - run: ls
       - run: cmake .
-      - run: make all
+      - run: make curl all
         if: github.event_name == 'pull_request'
       - run: make gnostr-install
       ## TODO: add ssh config to act sequence
