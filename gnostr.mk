@@ -27,13 +27,13 @@ SUBMODULES=$(shell cat .gitmodules | grep path | cut -d ' ' -f 3 | sed 's/bits//
 
 VERSION                                :=$(shell cat version)
 export VERSION
-GTAR                                   :=$(shell which gtar)
+GTAR                                   :=$(shell which gtar || true)
 export GTAR
-TAR                                    :=$(shell which tar)
+TAR                                    :=$(shell which tar || true)
 export TAR
 ifeq ($(GTAR),)
 #we prefer gtar but...
-GTAR                                   :=$(shell which tar)
+GTAR                                   :=$(shell which tar || true)
 endif
 export GTAR
 
@@ -87,14 +87,14 @@ gnostr-docs:doc/gnostr.1 doc## 	docs: convert README to doc/gnostr.1
 #@git ls-files -co --exclude-standard | grep '\.md/$\' | xargs git
 
 doc-gnostr-act:gnostr-act
-	[ -x $(shell which gnostr-act) ] || $(MAKE) gnostr-act
-	[ -x $(shell which gnostr-act) ] && help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 && cat doc/gnostr-act.1 > $(PREFIX)/share/man/man1/gnostr-act.1
+	$(MAKE) gnostr-act || false
+	help2man gnostr-act | sed 's/act /gnostr\-act /g' | sed 's/ACT /GNOSTR\-ACT /g' > doc/gnostr-act.1 && cat doc/gnostr-act.1 > $(PREFIX)/share/man/man1/gnostr-act.1
 doc-gnostr-cat:gnostr-cat
-	[ -x $(shell which gnostr-cat) ] || $(MAKE) gnostr-cat
-	[ -x $(shell which gnostr-cat) ] && help2man gnostr-cat > doc/gnostr-cat.1 && cat doc/gnostr-cat.1 > $(PREFIX)/share/man/man1/gnostr-cat.1
+	$(MAKE) gnostr-cat || false
+	help2man gnostr-cat > doc/gnostr-cat.1 && cat doc/gnostr-cat.1 > $(PREFIX)/share/man/man1/gnostr-cat.1
 doc-gnostr-git:gnostr-git
-	[ -x $(shell which gnostr-git) ] || $(MAKE) gnostr-git
-	[ -x $(shell which gnostr-git) ] && help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 && cat doc/gnostr-git.1 > $(PREFIX)/share/man/man1/gnostr-git.1
+	$(MAKE) gnostr-git || false
+	help2man gnostr-git | sed 's/ git / gnostr\-git /g' | sed 's/ GIT / GNOSTR\-GIT /g' > doc/gnostr-git.1 && cat doc/gnostr-git.1 > $(PREFIX)/share/man/man1/gnostr-git.1
 .PHONY:doc
 ##We stream edit certain tools man pages
 ##	make goals are processed from left to right
@@ -251,13 +251,13 @@ web:
 		fi \
 	fi \
 	)
-	bash -c "echo $(shell which open)"
+	#bash -c "echo $(shell which open)"
 
 	@cmake .  -DWT_INCLUDE="${WX_PREFIX}/lib/include" -DWT_CONFIG_H="${WX_PREFIX}/include" -DBUILD_WEB=ON -DBUILD_GUI=OFF -DCMAKE_C_FLAGS=-g -DCMAKE_BUILD_TYPE=Release
 	@$(MAKE) gnostr-web
 gnostr-web-deploy:
 	gnostr-web --http-address=0.0.0.0 --http-port=80 --deploy-path=/web --docroot=. & \
-    $(shell which open) http://0.0.0.0:80
+    open http://0.0.0.0:80
 
 
 
@@ -640,9 +640,9 @@ gnostr-query:
 	@install -m755 -vC template/gnostr-query          $(PREFIX)/bin     2>/dev/null
 
 gnostr-query-test:gnostr-cat gnostr-query gnostr-install
-	./template/gnostr-query -t gnostr | $(shell which gnostr-cat) -u wss://relay.damus.io
-	./template/gnostr-query -t weeble | $(shell which gnostr-cat) -u wss://relay.damus.io
-	./template/gnostr-query -t wobble | $(shell which gnostr-cat) -u wss://relay.damus.io
+	./template/gnostr-query -t gnostr | gnostr-cat -u wss://relay.damus.io
+	./template/gnostr-query -t weeble | gnostr-cat -u wss://relay.damus.io
+	./template/gnostr-query -t wobble | gnostr-cat -u wss://relay.damus.io
 	./template/gnostr-query -t blockheight | gnostr-cat -u wss://relay.damus.io
 
 ## 	for CI purposes we build largest apps last
@@ -653,7 +653,7 @@ gnostr-query-test:gnostr-cat gnostr-query gnostr-install
 ##
 gnostr-all:
 	rm CMakeCache.txt || echo
-	$(shell which cmake) .
+	cmake .
 	$(MAKE) -j libsecp256k1.a
 	type -P gnostr         || $(MAKE) -j gnostr
 	$(MAKE) -j gnostr-install
@@ -679,10 +679,10 @@ gnostr-all:
 
 dist: gnostr-docs version## 	create tar distribution
 	source .venv/bin/activate; pip install -r requirements.txt;
-	test -d .venv || $(shell which python3) -m virtualenv .venv;
+	test -d .venv || python3 -m virtualenv .venv;
 	( \
-	   $(shell which python3) -m pip install -r requirements.txt;\
-	   $(shell which python3) -m pip install git-archive-all;\
+	   python3 -m pip install -r requirements.txt;\
+	   python3 -m pip install git-archive-all;\
 	   mv dist dist-$(VERSION)-$(OS)-$(ARCH)-$(TIME) || echo;\
 	   mkdir -p dist && touch dist/.gitkeep;\
 	   cat version > CHANGELOG && git add -f CHANGELOG && git commit -m "CHANGELOG: update" 2>/dev/null || echo;\
