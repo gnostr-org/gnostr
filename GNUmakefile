@@ -76,14 +76,14 @@ BIND                                    :=$(bind)
 endif
 export BIND
 
-ifeq ($(token),)
-GITHUB_TOKEN                             =$(shell touch ~/GITHUB_TOKEN.txt && cat ~/GITHUB_TOKEN.txt || echo "0")
-else
-GITHUB_TOKEN                            :=$(shell echo $(token))
-endif
-export GITHUB_TOKEN
+## ifeq ($(token),)
+## GITHUB_TOKEN                             =$(shell touch ~/GITHUB_TOKEN.txt && cat ~/GITHUB_TOKEN.txt || echo "0")
+## else
+## GITHUB_TOKEN                            :=$(shell echo $(token))
+## endif
+## export GITHUB_TOKEN
 
-export $(cat ~/GITHUB_TOKEN) && make act
+## export $(cat ~/GITHUB_TOKEN) && make act
 
 PYTHON                                  := $(shell which python)
 export PYTHON
