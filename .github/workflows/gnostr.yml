@@ -97,13 +97,14 @@ jobs:
       - run: make gnostr-install
       ## TODO: add ssh config to act sequence
 
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-bins-installer.sh | sh
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostrd-installer.sh | sh
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-cli-installer.sh | sh
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-gui-installer.sh | sh
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-lookup-installer.sh | sh
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/gnostr-tui-installer.sh | sh
-      - run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/${{matrix.curl}}/nips-installer.sh | sh
+      - run: cargo install cargo-binstall
+      - run: cargo-binstall gnostr-bins
+      - run: cargo-binstall gnostrd
+      - run: cargo-binstall gnostr-cli
+      - run: cargo-binstall gnostr-gui
+      - run: cargo-binstall gnostr-lookup
+      - run: cargo-binstall gnostr-tui
+      - run: cargo-bindstall nips
 
       - name: Save rustup
         id: cache-rustup-save
