@@ -29,7 +29,7 @@ TRIPLET                                 :=aarch64-linux-gnu
 export TRIPLET
 endif
 
-HOMEBREW                                :=$(shell which brew || false)
+## HOMEBREW                                :=$(shell which brew || false)
 
 RUSTUP_INIT_SKIP_PATH_CHECK=yes
 TOOLCHAIN=stable
@@ -85,19 +85,19 @@ export BIND
 
 ## export $(cat ~/GITHUB_TOKEN) && make act
 
-PYTHON                                  := $(shell which python)
-export PYTHON
-PYTHON2                                 := $(shell which python2)
-export PYTHON2
-PYTHON3                                 := $(shell which python3)
-export PYTHON3
-
-PIP                                     := $(shell which pip)
-export PIP
-PIP2                                    := $(shell which pip2)
-export PIP2
-PIP3                                    := $(shell which pip3)
-export PIP3
+## PYTHON                                  := $(shell which python)
+## export PYTHON
+## PYTHON2                                 := $(shell which python2)
+## export PYTHON2
+## PYTHON3                                 := $(shell which python3)
+## export PYTHON3
+## 
+## PIP                                     := $(shell which pip)
+## export PIP
+## PIP2                                    := $(shell which pip2)
+## export PIP2
+## PIP3                                    := $(shell which pip3)
+## export PIP3
 
 PYTHON_VENV                             := $(shell python -c "import sys; sys.stdout.write('1') if hasattr(sys, 'base_prefix') else sys.stdout.write('0')")
 PYTHON3_VENV                            := $(shell python3 -c "import sys; sys.stdout.write('1') if hasattr(sys, 'real_prefix') else sys.stdout.write('0')")
@@ -370,19 +370,19 @@ endif
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
 ##	install rustup sequence
-	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default #& . "$(HOME)/.cargo/env"
+	type -P rustup || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default #& . "$(HOME)/.cargo/env"
 
 ##	install nvm sequence
 	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
 
-	bash -c "which autoconf                   || echo "
-	bash -c "which automake                   || echo "
-	bash -c "which brew                       || echo "
-	bash -c "which cargo                      || echo "
-	bash -c "which cmake                      || echo "
-	bash -c "which go                         || echo "
-	bash -c "which node                       || echo "
-	bash -c "which rustup                     || echo "
+	## bash -c "which autoconf                   || echo "
+	## bash -c "which automake                   || echo "
+	## bash -c "which brew                       || echo "
+	## bash -c "which cargo                      || echo "
+	## bash -c "which cmake                      || echo "
+	## bash -c "which go                         || echo "
+	## bash -c "which node                       || echo "
+	## bash -c "which rustup                     || echo "
 
 .PHONY: report
 report:## 	print make variables
