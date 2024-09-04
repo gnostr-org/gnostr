@@ -1,35 +1,61 @@
 #!/usr/bin/env bash
 
-for relay in $(gnostr-get-relays -s);do
+EUC=$(git rev-list --reverse --topo-order --first-parent HEAD | sed 1q)
+ROOT=$(git rev-list HEAD | tail -n 1)
+ORIGIN=$(git remotes | grep origin | sed 's/origin//g' | sed 's/       //g' | sed 's/ (fetch)//g' | sed 's/ (push)//g' | head -n 1)
+echo $ORIGIN
+TOPIC_BRANCH=$((git symbolic-ref HEAD 2>/dev/null || echo "(unnamed branch)")|cut -d/ -f3-) && echo $TOPIC_BRANCH
+echo $TOPIC_BRANCH
+RELAYS_JSON=$(gnostr-get-relays -j)
+#echo $RELAYS_JSON
+RELAYS_STRIPPED=$(gnostr-get-relays -s)
+#echo $RELAYS_STRIPPED
+for relay in $RELAYS_STRIPPED;do
 WEEBLE=$(gnostr-weeble)
-WOBBLE=$(gnostr-wobble)
 BLOCK_HEIGHT=$(gnostr-blockheight)
-echo $relay$WEEBLE$BLOCK_HEIGHT
-PRIV_KEY=$(gnostr-sha256 $relay$WEEBLE$BLOCK_HEIGHT)
+WOBBLE=$(gnostr-wobble)
+echo $relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE
+RELAY_PATH=$relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE
+echo $RELAY_PATH
+PRIV_KEY=$(gnostr-sha256 $relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE)
 echo $PRIV_KEY
+#TODO fix
 ./gnostr-nip --sec $PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
+
 nostril --sec $PRIV_KEY \
 --kind 30617 \
 --pow 8 \
 --tag d "$(gnostr-sha256 nostril)" \
 --tag name "<human-readable project name>" \
 --tag description "brief human-readable project description>" \
+--tag web "${ORIGIN/.git}" \
 --tag web "<url for browsing>" \
---tag web "<url for browsing>" \
+--tag clone "$ORIGIN" \
 --tag clone "<url for git-cloning>" \
---tag clone "<url for git-cloning>" \
---tag clone "<url for git-cloning>" \
+--tag branch "$TOPIC_BRANCH" \
 --tag relays "$relay" \
---tag r $(git rev-parse --short HEAD~0) \
---tag r $(git rev-parse         HEAD~0) \
+--tag r "$EUC" \
+--tag r "$ROOT" \
+ -t $(git rev-parse --short HEAD~0) \
+ -t $(git rev-parse         HEAD~0) \
 --tag topic $(git rev-parse         HEAD~0) \
 --tag maintainers "<other-recognized-maintainer>" \
 --tag maintainers "<other-recognized-maintainer>"  \
 -t gnostr \
 -t $relay \
--t $(gnostr-weeble) \
--t $(gnostr-blockheight) \
--t $(gnostr-wobble) \
---content "$relay/$(gnostr-weeble)/$(gnostr-blockheight)/$(git rev-parse HEAD~0):$(gnostr-diff)" | \
+-t $WEEBLE \
+-t $BLOCK_HEIGHT \
+-t $WOBBLE \
+--content "$RELAY_PATH/$(git rev-parse HEAD~0):$(gnostr-diff)" | \
 gnostr-post-event --relay $relay & sleep 3; \
+    (\
+    for head in $(ls .git/refs/heads/**);do \
+    nostril --sec $PRIV_KEY \
+    --kind 30618 \
+     --pow 8 \
+     --tag d "$(gnostr-sha256 nostril)" \
+     -t $head \
+     | gnostr-post-event --relay $relay & sleep 3; \
+    done
+    )
 done
