@@ -55,7 +55,7 @@ endif
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install help2man            || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install libtool             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install mercurial           || echo "
-	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@14             || echo "
+	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install node@18             || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pandoc              || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install pkg-config          || echo "
 	bash -c "[ '$(shell uname -s)' == 'Darwin' ] && brew install protobuf            || echo "
