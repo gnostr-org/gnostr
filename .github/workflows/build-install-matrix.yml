@@ -105,7 +105,7 @@ jobs:
       ## objective: test non-cmake build gnostr-am
       - run: make all || sudo make all
       - run: make install || sudo make install
-      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble)
+      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
 
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
