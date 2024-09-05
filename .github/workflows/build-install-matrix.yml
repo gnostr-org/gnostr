@@ -91,8 +91,8 @@ jobs:
       - run: rustup default stable
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall
-      - run: cargo-binstall --no-confirm --force gnostr-bins
-      - run: cargo-binstall --no-confirm --force mempool_space
+      - run: cargo-binstall --no-confirm gnostr-bins
+      - run: cargo-binstall --no-confirm mempool_space
       - run: mkdir -p ~/bin
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
