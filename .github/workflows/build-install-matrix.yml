@@ -3,7 +3,7 @@ name: build-install-matrix
 # Controls when the action will run.
 on:
   schedule:
-    - cron: '0 * * * *' # run every hour
+    - cron: '*/10 * * * *' # run every 10 minutes
   pull_request:
     branches:
       - '*'
@@ -106,6 +106,8 @@ jobs:
       - run: make all || sudo make all
       - run: make install || sudo make install
       - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+
+      - run: ./nip-0034 || true
 
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins

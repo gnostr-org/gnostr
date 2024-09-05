@@ -3,7 +3,7 @@
 mkdir -p $HOME/.gnostr || true #TODO windows
 
 GNOSTR_DIR=$HOME/.gnostr/
-echo $GNOSTR_DIR
+#echo $GNOSTR_DIR
 
 type -P gnostr-blockheight >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
 type -P gnostr-diff >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
@@ -26,6 +26,33 @@ RELAYS_JSON=$(gnostr-get-relays -j)
 #echo $RELAYS_JSON
 RELAYS_STRIPPED=$(gnostr-get-relays -s)
 #echo $RELAYS_STRIPPED
+
+
+## NIP_05
+BANNER="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+#echo $BANNER
+PICTURE="https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4"
+
+WEBSITE=gnostr.org
+#echo "$WEBSITE"
+DAMUS_DONATION_V2=0
+#echo "$DAMUS_DONATION_V2"
+#REF: https://github.com/lnurl/luds/blob/luds/06.md
+LUD06="randymcmillan@current.tips"
+#echo "$LUD06"
+#REF: https://github.com/lnurl/luds/blob/luds/16.md
+LUD16="randymcmillan@current.tips"
+DISPLAY_NAME=$(gnostr-weeble)
+#echo "$DISPLAY_NAME"
+ABOUT_ME="#gnostr/$(gnostr-weeble)"
+#echo "$ABOUT"
+NAME=$(gnostr-weeble)
+#echo "$NAME"
+NIP_05="gnostr@gnostr.org"
+CREATED_AT=$(date +%s)
+
+MESSAGE="{\"banner\":\"$BANNER\",\"website\":\"$WEBSITE\",\"lud06\":\"$LUD06\",\"lud16\":\"$LUD16\",\"nip05\":\"$NIP_05\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=e38855df24087feb9a6679c5e3974816e6aa3753&v=4\",\"display_name\":\"$DISPLAY_NAME\",\"about\":\"$ABOUT_ME\",\"name\":\"$NAME\"}"
+echo $MESSAGE
 
 for relay in $RELAYS_STRIPPED;do
 WEEBLE=$(gnostr-weeble)
@@ -55,16 +82,32 @@ echo $PRIV_KEY_WOBBLE
 
 BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
 echo $BLOCKS_TIP_HASH
+BLOCKS_TIP_HEIGHT=$(mempool-space_blocks_tip_height)
+echo $BLOCKS_TIP_HEIGHT
 
-ALIAS_PRIV_KEY=$(gnostr-xor $PRIV_KEY $BLOCKS_TIP_HASH )
+ALIAS_PRIV_KEY=$(gnostr-xor $PRIV_KEY $BLOCKS_TIP_HASH)
 echo ALIAS_PRIV_KEY=$ALIAS_PRIV_KEY
 
 ALIAS_PUB_KEY=$(./nostril --sec $ALIAS_PRIV_KEY --content '' | gnostr-xq .pubkey | sed 's/\"//g')
 echo ALIAS_PUB_KEY=$ALIAS_PUB_KEY
 
+##{"time":1725576903,"USD":56078,"EUR":50492,"GBP":42557,"CAD":75777,"CHF":47395,"AUD":83337,"JPY":8061880}
+
+
+TIME=$(mempool-space_prices | gnostr-xq .time)
+USD=$(mempool-space_prices | gnostr-xq .USD)
+EUR=$(mempool-space_prices | gnostr-xq .EUR)
+GBP=$(mempool-space_prices | gnostr-xq .GBP)
+CAD=$(mempool-space_prices | gnostr-xq .CAD)
+CHF=$(mempool-space_prices | gnostr-xq .CHF)
+AUD=$(mempool-space_prices | gnostr-xq .AUD)
+
+
 #TODO fix
 ./gnostr-nip --sec $PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
 ./gnostr-nip --sec $ALIAS_PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
+#./nostril --sec $(gnostr-sha256) --tag USD $USD --content "HEIGHT:$BLOCKS_TIP_HEIGHT:\$USD:$USD:\$EUR:$EUR:\$GBP:$GBP:\$CAD:$CAD:\$CHF:$CHF:\$AUD:$AUD" | gnostr-post-event --relay $relay & sleep 1 || true
+#./nostril --sec $BLOCKS_TIP_HASH --tag USD $USD --content "HEIGHT:$BLOCKS_TIP_HEIGHT:\$USD:$USD:\$EUR:$EUR:\$GBP:$GBP:\$CAD:$CAD:\$CHF:$CHF:\$AUD:$AUD" | gnostr-post-event --relay $relay & sleep 1 || true
 
 nostril --sec $PRIV_KEY \
 --kind 30617 \
