@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+type -P gnostr-blockheight || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-diff || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-post-event || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-sha256 || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-weeble || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-wobble || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-xor || install ./gnostr-xor /usr/local/bin/
+
 EUC=$(git rev-list --reverse --topo-order --first-parent HEAD | sed 1q)
 ROOT=$(git rev-list HEAD | tail -n 1)
 ORIGIN=$(git remotes | grep origin | sed 's/origin//g' | sed 's/       //g' | sed 's/ (fetch)//g' | sed 's/ (push)//g' | head -n 1)
@@ -24,7 +32,7 @@ echo $PRIV_KEY
 
 nostril --sec $PRIV_KEY \
 --kind 30617 \
---pow 8 \
+--pow 16 \
 --tag d "$(gnostr-sha256 nostril)" \
 --tag name "<human-readable project name>" \
 --tag description "brief human-readable project description>" \
@@ -47,14 +55,19 @@ nostril --sec $PRIV_KEY \
 -t $BLOCK_HEIGHT \
 -t $WOBBLE \
 --content "$RELAY_PATH/$(git rev-parse HEAD~0):$(gnostr-diff)" | \
-gnostr-post-event --relay $relay & sleep 3; \
+gnostr-post-event --relay $relay & sleep 4; \
     (\
     for head in $(ls .git/refs/heads/**);do \
     nostril --sec $PRIV_KEY \
     --kind 30618 \
-     --pow 8 \
+     --pow 16 \
      --tag d "$(gnostr-sha256 nostril)" \
      -t $head \
+     -t gnostr \
+     -t $relay \
+     -t $WEEBLE \
+     -t $BLOCK_HEIGHT \
+     -t $WOBBLE \
      | gnostr-post-event --relay $relay & sleep 3; \
     done
     )
