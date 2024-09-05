@@ -1,32 +1,67 @@
 #!/usr/bin/env bash
 
-type -P gnostr-blockheight || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
-type -P gnostr-diff || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
-type -P gnostr-post-event || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
-type -P gnostr-sha256 || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
-type -P gnostr-weeble || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
-type -P gnostr-wobble || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
-type -P gnostr-xor || install ./gnostr-xor /usr/local/bin/
+mkdir -p $HOME/.gnostr || true #TODO windows
+
+GNOSTR_DIR=$HOME/.gnostr/
+echo $GNOSTR_DIR
+
+type -P gnostr-blockheight >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-diff >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-post-event >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-sha256 >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-weeble >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-wobble >/dev/null || cargo binstall gnostr-bins --no-confirm || cargo install gnostr-bins
+type -P gnostr-xor >/dev/null || install ./gnostr-xor /usr/local/bin/
+type -P gnostr-xq >/dev/null || cargo binstall gnostr-xq --no-confirm || cargo install gnostr-xq
+
+type -P mempool-space_blocks_tip_hash >/dev/null || cargo binstall mempool_space || cargo install mempool_space
 
 EUC=$(git rev-list --reverse --topo-order --first-parent HEAD | sed 1q)
 ROOT=$(git rev-list HEAD | tail -n 1)
 ORIGIN=$(git remotes | grep origin | sed 's/origin//g' | sed 's/       //g' | sed 's/ (fetch)//g' | sed 's/ (push)//g' | head -n 1)
-echo $ORIGIN
-TOPIC_BRANCH=$((git symbolic-ref HEAD 2>/dev/null || echo "(unnamed branch)")|cut -d/ -f3-) && echo $TOPIC_BRANCH
-echo $TOPIC_BRANCH
+#echo $ORIGIN
+TOPIC_BRANCH=$((git symbolic-ref HEAD 2>/dev/null || echo "(unnamed branch)")|cut -d/ -f3-) #&& echo $TOPIC_BRANCH
+#echo $TOPIC_BRANCH
 RELAYS_JSON=$(gnostr-get-relays -j)
 #echo $RELAYS_JSON
 RELAYS_STRIPPED=$(gnostr-get-relays -s)
 #echo $RELAYS_STRIPPED
+
 for relay in $RELAYS_STRIPPED;do
 WEEBLE=$(gnostr-weeble)
 BLOCK_HEIGHT=$(gnostr-blockheight)
 WOBBLE=$(gnostr-wobble)
-echo $relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE
+#echo $relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE
+
+#GNOSTR DETERMINISTIC ALIASES 
+
 RELAY_PATH=$relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE
 echo $RELAY_PATH
-PRIV_KEY=$(gnostr-sha256 $relay/$WEEBLE/$BLOCK_HEIGHT/$WOBBLE)
+PRIV_KEY_RELAY_PATH=$(gnostr-sha256 $RELAY_PATH)
+echo $PRIV_KEY_RELAY_PATH
+
+PRIV_KEY=$(gnostr-sha256) ##empty sha256 for testing
 echo $PRIV_KEY
+PUB_KEY=$(./nostril --sec $PRIV_KEY --content '' | gnostr-xq .pubkey | sed 's/\"//g')
+echo $PUB_KEY
+PRIV_KEY_RELAY=$(gnostr-sha256 $relay)
+echo $PRIV_KEY_RELAY
+PRIV_KEY_WEEBLE=$(gnostr-sha256 $WEEBLE)
+echo $PRIV_KEY_WEEBLE
+PRIV_KEY_BLOCKHEIGHT=$(gnostr-sha256 $BLOCK_HEIGHT)
+echo $PRIV_KEY_BLOCKHEIGHT
+PRIV_KEY_WOBBLE=$(gnostr-sha256 $WOBBLE)
+echo $PRIV_KEY_WOBBLE
+
+BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
+echo $BLOCKS_TIP_HASH
+
+ALIAS_PRIV_KEY=$(gnostr-xor $PRIV_KEY $BLOCKS_TIP_HASH )
+echo ALIAS_PRIV_KEY=$ALIAS_PRIV_KEY
+
+ALIAS_PUB_KEY=$(./nostril --sec $ALIAS_PRIV_KEY --content '' | gnostr-xq .pubkey | sed 's/\"//g')
+echo ALIAS_PUB_KEY=$ALIAS_PUB_KEY
+
 #TODO fix
 ./gnostr-nip --sec $PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
 
