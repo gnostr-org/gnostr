@@ -105,7 +105,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
     let key: [u8; 16] = rand::random();
     let request = http::request::Request::builder()
         .method("GET")
-        .header("Host", host)
+        .header("Host", host.clone())
         .header("Connection", "Upgrade")
         .header("Upgrade", "websocket")
         .header("Sec-WebSocket-Version", "13")
@@ -144,7 +144,9 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
                 }
                 RelayMessage::Notice(s) => println!("NOTICE: {}", s),
                 RelayMessage::Eose(_) => println!("EOSE"),
-                RelayMessage::Ok(_id, ok, reason) => println!("[\"OK\", {{\"ok\":\"{}\", \"reason\":\"{}\"}}]", ok, reason),
+                //nostr uses json extensively
+                //yet relays dont return json formatted messages?
+                RelayMessage::Ok(_id, ok, reason) => println!("[\"{}\",{{\"ok\":\"{}\",\"reason\":\"{}\"}}]", host, ok, reason),
                 RelayMessage::Auth(challenge) => println!("AUTH: {}", challenge),
                 RelayMessageV3::Closed(_, _) => todo!(),
             }
