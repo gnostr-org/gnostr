@@ -108,6 +108,7 @@ jobs:
       - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
 
       - run: ./nip-0034 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
 
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
