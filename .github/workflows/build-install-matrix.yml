@@ -28,6 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        rustup: [stable, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -87,7 +88,7 @@ jobs:
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
-      - run: rustup default stable
+      - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall
       - run: cargo-binstall --no-confirm gnostr-bins
