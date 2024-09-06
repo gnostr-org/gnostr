@@ -9,15 +9,13 @@ on:
       - '*'
       - '*/*'
       - '**'
-      - 'master'
-      - 'main'
+      - 'ma**'
   push:
     branches:
       - '*'
       - '*/*'
       - '**'
-      - 'master'
-      - 'main'
+      - 'ma**'
 
   workflow_dispatch:
 
@@ -25,19 +23,20 @@ on:
 jobs:
   build:
     env:
-      GNOSTR: "gnostr"
+      GNOSTR: "gnostr"      
+      NOSTRIL: "nostril"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
-        #if: ${{ !env.ACT }}
         run: |
           echo GNOSTR=${{ env.GNOSTR }}
-          echo GNOSTR1=${{ env.GNOSTR1 }}
+          echo NOSTRIL=${{ env.NOSTRIL }}
+          echo MEMPOOL=${{ env.MEMPOOL }}
         env:
-          GNOSTR1: "GNOSTR1"
+          MEMPOOL: "mempool"
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
@@ -75,7 +74,7 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: false
+          fetch-tags: 'true'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
