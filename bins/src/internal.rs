@@ -144,7 +144,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
                 }
                 RelayMessage::Notice(s) => println!("NOTICE: {}", s),
                 RelayMessage::Eose(_) => println!("EOSE"),
-                RelayMessage::Ok(_id, ok, reason) => println!("OK: ok={} reason={}", ok, reason),
+                RelayMessage::Ok(_id, ok, reason) => println!("[\"OK\", {{\"ok\":\"{}\", \"reason\":\"{}\"}}]", ok, reason),
                 RelayMessage::Auth(challenge) => println!("AUTH: {}", challenge),
                 RelayMessageV3::Closed(_, _) => todo!(),
             }
