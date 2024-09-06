@@ -104,8 +104,8 @@ AUD=$(mempool-space_prices | gnostr-xq .AUD)
 
 
 #TODO fix
-./gnostr-nip --sec $PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
-./gnostr-nip --sec $ALIAS_PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
+#./gnostr-nip --sec $PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
+#./gnostr-nip --sec $ALIAS_PRIV_KEY | gnostr-post-event --relay $relay & sleep 1 || true
 #./nostril --sec $(gnostr-sha256) --tag USD $USD --content "HEIGHT:$BLOCKS_TIP_HEIGHT:\$USD:$USD:\$EUR:$EUR:\$GBP:$GBP:\$CAD:$CAD:\$CHF:$CHF:\$AUD:$AUD" | gnostr-post-event --relay $relay & sleep 1 || true
 #./nostril --sec $BLOCKS_TIP_HASH --tag USD $USD --content "HEIGHT:$BLOCKS_TIP_HEIGHT:\$USD:$USD:\$EUR:$EUR:\$GBP:$GBP:\$CAD:$CAD:\$CHF:$CHF:\$AUD:$AUD" | gnostr-post-event --relay $relay & sleep 1 || true
 
