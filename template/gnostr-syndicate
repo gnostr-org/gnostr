@@ -1,114 +1,135 @@
 #!/usr/bin/env bash
 
-GNOSTR_XQ=$(which gnostr-xq)
-type -P $GNOSTR_XQ &>/dev/null || cargo install gnostr-xq
-GNOSTR_REFLOG=$(which gnostr-reflog)
-type -P $GNOSTR_REFLOG  &>/dev/null || cargo install gnostr-bins
-GNOSTR_POST_EVENT=$(which gnostr-post-event)
-type -P $GNOSTR_POST_EVENT  &>/dev/null || cargo install gnostr-bins
-GNOSTR_GET_RELAYS=$(which gnostr-get-relays)
-type -P $GNOSTR_GET_RELAYS  &>/dev/null || cargo install gnostr-bins
 
-help(){
-
-echo "USAGE:"
-echo    "gnostr-syndicate wss://e.nos.lol 1"
-echo    "gnostr-syndicate --list 1"
-exit;
-}
-
-if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-    help
-fi
+type -P gnostr-reflog >/dev/null || cargo install gnostr-bins
+type -P gnostr-get-relays >/dev/null || cargo install gnostr-bins
 
 some_path=$PWD
 REPO=$(basename $some_path)
 PARENT_REPO=$(basename $(dirname $some_path))
 ##GRANDPARENT_REPO=$(basename $(dirname $(dirname $some_path)))
 
+
+
 IS_REPO=$(git rev-parse --is-inside-work-tree)
+#exit
+#echo $IS_REPO
 if $IS_REPO;then
+#echo 1 $IS_REPO=$REPO
 REPO=$(basename $some_path);
 else
+#echo 2 $IS_REPO=$REPO
 REPO=$(basename $(dirname $some_path));
 fi
 
 BRANCH=`git rev-parse --abbrev-ref HEAD` #&& echo $BRANCH
+
 GIT_ORIGIN=$(git config --get remote.origin.url)
+#echo $GIT_ORIGIN
+#exit;
+
+#non public/slow/unfriendly relays get included
+#strip them out here
+RELAYS=$(gnostr-get-relays -s \
+| sed 's/wss:\/\/relay.oldcity-bitcoiners.info//g' \
+| sed 's/wss:\/\/relay.damus.io//g' \
+| sed 's/wss:\/\/relay.damus.io//g' \
+| sed 's/wss:\/\/relay.damus.io//g' \
+| sed 's/wss:\/\/relay.damus.io//g' \
+| sed 's/wss:\/\/ragnar-relay.com//g' \
+| sed 's/wss:\/\/nostr.slothy.win//g' \
+| sed 's/wss:\/\/nostr-relay.schnitzel.world//g' \
+| sed 's/wss:\/\/nostr-pub.wellorder.net//g' \
+| sed 's/wss:\/\/relay.stoner.com//g' \
+| sed 's/wss:\/\/ragnar-relay.com//g' \
+| sed 's/wss:\/\/nostr.inosta.cc//g' \
+| sed 's/wss:\/\/nos.lol/wss:\/\/e.nos.lol/g' \
+)
+echo $RELAYS
 
 RELAY=${1:-wss://e.nos.lol}
-POW=${2:-1}
+#echo $RELAY
+POW=${2:-12}
+echo $POW
 GNOSTR_WEEBLE=$(gnostr-weeble)
 WEEBLE=${3:-$GNOSTR_WEEBLE}
+echo $WEEBLE
 BLOCK=${4:-$(gnostr-blockheight)}
+echo $BLOCK
 WOBBLE=${5:-$(gnostr-wobble)}
+echo $WOBBLE
 count=0;
 new_count=0;
 INIT_COMMIT=$(git rev-list --all --max-parents=0)
+#echo $INIT_COMMIT;#exit
+##git log -1 --skip 2 --pretty=format:"%h"
+##git rev-parse --short=256 HEAD~2
+#exit
+## n=`printf '%016s' "$(git rev-parse --short=4 HEAD~2)"`
+#n=`printf '%064s' "$(git rev-parse HEAD~0)"`
+#echo $n
+## exit
 
-for commit_hash in $(git rev-list $BRANCH);do
+## branch=master
+## for commit in $(git rev-list $branch)
+## do
+##     ## if git ls-tree --name-only -r $commit | grep -q '\.hbm\.xml$'; then
+##     if git ls-tree --name-only -r $commit; then
+## 
+##         ##echo $commit
+##         exit 0
+##     fi
+## done
+## exit;
+
+## var=$((var+1))
+## ((var=var+1))
+## ((var+=1))
+## ((var++))
+
+#count=0
+for commit_hash in $(git rev-list master);do
 
 padded_commit_hash=`printf '%064s' "$commit_hash"`
+#echo $padded_commit_hash
+#exit
+#echo $commit_hash
 count=$((count+1))
 done
+#exit
 export COUNT=$count
+#exit
 
-for commit_hash in $($GNOSTR_REFLOG);do
+new_count=0
+for commit_hash in $(gnostr-reflog);do
 
-PARENT=$(git rev-parse $commit_hash^1)
-padded_parent_hash=`printf '%064s' "$PARENT"`
+for relay in $(gnostr-get-relays -s);do
+
+#echo $commit_hash
 padded_commit_hash=`printf '%064s' "$commit_hash"`
+#echo $padded_commit_hash
 export NEW_COUNT=$new_count
-PARENT_ID=$(gnostr --sec $padded_parent_hash | $GNOSTR_XQ .pubkey)
-ID=$(gnostr --sec $padded_commit_hash | gnostr-xq .pubkey)
-PARENT_ID=${PARENT_ID//\"/}
-ID=${ID//\"/}
-
-
-if [[ "$1" == "--list" ]];
-then
-for relays in $($GNOSTR_GET_RELAYS -s);
-do
-echo $relays
+#n=`printf '%064s' "$(git rev-parse HEAD~$count)"`
+echo $n
 gnostr --sec $padded_commit_hash \
 --pow $POW \
--t gnostr \
+--tag relay $relay \
 --tag repo $REPO \
---tag relay $relays \
---tag r $relays \
 --tag branch $BRANCH \
 --tag origin $GIT_ORIGIN \
 --tag weeble $WEEBLE \
---tag block $BLOCK \
---tag wobble $WOBBLE \
--t $padded_commit_hash \
---tag commit $commit_hash \
---tag parent $PARENT \
---tag p $PARENT_ID \
---content "$(git show $commit_hash || exit)" | $GNOSTR_POST_EVENT $relays || echo "$commit_hash failed!"
-done
-else
-gnostr --sec $padded_commit_hash \
---pow $POW \
--t gnostr \
---tag repo $REPO \
---tag relay $RELAY \
---tag r $RELAY \
---tag branch $BRANCH \
---tag origin $GIT_ORIGIN \
 --tag weeble $WEEBLE \
 --tag block $BLOCK \
 --tag wobble $WOBBLE \
--t $padded_commit_hash \
 --tag commit $commit_hash \
---tag parent $PARENT \
---tag p $PARENT_ID \
---content "$(git show $commit_hash || exit)" | $GNOSTR_POST_EVENT $RELAY || echo "$commit_hash failed!"
-fi
-
+--content "$(git show $commit_hash || exit)" | gnostr-post-event --relay $relay || echo "$commit_hash failed!"
 if [[ "$commit_hash" == "$INIT_COMMIT" ]]; then
 exit;
 fi
 new_count=$((new_count+1))
+#echo $count & wait
+#echo $new_count & wait
+#exit
+done
 done
 exit;
