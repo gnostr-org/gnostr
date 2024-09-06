@@ -50,7 +50,7 @@ jobs:
         with:
           path: |
             ~/.rustup
-          key: ${{ runner.os }}-rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Restore cargo
         id: cache-cargo-restore
@@ -59,7 +59,7 @@ jobs:
         with:
           path: |
             ~/.cargo
-          key: ${{ runner.os }}-cargo
+          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Restore target
         id: cache-target-restore
@@ -68,7 +68,7 @@ jobs:
         with:
           path: |
             target
-          key: ${{ runner.os }}-target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - uses: actions/checkout@v3
         with:
