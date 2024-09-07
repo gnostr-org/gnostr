@@ -72,7 +72,6 @@ jobs:
       ## notice: additional operations can be done prior to checkout
       - run: apk update && apk add bash cmake curl git libcrypto3 make musl-dev openssl-dev perl-utils pipx python3 && pipx install virtualenv
       - run: printenv
-      - run: git config --global --add safe.directory /__w/gnostr/gnostr
       - run: touch ~/GITHUB_TOKEN.txt
       - name: checkout@v3 fetch-depth submodules set-safe-dir true
         uses: actions/checkout@v3
@@ -86,6 +85,7 @@ jobs:
       - run: rm -rf CMakeCache.txt CMakeFiles Makefile || echo
       - run: make help
       - run: git config --global --add safe.directory /__w/gnostr/gnostr
+      - run: git config --global --add safe.directory /__w/nostril/nostril
       - run: make libsecp256k1.a || rm -rf deps/secp256k1 && make libsecp256k1.a
       - run: make gnostr gnostr-am && cp gnostr gnostr-alpine
       - run: make gnostr-install
