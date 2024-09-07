@@ -40,12 +40,6 @@
 	branch = master
 	depth = shallow
 	ignore = dirty
-[submodule "gnostr-jq"]
-	path = jq
-	url = https://github.com/gnostr-org/gnostr-jq.git
-	branch = master
-	depth = shallow
-	ignore = dirty
 [submodule "gnostr-lfs"]
 	path = lfs
 	url = https://github.com/gnostr-org/gnostr-lfs.git
