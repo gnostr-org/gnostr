@@ -46,12 +46,6 @@
 	branch = master
 	depth = shallow
 	ignore = dirty
-[submodule "gnostr-grep"]
-	path = grep
-	url = https://github.com/gnostr-org/gnostr-grep.git
-	branch = master
-	depth = shallow
-	ignore = dirty
 [submodule "gnostr-jq"]
 	path = jq
 	url = https://github.com/gnostr-org/gnostr-jq.git
