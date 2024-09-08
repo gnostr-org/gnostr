@@ -74,13 +74,13 @@ fn help() {
 
     let crate_name = env!("CARGO_CRATE_NAME");
     let version = env!("CARGO_PKG_VERSION");
-    print!("\n{} v{}\n\n", crate_name.replace("_", "-"), version);
-    print!("{} get\n", crate_name.replace("_", "-"));
-    print!("       <csv_relay_list>\n");
-    print!("{} json\n", crate_name.replace("_", "-"));
-    print!("       <json_relay_list>\n");
-    print!("{} stripped\n", crate_name.replace("_", "-"));
-    print!("       <string_relay_list> <int_length_last>\n");
+    print!("\n{} v{}\n\n", crate_name.replace('_', "-"), version);
+    println!("{} get", crate_name.replace('_', "-"));
+    println!("       <csv_relay_list>");
+    println!("{} json", crate_name.replace('_', "-"));
+    println!("       <json_relay_list>");
+    println!("{} stripped", crate_name.replace('_', "-"));
+    println!("       <string_relay_list> <int_length_last>");
     process::exit(0);
 }
 fn version() {
@@ -95,7 +95,7 @@ fn version() {
 
     //println!("Program Name: {}", name);
     //println!("Program Version: {}", version);
-    println!("{} v{}", crate_name.replace("_", "-"), version);
+    println!("{} v{}", crate_name.replace('_', "-"), version);
     //println!("Program Version: {}", version);
     //println!("Program Author: {}", author);
 
