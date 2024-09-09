@@ -5916,6 +5916,7 @@ dependencies = [
  "gnip44",
  "gnostr-core",
  "gnostr-types",
+ "gnostr_rs",
  "hex",
  "homedir",
  "http 0.2.12",
@@ -5923,7 +5924,6 @@ dependencies = [
  "k256",
  "libp2p 0.53.2",
  "log 0.4.22",
- "nostr_rust",
  "num-bigint",
  "pad",
  "rand 0.7.3",
@@ -5941,6 +5941,7 @@ dependencies = [
  "sha2 0.10.8",
  "sha256",
  "structopt",
+ "sysinfo 0.30.13",
  "thiserror",
  "time 0.1.45",
  "tokio 0.2.25",
@@ -6145,6 +6146,29 @@ dependencies = [
  "trycmd",
  "urlencoding",
  "xq-lang",
+]
+
+[[package]]
+name = "gnostr_rs"
+version = "0.0.5"
+source = "git+https://github.com/gnostr-org/gnostr_rs.git#92af2556fbdb5a70961680a33acdbab6c489bfd5"
+dependencies = [
+ "aes 0.8.4",
+ "base64 0.21.7",
+ "bech32",
+ "cbc",
+ "hex",
+ "rand 0.8.5",
+ "reqwest 0.11.27",
+ "secp256k1 0.26.0",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sha256",
+ "thiserror",
+ "tokio-tungstenite 0.18.0",
+ "tungstenite 0.18.0",
+ "url",
 ]
 
 [[package]]
@@ -8333,7 +8357,7 @@ dependencies = [
  "libp2p-swarm 0.43.7",
  "log 0.4.22",
  "memory-stats",
- "sysinfo",
+ "sysinfo 0.29.11",
  "void",
 ]
 
@@ -8347,7 +8371,7 @@ dependencies = [
  "libp2p-identity",
  "libp2p-swarm 0.44.2",
  "memory-stats",
- "sysinfo",
+ "sysinfo 0.29.11",
  "tracing",
  "void",
 ]
@@ -10214,29 +10238,6 @@ dependencies = [
  "async-trait",
  "nostr",
  "thiserror",
-]
-
-[[package]]
-name = "nostr_rust"
-version = "0.20.3"
-source = "git+https://github.com/gnostr-org/gnostr_rs.git#b8a9ab72c0f46627ceec37f2ca5a763d55626a89"
-dependencies = [
- "aes 0.8.4",
- "base64 0.21.7",
- "bech32",
- "cbc",
- "hex",
- "rand 0.8.5",
- "reqwest 0.11.27",
- "secp256k1 0.26.0",
- "serde",
- "serde_derive",
- "serde_json",
- "sha256",
- "thiserror",
- "tokio-tungstenite 0.18.0",
- "tungstenite 0.18.0",
- "url",
 ]
 
 [[package]]
@@ -14373,6 +14374,21 @@ dependencies = [
  "once_cell",
  "rayon",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "sysinfo"
+version = "0.30.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a5b4ddaee55fb2bea2bf0e5000747e5f5c0de765e5a5ff87f4cd106439f4bb3"
+dependencies = [
+ "cfg-if 1.0.0",
+ "core-foundation-sys",
+ "libc",
+ "ntapi 0.4.1",
+ "once_cell",
+ "rayon",
+ "windows 0.52.0",
 ]
 
 [[package]]
