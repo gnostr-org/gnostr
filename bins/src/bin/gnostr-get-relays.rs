@@ -8,8 +8,6 @@ pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::E
     let command = args.next().unwrap(); // must be there or we would not have been called
 
     #[cfg(debug_assertions)]
-    println!("\n*** gnostr-gui is running in command mode ***");
-    #[cfg(debug_assertions)]
     println!("*** COMMAND = {} ***\n", command);
 
     match &*command {
@@ -47,26 +45,28 @@ pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::E
 }
 fn default() {
     json();
-    use std::process;
-    process::exit(0);
+    //use std::process;
+    //process::exit(0);
 }
 fn json() {
     let future = get_watch_list_json();
-    let _ = block_on(future);
+    let result = block_on(future);
+    log::info!("{:?}",result.unwrap());
 }
 fn print() {
     let future = print_watch_list();
-    let _ = block_on(future);
+    let result = block_on(future);
+    log::info!("{:?}",result.unwrap());
 }
 fn get() {
     let future = get_watch_list();
-    let _ = block_on(future);
+    let result = block_on(future);
+    log::info!("{:?}",result.unwrap());
 }
 //TODO: return length in watch_list?
 fn stripped() {
     let future = get_stripped_urls();
     let length = block_on(future);
-    //print!("{}",format!("{:?}",length.unwrap()));
     print!("{}", format!("{:?}", length.expect("REASON").len()));
 }
 fn help() {
@@ -120,4 +120,34 @@ fn main() {
     //    }
     //}
     process::exit(0);
+}
+/// cargo       test --bin gnostr-get-relays -- --nocapture
+/// cargo +nightly t --bin gnostr-get-relays -- --nocapture
+#[test]
+fn gnostr_get_relays_default() {
+    default();
+    println!();
+}
+#[test]
+fn gnostr_get_relays_json() {
+    json();
+    println!();
+}
+#[test]
+fn gnostr_get_relays_print() {
+    print();
+    println!();
+}
+#[test]
+fn gnostr_get_relays_stripped() {
+    stripped();
+    println!();
+}
+#[test]
+fn gnostr_get_relays_handle_command() {
+    let args = env::args();
+    if args.len() > 1 {
+    handle_command(env::args());
+    }
+    println!();
 }
