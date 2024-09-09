@@ -31,5 +31,5 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
     //let blockheight = seconds as f64 / tmp_u64 as f64;
     let blockheight = tmp_u64 as f64;
     //return Ok(blockheight.floor());
-    return Ok(blockheight);
+    Ok(blockheight)
 }

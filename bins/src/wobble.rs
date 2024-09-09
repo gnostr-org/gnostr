@@ -30,5 +30,5 @@ pub fn wobble() -> Result<f64, ascii::AsciiChar> {
     //TODO:impl gnostr-weeble_millis
     //let weeble = now_millis as f64 / tmp_u64 as f64;
     let wobble = seconds as f64 % tmp_u64 as f64;
-    return Ok(wobble.floor());
+    Ok(wobble.floor())
 }
