@@ -46,7 +46,7 @@ pub mod serve;
 /// Relays by supported NIP: https://api.nostr.watch/v1/nip/X Use NIP ids without leading zeros - for example: https://api.nostr.watch/v1/nip/1
 pub mod relays;
 use futures::executor::block_on;
-pub use relays::{relays, relays_offline, relays_online, relays_paid, relays_public};
+pub use relays::{relays_by_nip, relays, relays_offline, relays_online, relays_paid, relays_public};
 pub mod watch_list;
 pub use watch_list::*;
 pub async fn watch_list() -> Result<Vec<String>, url::ParseError> {
@@ -72,47 +72,62 @@ pub fn get_pwd() -> Result<String, &'static str> {
     return Ok(format!("{  }", no_nl));
 }
 
-/// get_relays
+/// get_relays_by_nip
+/// pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str>
+pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str> {
+    let _relays_no_nl = relays_by_nip(nip).unwrap().to_string();
+
+    Ok(relays_by_nip(nip).unwrap().to_string())
+}
+/// get_relays <https://api.nostr.watch>
+/// pub fn get_relays() -> Result<String, &'static str>
 pub fn get_relays() -> Result<String, &'static str> {
     let _relays_no_nl = relays().unwrap().to_string();
 
     Ok(format!("{}", relays().unwrap().to_string()))
 }
-/// get_relays_online
+/// get_relays_online <https://api.nostr.watch>
+/// pub fn get_relays_online() -> Result<String, &'static str>
 pub fn get_relays_online() -> Result<String, &'static str> {
     let _relays_no_nl = relays_public().unwrap().to_string();
 
     Ok(format!("{}", relays_online().unwrap().to_string()))
 }
-/// get_relays_public
+/// get_relays_public <https://api.nostr.watch>
+/// pub fn get_relays_public() -> Result<String, &'static str>
 pub fn get_relays_public() -> Result<String, &'static str> {
     let _relays_no_nl = relays_public().unwrap().to_string();
 
     Ok(format!("{}", relays_public().unwrap().to_string()))
 }
-/// get_relays_paid
+/// get_relays_paid <https://api.nostr.watch>
+/// pub fn get_relays_paid() -> Result<String, &'static str>
 pub fn get_relays_paid() -> Result<String, &'static str> {
     let _relays_no_nl = relays_paid().unwrap().to_string();
 
     Ok(format!("{}", relays_public().unwrap().to_string()))
 }
-/// get_relays_offline
+/// get_relays_offline <https://api.nostr.watch>
+/// pub fn get_relays_offline() -> Result<String, &'static str>
 pub fn get_relays_offline() -> Result<String, &'static str> {
     let _relays_no_nl = relays_offline().unwrap().to_string();
 
     Ok(format!("{}", relays_public().unwrap().to_string()))
 }
 
+/// pub fn get_weeble() -> Result<String, &'static str>
 pub fn get_weeble() -> Result<String, &'static str> {
     let _weeble_no_nl = weeble().unwrap().to_string();
 
     Ok(format!("{}", weeble().unwrap().to_string()))
 }
+/// pub fn get_wobble() -> Result<String, &'static str>
 pub fn get_wobble() -> Result<String, &'static str> {
     let _wobble_no_nl = wobble().unwrap().to_string();
 
     Ok(format!("{}", wobble().unwrap().to_string()))
 }
+/// pub fn get_blockheight() -> Result<String, &'static str>
 pub fn get_blockheight() -> Result<String, &'static str> {
     let _blockheight_no_nl = blockheight().unwrap().to_string();
 
@@ -222,9 +237,38 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     results
 }
 
+
+/// cargo +nightly t -- --nocapture
+///
+/// cargo    test -- --nocapture
+///
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn test_get_relays_paid() {
+        get_relays_paid();
+    }
+    #[test]
+    fn test_get_relays_public() {
+        get_relays_public();
+    }
+    #[test]
+    fn test_get_relays_online() {
+        get_relays_online();
+    }
+    #[test]
+    fn test_get_relays_by_nip() {
+        get_relays_by_nip(&"0");
+    }
+    #[test]
+    fn test_get_relays_offline() {
+        get_relays_offline();
+    }
+    #[test]
+    fn test_get_relays() {
+        get_relays();
+    }
 
     #[test]
     fn one_result() {
