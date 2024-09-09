@@ -10,6 +10,7 @@ use hyper::body::to_bytes;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Server};
 use route_recognizer::Params;
+use sysinfo::{get_current_pid, Pid, System};
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -85,7 +86,24 @@ async fn main() {
         .parse()
         .expect("address creation works");
     let server = Server::bind(&addr).serve(new_service);
-    println!("http://{}", addr);
+
+    match get_current_pid() {
+        Ok(pid) => {
+            let s = System::new_all();
+            if let Some(process) = s.process(Pid::from(pid)) {
+                println!(
+                    "{{\"{}\",\"{}\",\"{}\",\"{}\"}}",
+                    process.name(),
+                    pid,
+                    addr,
+                    port
+                );
+            }
+        }
+        Err(e) => {
+            println!("failed to get current pid: {}", e);
+        }
+    }
     let _ = server.await;
 }
 
@@ -106,51 +124,94 @@ async fn route(
     Ok(resp)
 }
 
-pub fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
-
-// This is a really bad adding function, its purpose is to fail in this
-// example.
-#[allow(dead_code)]
-fn bad_add(a: i32, b: i32) -> i32 {
-    a - b
-}
-
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use std::process::Command;
+    use std::process::{Command, Stdio};
+
+    use sysinfo::{get_current_pid, Pid, Process, System};
 
     use super::*;
 
     #[test]
+    fn install() {
+        //cargo install -q --bin gnostr-serve --path .
+        let output = Command::new("cargo")
+            .args([
+                "install",
+                /* "-q", */ "--bin",
+                "gnostr-serve",
+                "--path",
+                ".",
+            ])
+            .stdout(Stdio::piped())
+            //.spawn()
+            .output()
+            .unwrap();
+        //let mut stdout = output.stdout.unwrap();
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        println!("{:?}", stdout);
+    }
+    #[test]
     fn curl_test() {
-        let url = "http://localhost:8080/test";
-        let mut command = Command::new("curl");
-        command.arg(url);
-        let _output = command.output().unwrap();
+        match get_current_pid() {
+            Ok(pid) => {
+                println!("current pid: {}", pid);
+                let s = System::new_all();
+                if let Some(process) = s.process(Pid::from(pid)) {
+                    println!("{:?}", process.name());
+                }
+            }
+            Err(e) => {
+                println!("failed to get current pid: {}", e);
+            }
+        }
 
-        let url = "http://localhost:8080/params/1234";
-        let mut command = Command::new("curl");
-        command.arg(url);
-        let _output = command.output().unwrap();
+        //cargo install -q --bin gnostr-serve --path .
+        let mut output = Command::new("gnostr-serve")
+            .args([""])
+            .stdout(Stdio::piped())
+            .spawn()
+            //.output()
+            .unwrap();
+        let mut stdout = output.stdout.unwrap();
+        //let mut stdout = String::from_utf8(output.stdout).unwrap();
+        println!("{:?}", stdout);
 
-        let url = "http://localhost:8080/send -d '{{\"name\": \"chip\", \"active\": true}}'\n\n";
-        let mut command = Command::new("curl");
-        command.arg(url);
-        let _output = command.output().unwrap();
-    }
-    #[test]
-    fn test_add() {
-        assert_eq!(add(1, 2), 3);
-    }
+        let mut url = "http://localhost:8080/test";
+        let output = Command::new("curl")
+            .args([url])
+            .stdout(Stdio::piped())
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        println!("{}", stdout);
 
-    #[test]
-    #[should_panic(expected = "assertion `left == right` failed\n  left: -1\n right: 3")]
-    fn test_bad_add() {
-        // This assert would fire and test will fail.
-        // Please note, that private functions can be tested too!
-        assert_eq!(bad_add(1, 2), 3);
+        url = "http://localhost:8080/params/1234";
+        let output = Command::new("curl")
+            .args([url])
+            .stdout(Stdio::piped())
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        println!("{}", stdout);
+
+        url = "http://localhost:8080/send";
+        let d = "-d";
+        let json = "{\"name\": \"chip\", \"active\": true}";
+        let output = Command::new("curl")
+            .args([url, d, json])
+            .stdout(Stdio::piped())
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        println!("{}", stdout);
+
+        let system = System::new_all();
+        for (_, proc) in system.processes() {
+            if proc.name() == "gnostr-serve" {
+                proc.kill();
+            }
+        }
     }
 }
