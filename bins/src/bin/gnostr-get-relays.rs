@@ -2,9 +2,37 @@ use std::env;
 
 use futures::executor::block_on;
 use gnostr_bins::{get_stripped_urls, get_watch_list, get_watch_list_json, print_watch_list};
-
+use gnostr_bins::watch_list::{parse_urls, parse_json, stripped_urls};
 pub fn handle_command(mut args: env::Args) -> Result<bool, Box<dyn std::error::Error>> {
     let _ = args.next(); // program name
+    let nip: String;
+    let relays: String;
+    //default json output
+    if args.len() == 2 && args.next().unwrap() == "--nip"{
+        nip = String::from(args.next().unwrap());
+        relays = gnostr_bins::get_relays_by_nip(&nip)?;
+        let relays_json = parse_json(&relays);
+        let _ = block_on(relays_json);
+        std::process::exit(0);
+    }
+    if args.len() == 3 && args.next().unwrap() == "--nip"{
+        nip = String::from(args.next().unwrap());
+        relays = gnostr_bins::get_relays_by_nip(&nip)?;
+        let output_type = args.next().unwrap();
+        if output_type == "-j" {
+        let relays_json = parse_json(&relays);
+        let _ = block_on(relays_json);
+        }
+        if output_type == "-p" {
+        let relays_json = parse_urls(&relays);
+        let _ = block_on(relays_json);
+        }
+        if output_type == "-s" {
+        let relays_json = stripped_urls(&relays);
+        let _ = block_on(relays_json);
+        }
+        std::process::exit(0);
+    }
     let command = args.next().unwrap(); // must be there or we would not have been called
 
     #[cfg(debug_assertions)]
@@ -147,7 +175,8 @@ fn gnostr_get_relays_stripped() {
 fn gnostr_get_relays_handle_command() {
     let args = env::args();
     if args.len() > 1 {
-    handle_command(env::args());
+
+    handle_command(args);
     }
     println!();
 }
