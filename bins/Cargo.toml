@@ -51,6 +51,7 @@ futures-lite = "2.3.0"
 getopts = "0.2.21"
 git2 = "^0.18"
 gnostr-types = "0.7.1-unstable"
+gnostr_rs = { git = "https://github.com/gnostr-org/gnostr_rs.git" }
 hex = "0.4"
 homedir = "0.2.1"
 http = "0.2"
@@ -61,7 +62,6 @@ k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 libp2p = { version = "0.53.2", features = ["full"] }
 log = "0.4.21"
 nip44 = { version = "0.1.1", package = "gnip44" }
-nostr_rust = { git = "https://github.com/gnostr-org/gnostr_rs.git", version = "0.20.3" }
 num-bigint = "0.4.4"
 pad = "0.1.6"
 rand = { version = "0.7.3", default-features = false, features = ["std"] }
@@ -81,6 +81,7 @@ sha1 = { version = "0.10.6", features = ["oid"] }
 sha2 = "0.10.8"
 sha256 = "1.2.2"
 structopt = "0.3.26"
+sysinfo = "0.30.13"
 thiserror = "1.0"
 time = "0.1.42"
 tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
