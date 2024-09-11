@@ -347,10 +347,10 @@ static inline void xor_mix(unsigned char *dest, const unsigned char *a, const un
 
 static int generate_key(secp256k1_context *ctx, struct key *key, int *difficulty)
 {
-	uint64_t attempts = 0;
-	uint64_t duration;
+	//uint64_t attempts = 0;
+	//uint64_t duration;
 	int bits;
-	double pers;
+	//double pers;
 	struct timespec t1, t2;
 
 	/* If the secret key is zero or out of range (bigger than secp256k1's
@@ -369,13 +369,13 @@ static int generate_key(secp256k1_context *ctx, struct key *key, int *difficulty
 		if (!create_key(ctx, key))
 			return 0;
 
-		attempts++;
+		//attempts++;
 
 		if ((bits = count_leading_zero_bits(key->pubkey)) >= *difficulty) {
 			clock_gettime(CLOCK_MONOTONIC, &t2);
-			duration = ((t2.tv_sec - t1.tv_sec) * 1e9L + (t2.tv_nsec - t1.tv_nsec)) / 1e6L;
-			pers = (double)attempts / (double)duration;
-			fprintf(stderr, "mined pubkey with %d bits after %" PRIu64 " attempts, %" PRId64 " ms, %f attempts per ms\n", bits, attempts, duration, pers);
+			//duration = ((t2.tv_sec - t1.tv_sec) * 1e9L + (t2.tv_nsec - t1.tv_nsec)) / 1e6L;
+			//pers = (double)attempts / (double)duration;
+			//fprintf(stderr, "mined pubkey with %d bits after %" PRIu64 " attempts, %" PRId64 " ms, %f attempts per ms\n", bits, attempts, duration, pers);
 			return 1;
 		}
 
@@ -885,8 +885,11 @@ int main(int argc, const char *argv[])
 			fprintf(stderr, "could not generate key\n");
 			return 4;
 		}
-		fprintf(stderr, "secret_key ");
-		//print_hex(key.secret, sizeof(key.secret));
+		if ((args.flags & HAS_DIFFICULTY) && (args.flags & HAS_MINE_PUBKEY)) {
+		fprintf(stderr, "{\"secret_key\":\"");
+		print_hex(key.secret, sizeof(key.secret));
+		fprintf(stderr, "\"}");
+		}
 		fprintf(stderr, "\n");
 	}
 

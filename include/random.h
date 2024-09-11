@@ -71,6 +71,5 @@ static void print_hex(unsigned char* data, size_t size) {
     for (i = 0; i < size; i++) {
         fprintf(stderr, "%02x", data[i]);
     }
-    fprintf(stderr, "\n");
 }
 #endif
