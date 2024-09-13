@@ -149,7 +149,10 @@ async fn print_wobble() {
     #[cfg(debug_assertions)]
     println!("get_weeble(): {}", gnostr_bins::get_weeble().unwrap());
     #[cfg(debug_assertions)]
-    println!("get_blockheight(): {}", gnostr_bins::get_blockheight().unwrap());
+    println!(
+        "get_blockheight(): {}",
+        gnostr_bins::get_blockheight().unwrap()
+    );
 
     let wobble = gnostr_bins::get_wobble();
     print!("{}", wobble.unwrap());
@@ -166,7 +169,10 @@ async fn print_wobble() {
     println!("get_weeble(): {}", gnostr_bins::get_weeble().unwrap());
     #[cfg(debug_assertions)]
     #[cfg(debug_assertions)]
-    println!("get_blockheight(): {}", gnostr_bins::get_blockheight().unwrap());
+    println!(
+        "get_blockheight(): {}",
+        gnostr_bins::get_blockheight().unwrap()
+    );
     println!("\ndelta_millis: {}", stop_millis - start_millis);
 }
 
