@@ -50,7 +50,7 @@ futures-lite = "2.3.0"
 #futures = { workspace = true, default-features = false, features = ["async-await","futures-executor"] }
 getopts = "0.2.21"
 git2 = "^0.18"
-gnostr-types = "0.7.1-unstable"
+gnostr-types = { git = "https://github.com/gnostr-org/gnostr-types.git", version = "0.7.5" }
 #gnostr_rs = { git = "https://github.com/gnostr-org/gnostr_rs.git" }
 hex = "0.4"
 homedir = "0.2.1"
