@@ -20,11 +20,11 @@ fn main() {
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     ];
 
-    //let iter = buffer_min.chunks_exact(1);
+    //let iter = _buffer_min.chunks_exact(1);
     //for num in iter {
     ////print!("{}", u8::from_le_bytes(num.try_into().unwrap()));
     //}
-    //let iter = buffer_max.chunks_exact(1);
+    //let iter = _buffer_max.chunks_exact(1);
     //for num in iter {
     ////print!("{}", u8::from_le_bytes(num.try_into().unwrap()));
     //}
@@ -43,13 +43,13 @@ fn main() {
     signing_key_vec.push(SigningKey::random(&mut OsRng));
 
     #[cfg(debug_assertions)]
-    signing_key_vec.push(SigningKey::from_bytes(buffer_min).unwrap());
+    signing_key_vec.push(SigningKey::from_bytes(_buffer_min).unwrap());
     #[cfg(debug_assertions)]
-    signing_key_vec.push(SigningKey::from_bytes(buffer_min).unwrap());
+    signing_key_vec.push(SigningKey::from_bytes(_buffer_min).unwrap());
     #[cfg(debug_assertions)]
-    signing_key_vec.push(SigningKey::from_bytes(buffer_min).unwrap());
+    signing_key_vec.push(SigningKey::from_bytes(_buffer_min).unwrap());
     #[cfg(debug_assertions)]
-    signing_key_vec.push(SigningKey::from_bytes(buffer_min).unwrap());
+    signing_key_vec.push(SigningKey::from_bytes(_buffer_min).unwrap());
     let mut private_key =
         PrivateKey::try_from_hex_string(&format!("{:x}", signing_key_vec[0].to_bytes())).unwrap();
     let public_key = PublicKey::try_from_hex_string(
