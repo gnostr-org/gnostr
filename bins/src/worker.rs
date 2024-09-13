@@ -12,8 +12,8 @@ pub struct Worker {
     tree: String,
     parent: String,
     author: String,
-    repo: String,
-    pwd_hash: String,
+    _repo: String,
+    _pwd_hash: String,
     message: String,
     timestamp: time::Tm,
     weeble: String,
@@ -29,8 +29,8 @@ impl Worker {
         tree: String,
         parent: String,
         author: String,
-        repo: String,
-        pwd_hash: String,
+        _repo: String,
+        _pwd_hash: String,
         message: String,
         timestamp: time::Tm,
         weeble: String,
@@ -45,8 +45,8 @@ impl Worker {
             tree,
             parent,
             author,
-            repo,
-            pwd_hash,
+            _repo,
+            _pwd_hash,
             message,
             timestamp,
             weeble,
@@ -65,7 +65,7 @@ impl Worker {
             let result = self.calculate(&blob);
 
             if result.starts_with(&self.target) {
-                self.tx.send((self.id, raw, result));
+                let _ = self.tx.send((self.id, raw, result));
                 break;
             }
 
