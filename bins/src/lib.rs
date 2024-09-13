@@ -186,7 +186,7 @@ pub fn post_event_v2(url: &str, event: EventV2) {
 }
 
 pub fn print_event(event: &Event) {
-    println!(
+    print!(
         "{}",
         serde_json::to_string(event).expect("Cannot serialize event to JSON")
     );
