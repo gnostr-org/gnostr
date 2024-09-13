@@ -51,7 +51,7 @@ futures-lite = "2.3.0"
 getopts = "0.2.21"
 git2 = "^0.18"
 gnostr-types = "0.7.1-unstable"
-gnostr_rs = { git = "https://github.com/gnostr-org/gnostr_rs.git" }
+#gnostr_rs = { git = "https://github.com/gnostr-org/gnostr_rs.git" }
 hex = "0.4"
 homedir = "0.2.1"
 http = "0.2"
