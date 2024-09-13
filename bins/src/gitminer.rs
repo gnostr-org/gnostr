@@ -5,7 +5,7 @@ use std::process::Command;
 use std::sync::mpsc::channel;
 use std::{process, thread};
 
-use git2::*;
+//use git2::*;
 
 use super::worker::Worker;
 
@@ -91,7 +91,7 @@ impl Gitminer {
     }
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
-        Command::new("sh")
+        let _ = Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
             .output();
@@ -115,7 +115,7 @@ impl Gitminer {
             .unwrap_or_else(|| panic!("Failed to write temporary file {}", &tmpfile));
 
         //write the commit
-        Command::new("sh")
+        let _ = Command::new("sh")
             .arg("-c")
             .arg(format!(
                 "cd {} && gnostr-git hash-object -t commit -w --stdin < {} && gnostr-git reset \
@@ -127,7 +127,7 @@ impl Gitminer {
         //.expect("Failed to generate commit");
 
         //write the blob
-        Command::new("sh")
+        let _ = Command::new("sh")
             .arg("-c")
             .arg(format!(
                 "cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > \
@@ -164,7 +164,7 @@ impl Gitminer {
         // e.g. when merging in a commit; thus, in case the assumed-untracked file is
         // changed upstream, you will need to handle the situation manually.
 
-        Command::new("sh")
+        let _ = Command::new("sh")
             .arg("-c")
             .arg(format!(
                 "cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git reflog \
@@ -174,7 +174,7 @@ impl Gitminer {
             .output();
         //.ok()
         //.expect("Failed to write .gnostr/reflog");
-        Command::new("sh")
+        let _ = Command::new("sh")
             .arg("-c")
             .arg(format!(
                 "cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git update-index \
@@ -230,22 +230,22 @@ impl Gitminer {
         Ok(relays)
     }
 
-    fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
-        Gitminer::ensure_no_unstaged_changes(repo)?;
+    //fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+    //    Gitminer::ensure_no_unstaged_changes(repo)?;
 
-        let head = repo.revparse_single("HEAD").unwrap();
-        let head_2 = format!("{}", head.id());
+    //    let head = repo.revparse_single("HEAD").unwrap();
+    //    let head_2 = format!("{}", head.id());
 
-        Ok(head_2)
-    }
-    fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
-        Gitminer::ensure_no_unstaged_changes(repo)?;
+    //    Ok(head_2)
+    //}
+    //fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+    //    Gitminer::ensure_no_unstaged_changes(repo)?;
 
-        let head = repo.revparse_single("HEAD~1").unwrap();
-        let head_1 = format!("{}", head.id());
+    //    let head = repo.revparse_single("HEAD~1").unwrap();
+    //    let head_1 = format!("{}", head.id());
 
-        Ok(head_1)
-    }
+    //    Ok(head_1)
+    //}
     fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 

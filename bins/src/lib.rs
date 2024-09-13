@@ -25,11 +25,6 @@ pub use repo::*;
 pub mod worker;
 pub use worker::*;
 
-//gnostr-server
-pub mod handler;
-pub mod router;
-pub mod serve;
-
 /// REF: https://api.nostr.watch
 /// nostr.watch API Docs
 ///
@@ -46,7 +41,9 @@ pub mod serve;
 /// Relays by supported NIP: https://api.nostr.watch/v1/nip/X Use NIP ids without leading zeros - for example: https://api.nostr.watch/v1/nip/1
 pub mod relays;
 use futures::executor::block_on;
-pub use relays::{relays_by_nip, relays, relays_offline, relays_online, relays_paid, relays_public};
+pub use relays::{
+    relays, relays_by_nip, relays_offline, relays_online, relays_paid, relays_public,
+};
 pub mod watch_list;
 pub use watch_list::*;
 pub async fn watch_list() -> Result<Vec<String>, url::ParseError> {
@@ -236,7 +233,6 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     }
     results
 }
-
 
 /// cargo +nightly t -- --nocapture
 ///

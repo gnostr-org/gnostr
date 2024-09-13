@@ -1,8 +1,5 @@
 use std::ffi::OsString;
-use std::path::Path;
-use std::{env, process};
-
-use git2::{IndexAddOption, Oid, Repository};
+use git2::{Oid, Repository};
 
 fn car_cdr(s: &str) -> (&str, &str) {
     for i in 1..5 {
@@ -67,8 +64,8 @@ fn main() -> Result<(), git2::Error> {
         //let first_two_chars = &first_two_chars[..2];
         //println!("2:First two characters: {}", first_two_chars);
         //println!("{}objects/{}",repo.path().display() ,oid);
-        let (first_char, remainder) = car_cdr(&s);
-        let (second_char, remainder) = car_cdr(&remainder);
+        let (_first_char, remainder) = car_cdr(&s);
+        let (_second_char, remainder) = car_cdr(&remainder);
         println!(
             "{}objects/{}/{}",
             repo.path().display(),

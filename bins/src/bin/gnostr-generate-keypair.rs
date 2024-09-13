@@ -10,7 +10,7 @@ use k256::schnorr::SigningKey;
 use zeroize::Zeroize;
 
 fn main() {
-    let buffer_min = &[
+    let _buffer_min = &[
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 1,
     ];

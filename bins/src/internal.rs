@@ -146,7 +146,10 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
                 RelayMessage::Eose(_) => println!("EOSE"),
                 //nostr uses json extensively
                 //yet relays dont return json formatted messages?
-                RelayMessage::Ok(_id, ok, reason) => println!("[\"{}\",{{\"ok\":\"{}\",\"reason\":\"{}\"}}]", host, ok, reason),
+                RelayMessage::Ok(_id, ok, reason) => println!(
+                    "[\"{}\",{{\"ok\":\"{}\",\"reason\":\"{}\"}}]",
+                    host, ok, reason
+                ),
                 RelayMessage::Auth(challenge) => println!("AUTH: {}", challenge),
                 RelayMessageV3::Closed(_, _) => todo!(),
             }
