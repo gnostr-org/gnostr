@@ -888,7 +888,7 @@ int main(int argc, const char *argv[])
 		if ((args.flags & HAS_DIFFICULTY) && (args.flags & HAS_MINE_PUBKEY)) {
 		fprintf(stderr, "{\"secret_key\":\"");
 		print_hex(key.secret, sizeof(key.secret));
-		fprintf(stderr, "\"}");
+		fprintf(stderr, "\"},");
 		}
 		fprintf(stderr, "\n");
 	}
