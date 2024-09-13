@@ -33,11 +33,17 @@ fn main() {
             if args_vector.len() == 2 {
                 //catch help
                 if args_vector[1] == "-h" {
-                    print!("gnostr --sec <priv_key> | gnostr-post-event --relay {}",DEFAULT_RELAY_URL);
+                    print!(
+                        "gnostr --sec <priv_key> | gnostr-post-event --relay {}",
+                        DEFAULT_RELAY_URL
+                    );
                     process::exit(0);
                 }
                 if args_vector[1] == "--help" {
-                    print!("gnostr --sec <priv_key> | gnostr-post-event --relay {}",DEFAULT_RELAY_URL);
+                    print!(
+                        "gnostr --sec <priv_key> | gnostr-post-event --relay {}",
+                        DEFAULT_RELAY_URL
+                    );
                     process::exit(0);
                 }
                 //catch version
