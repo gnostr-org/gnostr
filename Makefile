@@ -63,6 +63,8 @@ configurator: configurator.c## 	configurator
 clean:## 	clean
 	rm -f nostril *.o *.a
 	rm -rf ext/secp256k1/.lib
+	rm -f configurator
+	rm -rf configurator.out.dSYM
 
 tags: fake
 	ctags *.c *.h
