@@ -23,7 +23,7 @@ on:
 jobs:
   build:
     env:
-      GNOSTR: "gnostr"      
+      GNOSTR: "gnostr"
       NOSTRIL: "nostril"
     strategy:
       matrix:
@@ -92,7 +92,7 @@ jobs:
       - run: cargo search gnostr --limit 100
       #- run: cargo install cargo-binstall
       #- run: cargo-binstall --no-confirm gnostr-bins
-      #- run: cargo-binstall --no-confirm mempool_space
+      - run: cargo install mempool_space
       - run: mkdir -p ~/bin
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
@@ -121,15 +121,58 @@ jobs:
           WEEBLE_SHA256=$(nostril --hash $(gnostr-weeble))
           echo WEEBLE_SHA256=$WEEBLE_SHA256
 
+          BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
+          echo BLOCKS_TIP_HASH=$BLOCKS_TIP_HASH
+
           BLOCKHEIGHT=$(gnostr-blockheight)
           echo BLOCKHEIGHT=$BLOCKHEIGHT
+
           BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
           echo BLOCKHEIGHT_SHA256=$BLOCKHEIGHT_SHA256
+
           WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
+
           ./nostril --sec $PRIVATE_KEY \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event
+
+          ./nostril --sec $BLOCKS_TIP_HASH \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event
+
+          ./nostril --sec $BLOCKHEIGHT_SHA256 \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event
+
+          ./nostril --sec $WEEBLE_SHA256 \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event
+
+          ./nostril --sec $WEEBLE_ALIAS \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
           --tag weeble $(gnostr-weeble) \
           --tag blockheight $(gnostr-blockheight) \
           --tag wobble $(gnostr-wobble) | \
