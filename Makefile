@@ -44,15 +44,19 @@ dist: docs version## 	dist
 	@echo "cc $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+.PHONY:nostril
 nostril: $(HEADERS) $(OBJS)## 	nostril
 	@$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@ || $(MAKE) $(ARS)
+	cp nostril gnostr
 
 install: all## 	install
 	@mkdir -p $(PREFIX)/bin || true
 	@install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1 || true
 	@install -m755 ./nostril $(PREFIX)/bin/nostril || true
 	@install -m755 nostril-query $(PREFIX)/bin/nostril-query || true
-	@$(shell which nostril)
+	@install -m755 ./nostril $(PREFIX)/bin/gnostr || true
+	#@$(shell which nostril)
+	#@$(shell which gnostr)
 
 config.h: configurator## 	config.h
 	./configurator > $@
@@ -69,4 +73,13 @@ clean:## 	clean
 tags: fake
 	ctags *.c *.h
 
+test: nostril
+	./nostril --hash ''
+	./nostril --hash ""
+	./nostril --hash ' '
+	./nostril --hash " "
+	type -P gnostr-sha256 >/dev/null && gnostr-sha256 ''
+	type -P gnostr-sha256 "" && gnostr-sha256 ""
+	type -P gnostr-sha256 && gnostr-sha256 ' '
+	type -P gnostr-sha256 " " && gnostr-sha256 " "
 .PHONY:docs doc/nostril.1 fake nostril version
