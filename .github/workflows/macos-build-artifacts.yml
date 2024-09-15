@@ -1,39 +1,34 @@
-name: ubuntu-pre-release
+name: macos-build-artifacts
 
 # Controls when the action will run.
 on:
   push:
     branches:
-      - 'master'
-      - '**pre-release**'
+      - 'ma**'
+      - '**artifacts**'
 
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  pre-release:
+  build-artifacts:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-latest]
+        os: [macos-12, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: '0'
-          submodules: 'recursive'
-          set-safe-directory: 'true'
-      - name: printenv && sudo apt update && sudo apt install scdoc -y
+      - uses: actions/checkout@v2
+      - name: "printenv"
         run: |
-          printenv && sudo apt update && sudo apt install scdoc -y
-      - name: "Build pre-release"
+          brew install libtool autoconf automake help2man scdoc coreutils
+          printenv
+      - name: "Build Artifacts"
         run: |
-          sudo mkdir -p /usr/local/share/man/man1/nostril.1
           #make install dist || sudo make install dist
-          make all || sudo make all
+          make all nostril || sudo make all nostril
           mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
@@ -44,14 +39,12 @@ jobs:
       - name: Set output
         run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: "marvinpinto/action-automatic-releases@latest"
-        if: ${{ !env.ACT }}
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ matrix.os }}
           prerelease: true
-          title: "Development Build"
+          title: "Build Artifacts"
           files: |
-            nostril-*
             nostril*
             gnostr*
             dist/*

@@ -1,4 +1,4 @@
-name: macos-pre-release
+name: ubuntu-build-artifacts
 
 # Controls when the action will run.
 on:
@@ -11,24 +11,29 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  pre-release:
+  build-artifacts:
     strategy:
       matrix:
-        os: [macos-12, macos-latest]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
         with:
           access_token: ${{ github.token }}
-      - uses: actions/checkout@v2
-      - name: "printenv"
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          submodules: 'recursive'
+          set-safe-directory: 'true'
+      - name: printenv && sudo apt update && sudo apt install scdoc -y
         run: |
-          brew install libtool autoconf automake help2man scdoc coreutils
-          printenv
+          printenv && sudo apt update && sudo apt install scdoc -y
       - name: "Build pre-release"
         run: |
+          sudo mkdir -p /usr/local/share/man/man1/nostril.1
           #make install dist || sudo make install dist
-          make all nostril || sudo make all nostril
+          make all || sudo make all
           mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
@@ -39,12 +44,14 @@ jobs:
       - name: Set output
         run: echo "{name}={value}" >> $GITHUB_OUTPUT
       - uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ !env.ACT }}
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ matrix.os }}
           prerelease: true
-          title: "Development Build"
+          title: "Build Artifacts"
           files: |
+            nostril-*
             nostril*
             gnostr*
             dist/*
