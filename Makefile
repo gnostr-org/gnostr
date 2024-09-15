@@ -43,8 +43,9 @@ dist: docs version## 	dist
 	gpg -u $(shell gpg --list-signatures --with-colons | grep 'sig' | grep 'E616FA7221A1613E5B99206297966C06BB06757B' | head -n 1 | cut -d':' -f5) --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt | true
 	cp CHANGELOG dist/CHANGELOG.txt
 	git add dist/*.txt* dist/dist.json
-	./nostril --sec $(shell ./nostril --hash $(shell date +%s)) -t $(shell git rev-parse --short HEAD) > dist/dist.json
+	./nostril --sec $(shell ./nostril --hash $(shell date +%s)) -t $(shell git rev-parse --short HEAD) -t gnostr --tag weeble $(shell gnostr-weeble) --tag blockheight $(shell gnostr-blockheight) --tag wobble $(shell gnostr-wobble) > dist/dist.json
 	git add dist/*.txt* dist/dist.json
+	git commit -m $(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble)
 	cat dist/dist.json | gnostr-post-event --relay wss://relay.damus.io
 	#rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
