@@ -22,7 +22,7 @@ export WHICH_GNOSTR_AM
 
 GNOSTR=${WHICH_GNOSTR:-$WHICH_GNOSTR_AM}
 export GNOSTR
-#echo $GNOSTR
+echo using $GNOSTR
 
 declare CALLED_FROM
 declare PRIVKEY
