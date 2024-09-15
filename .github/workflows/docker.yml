@@ -95,7 +95,7 @@ jobs:
       ##    ./nostril --sec $(gnostr-sha256) -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event
       ##- run: |
       ##    ./nostril --sec $(gnostr-sha256) -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" | gnostr-post-event
-      - run: ./nip-0034
+      ##- run: ./nip-0034
 
       - name: Save rustup
         id: cache-rustup-save
