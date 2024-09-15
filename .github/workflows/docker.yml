@@ -81,6 +81,8 @@ jobs:
       ## objective: non-cmake build/install
       - run: make all nostril install || sudo make all nostril install
       ## objective: test gnostr-am with crate gnostr-sha256
+      - run: ./nostril --hash
+      - run: ./nostril --hash
       - run: ./nostril --sec $(gnostr-sha256)
       - run: cmake .
       - run: make
