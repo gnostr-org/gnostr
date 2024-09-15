@@ -90,14 +90,7 @@ jobs:
       - run: V=1 make nostril install || sudo make nostril install
       ## objective: test gnostr with crate gnostr-bins gnostr-sha256
       - run: |
-          ./nostril \
-          --sec $(gnostr-sha256) \
-          -t gnostr \
-          -t $(gnostr-weeble) \
-          -t $(gnostr-blockheight) \
-          -t $(gnostr-wobble) \
-          --content "$(gnostr-weeble)" | \
-          gnostr-post-event
+          ./nostril --sec $(gnostr-sha256) -t gnostr -t $(gnostr-weeble) -t $(gnostr-blockheight) -t $(gnostr-wobble) --content "$(gnostr-weeble)" gnostr-post-event
       - run: |
           ./nostril \
           --sec $(gnostr-sha256 $(gnostr-weeble)) \
