@@ -90,9 +90,9 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
-      - run: cargo install cargo-binstall
-      - run: cargo-binstall --no-confirm gnostr-bins
-      - run: cargo-binstall --no-confirm mempool_space
+      #- run: cargo install cargo-binstall
+      #- run: cargo-binstall --no-confirm gnostr-bins
+      #- run: cargo-binstall --no-confirm mempool_space
       - run: mkdir -p ~/bin
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
@@ -105,7 +105,12 @@ jobs:
       ## objective: test non-cmake build gnostr-am
       - run: make all || sudo make all
       - run: make install || sudo make install
-      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content $(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+      - run: ./nostril --hash
+      - run: ./nostril --hash
+      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+
+      - run: ./nip-0034 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
 
       - run: ./nip-0034 || true
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
