@@ -23,10 +23,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: "printenv"
         run: |
-          brew install libtool autoconf automake help2man scdoc
+          brew install libtool autoconf automake help2man scdoc sha2
           printenv
       - name: "Build pre-release"
         run: |
+          make dist || sudo make dist
           make all nostril || sudo make all nostril
           mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
@@ -44,4 +45,7 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            nostril-*
+            nostril*
+            gnostr*
+            dist/*
+            dist/**.**
