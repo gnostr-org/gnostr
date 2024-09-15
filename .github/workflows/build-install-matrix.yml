@@ -116,17 +116,16 @@ jobs:
           PRIVATE_KEY=$(./nostril --hash)
           echo PRIVATE_KEY=$PRIVATE_KEY
 
-          WEEBLE_SHA256=$(nostril --hash $(gnostr-weeble))
           WEEBLE=$(gnostr-weeble)
-          echo $WEEBLE_SHA256
-          echo $WEEBLE
+          echo WEEBLE=$WEEBLE
+          WEEBLE_SHA256=$(nostril --hash $(gnostr-weeble))
+          echo WEEBLE_SHA256=$WEEBLE_SHA256
 
           BLOCKHEIGHT=$(gnostr-blockheight)
-          BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-weeble))
-          BLOCKHEIGHT=$(gnostr-blockheight)
-          echo $BLOCKHEIGHT
-          echo $BLOCKHEIGHT_SHA256
-          WEEBLE_ALIAS=$(gnostr-sha256 $($PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble))))
+          echo BLOCKHEIGHT=$BLOCKHEIGHT
+          BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
+          echo BLOCKHEIGHT_SHA256=$BLOCKHEIGHT_SHA256
+          WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
 
       - run: ./nip-0034 || true
