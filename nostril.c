@@ -1,20 +1,16 @@
-#define VERSION "0.3.8"
-
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
-#ifdef _MSC_VER
-#else
+#include <limits.h>
 #include <unistd.h>
-#endif
 
-#ifdef _MSC_VER
-#include "clock_gettime.h"
-#define CLOCK_MONOTONIC 0
-#endif
+#include<libgen.h>
+
 
 #include "secp256k1.h"
 #include "secp256k1_ecdh.h"
@@ -28,6 +24,16 @@
 #include "random.h"
 #include "proof.h"
 
+#include "constants.h"
+#include "struct_key.h"
+#include "struct_args.h"
+#include "struct_nostr_tag.h"
+#include "struct_nostr_event.h"
+
+//#include "../include/openssl_hash.h"
+
+#define VERSION "0.0.24"
+
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16
 
@@ -37,52 +43,135 @@
 #define HAS_ENCRYPT (1<<4)
 #define HAS_DIFFICULTY (1<<5)
 #define HAS_MINE_PUBKEY (1<<6)
+#define TO_BASE_N (sizeof(unsigned)*CHAR_BIT + 1)
+#define TO_BASE(x, b) my_to_base((char [TO_BASE_N]){""}, (x), (b))
+//                               ^--compound literal--^
+char *my_to_base(char buf[TO_BASE_N], unsigned i, int base) {
+  assert(base >= 2 && base <= 36);
+  char *s = &buf[TO_BASE_N - 1];
+  *s = '\0';
+  do {
+    s--;
+    *s = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i % base];
+    i /= base;
+  } while (i);
 
-struct key {
-	secp256k1_keypair pair;
-	unsigned char secret[32];
-	unsigned char pubkey[32];
-};
+  // Could employ memmove here to move the used buffer to the beginning
+  // size_t len = &buf[TO_BASE_N] - s;
+  // memmove(buf, s, len);
 
-struct args {
-	unsigned int flags;
-	int kind;
-	int difficulty;
+  return s;
+}
 
-	unsigned char encrypt_to[32];
-	const char *sec;
-	const char *tags;
-	const char *content;
+int print_base(int input) {
 
-	uint64_t created_at;
-};
+  int ip1 = 0x01020304;
+  int ip2 = 0x05060708;
+  printf("%s %s\n", TO_BASE(ip1, 16), TO_BASE(ip2, 16));
+  printf("%s %s\n", TO_BASE(ip1, 2), TO_BASE(ip2, 2));
+  puts(TO_BASE(ip1, 8));
+  puts(TO_BASE(ip1, 36));
+  printf("%s %s\n", TO_BASE(input, 16), TO_BASE(input, 16));
+  printf("%s %s\n", TO_BASE(input, 2), TO_BASE(input, 2));
+  puts(TO_BASE(input, 8));
+  puts(TO_BASE(input, 36));
+  return 0;
 
-struct nostr_tag {
-	const char *strs[MAX_TAG_ELEMS];
-	int num_elems;
-};
+}
 
-struct nostr_event {
-	unsigned char id[32];
-	unsigned char pubkey[32];
-	unsigned char sig[64];
 
-	const char *content;
-
-	uint64_t created_at;
-	int kind;
-
-	const char *explicit_tags;
-
-	struct nostr_tag tags[MAX_TAGS];
-	int num_tags;
-};
-
-void usage()
+int is_executable_file(char const * file_path)
 {
-	printf("usage: nostril [OPTIONS]\n");
+    struct stat sb;
+    return
+        (stat(file_path, &sb) == 0) &&
+        S_ISREG(sb.st_mode) &&
+        (access(file_path, X_OK) == 0);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// gnostr_sha256
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void gnostr_sha256(int argc, const char* argv[], struct args *args)
+{
+
+  char* command = "gnostr-sha256";
+  char* argument_list[] = {"gnostr-sha256", (char *)args->hash, NULL};
+
+  int status_code = execvp(command, argument_list);
+
+  if (status_code == -1) {
+
+    char* command = "cargo";
+    char* argument_list[] = {"cargo", "install", "gnostr-bins", NULL};
+    int status_code2 = execvp(command, argument_list);
+    if (status_code2 == -1) {
+
+      //We are assuming this is the problem
+      printf("failed to install gnostr-sha256");
+
+      exit(1);
+    }
+  }
+  //TODO:implement fail over to openssl call
+  exit(0);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// hash
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void hash(int argc, const char* argv[], struct args *args)
+{
+       gnostr_sha256(argc, argv, args);
+       exit(0);
+}
+void about()
+{
+	printf("gnostr: a git nostr command line utility.\n");
+	exit(0);
+}
+void version()
+{
+	printf("%s\n", VERSION);
+	exit(0);
+}
+void usage(char *appname)
+{
+
+
+
+
+
+	printf("\nusage: %s [OPTIONS]\n", appname);
 	printf("\n");
-	printf("  OPTIONS\n");
+
+
+	//gnostr --sec $(gnostr --hash)
+	char nostril[] = "nostril";
+	if (strcmp(appname,nostril)) {
+	printf("  %s --sec $(gnostr-git config --global --get gnostr.secretkey)", appname);
+	printf("\n");
+	printf("  %s --sec $(gnostr-git config --global --get gnostr.secretkey) --envelope --content \" \"\n\n", appname);
+	printf("\n");
+	printf("COMMAND CONTEXT:\n\n");
+	printf("  gnostr --sec $(gnostr-sha256 $(curl -s https://blockchain.info/q/getblockcount)) \\\n          -t block \\\n          -t $(curl -s https://blockchain.info/q/getblockcount) \\\n          --envelope \\\n          --content \"BLOCK:$(curl -s https://blockchain.info/q/getblockcount)\"\n\n");
+	printf("\n");
+	printf("GNOSTR-GIT:\n");
+	printf("CONFIG:\n");
+	printf("\n");
+	printf("  gnostr-git config\n\n");
+	printf("  gnostr git config --global\n\n");
+	printf("  gnostr git config --global --add gnostr.secretkey $(gnostr-sha256 12345)\n");
+	printf("  gnostr git config --global --get gnostr.secretkey\n");
+//printf("  5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5");
+	printf("\n");
+	printf("RELAY OPTIONS:\n\n");
+	printf("\n");
+	}
+
+	printf("NOSTR OPTIONS:\n");
 	printf("\n");
 	printf("      --content <string>              the content of the note\n");
 	printf("      --dm <hex pubkey>               make an encrypted dm to said pubkey. sets kind and tags.\n");
@@ -93,9 +182,22 @@ void usage()
 	printf("      --pow <difficulty>              number of leading 0 bits of the id to mine\n");
 	printf("      --mine-pubkey                   mine a pubkey instead of id\n");
 	printf("      --tag <key> <value>             add a tag\n");
+	printf("\n");
+	printf("      --hash <value>                  return sha256 of <value>\n");
+	printf("\n");
 	printf("      -e <event_id>                   shorthand for --tag e <event_id>\n");
 	printf("      -p <pubkey>                     shorthand for --tag p <pubkey>\n");
 	printf("      -t <hashtag>                    shorthand for --tag t <hashtag>\n");
+	printf("\n");
+	printf("%s --sec $(%s --hash \"<value>\")", appname, appname);
+	printf("\n");
+
+
+//gnostr-git config --global --get gnostr.secretkey
+
+// git config --global --add gnostr.secretkey
+// 0000000000000000000000000000000000000000000000000000000000000001
+
 	exit(0);
 }
 
@@ -261,10 +363,10 @@ static inline void xor_mix(unsigned char *dest, const unsigned char *a, const un
 
 static int generate_key(secp256k1_context *ctx, struct key *key, int *difficulty)
 {
-	uint64_t attempts = 0;
-	uint64_t duration;
+	//uint64_t attempts = 0;
+	//uint64_t duration;
 	int bits;
-	double pers;
+	//double pers;
 	struct timespec t1, t2;
 
 	/* If the secret key is zero or out of range (bigger than secp256k1's
@@ -283,13 +385,13 @@ static int generate_key(secp256k1_context *ctx, struct key *key, int *difficulty
 		if (!create_key(ctx, key))
 			return 0;
 
-		attempts++;
+		//attempts++;
 
 		if ((bits = count_leading_zero_bits(key->pubkey)) >= *difficulty) {
 			clock_gettime(CLOCK_MONOTONIC, &t2);
-			duration = ((t2.tv_sec - t1.tv_sec) * 1e9L + (t2.tv_nsec - t1.tv_nsec)) / 1e6L;
-			pers = (double)attempts / (double)duration;
-			fprintf(stderr, "mined pubkey with %d bits after %" PRIu64 " attempts, %" PRId64 " ms, %f attempts per ms\n", bits, attempts, duration, pers);
+			//duration = ((t2.tv_sec - t1.tv_sec) * 1e9L + (t2.tv_nsec - t1.tv_nsec)) / 1e6L;
+			//pers = (double)attempts / (double)duration;
+			//fprintf(stderr, "mined pubkey with %d bits after %" PRIu64 " attempts, %" PRId64 " ms, %f attempts per ms\n", bits, attempts, duration, pers);
 			return 1;
 		}
 
@@ -432,29 +534,39 @@ static int parse_args(int argc, const char *argv[], struct args *args, struct no
 	uint64_t n;
 	int has_added_tags = 0;
 
+    char* exe_name = basename((char *)argv[0]);
+    //printf(" Executable Name: %s", exe_name);
+    //printf("\n");
+    //return EXIT_SUCCESS;
+
 	argv++; argc--;
 	for (; argc; ) {
 		arg = *argv++; argc--;
 
-		if (!strcmp(arg, "--help")) {
-			usage();
-		}
-		if (!strcmp(arg, "--version")) {
-		printf("v%s",VERSION);
-		exit(0);
-		}
-		if (!strcmp(arg, "-v")) {
-		printf("v%s",VERSION);
-		exit(0);
-		}
+		if (!strcmp(arg, "--help") || !strcmp(arg, "-h")) { usage(exe_name); }
+
+		if (!strcmp(arg, "--version") || !strcmp(arg, "-v")) { version(); }
+
+		if (!strcmp(arg, "--about") || !strcmp(arg, "-a")) { about(); }
+
+		//if (!strcmp(arg, "--hash")){ openssl_hash(argc, *argv, args); }
+    if (!strcmp(arg, "--hash"))
+    {
+      args->hash = *argv++; argc--;
+      //printf("args->hash=%s\n", args->hash);
+      hash(argc, argv, args);
+    }
 
 		if (!argc) {
 			fprintf(stderr, "expected argument: '%s'\n", arg);
 			return 0;
 		}
 
-		if (!strcmp(arg, "--sec")) {
+		if (!strcmp(arg, "--sec") || !strcmp(arg, "-s")) {
 			args->sec = *argv++; argc--;
+			if (args->sec){
+				//printf("%s",args->sec);
+			}
 		} else if (!strcmp(arg, "--created-at")) {
 			arg = *argv++; argc--;
 			if (!parse_num(arg, &args->created_at)) {
@@ -636,6 +748,7 @@ static int mine_event(struct nostr_event *ev, int difficulty)
 
 		if ((res = count_leading_zero_bits(ev->id)) >= difficulty) {
 			//fprintf(stderr, "mined %d bits\n", res);
+			fprintf(stderr, "");
 			return 1;
 		}
 	}
@@ -654,11 +767,7 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 	unsigned char iv[16];
 	unsigned char compressed_pubkey[33];
 	int content_len = strlen(ev->content);
-#ifdef _MSC_VER
-	unsigned char* encbuf = malloc(content_len + (content_len % 16) + 1);
-#else
 	unsigned char encbuf[content_len + (content_len % 16) + 1];
-#endif
 	struct cursor cur;
 	secp256k1_pubkey pubkey;
 
@@ -687,8 +796,10 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 		return 0;
 	}
 
-	fprintf(stderr, "shared_secret ");
-	print_hex(shared_secret, 32);
+	//print_hex
+	//shared_secret
+	//fprintf(stderr, "shared_secret ");
+	//print_hex(shared_secret, 32);
 
 	memcpy(encbuf, ev->content, strlen(ev->content));
 	enclen = aes_encrypt(shared_secret, iv, encbuf, strlen(ev->content));
@@ -733,32 +844,43 @@ static int make_encrypted_dm(secp256k1_context *ctx, struct key *key,
 
 	cur.p += 65;
 
-#ifdef _MSC_VER
-	free(encbuf);
-#endif
 	return 1;
 }
 
-static void try_subcommand(int argc, const char *argv[])
-{
-	static char buf[128] = {0};
-	const char *sub = argv[1];
-	if (strlen(sub) >= 1 && sub[0] != '-') {
-		snprintf(buf, sizeof(buf)-1, "nostril-%s", sub);
-		execvp(buf, (char * const *)argv+1);
-	}
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// try_subcommand
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static void try_subcommand(int argc, const char* argv[])
+{
+  static char buf[128] = { 0 };
+  const char* sub = argv[1];
+  if (strlen(sub) >= 1 && sub[0] != '-')
+  {
+    snprintf(buf, sizeof(buf) - 1, "gnostr-%s", sub);
+    execvp(buf, (char* const*)argv + 1);
+  } else {
+
+    // printf("TODO:handle gnostr-sub-sub");
+
+  }
+}
 
 int main(int argc, const char *argv[])
 {
+
+    char* exe_name = basename((char *)argv[0]);
+    //printf(" Executable Name: %s", exe_name);
+    //printf("\n");
+    //return EXIT_SUCCESS;
+
 	struct args args = {0};
 	struct nostr_event ev = {0};
 	struct key key;
-        secp256k1_context *ctx;
+	secp256k1_context *ctx;
 
 	if (argc < 2)
-		usage();
+		usage(exe_name);
 
         if (!init_secp_context(&ctx))
 		return 2;
@@ -766,7 +888,7 @@ int main(int argc, const char *argv[])
 	try_subcommand(argc, argv);
 
 	if (!parse_args(argc, argv, &args, &ev)) {
-		usage();
+		usage(exe_name);
 		return 10;
 	}
 
@@ -790,8 +912,11 @@ int main(int argc, const char *argv[])
 			fprintf(stderr, "could not generate key\n");
 			return 4;
 		}
-		fprintf(stderr, "secret_key ");
+		if ((args.flags & HAS_DIFFICULTY) && (args.flags & HAS_MINE_PUBKEY)) {
+		fprintf(stderr, "{\"secret_key\":\"");
 		print_hex(key.secret, sizeof(key.secret));
+		fprintf(stderr, "\"},");
+		}
 		fprintf(stderr, "\n");
 	}
 
@@ -830,4 +955,3 @@ int main(int argc, const char *argv[])
 
 	return 0;
 }
-
