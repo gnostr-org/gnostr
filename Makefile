@@ -31,12 +31,21 @@ version: nostril.c## 	version
 
 dist: docs version## 	dist
 	@mkdir -p dist
+	@touch dist/SHA256SUMS.txt
+	@touch dist/dist.json
+	git add Makefile dist/*.txt* dist/dist.json
 	git ls-files --recurse-submodules | $(shell which gtar || which tar) --transform 's/^/nostril-$(shell cat version)\//' -T- -caf dist/nostril-$(shell cat version).tar.gz
 	@ls -dt dist/* | head -n1 | xargs echo "tgz "
+	git add Makefile dist/SHA256SUMS.txt* dist/dist.json
 	cd dist;\
-	sha256sum *.tar.gz > SHA256SUMS.txt;\
+	sha2      *.tar.gz > SHA256SUMS.txt;\
+	git add *.txt* dist.json
 	gpg -u $(shell gpg --list-signatures --with-colons | grep 'sig' | grep 'E616FA7221A1613E5B99206297966C06BB06757B' | head -n 1 | cut -d':' -f5) --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt | true
 	cp CHANGELOG dist/CHANGELOG.txt
+	git add dist/*.txt* dist/dist.json
+	./nostril --sec $(shell ./nostril --hash $(shell date +%s)) -t $(shell git rev-parse --short HEAD) > dist/dist.json
+	git add dist/*.txt* dist/dist.json
+	cat dist/dist.json | gnostr-post-event --relay wss://relay.damus.io
 	#rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 
 

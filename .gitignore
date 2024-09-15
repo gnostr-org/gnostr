@@ -1,3 +1,5 @@
+dist/nostril-**.tar.gz
+
 gnostr
 mempool-bot
 openssl
@@ -31,12 +33,11 @@ libsecp256k1.a
 
 Cargo.lock
 Cargo.toml
-*.json
+!/dist/*.json
 scripts/jb55-post
 scripts/nostr-follows
 scripts/nostr-req
 scripts/subnote
-/dist
 /version
 
 .DS_Store
