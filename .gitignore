@@ -1,3 +1,7 @@
+gnostr
+mempool-bot
+openssl
+
 cmake_install.cmake
 
 CMakeCache.txt
