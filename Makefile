@@ -35,7 +35,7 @@ dist: docs version## 	dist
 	@ls -dt dist/* | head -n1 | xargs echo "tgz "
 	cd dist;\
 	sha256sum *.tar.gz > SHA256SUMS.txt;\
-	gpg -u $(shell gpg --list-signatures --with-colons | grep 'sig' | grep 'E616FA7221A1613E5B99206297966C06BB06757B' | head -n 1 | cut -d':' -f5) --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt
+	gpg -u $(shell gpg --list-signatures --with-colons | grep 'sig' | grep 'E616FA7221A1613E5B99206297966C06BB06757B' | head -n 1 | cut -d':' -f5) --sign --armor --detach-sig --output SHA256SUMS.txt.asc SHA256SUMS.txt | true
 	cp CHANGELOG dist/CHANGELOG.txt
 	#rsync -avzP dist/ charon:/www/cdn.jb55.com/tarballs/nostril/
 

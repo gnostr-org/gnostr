@@ -33,6 +33,7 @@ jobs:
         run: |
           sudo mkdir -p /usr/local/share/man/man1/nostril.1
           make all || sudo make all
+          make dist || sudo make dist
           mv nostril nostril-$RUNNER_OS-$RUNNER_ARCH
           shasum -a 256 nostril-$RUNNER_OS-$RUNNER_ARCH > nostril-$RUNNER_OS-$RUNNER_ARCH.sha256.txt
           mv nostril-query nostril-query-$RUNNER_OS-$RUNNER_ARCH
@@ -51,3 +52,7 @@ jobs:
           title: "Development Build"
           files: |
             nostril-*
+            nostril*
+            gnostr*
+            dist/*
+            dist/**.**
