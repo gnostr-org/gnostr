@@ -113,7 +113,9 @@ jobs:
       ## WEEBLE-WOBBLE
       ## GNOSTR DETEMINISTIC ALIASES
       ##
-      - run: |
+      - name: WEEBLE_WOBBLE
+        continue-on-error: true
+        run: |
           PRIVATE_KEY=$(./nostril --hash)
           echo PRIVATE_KEY=$PRIVATE_KEY
 
