@@ -47,10 +47,10 @@ cargo-bench:### 	cargo-bench
 	@. $(HOME)/.cargo/env
 	@cargo bench
 cargo-t:cargo-test
-cargo-test:### 	cargo-test
+cargo-test: cargo-install### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	@cargo test .
+	@cargo test -- --nocapture
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1

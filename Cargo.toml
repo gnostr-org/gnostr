@@ -9,6 +9,7 @@ description = "gnostr: git+nostr workflow utility"
 
 [dependencies]
 gnostr-bins = { version = "0.0.53", path = "vendor/gnostr-bins" }
+sha256 = "1.2.2"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
