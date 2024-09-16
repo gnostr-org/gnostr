@@ -128,11 +128,18 @@ jobs:
           BLOCKHEIGHT=$(gnostr-blockheight)
           echo BLOCKHEIGHT=$BLOCKHEIGHT
 
+          WOBBLE=$(gnostr-wobble)
+          echo WOBBLE=$WOBBLE
+          WOBBLE_SHA256=$(nostril --hash $(gnostr-wobble))
+          echo WOBBLE_SHA256=$WOBBLE_SHA256
+
           BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
           echo BLOCKHEIGHT_SHA256=$BLOCKHEIGHT_SHA256
 
           WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
+          WEEBLE_BH_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)))
+          echo WEEBLE_BH_ALIAS=$WEEBLE_ALIAS
 
           ./nostril --sec $PRIVATE_KEY \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
