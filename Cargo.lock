@@ -675,7 +675,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.54"
+version = "0.0.55"
 dependencies = [
  "gnostr-bins",
  "sha256",

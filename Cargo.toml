@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.54"
+version = "0.0.55"
 edition = "2021"
 repository = "https://github.com/gnostr-org/gnostr.git"
 homepage = "https://github.com/gnostr-org/gnostr.git"

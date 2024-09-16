@@ -32,7 +32,7 @@
 
 //#include "../include/openssl_hash.h"
 
-#define VERSION "0.0.54"
+#define VERSION "0.0.55"
 
 #define MAX_TAGS 32
 #define MAX_TAG_ELEMS 16
