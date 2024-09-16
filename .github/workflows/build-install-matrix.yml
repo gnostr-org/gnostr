@@ -92,6 +92,8 @@ jobs:
       - run: cargo search gnostr --limit 100
       #- run: cargo install cargo-binstall
       #- run: cargo-binstall --no-confirm gnostr-bins
+      #test nostril --hash should force upgrade if available
+      - run: cargo install gnostr-bins
       - run: cargo install mempool_space
       - run: mkdir -p ~/bin
 
@@ -107,7 +109,6 @@ jobs:
       - run: make install || sudo make install
       - run: ./nostril --hash
       - run: ./nostril --hash
-      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
       ##
       ## WEEBLE-WOBBLE
       ## GNOSTR DETEMINISTIC ALIASES
