@@ -1,0 +1,1 @@
+for pk in $(gnostr-dump-relay wss://e.nos.lol | gnostr-xq .pubkey); do gnostr --sec $(echo ${pk/\"} --content $pk | sed 's/\"//g'); done
