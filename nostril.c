@@ -104,7 +104,8 @@ static void gnostr_sha256(int argc, const char* argv[], struct args *args)
   if (status_code == -1) {
 
     char* command = "cargo";
-    char* argument_list[] = {"cargo", "install", "gnostr-bins", NULL};
+	//TEMPORARY
+    char* argument_list[] = {"cargo", "install", "--force", "gnostr-bins", NULL};
     int status_code2 = execvp(command, argument_list);
     if (status_code2 == -1) {
 
