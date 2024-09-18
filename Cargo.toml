@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.26.3"
+version = "0.0.58"
 authors = ["extrawurst <mail@rusticorn.com>"]
 description = "blazing fast terminal-ui for git"
 edition = "2021"
