@@ -1,4 +1,5 @@
 use std::ffi::OsString;
+
 use git2::{Oid, Repository};
 
 fn car_cdr(s: &str) -> (&str, &str) {

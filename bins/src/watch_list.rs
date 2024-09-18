@@ -13,7 +13,6 @@ struct Relay {
 }
 
 /// pub async fn parse_json(urls_str: &str) -> Result<Vec<String>>
-///
 pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
     let mut part = String::new();
     let mut collected = Vec::new();
@@ -48,7 +47,6 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
     Ok(collected)
 }
 /// pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>>
-///
 pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
     let mut part = String::new();
     let mut collected = Vec::new();
@@ -77,7 +75,6 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
     Ok(collected)
 }
 /// pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>>
-///
 pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
     let mut part = String::new();
     let mut collected = Vec::new();

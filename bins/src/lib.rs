@@ -237,7 +237,6 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// cargo +nightly t -- --nocapture
 ///
 /// cargo    test -- --nocapture
-///
 #[cfg(test)]
 mod tests {
     use super::*;
