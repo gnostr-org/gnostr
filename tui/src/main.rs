@@ -145,7 +145,7 @@ fn main() -> Result<()> {
 			//std::process::exit(0);
 		}
 	}
-	std::process::exit(0);
+	//std::process::exit(0);
 
 	let cliargs = process_cmdline()?;
 
