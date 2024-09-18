@@ -1,5 +1,5 @@
 [package]
-name = "gitui"
+name = "gnostr"
 version = "0.26.3"
 authors = ["extrawurst <mail@rusticorn.com>"]
 description = "blazing fast terminal-ui for git"
