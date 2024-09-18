@@ -74,8 +74,10 @@ use scopetime::scope_time;
 use spinner::Spinner;
 use std::{
 	cell::RefCell,
+	env,
 	io::{self, Write},
 	panic, process,
+	process::Command,
 	time::{Duration, Instant},
 };
 use ui::style::Theme;
@@ -121,9 +123,35 @@ enum Updater {
 }
 
 fn main() -> Result<()> {
-	let app_start = Instant::now();
+	use std::env;
+	let mut args_vec: Vec<String> = env::args().collect();
+
+	args_vec.remove(0);
+	for argument in args_vec.clone() {
+		if argument == "init"
+			|| argument == "list"
+			|| argument == "send"
+			|| argument == "push"
+			|| argument == "pull"
+			|| argument == "login"
+		{
+			let copy_args_vec = args_vec.clone();
+			println!("{}:{:?}", argument, copy_args_vec);
+			use std::process::Command;
+			Command::new("gnostr-cli")
+				.args(copy_args_vec)
+				.spawn()
+				.expect("gnostr-cli --help");
+			//std::process::exit(0);
+		}
+	}
+	std::process::exit(0);
 
 	let cliargs = process_cmdline()?;
+
+	let app_start = Instant::now();
+
+	//let cliargs = process_cmdline()?;
 
 	asyncgit::register_tracing_logging();
 

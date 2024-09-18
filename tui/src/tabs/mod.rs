@@ -1,9 +1,9 @@
-mod welcome;
 mod files;
 mod revlog;
 mod stashing;
 mod stashlist;
 mod status;
+mod welcome;
 
 pub use files::FilesTab;
 pub use revlog::Revlog;

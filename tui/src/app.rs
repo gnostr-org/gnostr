@@ -66,6 +66,7 @@ pub enum QuitState {
 
 /// the main app type
 pub struct App {
+	//init: String,
 	repo: RepoPathRef,
 	do_quit: QuitState,
 	help: HelpComponent,
@@ -98,8 +99,7 @@ pub struct App {
 
 	cmdbar: RefCell<CommandBar>, //cmdbar
 
-    //Tabs
-
+	//Tabs
 	tab: usize, //tab
 
 	revlog: Revlog,
@@ -133,6 +133,7 @@ impl App {
 	///
 	#[allow(clippy::too_many_lines)]
 	pub fn new(
+		//init: String,
 		repo: RepoPathRef,
 		sender: &Sender<AsyncGitNotification>,
 		sender_app: &Sender<AsyncAppNotification>,
@@ -321,7 +322,7 @@ impl App {
 				theme.clone(),
 				key_config.clone(),
 			),
-            //welcome
+			//welcome
 			welcome_tab: Welcome::new(
 				repo.clone(),
 				&queue,
@@ -330,7 +331,7 @@ impl App {
 				key_config.clone(),
 				options.clone(),
 			),
-            //status
+			//status
 			status_tab: Status::new(
 				repo.clone(),
 				&queue,
@@ -339,7 +340,7 @@ impl App {
 				key_config.clone(),
 				options.clone(),
 			),
-            //tab
+			//tab
 			stashing_tab: Stashing::new(
 				&repo,
 				sender,
@@ -347,14 +348,14 @@ impl App {
 				theme.clone(),
 				key_config.clone(),
 			),
-            //tab
+			//tab
 			stashlist_tab: StashList::new(
 				repo.clone(),
 				&queue,
 				theme.clone(),
 				key_config.clone(),
 			),
-            //tab
+			//tab
 			files_tab: FilesTab::new(
 				repo.clone(),
 				sender_app,
@@ -363,7 +364,7 @@ impl App {
 				theme.clone(),
 				key_config.clone(),
 			),
-            //tab
+			//tab
 			tab: 0,
 			queue,
 			theme,
@@ -512,10 +513,10 @@ impl App {
 						let changes =
 							self.status_tab.get_files_changes()?;
 						self.commit.show_editor(changes)
-					//} else {
-					//	let changes =
-					//		self.welcome_tab.get_files_changes()?;
-					//	self.commit.show_editor(changes)
+						//} else {
+						//	let changes =
+						//		self.welcome_tab.get_files_changes()?;
+						//	self.commit.show_editor(changes)
 					};
 
 				if let Err(e) = result {
@@ -600,7 +601,7 @@ impl App {
 	///
 	pub fn any_work_pending(&self) -> bool {
 		self.welcome_tab.anything_pending()
-		    || self.status_tab.anything_pending()
+			|| self.status_tab.anything_pending()
 			|| self.revlog.any_work_pending()
 			|| self.stashing_tab.anything_pending()
 			|| self.files_tab.anything_pending()
@@ -721,13 +722,11 @@ impl App {
 		false
 	}
 
-    //
+	//
 	fn get_tabs(&mut self) -> Vec<&mut dyn Component> {
 		vec![
-
-            //welcome dashboard
-            &mut self.welcome_tab,
-
+			//welcome dashboard
+			&mut self.welcome_tab,
 			&mut self.status_tab,
 			&mut self.revlog,
 			&mut self.files_tab,
@@ -785,8 +784,8 @@ impl App {
 		match tab {
 			AppTabs::Welcome => self.set_tab(0)?,
 			AppTabs::Status => self.set_tab(1)?, //1
-			AppTabs::Log => self.set_tab(2)?, //2
-			AppTabs::Files => self.set_tab(3)?, //3
+			AppTabs::Log => self.set_tab(2)?,    //2
+			AppTabs::Files => self.set_tab(3)?,  //3
 			AppTabs::Stashing => self.set_tab(4)?, //4
 			AppTabs::Stashlist => self.set_tab(5)?, //5
 		}
