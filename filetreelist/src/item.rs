@@ -1,15 +1,17 @@
-use crate::error::Result;
 use std::path::{Path, PathBuf};
 
-/// holds the information shared among all `FileTreeItem` in a `FileTree`
+use crate::error::Result;
+
+/// holds the information shared among all `FileTreeItem` in a
+/// `FileTree`
 #[derive(Debug, Clone)]
 pub struct TreeItemInfo {
 	/// indent level
 	indent: u8,
 	/// currently visible depending on the folder collapse states
 	visible: bool,
-	/// contains this paths last component and folded up paths added to it
-	/// if this is `None` nothing was folding into here
+	/// contains this paths last component and folded up paths added
+	/// to it if this is `None` nothing was folding into here
 	folded: Option<PathBuf>,
 	/// the full path
 	full_path: PathBuf,
@@ -79,7 +81,8 @@ impl TreeItemInfo {
 	}
 }
 
-/// attribute used to indicate the collapse/expand state of a path item
+/// attribute used to indicate the collapse/expand state of a path
+/// item
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub struct PathCollapsed(pub bool);
 
@@ -103,7 +106,8 @@ impl FileTreeItemKind {
 	}
 }
 
-/// `FileTreeItem` can be of two kinds: see `FileTreeItem` but shares an info
+/// `FileTreeItem` can be of two kinds: see `FileTreeItem` but shares
+/// an info
 #[derive(Debug, Clone)]
 pub struct FileTreeItem {
 	info: TreeItemInfo,
@@ -211,8 +215,9 @@ impl Ord for FileTreeItem {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[test]
 	fn test_smoke() {

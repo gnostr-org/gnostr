@@ -1,13 +1,14 @@
-use crate::{
-	error::Error,
-	item::{FileTreeItemKind, PathCollapsed},
-	FileTreeItem,
-};
-use crate::{error::Result, treeitems_iter::TreeItemsIterator};
 use std::{
 	collections::{BTreeSet, HashMap},
 	path::{Path, PathBuf},
 	usize,
+};
+
+use crate::{
+	error::{Error, Result},
+	item::{FileTreeItemKind, PathCollapsed},
+	treeitems_iter::TreeItemsIterator,
+	FileTreeItem,
 };
 
 ///
@@ -81,8 +82,9 @@ impl FileTreeItems {
 	fn push_dirs<'a>(
 		item_path: &'a Path,
 		nodes: &mut Vec<FileTreeItem>,
-		// helps to only add new nodes for paths that were not added before
-		// we also count the number of children a node has for later folding
+		// helps to only add new nodes for paths that were not added
+		// before we also count the number of children a node has
+		// for later folding
 		paths_added: &mut HashMap<&'a Path, usize>,
 		collapsed: &BTreeSet<&String>,
 	) -> Result<()> {
@@ -95,7 +97,8 @@ impl FileTreeItems {
 				// add node and set count to have no children
 				paths_added.insert(c, 0);
 
-				// increase the number of children in the parent node count
+				// increase the number of children in the parent node
+				// count
 				if let Some(parent) = c.parent() {
 					if !parent.as_os_str().is_empty() {
 						*paths_added.entry(parent).or_insert(0) += 1;
@@ -109,7 +112,8 @@ impl FileTreeItems {
 			}
 		}
 
-		// increase child count in parent node (the above ancenstor ignores the leaf component)
+		// increase child count in parent node (the above ancenstor
+		// ignores the leaf component)
 		if let Some(parent) = item_path.parent() {
 			*paths_added.entry(parent).or_insert(0) += 1;
 		}
@@ -280,7 +284,8 @@ impl FileTreeItems {
 		start_idx: usize,
 		set_defaults: bool,
 	) {
-		// if we are in any subpath that is collapsed we keep skipping over it
+		// if we are in any subpath that is collapsed we keep skipping
+		// over it
 		let mut inner_collapsed: Option<PathBuf> = None;
 
 		for i in start_idx..self.tree_items.len() {
@@ -306,7 +311,8 @@ impl FileTreeItems {
 
 			if matches!(item_kind, FileTreeItemKind::Path(PathCollapsed(collapsed)) if collapsed)
 			{
-				// we encountered an inner path that is still collapsed
+				// we encountered an inner path that is still
+				// collapsed
 				inner_collapsed = Some(item_path.into());
 			}
 
@@ -385,8 +391,9 @@ impl FileTreeItems {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[test]
 	fn test_simple() {
@@ -922,8 +929,9 @@ mod tests {
 
 #[cfg(test)]
 mod test_merging {
-	use super::*;
 	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[test]
 	fn test_merge_simple() {
