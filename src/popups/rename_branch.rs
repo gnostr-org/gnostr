@@ -1,19 +1,20 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, InputType, TextInputComponent,
-};
-use crate::ui::style::SharedTheme;
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, NeedsUpdate, Queue},
-	strings,
-};
 use anyhow::Result;
 use asyncgit::sync::{self, RepoPathRef};
 use crossterm::event::Event;
 use easy_cast::Cast;
 use ratatui::{layout::Rect, widgets::Paragraph, Frame};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, InputType, TextInputComponent,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, NeedsUpdate, Queue},
+	strings,
+	ui::style::SharedTheme,
+};
 
 pub struct RenameBranchPopup {
 	repo: RepoPathRef,

@@ -1,17 +1,5 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, FuzzyFinderTarget, VerticalScroll,
-};
-use crate::{
-	app::Environment,
-	components::ScrollType,
-	keys::{key_match, SharedKeyConfig},
-	queue::{
-		Action, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen,
-	},
-	strings, try_or_popup,
-	ui::{self, Size},
-};
+use std::cell::Cell;
+
 use anyhow::Result;
 use asyncgit::{
 	sync::{
@@ -34,11 +22,24 @@ use ratatui::{
 	widgets::{Block, BorderType, Borders, Clear, Paragraph, Tabs},
 	Frame,
 };
-use std::cell::Cell;
 use ui::style::SharedTheme;
 use unicode_truncate::UnicodeTruncateStr;
 
 use super::InspectCommitOpen;
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, FuzzyFinderTarget, ScrollType,
+		VerticalScroll,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{
+		Action, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen,
+	},
+	strings, try_or_popup,
+	ui::{self, Size},
+};
 
 ///
 pub struct BranchListPopup {

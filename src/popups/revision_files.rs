@@ -1,19 +1,21 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, RevisionFilesComponent,
-};
+use std::path::Path;
+
+use anyhow::Result;
+use asyncgit::sync::CommitId;
+use crossterm::event::Event;
+use ratatui::{layout::Rect, widgets::Clear, Frame};
+
 use crate::{
 	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, RevisionFilesComponent,
+	},
 	keys::{key_match, SharedKeyConfig},
 	queue::{InternalEvent, Queue, StackablePopupOpen},
 	strings::{self},
 	AsyncNotification,
 };
-use anyhow::Result;
-use asyncgit::sync::CommitId;
-use crossterm::event::Event;
-use ratatui::{layout::Rect, widgets::Clear, Frame};
-use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct FileTreeOpen {
@@ -132,7 +134,8 @@ impl Component for RevisionFilesPopup {
 			}
 
 			let res = self.files.event(event)?;
-			//Note: if this made the files hide we need to stack the popup
+			//Note: if this made the files hide we need to stack the
+			// popup
 			if res == EventState::Consumed && !self.files.is_visible()
 			{
 				self.hide_stacked(true);

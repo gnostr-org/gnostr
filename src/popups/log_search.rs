@@ -1,14 +1,3 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, InputType, TextInputComponent,
-};
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, Queue},
-	strings::{self, POPUP_COMMIT_SHA_INVALID},
-	ui::{self, style::SharedTheme},
-};
 use anyhow::Result;
 use asyncgit::sync::{
 	CommitId, LogFilterSearchOptions, RepoPathRef, SearchFields,
@@ -23,6 +12,18 @@ use ratatui::{
 	text::{Line, Span},
 	widgets::{Block, Borders, Clear, Paragraph},
 	Frame,
+};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, InputType, TextInputComponent,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, Queue},
+	strings::{self, POPUP_COMMIT_SHA_INVALID},
+	ui::{self, style::SharedTheme},
 };
 
 enum Selection {
@@ -134,8 +135,9 @@ impl LogSearchPopupPopup {
 				));
 			}
 			PopupMode::JumpCommitSha => {
-				let commit_id = self.jump_commit_id
-                    .expect("Commit id must have value here because it's already validated");
+				let commit_id = self.jump_commit_id.expect(
+					"Commit id must have value here because it's already validated",
+				);
 				self.queue.push(InternalEvent::SelectCommitInRevlog(
 					commit_id,
 				));

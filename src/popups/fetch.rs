@@ -1,14 +1,3 @@
-use crate::{
-	app::Environment,
-	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		CredComponent, DrawableComponent, EventState,
-	},
-	keys::SharedKeyConfig,
-	queue::{InternalEvent, NeedsUpdate, Queue},
-	strings,
-	ui::{self, style::SharedTheme},
-};
 use anyhow::Result;
 use asyncgit::{
 	asyncjob::AsyncSingleJob,
@@ -27,6 +16,18 @@ use ratatui::{
 	text::Span,
 	widgets::{Block, BorderType, Borders, Clear, Gauge},
 	Frame,
+};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		CredComponent, DrawableComponent, EventState,
+	},
+	keys::SharedKeyConfig,
+	queue::{InternalEvent, NeedsUpdate, Queue},
+	strings,
+	ui::{self, style::SharedTheme},
 };
 
 ///

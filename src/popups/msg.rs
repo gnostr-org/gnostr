@@ -1,23 +1,24 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, ScrollType, VerticalScroll,
-};
-use crate::strings::order;
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	strings, ui,
-};
 use anyhow::Result;
 use crossterm::event::Event;
-use ratatui::text::Line;
 use ratatui::{
 	layout::{Alignment, Rect},
-	text::Span,
+	text::{Line, Span},
 	widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
 	Frame,
 };
 use ui::style::SharedTheme;
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, ScrollType, VerticalScroll,
+	},
+	keys::{key_match, SharedKeyConfig},
+	strings,
+	strings::order,
+	ui,
+};
 
 pub struct MsgPopup {
 	title: String,

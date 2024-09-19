@@ -1,18 +1,5 @@
-use crate::{
-	app::Environment,
-	components::{
-		string_width_align, time_to_string, visibility_blocking,
-		CommandBlocking, CommandInfo, Component, DrawableComponent,
-		EventState, ScrollType,
-	},
-	keys::{key_match, SharedKeyConfig},
-	popups::{FileRevOpen, InspectCommitOpen},
-	queue::{InternalEvent, Queue, StackablePopupOpen},
-	string_utils::tabs_to_spaces,
-	strings,
-	ui::{self, style::SharedTheme, AsyncSyntaxJob, SyntaxText},
-	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
-};
+use std::path::Path;
+
 use anyhow::Result;
 use asyncgit::{
 	asyncjob::AsyncSingleJob,
@@ -28,7 +15,22 @@ use ratatui::{
 	widgets::{Block, Borders, Cell, Clear, Row, Table, TableState},
 	Frame,
 };
-use std::path::Path;
+
+use crate::{
+	app::Environment,
+	components::{
+		string_width_align, time_to_string, visibility_blocking,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType,
+	},
+	keys::{key_match, SharedKeyConfig},
+	popups::{FileRevOpen, InspectCommitOpen},
+	queue::{InternalEvent, Queue, StackablePopupOpen},
+	string_utils::tabs_to_spaces,
+	strings,
+	ui::{self, style::SharedTheme, AsyncSyntaxJob, SyntaxText},
+	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
+};
 
 static NO_COMMIT_ID: &str = "0000000";
 static NO_AUTHOR: &str = "<no author>";
@@ -158,20 +160,22 @@ impl DrawableComponent for BlameFilePopup {
 				f,
 				area,
 				&self.theme,
-				// April 2021: `draw_scrollbar` assumes that the last parameter
-				// is `scroll_top`.  Therefore, it subtracts the area’s height
-				// before calculating the position of the scrollbar. To account
+				// April 2021: `draw_scrollbar` assumes that the last
+				// parameter is `scroll_top`.  Therefore, it
+				// subtracts the area’s height before calculating
+				// the position of the scrollbar. To account
 				// for that, we add the current height.
 				number_of_rows + (area.height as usize),
-				// April 2021: we don’t have access to `table_state.offset`
-				// (it’s private), so we use `table_state.selected()` as a
-				// replacement.
+				// April 2021: we don’t have access to
+				// `table_state.offset` (it’s private), so we use
+				// `table_state.selected()` as a replacement.
 				//
-				// Other widgets, for example `BranchListComponent`, manage
-				// scroll state themselves and use `self.scroll_top` in this
-				// situation.
+				// Other widgets, for example `BranchListComponent`,
+				// manage scroll state themselves and use
+				// `self.scroll_top` in this situation.
 				//
-				// There are plans to change `render_stateful_widgets`, so this
+				// There are plans to change
+				// `render_stateful_widgets`, so this
 				// might be acceptable as an interim solution.
 				//
 				// https://github.com/fdehau/tui-rs/issues/448

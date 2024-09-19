@@ -1,30 +1,17 @@
-use crate::components::{
-	time_to_string, visibility_blocking, CommandBlocking,
-	CommandInfo, Component, DrawableComponent, EventState,
-};
-use crate::{
-	app::Environment,
-	components::ScrollType,
-	keys::{key_match, SharedKeyConfig},
-	queue::{Action, InternalEvent, Queue},
-	strings,
-	ui::{self, Size},
-	AsyncNotification,
-};
 use anyhow::Result;
 use asyncgit::{
 	asyncjob::AsyncSingleJob,
 	remote_tags::AsyncRemoteTagsJob,
-	sync::cred::{
-		extract_username_password, need_username_password,
-		BasicAuthCredential,
-	},
 	sync::{
-		self, get_tags_with_metadata, RepoPathRef, TagWithMetadata,
+		self,
+		cred::{
+			extract_username_password, need_username_password,
+			BasicAuthCredential,
+		},
+		get_tags_with_metadata, RepoPathRef, TagWithMetadata,
 	},
 	AsyncGitNotification,
 };
-
 use crossterm::event::Event;
 use ratatui::{
 	layout::{Constraint, Margin, Rect},
@@ -36,6 +23,20 @@ use ratatui::{
 	Frame,
 };
 use ui::style::SharedTheme;
+
+use crate::{
+	app::Environment,
+	components::{
+		time_to_string, visibility_blocking, CommandBlocking,
+		CommandInfo, Component, DrawableComponent, EventState,
+		ScrollType,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{Action, InternalEvent, Queue},
+	strings,
+	ui::{self, Size},
+	AsyncNotification,
+};
 
 ///
 pub struct TagListPopup {
@@ -75,7 +76,8 @@ impl DrawableComponent for TagListPopup {
 				});
 
 			let constraints = [
-				// symbol if tag is not yet on remote and can be pushed
+				// symbol if tag is not yet on remote and can be
+				// pushed
 				Constraint::Length(1),
 				// tag name
 				Constraint::Length(tag_name_width.try_into()?),

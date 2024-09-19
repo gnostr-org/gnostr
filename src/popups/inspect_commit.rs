@@ -1,16 +1,3 @@
-use crate::components::{
-	command_pump, event_pump, visibility_blocking, CommandBlocking,
-	CommandInfo, CommitDetailsComponent, Component, DiffComponent,
-	DrawableComponent, EventState,
-};
-use crate::{
-	accessors,
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	options::SharedOptions,
-	queue::{InternalEvent, Queue, StackablePopupOpen},
-	strings,
-};
 use anyhow::Result;
 use asyncgit::{
 	sync::{CommitId, CommitTags},
@@ -24,6 +11,19 @@ use ratatui::{
 };
 
 use super::FileTreeOpen;
+use crate::{
+	accessors,
+	app::Environment,
+	components::{
+		command_pump, event_pump, visibility_blocking,
+		CommandBlocking, CommandInfo, CommitDetailsComponent,
+		Component, DiffComponent, DrawableComponent, EventState,
+	},
+	keys::{key_match, SharedKeyConfig},
+	options::SharedOptions,
+	queue::{InternalEvent, Queue, StackablePopupOpen},
+	strings,
+};
 
 #[derive(Clone, Debug)]
 pub struct InspectCommitOpen {

@@ -1,3 +1,11 @@
+use std::borrow::Cow;
+
+use anyhow::Result;
+use crossterm::event::Event;
+use ratatui::{layout::Rect, text::Text, widgets::Clear, Frame};
+use ui::style::SharedTheme;
+
+use super::popup_paragraph;
 use crate::{
 	app::Environment,
 	components::{
@@ -8,13 +16,6 @@ use crate::{
 	queue::{Action, InternalEvent, Queue},
 	strings, ui,
 };
-use anyhow::Result;
-use crossterm::event::Event;
-use ratatui::{layout::Rect, text::Text, widgets::Clear, Frame};
-use std::borrow::Cow;
-use ui::style::SharedTheme;
-
-use super::popup_paragraph;
 
 ///
 pub struct ConfirmPopup {

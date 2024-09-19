@@ -1,13 +1,5 @@
-use crate::{
-	app::Environment,
-	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState,
-	},
-	keys::SharedKeyConfig,
-	strings,
-	ui::{self, style::SharedTheme},
-};
+use std::{env, ffi::OsStr, io, path::Path, process::Command};
+
 use anyhow::{anyhow, bail, Result};
 use asyncgit::sync::{
 	get_config_string, utils::repo_work_dir, RepoPath,
@@ -24,8 +16,17 @@ use ratatui::{
 	Frame,
 };
 use scopeguard::defer;
-use std::ffi::OsStr;
-use std::{env, io, path::Path, process::Command};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState,
+	},
+	keys::SharedKeyConfig,
+	strings,
+	ui::{self, style::SharedTheme},
+};
 
 ///
 pub struct ExternalEditorPopup {
@@ -78,7 +79,8 @@ impl ExternalEditorPopup {
 			.unwrap_or_else(|| String::from("vi"));
 
 		// TODO: proper handling arguments containing whitespaces
-		// This does not do the right thing if the input is `editor --something "with spaces"`
+		// This does not do the right thing if the input is `editor
+		// --something "with spaces"`
 
 		// deal with "editor name with spaces" p1 p2 p3
 		// and with "editor_no_spaces" p1 p2 p3

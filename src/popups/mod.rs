@@ -42,6 +42,11 @@ pub use options::{AppOption, OptionsPopup};
 pub use pull::PullPopup;
 pub use push::PushPopup;
 pub use push_tags::PushTagsPopup;
+use ratatui::{
+	layout::Alignment,
+	text::{Span, Text},
+	widgets::{Block, BorderType, Borders, Paragraph, Wrap},
+};
 pub use rename_branch::RenameBranchPopup;
 pub use reset::ResetPopup;
 pub use revision_files::{FileTreeOpen, RevisionFilesPopup};
@@ -51,11 +56,6 @@ pub use tag_commit::TagCommitPopup;
 pub use taglist::TagListPopup;
 
 use crate::ui::style::Theme;
-use ratatui::{
-	layout::Alignment,
-	text::{Span, Text},
-	widgets::{Block, BorderType, Borders, Paragraph, Wrap},
-};
 
 fn popup_paragraph<'a, T>(
 	title: &'a str,
