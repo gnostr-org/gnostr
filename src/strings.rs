@@ -284,8 +284,8 @@ pub fn confirm_msg_force_push(
 	branch_ref: &str,
 ) -> String {
 	format!(
-        "Confirm force push to branch '{branch_ref}' ?  This may rewrite history."
-    )
+		"Confirm force push to branch '{branch_ref}' ?  This may rewrite history."
+	)
 }
 pub fn log_title(_key_config: &SharedKeyConfig) -> String {
 	"Commit".to_string()
@@ -427,8 +427,7 @@ pub mod commit {
 }
 
 pub mod commands {
-	use crate::components::CommandText;
-	use crate::keys::SharedKeyConfig;
+	use crate::{components::CommandText, keys::SharedKeyConfig};
 
 	static CMD_GROUP_GENERAL: &str = "-- General --";
 	static CMD_GROUP_DIFF: &str = "-- Diff --";
