@@ -112,10 +112,10 @@ fn create_hook_in_path(path: &Path, hook_script: &[u8]) {
 	}
 }
 
-/// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
+// /// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
 /// we use the same convention as other git clients to create a temp file containing
-/// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and pass it's relative path as the only
-/// parameter to the hook script.
+// /// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and pass it's relative path as the only
+// /// parameter to the hook script.
 pub fn hooks_commit_msg(
 	repo: &Repository,
 	other_paths: Option<&[&str]>,
