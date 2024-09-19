@@ -1,17 +1,22 @@
 //! Sync git API for fetching a file blame
 
+use std::{
+	collections::{HashMap, HashSet},
+	io::{BufRead, BufReader},
+	path::Path,
+};
+
+use git2::BlameOptions;
+use scopetime::scope_time;
+
 use super::{utils, CommitId, RepoPath};
 use crate::{
 	error::{Error, Result},
 	sync::{get_commits_info, repository::repo},
 };
-use git2::BlameOptions;
-use scopetime::scope_time;
-use std::collections::{HashMap, HashSet};
-use std::io::{BufRead, BufReader};
-use std::path::Path;
 
-/// A `BlameHunk` contains all the information that will be shown to the user.
+/// A `BlameHunk` contains all the information that will be shown to
+/// the user.
 #[derive(Clone, Hash, Debug, PartialEq, Eq)]
 pub struct BlameHunk {
 	///
@@ -20,16 +25,16 @@ pub struct BlameHunk {
 	pub author: String,
 	///
 	pub time: i64,
-	/// `git2::BlameHunk::final_start_line` returns 1-based indices, but
-	/// `start_line` is 0-based because the `Vec` storing the lines starts at
-	/// index 0.
+	/// `git2::BlameHunk::final_start_line` returns 1-based indices,
+	/// but `start_line` is 0-based because the `Vec` storing the
+	/// lines starts at index 0.
 	pub start_line: usize,
 	///
 	pub end_line: usize,
 }
 
-/// A `BlameFile` represents a collection of lines. This is targeted at how the
-/// data will be used by the UI.
+/// A `BlameFile` represents a collection of lines. This is targeted
+/// at how the data will be used by the UI.
 #[derive(Clone, Debug)]
 pub struct FileBlame {
 	///
@@ -148,15 +153,16 @@ pub fn blame_file(
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use crate::{
-		error::Result,
-		sync::{commit, stage_add_file, tests::repo_init_empty},
-	};
 	use std::{
 		fs::{File, OpenOptions},
 		io::Write,
 		path::Path,
+	};
+
+	use super::*;
+	use crate::{
+		error::Result,
+		sync::{commit, stage_add_file, tests::repo_init_empty},
 	};
 
 	#[test]

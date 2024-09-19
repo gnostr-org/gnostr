@@ -1,9 +1,11 @@
-use super::{commit_files::get_commit_diff, CommitId};
-use crate::error::Result;
+use std::sync::Arc;
+
 use bitflags::bitflags;
 use fuzzy_matcher::FuzzyMatcher;
 use git2::{Diff, Repository};
-use std::sync::Arc;
+
+use super::{commit_files::get_commit_diff, CommitId};
+use crate::error::Result;
 
 ///
 pub type SharedCommitFilterFn = Arc<
@@ -214,7 +216,8 @@ pub fn filter_commit_by_search(
 
 			Ok(msg_summary_match
 				|| msg_body_match
-				|| file_match || authors_match)
+				|| file_match
+				|| authors_match)
 		},
 	))
 }

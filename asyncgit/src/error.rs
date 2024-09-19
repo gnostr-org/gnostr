@@ -4,6 +4,7 @@ use std::{
 	num::TryFromIntError, path::StripPrefixError,
 	string::FromUtf8Error,
 };
+
 use thiserror::Error;
 
 ///
@@ -94,15 +95,21 @@ pub enum Error {
 	Sign(#[from] crate::sync::sign::SignError),
 
 	///
-	#[error("amend error: config commit.gpgsign=true detected.\ngpg signing is not supported for amending non-last commits")]
+	#[error(
+		"amend error: config commit.gpgsign=true detected.\ngpg signing is not supported for amending non-last commits"
+	)]
 	SignAmendNonLastCommit,
 
 	///
-	#[error("reword error: config commit.gpgsign=true detected.\ngpg signing is not supported for rewording non-last commits")]
+	#[error(
+		"reword error: config commit.gpgsign=true detected.\ngpg signing is not supported for rewording non-last commits"
+	)]
 	SignRewordNonLastCommit,
 
 	///
-	#[error("reword error: config commit.gpgsign=true detected.\ngpg signing is not supported for rewording commits with staged changes\ntry unstaging or stashing your changes")]
+	#[error(
+		"reword error: config commit.gpgsign=true detected.\ngpg signing is not supported for rewording commits with staged changes\ntry unstaging or stashing your changes"
+	)]
 	SignRewordLastCommitStaged,
 }
 

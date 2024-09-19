@@ -1,11 +1,12 @@
 //! merging from upstream
 
+use scopetime::scope_time;
+
 use super::BranchType;
 use crate::{
 	error::{Error, Result},
 	sync::{repository::repo, RepoPath},
 };
-use scopetime::scope_time;
 
 ///
 pub fn branch_merge_upstream_fastforward(

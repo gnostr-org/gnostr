@@ -1,13 +1,15 @@
-use super::{utils::work_dir, RepoPath};
-use crate::{
-	error::{Error, Result},
-	sync::repository::repo,
-};
-use scopetime::scope_time;
 use std::{
 	fs::{File, OpenOptions},
 	io::{Read, Seek, SeekFrom, Write},
 	path::Path,
+};
+
+use scopetime::scope_time;
+
+use super::{utils::work_dir, RepoPath};
+use crate::{
+	error::{Error, Result},
+	sync::repository::repo,
 };
 
 static GITIGNORE: &str = ".gitignore";
@@ -62,11 +64,13 @@ fn file_ends_with_newline(file: &Path) -> Result<bool> {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use crate::sync::{tests::repo_init, utils::repo_write_file};
+	use std::{fs::File, io, path::Path};
+
 	use io::BufRead;
 	use pretty_assertions::assert_eq;
-	use std::{fs::File, io, path::Path};
+
+	use super::*;
+	use crate::sync::{tests::repo_init, utils::repo_write_file};
 
 	#[test]
 	fn test_empty() -> Result<()> {

@@ -8,7 +8,8 @@ use super::{
 };
 use crate::error::{Error, Result};
 
-/// This is the same as reword, but will abort and fix the repo if something goes wrong
+/// This is the same as reword, but will abort and fix the repo if
+/// something goes wrong
 pub fn reword(
 	repo_path: &RepoPath,
 	commit: CommitId,
@@ -45,7 +46,8 @@ pub fn reword(
 
 	match reword_internal(&repo, commit.get_oid(), message) {
 		Ok(id) => Ok(id.into()),
-		// Something went wrong, checkout the previous branch then error
+		// Something went wrong, checkout the previous branch then
+		// error
 		Err(e) => {
 			if let Ok(mut rebase) = repo.open_rebase(None) {
 				rebase.abort()?;
@@ -78,8 +80,9 @@ fn get_current_branch(
 /// reword operation in an interactive rebase, that is not how it
 /// is implemented in git2rs
 ///
-/// This is dangerous if it errors, as the head will be detached so this should
-/// always be wrapped by another function which aborts the rebase if something goes wrong
+/// This is dangerous if it errors, as the head will be detached so
+/// this should always be wrapped by another function which aborts the
+/// rebase if something goes wrong
 fn reword_internal(
 	repo: &Repository,
 	commit: Oid,
@@ -94,7 +97,8 @@ fn reword_internal(
 
 	let commit_to_change = if let Some(pc_oid) = parent_commit_oid {
 		// Need to start at one previous to the commit, so
-		// first rebase.next() points to the actual commit we want to change
+		// first rebase.next() points to the actual commit we want to
+		// change
 		repo.find_annotated_commit(pc_oid)?
 	} else {
 		return Err(Error::NoParent);
@@ -124,8 +128,8 @@ fn reword_internal(
 		target = rebase.commit(None, &sig, Some(message))?;
 		let reworded_commit = target;
 
-		// Set target to top commit, don't know when the rebase will end
-		// so have to loop till end
+		// Set target to top commit, don't know when the rebase will
+		// end so have to loop till end
 		while rebase.next().is_some() {
 			target = rebase.commit(None, &sig, None)?;
 		}
@@ -149,12 +153,13 @@ fn reword_internal(
 
 #[cfg(test)]
 mod tests {
+	use pretty_assertions::assert_eq;
+
 	use super::*;
 	use crate::sync::{
 		get_commit_info,
 		tests::{repo_init_empty, write_commit_file},
 	};
-	use pretty_assertions::assert_eq;
 
 	#[test]
 	fn test_reword() {

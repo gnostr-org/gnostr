@@ -1,3 +1,13 @@
+use std::{
+	hash::Hash,
+	sync::{
+		atomic::{AtomicUsize, Ordering},
+		Arc, Mutex,
+	},
+};
+
+use crossbeam_channel::Sender;
+
 use crate::{
 	error::Result,
 	hash,
@@ -6,14 +16,6 @@ use crate::{
 		RepoPath,
 	},
 	AsyncGitNotification, FileDiff,
-};
-use crossbeam_channel::Sender;
-use std::{
-	hash::Hash,
-	sync::{
-		atomic::{AtomicUsize, Ordering},
-		Arc, Mutex,
-	},
 };
 
 ///

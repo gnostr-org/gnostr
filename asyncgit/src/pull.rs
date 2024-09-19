@@ -1,3 +1,10 @@
+use std::{
+	sync::{Arc, Mutex},
+	thread,
+};
+
+use crossbeam_channel::{unbounded, Sender};
+
 use crate::{
 	error::{Error, Result},
 	sync::{
@@ -6,11 +13,6 @@ use crate::{
 		RepoPath,
 	},
 	AsyncGitNotification, RemoteProgress,
-};
-use crossbeam_channel::{unbounded, Sender};
-use std::{
-	sync::{Arc, Mutex},
-	thread,
 };
 
 ///
@@ -24,7 +26,8 @@ pub struct FetchRequest {
 	pub basic_credential: Option<BasicAuthCredential>,
 }
 
-//TODO: since this is empty we can go with a simple AtomicBool to mark that we are fetching or not
+//TODO: since this is empty we can go with a simple AtomicBool to
+// mark that we are fetching or not
 #[derive(Default, Clone, Debug)]
 struct FetchState {}
 

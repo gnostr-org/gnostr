@@ -1,7 +1,8 @@
-use super::RepoPath;
-use crate::{error::Result, sync::repository::repo};
 use git2::RepositoryState;
 use scopetime::scope_time;
+
+use super::RepoPath;
+use crate::{error::Result, sync::repository::repo};
 
 ///
 #[derive(Debug, PartialEq, Eq)]

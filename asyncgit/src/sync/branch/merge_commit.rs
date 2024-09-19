@@ -1,16 +1,17 @@
 //! merging from upstream
 
+use git2::Commit;
+use scopetime::scope_time;
+
 use super::BranchType;
 use crate::{
 	error::{Error, Result},
 	sync::{merge_msg, repository::repo, CommitId, RepoPath},
 };
-use git2::Commit;
-use scopetime::scope_time;
 
-/// merge upstream using a merge commit if we did not create conflicts.
-/// if we did not create conflicts we create a merge commit and return the commit id.
-/// Otherwise we return `None`
+/// merge upstream using a merge commit if we did not create
+/// conflicts. if we did not create conflicts we create a merge commit
+/// and return the commit id. Otherwise we return `None`
 pub fn merge_upstream_commit(
 	repo_path: &RepoPath,
 	branch_name: &str,
@@ -151,16 +152,18 @@ mod test {
 		);
 
 		//push should fail since origin diverged
-		assert!(push_branch(
-			&clone2_dir.into(),
-			"origin",
-			"master",
-			false,
-			false,
-			None,
-			None,
-		)
-		.is_err());
+		assert!(
+			push_branch(
+				&clone2_dir.into(),
+				"origin",
+				"master",
+				false,
+				false,
+				None,
+				None,
+			)
+			.is_err()
+		);
 
 		//lets fetch from origin
 		let bytes =
@@ -199,9 +202,11 @@ mod test {
 		)
 		.unwrap();
 		assert_eq!(
-            details.message.unwrap().combine(),
-            String::from("Merge remote-tracking branch 'refs/remotes/origin/master'")
-        );
+			details.message.unwrap().combine(),
+			String::from(
+				"Merge remote-tracking branch 'refs/remotes/origin/master'"
+			)
+		);
 	}
 
 	#[test]
@@ -263,7 +268,8 @@ mod test {
 		)
 		.unwrap();
 
-		//this should not have committed cause we left conflicts behind
+		//this should not have committed cause we left conflicts
+		// behind
 		assert_eq!(res, None);
 
 		let state = crate::sync::repo_state(

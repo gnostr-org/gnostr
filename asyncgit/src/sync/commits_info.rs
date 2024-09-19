@@ -1,10 +1,11 @@
 use std::fmt::Display;
 
-use super::RepoPath;
-use crate::{error::Result, sync::repository::repo};
 use git2::{Commit, Error, Oid};
 use scopetime::scope_time;
 use unicode_truncate::UnicodeTruncateStr;
+
+use super::RepoPath;
+use crate::{error::Result, sync::repository::repo};
 
 /// identifies a single commit
 #[derive(
@@ -34,7 +35,8 @@ impl CommitId {
 		self.to_string().chars().take(7).collect()
 	}
 
-	/// Tries to retrieve the `CommitId` form the revision if exists in the given repository
+	/// Tries to retrieve the `CommitId` form the revision if exists
+	/// in the given repository
 	pub fn from_revision(
 		repo_path: &RepoPath,
 		revision: &str,
@@ -157,6 +159,8 @@ pub fn get_message(
 
 #[cfg(test)]
 mod tests {
+	use std::{fs::File, io::Write, path::Path};
+
 	use super::get_commits_info;
 	use crate::{
 		error::Result,
@@ -165,7 +169,6 @@ mod tests {
 			utils::get_head_repo, CommitId, RepoPath,
 		},
 	};
-	use std::{fs::File, io::Write, path::Path};
 
 	#[test]
 	fn test_log() -> Result<()> {

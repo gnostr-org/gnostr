@@ -1,13 +1,15 @@
+use std::{
+	cmp::Ordering,
+	path::{Path, PathBuf},
+};
+
+use git2::{Oid, Repository, Tree};
+use scopetime::scope_time;
+
 use super::{CommitId, RepoPath};
 use crate::{
 	error::{Error, Result},
 	sync::repository::repo,
-};
-use git2::{Oid, Repository, Tree};
-use scopetime::scope_time;
-use std::{
-	cmp::Ordering,
-	path::{Path, PathBuf},
 };
 
 /// `tree_files` returns a list of `FileTree`
@@ -122,9 +124,10 @@ fn tree_recurse(
 
 #[cfg(test)]
 mod tests {
+	use pretty_assertions::{assert_eq, assert_ne};
+
 	use super::*;
 	use crate::sync::tests::{repo_init, write_commit_file};
-	use pretty_assertions::{assert_eq, assert_ne};
 
 	#[test]
 	fn test_smoke() {

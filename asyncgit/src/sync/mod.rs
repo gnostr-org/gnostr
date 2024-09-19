@@ -64,7 +64,7 @@ pub use config::{
 	ShowUntrackedFilesConfig,
 };
 pub use diff::get_diff_commit;
-pub use git2::BranchType;
+pub use git2::{BranchType, ResetType};
 pub use hooks::{
 	hooks_commit_msg, hooks_post_commit, hooks_pre_commit,
 	hooks_prepare_commit_msg, HookResult, PrepareCommitMsgSource,
@@ -107,10 +107,13 @@ pub use utils::{
 	stage_add_all, stage_add_file, stage_addremoved, Head,
 };
 
-pub use git2::ResetType;
-
 #[cfg(test)]
 mod tests {
+	use std::{path::Path, process::Command};
+
+	use git2::Repository;
+	use tempfile::TempDir;
+
 	use super::{
 		commit,
 		repository::repo,
@@ -120,17 +123,15 @@ mod tests {
 		CommitId, LogWalker, RepoPath,
 	};
 	use crate::error::Result;
-	use git2::Repository;
-	use std::{path::Path, process::Command};
-	use tempfile::TempDir;
 
-	/// Calling `set_search_path` with an empty directory makes sure that there
-	/// is no git config interfering with our tests (for example user-local
-	/// `.gitconfig`).
+	/// Calling `set_search_path` with an empty directory makes sure
+	/// that there is no git config interfering with our tests (for
+	/// example user-local `.gitconfig`).
 	#[allow(unsafe_code)]
 	fn sandbox_config_files() {
-		use git2::{opts::set_search_path, ConfigLevel};
 		use std::sync::Once;
+
+		use git2::{opts::set_search_path, ConfigLevel};
 
 		static INIT: Once = Once::new();
 
@@ -168,7 +169,8 @@ mod tests {
 		.unwrap()
 	}
 
-	/// write, stage and commit a file giving the commit a specific timestamp
+	/// write, stage and commit a file giving the commit a specific
+	/// timestamp
 	pub fn write_commit_file_at(
 		repo: &Repository,
 		file: &str,
@@ -302,7 +304,8 @@ mod tests {
 		Ok((tmp_repo_dir, bare_repo))
 	}
 
-	/// helper returning amount of files with changes in the (wd,stage)
+	/// helper returning amount of files with changes in the
+	/// (wd,stage)
 	pub fn get_statuses(repo_path: &RepoPath) -> (usize, usize) {
 		(
 			get_status(repo_path, StatusType::WorkingDir, None)

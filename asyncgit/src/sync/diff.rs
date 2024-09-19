@@ -1,5 +1,14 @@
 //! sync git api for fetching a diff
 
+use std::{cell::RefCell, fs, path::Path, rc::Rc};
+
+use easy_cast::Conv;
+use git2::{
+	Delta, Diff, DiffDelta, DiffFormat, DiffHunk, Patch, Repository,
+};
+use scopetime::scope_time;
+use serde::{Deserialize, Serialize};
+
 use super::{
 	commit_files::{
 		get_commit_diff, get_compare_commits_diff, OldNew,
@@ -8,18 +17,10 @@ use super::{
 	CommitId, RepoPath,
 };
 use crate::{
-	error::Error,
-	error::Result,
+	error::{Error, Result},
 	hash,
 	sync::{get_stashes, repository::repo},
 };
-use easy_cast::Conv;
-use git2::{
-	Delta, Diff, DiffDelta, DiffFormat, DiffHunk, Patch, Repository,
-};
-use scopetime::scope_time;
-use serde::{Deserialize, Serialize};
-use std::{cell::RefCell, fs, path::Path, rc::Rc};
 
 /// type of diff of a single line
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -257,7 +258,8 @@ pub fn get_diff_commits(
 }
 
 ///
-//TODO: refactor into helper type with the inline closures as dedicated functions
+//TODO: refactor into helper type with the inline closures as
+// dedicated functions
 #[allow(clippy::too_many_lines)]
 fn raw_diff_to_file_diff(
 	diff: &Diff,
@@ -310,7 +312,8 @@ fn raw_diff_to_file_diff(
 				let diff_line = DiffLine {
 					position: DiffLinePosition::from(&line),
 					content: String::from_utf8_lossy(line.content())
-						//Note: trim await trailing newline characters
+						//Note: trim await trailing newline
+						// characters
 						.trim_matches(is_newline)
 						.into(),
 					line_type: line.origin_value().into(),
@@ -420,6 +423,12 @@ fn new_file_content(path: &Path) -> Option<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
+	use std::{
+		fs::{self, File},
+		io::Write,
+		path::Path,
+	};
+
 	use super::{get_diff, get_diff_commit};
 	use crate::{
 		error::Result,
@@ -429,11 +438,6 @@ mod tests {
 			tests::{get_statuses, repo_init, repo_init_empty},
 			RepoPath,
 		},
-	};
-	use std::{
-		fs::{self, File},
-		io::Write,
-		path::Path,
 	};
 
 	#[test]

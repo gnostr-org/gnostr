@@ -1,14 +1,18 @@
 //! Git Api for Commits
-use super::{CommitId, RepoPath};
-use crate::sync::sign::{SignBuilder, SignError};
-use crate::{
-	error::{Error, Result},
-	sync::{repository::repo, utils::get_head_repo},
-};
 use git2::{
 	message_prettify, ErrorCode, ObjectType, Repository, Signature,
 };
 use scopetime::scope_time;
+
+use super::{CommitId, RepoPath};
+use crate::{
+	error::{Error, Result},
+	sync::{
+		repository::repo,
+		sign::{SignBuilder, SignError},
+		utils::get_head_repo,
+	},
+};
 
 ///
 pub fn amend(
@@ -79,7 +83,8 @@ pub(crate) fn signature_allow_undefined_name(
 	signature
 }
 
-/// this does not run any git hooks, git-hooks have to be executed manually, checkout `hooks_commit_msg` for example
+/// this does not run any git hooks, git-hooks have to be executed
+/// manually, checkout `hooks_commit_msg` for example
 pub fn commit(repo_path: &RepoPath, msg: &str) -> Result<CommitId> {
 	scope_time!("commit");
 
@@ -123,8 +128,9 @@ pub fn commit(repo_path: &RepoPath, msg: &str) -> Result<CommitId> {
 		)?;
 
 		// manually advance to the new commit ID
-		// repo.commit does that on its own, repo.commit_signed does not
-		// if there is no head, read default branch or default to "master"
+		// repo.commit does that on its own, repo.commit_signed does
+		// not if there is no head, read default branch or default
+		// to "master"
 		if let Ok(mut head) = repo.head() {
 			head.set_target(commit_id, msg)?;
 		} else {
@@ -156,8 +162,8 @@ pub fn commit(repo_path: &RepoPath, msg: &str) -> Result<CommitId> {
 
 /// Tag a commit.
 ///
-/// This function will return an `Err(…)` variant if the tag’s name is refused
-/// by git or if the tag already exists.
+/// This function will return an `Err(…)` variant if the tag’s name is
+/// refused by git or if the tag already exists.
 pub fn tag_commit(
 	repo_path: &RepoPath,
 	commit_id: &CommitId,
@@ -182,7 +188,8 @@ pub fn tag_commit(
 	Ok(c)
 }
 
-/// Loads the comment prefix from config & uses it to prettify commit messages
+/// Loads the comment prefix from config & uses it to prettify commit
+/// messages
 pub fn commit_message_prettify(
 	repo_path: &RepoPath,
 	message: String,
@@ -199,19 +206,22 @@ pub fn commit_message_prettify(
 
 #[cfg(test)]
 mod tests {
-	use crate::error::Result;
-	use crate::sync::tags::Tag;
-	use crate::sync::RepoPath;
-	use crate::sync::{
-		commit, get_commit_details, get_commit_files, stage_add_file,
-		tags::get_tags,
-		tests::{get_statuses, repo_init, repo_init_empty},
-		utils::get_head,
-		LogWalker,
-	};
+	use std::{fs::File, io::Write, path::Path};
+
 	use commit::{amend, commit_message_prettify, tag_commit};
 	use git2::Repository;
-	use std::{fs::File, io::Write, path::Path};
+
+	use crate::{
+		error::Result,
+		sync::{
+			commit, get_commit_details, get_commit_files,
+			stage_add_file,
+			tags::{get_tags, Tag},
+			tests::{get_statuses, repo_init, repo_init_empty},
+			utils::get_head,
+			LogWalker, RepoPath,
+		},
+	};
 
 	fn count_commits(repo: &Repository, max: usize) -> usize {
 		let mut items = Vec::new();
@@ -378,12 +388,14 @@ mod tests {
 		Ok(())
 	}
 
-	/// Beware: this test has to be run with a `$HOME/.gitconfig` that has
-	/// `user.email` not set. Otherwise, git falls back to the value of
-	/// `user.email` in `$HOME/.gitconfig` and this test fails.
+	/// Beware: this test has to be run with a `$HOME/.gitconfig` that
+	/// has `user.email` not set. Otherwise, git falls back to the
+	/// value of `user.email` in `$HOME/.gitconfig` and this test
+	/// fails.
 	///
-	/// As of February 2021, `repo_init_empty` sets all git config locations
-	/// to an empty temporary directory, so this constraint is met.
+	/// As of February 2021, `repo_init_empty` sets all git config
+	/// locations to an empty temporary directory, so this constraint
+	/// is met.
 	#[test]
 	fn test_empty_email() -> Result<()> {
 		let file_path = Path::new("foo");

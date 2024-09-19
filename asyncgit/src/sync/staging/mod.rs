@@ -1,15 +1,16 @@
 mod discard_tracked;
 mod stage_tracked;
 
+use std::{collections::HashSet, fs::File, io::Read};
+
 pub use discard_tracked::discard_lines;
+use git2::{DiffLine, DiffLineType, Repository};
 pub use stage_tracked::stage_lines;
 
 use super::{
 	diff::DiffLinePosition, patches::HunkLines, utils::work_dir,
 };
 use crate::error::Result;
-use git2::{DiffLine, DiffLineType, Repository};
-use std::{collections::HashSet, fs::File, io::Read};
 
 const NEWLINE: char = '\n';
 

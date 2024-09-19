@@ -1,3 +1,10 @@
+use git2::{BranchType, Commit, MergeOptions, Repository};
+use scopetime::scope_time;
+
+use super::{
+	rebase::{RebaseProgress, RebaseState},
+	RepoPath,
+};
 use crate::{
 	error::{Error, Result},
 	sync::{
@@ -8,13 +15,6 @@ use crate::{
 		repository::repo,
 		reset_stage, reset_workdir, CommitId,
 	},
-};
-use git2::{BranchType, Commit, MergeOptions, Repository};
-use scopetime::scope_time;
-
-use super::{
-	rebase::{RebaseProgress, RebaseState},
-	RepoPath,
 };
 
 ///
@@ -153,13 +153,14 @@ pub fn merge_commit(
 
 #[cfg(test)]
 mod tests {
+	use pretty_assertions::assert_eq;
+
 	use super::*;
 	use crate::sync::{
 		create_branch,
 		tests::{repo_init, write_commit_file},
 		RepoPath,
 	};
-	use pretty_assertions::assert_eq;
 
 	#[test]
 	fn test_smoke() {

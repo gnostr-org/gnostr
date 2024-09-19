@@ -1,10 +1,11 @@
 //! renaming of branches
 
+use scopetime::scope_time;
+
 use crate::{
 	error::Result,
 	sync::{repository::repo, RepoPath},
 };
-use scopetime::scope_time;
 
 /// Rename the branch reference
 pub fn rename_branch(
@@ -24,8 +25,10 @@ pub fn rename_branch(
 
 #[cfg(test)]
 mod test {
-	use super::super::{checkout_branch, create_branch, RepoPath};
-	use super::rename_branch;
+	use super::{
+		super::{checkout_branch, create_branch, RepoPath},
+		rename_branch,
+	};
 	use crate::sync::tests::repo_init;
 
 	#[test]

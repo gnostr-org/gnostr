@@ -1,12 +1,11 @@
 use git2::{BranchType, Repository};
 use scopetime::scope_time;
 
+use super::{CommitId, RepoPath};
 use crate::{
 	error::{Error, Result},
 	sync::repository::repo,
 };
-
-use super::{CommitId, RepoPath};
 
 /// rebase current HEAD on `branch`
 pub fn rebase_branch(
@@ -34,7 +33,8 @@ fn rebase_branch_repo(
 	rebase(repo, &annotated)
 }
 
-/// rebase attempt which aborts and undo's rebase if any conflict appears
+/// rebase attempt which aborts and undo's rebase if any conflict
+/// appears
 pub fn conflict_free_rebase(
 	repo: &git2::Repository,
 	commit: &git2::AnnotatedCommit,
@@ -185,6 +185,9 @@ pub fn abort_rebase(repo: &git2::Repository) -> Result<()> {
 
 #[cfg(test)]
 mod test_conflict_free_rebase {
+	use git2::{BranchType, Repository};
+
+	use super::conflict_free_rebase;
 	use crate::sync::{
 		checkout_branch, create_branch,
 		rebase::{rebase_branch, RebaseState},
@@ -193,9 +196,6 @@ mod test_conflict_free_rebase {
 		tests::{repo_init, write_commit_file},
 		CommitId, RepoPath, RepoState,
 	};
-	use git2::{BranchType, Repository};
-
-	use super::conflict_free_rebase;
 
 	fn parent_ids(repo: &Repository, c: CommitId) -> Vec<CommitId> {
 		let foo = repo
@@ -284,6 +284,8 @@ mod test_conflict_free_rebase {
 
 #[cfg(test)]
 mod test_rebase {
+	use git2::BranchType;
+
 	use crate::sync::{
 		checkout_branch, create_branch,
 		rebase::{
@@ -294,7 +296,6 @@ mod test_rebase {
 		tests::{repo_init, write_commit_file},
 		RepoPath, RepoState,
 	};
-	use git2::BranchType;
 
 	#[test]
 	fn test_conflicted_abort() {

@@ -1,5 +1,7 @@
 //! credentials git helper
 
+use git2::CredentialHelper;
+
 use super::{
 	remotes::{
 		get_default_remote_for_fetch_in_repo,
@@ -10,7 +12,6 @@ use super::{
 	RepoPath,
 };
 use crate::error::{Error, Result};
-use git2::CredentialHelper;
 
 /// basic Authentication Credentials
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -50,8 +51,8 @@ pub fn need_username_password(repo_path: &RepoPath) -> Result<bool> {
 }
 
 /// know if username and password are needed for this url
-/// TODO: Very similar to `need_username_password_for_fetch`. Can be refactored. See also
-/// `need_username_password`.
+/// TODO: Very similar to `need_username_password_for_fetch`. Can be
+/// refactored. See also `need_username_password`.
 pub fn need_username_password_for_fetch(
 	repo_path: &RepoPath,
 ) -> Result<bool> {
@@ -68,8 +69,8 @@ pub fn need_username_password_for_fetch(
 }
 
 /// know if username and password are needed for this url
-/// TODO: Very similar to `need_username_password_for_fetch`. Can be refactored. See also
-/// `need_username_password`.
+/// TODO: Very similar to `need_username_password_for_fetch`. Can be
+/// refactored. See also `need_username_password`.
 pub fn need_username_password_for_push(
 	repo_path: &RepoPath,
 ) -> Result<bool> {
@@ -114,7 +115,8 @@ pub fn extract_username_password(
 }
 
 /// extract username and password
-/// TODO: Very similar to `extract_username_password_for_fetch`. Can be refactored.
+/// TODO: Very similar to `extract_username_password_for_fetch`. Can
+/// be refactored.
 pub fn extract_username_password_for_fetch(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
@@ -143,7 +145,8 @@ pub fn extract_username_password_for_fetch(
 }
 
 /// extract username and password
-/// TODO: Very similar to `extract_username_password_for_fetch`. Can be refactored.
+/// TODO: Very similar to `extract_username_password_for_fetch`. Can
+/// be refactored.
 pub fn extract_username_password_for_push(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
@@ -190,6 +193,8 @@ pub fn extract_cred_from_url(url: &str) -> BasicAuthCredential {
 
 #[cfg(test)]
 mod tests {
+	use serial_test::serial;
+
 	use crate::sync::{
 		cred::{
 			extract_cred_from_url, extract_username_password,
@@ -199,7 +204,6 @@ mod tests {
 		tests::repo_init,
 		RepoPath,
 	};
-	use serial_test::serial;
 
 	#[test]
 	fn test_credential_complete() {
@@ -314,8 +318,8 @@ mod tests {
 	#[test]
 	#[serial]
 	#[should_panic]
-	fn test_error_if_no_remote_when_trying_to_retrieve_if_need_username_password(
-	) {
+	fn test_error_if_no_remote_when_trying_to_retrieve_if_need_username_password()
+	 {
 		let (_td, repo) = repo_init().unwrap();
 		let root = repo.path().parent().unwrap();
 		let repo_path: &RepoPath =
@@ -367,8 +371,8 @@ mod tests {
 	#[test]
 	#[serial]
 	#[should_panic]
-	fn test_error_if_no_remote_when_trying_to_extract_username_password(
-	) {
+	fn test_error_if_no_remote_when_trying_to_extract_username_password()
+	 {
 		let (_td, repo) = repo_init().unwrap();
 		let root = repo.path().parent().unwrap();
 		let repo_path: &RepoPath =

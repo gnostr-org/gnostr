@@ -1,3 +1,8 @@
+use std::path::Path;
+
+use easy_cast::Conv;
+use scopetime::scope_time;
+
 use super::apply_selection;
 use crate::{
 	error::{Error, Result},
@@ -7,9 +12,6 @@ use crate::{
 		RepoPath,
 	},
 };
-use easy_cast::Conv;
-use scopetime::scope_time;
-use std::path::Path;
 
 ///
 pub fn stage_lines(

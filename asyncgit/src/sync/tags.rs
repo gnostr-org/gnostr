@@ -1,12 +1,14 @@
+use std::{
+	collections::{BTreeMap, HashMap, HashSet},
+	ops::Not,
+};
+
+use scopetime::scope_time;
+
 use super::{get_commits_info, CommitId, RepoPath};
 use crate::{
 	error::Result,
 	sync::{repository::repo, utils::bytes2string},
-};
-use scopetime::scope_time;
-use std::{
-	collections::{BTreeMap, HashMap, HashSet},
-	ops::Not,
 };
 
 ///
@@ -189,9 +191,10 @@ pub fn delete_tag(
 
 #[cfg(test)]
 mod tests {
+	use git2::ObjectType;
+
 	use super::*;
 	use crate::sync::tests::repo_init;
-	use git2::ObjectType;
 
 	#[test]
 	fn test_smoke() {

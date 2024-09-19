@@ -1,12 +1,3 @@
-use crate::{
-	error::Result,
-	hash,
-	sync::{
-		self, status::StatusType, RepoPath, ShowUntrackedFilesConfig,
-	},
-	AsyncGitNotification, StatusItem,
-};
-use crossbeam_channel::Sender;
 use std::{
 	hash::Hash,
 	sync::{
@@ -14,6 +5,17 @@ use std::{
 		Arc, Mutex,
 	},
 	time::{SystemTime, UNIX_EPOCH},
+};
+
+use crossbeam_channel::Sender;
+
+use crate::{
+	error::Result,
+	hash,
+	sync::{
+		self, status::StatusType, RepoPath, ShowUntrackedFilesConfig,
+	},
+	AsyncGitNotification, StatusItem,
 };
 
 fn current_tick() -> u128 {

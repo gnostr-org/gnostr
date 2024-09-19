@@ -1,11 +1,13 @@
 #![allow(dead_code)]
-use super::{CommitId, SharedCommitFilterFn};
-use crate::error::Result;
-use git2::{Commit, Oid, Repository};
 use std::{
 	cmp::Ordering,
 	collections::{BinaryHeap, HashSet},
 };
+
+use git2::{Commit, Oid, Repository};
+
+use super::{CommitId, SharedCommitFilterFn};
+use crate::error::Result;
 
 struct TimeOrderedCommit<'a>(Commit<'a>);
 
@@ -110,20 +112,22 @@ impl<'a> LogWalker<'a> {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use crate::error::Result;
-	use crate::sync::commit_filter::{SearchFields, SearchOptions};
-	use crate::sync::tests::write_commit_file;
-	use crate::sync::{
-		commit, get_commits_info, stage_add_file,
-		tests::repo_init_empty,
-	};
-	use crate::sync::{
-		diff_contains_file, filter_commit_by_search, LogFilterSearch,
-		LogFilterSearchOptions, RepoPath,
-	};
-	use pretty_assertions::assert_eq;
 	use std::{fs::File, io::Write, path::Path};
+
+	use pretty_assertions::assert_eq;
+
+	use super::*;
+	use crate::{
+		error::Result,
+		sync::{
+			commit,
+			commit_filter::{SearchFields, SearchOptions},
+			diff_contains_file, filter_commit_by_search,
+			get_commits_info, stage_add_file,
+			tests::{repo_init_empty, write_commit_file},
+			LogFilterSearch, LogFilterSearchOptions, RepoPath,
+		},
+	};
 
 	#[test]
 	fn test_limit() -> Result<()> {

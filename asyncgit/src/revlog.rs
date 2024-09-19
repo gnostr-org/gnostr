@@ -1,12 +1,3 @@
-use crate::{
-	error::Result,
-	sync::{
-		repo, CommitId, LogWalker, RepoPath, SharedCommitFilterFn,
-	},
-	AsyncGitNotification, Error,
-};
-use crossbeam_channel::Sender;
-use scopetime::scope_time;
 use std::{
 	sync::{
 		atomic::{AtomicBool, Ordering},
@@ -14,6 +5,17 @@ use std::{
 	},
 	thread,
 	time::{Duration, Instant},
+};
+
+use crossbeam_channel::Sender;
+use scopetime::scope_time;
+
+use crate::{
+	error::Result,
+	sync::{
+		repo, CommitId, LogWalker, RepoPath, SharedCommitFilterFn,
+	},
+	AsyncGitNotification, Error,
 };
 
 ///
@@ -84,7 +86,9 @@ impl AsyncLog {
 		amount: usize,
 	) -> Result<Vec<CommitId>> {
 		if self.partial_extract.load(Ordering::Relaxed) {
-			return Err(Error::Generic(String::from("Faulty usage of AsyncLog: Cannot partially extract items and rely on get_items slice to still work!")));
+			return Err(Error::Generic(String::from(
+				"Faulty usage of AsyncLog: Cannot partially extract items and rely on get_items slice to still work!",
+			)));
 		}
 
 		let list = &self.current.lock()?.commits;
@@ -98,7 +102,9 @@ impl AsyncLog {
 	///
 	pub fn get_items(&self) -> Result<Vec<CommitId>> {
 		if self.partial_extract.load(Ordering::Relaxed) {
-			return Err(Error::Generic(String::from("Faulty usage of AsyncLog: Cannot partially extract items and rely on get_items slice to still work!")));
+			return Err(Error::Generic(String::from(
+				"Faulty usage of AsyncLog: Cannot partially extract items and rely on get_items slice to still work!",
+			)));
 		}
 
 		let list = &self.current.lock()?.commits;
