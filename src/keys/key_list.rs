@@ -1,8 +1,8 @@
+use std::{fs::File, path::PathBuf};
+
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::{Deserialize, Serialize};
-use std::{fs::File, path::PathBuf};
-use struct_patch::traits::Patch as PatchTrait;
-use struct_patch::Patch;
+use struct_patch::{traits::Patch as PatchTrait, Patch};
 
 #[derive(Debug, PartialOrd, Clone, Copy, Serialize, Deserialize)]
 pub struct GituiKeyEvent {
@@ -236,10 +236,12 @@ impl KeysList {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use pretty_assertions::assert_eq;
 	use std::io::Write;
+
+	use pretty_assertions::assert_eq;
 	use tempfile::NamedTempFile;
+
+	use super::*;
 
 	#[test]
 	fn test_apply_vim_style_example() {

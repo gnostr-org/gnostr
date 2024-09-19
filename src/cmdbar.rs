@@ -1,15 +1,17 @@
-use crate::{
-	components::CommandInfo, keys::SharedKeyConfig, strings,
-	ui::style::SharedTheme,
-};
+use std::borrow::Cow;
+
 use ratatui::{
 	layout::{Alignment, Rect},
 	text::{Line, Span},
 	widgets::Paragraph,
 	Frame,
 };
-use std::borrow::Cow;
 use unicode_width::UnicodeWidthStr;
+
+use crate::{
+	components::CommandInfo, keys::SharedKeyConfig, strings,
+	ui::style::SharedTheme,
+};
 
 enum DrawListEntry {
 	LineBreak,

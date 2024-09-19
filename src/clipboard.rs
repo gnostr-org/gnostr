@@ -1,7 +1,10 @@
+use std::{
+	io::Write,
+	path::PathBuf,
+	process::{Command, Stdio},
+};
+
 use anyhow::{anyhow, Result};
-use std::io::Write;
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
 use which::which;
 
 fn exec_copy_with_args(
