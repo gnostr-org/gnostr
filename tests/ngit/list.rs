@@ -3,6 +3,7 @@ use futures::join;
 use serial_test::serial;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
+#[cfg(feature = "expensive_tests")]
 async fn prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(
 	proposal_number: u16,
 ) -> Result<(GitTestRepo, GitTestRepo)> {
@@ -54,6 +55,7 @@ mod cannot_find_repo_event {
 		use nostr::{nips::nip01::Coordinate, ToBech32};
 
 		use super::*;
+		#[cfg(feature = "expensive_tests")]
 		async fn run_async_repo_event_ref_needed(
 			invalid_input: bool,
 			naddr: bool,
@@ -144,6 +146,7 @@ mod cannot_find_repo_event {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn warns_not_valid_input_and_asks_again() -> Result<()>
 		{
 			run_async_repo_event_ref_needed(true, false).await
@@ -151,6 +154,7 @@ mod cannot_find_repo_event {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn finds_based_on_naddr_on_embeded_relay() -> Result<()>
 		{
 			run_async_repo_event_ref_needed(false, true).await
@@ -177,6 +181,7 @@ mod when_main_branch_is_uptodate {
 					use super::*;
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -284,6 +289,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_created_with_correct_name()
 				-> Result<()> {
 					let (_, test_repo) =
@@ -303,6 +309,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) =
                         prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(1).await?;
@@ -318,6 +325,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_tip_is_most_recent_patch()
 				-> Result<()> {
 					let (originating_repo, test_repo) =
@@ -344,6 +352,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -451,6 +460,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_created_with_correct_name()
 				-> Result<()> {
 					let (_, test_repo) =
@@ -470,6 +480,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) =
                         prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(3).await?;
@@ -485,6 +496,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_tip_is_most_recent_patch()
 				-> Result<()> {
 					let (originating_repo, test_repo) =
@@ -596,6 +608,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -716,6 +729,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_created_with_correct_name()
 				-> Result<()> {
 					let (_, test_repo) = prep_and_run().await?;
@@ -734,6 +748,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) = prep_and_run().await?;
 					assert_eq!(
@@ -748,6 +763,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_tip_is_most_recent_patch()
 				-> Result<()> {
 					let (originating_repo, test_repo) =
@@ -885,6 +901,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -1032,6 +1049,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) = prep_and_run().await?;
 					assert_eq!(
@@ -1134,6 +1152,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -1243,6 +1262,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) = prep_and_run().await?;
 					assert_eq!(
@@ -1257,6 +1277,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_tip_is_most_recent_patch()
 				-> Result<()> {
 					let (originating_repo, test_repo) =
@@ -1380,6 +1401,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn out_reflects_second_choice_discarding_old_and_applying_new()
 					-> Result<()> {
 						let (
@@ -1502,6 +1524,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn second_choice_discarded_unpublished_commits_and_checked_out_latest_revision()
 				-> Result<()> {
 					let (originating_repo, test_repo) =
@@ -1616,6 +1639,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -1732,6 +1756,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) = prep_and_run().await?;
 					assert_eq!(
@@ -1746,6 +1771,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn didnt_overwrite_local_appendments()
 				-> Result<()> {
 					let (originating_repo, test_repo) =
@@ -1863,6 +1889,7 @@ mod when_main_branch_is_uptodate {
 
 					#[tokio::test]
 					#[serial]
+					#[cfg(feature = "expensive_tests")]
 					async fn prompts_to_choose_from_proposal_titles()
 					-> Result<()> {
 						let (
@@ -1963,6 +1990,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_checked_out() -> Result<()> {
 					let (_, test_repo) = prep_and_run().await?;
 					assert_eq!(
@@ -1977,6 +2005,7 @@ mod when_main_branch_is_uptodate {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn proposal_branch_tip_is_most_recent_proposal_revision_tip()
 				-> Result<()> {
 					let (originating_repo, test_repo) =

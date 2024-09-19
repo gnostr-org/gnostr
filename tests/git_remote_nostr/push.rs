@@ -2,6 +2,7 @@ use super::*;
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "expensive_tests")]
 async fn new_branch_when_no_state_event_exists() -> Result<()> {
 	generate_repo_with_state_event().await?;
 	Ok(())
@@ -12,6 +13,7 @@ mod two_branches_in_batch_one_added_one_updated {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn updates_branch_on_git_server() -> Result<()> {
 		let git_repo = prep_git_repo()?;
 		let source_git_repo =
@@ -104,6 +106,7 @@ mod two_branches_in_batch_one_added_one_updated {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn remote_refs_updated_in_local_git() -> Result<()> {
 		let git_repo = prep_git_repo()?;
 		let source_git_repo =
@@ -205,6 +208,7 @@ mod two_branches_in_batch_one_added_one_updated {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn prints_git_helper_ok_respose() -> Result<()> {
 		let git_repo = prep_git_repo()?;
 		let source_git_repo =
@@ -285,6 +289,7 @@ mod two_branches_in_batch_one_added_one_updated {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event()
 	-> Result<()> {
 		let git_repo = prep_git_repo()?;
@@ -392,6 +397,7 @@ mod two_branches_in_batch_one_added_one_updated {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn existing_state_event_published_in_nostr_state_event()
 	-> Result<()> {
 		let (state_event, source_git_repo) =
@@ -530,6 +536,7 @@ mod delete_one_branch {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn deletes_branch_on_git_server() -> Result<()> {
 		let git_repo = prep_git_repo()?;
 
@@ -609,6 +616,7 @@ mod delete_one_branch {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn remote_refs_updated_in_local_git() -> Result<()> {
 		let git_repo = prep_git_repo()?;
 
@@ -694,6 +702,7 @@ mod delete_one_branch {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn prints_git_helper_ok_respose() -> Result<()> {
 		let git_repo = prep_git_repo()?;
 
@@ -768,6 +777,7 @@ mod delete_one_branch {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn state_event_updated_and_branch_deleted_and_ok_printed()
 		-> Result<()> {
 			let (state_event, source_git_repo) =
@@ -866,6 +876,7 @@ mod delete_one_branch {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn existing_state_event_updated_and_ok_printed()
 			-> Result<()> {
 				let (state_event, source_git_repo) =
@@ -987,6 +998,7 @@ mod delete_one_branch {
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "expensive_tests")]
 async fn pushes_to_all_git_servers_listed_and_ok_printed()
 -> Result<()> {
 	let (state_event, source_git_repo) =
@@ -1064,6 +1076,7 @@ async fn pushes_to_all_git_servers_listed_and_ok_printed()
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "expensive_tests")]
 async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued()
 -> Result<()> {
 	//
@@ -1251,6 +1264,7 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued()
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "expensive_tests")]
 async fn push_2_commits_to_existing_proposal() -> Result<()> {
 	let (events, source_git_repo) =
 		prep_source_repo_and_events_including_proposals().await?;
@@ -1426,6 +1440,7 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "expensive_tests")]
 async fn force_push_creates_proposal_revision() -> Result<()> {
 	let (events, source_git_repo) =
 		prep_source_repo_and_events_including_proposals().await?;
@@ -1610,6 +1625,7 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "expensive_tests")]
 async fn push_new_pr_branch_creates_proposal() -> Result<()> {
 	let (events, source_git_repo) =
 		prep_source_repo_and_events_including_proposals().await?;

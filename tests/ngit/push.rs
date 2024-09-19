@@ -7,6 +7,7 @@ mod when_main_is_checked_out {
 	use super::*;
 
 	#[test]
+	#[cfg(feature = "expensive_tests")]
 	fn cli_returns_error() -> Result<()> {
 		let test_repo = GitTestRepo::default();
 		test_repo.populate()?;
@@ -35,6 +36,7 @@ mod when_proposal_isnt_associated_with_branch_name {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn cli_show_error() -> Result<()> {
 			let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
 				Relay::new(8051, None, None),
@@ -104,6 +106,7 @@ mod when_branch_is_checked_out {
 			use super::*;
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn cli_show_up_to_date() -> Result<()> {
 				let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
 					Relay::new(8051, None, None),
@@ -169,6 +172,7 @@ mod when_branch_is_checked_out {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn cli_show_proposal_ahead_error() -> Result<()> {
 				let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
 					Relay::new(8051, None, None),
@@ -244,6 +248,7 @@ mod when_branch_is_checked_out {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn cli_applied_1_commit() -> Result<()> {
 				// fallback (51,52) user write (53, 55) repo (55, 56)
 				let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -427,6 +432,7 @@ mod when_branch_is_checked_out {
 		}
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn commits_issued_as_patch_event() -> Result<()> {
 			let (test_repo, r55_events) = prep_and_run().await?;
 
@@ -453,6 +459,7 @@ mod when_branch_is_checked_out {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn cli_shows_unpublished_rebase_error() -> Result<()>
 			{
 				let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -540,6 +547,7 @@ mod when_branch_is_checked_out {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn cli_shows_revision_sent() -> Result<()> {
 					let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
 						Relay::new(8051, None, None),

@@ -2,7 +2,8 @@ use super::*;
 
 #[tokio::test]
 #[serial]
-async fn fetch_downloads_speficied_commits_from_git_server()
+#[cfg(feature = "expensive_tests")]
+async fn fetch_downloads_specified_commits_from_git_server()
 -> Result<()> {
 	let source_git_repo = prep_git_repo()?;
 	let source_path =
@@ -109,6 +110,7 @@ mod when_first_git_server_fails_ {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn fetch_downloads_speficied_commits_from_second_git_server()
 	-> Result<()> {
 		let (state_event, source_git_repo) =
@@ -199,7 +201,8 @@ mod when_first_git_server_fails_ {
 
 #[tokio::test]
 #[serial]
-async fn creates_commits_from_open_proposal_with_no_warngins_printed()
+#[cfg(feature = "expensive_tests")]
+async fn creates_commits_from_open_proposal_with_no_warnings_printed()
 -> Result<()> {
 	let (events, source_git_repo) =
 		prep_source_repo_and_events_including_proposals().await?;
