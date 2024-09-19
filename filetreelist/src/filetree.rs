@@ -1,8 +1,9 @@
+use std::{collections::BTreeSet, path::Path, usize};
+
 use crate::{
 	error::Result, filetreeitems::FileTreeItems,
 	tree_iter::TreeIterator, TreeItemInfo,
 };
-use std::{collections::BTreeSet, path::Path, usize};
 
 ///
 #[derive(Copy, Clone, Debug)]
@@ -23,7 +24,8 @@ pub struct VisualSelection {
 	pub index: usize,
 }
 
-/// wraps `FileTreeItems` as a datastore and adds selection functionality
+/// wraps `FileTreeItems` as a datastore and adds selection
+/// functionality
 #[derive(Default)]
 pub struct FileTree {
 	items: FileTreeItems,
@@ -174,11 +176,7 @@ impl FileTree {
 			.iterate(0, self.items.len())
 			.enumerate()
 			.find_map(|(i, (abs, _))| {
-				if i == visual_index {
-					Some(abs)
-				} else {
-					None
-				}
+				if i == visual_index { Some(abs) } else { None }
 			})
 	}
 
@@ -204,11 +202,7 @@ impl FileTree {
 	}
 
 	const fn selection_start(current_index: usize) -> Option<usize> {
-		if current_index == 0 {
-			None
-		} else {
-			Some(0)
-		}
+		if current_index == 0 { None } else { Some(0) }
 	}
 
 	fn selection_end(&self, current_index: usize) -> Option<usize> {
@@ -341,9 +335,11 @@ impl FileTree {
 
 #[cfg(test)]
 mod test {
-	use crate::{FileTree, MoveSelection};
-	use pretty_assertions::assert_eq;
 	use std::{collections::BTreeSet, path::Path};
+
+	use pretty_assertions::assert_eq;
+
+	use crate::{FileTree, MoveSelection};
 
 	#[test]
 	fn test_selection() {

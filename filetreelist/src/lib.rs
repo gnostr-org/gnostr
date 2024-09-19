@@ -22,8 +22,8 @@
 	clippy::empty_docs
 )]
 #![warn(
-    clippy::legacy_numeric_constants,
-    clippy::needless_pass_by_ref_mut
+	clippy::legacy_numeric_constants,
+	clippy::needless_pass_by_ref_mut
 )]
 
 mod error;
@@ -34,7 +34,6 @@ mod tree_iter;
 mod treeitems_iter;
 
 pub use crate::{
-	filetree::FileTree,
-	filetree::MoveSelection,
+	filetree::{FileTree, MoveSelection},
 	item::{FileTreeItem, TreeItemInfo},
 };
