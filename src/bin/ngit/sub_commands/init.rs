@@ -319,6 +319,7 @@ pub async fn launch(
 		args.relays.clone()
 	};
 
+	#[allow(clippy::single_match_else)]
 	let earliest_unique_commit = match &args.earliest_unique_commit {
 		Some(t) => t.clone(),
 		None => {

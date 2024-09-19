@@ -689,6 +689,7 @@ impl BlameFilePopup {
 		number_of_digits(max_line_number)
 	}
 
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	fn move_selection(&mut self, scroll_type: ScrollType) -> bool {
 		let mut table_state = self.table_state.take();
 
@@ -720,6 +721,7 @@ impl BlameFilePopup {
 		needs_update
 	}
 
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	fn set_open_selection(&mut self) {
 		if let Some(selection) =
 			self.open_request.as_ref().and_then(|req| req.selection)

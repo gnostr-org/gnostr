@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![allow(clippy::large_futures)]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-
+#![allow(clippy::single_match_else)]
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};

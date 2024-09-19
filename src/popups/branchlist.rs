@@ -757,6 +757,7 @@ impl BranchListPopup {
 		Ok(())
 	}
 
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	fn rename_branch(&mut self) {
 		let cur_branch = &self.branches[self.selection as usize];
 		self.queue.push(InternalEvent::RenameBranch(
@@ -765,6 +766,7 @@ impl BranchListPopup {
 		));
 	}
 
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	fn delete_branch(&mut self) {
 		let reference =
 			self.branches[self.selection as usize].reference.clone();
