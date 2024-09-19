@@ -18,6 +18,14 @@ build = "build.rs"
 name = "ngit"
 path = "src/lib/mod.rs"
 
+[[bin]]
+name = "gnostr-cli"
+path = "src/bin/ngit/main.rs"
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bin/git_remote_nostr/main.rs"
+
 [dependencies]
 
 ##nostr
