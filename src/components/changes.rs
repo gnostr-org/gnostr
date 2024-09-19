@@ -78,7 +78,7 @@ impl ChangesComponent {
 		self.files.is_file_selected()
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn index_add_remove(&mut self) -> Result<bool> {
 		if let Some(tree_item) = self.selection() {
 			if self.is_working_dir {
@@ -133,7 +133,7 @@ impl ChangesComponent {
 		Ok(false)
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn index_add_all(&mut self) -> Result<()> {
 		let config = self.options.borrow().status_show_untracked();
 
@@ -144,7 +144,7 @@ impl ChangesComponent {
 		Ok(())
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn stage_remove_all(&mut self) -> Result<()> {
 		sync::reset_stage(&self.repo.borrow(), "*")?;
 
@@ -153,7 +153,7 @@ impl ChangesComponent {
 		Ok(())
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn dispatch_reset_workdir(&mut self) -> bool {
 		if let Some(tree_item) = self.selection() {
 			self.queue.push(InternalEvent::ConfirmAction(

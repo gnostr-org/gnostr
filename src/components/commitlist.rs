@@ -176,7 +176,7 @@ impl CommitList {
 	}
 
 	///
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	pub fn checkout(&mut self) {
 		if let Some(commit_hash) =
 			self.selected_entry().map(|entry| entry.id)
@@ -713,7 +713,7 @@ impl CommitList {
 		}
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn selection_highlighted(&mut self) -> bool {
 		let commit = self.commits[self.selection];
 
