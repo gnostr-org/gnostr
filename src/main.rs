@@ -22,6 +22,12 @@
 	clippy::module_name_repetitions,
 	clippy::empty_docs
 )]
+#![warn(
+	clippy::use_self,
+	clippy::legacy_numeric_constants,
+	clippy::too_long_first_doc_paragraph,
+	clippy::set_contains_or_insert
+)]
 
 //TODO:
 // #![deny(clippy::expect_used)]
