@@ -32,7 +32,7 @@ endif
 HOMEBREW                                :=$(shell which brew || false)
 
 RUSTUP_INIT_SKIP_PATH_CHECK=yes
-TOOLCHAIN=stable
+TOOLCHAIN=nightly
 Z=	##
 ifneq ($(toolchain),)
 
@@ -370,7 +370,7 @@ endif
 	bash -c "[ '$(shell uname -m)' == 'i386' ] && echo 'is i386' || echo 'not i386';"
 
 ##	install rustup sequence
-	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain stable --profile default #& . "$(HOME)/.cargo/env"
+	$(shell echo which rustup) || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --no-modify-path --default-toolchain $(TOOLCHAIN) --profile default #& . "$(HOME)/.cargo/env"
 
 ##	install nvm sequence
 	@bash -c "curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && export NVM_DIR='$(HOME)/.nvm'; [ -s '$(NVM_DIR)/nvm.sh' ] && \. '$(NVM_DIR)/nvm.sh'; [ -s '$(NVM_DIR)/bash_completion' ] && \. '$(NVM_DIR)/bash_completion' &"
