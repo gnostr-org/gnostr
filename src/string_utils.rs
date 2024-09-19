@@ -24,8 +24,9 @@ pub fn tabs_to_spaces(input: String) -> String {
 	}
 }
 
-/// This function will return a str slice which start at specified offset.
-/// As src is a unicode str, start offset has to be calculated with each character.
+/// This function will return a str slice which start at specified
+/// offset. As src is a unicode str, start offset has to be calculated
+/// with each character.
 pub fn trim_offset(src: &str, mut offset: usize) -> &str {
 	let mut start = 0;
 	for c in UnicodeSegmentation::graphemes(src, true) {
