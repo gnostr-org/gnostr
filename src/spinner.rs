@@ -1,11 +1,13 @@
+use std::{cell::Cell, char, io};
+
 use ratatui::{
 	backend::{Backend, CrosstermBackend},
 	Terminal,
 };
-use std::{cell::Cell, char, io};
 
 // static SPINNER_CHARS: &[char] = &['◢', '◣', '◤', '◥'];
-// static SPINNER_CHARS: &[char] = &['⢹', '⢺', '⢼', '⣸', '⣇', '⡧', '⡗', '⡏'];
+// static SPINNER_CHARS: &[char] = &['⢹', '⢺', '⢼', '⣸', '⣇', '⡧',
+// '⡗', '⡏'];
 static SPINNER_CHARS: &[char] =
 	&['⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽', '⣾'];
 
