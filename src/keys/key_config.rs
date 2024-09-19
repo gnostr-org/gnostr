@@ -1,13 +1,13 @@
-use anyhow::Result;
-use crossterm::event::{KeyCode, KeyModifiers};
 use std::{fs::canonicalize, path::PathBuf, rc::Rc};
 
-use crate::{args::get_app_config_path, strings::symbol};
+use anyhow::Result;
+use crossterm::event::{KeyCode, KeyModifiers};
 
 use super::{
 	key_list::{GituiKeyEvent, KeysList},
 	symbols::KeySymbols,
 };
+use crate::{args::get_app_config_path, strings::symbol};
 
 pub type SharedKeyConfig = Rc<KeyConfig>;
 const KEY_LIST_FILENAME: &str = "key_bindings.ron";
@@ -118,10 +118,11 @@ impl KeyConfig {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use std::fs;
-	use std::io::Write;
+	use std::{fs, io::Write};
+
 	use tempfile::NamedTempFile;
+
+	use super::*;
 
 	#[test]
 	fn test_get_hint() {

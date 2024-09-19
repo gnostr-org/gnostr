@@ -1,3 +1,30 @@
+use std::{
+	cell::{Cell, RefCell},
+	path::{Path, PathBuf},
+	rc::Rc,
+};
+
+use anyhow::{bail, Result};
+use asyncgit::{
+	sync::{
+		self,
+		utils::{repo_work_dir, undo_last_commit},
+		RepoPath, RepoPathRef,
+	},
+	AsyncGitNotification, PushType,
+};
+use crossbeam_channel::Sender;
+use crossterm::event::{Event, KeyEvent};
+use ratatui::{
+	layout::{
+		Alignment, Constraint, Direction, Layout, Margin, Rect,
+	},
+	text::{Line, Span},
+	widgets::{Block, Borders, Paragraph, Tabs},
+	Frame,
+};
+use unicode_width::UnicodeWidthStr;
+
 use crate::{
 	accessors,
 	cmdbar::CommandBar,
@@ -30,31 +57,6 @@ use crate::{
 	ui::style::{SharedTheme, Theme},
 	AsyncAppNotification, AsyncNotification,
 };
-use anyhow::{bail, Result};
-use asyncgit::{
-	sync::{
-		self,
-		utils::{repo_work_dir, undo_last_commit},
-		RepoPath, RepoPathRef,
-	},
-	AsyncGitNotification, PushType,
-};
-use crossbeam_channel::Sender;
-use crossterm::event::{Event, KeyEvent};
-use ratatui::{
-	layout::{
-		Alignment, Constraint, Direction, Layout, Margin, Rect,
-	},
-	text::{Line, Span},
-	widgets::{Block, Borders, Paragraph, Tabs},
-	Frame,
-};
-use std::{
-	cell::{Cell, RefCell},
-	path::{Path, PathBuf},
-	rc::Rc,
-};
-use unicode_width::UnicodeWidthStr;
 
 #[derive(Clone)]
 pub enum QuitState {
@@ -122,7 +124,8 @@ pub struct Environment {
 	pub sender_app: Sender<AsyncAppNotification>,
 }
 
-/// The need to construct a "whatever" environment only arises in testing right now
+/// The need to construct a "whatever" environment only arises in
+/// testing right now
 #[cfg(test)]
 impl Environment {
 	pub fn test_env() -> Self {
@@ -414,7 +417,8 @@ impl App {
 		self.tags_popup.update(ev);
 
 		//TODO: better system for this
-		// can we simply process the queue here and everyone just uses the queue to schedule a cmd update?
+		// can we simply process the queue here and everyone just uses
+		// the queue to schedule a cmd update?
 		self.process_queue(NeedsUpdate::COMMANDS)?;
 
 		Ok(())
@@ -862,7 +866,8 @@ impl App {
 					Path::new(&repo_work_dir(&self.repo.borrow())?)
 						.join(path),
 				);
-				//TODO: validate this is a valid repo first, so we can show proper error otherwise
+				//TODO: validate this is a valid repo first, so we
+				// can show proper error otherwise
 				self.do_quit =
 					QuitState::OpenSubmodule(submodule_repo_path);
 			}
@@ -992,12 +997,13 @@ impl App {
 		branch_ref: &str,
 	) -> Result<()> {
 		self.queue.push(
-			//TODO: check if this is correct based on the fix in `c6abbaf`
+			//TODO: check if this is correct based on the fix in
+			// `c6abbaf`
 			branch_ref.rsplit('/').next().map_or_else(
 				|| {
 					InternalEvent::ShowErrorMsg(format!(
-						    "Failed to find the branch name in {branch_ref}"
-					    ))
+						"Failed to find the branch name in {branch_ref}"
+					))
 				},
 				|name| {
 					InternalEvent::Push(

@@ -1,4 +1,9 @@
-use crate::bug_report;
+use std::{
+	env,
+	fs::{self, File},
+	path::PathBuf,
+};
+
 use anyhow::{anyhow, Result};
 use asyncgit::sync::RepoPath;
 use clap::{
@@ -6,11 +11,8 @@ use clap::{
 	Command as ClapApp,
 };
 use simplelog::{Config, LevelFilter, WriteLogger};
-use std::{
-	env,
-	fs::{self, File},
-	path::PathBuf,
-};
+
+use crate::bug_report;
 
 pub struct CliArgs {
 	pub theme: PathBuf,

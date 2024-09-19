@@ -1,7 +1,3 @@
-use crate::notify_mutex::NotifyableMutex;
-use anyhow::Result;
-use crossbeam_channel::{unbounded, Receiver, Sender};
-use crossterm::event::{self, Event, Event::Key, KeyEventKind};
 use std::{
 	sync::{
 		atomic::{AtomicBool, Ordering},
@@ -10,6 +6,12 @@ use std::{
 	thread,
 	time::Duration,
 };
+
+use anyhow::Result;
+use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossterm::event::{self, Event, Event::Key, KeyEventKind};
+
+use crate::notify_mutex::NotifyableMutex;
 
 static FAST_POLL_DURATION: Duration = Duration::from_millis(100);
 static SLOW_POLL_DURATION: Duration = Duration::from_millis(10000);
@@ -115,7 +117,8 @@ impl Input {
 				arc_current.store(true, Ordering::Relaxed);
 
 				if let Some(e) = Self::poll(poll_duration)? {
-					// windows send key release too, only process key press
+					// windows send key release too, only process key
+					// press
 					if let Key(key) = e {
 						if key.kind != KeyEventKind::Press {
 							continue;
@@ -123,9 +126,10 @@ impl Input {
 					}
 
 					tx.send(InputEvent::Input(e))?;
-					//Note: right after an input event we might have a reason to stop
-					// polling (external editor opening) so lets do a quick poll until the next input
-					// this fixes https://github.com/extrawurst/gitui/issues/1506
+					//Note: right after an input event we might have
+					// a reason to stop polling (external editor
+					// opening) so lets do a quick poll until the next
+					// input this fixes https://github.com/extrawurst/gitui/issues/1506
 					poll_duration = FAST_POLL_DURATION;
 				} else {
 					poll_duration = SLOW_POLL_DURATION;

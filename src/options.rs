@@ -1,3 +1,11 @@
+use std::{
+	cell::RefCell,
+	fs::File,
+	io::{Read, Write},
+	path::PathBuf,
+	rc::Rc,
+};
+
 use anyhow::Result;
 use asyncgit::sync::{
 	diff::DiffOptions, repo_dir, RepoPathRef,
@@ -8,13 +16,6 @@ use ron::{
 	ser::{to_string_pretty, PrettyConfig},
 };
 use serde::{Deserialize, Serialize};
-use std::{
-	cell::RefCell,
-	fs::File,
-	io::{Read, Write},
-	path::PathBuf,
-	rc::Rc,
-};
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 struct OptionsData {
