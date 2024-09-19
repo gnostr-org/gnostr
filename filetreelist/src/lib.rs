@@ -21,10 +21,8 @@
 	clippy::missing_errors_doc,
 	clippy::empty_docs
 )]
-#![warn(
-	clippy::legacy_numeric_constants,
-	clippy::needless_pass_by_ref_mut
-)]
+#![allow(clippy::legacy_numeric_constants)]
+#![allow(clippy::needless_pass_by_ref_mut)]
 
 mod error;
 mod filetree;
