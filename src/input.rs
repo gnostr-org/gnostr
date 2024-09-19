@@ -75,6 +75,7 @@ impl Input {
 	}
 
 	///
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	pub fn set_polling(&mut self, enabled: bool) {
 		self.desired_state.set_and_notify(enabled);
 	}

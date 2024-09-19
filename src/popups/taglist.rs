@@ -386,6 +386,7 @@ impl TagListPopup {
 	}
 
 	///
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	fn move_selection(&mut self, scroll_type: ScrollType) -> bool {
 		let mut table_state = self.table_state.take();
 

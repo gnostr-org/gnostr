@@ -245,6 +245,7 @@ impl DetailsComponent {
 		})
 	}
 
+    #[allow(clippy::needless_pass_by_ref_mut)]
 	fn move_scroll_top(&mut self, move_type: ScrollType) -> bool {
 		if self.data.is_some() {
 			self.scroll.move_top(move_type)

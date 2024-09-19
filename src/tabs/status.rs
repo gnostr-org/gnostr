@@ -544,6 +544,7 @@ impl Status {
 	}
 
 	/// called after confirmation
+	#[allow(needless_pass_by_ref_mut)]
 	pub fn reset(&mut self, item: &ResetItem) -> bool {
 		if let Err(e) = sync::reset_workdir(
 			&self.repo.borrow(),
