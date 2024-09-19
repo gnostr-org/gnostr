@@ -20,13 +20,12 @@
 	clippy::multiple_crate_versions,
 	clippy::bool_to_int_with_if,
 	clippy::module_name_repetitions,
-	clippy::empty_docs
-)]
-#![warn(
+	clippy::empty_docs,
 	clippy::use_self,
 	clippy::legacy_numeric_constants,
 	clippy::too_long_first_doc_paragraph,
-	clippy::set_contains_or_insert
+	clippy::set_contains_or_insert,
+	clippy::unknown_lints
 )]
 
 //TODO:
