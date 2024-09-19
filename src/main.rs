@@ -17,14 +17,10 @@
 )]
 #![allow(clippy::module_name_repetitions)]
 #![allow(
+	clippy::multiple_crate_versions,
 	clippy::bool_to_int_with_if,
 	clippy::module_name_repetitions,
 	clippy::empty_docs
-)]
-#![warn(
-	clippy::needless_pass_by_ref_mut,
-	clippy::multiple_crate_versions,
-	clippy::use_self
 )]
 
 //TODO:
@@ -50,13 +46,7 @@ mod tabs;
 mod ui;
 mod watcher;
 
-use std::{
-	cell::RefCell,
-	io::{self, Stdout},
-	panic, process,
-	time::{Duration, Instant},
-};
-
+use crate::{app::App, args::process_cmdline};
 use anyhow::{bail, Result};
 use app::QuitState;
 use asyncgit::{
@@ -78,10 +68,14 @@ use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::scope_time;
 use spinner::Spinner;
+use std::{
+	cell::RefCell,
+	io::{self, Stdout},
+	panic, process,
+	time::{Duration, Instant},
+};
 use ui::style::Theme;
 use watcher::RepoWatcher;
-
-use crate::{app::App, args::process_cmdline};
 
 type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
 
@@ -132,9 +126,7 @@ fn main() -> Result<()> {
 	asyncgit::register_tracing_logging();
 
 	if !valid_path(&cliargs.repo_path) {
-		eprintln!(
-			"invalid path\nplease run gitui inside of a non-bare git repository"
-		);
+		eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
 		return Ok(());
 	}
 
@@ -252,8 +244,7 @@ fn run_app(
 						ev,
 						InputEvent::State(InputState::Polling)
 					) {
-						//Note: external ed closed, we need to
-						// re-hide cursor
+						//Note: external ed closed, we need to re-hide cursor
 						terminal.hide_cursor()?;
 					}
 					app.event(ev)?;
@@ -311,7 +302,7 @@ fn shutdown_terminal() {
 
 fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 	if app.requires_redraw() {
-		let _ = terminal.resize(terminal.size()?);
+		terminal.clear()?;
 	}
 
 	terminal.draw(|f| {
@@ -377,8 +368,7 @@ fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
 	Ok(terminal)
 }
 
-// do log::error! and eprintln! in one line, pass string, error and
-// backtrace
+// do log::error! and eprintln! in one line, pass string, error and backtrace
 macro_rules! log_eprintln {
 	($string:expr, $e:expr, $bt:expr) => {
 		log::error!($string, $e, $bt);
@@ -391,11 +381,7 @@ fn set_panic_handlers() -> Result<()> {
 	panic::set_hook(Box::new(|e| {
 		let backtrace = Backtrace::new();
 		shutdown_terminal();
-		log_eprintln!(
-			"\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
-			e,
-			backtrace
-		);
+		log_eprintln!("\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}", e, backtrace);
 	}));
 
 	// global threadpool

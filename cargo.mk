@@ -5,7 +5,7 @@ cargo-help:### 	cargo-help
 	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 cargo-release-all:### 	cargo-release-all
 ## 	cargo-release-all 	recursively cargo build --release
-	for t in */Cargo.toml;  do echo $$t; cargo b -r -vv --manifest-path $$t; done
+	for t in */Cargo.toml;  do echo $$t; cargo +$(TOOLCHAIN) b -r -vv --manifest-path $$t; done
 #for t in ffi/*/Cargo.toml;  do echo $$t; cargo b -r -vv --manifest-path $$t; done
 cargo-clean-all:### 	cargo-clean-all - clean release artifacts
 ## 	cargo-clean-all 	recursively cargo clean --release
@@ -23,7 +23,7 @@ cargo-b:cargo-build### 	cargo b
 cargo-build:### 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
-	@RUST_BACKTRACE=all cargo b $(QUIET)
+	@RUST_BACKTRACE=all cargo +$(TOOLCHAIN) b $(QUIET)
 cargo-i:cargo-install
 cargo-install:### 	cargo install --path . $(FORCE)
 	#@. $(HOME)/.cargo/env
@@ -34,22 +34,22 @@ cargo-br:cargo-build-release### 	cargo-br
 cargo-build-release:### 	cargo-build-release
 ## 	cargo-build-release q=true
 	@. $(HOME)/.cargo/env
-	@cargo b --release $(QUIET)
+	@cargo +$(TOOLCHAIN) b -r $(QUIET)
 cargo-c:cargo-check
 cargo-check:### 	cargo-check
 	@. $(HOME)/.cargo/env
-	@cargo c
+	@cargo +$(TOOLCHAIN) c
 cargo-bench:### 	cargo-bench
 	@. $(HOME)/.cargo/env
-	@cargo bench
+	@cargo +$(TOOLCHAIN) bench
 cargo-t:cargo-test
 cargo-test:### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	@cargo test -- --nocapture
+	@cargo +$(TOOLCHAIN) test -- --nocapture
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
-	cargo report future-incompatibilities --id 1
+	cargo +$(TOOLCHAIN) report future-incompatibilities --id 1
 
 cargo-deps-gnostr-all:cargo-deps-gnostr-cat cargo-deps-gnostr-cli cargo-deps-gnostr-command cargo-deps-gnostr-grep cargo-deps-gnostr-legit cargo-deps-gnostr-sha256### 	cargo-deps-gnostr-all
 cargo-deps-gnostr-cat:### 	cargo-deps-gnostr-cat
@@ -69,10 +69,11 @@ cargo-deps-gnostr-sha256:### 	cargo-deps-gnostr-sha256
 	cargo -Z unstable-options  -C deps/gnostr-sha256 install --path .
 ##===============================================================================
 cargo-dist:### 	cargo-dist -h
-	cargo dist -h
+	cargo +$(TOOLCHAIN) dist -h
 cargo-dist-build:### 	cargo-dist-build
 	RUSTFLAGS="--cfg tokio_unstable" cargo dist build
 cargo-dist-manifest-global:### 	cargo dist manifest --artifacts=all
-	cargo dist manifest --artifacts=all
+	cargo +$(TOOLCHAIN) dist manifest --artifacts=all
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
