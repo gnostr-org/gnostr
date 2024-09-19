@@ -3,8 +3,8 @@ use chrono::TimeZone;
 fn get_git_hash() -> String {
 	use std::process::Command;
 
-	// Allow builds from `git archive` generated tarballs if output of `git get-tar-commit-id` is
-	// set in an env var.
+	// Allow builds from `git archive` generated tarballs if output of
+	// `git get-tar-commit-id` is set in an env var.
 	if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
 		return commit[..7].to_string();
 	};
