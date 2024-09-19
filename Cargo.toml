@@ -125,6 +125,7 @@ members = [
     "git2-hooks",
     "git2-testing",
     "scopetime",
+    "test_utils"
 ]
 
 [profile.release]
