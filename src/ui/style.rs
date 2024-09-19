@@ -1,9 +1,10 @@
+use std::{fs::File, io::Write, path::PathBuf, rc::Rc};
+
 use anyhow::Result;
 use asyncgit::{DiffLineType, StatusItemType};
 use ratatui::style::{Color, Modifier, Style};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::Write, path::PathBuf, rc::Rc};
 use struct_patch::Patch;
 
 pub type SharedTheme = Rc<Theme>;
@@ -287,7 +288,8 @@ impl Theme {
 		Ok(ron::de::from_reader::<File, Self>(old_file)?)
 	}
 
-	// This is supposed to be called when theme.ron doesn't already exists.
+	// This is supposed to be called when theme.ron doesn't already
+	// exists.
 	fn save_patch(&self, theme_path: &PathBuf) -> Result<()> {
 		let mut file = File::create(theme_path)?;
 		let patch = self.clone().into_patch_by_diff(Self::default());
@@ -359,9 +361,10 @@ impl Default for Theme {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use pretty_assertions::assert_eq;
 	use tempfile::NamedTempFile;
+
+	use super::*;
 
 	#[test]
 	fn test_smoke() {

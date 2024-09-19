@@ -16,7 +16,8 @@ pub use syntax_text::{AsyncSyntaxJob, SyntaxText};
 
 use crate::keys::{key_match, SharedKeyConfig};
 
-/// return the scroll position (line) necessary to have the `selection` in view if it is not already
+/// return the scroll position (line) necessary to have the
+/// `selection` in view if it is not already
 pub const fn calc_scroll_top(
 	current_top: usize,
 	height_in_lines: usize,
@@ -85,7 +86,8 @@ pub fn centered_rect(
 		.split(popup_layout[1])[1]
 }
 
-/// makes sure Rect `r` at least stays as big as min and not bigger than max
+/// makes sure Rect `r` at least stays as big as min and not bigger
+/// than max
 pub fn rect_inside(min: Size, max: Size, r: Rect) -> Rect {
 	let new_width = if min.width > max.width {
 		max.width
@@ -155,9 +157,10 @@ pub fn common_nav(
 
 #[cfg(test)]
 mod test {
-	use super::{rect_inside, Size};
 	use pretty_assertions::assert_eq;
 	use ratatui::layout::Rect;
+
+	use super::{rect_inside, Size};
 
 	#[test]
 	fn test_small_rect_in_rect() {

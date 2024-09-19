@@ -1,4 +1,3 @@
-use super::style::SharedTheme;
 use easy_cast::CastFloat;
 use ratatui::{
 	buffer::Buffer,
@@ -11,6 +10,8 @@ use ratatui::{
 	widgets::Widget,
 	Frame,
 };
+
+use super::style::SharedTheme;
 
 pub enum Orientation {
 	Vertical,

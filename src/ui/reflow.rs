@@ -1,13 +1,14 @@
-use crate::string_utils::trim_offset;
 use easy_cast::Cast;
 use ratatui::text::StyledGrapheme;
 use unicode_width::UnicodeWidthStr;
 
+use crate::string_utils::trim_offset;
+
 const NBSP: &str = "\u{00a0}";
 
 /// A state machine to pack styled symbols into lines.
-/// Cannot implement it as Iterator since it yields slices of the internal buffer (need streaming
-/// iterators for that).
+/// Cannot implement it as Iterator since it yields slices of the
+/// internal buffer (need streaming iterators for that).
 pub trait LineComposer<'a> {
 	fn next_line(&mut self) -> Option<(&[StyledGrapheme<'a>], u16)>;
 }
@@ -92,7 +93,8 @@ impl<'a, 'b> LineComposer<'a> for WordWrapper<'a, 'b> {
 			current_line_width += Cast::<u16>::cast(symbol.width());
 
 			if current_line_width > self.max_line_width {
-				// If there was no word break in the text, wrap at the end of the line.
+				// If there was no word break in the text, wrap at the
+				// end of the line.
 				let (truncate_at, truncated_width) =
 					if symbols_to_last_word_end == 0 {
 						(
@@ -106,7 +108,8 @@ impl<'a, 'b> LineComposer<'a> for WordWrapper<'a, 'b> {
 						)
 					};
 
-				// Push the remainder to the next line but strip leading whitespace:
+				// Push the remainder to the next line but strip
+				// leading whitespace:
 				{
 					let remainder = &self.current_line[truncate_at..];
 					if let Some(remainder_nonwhite) =
@@ -130,7 +133,8 @@ impl<'a, 'b> LineComposer<'a> for WordWrapper<'a, 'b> {
 			prev_whitespace = symbol_whitespace;
 		}
 
-		// Even if the iterator is exhausted, pass the previous remainder.
+		// Even if the iterator is exhausted, pass the previous
+		// remainder.
 		if symbols_exhausted && self.current_line.is_empty() {
 			None
 		} else {
@@ -235,8 +239,9 @@ impl<'a, 'b> LineComposer<'a> for LineTruncator<'a, 'b> {
 
 #[cfg(test)]
 mod test {
-	use super::*;
 	use unicode_segmentation::UnicodeSegmentation;
+
+	use super::*;
 
 	enum Composer {
 		WordWrapper { trim: bool },
@@ -298,8 +303,7 @@ mod test {
 	#[test]
 	fn line_composer_short_lines() {
 		let width = 20;
-		let text =
-            "abcdefg\nhijklmno\npabcdefg\nhijklmn\nopabcdefghijk\nlmnopabcd\n\n\nefghijklmno";
+		let text = "abcdefg\nhijklmno\npabcdefg\nhijklmn\nopabcdefghijk\nlmnopabcd\n\n\nefghijklmno";
 		let (word_wrapper, _) = run_composer(
 			Composer::WordWrapper { trim: true },
 			text,
@@ -332,20 +336,18 @@ mod test {
 			&text[width * 3..],
 		];
 		assert_eq!(
-            word_wrapper, wrapped,
-            "WordWrapper should detect the line cannot be broken on word boundary and \
+			word_wrapper, wrapped,
+			"WordWrapper should detect the line cannot be broken on word boundary and \
              break it at line width limit."
-        );
+		);
 		assert_eq!(line_truncator, vec![&text[..width]]);
 	}
 
 	#[test]
 	fn line_composer_long_sentence() {
 		let width = 20;
-		let text =
-            "abcd efghij klmnopabcd efgh ijklmnopabcdefg hijkl mnopab c d e f g h i j k l m n o";
-		let text_multi_space =
-            "abcd efghij    klmnopabcd efgh     ijklmnopabcdefg hijkl mnopab c d e f g h i j k l \
+		let text = "abcd efghij klmnopabcd efgh ijklmnopabcdefg hijkl mnopab c d e f g h i j k l m n o";
+		let text_multi_space = "abcd efghij    klmnopabcd efgh     ijklmnopabcdefg hijkl mnopab c d e f g h i j k l \
              m n o";
 		let (word_wrapper_single_space, _) = run_composer(
 			Composer::WordWrapper { trim: true },
@@ -426,7 +428,8 @@ mod test {
 		assert_eq!(line_truncator, vec!["", "a"]);
 	}
 
-	/// Tests `WordWrapper` with words some of which exceed line length and some not.
+	/// Tests `WordWrapper` with words some of which exceed line
+	/// length and some not.
 	#[test]
 	fn line_composer_word_wrapper_mixed_length() {
 		let width = 20;
@@ -509,8 +512,8 @@ mod test {
 		assert_eq!(line_truncator, vec!["                    "]);
 	}
 
-	/// Tests an input starting with a letter, followed by spaces - some of the behaviour is
-	/// incidental.
+	/// Tests an input starting with a letter, followed by spaces -
+	/// some of the behaviour is incidental.
 	#[test]
 	fn line_composer_char_plus_lots_of_spaces() {
 		let width = 20;
@@ -522,23 +525,25 @@ mod test {
 		);
 		let (line_truncator, _) =
 			run_composer(Composer::LineTruncator, text, width);
-		// What's happening below is: the first line gets consumed, trailing spaces discarded,
-		// after 20 of which a word break occurs (probably shouldn't). The second line break
-		// discards all whitespace. The result should probably be vec!["a"] but it doesn't matter
-		// that much.
+		// What's happening below is: the first line gets consumed,
+		// trailing spaces discarded, after 20 of which a word break
+		// occurs (probably shouldn't). The second line break
+		// discards all whitespace. The result should probably be
+		// vec!["a"] but it doesn't matter that much.
 		assert_eq!(word_wrapper, vec!["a", ""]);
 		assert_eq!(line_truncator, vec!["a                   "]);
 	}
 
 	#[test]
-	fn line_composer_word_wrapper_double_width_chars_mixed_with_spaces(
-	) {
+	fn line_composer_word_wrapper_double_width_chars_mixed_with_spaces()
+	 {
 		let width = 20;
-		// Japanese seems not to use spaces but we should break on spaces anyway... We're using it
-		// to test double-width chars.
-		// You are more than welcome to add word boundary detection based of alterations of
-		// hiragana and katakana...
-		// This happens to also be a test case for mixed width because regular spaces are single width.
+		// Japanese seems not to use spaces but we should break on
+		// spaces anyway... We're using it to test double-width
+		// chars. You are more than welcome to add word boundary
+		// detection based of alterations of hiragana and
+		// katakana... This happens to also be a test case for mixed
+		// width because regular spaces are single width.
 		let text = "コンピュ ータ上で文字を扱う場合、 典型的には文 字による 通信を行 う場合にその両端点では、";
 		let (word_wrapper, word_wrapper_width) = run_composer(
 			Composer::WordWrapper { trim: true },
@@ -560,7 +565,8 @@ mod test {
 		assert_eq!(word_wrapper_width, vec![8, 20, 17, 17, 20, 4]);
 	}
 
-	/// Ensure words separated by nbsp are wrapped as if they were a single one.
+	/// Ensure words separated by nbsp are wrapped as if they were a
+	/// single one.
 	#[test]
 	fn line_composer_word_wrapper_nbsp() {
 		let width = 20;
@@ -575,7 +581,8 @@ mod test {
 			vec!["AAAAAAAAAAAAAAA", "AAAA\u{00a0}AAA",]
 		);
 
-		// Ensure that if the character was a regular space, it would be wrapped differently.
+		// Ensure that if the character was a regular space, it would
+		// be wrapped differently.
 		let text_space = text.replace('\u{00a0}', " ");
 		let (word_wrapper_space, _) = run_composer(
 			Composer::WordWrapper { trim: true },
@@ -621,8 +628,8 @@ mod test {
 	}
 
 	#[test]
-	fn line_composer_word_wrapper_preserve_indentation_lots_of_whitespace(
-	) {
+	fn line_composer_word_wrapper_preserve_indentation_lots_of_whitespace()
+	 {
 		let width = 10;
 		let text =
 			"               4 Indent\n                 must wrap!";
