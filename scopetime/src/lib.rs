@@ -1,4 +1,5 @@
-//! simple macro to insert a scope based runtime measure that logs the result
+//! simple macro to insert a scope based runtime measure that logs the
+//! result
 
 #![forbid(unsafe_code)]
 #![deny(unused_imports)]
