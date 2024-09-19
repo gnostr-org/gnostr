@@ -60,6 +60,7 @@ mod when_repo_not_previously_claimed {
 
 		use super::*;
 
+		#[cfg(feature = "expensive_tests")]
 		fn prep_git_repo() -> Result<GitTestRepo> {
 			let test_repo = GitTestRepo::without_repo_in_git_config();
 			test_repo.populate()?;
@@ -68,10 +69,12 @@ mod when_repo_not_previously_claimed {
 			Ok(test_repo)
 		}
 
+		#[cfg(feature = "expensive_tests")]
 		fn cli_tester_init(git_repo: &GitTestRepo) -> CliTester {
 			CliTester::new_from_dir(&git_repo.dir, get_cli_args())
 		}
 
+		#[cfg(feature = "expensive_tests")]
 		async fn prep_run_init() -> Result<(
 			Relay<'static>,
 			Relay<'static>,
@@ -150,6 +153,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn only_1_repository_kind_event_sent_to_user_relays()
 			-> Result<()> {
 				let (_, _, r53, r55, _, _) = prep_run_init().await?;
@@ -170,6 +174,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn only_1_repository_kind_event_sent_to_specified_repo_relays()
 			-> Result<()> {
 				let (_, _, _, r55, r56, _) = prep_run_init().await?;
@@ -190,6 +195,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn only_1_repository_kind_event_sent_to_fallback_relays()
 			-> Result<()> {
 				let (r51, r52, _, _, _, _) = prep_run_init().await?;
@@ -210,6 +216,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn only_1_repository_kind_event_sent_to_blaster_relays()
 			-> Result<()> {
 				let (_, _, _, _, _, r57) = prep_run_init().await?;
@@ -231,6 +238,7 @@ mod when_repo_not_previously_claimed {
 
 			use super::*;
 
+			#[cfg(feature = "expensive_tests")]
 			async fn async_run_test() -> Result<()> {
 				let git_repo = prep_git_repo()?;
 				// fallback (51,52) user write (53, 55) repo (55, 56)
@@ -320,6 +328,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn contains_identifier_maintainers_and_relays()
 			-> Result<()> {
 				async_run_test().await
@@ -328,6 +337,7 @@ mod when_repo_not_previously_claimed {
 				use std::io::Write;
 
 				use super::*;
+				#[cfg(feature = "expensive_tests")]
 				async fn async_run_test() -> Result<()> {
 					let git_repo = prep_git_repo()?;
 					// fallback (51,52) user write (53, 55) repo (55,
@@ -432,6 +442,7 @@ mod when_repo_not_previously_claimed {
 
 				#[tokio::test]
 				#[serial]
+				#[cfg(feature = "expensive_tests")]
 				async fn adds_missing_identifier() -> Result<()> {
 					async_run_test().await
 				}
@@ -445,6 +456,7 @@ mod when_repo_not_previously_claimed {
 
 			use super::*;
 
+			#[cfg(feature = "expensive_tests")]
 			async fn async_run_test() -> Result<()> {
 				let git_repo = prep_git_repo()?;
 				// fallback (51,52) user write (53, 55) repo (55, 56)
@@ -526,6 +538,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn with_nostr_repo_set_to_user_and_identifer_naddr()
 			-> Result<()> {
 				async_run_test().await?;
@@ -538,6 +551,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn d_replaceable_event_identifier() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -560,6 +574,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn earliest_unique_commit_as_reference_with_euc_marker()
 			-> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
@@ -585,6 +600,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn name() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -610,6 +626,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn alt() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -633,6 +650,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn description() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -655,6 +673,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn git_server() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -681,6 +700,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn relays() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -706,6 +726,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn web() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -737,6 +758,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn maintainers() -> Result<()> {
 				let (_, _, r53, r55, r56, r57) =
 					prep_run_init().await?;
@@ -768,6 +790,7 @@ mod when_repo_not_previously_claimed {
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn check_cli_output() -> Result<()> {
 				let git_repo = prep_git_repo()?;
 

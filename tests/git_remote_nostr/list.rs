@@ -105,6 +105,7 @@ mod with_state_announcement {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn lists_head_and_2_branches_and_commit_ids_announcement()
 		-> Result<()> {
 			let (state_event, source_git_repo) =
@@ -203,6 +204,7 @@ mod with_state_announcement {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn anouncement_state_is_used() -> Result<()> {
 			let (state_event, source_git_repo) =
 				generate_repo_with_state_event().await?;
@@ -331,6 +333,7 @@ mod with_state_announcement {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn open_proposal_listed_in_prs_namespace() -> Result<()>
 		{
 			let (state_event, source_git_repo) =

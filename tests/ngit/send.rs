@@ -5,6 +5,7 @@ use serial_test::serial;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
 #[test]
+#[cfg(feature = "expensive_tests")]
 fn when_no_main_or_master_branch_return_error() -> Result<()> {
 	let test_repo = GitTestRepo::new("notmain")?;
 	test_repo.populate()?;
@@ -54,6 +55,7 @@ mod when_commits_behind_ask_to_proceed {
 	}
 
 	#[test]
+	#[cfg(feature = "expensive_tests")]
 	fn asked_with_default_no() -> Result<()> {
 		let test_repo = prep_test_repo()?;
 
@@ -67,6 +69,7 @@ mod when_commits_behind_ask_to_proceed {
 	}
 
 	#[test]
+	#[cfg(feature = "expensive_tests")]
 	fn when_response_is_false_aborts() -> Result<()> {
 		let test_repo = prep_test_repo()?;
 
@@ -85,6 +88,7 @@ mod when_commits_behind_ask_to_proceed {
 	}
 	#[test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	fn when_response_is_true_proceeds() -> Result<()> {
 		let test_repo = prep_test_repo()?;
 
@@ -271,6 +275,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 	use super::*;
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn only_1_cover_letter_event_sent_to_each_relay()
 	-> Result<()> {
 		let (_, _, r53, r55, r56) =
@@ -290,6 +295,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn only_1_cover_letter_event_sent_to_user_relays()
 	-> Result<()> {
 		let (_, _, r53, r55, _) =
@@ -309,6 +315,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn only_1_cover_letter_event_sent_to_repo_relays()
 	-> Result<()> {
 		let (_, _, _, r55, r56) =
@@ -328,6 +335,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn only_1_cover_letter_event_sent_to_fallback_relays()
 	-> Result<()> {
 		let (r51, r52, _, _, _) =
@@ -347,6 +355,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn only_2_patch_kind_events_sent_to_each_relay()
 	-> Result<()> {
 		let (r51, r52, r53, r55, r56) =
@@ -362,6 +371,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn patch_content_contains_patch_in_email_format_with_patch_series_numbers()
 	-> Result<()> {
 		let (_, _, r53, r55, r56) =
@@ -431,6 +441,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn root_commit_as_r() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal(true).await?;
@@ -456,6 +467,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn a_tag_for_repo_event_of_each_maintainer()
 		-> Result<()> {
 			let (_, _, r53, r55, r56) =
@@ -492,6 +504,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn p_tags_for_maintainers() -> Result<()> {
 			let event = generate_repo_ref_event();
 			let maintainers = &event
@@ -522,6 +535,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn t_tag_cover_letter() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal(true).await?;
@@ -541,6 +555,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn t_tag_root() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal(true).await?;
@@ -559,6 +574,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn cover_letter_tags_branch_name() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal(true).await?;
@@ -585,6 +601,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn cover_letter_tags_alt() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal(true).await?;
@@ -626,6 +643,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn commit_and_commit_r() -> Result<()> {
 			static COMMIT_ID: &str =
 				"232efb37ebc67692c9e9ff58b83c0d3d63971a0a";
@@ -649,6 +667,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn parent_commit() -> Result<()> {
 			// commit parent 'r' and 'parent-commit' tag
 			static COMMIT_PARENT_ID: &str =
@@ -668,6 +687,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn root_commit_as_r() -> Result<()> {
 			assert!(prep().await?.tags.iter().any(|t| {
 				t.as_vec()[0].eq("r")
@@ -680,6 +700,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn p_tags_for_maintainers() -> Result<()> {
 			let event = generate_repo_ref_event();
 			let maintainers = &event
@@ -698,6 +719,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn a_tag_for_repo_event_of_each_maintainer()
 		-> Result<()> {
 			assert!(prep().await?.tags.iter().any(|t| {
@@ -725,6 +747,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn description_with_commit_message() -> Result<()> {
 			assert_eq!(
 				prep()
@@ -741,6 +764,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn commit_author() -> Result<()> {
 			assert_eq!(
 				prep()
@@ -763,6 +787,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn commit_committer() -> Result<()> {
 			assert_eq!(
 				prep()
@@ -785,6 +810,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn alt() -> Result<()> {
 			assert_eq!(
 				prep()
@@ -801,6 +827,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn patch_tags_cover_letter_event_as_root() -> Result<()>
 		{
 			let (_, _, r53, r55, r56) =
@@ -839,6 +866,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn second_patch_tags_first_with_reply() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal(true).await?;
@@ -865,6 +893,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn no_t_root_tag() -> Result<()> {
 			assert!(
 				!prep()
@@ -882,6 +911,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn check_cli_output() -> Result<()> {
 			let git_repo = prep_git_repo()?;
 
@@ -995,6 +1025,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn only_first_rejected_event_sent_to_relay()
 			-> Result<()> {
 				let git_repo = prep_git_repo()?;
@@ -1088,6 +1119,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
 			#[tokio::test]
 			#[serial]
+			#[cfg(feature = "expensive_tests")]
 			async fn cli_show_rejection_with_comment() -> Result<()> {
 				let git_repo = prep_git_repo()?;
 
@@ -1216,6 +1248,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn check_cli_output() -> Result<()> {
 			let git_repo = prep_git_repo()?;
 
@@ -1324,6 +1357,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn no_cover_letter_event() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal(false).await?;
@@ -1342,6 +1376,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn two_patch_events() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal(false).await?;
@@ -1356,6 +1391,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	// TODO check this is the ancestor
 	async fn first_patch_with_root_t_tag() -> Result<()> {
 		let (_, _, r53, r55, r56) =
@@ -1389,6 +1425,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn root_patch_tags_branch_name() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal(false).await?;
@@ -1415,6 +1452,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn second_patch_lists_first_as_root() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal(false).await?;
@@ -1564,6 +1602,7 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn check_cli_output() -> Result<()> {
 			let git_repo = prep_git_repo()?;
 
@@ -1670,6 +1709,7 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn two_patch_events_sent() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal().await?;
@@ -1823,6 +1863,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn check_cli_output() -> Result<()> {
 			let git_repo = prep_git_repo()?;
 
@@ -1935,6 +1976,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn t_tag_root() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal().await?;
@@ -1953,6 +1995,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn t_tag_revision_root() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal().await?;
@@ -1972,6 +2015,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
 		#[tokio::test]
 		#[serial]
+		#[cfg(feature = "expensive_tests")]
 		async fn e_tag_in_reply_to_event_as_reply() -> Result<()> {
 			let (_, _, r53, r55, r56) =
 				prep_run_create_proposal().await?;
@@ -2002,6 +2046,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn patch_tags_cover_letter_event_as_root() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal().await?;
@@ -2148,6 +2193,7 @@ mod in_reply_to_mentions_issue {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn issue_event_mentioned_in_tagged_cover_letter()
 	-> Result<()> {
 		let (_, _, r53, r55, r56) =
@@ -2170,6 +2216,7 @@ mod in_reply_to_mentions_issue {
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn isnt_tagged_as_revision() -> Result<()> {
 		let (_, _, r53, r55, r56) =
 			prep_run_create_proposal().await?;
@@ -2292,6 +2339,7 @@ mod in_reply_to_mentions_npub_and_nprofile_which_get_mentioned_in_proposal_root 
 
 	#[tokio::test]
 	#[serial]
+	#[cfg(feature = "expensive_tests")]
 	async fn npub_and_nprofile_mentioned_in_tagged_cover_letter()
 	-> Result<()> {
 		let (_, _, r53, r55, r56) =
