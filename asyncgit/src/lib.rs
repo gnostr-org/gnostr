@@ -22,19 +22,17 @@
 #![allow(
 	clippy::module_name_repetitions,
 	clippy::must_use_candidate,
-	clippy::missing_errors_doc,
-	clippy::empty_docs
+	clippy::missing_errors_doc
 )]
 //TODO:
 #![allow(
 	clippy::significant_drop_tightening,
 	clippy::missing_panics_doc,
-	clippy::multiple_crate_versions
-)]
-#![warn(
+	clippy::multiple_crate_versions,
 	clippy::needless_pass_by_ref_mut,
 	clippy::too_long_first_doc_paragraph,
-	clippy::set_contains_or_insert
+	clippy::set_contains_or_insert,
+	clippy::empty_docs
 )]
 
 pub mod asyncjob;
