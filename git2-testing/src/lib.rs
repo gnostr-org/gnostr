@@ -62,13 +62,14 @@ pub fn repo_init_bare() -> (TempDir, Repository) {
 	(tmp_repo_dir, bare_repo)
 }
 
-/// Calling `set_search_path` with an empty directory makes sure that there
-/// is no git config interfering with our tests (for example user-local
-/// `.gitconfig`).
+/// Calling `set_search_path` with an empty directory makes sure that
+/// there is no git config interfering with our tests (for example
+/// user-local `.gitconfig`).
 #[allow(unsafe_code)]
 fn sandbox_config_files() {
-	use git2::{opts::set_search_path, ConfigLevel};
 	use std::sync::Once;
+
+	use git2::{opts::set_search_path, ConfigLevel};
 
 	static INIT: Once = Once::new();
 
