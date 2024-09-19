@@ -169,7 +169,7 @@ impl OptionsPopup {
 		}
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn switch_option(&mut self, right: bool) {
 		if right {
 			match self.selection {

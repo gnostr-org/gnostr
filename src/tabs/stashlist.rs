@@ -47,7 +47,7 @@ impl StashList {
 		Ok(())
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn apply_stash(&mut self) {
 		if let Some(e) = self.list.selected_entry() {
 			match sync::stash_apply(&self.repo.borrow(), e.id, false)
@@ -64,7 +64,7 @@ impl StashList {
 		}
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn drop_stash(&mut self) {
 		if self.list.marked_count() > 0 {
 			self.queue.push(InternalEvent::ConfirmAction(

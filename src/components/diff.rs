@@ -500,7 +500,7 @@ impl DiffComponent {
 		false
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn unstage_hunk(&mut self) -> Result<()> {
 		if let Some(diff) = &self.diff {
 			if let Some(hunk) = self.selected_hunk {
@@ -518,7 +518,7 @@ impl DiffComponent {
 		Ok(())
 	}
 
-    #[allow(clippy::needless_pass_by_ref_mut)]
+	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn stage_hunk(&mut self) -> Result<()> {
 		if let Some(diff) = &self.diff {
 			if let Some(hunk) = self.selected_hunk {
@@ -528,7 +528,7 @@ impl DiffComponent {
 						Path::new(&self.current.path),
 					)?;
 				} else {
-                    #[allow(clippy::needless_pass_by_ref_mut)]
+					#[allow(clippy::needless_pass_by_ref_mut)]
 					let hash = diff.hunks[hunk].header_hash;
 					sync::stage_hunk(
 						&self.repo.borrow(),
