@@ -1,11 +1,7 @@
-use crate::{
-	components::FuzzyFinderTarget,
-	popups::{
-		AppOption, BlameFileOpen, FileRevOpen, FileTreeOpen,
-		InspectCommitOpen,
-	},
-	tabs::StashingOptions,
+use std::{
+	cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc,
 };
+
 use asyncgit::{
 	sync::{
 		diff::DiffLinePosition, CommitId, LogFilterSearchOptions,
@@ -13,8 +9,14 @@ use asyncgit::{
 	PushType,
 };
 use bitflags::bitflags;
-use std::{
-	cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc,
+
+use crate::{
+	components::FuzzyFinderTarget,
+	popups::{
+		AppOption, BlameFileOpen, FileRevOpen, FileTreeOpen,
+		InspectCommitOpen,
+	},
+	tabs::StashingOptions,
 };
 
 bitflags! {
@@ -148,7 +150,8 @@ pub enum InternalEvent {
 	CommitSearch(LogFilterSearchOptions),
 }
 
-/// single threaded simple queue for components to communicate with each other
+/// single threaded simple queue for components to communicate with
+/// each other
 #[derive(Clone)]
 pub struct Queue {
 	data: Rc<RefCell<VecDeque<InternalEvent>>>,
