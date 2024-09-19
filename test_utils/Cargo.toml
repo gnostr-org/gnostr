@@ -2,6 +2,16 @@
 name = "test_utils"
 version = "0.1.0"
 edition = "2021"
+authors = ["extrawurst <mail@rusticorn.com>"]
+description = "blazing fast terminal-ui for git"
+rust-version = "1.79"
+exclude = [".github/*", ".vscode/*", "assets/*"]
+homepage = "https://github.com/extrawurst/gitui"
+repository = "https://github.com/extrawurst/gitui"
+readme = "README.md"
+license = "MIT"
+categories = ["command-line-utilities"]
+keywords = ["git", "gui", "cli", "terminal", "ui"]
 
 [dependencies]
 anyhow = "1.0.75"
