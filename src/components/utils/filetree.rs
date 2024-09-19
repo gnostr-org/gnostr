@@ -1,7 +1,5 @@
 //TODO: remove in favour of new `filetreelist` crate
 
-use anyhow::{bail, Result};
-use asyncgit::StatusItem;
 use std::{
 	collections::BTreeSet,
 	ffi::OsStr,
@@ -9,7 +7,11 @@ use std::{
 	path::Path,
 };
 
-/// holds the information shared among all `FileTreeItem` in a `FileTree`
+use anyhow::{bail, Result};
+use asyncgit::StatusItem;
+
+/// holds the information shared among all `FileTreeItem` in a
+/// `FileTree`
 #[derive(Debug, Clone)]
 pub struct TreeItemInfo {
 	/// indent level
@@ -37,7 +39,8 @@ impl TreeItemInfo {
 	}
 }
 
-/// attribute used to indicate the collapse/expand state of a path item
+/// attribute used to indicate the collapse/expand state of a path
+/// item
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub struct PathCollapsed(pub bool);
 
@@ -48,7 +51,8 @@ pub enum FileTreeItemKind {
 	File(StatusItem),
 }
 
-/// `FileTreeItem` can be of two kinds: see `FileTreeItem` but shares an info
+/// `FileTreeItem` can be of two kinds: see `FileTreeItem` but shares
+/// an info
 #[derive(Debug, Clone)]
 pub struct FileTreeItem {
 	pub info: TreeItemInfo,
@@ -259,8 +263,9 @@ impl Index<usize> for FileTreeItems {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use asyncgit::StatusItemType;
+
+	use super::*;
 
 	fn string_vec_to_status(items: &[&str]) -> Vec<StatusItem> {
 		items

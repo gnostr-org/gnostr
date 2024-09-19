@@ -1,9 +1,11 @@
+use std::cell::Cell;
+
+use ratatui::{layout::Rect, Frame};
+
 use crate::{
 	components::ScrollType,
 	ui::{draw_scrollbar, style::SharedTheme, Orientation},
 };
-use ratatui::{layout::Rect, Frame};
-use std::cell::Cell;
 
 pub struct VerticalScroll {
 	top: Cell<usize>,
@@ -63,7 +65,8 @@ impl VerticalScroll {
 			self.top.set(start);
 			return;
 		}
-		// the bottom of some content is hidden and there is visible space available
+		// the bottom of some content is hidden and there is visible
+		// space available
 		if end > bottom && start > top {
 			let avail_space = start.saturating_sub(top);
 			let diff = std::cmp::min(
@@ -143,8 +146,9 @@ const fn calc_scroll_top(
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[test]
 	fn test_scroll_no_scroll_to_top() {

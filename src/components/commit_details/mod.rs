@@ -2,16 +2,6 @@ mod compare_details;
 mod details;
 mod style;
 
-use super::{
-	command_pump, event_pump, CommandBlocking, CommandInfo,
-	Component, DrawableComponent, EventState, StatusTreeComponent,
-};
-use crate::{
-	accessors,
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	strings,
-};
 use anyhow::Result;
 use asyncgit::{
 	sync::{commit_files::OldNew, CommitTags},
@@ -23,6 +13,17 @@ use details::DetailsComponent;
 use ratatui::{
 	layout::{Constraint, Direction, Layout, Rect},
 	Frame,
+};
+
+use super::{
+	command_pump, event_pump, CommandBlocking, CommandInfo,
+	Component, DrawableComponent, EventState, StatusTreeComponent,
+};
+use crate::{
+	accessors,
+	app::Environment,
+	keys::{key_match, SharedKeyConfig},
+	strings,
 };
 
 pub struct CommitDetailsComponent {

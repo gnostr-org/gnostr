@@ -1,18 +1,7 @@
-use super::{
-	utils::scroll_vertical::VerticalScroll, CommandBlocking,
-	CommandInfo, Component, DrawableComponent, EventState,
-	FuzzyFinderTarget, SyntaxTextComponent,
+use std::{
+	borrow::Cow, collections::BTreeSet, fmt::Write, path::Path,
 };
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	popups::{BlameFileOpen, FileRevOpen},
-	queue::{InternalEvent, Queue, StackablePopupOpen},
-	strings::{self, order, symbol},
-	try_or_popup,
-	ui::{self, common_nav, style::SharedTheme},
-	AsyncNotification,
-};
+
 use anyhow::Result;
 use asyncgit::{
 	asyncjob::AsyncSingleJob,
@@ -29,10 +18,24 @@ use ratatui::{
 	widgets::{Block, Borders},
 	Frame,
 };
-use std::{borrow::Cow, fmt::Write};
-use std::{collections::BTreeSet, path::Path};
 use unicode_truncate::UnicodeTruncateStr;
 use unicode_width::UnicodeWidthStr;
+
+use super::{
+	utils::scroll_vertical::VerticalScroll, CommandBlocking,
+	CommandInfo, Component, DrawableComponent, EventState,
+	FuzzyFinderTarget, SyntaxTextComponent,
+};
+use crate::{
+	app::Environment,
+	keys::{key_match, SharedKeyConfig},
+	popups::{BlameFileOpen, FileRevOpen},
+	queue::{InternalEvent, Queue, StackablePopupOpen},
+	strings::{self, order, symbol},
+	try_or_popup,
+	ui::{self, common_nav, style::SharedTheme},
+	AsyncNotification,
+};
 
 enum Focus {
 	Tree,

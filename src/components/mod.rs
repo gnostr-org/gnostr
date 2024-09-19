@@ -10,13 +10,20 @@ mod syntax_text;
 mod textinput;
 mod utils;
 
-pub use self::status_tree::StatusTreeComponent;
+use anyhow::Result;
 pub use changes::ChangesComponent;
 pub use command::{CommandInfo, CommandText};
 pub use commit_details::CommitDetailsComponent;
 pub use commitlist::CommitList;
 pub use cred::CredComponent;
+use crossterm::event::Event;
 pub use diff::DiffComponent;
+use ratatui::{
+	layout::{Alignment, Rect},
+	text::{Span, Text},
+	widgets::{Block, Borders, Paragraph},
+	Frame,
+};
 pub use revision_files::RevisionFilesComponent;
 pub use syntax_text::SyntaxTextComponent;
 pub use textinput::{InputType, TextInputComponent};
@@ -26,15 +33,8 @@ pub use utils::{
 	time_to_string,
 };
 
+pub use self::status_tree::StatusTreeComponent;
 use crate::ui::style::Theme;
-use anyhow::Result;
-use crossterm::event::Event;
-use ratatui::{
-	layout::{Alignment, Rect},
-	text::{Span, Text},
-	widgets::{Block, Borders, Paragraph},
-	Frame,
-};
 
 /// creates accessors for a list of components
 ///

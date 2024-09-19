@@ -1,9 +1,11 @@
+use std::cell::Cell;
+
+use ratatui::{layout::Rect, Frame};
+
 use crate::{
 	components::HorizontalScrollType,
 	ui::{draw_scrollbar, style::SharedTheme, Orientation},
 };
-use ratatui::{layout::Rect, Frame};
-use std::cell::Cell;
 
 pub struct HorizontalScroll {
 	right: Cell<usize>,
@@ -118,8 +120,9 @@ const fn calc_scroll_right(
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[test]
 	fn test_scroll_no_scroll_to_right() {

@@ -1,26 +1,24 @@
-use crate::app::Environment;
-use crate::keys::key_match;
-use crate::ui::Size;
+use std::cell::{Cell, OnceCell};
+
+use anyhow::Result;
+use crossterm::event::Event;
+use ratatui::{
+	layout::{Alignment, Rect},
+	widgets::{Block, Borders, Clear, Paragraph},
+	Frame,
+};
+use tui_textarea::{CursorMove, Input, Key, Scrolling, TextArea};
+
 use crate::{
+	app::Environment,
 	components::{
 		visibility_blocking, CommandBlocking, CommandInfo, Component,
 		DrawableComponent, EventState,
 	},
-	keys::SharedKeyConfig,
+	keys::{key_match, SharedKeyConfig},
 	strings,
-	ui::{self, style::SharedTheme},
+	ui::{self, style::SharedTheme, Size},
 };
-use anyhow::Result;
-use crossterm::event::Event;
-use ratatui::widgets::{Block, Borders};
-use ratatui::{
-	layout::{Alignment, Rect},
-	widgets::{Clear, Paragraph},
-	Frame,
-};
-use std::cell::Cell;
-use std::cell::OnceCell;
-use tui_textarea::{CursorMove, Input, Key, Scrolling, TextArea};
 
 ///
 #[derive(PartialEq, Eq)]
@@ -109,10 +107,10 @@ impl TextInputComponent {
 		// tui_textarea returns its lines to the caller as &[String]
 		// gitui wants &str of \n delimited text
 		// it would be simple if this was a mut method. You could
-		// just load up msg from the lines area and return an &str pointing at it
-		// but its not a mut method. So we need to store the text in a OnceCell
-		// The methods that change msg call take() on the cell. That makes
-		// get_or_init run again
+		// just load up msg from the lines area and return an &str
+		// pointing at it but its not a mut method. So we need to
+		// store the text in a OnceCell The methods that change msg
+		// call take() on the cell. That makes get_or_init run again
 
 		self.msg.get_or_init(|| {
 			self.textarea
@@ -228,8 +226,9 @@ impl TextInputComponent {
 		if input.key == Key::Null {
 			return;
 		}
-		// Should we start selecting text, stop the current selection, or do nothing?
-		// the end is handled after the ending keystroke
+		// Should we start selecting text, stop the current selection,
+		// or do nothing? the end is handled after the ending
+		// keystroke
 
 		match (&self.select_state, input.shift) {
 			(SelectionState::Selecting, true)
@@ -251,9 +250,9 @@ impl TextInputComponent {
 				}
 			}
 			(SelectionState::SelectionEndPending, _) => {
-				// this really should not happen because the end pending state
-				// should have been picked up in the same pass as it was set
-				// so lets clear it
+				// this really should not happen because the end
+				// pending state should have been picked up in the
+				// same pass as it was set so lets clear it
 				self.select_state = SelectionState::NotSelecting;
 			}
 		}
@@ -617,8 +616,8 @@ impl TextInputComponent {
 
 impl DrawableComponent for TextInputComponent {
 	fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
-		// this should always be true since draw should only be being called
-		// is control is visible
+		// this should always be true since draw should only be being
+		// called is control is visible
 		if let Some(ta) = &self.textarea {
 			let area = if self.embed {
 				rect
@@ -668,7 +667,8 @@ impl Component for TextInputComponent {
 			.order(1),
 		);
 
-		//TODO: we might want to show the textarea specific commands here
+		//TODO: we might want to show the textarea specific commands
+		// here
 
 		visibility_blocking(self)
 	}

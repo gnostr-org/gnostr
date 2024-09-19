@@ -1,18 +1,15 @@
 use anyhow::Result;
+use asyncgit::sync::cred::BasicAuthCredential;
 use crossterm::event::Event;
 use ratatui::{layout::Rect, Frame};
 
-use asyncgit::sync::cred::BasicAuthCredential;
-
-use crate::app::Environment;
-use crate::components::{EventState, InputType, TextInputComponent};
-use crate::keys::key_match;
 use crate::{
+	app::Environment,
 	components::{
 		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent,
+		DrawableComponent, EventState, InputType, TextInputComponent,
 	},
-	keys::SharedKeyConfig,
+	keys::{key_match, SharedKeyConfig},
 	strings,
 };
 

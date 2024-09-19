@@ -1,9 +1,11 @@
+use std::{cmp, collections::BTreeSet};
+
+use anyhow::Result;
+use asyncgit::StatusItem;
+
 use super::filetree::{
 	FileTreeItem, FileTreeItemKind, FileTreeItems, PathCollapsed,
 };
-use anyhow::Result;
-use asyncgit::StatusItem;
-use std::{cmp, collections::BTreeSet};
 
 //TODO: use new `filetreelist` crate
 
@@ -41,7 +43,8 @@ impl SelectionChange {
 }
 
 impl StatusTree {
-	/// update tree with a new list, try to retain selection and collapse states
+	/// update tree with a new list, try to retain selection and
+	/// collapse states
 	pub fn update(&mut self, list: &[StatusItem]) -> Result<()> {
 		let last_collapsed = self.all_collapsed();
 
@@ -64,7 +67,8 @@ impl StatusTree {
 		self.update_visibility(None, 0, true);
 		self.available_selections = self.setup_available_selections();
 
-		//NOTE: now that visibility is set we can make sure selection is visible
+		//NOTE: now that visibility is set we can make sure selection
+		// is visible
 		if let Some(idx) = self.selection {
 			self.selection = Some(self.find_visible_idx(idx));
 		}
@@ -75,9 +79,11 @@ impl StatusTree {
 	/// Return which indices can be selected, taking into account that
 	/// some folders may be folded up into their parent
 	///
-	/// It should be impossible to select a folder which has been folded into its parent
+	/// It should be impossible to select a folder which has been
+	/// folded into its parent
 	fn setup_available_selections(&self) -> Vec<usize> {
-		// use the same algorithm as in filetree build_vec_text_for_drawing function
+		// use the same algorithm as in filetree
+		// build_vec_text_for_drawing function
 		let mut should_skip_over: usize = 0;
 		let mut vec_available_selections: Vec<usize> = vec![];
 		let tree_items = self.tree.items();
@@ -219,7 +225,8 @@ impl StatusTree {
 					break;
 				}
 
-				// Find the closest to the index, usually this shouldn't happen
+				// Find the closest to the index, usually this
+				// shouldn't happen
 				if current_index == 0 {
 					// This should never happen
 					current_index_in_available_selections = 0;
@@ -232,8 +239,8 @@ impl StatusTree {
 		let mut new_index;
 
 		loop {
-			// Use available_selections to go to the correct selection as
-			// some of the folders may be folded up
+			// Use available_selections to go to the correct selection
+			// as some of the folders may be folded up
 			new_index = if up {
 				current_index_in_available_selections =
 					current_index_in_available_selections
@@ -388,7 +395,8 @@ impl StatusTree {
 		start_idx: usize,
 		set_defaults: bool,
 	) {
-		// if we are in any subpath that is collapsed we keep skipping over it
+		// if we are in any subpath that is collapsed we keep skipping
+		// over it
 		let mut inner_collapsed: Option<String> = None;
 
 		for i in start_idx..self.tree.len() {
@@ -409,7 +417,8 @@ impl StatusTree {
 
 			if matches!(item_kind, FileTreeItemKind::Path(PathCollapsed(collapsed)) if collapsed)
 			{
-				// we encountered an inner path that is still collapsed
+				// we encountered an inner path that is still
+				// collapsed
 				inner_collapsed = Some(format!("{}/", &item_path));
 			}
 
@@ -431,8 +440,9 @@ impl StatusTree {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use asyncgit::StatusItemType;
+
+	use super::*;
 
 	fn string_vec_to_status(items: &[&str]) -> Vec<StatusItem> {
 		items

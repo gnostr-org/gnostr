@@ -1,19 +1,5 @@
-use super::{
-	utils::scroll_horizontal::HorizontalScroll,
-	utils::scroll_vertical::VerticalScroll, CommandBlocking,
-	Direction, DrawableComponent, HorizontalScrollType, ScrollType,
-};
-use crate::{
-	app::Environment,
-	components::{CommandInfo, Component, EventState},
-	keys::{key_match, SharedKeyConfig},
-	options::SharedOptions,
-	queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
-	string_utils::tabs_to_spaces,
-	string_utils::trim_offset,
-	strings, try_or_popup,
-	ui::style::SharedTheme,
-};
+use std::{borrow::Cow, cell::Cell, cmp, path::Path};
+
 use anyhow::Result;
 use asyncgit::{
 	hash,
@@ -29,7 +15,25 @@ use ratatui::{
 	widgets::{Block, Borders, Paragraph},
 	Frame,
 };
-use std::{borrow::Cow, cell::Cell, cmp, path::Path};
+
+use super::{
+	utils::{
+		scroll_horizontal::HorizontalScroll,
+		scroll_vertical::VerticalScroll,
+	},
+	CommandBlocking, Direction, DrawableComponent,
+	HorizontalScrollType, ScrollType,
+};
+use crate::{
+	app::Environment,
+	components::{CommandInfo, Component, EventState},
+	keys::{key_match, SharedKeyConfig},
+	options::SharedOptions,
+	queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
+	string_utils::{tabs_to_spaces, trim_offset},
+	strings, try_or_popup,
+	ui::style::SharedTheme,
+};
 
 #[derive(Default)]
 struct Current {
@@ -198,8 +202,8 @@ impl DiffComponent {
 				})
 				.max()
 				.map_or(0, |len| {
-					// Each hunk uses a 1-character wide vertical bar to its left to indicate
-					// selection.
+					// Each hunk uses a 1-character wide vertical bar
+					// to its left to indicate selection.
 					len + 1
 				});
 
@@ -946,11 +950,12 @@ impl Component for DiffComponent {
 
 #[cfg(test)]
 mod tests {
+	use std::{io::Write, rc::Rc};
+
+	use tempfile::NamedTempFile;
+
 	use super::*;
 	use crate::ui::style::Theme;
-	use std::io::Write;
-	use std::rc::Rc;
-	use tempfile::NamedTempFile;
 
 	#[test]
 	fn test_line_break() {
