@@ -1,13 +1,13 @@
 [package]
-name = "gitui"
+name = "gnostr-tui"
 version = "0.26.3"
-authors = ["extrawurst <mail@rusticorn.com>"]
-description = "blazing fast terminal-ui for git"
+authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
+description = "gnostr:a git+nostr workflow utility"
 edition = "2021"
 rust-version = "1.70"
 exclude = [".github/*", ".vscode/*", "assets/*"]
-homepage = "https://github.com/extrawurst/gitui"
-repository = "https://github.com/extrawurst/gitui"
+homepage = "https://github.com/gnostr-org/gnostr-tui"
+repository = "https://github.com/gnostr-org/gnostr-tui"
 readme = "README.md"
 license = "MIT"
 categories = ["command-line-utilities"]
