@@ -1,3 +1,19 @@
+use std::{borrow::Cow, cell::Cell};
+
+use anyhow::Result;
+use asyncgit::sync::{
+	self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag,
+};
+use crossterm::event::Event;
+use ratatui::{
+	layout::{Constraint, Direction, Layout, Rect},
+	style::{Modifier, Style},
+	text::{Line, Span, Text},
+	Frame,
+};
+use sync::CommitTags;
+
+use super::style::Detail;
 use crate::{
 	app::Environment,
 	components::{
@@ -11,21 +27,6 @@ use crate::{
 	strings::{self, order},
 	ui::style::SharedTheme,
 };
-use anyhow::Result;
-use asyncgit::sync::{
-	self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag,
-};
-use crossterm::event::Event;
-use ratatui::{
-	layout::{Constraint, Direction, Layout, Rect},
-	style::{Modifier, Style},
-	text::{Line, Span, Text},
-	Frame,
-};
-use std::{borrow::Cow, cell::Cell};
-use sync::CommitTags;
-
-use super::style::Detail;
 
 pub struct DetailsComponent {
 	repo: RepoPathRef,
@@ -277,8 +278,8 @@ impl DrawableComponent for DetailsComponent {
 			chunks[0],
 		);
 
-		// We have to take the border into account which is one character on
-		// each side.
+		// We have to take the border into account which is one
+		// character on each side.
 		let border_width: u16 = 2;
 
 		let width = chunks[1].width.saturating_sub(border_width);

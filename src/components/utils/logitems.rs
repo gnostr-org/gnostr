@@ -1,7 +1,8 @@
+use std::{rc::Rc, slice::Iter};
+
 use asyncgit::sync::{CommitId, CommitInfo};
 use chrono::{DateTime, Duration, Local, Utc};
 use indexmap::IndexSet;
-use std::{rc::Rc, slice::Iter};
 
 #[cfg(feature = "ghemoji")]
 use super::emoji::emojifi_string;
@@ -30,7 +31,10 @@ impl From<CommitInfo> for LogEntry {
 			let date = DateTime::from_timestamp(c.time, 0)
 				.map(|d| d.naive_utc());
 			if date.is_none() {
-				log::error!("error reading commit date: {hash_short} - timestamp: {}",c.time);
+				log::error!(
+					"error reading commit date: {hash_short} - timestamp: {}",
+					c.time
+				);
 			}
 			DateTime::<Local>::from(
 				DateTime::<Utc>::from_naive_utc_and_offset(
@@ -187,7 +191,9 @@ mod tests {
 			"It's 🔨 time!"
 		);
 		assert_eq!(
-			&test_conversion(":red_circle::orange_circle::yellow_circle::green_circle::large_blue_circle::purple_circle:"),
+			&test_conversion(
+				":red_circle::orange_circle::yellow_circle::green_circle::large_blue_circle::purple_circle:"
+			),
 			"🔴🟠🟡🟢🔵🟣"
 		);
 		assert_eq!(

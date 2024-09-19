@@ -1,5 +1,16 @@
 use std::borrow::Cow;
 
+use anyhow::Result;
+use asyncgit::sync::{
+	self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef,
+};
+use crossterm::event::Event;
+use ratatui::{
+	layout::{Constraint, Direction, Layout, Rect},
+	text::{Line, Span, Text},
+	Frame,
+};
+
 use crate::{
 	app::Environment,
 	components::{
@@ -11,16 +22,6 @@ use crate::{
 	},
 	strings::{self},
 	ui::style::SharedTheme,
-};
-use anyhow::Result;
-use asyncgit::sync::{
-	self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef,
-};
-use crossterm::event::Event;
-use ratatui::{
-	layout::{Constraint, Direction, Layout, Rect},
-	text::{Line, Span, Text},
-	Frame,
 };
 
 pub struct CompareDetailsComponent {

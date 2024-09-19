@@ -1,17 +1,8 @@
-use super::utils::logitems::{ItemBatch, LogEntry};
-use crate::{
-	app::Environment,
-	components::{
-		utils::string_width_align, CommandBlocking, CommandInfo,
-		Component, DrawableComponent, EventState, ScrollType,
-	},
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, Queue},
-	strings::{self, symbol},
-	try_or_popup,
-	ui::style::{SharedTheme, Theme},
-	ui::{calc_scroll_top, draw_scrollbar, Orientation},
+use std::{
+	borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc,
+	time::Instant,
 };
+
 use anyhow::Result;
 use asyncgit::sync::{
 	self, checkout_commit, BranchDetails, BranchInfo, CommitId,
@@ -28,9 +19,23 @@ use ratatui::{
 	widgets::{Block, Borders, Paragraph},
 	Frame,
 };
-use std::{
-	borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc,
-	time::Instant,
+
+use super::utils::logitems::{ItemBatch, LogEntry};
+use crate::{
+	app::Environment,
+	components::{
+		utils::string_width_align, CommandBlocking, CommandInfo,
+		Component, DrawableComponent, EventState, ScrollType,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, Queue},
+	strings::{self, symbol},
+	try_or_popup,
+	ui::{
+		calc_scroll_top, draw_scrollbar,
+		style::{SharedTheme, Theme},
+		Orientation,
+	},
 };
 
 const ELEMENTS_PER_LINE: usize = 9;
@@ -264,7 +269,9 @@ impl CommitList {
 			self.set_highlighted_selection_index();
 			Ok(())
 		} else {
-			anyhow::bail!("Could not select commit. It might not be loaded yet or it might be on a different branch.");
+			anyhow::bail!(
+				"Could not select commit. It might not be loaded yet or it might be on a different branch."
+			);
 		}
 	}
 

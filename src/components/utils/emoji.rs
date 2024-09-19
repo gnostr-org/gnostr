@@ -1,5 +1,6 @@
-use once_cell::sync::Lazy;
 use std::borrow::Cow;
+
+use once_cell::sync::Lazy;
 
 static EMOJI_REPLACER: Lazy<gh_emoji::Replacer> =
 	Lazy::new(gh_emoji::Replacer::new);

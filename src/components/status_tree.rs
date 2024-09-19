@@ -1,3 +1,10 @@
+use std::{borrow::Cow, cell::Cell, path::Path};
+
+use anyhow::Result;
+use asyncgit::{hash, sync::CommitId, StatusItem, StatusItemType};
+use crossterm::event::Event;
+use ratatui::{layout::Rect, text::Span, Frame};
+
 use super::{
 	utils::{
 		filetree::{FileTreeItem, FileTreeItemKind},
@@ -14,11 +21,6 @@ use crate::{
 	strings::{self, order},
 	ui::{self, style::SharedTheme},
 };
-use anyhow::Result;
-use asyncgit::{hash, sync::CommitId, StatusItem, StatusItemType};
-use crossterm::event::Event;
-use ratatui::{layout::Rect, text::Span, Frame};
-use std::{borrow::Cow, cell::Cell, path::Path};
 
 //TODO: use new `filetreelist` crate
 
@@ -219,8 +221,9 @@ impl StatusTreeComponent {
 		}
 	}
 
-	/// Returns a `Vec<TextDrawInfo>` which is used to draw the `FileTreeComponent` correctly,
-	/// allowing folders to be folded up if they are alone in their directory
+	/// Returns a `Vec<TextDrawInfo>` which is used to draw the
+	/// `FileTreeComponent` correctly, allowing folders to be folded
+	/// up if they are alone in their directory
 	fn build_vec_text_draw_info_for_drawing(
 		&self,
 	) -> (Vec<TextDrawInfo>, usize, usize) {
@@ -277,8 +280,8 @@ impl StatusTreeComponent {
 					break;
 				}
 
-				// There is only one item at this level (i.e only one folder in the folder),
-				// so do fold up
+				// There is only one item at this level (i.e only one
+				// folder in the folder), so do fold up
 
 				let vec_draw_text_info_len = vec_draw_text_info.len();
 				vec_draw_text_info[vec_draw_text_info_len - 1]

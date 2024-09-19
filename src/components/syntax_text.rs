@@ -1,18 +1,5 @@
-use super::{
-	CommandBlocking, CommandInfo, Component, DrawableComponent,
-	EventState,
-};
-use crate::{
-	app::Environment,
-	keys::SharedKeyConfig,
-	string_utils::tabs_to_spaces,
-	strings,
-	ui::{
-		self, common_nav, style::SharedTheme, AsyncSyntaxJob,
-		ParagraphState, ScrollPos, StatefulParagraph,
-	},
-	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
-};
+use std::{cell::Cell, path::Path};
+
 use anyhow::Result;
 use asyncgit::{
 	asyncjob::AsyncSingleJob,
@@ -28,7 +15,22 @@ use ratatui::{
 	widgets::{Block, Borders, Wrap},
 	Frame,
 };
-use std::{cell::Cell, path::Path};
+
+use super::{
+	CommandBlocking, CommandInfo, Component, DrawableComponent,
+	EventState,
+};
+use crate::{
+	app::Environment,
+	keys::SharedKeyConfig,
+	string_utils::tabs_to_spaces,
+	strings,
+	ui::{
+		self, common_nav, style::SharedTheme, AsyncSyntaxJob,
+		ParagraphState, ScrollPos, StatefulParagraph,
+	},
+	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
+};
 
 pub struct SyntaxTextComponent {
 	repo: RepoPathRef,

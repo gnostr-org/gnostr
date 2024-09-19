@@ -1,3 +1,13 @@
+use std::path::Path;
+
+use anyhow::Result;
+use asyncgit::{
+	sync::{self, RepoPathRef},
+	StatusItem, StatusItemType,
+};
+use crossterm::event::Event;
+use ratatui::{layout::Rect, Frame};
+
 use super::{
 	status_tree::StatusTreeComponent,
 	utils::filetree::{FileTreeItem, FileTreeItemKind},
@@ -11,14 +21,6 @@ use crate::{
 	queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
 	strings, try_or_popup,
 };
-use anyhow::Result;
-use asyncgit::{
-	sync::{self, RepoPathRef},
-	StatusItem, StatusItemType,
-};
-use crossterm::event::Event;
-use ratatui::{layout::Rect, Frame};
-use std::path::Path;
 
 ///
 pub struct ChangesComponent {
@@ -97,7 +99,8 @@ impl ChangesComponent {
 					let config =
 						self.options.borrow().status_show_untracked();
 
-					//TODO: check if we can handle the one file case with it as well
+					//TODO: check if we can handle the one file case
+					// with it as well
 					sync::stage_add_all(
 						&self.repo.borrow(),
 						tree_item.info.full_path.as_str(),
@@ -106,9 +109,10 @@ impl ChangesComponent {
 				}
 
 				//TODO: this might be slow in big repos,
-				// in theory we should be able to ask the tree structure
-				// if we are currently on a leaf or a lonely branch that
-				// would mean that after staging the workdir becomes empty
+				// in theory we should be able to ask the tree
+				// structure if we are currently on a leaf or a
+				// lonely branch that would mean that after
+				// staging the workdir becomes empty
 				if sync::is_workdir_clean(
 					&self.repo.borrow(),
 					self.options.borrow().status_show_untracked(),
