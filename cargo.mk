@@ -35,18 +35,35 @@ cargo-build-release:### 	cargo-build-release
 ## 	cargo-build-release q=true
 	@. $(HOME)/.cargo/env
 	@cargo +$(TOOLCHAIN) b -r $(QUIET)
+cargo-bench:### 	cargo-bench
+	@. $(HOME)/.cargo/env
+	@cargo +$(TOOLCHAIN) bench
 cargo-c:cargo-check
 cargo-check:### 	cargo-check
 	@. $(HOME)/.cargo/env
 	@cargo +$(TOOLCHAIN) c
-cargo-bench:### 	cargo-bench
+doc:cargo-doc
+docs:cargo-doc
+cargo-docs:cargo-doc
+cargo-doc:### 	cargo-doc
 	@. $(HOME)/.cargo/env
-	@cargo +$(TOOLCHAIN) bench
+	@cargo +$(TOOLCHAIN) rustdoc
 cargo-t:cargo-test
+test:cargo-test
 cargo-test:### 	cargo-test
 	@. $(HOME)/.cargo/env
-	@cargo +$(TOOLCHAIN) fmt -- --check
-	@cargo +$(TOOLCHAIN) test -- --nocapture
+	cargo +$(TOOLCHAIN) fmt #-- --check
+	cargo +$(TOOLCHAIN) test -- --nocapture || \
+	(\
+		cargo +$(TOOLCHAIN) test)
+cargo-tests:tests
+tests:cargo-test-all-features
+cargo-test-all-features:### 	cargo-test-all-features
+	@. $(HOME)/.cargo/env
+	cargo +$(TOOLCHAIN) fmt #-- --check
+	cargo +$(TOOLCHAIN) test --all-features -- --nocapture || \
+	(\
+	cargo +$(TOOLCHAIN) test --all-features)
 cargo-report:### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo +$(TOOLCHAIN) report future-incompatibilities --id 1
