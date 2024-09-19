@@ -31,6 +31,11 @@
 	clippy::missing_panics_doc,
 	clippy::multiple_crate_versions
 )]
+#![warn(
+    clippy::needless_pass_by_ref_mut,
+    clippy::too_long_first_doc_paragraph,
+    clippy::set_contains_or_insert
+)]
 
 pub mod asyncjob;
 mod blame;
