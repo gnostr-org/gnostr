@@ -1,17 +1,12 @@
-use crate::{
-	app::Environment,
-	components::{
-		visibility_blocking, CommandBlocking, CommandInfo,
-		CommitDetailsComponent, CommitList, Component,
-		DrawableComponent, EventState,
+use std::{
+	rc::Rc,
+	sync::{
+		atomic::{AtomicBool, Ordering},
+		Arc,
 	},
-	keys::{key_match, SharedKeyConfig},
-	popups::{FileTreeOpen, InspectCommitOpen},
-	queue::{InternalEvent, Queue, StackablePopupOpen},
-	strings::{self, order},
-	try_or_popup,
-	ui::style::{SharedTheme, Theme},
+	time::Duration,
 };
+
 use anyhow::Result;
 use asyncgit::{
 	asyncjob::AsyncSingleJob,
@@ -32,15 +27,22 @@ use ratatui::{
 	widgets::{Block, Borders, Paragraph},
 	Frame,
 };
-use std::{
-	rc::Rc,
-	sync::{
-		atomic::{AtomicBool, Ordering},
-		Arc,
-	},
-	time::Duration,
-};
 use sync::CommitTags;
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo,
+		CommitDetailsComponent, CommitList, Component,
+		DrawableComponent, EventState,
+	},
+	keys::{key_match, SharedKeyConfig},
+	popups::{FileTreeOpen, InspectCommitOpen},
+	queue::{InternalEvent, Queue, StackablePopupOpen},
+	strings::{self, order},
+	try_or_popup,
+	ui::style::{SharedTheme, Theme},
+};
 
 struct LogSearchResult {
 	options: LogFilterSearchOptions,

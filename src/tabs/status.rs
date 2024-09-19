@@ -1,3 +1,21 @@
+use anyhow::Result;
+use asyncgit::{
+	cached,
+	sync::{
+		self, status::StatusType, BranchCompare, CommitId, RepoPath,
+		RepoPathRef, RepoState,
+	},
+	AsyncDiff, AsyncGitNotification, AsyncStatus, DiffParams,
+	DiffType, PushType, StatusItem, StatusParams,
+};
+use crossterm::event::Event;
+use itertools::Itertools;
+use ratatui::{
+	layout::{Alignment, Constraint, Direction, Layout},
+	style::{Color, Style},
+	widgets::{Block, BorderType, Borders, Paragraph},
+};
+
 use crate::{
 	accessors,
 	app::Environment,
@@ -12,23 +30,6 @@ use crate::{
 	queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
 	strings, try_or_popup,
 	ui::style::Theme,
-};
-use anyhow::Result;
-use asyncgit::{
-	cached,
-	sync::{
-		self, status::StatusType, RepoPath, RepoPathRef, RepoState,
-	},
-	sync::{BranchCompare, CommitId},
-	AsyncDiff, AsyncGitNotification, AsyncStatus, DiffParams,
-	DiffType, PushType, StatusItem, StatusParams,
-};
-use crossterm::event::Event;
-use itertools::Itertools;
-use ratatui::{
-	layout::{Alignment, Constraint, Direction, Layout},
-	style::{Color, Style},
-	widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 /// what part of the screen is focused
@@ -502,10 +503,12 @@ impl Status {
 				// maybe the diff changed (outside file change)
 				if let Some((params, last)) = self.git_diff.last()? {
 					if params == diff_params {
-						// all params match, so we might need to update
+						// all params match, so we might need to
+						// update
 						self.diff.update(path, is_stage, last);
 					} else {
-						// params changed, we need to request the right diff
+						// params changed, we need to request the
+						// right diff
 						self.request_diff(
 							diff_params,
 							path,
@@ -514,7 +517,8 @@ impl Status {
 					}
 				}
 			} else {
-				// we dont show the right diff right now, so we need to request
+				// we dont show the right diff right now, so we need
+				// to request
 				self.request_diff(diff_params, path, is_stage)?;
 			}
 		} else {
@@ -686,7 +690,8 @@ impl Status {
 				strings::commands::select_staging(&self.key_config),
 				!focus_on_diff,
 				(self.visible
-					&& !focus_on_diff && self.focus == Focus::WorkDir)
+					&& !focus_on_diff
+					&& self.focus == Focus::WorkDir)
 					|| force_all,
 			)
 			.order(strings::order::NAV),
@@ -696,7 +701,8 @@ impl Status {
 				strings::commands::select_unstaged(&self.key_config),
 				!focus_on_diff,
 				(self.visible
-					&& !focus_on_diff && self.focus == Focus::Stage)
+					&& !focus_on_diff
+					&& self.focus == Focus::Stage)
 					|| force_all,
 			)
 			.order(strings::order::NAV),
