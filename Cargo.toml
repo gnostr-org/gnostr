@@ -115,6 +115,7 @@ maintenance = { status = "actively-developed" }
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
+expensive_tests = [] #nostr
 ghemoji = ["gh-emoji"]
 # regex-* features are mutually exclusive.
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
