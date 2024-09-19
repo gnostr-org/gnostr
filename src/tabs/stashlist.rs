@@ -1,3 +1,7 @@
+use anyhow::Result;
+use asyncgit::sync::{self, CommitId, RepoPath, RepoPathRef};
+use crossterm::event::Event;
+
 use crate::{
 	app::Environment,
 	components::{
@@ -9,9 +13,6 @@ use crate::{
 	queue::{Action, InternalEvent, Queue, StackablePopupOpen},
 	strings,
 };
-use anyhow::Result;
-use asyncgit::sync::{self, CommitId, RepoPath, RepoPathRef};
-use crossterm::event::Event;
 
 pub struct StashList {
 	repo: RepoPathRef,

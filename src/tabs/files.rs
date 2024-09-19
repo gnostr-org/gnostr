@@ -1,5 +1,8 @@
 use std::path::Path;
 
+use anyhow::Result;
+use asyncgit::sync::{self, RepoPathRef};
+
 use crate::{
 	app::Environment,
 	components::{
@@ -8,8 +11,6 @@ use crate::{
 	},
 	AsyncNotification,
 };
-use anyhow::Result;
-use asyncgit::sync::{self, RepoPathRef};
 
 pub struct FilesTab {
 	repo: RepoPathRef,

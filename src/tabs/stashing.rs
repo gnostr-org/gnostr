@@ -1,3 +1,17 @@
+use std::borrow::Cow;
+
+use anyhow::Result;
+use asyncgit::{
+	sync::{self, status::StatusType, RepoPathRef},
+	AsyncGitNotification, AsyncStatus, StatusParams,
+};
+use crossterm::event::Event;
+use ratatui::{
+	layout::{Alignment, Constraint, Direction, Layout},
+	text::{Line, Span},
+	widgets::{Block, Borders, Paragraph},
+};
+
 use crate::{
 	accessors,
 	app::Environment,
@@ -11,18 +25,6 @@ use crate::{
 	strings,
 	ui::style::SharedTheme,
 };
-use anyhow::Result;
-use asyncgit::{
-	sync::{self, status::StatusType, RepoPathRef},
-	AsyncGitNotification, AsyncStatus, StatusParams,
-};
-use crossterm::event::Event;
-use ratatui::{
-	layout::{Alignment, Constraint, Direction, Layout},
-	text::{Line, Span},
-	widgets::{Block, Borders, Paragraph},
-};
-use std::borrow::Cow;
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct StashingOptions {
