@@ -17,10 +17,14 @@
 )]
 #![allow(clippy::module_name_repetitions)]
 #![allow(
-	clippy::multiple_crate_versions,
 	clippy::bool_to_int_with_if,
 	clippy::module_name_repetitions,
 	clippy::empty_docs
+)]
+#![warn(
+	clippy::needless_pass_by_ref_mut,
+	clippy::multiple_crate_versions,
+	clippy::use_self
 )]
 
 //TODO:
