@@ -1,19 +1,20 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, InputType, TextInputComponent,
-};
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, NeedsUpdate, Queue},
-	strings, try_or_popup,
-};
 use anyhow::Result;
 use asyncgit::sync::{
 	self, get_config_string, CommitId, RepoPathRef,
 };
 use crossterm::event::Event;
 use ratatui::{layout::Rect, Frame};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, InputType, TextInputComponent,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, NeedsUpdate, Queue},
+	strings, try_or_popup,
+};
 
 enum Mode {
 	Name,
@@ -169,7 +170,10 @@ impl TagCommitPopup {
 				.and_then(|val| val.parse::<bool>().ok())
 				.unwrap_or_default();
 
-		anyhow::ensure!(!gpgsign, "config tag.gpgsign=true detected.\ngpg signing not supported.\ndeactivate in your repo/gitconfig to be able to tag without signing.");
+		anyhow::ensure!(
+			!gpgsign,
+			"config tag.gpgsign=true detected.\ngpg signing not supported.\ndeactivate in your repo/gitconfig to be able to tag without signing."
+		);
 
 		let (tag_name, tag_annotation) = self.tag_info();
 

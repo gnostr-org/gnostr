@@ -1,3 +1,14 @@
+use anyhow::Result;
+use asyncgit::sync::ShowUntrackedFilesConfig;
+use crossterm::event::Event;
+use ratatui::{
+	layout::{Alignment, Rect},
+	style::{Modifier, Style},
+	text::{Line, Span},
+	widgets::{Block, Borders, Clear, Paragraph},
+	Frame,
+};
+
 use crate::{
 	app::Environment,
 	components::{
@@ -9,16 +20,6 @@ use crate::{
 	queue::{InternalEvent, Queue},
 	strings,
 	ui::{self, style::SharedTheme},
-};
-use anyhow::Result;
-use asyncgit::sync::ShowUntrackedFilesConfig;
-use crossterm::event::Event;
-use ratatui::{
-	layout::{Alignment, Rect},
-	style::{Modifier, Style},
-	text::{Line, Span},
-	widgets::{Block, Borders, Clear, Paragraph},
-	Frame,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]

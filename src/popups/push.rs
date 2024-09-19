@@ -1,14 +1,3 @@
-use crate::{
-	app::Environment,
-	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		CredComponent, DrawableComponent, EventState,
-	},
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, Queue},
-	strings,
-	ui::{self, style::SharedTheme},
-};
 use anyhow::Result;
 use asyncgit::{
 	sync::{
@@ -29,6 +18,18 @@ use ratatui::{
 	text::Span,
 	widgets::{Block, BorderType, Borders, Clear, Gauge},
 	Frame,
+};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		CredComponent, DrawableComponent, EventState,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, Queue},
+	strings,
+	ui::{self, style::SharedTheme},
 };
 
 ///
@@ -130,10 +131,17 @@ impl PushPopup {
 		let remote = if let Ok(Some(remote)) =
 			get_branch_remote(&self.repo.borrow(), &self.branch)
 		{
-			log::info!("push: branch '{}' has upstream for remote '{}' - using that",self.branch,remote);
+			log::info!(
+				"push: branch '{}' has upstream for remote '{}' - using that",
+				self.branch,
+				remote
+			);
 			remote
 		} else {
-			log::info!("push: branch '{}' has no upstream - looking up default remote",self.branch);
+			log::info!(
+				"push: branch '{}' has no upstream - looking up default remote",
+				self.branch
+			);
 			let remote =
 				get_default_remote_for_push(&self.repo.borrow())?;
 			log::info!(

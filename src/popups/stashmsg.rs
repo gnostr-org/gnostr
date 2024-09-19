@@ -1,18 +1,19 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, InputType, TextInputComponent,
-};
+use anyhow::Result;
+use asyncgit::sync::{self, RepoPathRef};
+use crossterm::event::Event;
+use ratatui::{layout::Rect, Frame};
+
 use crate::{
 	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, InputType, TextInputComponent,
+	},
 	keys::{key_match, SharedKeyConfig},
 	queue::{AppTabs, InternalEvent, Queue},
 	strings,
 	tabs::StashingOptions,
 };
-use anyhow::Result;
-use asyncgit::sync::{self, RepoPathRef};
-use crossterm::event::Event;
-use ratatui::{layout::Rect, Frame};
 
 pub struct StashMsgPopup {
 	repo: RepoPathRef,
@@ -88,11 +89,11 @@ impl Component for StashMsgPopup {
 								self.options
 							);
 							self.queue.push(
-                                InternalEvent::ShowErrorMsg(format!(
-                                    "stash error:\n{}\noptions:\n{:?}",
-                                    e, self.options
-                                )),
-                            );
+								InternalEvent::ShowErrorMsg(format!(
+									"stash error:\n{}\noptions:\n{:?}",
+									e, self.options
+								)),
+							);
 						}
 					}
 				}

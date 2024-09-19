@@ -1,14 +1,3 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState,
-};
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	queue::Queue,
-	strings, try_or_popup,
-	ui::{self, style::SharedTheme},
-};
 use anyhow::Result;
 use asyncgit::{
 	cached,
@@ -20,6 +9,18 @@ use ratatui::{
 	text::{Line, Span},
 	widgets::{Block, Borders, Clear, Paragraph},
 	Frame,
+};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::Queue,
+	strings, try_or_popup,
+	ui::{self, style::SharedTheme},
 };
 
 const fn type_to_string(

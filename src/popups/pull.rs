@@ -1,15 +1,3 @@
-use crate::{
-	app::Environment,
-	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		CredComponent, DrawableComponent, EventState,
-	},
-	keys::SharedKeyConfig,
-	popups::PushPopup,
-	queue::{Action, InternalEvent, Queue},
-	strings, try_or_popup,
-	ui::{self, style::SharedTheme},
-};
 use anyhow::Result;
 use asyncgit::{
 	sync::{
@@ -23,13 +11,25 @@ use asyncgit::{
 	},
 	AsyncGitNotification, AsyncPull, FetchRequest, RemoteProgress,
 };
-
 use crossterm::event::Event;
 use ratatui::{
 	layout::Rect,
 	text::Span,
 	widgets::{Block, BorderType, Borders, Clear, Gauge},
 	Frame,
+};
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		CredComponent, DrawableComponent, EventState,
+	},
+	keys::SharedKeyConfig,
+	popups::PushPopup,
+	queue::{Action, InternalEvent, Queue},
+	strings, try_or_popup,
+	ui::{self, style::SharedTheme},
 };
 
 ///

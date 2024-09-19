@@ -1,12 +1,5 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState,
-};
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	strings, ui,
-};
+use std::{borrow::Cow, cmp};
+
 use anyhow::Result;
 use asyncgit::hash;
 use crossterm::event::Event;
@@ -18,8 +11,17 @@ use ratatui::{
 	widgets::{Block, BorderType, Borders, Clear, Paragraph},
 	Frame,
 };
-use std::{borrow::Cow, cmp};
 use ui::style::SharedTheme;
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState,
+	},
+	keys::{key_match, SharedKeyConfig},
+	strings, ui,
+};
 
 ///
 pub struct HelpPopup {

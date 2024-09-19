@@ -1,14 +1,5 @@
-use crate::{
-	app::Environment,
-	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, ScrollType, VerticalScroll,
-	},
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, NeedsUpdate, Queue},
-	strings, try_or_popup,
-	ui::{self, Size},
-};
+use std::cell::Cell;
+
 use anyhow::Result;
 use asyncgit::sync::{
 	get_submodules, repo_dir, submodule_parent_info,
@@ -24,9 +15,20 @@ use ratatui::{
 	widgets::{Block, Borders, Clear, Paragraph},
 	Frame,
 };
-use std::cell::Cell;
 use ui::style::SharedTheme;
 use unicode_truncate::UnicodeTruncateStr;
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, ScrollType, VerticalScroll,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, NeedsUpdate, Queue},
+	strings, try_or_popup,
+	ui::{self, Size},
+};
 
 ///
 pub struct SubmodulesListPopup {

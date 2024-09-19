@@ -1,17 +1,3 @@
-use crate::components::{
-	command_pump, event_pump, visibility_blocking, CommandBlocking,
-	CommandInfo, CommitDetailsComponent, Component, DiffComponent,
-	DrawableComponent, EventState,
-};
-use crate::{
-	accessors,
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	options::SharedOptions,
-	popups::InspectCommitOpen,
-	queue::{InternalEvent, Queue, StackablePopupOpen},
-	strings,
-};
 use anyhow::Result;
 use asyncgit::{
 	sync::{self, commit_files::OldNew, CommitId, RepoPathRef},
@@ -23,6 +9,21 @@ use ratatui::{
 	layout::{Constraint, Direction, Layout, Rect},
 	widgets::Clear,
 	Frame,
+};
+
+use crate::{
+	accessors,
+	app::Environment,
+	components::{
+		command_pump, event_pump, visibility_blocking,
+		CommandBlocking, CommandInfo, CommitDetailsComponent,
+		Component, DiffComponent, DrawableComponent, EventState,
+	},
+	keys::{key_match, SharedKeyConfig},
+	options::SharedOptions,
+	popups::InspectCommitOpen,
+	queue::{InternalEvent, Queue, StackablePopupOpen},
+	strings,
 };
 
 pub struct CompareCommitsPopup {

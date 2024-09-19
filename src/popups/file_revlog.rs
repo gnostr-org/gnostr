@@ -1,16 +1,3 @@
-use crate::{
-	app::Environment,
-	components::{
-		event_pump, visibility_blocking, CommandBlocking,
-		CommandInfo, Component, DiffComponent, DrawableComponent,
-		EventState, ItemBatch, ScrollType,
-	},
-	keys::{key_match, SharedKeyConfig},
-	options::SharedOptions,
-	queue::{InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
-	strings,
-	ui::{draw_scrollbar, style::SharedTheme, Orientation},
-};
 use anyhow::Result;
 use asyncgit::{
 	sync::{
@@ -29,6 +16,19 @@ use ratatui::{
 };
 
 use super::{BlameFileOpen, InspectCommitOpen};
+use crate::{
+	app::Environment,
+	components::{
+		event_pump, visibility_blocking, CommandBlocking,
+		CommandInfo, Component, DiffComponent, DrawableComponent,
+		EventState, ItemBatch, ScrollType,
+	},
+	keys::{key_match, SharedKeyConfig},
+	options::SharedOptions,
+	queue::{InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
+	strings,
+	ui::{draw_scrollbar, style::SharedTheme, Orientation},
+};
 
 const SLICE_SIZE: usize = 1200;
 
@@ -403,15 +403,18 @@ impl FileRevlogPopup {
 			);
 
 		let table_state = self.table_state.take();
-		// We have to adjust the table state for drawing to account for the fact
-		// that `self.items` not necessarily starts at index 0.
+		// We have to adjust the table state for drawing to account
+		// for the fact that `self.items` not necessarily starts at
+		// index 0.
 		//
-		// When a user scrolls down, items outside of the current view are removed
-		// when new data is fetched. Let’s have a look at an example: if the item at
-		// index 50 is the first item in the current view and `self.items` has been
-		// freshly fetched, the current offset is 50 and `self.items[0]` is the item
-		// at index 50. Subtracting the current offset from the selected index
-		// yields the correct index in `self.items`, in this case 0.
+		// When a user scrolls down, items outside of the current view
+		// are removed when new data is fetched. Let’s have a look
+		// at an example: if the item at index 50 is the first item
+		// in the current view and `self.items` has been
+		// freshly fetched, the current offset is 50 and
+		// `self.items[0]` is the item at index 50. Subtracting the
+		// current offset from the selected index yields the correct
+		// index in `self.items`, in this case 0.
 		let mut adjusted_table_state = TableState::default()
 			.with_selected(table_state.selected().map(|selected| {
 				selected.saturating_sub(self.items.index_offset())

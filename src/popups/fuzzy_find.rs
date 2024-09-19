@@ -1,16 +1,5 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, FuzzyFinderTarget, InputType,
-	ScrollType, TextInputComponent,
-};
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, Queue},
-	string_utils::trim_length_left,
-	strings,
-	ui::{self, style::SharedTheme},
-};
+use std::borrow::Cow;
+
 use anyhow::Result;
 use crossterm::event::Event;
 use fuzzy_matcher::FuzzyMatcher;
@@ -20,8 +9,21 @@ use ratatui::{
 	widgets::{Block, Borders, Clear},
 	Frame,
 };
-use std::borrow::Cow;
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, FuzzyFinderTarget, InputType,
+		ScrollType, TextInputComponent,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, Queue},
+	string_utils::trim_length_left,
+	strings,
+	ui::{self, style::SharedTheme},
+};
 
 pub struct FuzzyFindPopup {
 	queue: Queue,
@@ -168,7 +170,8 @@ impl FuzzyFindPopup {
 	#[inline]
 	fn draw_matches_list(&self, f: &mut Frame, mut area: Rect) {
 		{
-			// Block has two lines up and down which need to be considered
+			// Block has two lines up and down which need to be
+			// considered
 			const HEIGHT_BLOCK_MARGIN: usize = 2;
 
 			let title = format!("Hits: {}", self.filtered.len());

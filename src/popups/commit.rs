@@ -1,22 +1,17 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, TextInputComponent,
+use std::{
+	fs::{read_to_string, File},
+	io::{Read, Write},
+	path::PathBuf,
+	str::FromStr,
 };
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	options::SharedOptions,
-	queue::{InternalEvent, NeedsUpdate, Queue},
-	strings, try_or_popup,
-	ui::style::SharedTheme,
-};
+
 use anyhow::{bail, Ok, Result};
-use asyncgit::sync::commit::commit_message_prettify;
 use asyncgit::{
 	cached,
 	sync::{
-		self, get_config_string, CommitId, HookResult,
-		PrepareCommitMsgSource, RepoPathRef, RepoState,
+		self, commit::commit_message_prettify, get_config_string,
+		CommitId, HookResult, PrepareCommitMsgSource, RepoPathRef,
+		RepoState,
 	},
 	StatusItem, StatusItemType,
 };
@@ -27,14 +22,20 @@ use ratatui::{
 	widgets::Paragraph,
 	Frame,
 };
-use std::{
-	fs::{read_to_string, File},
-	io::{Read, Write},
-	path::PathBuf,
-	str::FromStr,
-};
 
 use super::ExternalEditorPopup;
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, TextInputComponent,
+	},
+	keys::{key_match, SharedKeyConfig},
+	options::SharedOptions,
+	queue::{InternalEvent, NeedsUpdate, Queue},
+	strings, try_or_popup,
+	ui::style::SharedTheme,
+};
 
 enum CommitResult {
 	CommitDone,
@@ -345,7 +346,8 @@ impl CommitPopup {
 	}
 
 	pub fn open(&mut self, reword: Option<CommitId>) -> Result<()> {
-		//only clear text if it was not a normal commit dlg before, so to preserve old commit msg that was edited
+		//only clear text if it was not a normal commit dlg before,
+		// so to preserve old commit msg that was edited
 		if !matches!(self.mode, Mode::Normal) {
 			self.input.clear();
 		}
@@ -412,7 +414,10 @@ impl CommitPopup {
 					.and_then(|path| {
 						read_to_string(&path)
 							.map_err(|e| {
-								log::error!("read commit.template failed: {e} (path: '{:?}')",path);
+								log::error!(
+									"read commit.template failed: {e} (path: '{:?}')",
+									path
+								);
 								e
 							})
 							.ok()
