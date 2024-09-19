@@ -1,10 +1,12 @@
+use std::{
+	path::{Path, PathBuf},
+	process::Command,
+	str::FromStr,
+};
+
 use git2::Repository;
 
 use crate::{error::Result, HookResult, HooksError};
-
-use std::{
-	path::Path, path::PathBuf, process::Command, str::FromStr,
-};
 
 pub struct HookPaths {
 	pub git: PathBuf,
@@ -17,12 +19,14 @@ const DEFAULT_HOOKS_PATH: &str = "hooks";
 
 impl HookPaths {
 	/// `core.hooksPath` always takes precedence.
-	/// If its defined and there is no hook `hook` this is not considered
-	/// an error or a reason to search in other paths.
+	/// If its defined and there is no hook `hook` this is not
+	/// considered an error or a reason to search in other paths.
 	/// If the config is not set we go into search mode and
-	/// first check standard `.git/hooks` folder and any sub path provided in `other_paths`.
+	/// first check standard `.git/hooks` folder and any sub path
+	/// provided in `other_paths`.
 	///
-	/// Note: we try to model as closely as possible what git shell is doing.
+	/// Note: we try to model as closely as possible what git shell is
+	/// doing.
 	pub fn new(
 		repo: &Repository,
 		other_paths: Option<&[&str]>,
@@ -67,8 +71,9 @@ impl HookPaths {
 		Ok(repo.config()?.get_string(CONFIG_HOOKS_PATH).ok())
 	}
 
-	/// check default hook path first and then followed by `other_paths`.
-	/// if no hook is found we return the default hook path
+	/// check default hook path first and then followed by
+	/// `other_paths`. if no hook is found we return the default hook
+	/// path
 	fn find_hook(
 		repo: &Repository,
 		other_paths: Option<&[&str]>,
@@ -101,8 +106,8 @@ impl HookPaths {
 		self.hook.exists() && is_executable(&self.hook)
 	}
 
-	/// this function calls hook scripts based on conventions documented here
-	/// see <https://git-scm.com/docs/githooks>
+	/// this function calls hook scripts based on conventions
+	/// documented here see <https://git-scm.com/docs/githooks>
 	pub fn run_hook(&self, args: &[&str]) -> Result<HookResult> {
 		let hook = self.hook.clone();
 
@@ -118,9 +123,9 @@ impl HookPaths {
 		let output = Command::new(git_bash)
 			.args(bash_args)
 			.current_dir(&self.pwd)
-			// This call forces Command to handle the Path environment correctly on windows,
-			// the specific env set here does not matter
-			// see https://github.com/rust-lang/rust/issues/37519
+			// This call forces Command to handle the Path environment
+			// correctly on windows, the specific env set here does
+			// not matter see https://github.com/rust-lang/rust/issues/37519
 			.env(
 				"DUMMY_ENV_TO_FIX_WINDOWS_CMD_RUNS",
 				"FixPathHandlingOnWindows",
@@ -163,8 +168,9 @@ fn is_executable(path: &Path) -> bool {
 }
 
 #[cfg(windows)]
-/// windows does not consider bash scripts to be executable so we consider everything
-/// to be executable (which is not far from the truth for windows platform.)
+/// windows does not consider bash scripts to be executable so we
+/// consider everything to be executable (which is not far from the
+/// truth for windows platform.)
 const fn is_executable(_: &Path) -> bool {
 	true
 }

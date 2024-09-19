@@ -5,9 +5,11 @@
 //!  * `.git/hooks/`
 //!  * whatever list of paths provided as `other_paths` (in order)
 //!
-//! most basic hook is: [`hooks_pre_commit`]. see also other `hooks_*` functions.
+//! most basic hook is: [`hooks_pre_commit`]. see also other `hooks_*`
+//! functions.
 //!
-//! [`create_hook`] is useful to create git hooks from code (unittest make heavy usage of it)
+//! [`create_hook`] is useful to create git hooks from code (unittest
+//! make heavy usage of it)
 
 #![forbid(unsafe_code)]
 #![deny(
@@ -35,9 +37,8 @@ use std::{
 
 pub use error::HooksError;
 use error::Result;
-use hookspath::HookPaths;
-
 use git2::Repository;
+use hookspath::HookPaths;
 
 pub const HOOK_POST_COMMIT: &str = "post-commit";
 pub const HOOK_PRE_COMMIT: &str = "pre-commit";
@@ -80,7 +81,8 @@ impl HookResult {
 	}
 }
 
-/// helper method to create git hooks programmatically (heavy used in unittests)
+/// helper method to create git hooks programmatically (heavy used in
+/// unittests)
 ///
 /// # Panics
 /// Panics if hook could not be created
@@ -113,9 +115,11 @@ fn create_hook_in_path(path: &Path, hook_script: &[u8]) {
 }
 
 // /// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
-/// we use the same convention as other git clients to create a temp file containing
-// /// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and pass it's relative path as the only
-// /// parameter to the hook script.
+/// we use the same convention as other git clients to create a temp
+/// file containing
+// /// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and
+// pass it's relative path as the only /// parameter to the hook
+// script.
 pub fn hooks_commit_msg(
 	repo: &Repository,
 	other_paths: Option<&[&str]>,
@@ -231,10 +235,11 @@ pub fn hooks_prepare_commit_msg(
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use git2_testing::{repo_init, repo_init_bare};
 	use pretty_assertions::assert_eq;
 	use tempfile::TempDir;
+
+	use super::*;
 
 	#[test]
 	fn test_smoke() {
@@ -357,9 +362,9 @@ exit 1
 			let custom_hooks_path = td.path().join(".myhooks");
 			std::fs::create_dir(dbg!(&custom_hooks_path)).unwrap();
 			create_hook_in_path(
-				dbg!(custom_hooks_path
-					.join(HOOK_PRE_COMMIT)
-					.as_path()),
+				dbg!(
+					custom_hooks_path.join(HOOK_PRE_COMMIT).as_path()
+				),
 				reject_hook,
 			);
 		}
@@ -400,9 +405,11 @@ exit 1
 			unreachable!()
 		};
 
-		assert!(stdout
-			.lines()
-			.any(|line| line.starts_with("export PATH")));
+		assert!(
+			stdout
+				.lines()
+				.any(|line| line.starts_with("export PATH"))
+		);
 	}
 
 	#[test]
