@@ -1,14 +1,16 @@
 //! Functions for getting infos about files in commits
 
+use std::collections::HashSet;
+
+use git2::{Diff, Repository};
+use scopetime::scope_time;
+
 use super::{diff::DiffOptions, CommitId, RepoPath};
 use crate::{
 	error::Result,
 	sync::{get_stashes, repository::repo},
 	StatusItem, StatusItemType,
 };
-use git2::{Diff, Repository};
-use scopetime::scope_time;
-use std::collections::HashSet;
 
 /// struct containing a new and an old version
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -181,6 +183,8 @@ pub(crate) fn get_commit_diff<'a>(
 
 #[cfg(test)]
 mod tests {
+	use std::{fs::File, io::Write, path::Path};
+
 	use super::get_commit_files;
 	use crate::{
 		error::Result,
@@ -191,7 +195,6 @@ mod tests {
 		},
 		StatusItemType,
 	};
-	use std::{fs::File, io::Write, path::Path};
 
 	#[test]
 	fn test_smoke() -> Result<()> {

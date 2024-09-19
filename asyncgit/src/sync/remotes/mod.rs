@@ -4,6 +4,14 @@ mod callbacks;
 pub(crate) mod push;
 pub(crate) mod tags;
 
+pub use callbacks::Callbacks;
+use crossbeam_channel::Sender;
+use git2::{BranchType, FetchOptions, ProxyOptions, Repository};
+use scopetime::scope_time;
+pub use tags::tags_missing_remote;
+use utils::bytes2string;
+
+use super::RepoPath;
 use crate::{
 	error::{Error, Result},
 	sync::{
@@ -12,15 +20,6 @@ use crate::{
 	},
 	ProgressPercent,
 };
-use crossbeam_channel::Sender;
-use git2::{BranchType, FetchOptions, ProxyOptions, Repository};
-use scopetime::scope_time;
-use utils::bytes2string;
-
-pub use callbacks::Callbacks;
-pub use tags::tags_missing_remote;
-
-use super::RepoPath;
 
 /// origin
 pub const DEFAULT_REMOTE_NAME: &str = "origin";
@@ -66,13 +65,17 @@ fn get_current_branch(
 	Ok(None)
 }
 
-/// Tries to find the default repo to fetch from based on configuration.
+/// Tries to find the default repo to fetch from based on
+/// configuration.
 ///
 /// > branch.<name>.remote
 /// >
-/// > When on branch `<name>`, it tells `git fetch` and `git push` which remote to fetch from or
-/// > push to. [...] If no remote is configured, or if you are not on any branch and there is more
-/// > than one remote defined in the repository, it defaults to `origin` for fetching [...].
+/// > When on branch `<name>`, it tells `git fetch` and `git push`
+/// > which remote to fetch from or
+/// > push to. [...] If no remote is configured, or if you are not on
+/// > any branch and there is more
+/// > than one remote defined in the repository, it defaults to
+/// > `origin` for fetching [...].
 ///
 /// [git-config-branch-name-remote]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-branchltnamegtremote
 ///
@@ -84,7 +87,8 @@ pub fn get_default_remote_for_fetch(
 	get_default_remote_for_fetch_in_repo(&repo)
 }
 
-// TODO: Very similar to `get_default_remote_for_push_in_repo`. Can probably be refactored.
+// TODO: Very similar to `get_default_remote_for_push_in_repo`. Can
+// probably be refactored.
 pub(crate) fn get_default_remote_for_fetch_in_repo(
 	repo: &Repository,
 ) -> Result<String> {
@@ -111,16 +115,22 @@ pub(crate) fn get_default_remote_for_fetch_in_repo(
 ///
 /// > remote.pushDefault
 /// >
-/// > The remote to push to by default. Overrides `branch.<name>.remote` for all branches, and is
+/// > The remote to push to by default. Overrides
+/// > `branch.<name>.remote` for all branches, and is
 /// > overridden by `branch.<name>.pushRemote` for specific branches.
 ///
 /// > branch.<name>.remote
 /// >
-/// > When on branch `<name>`, it tells `git fetch` and `git push` which remote to fetch from or
-/// > push to. The remote to push to may be overridden with `remote.pushDefault` (for all
-/// > branches). The remote to push to, for the current branch, may be further overridden by
-/// > `branch.<name>.pushRemote`. If no remote is configured, or if you are not on any branch and
-/// > there is more than one remote defined in the repository, it defaults to `origin` for fetching
+/// > When on branch `<name>`, it tells `git fetch` and `git push`
+/// > which remote to fetch from or
+/// > push to. The remote to push to may be overridden with
+/// > `remote.pushDefault` (for all
+/// > branches). The remote to push to, for the current branch, may be
+/// > further overridden by
+/// > `branch.<name>.pushRemote`. If no remote is configured, or if
+/// > you are not on any branch and
+/// > there is more than one remote defined in the repository, it
+/// > defaults to `origin` for fetching
 /// > and `remote.pushDefault` for pushing.
 ///
 /// [git-config-remote-push-default]: https://git-scm.com/docs/git-config#Documentation/git-config.txt-remotepushDefault
@@ -134,7 +144,8 @@ pub fn get_default_remote_for_push(
 	get_default_remote_for_push_in_repo(&repo)
 }
 
-// TODO: Very similar to `get_default_remote_for_fetch_in_repo`. Can probably be refactored.
+// TODO: Very similar to `get_default_remote_for_fetch_in_repo`. Can
+// probably be refactored.
 pub(crate) fn get_default_remote_for_push_in_repo(
 	repo: &Repository,
 ) -> Result<String> {
@@ -371,7 +382,8 @@ mod tests {
 			&format!("git remote add origin {remote_path}")[..],
 		);
 
-		//NOTE: apparently remotes are not chronolically sorted but alphabetically
+		//NOTE: apparently remotes are not chronolically sorted but
+		// alphabetically
 		let remotes = get_remotes(repo_path).unwrap();
 
 		assert_eq!(

@@ -5,6 +5,11 @@ pub mod merge_ff;
 pub mod merge_rebase;
 pub mod rename;
 
+use std::collections::HashSet;
+
+use git2::{Branch, BranchType, Repository};
+use scopetime::scope_time;
+
 use super::{utils::bytes2string, RepoPath};
 use crate::{
 	error::{Error, Result},
@@ -13,9 +18,6 @@ use crate::{
 		repository::repo, utils::get_head_repo, CommitId,
 	},
 };
-use git2::{Branch, BranchType, Repository};
-use scopetime::scope_time;
-use std::collections::HashSet;
 
 /// returns the branch-name head is currently pointing to
 /// this might be expensive, see `cached::BranchName`
@@ -115,8 +117,9 @@ pub fn validate_branch_name(name: &str) -> Result<bool> {
 	Ok(valid)
 }
 
-/// returns a list of `BranchInfo` with a simple summary on each branch
-/// `local` filters for local branches otherwise remote branches will be returned
+/// returns a list of `BranchInfo` with a simple summary on each
+/// branch `local` filters for local branches otherwise remote
+/// branches will be returned
 pub fn get_branches_info(
 	repo_path: &RepoPath,
 	local: bool,
@@ -284,9 +287,10 @@ pub fn branch_compare_upstream(
 
 /// Switch branch to given `branch_name`.
 ///
-/// Method will fail if there are conflicting changes between current and target branch. However,
-/// if files are not conflicting, they will remain in tree (e.g. tracked new file is not
-/// conflicting and therefore is kept in tree even after checkout).
+/// Method will fail if there are conflicting changes between current
+/// and target branch. However, if files are not conflicting, they
+/// will remain in tree (e.g. tracked new file is not conflicting and
+/// therefore is kept in tree even after checkout).
 pub fn checkout_branch(
 	repo_path: &RepoPath,
 	branch_name: &str,
@@ -318,7 +322,8 @@ pub fn checkout_branch(
 	Ok(())
 }
 
-/// Detach HEAD to point to a commit then checkout HEAD, does not work if there are uncommitted changes
+/// Detach HEAD to point to a commit then checkout HEAD, does not work
+/// if there are uncommitted changes
 pub fn checkout_commit(
 	repo_path: &RepoPath,
 	commit_hash: CommitId,
@@ -408,7 +413,8 @@ pub fn delete_branch(
 	Ok(())
 }
 
-/// creates a new branch pointing to current HEAD commit and updating HEAD to new branch
+/// creates a new branch pointing to current HEAD commit and updating
+/// HEAD to new branch
 pub fn create_branch(
 	repo_path: &RepoPath,
 	name: &str,
@@ -677,9 +683,10 @@ mod tests_branches {
 
 #[cfg(test)]
 mod tests_checkout {
+	use std::{fs::File, path::Path};
+
 	use super::*;
 	use crate::sync::{stage_add_file, tests::repo_init};
-	use std::{fs::File, path::Path};
 
 	#[test]
 	fn test_smoke() {
@@ -739,8 +746,10 @@ mod tests_checkout {
 #[cfg(test)]
 mod tests_checkout_commit {
 	use super::*;
-	use crate::sync::tests::{repo_init, write_commit_file};
-	use crate::sync::RepoPath;
+	use crate::sync::{
+		tests::{repo_init, write_commit_file},
+		RepoPath,
+	};
 
 	#[test]
 	fn test_smoke() {
@@ -813,9 +822,9 @@ mod test_delete_branch {
 #[cfg(test)]
 mod test_remote_branches {
 	use super::*;
-	use crate::sync::remotes::push::push_branch;
-	use crate::sync::tests::{
-		repo_clone, repo_init_bare, write_commit_file,
+	use crate::sync::{
+		remotes::push::push_branch,
+		tests::{repo_clone, repo_init_bare, write_commit_file},
 	};
 
 	impl BranchInfo {

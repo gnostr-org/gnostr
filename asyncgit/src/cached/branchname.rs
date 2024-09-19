@@ -1,8 +1,9 @@
+use sync::Head;
+
 use crate::{
 	error::Result,
 	sync::{self, branch::get_branch_name, RepoPathRef},
 };
-use sync::Head;
 
 ///
 pub struct BranchName {

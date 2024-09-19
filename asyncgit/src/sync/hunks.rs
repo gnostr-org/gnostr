@@ -1,3 +1,6 @@
+use git2::{ApplyLocation, ApplyOptions, Diff};
+use scopetime::scope_time;
+
 use super::{
 	diff::{get_diff_raw, DiffOptions, HunkHeader},
 	RepoPath,
@@ -7,8 +10,6 @@ use crate::{
 	hash,
 	sync::repository::repo,
 };
-use git2::{ApplyLocation, ApplyOptions, Diff};
-use scopetime::scope_time;
 
 ///
 pub fn stage_hunk(
@@ -88,11 +89,7 @@ fn find_hunk_index(diff: &Diff, hunk_hash: u64) -> Option<usize> {
 		None,
 	);
 
-	if foreach_result.is_ok() {
-		result
-	} else {
-		None
-	}
+	if foreach_result.is_ok() { result } else { None }
 }
 
 ///
@@ -150,15 +147,16 @@ pub fn unstage_hunk(
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use crate::{
-		error::Result,
-		sync::{diff::get_diff, tests::repo_init_empty},
-	};
 	use std::{
 		fs::{self, File},
 		io::Write,
 		path::Path,
+	};
+
+	use super::*;
+	use crate::{
+		error::Result,
+		sync::{diff::get_diff, tests::repo_init_empty},
 	};
 
 	#[test]
@@ -181,13 +179,15 @@ mod tests {
 			None,
 		)?;
 
-		assert!(reset_hunk(
-			repo_path,
-			file_path.to_str().unwrap(),
-			diff.hunks[0].header_hash,
-			None,
-		)
-		.is_err());
+		assert!(
+			reset_hunk(
+				repo_path,
+				file_path.to_str().unwrap(),
+				diff.hunks[0].header_hash,
+				None,
+			)
+			.is_err()
+		);
 
 		Ok(())
 	}

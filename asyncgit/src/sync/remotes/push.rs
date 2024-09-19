@@ -1,3 +1,7 @@
+use crossbeam_channel::Sender;
+use git2::{PackBuilderStage, PushOptions};
+use scopetime::scope_time;
+
 use crate::{
 	error::{Error, Result},
 	progress::ProgressPercent,
@@ -9,9 +13,6 @@ use crate::{
 		CommitId, RepoPath,
 	},
 };
-use crossbeam_channel::Sender;
-use git2::{PackBuilderStage, PushOptions};
-use scopetime::scope_time;
 
 ///
 pub trait AsyncProgress: Clone + Send + Sync {
@@ -184,6 +185,10 @@ pub fn push_raw(
 
 #[cfg(test)]
 mod tests {
+	use std::{fs::File, io::Write, path::Path};
+
+	use git2::Repository;
+
 	use super::*;
 	use crate::sync::{
 		self,
@@ -192,8 +197,6 @@ mod tests {
 			write_commit_file,
 		},
 	};
-	use git2::Repository;
-	use std::{fs::File, io::Write, path::Path};
 
 	#[test]
 	fn test_force_push() {
@@ -433,7 +436,8 @@ mod tests {
 
 	#[test]
 	fn test_delete_remote_branch() {
-		// This test mimics the scenario of a user creating a branch, push it, and then remove it on the remote
+		// This test mimics the scenario of a user creating a branch,
+		// push it, and then remove it on the remote
 
 		let (upstream_dir, upstream_repo) = repo_init_bare().unwrap();
 

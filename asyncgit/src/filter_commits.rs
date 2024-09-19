@@ -1,3 +1,11 @@
+use std::{
+	sync::{
+		atomic::{AtomicBool, AtomicUsize, Ordering},
+		Arc, Mutex,
+	},
+	time::{Duration, Instant},
+};
+
 use rayon::{
 	prelude::ParallelIterator,
 	slice::{ParallelSlice, ParallelSliceMut},
@@ -8,13 +16,6 @@ use crate::{
 	error::Result,
 	sync::{self, CommitId, RepoPath, SharedCommitFilterFn},
 	AsyncGitNotification, ProgressPercent,
-};
-use std::{
-	sync::{
-		atomic::{AtomicBool, AtomicUsize, Ordering},
-		Arc, Mutex,
-	},
-	time::{Duration, Instant},
 };
 
 ///
@@ -101,7 +102,8 @@ impl AsyncCommitFilterJob {
 		let total_amount = commits.len();
 		let start = Instant::now();
 
-		//note: for some reason >4 threads degrades search performance
+		//note: for some reason >4 threads degrades search
+		// performance
 		let pool =
 			rayon::ThreadPoolBuilder::new().num_threads(4).build()?;
 

@@ -1,5 +1,8 @@
 //! merging from upstream (rebase)
 
+use git2::BranchType;
+use scopetime::scope_time;
+
 use crate::{
 	error::{Error, Result},
 	sync::{
@@ -7,8 +10,6 @@ use crate::{
 		RepoPath,
 	},
 };
-use git2::BranchType;
-use scopetime::scope_time;
 
 /// tries merging current branch with its upstream using rebase
 pub fn merge_upstream_rebase(
@@ -35,6 +36,8 @@ pub fn merge_upstream_rebase(
 
 #[cfg(test)]
 mod test {
+	use git2::{Repository, Time};
+
 	use super::*;
 	use crate::sync::{
 		branch_compare_upstream, get_commits_info,
@@ -45,7 +48,6 @@ mod test {
 		},
 		RepoState,
 	};
-	use git2::{Repository, Time};
 
 	fn get_commit_msgs(r: &Repository) -> Vec<String> {
 		let commits = get_commit_ids(r, 10);

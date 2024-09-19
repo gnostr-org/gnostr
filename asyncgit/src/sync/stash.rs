@@ -1,13 +1,14 @@
-use super::{CommitId, RepoPath};
-use crate::{
-	error::{Error, Result},
-	sync::repository::repo,
-};
 use git2::{
 	build::CheckoutBuilder, Oid, Repository, StashApplyOptions,
 	StashFlags,
 };
 use scopetime::scope_time;
+
+use super::{CommitId, RepoPath};
+use crate::{
+	error::{Error, Result},
+	sync::repository::repo,
+};
 
 ///
 pub fn get_stashes(repo_path: &RepoPath) -> Result<Vec<CommitId>> {
@@ -126,6 +127,8 @@ pub fn stash_save(
 
 #[cfg(test)]
 mod tests {
+	use std::{fs::File, io::Write, path::Path};
+
 	use super::*;
 	use crate::sync::{
 		commit, get_commit_files, get_commits_info, stage_add_file,
@@ -135,7 +138,6 @@ mod tests {
 		},
 		utils::{repo_read_file, repo_write_file},
 	};
-	use std::{fs::File, io::Write, path::Path};
 
 	#[test]
 	fn test_smoke() {
@@ -227,9 +229,9 @@ mod tests {
 		File::create(root.join(file_path1))?
 			.write_all(b"modified")?;
 
-		//NOTE: apparently `libgit2` works differently to git stash in
-		//always creating the third parent for untracked files while the
-		//cli skips that step when no new files exist
+		//NOTE: apparently `libgit2` works differently to git stash
+		// in always creating the third parent for untracked files
+		// while the cli skips that step when no new files exist
 		debug_cmd_print(repo_path, "git stash");
 
 		let stash = get_stashes(repo_path)?[0];

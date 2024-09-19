@@ -1,5 +1,11 @@
 //!
 
+use std::collections::HashSet;
+
+use crossbeam_channel::Sender;
+use git2::{Direction, PushOptions};
+use scopetime::scope_time;
+
 use super::push::AsyncProgress;
 use crate::{
 	error::Result,
@@ -11,15 +17,12 @@ use crate::{
 		RepoPath,
 	},
 };
-use crossbeam_channel::Sender;
-use git2::{Direction, PushOptions};
-use scopetime::scope_time;
-use std::collections::HashSet;
 
 ///
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PushTagsProgress {
-	/// fetching tags from remote to check which local tags need pushing
+	/// fetching tags from remote to check which local tags need
+	/// pushing
 	CheckRemote,
 	/// pushing local tags that are missing remote
 	Push {
@@ -155,6 +158,9 @@ pub fn push_tags(
 
 #[cfg(test)]
 mod tests {
+	use pretty_assertions::assert_eq;
+	use sync::tests::write_commit_file;
+
 	use super::*;
 	use crate::{
 		sync::{
@@ -167,8 +173,6 @@ mod tests {
 		},
 		PushType,
 	};
-	use pretty_assertions::assert_eq;
-	use sync::tests::write_commit_file;
 
 	#[test]
 	fn test_push_pull_tags() {

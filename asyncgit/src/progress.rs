@@ -1,7 +1,8 @@
 //!
 
-use easy_cast::{Conv, ConvFloat};
 use std::cmp;
+
+use easy_cast::{Conv, ConvFloat};
 
 ///
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]

@@ -1,15 +1,15 @@
 //! sync git api for fetching a status
 
-use crate::{
-	error::Error,
-	error::Result,
-	sync::{config::untracked_files_config_repo, repository::repo},
-};
-use git2::{Delta, Status, StatusOptions, StatusShow};
-use scopetime::scope_time;
 use std::path::Path;
 
+use git2::{Delta, Status, StatusOptions, StatusShow};
+use scopetime::scope_time;
+
 use super::{RepoPath, ShowUntrackedFilesConfig};
+use crate::{
+	error::{Error, Result},
+	sync::{config::untracked_files_config_repo, repository::repo},
+};
 
 ///
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Debug)]

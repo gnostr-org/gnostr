@@ -1,3 +1,11 @@
+use std::{
+	sync::{Arc, Mutex},
+	time::{Duration, Instant},
+};
+
+use crossbeam_channel::Sender;
+use sync::Tags;
+
 use crate::{
 	asyncjob::{AsyncJob, AsyncSingleJob, RunParams},
 	error::Result,
@@ -5,12 +13,6 @@ use crate::{
 	sync::{self, RepoPath},
 	AsyncGitNotification,
 };
-use crossbeam_channel::Sender;
-use std::{
-	sync::{Arc, Mutex},
-	time::{Duration, Instant},
-};
-use sync::Tags;
 
 ///
 #[derive(Default, Clone)]

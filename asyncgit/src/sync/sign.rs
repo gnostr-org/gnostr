@@ -1,24 +1,32 @@
 //! Sign commit data.
 
-use ssh_key::{HashAlg, LineEnding, PrivateKey};
 use std::path::PathBuf;
+
+use ssh_key::{HashAlg, LineEnding, PrivateKey};
 
 /// Error type for [`SignBuilder`], used to create [`Sign`]'s
 #[derive(thiserror::Error, Debug)]
 pub enum SignBuilderError {
 	/// The given format is invalid
-	#[error("Failed to derive a commit signing method from git configuration 'gpg.format': {0}")]
+	#[error(
+		"Failed to derive a commit signing method from git configuration 'gpg.format': {0}"
+	)]
 	InvalidFormat(String),
 
 	/// The GPG signing key could
-	#[error("Failed to retrieve 'user.signingkey' from the git configuration: {0}")]
+	#[error(
+		"Failed to retrieve 'user.signingkey' from the git configuration: {0}"
+	)]
 	GPGSigningKey(String),
 
 	/// The SSH signing key could
-	#[error("Failed to retrieve 'user.signingkey' from the git configuration: {0}")]
+	#[error(
+		"Failed to retrieve 'user.signingkey' from the git configuration: {0}"
+	)]
 	SSHSigningKey(String),
 
-	/// No signing signature could be built from the configuration data present
+	/// No signing signature could be built from the configuration
+	/// data present
 	#[error("Failed to build signing signature: {0}")]
 	Signature(String),
 
@@ -35,12 +43,16 @@ pub enum SignError {
 	#[error("Failed to spawn signing process: {0}")]
 	Spawn(String),
 
-	/// Unable to acquire the child process' standard input to write the commit data for signing
+	/// Unable to acquire the child process' standard input to write
+	/// the commit data for signing
 	#[error("Failed to acquire standard input handler")]
 	Stdin,
 
-	/// Unable to write commit data to sign to standard input of the child process
-	#[error("Failed to write buffer to standard input of signing process: {0}")]
+	/// Unable to write commit data to sign to standard input of the
+	/// child process
+	#[error(
+		"Failed to write buffer to standard input of signing process: {0}"
+	)]
 	WriteBuffer(String),
 
 	/// Unable to retrieve the signed data from the child process
@@ -56,14 +68,17 @@ pub enum SignError {
 pub trait Sign {
 	/// Sign commit with the respective implementation.
 	///
-	/// Retrieve an implementation using [`SignBuilder::from_gitconfig`].
+	/// Retrieve an implementation using
+	/// [`SignBuilder::from_gitconfig`].
 	///
 	/// The `commit` buffer can be created using the following steps:
-	/// - create a buffer using [`git2::Repository::commit_create_buffer`]
+	/// - create a buffer using
+	///   [`git2::Repository::commit_create_buffer`]
 	///
-	/// The function returns a tuple of `signature` and `signature_field`.
-	/// These values can then be passed into [`git2::Repository::commit_signed`].
-	/// Finally, the repository head needs to be advanced to the resulting commit ID
+	/// The function returns a tuple of `signature` and
+	/// `signature_field`. These values can then be passed into
+	/// [`git2::Repository::commit_signed`]. Finally, the repository
+	/// head needs to be advanced to the resulting commit ID
 	/// using [`git2::Reference::set_target`].
 	fn sign(
 		&self,
@@ -77,11 +92,13 @@ pub trait Sign {
 	fn signing_key(&self) -> &String;
 }
 
-/// A builder to facilitate the creation of a signing method ([`Sign`]) by examining the git configuration.
+/// A builder to facilitate the creation of a signing method
+/// ([`Sign`]) by examining the git configuration.
 pub struct SignBuilder;
 
 impl SignBuilder {
-	/// Get a [`Sign`] from the given repository configuration to sign commit data
+	/// Get a [`Sign`] from the given repository configuration to sign
+	/// commit data
 	///
 	///
 	/// ```no_run
@@ -112,10 +129,11 @@ impl SignBuilder {
 		// https://git-scm.com/docs/git-config#Documentation/git-config.txt-gpgformat
 		match format.as_str() {
 			"openpgp" => {
-				// Try to retrieve the gpg program from the git configuration,
-				// moving from the least to the most specific config key,
-				// defaulting to "gpg" if nothing is explicitly defined (per git's implementation)
-				// https://git-scm.com/docs/git-config#Documentation/git-config.txt-gpgprogram
+				// Try to retrieve the gpg program from the git
+				// configuration, moving from the least to the
+				// most specific config key, defaulting to "gpg"
+				// if nothing is explicitly defined (per git's
+				// implementation) https://git-scm.com/docs/git-config#Documentation/git-config.txt-gpgprogram
 				// https://git-scm.com/docs/git-config#Documentation/git-config.txt-gpgprogram
 				let program = config
 					.get_string("gpg.openpgp.program")
@@ -123,9 +141,9 @@ impl SignBuilder {
 					.unwrap_or_else(|_| "gpg".to_string());
 
 				// Optional signing key.
-				// If 'user.signingKey' is not set, we'll use 'user.name' and 'user.email'
-				// to build a default signature in the format 'name <email>'.
-				// https://git-scm.com/docs/git-config#Documentation/git-config.txt-usersigningKey
+				// If 'user.signingKey' is not set, we'll use
+				// 'user.name' and 'user.email' to build a default
+				// signature in the format 'name <email>'. https://git-scm.com/docs/git-config#Documentation/git-config.txt-usersigningKey
 				let signing_key = config
 					.get_string("user.signingKey")
 					.or_else(
@@ -206,8 +224,10 @@ impl Sign for GPGSign {
 		&self,
 		commit: &[u8],
 	) -> Result<(String, Option<String>), SignError> {
-		use std::io::Write;
-		use std::process::{Command, Stdio};
+		use std::{
+			io::Write,
+			process::{Command, Stdio},
+		};
 
 		let mut cmd = Command::new(&self.program);
 		cmd.stdin(Stdio::piped())
@@ -238,8 +258,9 @@ impl Sign for GPGSign {
 			return Err(SignError::Shellout(format!(
 				"failed to sign data, program '{}' exited non-zero: {}",
 				&self.program,
-				std::str::from_utf8(&output.stderr)
-					.unwrap_or("[error could not be read from stderr]")
+				std::str::from_utf8(&output.stderr).unwrap_or(
+					"[error could not be read from stderr]"
+				)
 			)));
 		}
 
@@ -247,9 +268,10 @@ impl Sign for GPGSign {
 			.map_err(|e| SignError::Shellout(e.to_string()))?;
 
 		if !stderr.contains("\n[GNUPG:] SIG_CREATED ") {
-			return Err(SignError::Shellout(
-				format!("failed to sign data, program '{}' failed, SIG_CREATED not seen in stderr", &self.program),
-			));
+			return Err(SignError::Shellout(format!(
+				"failed to sign data, program '{}' failed, SIG_CREATED not seen in stderr",
+				&self.program
+			)));
 		}
 
 		let signed_commit = std::str::from_utf8(&output.stdout)
@@ -303,9 +325,9 @@ impl SSHSign {
 					))
 				})
 		} else {
-			Err(SignBuilderError::SSHSigningKey(
-				String::from("Currently, we only support a pair of ssh key in disk."),
-			))
+			Err(SignBuilderError::SSHSigningKey(String::from(
+				"Currently, we only support a pair of ssh key in disk.",
+			)))
 		}
 	}
 }
@@ -338,8 +360,7 @@ impl Sign for SSHSign {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::error::Result;
-	use crate::sync::tests::repo_init_empty;
+	use crate::{error::Result, sync::tests::repo_init_empty};
 
 	#[test]
 	fn test_invalid_signing_format() -> Result<()> {
@@ -396,8 +417,8 @@ mod tests {
 		let sign =
 			SignBuilder::from_gitconfig(&repo, &repo.config()?)?;
 
-		// since gpg.openpgp.program is now set as well, it is more specific than
-		// gpg.program and therefore takes precedence
+		// since gpg.openpgp.program is now set as well, it is more
+		// specific than gpg.program and therefore takes precedence
 		assert_eq!("GPG_OPENPGP_PROGRAM_TEST", sign.program());
 
 		Ok(())

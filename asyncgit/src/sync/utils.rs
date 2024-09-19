@@ -1,18 +1,20 @@
 //! sync git api (various methods)
 
+use std::{
+	fs::File,
+	io::Write,
+	path::{Path, PathBuf},
+};
+
+use git2::{IndexAddOption, Repository, RepositoryOpenFlags};
+use scopetime::scope_time;
+
 use super::{
 	repository::repo, CommitId, RepoPath, ShowUntrackedFilesConfig,
 };
 use crate::{
 	error::{Error, Result},
 	sync::config::untracked_files_config_repo,
-};
-use git2::{IndexAddOption, Repository, RepositoryOpenFlags};
-use scopetime::scope_time;
-use std::{
-	fs::File,
-	io::Write,
-	path::{Path, PathBuf},
 };
 
 ///
@@ -86,7 +88,8 @@ pub fn get_head_repo(repo: &Repository) -> Result<CommitId> {
 	head.map_or(Err(Error::NoHead), |head_id| Ok(head_id.into()))
 }
 
-/// add a file diff from workingdir to stage (will not add removed files see `stage_addremoved`)
+/// add a file diff from workingdir to stage (will not add removed
+/// files see `stage_addremoved`)
 pub fn stage_add_file(
 	repo_path: &RepoPath,
 	path: &Path,
@@ -103,7 +106,8 @@ pub fn stage_add_file(
 	Ok(())
 }
 
-/// like `stage_add_file` but uses a pattern to match/glob multiple files/folders
+/// like `stage_add_file` but uses a pattern to match/glob multiple
+/// files/folders
 pub fn stage_add_all(
 	repo_path: &RepoPath,
 	pattern: &str,
@@ -219,6 +223,12 @@ pub(crate) fn repo_read_file(
 
 #[cfg(test)]
 mod tests {
+	use std::{
+		fs::{self, remove_file, File},
+		io::Write,
+		path::Path,
+	};
+
 	use super::*;
 	use crate::sync::{
 		commit,
@@ -228,11 +238,6 @@ mod tests {
 			debug_cmd_print, get_statuses, repo_init,
 			repo_init_empty, write_commit_file,
 		},
-	};
-	use std::{
-		fs::{self, remove_file, File},
-		io::Write,
-		path::Path,
 	};
 
 	#[test]

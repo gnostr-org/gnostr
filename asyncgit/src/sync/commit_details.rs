@@ -1,7 +1,8 @@
-use super::{commits_info::get_message, CommitId, RepoPath};
-use crate::{error::Result, sync::repository::repo};
 use git2::Signature;
 use scopetime::scope_time;
+
+use super::{commits_info::get_message, CommitId, RepoPath};
+use crate::{error::Result, sync::repository::repo};
 
 ///
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
@@ -121,6 +122,8 @@ pub fn get_commit_details(
 
 #[cfg(test)]
 mod tests {
+	use std::{fs::File, io::Write, path::Path};
+
 	use super::{get_commit_details, CommitMessage};
 	use crate::{
 		error::Result,
@@ -128,7 +131,6 @@ mod tests {
 			commit, stage_add_file, tests::repo_init_empty, RepoPath,
 		},
 	};
-	use std::{fs::File, io::Write, path::Path};
 
 	#[test]
 	fn test_msg_invalid_utf8() -> Result<()> {

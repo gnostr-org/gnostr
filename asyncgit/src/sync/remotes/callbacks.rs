@@ -1,11 +1,13 @@
-use super::push::ProgressNotification;
-use crate::{error::Result, sync::cred::BasicAuthCredential};
-use crossbeam_channel::Sender;
-use git2::{Cred, Error as GitError, RemoteCallbacks};
 use std::sync::{
 	atomic::{AtomicBool, Ordering},
 	Arc, Mutex,
 };
+
+use crossbeam_channel::Sender;
+use git2::{Cred, Error as GitError, RemoteCallbacks};
+
+use super::push::ProgressNotification;
+use crate::{error::Result, sync::cred::BasicAuthCredential};
 
 ///
 #[derive(Default, Clone)]
@@ -176,8 +178,9 @@ impl Callbacks {
 		});
 	}
 
-	// If credentials are bad, we don't ask the user to re-fill their creds. We push an error and they will be able to restart their action (for example a push) and retype their creds.
-	// This behavior is explained in a issue on git2-rs project : https://github.com/rust-lang/git2-rs/issues/347
+	// If credentials are bad, we don't ask the user to re-fill their
+	// creds. We push an error and they will be able to restart their
+	// action (for example a push) and retype their creds. This behavior is explained in a issue on git2-rs project : https://github.com/rust-lang/git2-rs/issues/347
 	// An implementation reference is done in cargo : https://github.com/rust-lang/cargo/blob/9fb208dddb12a3081230a5fd8f470e01df8faa25/src/cargo/sources/git/utils.rs#L588
 	// There is also a guide about libgit2 authentication : https://libgit2.org/docs/guides/authentication/
 	fn credentials(
@@ -193,7 +196,8 @@ impl Callbacks {
 			allowed_types
 		);
 
-		// This boolean is used to avoid multiple calls to credentials callback.
+		// This boolean is used to avoid multiple calls to credentials
+		// callback.
 		if self.first_call_to_credentials.load(Ordering::Relaxed) {
 			self.first_call_to_credentials
 				.store(false, Ordering::Relaxed);

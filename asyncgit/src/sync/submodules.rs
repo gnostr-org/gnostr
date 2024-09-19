@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+pub use git2::SubmoduleStatus;
 use git2::{
 	Repository, RepositoryOpenFlags, Submodule,
 	SubmoduleUpdateOptions,
@@ -8,8 +9,6 @@ use scopetime::scope_time;
 
 use super::{repo, CommitId, RepoPath};
 use crate::{error::Result, sync::utils::work_dir, Error};
-
-pub use git2::SubmoduleStatus;
 
 ///
 #[derive(Debug)]
@@ -106,7 +105,8 @@ pub fn update_submodule(
 	Ok(())
 }
 
-/// query whether `repo_path` points to a repo that is part of a parent git which contains it as a submodule
+/// query whether `repo_path` points to a repo that is part of a
+/// parent git which contains it as a submodule
 pub fn submodule_parent_info(
 	repo_path: &RepoPath,
 ) -> Result<Option<SubmoduleParentInfo>> {
@@ -155,13 +155,15 @@ pub fn submodule_parent_info(
 
 #[cfg(test)]
 mod tests {
+	use std::path::Path;
+
+	use git2::Repository;
+	use pretty_assertions::assert_eq;
+
 	use super::get_submodules;
 	use crate::sync::{
 		submodules::submodule_parent_info, tests::repo_init, RepoPath,
 	};
-	use git2::Repository;
-	use pretty_assertions::assert_eq;
-	use std::path::Path;
 
 	#[test]
 	fn test_smoke() {

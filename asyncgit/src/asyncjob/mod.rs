@@ -2,11 +2,14 @@
 
 #![deny(clippy::expect_used)]
 
-use crate::error::Result;
-use crossbeam_channel::Sender;
 use std::sync::{Arc, Mutex, RwLock};
 
-/// Passed to `AsyncJob::run` allowing sending intermediate progress notifications
+use crossbeam_channel::Sender;
+
+use crate::error::Result;
+
+/// Passed to `AsyncJob::run` allowing sending intermediate progress
+/// notifications
 pub struct RunParams<
 	T: Copy + Send,
 	P: Clone + Send + Sync + PartialEq,
@@ -21,8 +24,8 @@ impl<T: Copy + Send, P: Clone + Send + Sync + PartialEq>
 	/// send an intermediate update notification.
 	/// do not confuse this with the return value of `run`.
 	/// `send` should only be used about progress notifications
-	/// and not for the final notification indicating the end of the async job.
-	/// see `run` for more info
+	/// and not for the final notification indicating the end of the
+	/// async job. see `run` for more info
 	pub fn send(&self, notification: T) -> Result<()> {
 		self.sender.send(notification)?;
 		Ok(())
@@ -48,23 +51,25 @@ pub trait AsyncJob: Send + Sync + Clone {
 
 	/// can run a synchronous time intensive task.
 	/// the returned notification is used to tell interested parties
-	/// that the job finished and the job can be access via `take_last`.
-	/// prior to this final notification it is not safe to assume `take_last`
-	/// will already return the correct job
+	/// that the job finished and the job can be access via
+	/// `take_last`. prior to this final notification it is not safe
+	/// to assume `take_last` will already return the correct job
 	fn run(
 		&mut self,
 		params: RunParams<Self::Notification, Self::Progress>,
 	) -> Result<Self::Notification>;
 
-	/// allows observers to get intermediate progress status if the job customizes it
-	/// by default this will be returning `Self::Progress::default()`
+	/// allows observers to get intermediate progress status if the
+	/// job customizes it by default this will be returning
+	/// `Self::Progress::default()`
 	fn get_progress(&self) -> Self::Progress {
 		Self::Progress::default()
 	}
 }
 
-/// Abstraction for a FIFO task queue that will only queue up **one** `next` job.
-/// It keeps overwriting the next job until it is actually taken to be processed
+/// Abstraction for a FIFO task queue that will only queue up **one**
+/// `next` job. It keeps overwriting the next job until it is actually
+/// taken to be processed
 #[derive(Debug, Clone)]
 pub struct AsyncSingleJob<J: AsyncJob> {
 	next: Arc<Mutex<Option<J>>>,
@@ -91,7 +96,8 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
 		self.pending.try_lock().is_err()
 	}
 
-	/// makes sure `next` is cleared and returns `true` if it actually canceled something
+	/// makes sure `next` is cleared and returns `true` if it actually
+	/// canceled something
 	pub fn cancel(&mut self) -> bool {
 		if let Ok(mut next) = self.next.lock() {
 			if next.is_some() {
@@ -109,8 +115,9 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
 	}
 
 	/// spawns `task` if nothing is running currently,
-	/// otherwise schedules as `next` overwriting if `next` was set before.
-	/// return `true` if the new task gets started right away.
+	/// otherwise schedules as `next` overwriting if `next` was set
+	/// before. return `true` if the new task gets started right
+	/// away.
 	pub fn spawn(&mut self, task: J) -> bool {
 		self.schedule_next(task);
 		self.check_for_job()
@@ -175,14 +182,16 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
 
 #[cfg(test)]
 mod test {
-	use super::*;
-	use crossbeam_channel::unbounded;
-	use pretty_assertions::assert_eq;
 	use std::{
 		sync::atomic::{AtomicBool, AtomicU32, Ordering},
 		thread,
 		time::Duration,
 	};
+
+	use crossbeam_channel::unbounded;
+	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[derive(Clone)]
 	struct TestJob {

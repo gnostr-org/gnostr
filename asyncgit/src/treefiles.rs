@@ -1,10 +1,11 @@
+use std::sync::{Arc, Mutex};
+
 use crate::{
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
 	sync::{tree_files, CommitId, RepoPath, TreeFile},
 	AsyncGitNotification,
 };
-use std::sync::{Arc, Mutex};
 
 ///
 pub struct FileTreeResult {

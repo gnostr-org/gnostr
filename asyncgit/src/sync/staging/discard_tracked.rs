@@ -1,3 +1,5 @@
+use scopetime::scope_time;
+
 use super::{apply_selection, load_file};
 use crate::{
 	error::Result,
@@ -7,7 +9,6 @@ use crate::{
 		utils::repo_write_file, RepoPath,
 	},
 };
-use scopetime::scope_time;
 
 /// discards specific lines in an unstaged hunk of a diff
 pub fn discard_lines(
@@ -272,7 +273,8 @@ end
 		assert_eq!(result_file.as_str(), FILE_3);
 	}
 
-	//this test shows that we require at least a diff context around add/removes of 1
+	//this test shows that we require at least a diff context around
+	// add/removes of 1
 	#[test]
 	fn test_discard_deletions_filestart_breaking_with_zero_context() {
 		static FILE_1: &str = r"start

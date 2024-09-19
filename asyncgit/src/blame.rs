@@ -1,16 +1,18 @@
-use crate::{
-	error::Result,
-	hash,
-	sync::{self, CommitId, FileBlame, RepoPath},
-	AsyncGitNotification,
-};
-use crossbeam_channel::Sender;
 use std::{
 	hash::Hash,
 	sync::{
 		atomic::{AtomicUsize, Ordering},
 		Arc, Mutex,
 	},
+};
+
+use crossbeam_channel::Sender;
+
+use crate::{
+	error::Result,
+	hash,
+	sync::{self, CommitId, FileBlame, RepoPath},
+	AsyncGitNotification,
 };
 
 ///

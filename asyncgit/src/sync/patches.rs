@@ -1,6 +1,7 @@
+use git2::{Diff, DiffLine, Patch, Repository};
+
 use super::diff::{get_diff_raw, DiffOptions, HunkHeader};
 use crate::error::{Error, Result};
-use git2::{Diff, DiffLine, Patch, Repository};
 
 #[allow(clippy::redundant_pub_crate)]
 pub(crate) struct HunkLines<'a> {

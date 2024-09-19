@@ -1,12 +1,14 @@
+use std::sync::{
+	atomic::{AtomicUsize, Ordering},
+	Arc, Mutex,
+};
+
+use crossbeam_channel::Sender;
+
 use crate::{
 	error::Result,
 	sync::{self, commit_files::OldNew, CommitId, RepoPath},
 	AsyncGitNotification, StatusItem,
-};
-use crossbeam_channel::Sender;
-use std::sync::{
-	atomic::{AtomicUsize, Ordering},
-	Arc, Mutex,
 };
 
 type ResultType = Vec<StatusItem>;

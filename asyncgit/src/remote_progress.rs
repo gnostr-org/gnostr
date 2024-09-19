@@ -1,16 +1,18 @@
 //!
 
+use std::{
+	sync::{Arc, Mutex},
+	thread::{self, JoinHandle},
+};
+
+use crossbeam_channel::{Receiver, Sender};
+use git2::PackBuilderStage;
+
 use crate::{
 	error::Result,
 	progress::ProgressPercent,
 	sync::remotes::push::{AsyncProgress, ProgressNotification},
 	AsyncGitNotification,
-};
-use crossbeam_channel::{Receiver, Sender};
-use git2::PackBuilderStage;
-use std::{
-	sync::{Arc, Mutex},
-	thread::{self, JoinHandle},
 };
 
 /// used for push/pull
@@ -66,7 +68,8 @@ impl RemoteProgress {
 		Ok(())
 	}
 
-	/// spawn thread to listen to progress notifications coming in from blocking remote git method (fetch/push)
+	/// spawn thread to listen to progress notifications coming in
+	/// from blocking remote git method (fetch/push)
 	pub(crate) fn spawn_receiver_thread<
 		T: 'static + AsyncProgress,
 	>(
@@ -75,31 +78,33 @@ impl RemoteProgress {
 		receiver: Receiver<T>,
 		progress: Arc<Mutex<Option<T>>>,
 	) -> JoinHandle<()> {
-		thread::spawn(move || loop {
-			let incoming = receiver.recv();
-			match incoming {
-				Ok(update) => {
-					Self::set_progress(
-						&progress,
-						Some(update.clone()),
-					)
-					.expect("set progress failed");
-					sender
-						.send(notification_type)
-						.expect("Notification error");
+		thread::spawn(move || {
+			loop {
+				let incoming = receiver.recv();
+				match incoming {
+					Ok(update) => {
+						Self::set_progress(
+							&progress,
+							Some(update.clone()),
+						)
+						.expect("set progress failed");
+						sender
+							.send(notification_type)
+							.expect("Notification error");
 
-					thread::yield_now();
+						thread::yield_now();
 
-					if update.is_done() {
+						if update.is_done() {
+							break;
+						}
+					}
+					Err(e) => {
+						log::error!(
+							"remote progress receiver error: {}",
+							e
+						);
 						break;
 					}
-				}
-				Err(e) => {
-					log::error!(
-						"remote progress receiver error: {}",
-						e
-					);
-					break;
 				}
 			}
 		})

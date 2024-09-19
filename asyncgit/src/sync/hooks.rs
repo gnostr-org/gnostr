@@ -1,7 +1,8 @@
-use super::{repository::repo, RepoPath};
-use crate::error::Result;
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
+
+use super::{repository::repo, RepoPath};
+use crate::error::Result;
 
 ///
 #[derive(Debug, PartialEq, Eq)]
@@ -27,9 +28,10 @@ impl From<git2_hooks::HookResult> for HookResult {
 }
 
 /// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
-/// we use the same convention as other git clients to create a temp file containing
-/// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and pass it's relative path as the only
-/// parameter to the hook script.
+/// we use the same convention as other git clients to create a temp
+/// file containing the commit message at
+/// `<.git|hooksPath>/COMMIT_EDITMSG` and pass it's relative path as
+/// the only parameter to the hook script.
 pub fn hooks_commit_msg(
 	repo_path: &RepoPath,
 	msg: &mut String,
@@ -42,7 +44,6 @@ pub fn hooks_commit_msg(
 }
 
 /// this hook is documented here <https://git-scm.com/docs/githooks#_pre_commit>
-///
 pub fn hooks_pre_commit(repo_path: &RepoPath) -> Result<HookResult> {
 	scope_time!("hooks_pre_commit");
 

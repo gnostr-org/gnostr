@@ -1,7 +1,8 @@
-use super::{utils::get_head_repo, CommitId, RepoPath};
-use crate::{error::Result, sync::repository::repo};
 use git2::{build::CheckoutBuilder, ObjectType, ResetType};
 use scopetime::scope_time;
+
+use super::{utils::get_head_repo, CommitId, RepoPath};
+use crate::{error::Result, sync::repository::repo};
 
 ///
 pub fn reset_stage(repo_path: &RepoPath, path: &str) -> Result<()> {
@@ -57,21 +58,25 @@ pub fn reset_repo(
 
 #[cfg(test)]
 mod tests {
-	use super::{reset_stage, reset_workdir};
-	use crate::error::Result;
-	use crate::sync::{
-		commit,
-		status::{get_status, StatusType},
-		tests::{
-			debug_cmd_print, get_statuses, repo_init, repo_init_empty,
-		},
-		utils::{stage_add_all, stage_add_file},
-		RepoPath,
-	};
 	use std::{
 		fs::{self, File},
 		io::Write,
 		path::Path,
+	};
+
+	use super::{reset_stage, reset_workdir};
+	use crate::{
+		error::Result,
+		sync::{
+			commit,
+			status::{get_status, StatusType},
+			tests::{
+				debug_cmd_print, get_statuses, repo_init,
+				repo_init_empty,
+			},
+			utils::{stage_add_all, stage_add_file},
+			RepoPath,
+		},
 	};
 
 	static HUNK_A: &str = r"

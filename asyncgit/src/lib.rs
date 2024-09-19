@@ -32,9 +32,9 @@
 	clippy::multiple_crate_versions
 )]
 #![warn(
-    clippy::needless_pass_by_ref_mut,
-    clippy::too_long_first_doc_paragraph,
-    clippy::set_contains_or_insert
+	clippy::needless_pass_by_ref_mut,
+	clippy::too_long_first_doc_paragraph,
+	clippy::set_contains_or_insert
 )]
 
 pub mod asyncjob;
@@ -57,6 +57,13 @@ mod status;
 pub mod sync;
 mod tags;
 mod treefiles;
+
+use std::{
+	collections::hash_map::DefaultHasher,
+	hash::{Hash, Hasher},
+};
+
+pub use git2::message_prettify;
 
 pub use crate::{
 	blame::{AsyncBlame, BlameParams},
@@ -81,16 +88,12 @@ pub use crate::{
 	tags::AsyncTags,
 	treefiles::AsyncTreeFilesJob,
 };
-pub use git2::message_prettify;
-use std::{
-	collections::hash_map::DefaultHasher,
-	hash::{Hash, Hasher},
-};
 
 /// this type is used to communicate events back through the channel
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AsyncGitNotification {
-	/// this indicates that no new state was fetched but that a async process finished
+	/// this indicates that no new state was fetched but that a async
+	/// process finished
 	FinishUnchanged,
 	///
 	Status,
@@ -124,7 +127,8 @@ pub enum AsyncGitNotification {
 	CommitFilter,
 }
 
-/// helper function to calculate the hash of an arbitrary type that implements the `Hash` trait
+/// helper function to calculate the hash of an arbitrary type that
+/// implements the `Hash` trait
 pub fn hash<T: Hash + ?Sized>(v: &T) -> u64 {
 	let mut hasher = DefaultHasher::new();
 	v.hash(&mut hasher);

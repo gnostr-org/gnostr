@@ -1,9 +1,10 @@
+use scopetime::scope_time;
+
 use super::{CommitId, RepoPath};
 use crate::{
 	error::Result,
 	sync::{repository::repo, utils::read_file},
 };
-use scopetime::scope_time;
 
 const GIT_REVERT_HEAD_FILE: &str = "REVERT_HEAD";
 

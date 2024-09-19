@@ -1,17 +1,17 @@
 //!
 
+use std::sync::{Arc, Mutex};
+
 use crate::{
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
-	sync::cred::BasicAuthCredential,
 	sync::{
+		cred::BasicAuthCredential,
 		remotes::{get_default_remote, tags_missing_remote},
 		RepoPath,
 	},
 	AsyncGitNotification,
 };
-
-use std::sync::{Arc, Mutex};
 
 enum JobState {
 	Request(Option<BasicAuthCredential>),
