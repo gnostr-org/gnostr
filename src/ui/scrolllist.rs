@@ -1,4 +1,3 @@
-use super::style::SharedTheme;
 use ratatui::{
 	buffer::Buffer,
 	layout::Rect,
@@ -7,6 +6,8 @@ use ratatui::{
 	widgets::{Block, Borders, List, ListItem, Widget},
 	Frame,
 };
+
+use super::style::SharedTheme;
 
 ///
 struct ScrollableList<'b, L, S>

@@ -1,10 +1,3 @@
-use asyncgit::{
-	asyncjob::{AsyncJob, RunParams},
-	ProgressPercent,
-};
-use once_cell::sync::Lazy;
-use ratatui::text::{Line, Span};
-use scopetime::scope_time;
 use std::{
 	ffi::OsStr,
 	ops::Range,
@@ -12,6 +5,14 @@ use std::{
 	sync::{Arc, Mutex},
 	time::{Duration, Instant},
 };
+
+use asyncgit::{
+	asyncjob::{AsyncJob, RunParams},
+	ProgressPercent,
+};
+use once_cell::sync::Lazy;
+use ratatui::text::{Line, Span};
+use scopetime::scope_time;
 use syntect::{
 	highlighting::{
 		FontStyle, HighlightState, Highlighter,

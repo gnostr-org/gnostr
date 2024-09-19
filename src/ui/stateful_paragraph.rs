@@ -1,3 +1,5 @@
+use std::iter;
+
 use easy_cast::Cast;
 use ratatui::{
 	buffer::Buffer,
@@ -6,7 +8,6 @@ use ratatui::{
 	text::{StyledGrapheme, Text},
 	widgets::{Block, StatefulWidget, Widget, Wrap},
 };
-use std::iter;
 use unicode_width::UnicodeWidthStr;
 
 use super::reflow::{LineComposer, LineTruncator, WordWrapper};
@@ -104,8 +105,8 @@ impl<'a> StatefulParagraph<'a> {
 	// 	self
 	// }
 
-	// pub const fn alignment(mut self, alignment: Alignment) -> Self {
-	// 	self.alignment = alignment;
+	// pub const fn alignment(mut self, alignment: Alignment) -> Self
+	// { 	self.alignment = alignment;
 	// 	self
 	// }
 }
@@ -135,8 +136,9 @@ impl<'a> StatefulWidget for StatefulParagraph<'a> {
 			line.spans
 				.iter()
 				.flat_map(|span| span.styled_graphemes(style))
-				// Required given the way composers work but might be refactored out if we change
-				// composers to operate on lines instead of a stream of graphemes.
+				// Required given the way composers work but might be
+				// refactored out if we change composers to
+				// operate on lines instead of a stream of graphemes.
 				.chain(iter::once(StyledGrapheme {
 					symbol: "\n",
 					style: self.style,
@@ -178,8 +180,9 @@ impl<'a> StatefulWidget for StatefulParagraph<'a> {
 						text_area.top() + y - state.scroll.y,
 					)
 					.set_symbol(if symbol.is_empty() {
-						// If the symbol is empty, the last char which rendered last time will
-						// leave on the line. It's a quick fix.
+						// If the symbol is empty, the last char which
+						// rendered last time will leave on the
+						// line. It's a quick fix.
 						" "
 					} else {
 						symbol
