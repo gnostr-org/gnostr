@@ -144,6 +144,10 @@ jobs:
           WEEBLE_BH_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)$(gnostr-blockheight)))
           echo WEEBLE_BH_ALIAS=$WEEBLE_ALIAS
 
+          ./nostril --sec $(gnostr-blockhash) \
+          --content "$(mempool-space_blocks_timestamp | gnostr-xq .[])" | \
+          gnostr-post-event
+
           ./nostril --sec $PRIVATE_KEY \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr \

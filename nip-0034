@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
-IDIOT_KEY=$(gnostr-xor d840027d536f5a209d54636d7c81dddeaf93519a9d7ecb0b88db20b1d6a8fdc8 $(gnostr-sha256))
+//IDIOT_KEY=$(gnostr-xor d840027d536f5a209d54636d7c81dddeaf93519a9d7ecb0b88db20b1d6a8fdc8 $(gnostr-sha256) || mempool-space_blocks_tip_hash || d840027d536f5a209d54636d7c81dddeaf93519a9d7ecb0b88db20b1d6a8fdc8)
+IDIOT_KEY=$(mempool-space_blocks_tip_hash || d840027d536f5a209d54636d7c81dddeaf93519a9d7ecb0b88db20b1d6a8fdc8)
 
-for relay in $(gnostr-get-relays --nip 50 -s);do
+for relay in $(gnostr-get-relays -s);do
     echo $relay;
+    if [[ $relay != "wss://nostr-relay.schnitzel.world" ]]; then
     nostril --sec $IDIOT_KEY --dm $IDIOT_KEY | gnostr-post-event --relay $relay
     nostril --sec $(gnostr-sha256 $IDIOT_KEY$(gnostr-weeble)) --dm $IDIOT_KEY | gnostr-post-event --relay $relay
     nostril --sec $(gnostr-sha256 $IDIOT_KEY$(gnostr-weeble)$(gnostr-blockheight)) --dm $IDIOT_KEY | gnostr-post-event --relay $relay
     nostril --sec $(gnostr-sha256 $IDIOT_KEY$(gnostr-weeble)$(gnostr-blockheight)$(gnostr-wobble)) --dm $IDIOT_KEY | gnostr-post-event --relay $relay
+    fi
     done
 
 mkdir -p $HOME/.gnostr || true #TODO windows
