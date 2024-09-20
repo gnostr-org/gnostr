@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-tui"
-version = "0.0.60"
+version = "0.0.61"
 dependencies = [
  "anyhow",
  "async-trait",
