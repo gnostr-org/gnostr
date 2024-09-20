@@ -32,7 +32,7 @@ endif
 HOMEBREW                                :=$(shell which brew || false)
 
 RUSTUP_INIT_SKIP_PATH_CHECK=yes
-TOOLCHAIN=nightly
+TOOLCHAIN=stable
 Z=	##
 ifneq ($(toolchain),)
 
@@ -396,18 +396,20 @@ report:## 	print make variables
 	@echo 'OS_VERSION=${OS_VERSION}'
 	@echo 'ARCH=${ARCH}'
 	@echo ''
+	@echo 'TOOLCHAIN=${TOOLCHAIN}'
+	@echo ''
 	@echo 'SUBMODULES=${SUBMODULES}'
 	@echo ''
-	@echo 'PYTHON=${PYTHON}'
-	@echo 'PYTHON2=${PYTHON2}'
-	@echo 'PYTHON3=${PYTHON3}'
-	@echo ''
-	@echo 'PIP=${PIP}'
-	@echo 'PIP2=${PIP2}'
-	@echo 'PIP3=${PIP3}'
-	@echo ''
-	@echo 'PYTHON_VENV=${PYTHON_VENV}'
-	@echo 'PYTHON3_VENV=${PYTHON3_VENV}'
+## 	@echo 'PYTHON=${PYTHON}'
+## 	@echo 'PYTHON2=${PYTHON2}'
+## 	@echo 'PYTHON3=${PYTHON3}'
+## 	@echo ''
+## 	@echo 'PIP=${PIP}'
+## 	@echo 'PIP2=${PIP2}'
+## 	@echo 'PIP3=${PIP3}'
+## 	@echo ''
+## 	@echo 'PYTHON_VENV=${PYTHON_VENV}'
+## 	@echo 'PYTHON3_VENV=${PYTHON3_VENV}'
 	@echo ''
 	@echo 'GIT_USER_NAME=${GIT_USER_NAME}'
 	@echo 'GH_USER_REPO=${GH_USER_REPO}'

@@ -52,7 +52,7 @@ cargo-t:cargo-test
 test:cargo-test
 cargo-test:### 	cargo-test
 	@. $(HOME)/.cargo/env
-	cargo +$(TOOLCHAIN) fmt #-- --check
+	cargo +nightly fmt -- --check
 	cargo +$(TOOLCHAIN) test -- --nocapture || \
 	(\
 		cargo +$(TOOLCHAIN) test)
@@ -60,7 +60,7 @@ cargo-tests:tests
 tests:cargo-test-all-features
 cargo-test-all-features:### 	cargo-test-all-features
 	@. $(HOME)/.cargo/env
-	cargo +$(TOOLCHAIN) fmt #-- --check
+	cargo +nightly fmt -- --check
 	cargo +$(TOOLCHAIN) test --all-features -- --nocapture || \
 	(\
 	cargo +$(TOOLCHAIN) test --all-features)

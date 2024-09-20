@@ -83,13 +83,13 @@ build-linux-arm-release:
 	cargo build --release --target=arm-unknown-linux-gnueabihf --locked
 
 test:
-	cargo test --workspace
+	cargo +$(TOOLCHAIN) test --workspace
 
 fmt:
-	cargo fmt -- --check
+	cargo +$(TOOLCHAIN) fmt -- --check
 
 clippy:
-	cargo clippy --workspace --all-features
+	cargo +$(TOOLCHAIN) clippy --workspace --all-features
 
 clippy-nightly:
 	cargo +nightly clippy --workspace --all-features
@@ -102,7 +102,7 @@ check-nightly:
 	cargo +nightly t
 
 deny:
-	cargo deny check
+	cargo +$(TOOLCHAIN) deny check
 
 install:
 	cargo install --path "." --offline --locked
