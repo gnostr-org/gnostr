@@ -313,3 +313,14 @@ vendor/winreg/
 vendor/zerocopy-derive/
 vendor/zerocopy/
 vendor/zeroize/
+
+
+/release
+.DS_Store
+/.idea/
+flamegraph.svg
+.direnv
+tmpgit-*
+test-utils/tmpgit-*
+tmp
+test-cli-expect-output.txt
