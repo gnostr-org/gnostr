@@ -118,7 +118,7 @@ printf "$note\n"
 
 for r in $RELAYS;
 do
-##printf "relaying:\n" >&2
+printf "trying:\n$r:\n" >&2
 printf "$note\n"
 <<<"$note" gnostr-post-event $r || true
 #printf "done.\n" >&2
