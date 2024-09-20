@@ -37,6 +37,7 @@ impl From<&GituiKeyEvent> for KeyEvent {
 #[derive(Debug, Clone, Patch)]
 #[patch_derive(Deserialize, Debug)]
 pub struct KeysList {
+	pub tab_home: GituiKeyEvent,
 	pub tab_status: GituiKeyEvent,
 	pub tab_log: GituiKeyEvent,
 	pub tab_files: GituiKeyEvent,
@@ -129,11 +130,12 @@ pub struct KeysList {
 impl Default for KeysList {
 	fn default() -> Self {
 		Self {
-			tab_status: GituiKeyEvent::new(KeyCode::Char('1'), KeyModifiers::empty()),
-			tab_log: GituiKeyEvent::new(KeyCode::Char('2'),  KeyModifiers::empty()),
-			tab_files: GituiKeyEvent::new(KeyCode::Char('3'),  KeyModifiers::empty()),
-			tab_stashing: GituiKeyEvent::new(KeyCode::Char('4'),  KeyModifiers::empty()),
-			tab_stashes: GituiKeyEvent::new(KeyCode::Char('5'),  KeyModifiers::empty()),
+			tab_home: GituiKeyEvent::new(KeyCode::Char('1'), KeyModifiers::empty()),
+			tab_status: GituiKeyEvent::new(KeyCode::Char('2'), KeyModifiers::empty()),
+			tab_log: GituiKeyEvent::new(KeyCode::Char('3'),  KeyModifiers::empty()),
+			tab_files: GituiKeyEvent::new(KeyCode::Char('4'),  KeyModifiers::empty()),
+			tab_stashing: GituiKeyEvent::new(KeyCode::Char('5'),  KeyModifiers::empty()),
+			tab_stashes: GituiKeyEvent::new(KeyCode::Char('6'),  KeyModifiers::empty()),
 			tab_toggle: GituiKeyEvent::new(KeyCode::Tab,  KeyModifiers::empty()),
 			tab_toggle_reverse: GituiKeyEvent::new(KeyCode::BackTab,  KeyModifiers::SHIFT),
 			toggle_workarea: GituiKeyEvent::new(KeyCode::Char('w'),  KeyModifiers::empty()),

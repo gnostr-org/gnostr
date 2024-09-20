@@ -71,6 +71,10 @@ impl RevisionFilesPopup {
 		self.files.find_file(file);
 	}
 
+	pub fn home_file_finder_update(&mut self, file: &Path) {
+		self.files.find_file(file);
+	}
+
 	fn hide_stacked(&mut self, stack: bool) {
 		self.hide();
 

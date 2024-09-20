@@ -52,7 +52,7 @@ use crate::{
 	},
 	setup_popups,
 	strings::{self, ellipsis_trim_start, order},
-	tabs::{FilesTab, Revlog, StashList, Stashing, Status},
+	tabs::{FilesTab, HomeTab, Revlog, StashList, Stashing, Status},
 	try_or_popup,
 	ui::style::{SharedTheme, Theme},
 	AsyncAppNotification, AsyncNotification,
@@ -101,6 +101,7 @@ pub struct App {
 	stashing_tab: Stashing,
 	stashlist_tab: StashList,
 	files_tab: FilesTab,
+	home_tab: HomeTab,
 	queue: Queue,
 	theme: SharedTheme,
 	key_config: SharedKeyConfig,
@@ -211,6 +212,7 @@ impl App {
 			stashing_tab: Stashing::new(&env),
 			stashlist_tab: StashList::new(&env),
 			files_tab: FilesTab::new(&env),
+			home_tab: HomeTab::new(&env),
 			tab: 0,
 			queue: env.queue,
 			theme: env.theme,
@@ -262,11 +264,12 @@ impl App {
 		if !fullscreen_popup_open {
 			//TODO: macro because of generic draw call
 			match self.tab {
-				0 => self.status_tab.draw(f, chunks_main[1])?,
-				1 => self.revlog.draw(f, chunks_main[1])?,
-				2 => self.files_tab.draw(f, chunks_main[1])?,
-				3 => self.stashing_tab.draw(f, chunks_main[1])?,
-				4 => self.stashlist_tab.draw(f, chunks_main[1])?,
+				0 => self.home_tab.draw(f, chunks_main[1])?,
+				1 => self.status_tab.draw(f, chunks_main[1])?,
+				2 => self.revlog.draw(f, chunks_main[1])?,
+				3 => self.files_tab.draw(f, chunks_main[1])?,
+				4 => self.stashing_tab.draw(f, chunks_main[1])?,
+				5 => self.stashlist_tab.draw(f, chunks_main[1])?,
 				_ => bail!("unknown tab"),
 			};
 		}
@@ -304,22 +307,13 @@ impl App {
 				) {
 					self.toggle_tabs(true)?;
 					NeedsUpdate::COMMANDS
-				} else if key_match(
-					k,
-					self.key_config.keys.tab_status,
-				) || key_match(
-					k,
-					self.key_config.keys.tab_log,
-				) || key_match(
-					k,
-					self.key_config.keys.tab_files,
-				) || key_match(
-					k,
-					self.key_config.keys.tab_stashing,
-				) || key_match(
-					k,
-					self.key_config.keys.tab_stashes,
-				) {
+				} else if key_match(k, self.key_config.keys.tab_home)
+					|| key_match(k, self.key_config.keys.tab_status)
+					|| key_match(k, self.key_config.keys.tab_log)
+					|| key_match(k, self.key_config.keys.tab_files)
+					|| key_match(k, self.key_config.keys.tab_stashing)
+					|| key_match(k, self.key_config.keys.tab_stashes)
+				{
 					self.switch_tab(k)?;
 					NeedsUpdate::COMMANDS
 				} else if key_match(
@@ -378,6 +372,7 @@ impl App {
 		log::trace!("update");
 
 		self.commit_popup.update();
+		self.home_tab.update()?;
 		self.status_tab.update()?;
 		self.revlog.update()?;
 		self.files_tab.update()?;
@@ -398,6 +393,7 @@ impl App {
 		log::trace!("update_async: {:?}", ev);
 
 		if let AsyncNotification::Git(ev) = ev {
+			//self.home_tab.update_git(ev)?;
 			self.status_tab.update_git(ev)?;
 			self.stashing_tab.update_git(ev)?;
 			self.revlog.update_git(ev)?;
@@ -411,6 +407,7 @@ impl App {
 			self.select_branch_popup.update_git(ev)?;
 		}
 
+		self.home_tab.update_async(ev)?;
 		self.files_tab.update_async(ev)?;
 		self.blame_file_popup.update_async(ev)?;
 		self.revision_files_popup.update(ev)?;
@@ -441,6 +438,7 @@ impl App {
 			|| self.revlog.any_work_pending()
 			|| self.stashing_tab.anything_pending()
 			|| self.files_tab.anything_pending()
+			|| self.home_tab.anything_pending()
 			|| self.blame_file_popup.any_work_pending()
 			|| self.file_revlog_popup.any_work_pending()
 			|| self.inspect_commit_popup.any_work_pending()
@@ -498,6 +496,7 @@ impl App {
 			revlog,
 			status_tab,
 			files_tab,
+			home_tab,
 			stashing_tab,
 			stashlist_tab
 		]
@@ -559,6 +558,7 @@ impl App {
 
 	fn get_tabs(&mut self) -> Vec<&mut dyn Component> {
 		vec![
+			&mut self.home_tab,
 			&mut self.status_tab,
 			&mut self.revlog,
 			&mut self.files_tab,
@@ -585,6 +585,8 @@ impl App {
 			self.switch_to_tab(&AppTabs::Log)?;
 		} else if key_match(k, self.key_config.keys.tab_files) {
 			self.switch_to_tab(&AppTabs::Files)?;
+		} else if key_match(k, self.key_config.keys.tab_home) {
+			self.switch_to_tab(&AppTabs::Home)?;
 		} else if key_match(k, self.key_config.keys.tab_stashing) {
 			self.switch_to_tab(&AppTabs::Stashing)?;
 		} else if key_match(k, self.key_config.keys.tab_stashes) {
@@ -612,11 +614,12 @@ impl App {
 
 	fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {
 		match tab {
-			AppTabs::Status => self.set_tab(0)?,
-			AppTabs::Log => self.set_tab(1)?,
-			AppTabs::Files => self.set_tab(2)?,
-			AppTabs::Stashing => self.set_tab(3)?,
-			AppTabs::Stashlist => self.set_tab(4)?,
+			AppTabs::Home => self.set_tab(0)?,
+			AppTabs::Status => self.set_tab(1)?,
+			AppTabs::Log => self.set_tab(2)?,
+			AppTabs::Files => self.set_tab(3)?,
+			AppTabs::Stashing => self.set_tab(4)?,
+			AppTabs::Stashlist => self.set_tab(5)?,
 		}
 		Ok(())
 	}
@@ -838,6 +841,15 @@ impl App {
 							&PathBuf::from(content),
 						);
 					}
+					FuzzyFinderTarget::Files => {
+						self.home_tab.home_file_finder_update(
+							&PathBuf::from(content.clone()),
+						);
+						self.revision_files_popup
+							.home_file_finder_update(&PathBuf::from(
+								content,
+							));
+					}
 				}
 
 				flags
@@ -1029,8 +1041,7 @@ impl App {
 		res.push(CommandInfo::new(
 			strings::commands::find_file(&self.key_config),
 			!self.fuzzy_find_popup.is_visible(),
-			(!self.any_popup_visible()
-				&& self.files_tab.is_visible())
+			(!self.any_popup_visible() && self.home_tab.is_visible())
 				|| self.revision_files_popup.is_visible()
 				|| force_all,
 		));
@@ -1086,6 +1097,7 @@ impl App {
 		});
 
 		let tab_labels = [
+			Span::raw(strings::tab_home(&self.key_config)),
 			Span::raw(strings::tab_status(&self.key_config)),
 			Span::raw(strings::tab_log(&self.key_config)),
 			Span::raw(strings::tab_files(&self.key_config)),
