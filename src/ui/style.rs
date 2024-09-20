@@ -29,6 +29,7 @@ pub struct Theme {
 	commit_time: Color,
 	commit_author: Color,
 	danger_fg: Color,
+	danger_bg: Color,
 	push_gauge_bg: Color,
 	push_gauge_fg: Color,
 	tag_fg: Color,
@@ -328,27 +329,28 @@ impl Theme {
 		theme
 	}
 }
-
+                     
 impl Default for Theme {
 	fn default() -> Self {
 		Self {
-			selected_tab: Color::Reset,
+			selected_tab: Color::LightMagenta,
 			command_fg: Color::White,
 			selection_bg: Color::Magenta,
-			selection_fg: Color::White,
+			selection_fg: Color::Black,
 			cmdbar_bg: Color::Reset,
 			cmdbar_extra_lines_bg: Color::Reset,
-			disabled_fg: Color::DarkGray,
+			disabled_fg: Color::Reset,
 			diff_line_add: Color::Green,
 			diff_line_delete: Color::Red,
 			diff_file_added: Color::LightGreen,
 			diff_file_removed: Color::LightRed,
 			diff_file_moved: Color::LightMagenta,
 			diff_file_modified: Color::Yellow,
-			commit_hash: Color::Magenta,
+			commit_hash: Color::LightMagenta,
 			commit_time: Color::LightCyan,
 			commit_author: Color::Green,
-			danger_fg: Color::Red,
+			danger_fg: Color::Reset,
+			danger_bg: Color::Red,
 			push_gauge_bg: Color::Reset,
 			push_gauge_fg: Color::Reset,
 			tag_fg: Color::LightMagenta,
