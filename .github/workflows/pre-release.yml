@@ -81,8 +81,6 @@ jobs:
           sudo apt-get update && sudo apt-get install virtualenv help2man || brew install virtualenv help2man
           touch ~/GITHUB_TOKEN.txt
 
-      - run: python3 -m pip install virtualenv
-
       - run: V=1 make
       - run: V=1 make cargo-doc
       - run: V=1 make cargo-br
