@@ -1,5 +1,7 @@
 #! /bin/sh
 
+
+#
 if [ $# = 0 ]; then
     echo "Usage: $0 <submoduledir1>..." >&2
     exit 1

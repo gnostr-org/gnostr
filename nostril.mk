@@ -59,7 +59,7 @@ nostril: $(HEADERS) $(OBJS)## 	nostril
 	@$(CC) $(CFLAGS) $(OBJS) $(ARS) -o $@ || $(MAKE) $(ARS)
 	cp nostril gnostr
 
-install: all## 	install
+install-nostril: all## 	install-nostril
 	@mkdir -p $(PREFIX)/bin || true
 	@install -m644 doc/nostril.1 $(PREFIX)/share/man/man1/nostril.1 || true
 	@install -m755 ./nostril $(PREFIX)/bin/nostril || true
@@ -75,7 +75,7 @@ config.h: configurator## 	config.h
 configurator: configurator.c## 	configurator
 	$(CC) $< -o $@
 
-clean:## 	clean
+clean-nostril:## 	clean-nostril
 	rm -f nostril *.o *.a
 	rm -rf ext/secp256k1/.lib
 	rm -f configurator
@@ -84,7 +84,7 @@ clean:## 	clean
 tags: fake
 	ctags *.c *.h
 
-test: nostril
+test-nostril: nostril
 	./nostril --hash ''
 	./nostril --hash ""
 	./nostril --hash ' '

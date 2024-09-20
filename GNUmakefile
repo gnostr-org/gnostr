@@ -440,12 +440,12 @@ else
 ##	make detect
 endif
 
-tag:## 	git tag & git push
-tags:tag
-##tag
-##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
-	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
-	@git push -f --tags || echo "unable to push tags..."
+## tag:## 	git tag & git push
+## tags:tag
+## ##tag
+## ##	git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+## 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
+## 	@git push -f --tags || echo "unable to push tags..."
 
 .PHONY: nvm
 .ONESHELL:
@@ -457,11 +457,8 @@ nvm: ## 	nvm
 nvm-clean: ## 	nvm-clean
 	@rm -rf ~/.nvm
 
--include gnostr.mk
--include gnostr-act.mk
--include gnostr-bot.mk
--include docker.mk
--include venv.mk
+-include libsecp256k1.mk
+-include nostril.mk
 -include clean.mk
 -include cargo.mk
 -include tests.mk
