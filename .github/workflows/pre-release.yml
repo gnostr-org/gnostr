@@ -1,16 +1,9 @@
-name: pre-release-matrix
+name: Pre-Release
 
 # Controls when the action will run.
 on:
-  pull_request:
-    branches:
-      - 'master'
-      - 'main'
-      - '!v**'
   push:
     branches:
-      - 'master'
-      - 'main'
       - 'v**-rc*'
 
   workflow_dispatch:
