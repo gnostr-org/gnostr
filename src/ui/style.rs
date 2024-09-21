@@ -329,7 +329,7 @@ impl Theme {
 		theme
 	}
 }
-                     
+
 impl Default for Theme {
 	fn default() -> Self {
 		Self {
