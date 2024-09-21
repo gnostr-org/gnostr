@@ -144,7 +144,10 @@ impl Connect for Client {
 			if std::env::var("NGITTEST").is_ok() {
 				vec!["ws://localhost:8057".to_string()]
 			} else {
-				vec!["wss://nostr.mutinywallet.com".to_string()]
+				vec![
+					"wss://nos.lol".to_string(),
+					"wss://e.nos.lol".to_string(),
+				]
 			};
 		Client {
 			client: nostr_sdk::ClientBuilder::new()
