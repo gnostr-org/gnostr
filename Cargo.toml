@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 gnostr-bins = { git = "https://github.com/gnostr-org/gnostr-bins.git", version = "0.0.62" }
+gnostr-xq = { git = "https://github.com/gnostr-org/gnostr-xq.git", version = "0.0.1" }
