@@ -15,7 +15,7 @@ cargo-publish-all:### 	cargo-publish-all
 	for t in */Cargo.toml;  do echo $$t; cargo publish -vv --manifest-path $$t; done
 cargo-sweep:### 	cargo-sweep sweep -t 1 -r
 ## 	cargo-sweep sweep -t 1 -r
-	type -P cargo-sweep && cargo-sweep sweep -t 1 -r
+	type -P cargo-sweep && cargo-sweep sweep -t 0 -r -vv --hidden || cargo binstall cargo-sweep || cargo install cargo-sweep
 cargo-install-bins:### 	cargo-install-bins
 ## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
 ## 	*** cargo install -vv --force is NOT used.
@@ -27,32 +27,32 @@ cargo-install-bins:### 	cargo-install-bins
 cargo-b:cargo-build### 	cargo b
 cargo-build:### 	cargo build
 ## 	cargo-build q=true
-	@. $(HOME)/.cargo/env || true
+	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-i:cargo-install
 cargo-install:### 	cargo install --path .
-	@. $(HOME)/.cargo/env || true
-	@cargo install --path . $(FORCE)
+	@. $(HOME)/.cargo/env
+	@cargo install --path alacritty $(FORCE)
 cargo-br:cargo-build-release### 	cargo-br
 ## 	cargo-br q=true
 cargo-build-release:### 	cargo-build-release
 ## 	cargo-build-release q=true
-	@. $(HOME)/.cargo/env || true
+	@. $(HOME)/.cargo/env
 	@cargo b --release $(QUIET)
 cargo-c:cargo-check
 cargo-check:### 	cargo-check
-	@. $(HOME)/.cargo/env || true
+	@. $(HOME)/.cargo/env
 	@cargo c
 cargo-bench:### 	cargo-bench
-	@. $(HOME)/.cargo/env || true
+	@. $(HOME)/.cargo/env
 	@cargo bench
 cargo-t:cargo-test
-cargo-test: cargo-install### 	cargo-test
-	@. $(HOME)/.cargo/env || true
+cargo-test:### 	cargo-test
+	@. $(HOME)/.cargo/env
 	#@cargo test
-	@cargo test -- --nocapture
+	@cargo test
 cargo-report:### 	cargo-report
-	@. $(HOME)/.cargo/env || true
+	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1
 
 ##===============================================================================
