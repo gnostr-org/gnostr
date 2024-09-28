@@ -313,3 +313,10 @@ vendor/winreg/
 vendor/zerocopy-derive/
 vendor/zerocopy/
 vendor/zeroize/
+
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target

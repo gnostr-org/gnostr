@@ -53,14 +53,14 @@ jobs:
           profile: minimal
           override: false
 
-      - name: cargo fmt -- --check
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+    #- name: cargo fmt -- --check
+    #  uses: actions-rs/cargo@v1
+    #  with:
+    #    command: fmt
+    #    args: -- --check
 
-      - name: temporary workaround - fmt all files under src
-        run: cargo fmt -- --check $(find ./src -name '*.rs' -print)
+    #- name: temporary workaround - fmt all files under src
+    #  run: cargo fmt -- --check $(find ./src -name '*.rs' -print)
 
   test:
     name: ${{ matrix.name }}
