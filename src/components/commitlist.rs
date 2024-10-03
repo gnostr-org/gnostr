@@ -5,36 +5,35 @@ use std::{
 
 use anyhow::Result;
 use asyncgit::sync::{
-	self, checkout_commit, BranchDetails, BranchInfo, CommitId,
-	RepoPathRef, Tags,
+	self, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+	checkout_commit,
 };
 use chrono::{DateTime, Local};
 use crossterm::event::Event;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Rect},
 	style::Style,
 	text::{Line, Span},
 	widgets::{Block, Borders, Paragraph},
-	Frame,
 };
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::{
 	app::Environment,
 	components::{
-		utils::string_width_align, CommandBlocking, CommandInfo,
-		Component, DrawableComponent, EventState, ScrollType,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType, utils::string_width_align,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, Queue},
 	strings::{self, symbol},
 	try_or_popup,
 	ui::{
-		calc_scroll_top, draw_scrollbar,
+		Orientation, calc_scroll_top, draw_scrollbar,
 		style::{SharedTheme, Theme},
-		Orientation,
 	},
 };
 

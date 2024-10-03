@@ -2,18 +2,18 @@ use std::{cell::Cell, path::Path};
 
 use anyhow::Result;
 use asyncgit::{
+	ProgressPercent,
 	asyncjob::AsyncSingleJob,
 	sync::{self, RepoPathRef, TreeFile},
-	ProgressPercent,
 };
 use crossterm::event::Event;
 use filetreelist::MoveSelection;
 use itertools::Either;
 use ratatui::{
+	Frame,
 	layout::Rect,
 	text::Text,
 	widgets::{Block, Borders, Wrap},
-	Frame,
 };
 
 use super::{
@@ -21,15 +21,15 @@ use super::{
 	EventState,
 };
 use crate::{
+	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
 	app::Environment,
 	keys::SharedKeyConfig,
 	string_utils::tabs_to_spaces,
 	strings,
 	ui::{
-		self, common_nav, style::SharedTheme, AsyncSyntaxJob,
-		ParagraphState, ScrollPos, StatefulParagraph,
+		self, AsyncSyntaxJob, ParagraphState, ScrollPos,
+		StatefulParagraph, common_nav, style::SharedTheme,
 	},
-	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
 };
 
 pub struct SyntaxTextComponent {
@@ -195,13 +195,13 @@ impl DrawableComponent for SyntaxTextComponent {
 		);
 
 		let title = format!(
-			"{}{}",
+			"DrawableComp {}{}",
 			self.current_file
 				.as_ref()
 				.map(|(name, _)| name.clone())
 				.unwrap_or_default(),
 			self.syntax_progress
-				.map(|p| format!(" ({}%)", p.progress))
+				.map(|p| format!("syntax_text.rs ({}%)", p.progress))
 				.unwrap_or_default()
 		);
 

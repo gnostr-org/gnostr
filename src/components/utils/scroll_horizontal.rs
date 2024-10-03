@@ -1,10 +1,10 @@
 use std::cell::Cell;
 
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 
 use crate::{
 	components::HorizontalScrollType,
-	ui::{draw_scrollbar, style::SharedTheme, Orientation},
+	ui::{Orientation, draw_scrollbar, style::SharedTheme},
 };
 
 pub struct HorizontalScroll {

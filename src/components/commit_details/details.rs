@@ -6,10 +6,10 @@ use asyncgit::sync::{
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Direction, Layout, Rect},
 	style::{Modifier, Style},
 	text::{Line, Span, Text},
-	Frame,
 };
 use sync::CommitTags;
 
@@ -17,13 +17,13 @@ use super::style::Detail;
 use crate::{
 	app::Environment,
 	components::{
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType,
 		commit_details::style::style_detail,
 		dialog_paragraph,
 		utils::{scroll_vertical::VerticalScroll, time_to_string},
-		CommandBlocking, CommandInfo, Component, DrawableComponent,
-		EventState, ScrollType,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	strings::{self, order},
 	ui::style::SharedTheme,
 };
@@ -422,18 +422,15 @@ mod tests {
 	fn test_textwrap() {
 		let message = CommitMessage::from("Commit message");
 
-		assert_eq!(
-			get_wrapped_lines(&message, 7),
-			vec!["Commit", "message"]
-		);
-		assert_eq!(
-			get_wrapped_lines(&message, 14),
-			vec!["Commit message"]
-		);
-		assert_eq!(
-			get_wrapped_lines(&message, 0),
-			vec!["Commit", "message"]
-		);
+		assert_eq!(get_wrapped_lines(&message, 7), vec![
+			"Commit", "message"
+		]);
+		assert_eq!(get_wrapped_lines(&message, 14), vec![
+			"Commit message"
+		]);
+		assert_eq!(get_wrapped_lines(&message, 0), vec![
+			"Commit", "message"
+		]);
 
 		let message_with_newline =
 			CommitMessage::from("Commit message\n");
@@ -446,33 +443,25 @@ mod tests {
 			get_wrapped_lines(&message_with_newline, 14),
 			vec!["Commit message"]
 		);
-		assert_eq!(
-			get_wrapped_lines(&message, 0),
-			vec!["Commit", "message"]
-		);
+		assert_eq!(get_wrapped_lines(&message, 0), vec![
+			"Commit", "message"
+		]);
 
 		let message_with_body = CommitMessage::from(
 			"Commit message\nFirst line\nSecond line",
 		);
 
-		assert_eq!(
-			get_wrapped_lines(&message_with_body, 7),
-			vec![
-				"Commit", "message", "First", "line", "Second",
-				"line"
-			]
-		);
-		assert_eq!(
-			get_wrapped_lines(&message_with_body, 14),
-			vec!["Commit message", "First line", "Second line"]
-		);
-		assert_eq!(
-			get_wrapped_lines(&message_with_body, 7),
-			vec![
-				"Commit", "message", "First", "line", "Second",
-				"line"
-			]
-		);
+		assert_eq!(get_wrapped_lines(&message_with_body, 7), vec![
+			"Commit", "message", "First", "line", "Second", "line"
+		]);
+		assert_eq!(get_wrapped_lines(&message_with_body, 14), vec![
+			"Commit message",
+			"First line",
+			"Second line"
+		]);
+		assert_eq!(get_wrapped_lines(&message_with_body, 7), vec![
+			"Commit", "message", "First", "line", "Second", "line"
+		]);
 	}
 }
 
