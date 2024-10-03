@@ -6,7 +6,7 @@ use std::{
 
 use git2::Repository;
 
-use crate::{error::Result, HookResult, HooksError};
+use crate::{HookResult, HooksError, error::Result};
 
 pub struct HookPaths {
 	pub git: PathBuf,

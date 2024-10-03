@@ -202,16 +202,13 @@ pub fn hooks_prepare_commit_msg(
 
 	let temp_file_path = temp_file.as_os_str().to_string_lossy();
 
-	let vec = vec![
-		temp_file_path.as_ref(),
-		match source {
-			PrepareCommitMsgSource::Message => "message",
-			PrepareCommitMsgSource::Template => "template",
-			PrepareCommitMsgSource::Merge => "merge",
-			PrepareCommitMsgSource::Squash => "squash",
-			PrepareCommitMsgSource::Commit(_) => "commit",
-		},
-	];
+	let vec = vec![temp_file_path.as_ref(), match source {
+		PrepareCommitMsgSource::Message => "message",
+		PrepareCommitMsgSource::Template => "template",
+		PrepareCommitMsgSource::Merge => "merge",
+		PrepareCommitMsgSource::Squash => "squash",
+		PrepareCommitMsgSource::Commit(_) => "commit",
+	}];
 	let mut args = vec;
 
 	let id = if let PrepareCommitMsgSource::Commit(id) = &source {
