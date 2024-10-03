@@ -13,10 +13,10 @@ static EXPECTED_SET_PASSWORD_CONFIRM_PROMPT: &str =
 
 fn standard_first_time_login_encrypting_nsec() -> Result<CliTester> {
 	let test_repo = GitTestRepo::default();
-	let mut p = CliTester::new_from_dir(
-		&test_repo.dir,
-		["login", "--offline"],
-	);
+	let mut p = CliTester::new_from_dir(&test_repo.dir, [
+		"login",
+		"--offline",
+	]);
 
 	p.expect_input_eventually(EXPECTED_NSEC_PROMPT)?
 		.succeeds_with(TEST_KEY_1_NSEC)?;
@@ -37,7 +37,7 @@ fn standard_first_time_login_encrypting_nsec() -> Result<CliTester> {
 mod with_relays {
 	use anyhow::Ok;
 	use futures::join;
-	use test_utils::relay::{shutdown_relay, ListenerReqFunc, Relay};
+	use test_utils::relay::{ListenerReqFunc, Relay, shutdown_relay};
 
 	use super::*;
 
@@ -1037,10 +1037,10 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn succeeds_with_text_logged_in_as_npub() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				["login", "--offline"],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+			]);
 
 			p.expect_input(EXPECTED_NSEC_PROMPT)?
 				.succeeds_with(TEST_KEY_1_NSEC)?;
@@ -1076,10 +1076,10 @@ mod with_offline_flag {
 		fn succeeds_with_hex_secret_key_in_place_of_nsec()
 		-> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				["login", "--offline"],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+			]);
 
 			p.expect_input(EXPECTED_NSEC_PROMPT)?
 				.succeeds_with(TEST_KEY_1_SK_HEX)?;
@@ -1119,10 +1119,11 @@ mod with_offline_flag {
 				let invalid_nsec_response = "invalid. try again with nostr address / bunker uri / nsec";
 
 				let test_repo = GitTestRepo::default();
-				let mut p = CliTester::new_from_dir(
-					&test_repo.dir,
-					["login", "--offline"],
-				);
+				let mut p =
+					CliTester::new_from_dir(&test_repo.dir, [
+						"login",
+						"--offline",
+					]);
 
 				p.expect_input(EXPECTED_NSEC_PROMPT)?
 					// this behaviour is intentional. rejecting the
@@ -1174,10 +1175,12 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				["login", "--offline", "--nsec", TEST_KEY_1_NSEC],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+				"--nsec",
+				TEST_KEY_1_NSEC,
+			]);
 
 			p.expect("saved login details to local git config\r\n")?;
 
@@ -1191,10 +1194,12 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn forgets_identity() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				["login", "--offline", "--nsec", TEST_KEY_1_NSEC],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+				"--nsec",
+				TEST_KEY_1_NSEC,
+			]);
 
 			p.expect("saved login details to local git config\r\n")?;
 
@@ -1203,10 +1208,10 @@ mod with_offline_flag {
 					.as_str(),
 			)?;
 
-			p = CliTester::new_from_dir(
-				&test_repo.dir,
-				["login", "--offline"],
-			);
+			p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+			]);
 
 			p.expect_input(EXPECTED_NSEC_PROMPT)?
 				.succeeds_with(TEST_KEY_1_NSEC)?;
@@ -1224,10 +1229,13 @@ mod with_offline_flag {
 				standard_first_time_login_encrypting_nsec()?
 					.exit()?;
 				let test_repo = GitTestRepo::default();
-				let mut p = CliTester::new_from_dir(
-					&test_repo.dir,
-					["login", "--offline", "--nsec", TEST_KEY_2_NSEC],
-				);
+				let mut p =
+					CliTester::new_from_dir(&test_repo.dir, [
+						"login",
+						"--offline",
+						"--nsec",
+						TEST_KEY_2_NSEC,
+					]);
 
 				p.expect(
 					"saved login details to local git config\r\n",
@@ -1243,10 +1251,12 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				["login", "--offline", "--nsec", TEST_INVALID_NSEC],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+				"--nsec",
+				TEST_INVALID_NSEC,
+			]);
 
 			p.expect_end_with(
                 "Error: invalid nsec parameter\r\n\r\nCaused by:\r\n    Invalid secret key\r\n",
@@ -1261,17 +1271,14 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				[
-					"login",
-					"--offline",
-					"--nsec",
-					TEST_KEY_1_NSEC,
-					"--password",
-					TEST_PASSWORD,
-				],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+				"--nsec",
+				TEST_KEY_1_NSEC,
+				"--password",
+				TEST_PASSWORD,
+			]);
 			p.expect("saved login details to local git config\r\n")?;
 			p.expect_end_with(
 				format!("logged in as {}\r\n", TEST_KEY_1_NPUB)
@@ -1283,17 +1290,14 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn parameters_can_be_called_globally() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				[
-					"--nsec",
-					TEST_KEY_1_NSEC,
-					"--password",
-					TEST_PASSWORD,
-					"login",
-					"--offline",
-				],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"--nsec",
+				TEST_KEY_1_NSEC,
+				"--password",
+				TEST_PASSWORD,
+				"login",
+				"--offline",
+			]);
 			p.expect("saved login details to local git config\r\n")?;
 			p.expect_end_with(
 				format!("logged in as {}\r\n", TEST_KEY_1_NPUB)
@@ -1311,17 +1315,15 @@ mod with_offline_flag {
 				standard_first_time_login_encrypting_nsec()?
 					.exit()?;
 				let test_repo = GitTestRepo::default();
-				let mut p = CliTester::new_from_dir(
-					&test_repo.dir,
-					[
+				let mut p =
+					CliTester::new_from_dir(&test_repo.dir, [
 						"login",
 						"--offline",
 						"--nsec",
 						TEST_KEY_2_NSEC,
 						"--password",
 						TEST_PASSWORD,
-					],
-				);
+					]);
 				p.expect(
 					"saved login details to local git config\r\n",
 				)?;
@@ -1341,17 +1343,15 @@ mod with_offline_flag {
 				standard_first_time_login_encrypting_nsec()?
 					.exit()?;
 				let test_repo = GitTestRepo::default();
-				let mut p = CliTester::new_from_dir(
-					&test_repo.dir,
-					[
+				let mut p =
+					CliTester::new_from_dir(&test_repo.dir, [
 						"login",
 						"--offline",
 						"--nsec",
 						TEST_KEY_1_NSEC,
 						"--password",
 						TEST_INVALID_PASSWORD,
-					],
-				);
+					]);
 				p.expect(
 					"saved login details to local git config\r\n",
 				)?;
@@ -1360,15 +1360,12 @@ mod with_offline_flag {
 						.as_str(),
 				)?;
 
-				CliTester::new_from_dir(
-					&test_repo.dir,
-					[
-						"--password",
-						TEST_INVALID_PASSWORD,
-						"login",
-						"--offline",
-					],
-				)
+				CliTester::new_from_dir(&test_repo.dir, [
+					"--password",
+					TEST_INVALID_PASSWORD,
+					"login",
+					"--offline",
+				])
 				.expect_end_with(
 					format!("logged in as {}\r\n", TEST_KEY_1_NPUB)
 						.as_str(),
@@ -1380,17 +1377,14 @@ mod with_offline_flag {
 		#[cfg(feature = "expensive_tests")]
 		fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
 			let test_repo = GitTestRepo::default();
-			let mut p = CliTester::new_from_dir(
-				&test_repo.dir,
-				[
-					"login",
-					"--offline",
-					"--nsec",
-					TEST_INVALID_NSEC,
-					"--password",
-					TEST_PASSWORD,
-				],
-			);
+			let mut p = CliTester::new_from_dir(&test_repo.dir, [
+				"login",
+				"--offline",
+				"--nsec",
+				TEST_INVALID_NSEC,
+				"--password",
+				TEST_PASSWORD,
+			]);
 			p.expect_end_with(
                 "Error: invalid nsec parameter\r\n\r\nCaused by:\r\n    Invalid secret key\r\n",
             )

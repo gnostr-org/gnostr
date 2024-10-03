@@ -66,10 +66,10 @@ mod when_proposal_isnt_associated_with_branch_name {
 					test_repo.create_branch("random-name")?;
 					test_repo.checkout("random-name")?;
 
-					let mut p = CliTester::new_from_dir(
-						&test_repo.dir,
-						["push"],
-					);
+					let mut p =
+						CliTester::new_from_dir(&test_repo.dir, [
+							"push",
+						]);
 					p.expect("fetching updates...\r\n")?;
 					p.expect_eventually("\r\n")?; // some updates listed here
 					p.expect_end_with(
@@ -398,17 +398,15 @@ mod when_branch_is_checked_out {
 
 					// run test
 
-					let mut p = CliTester::new_from_dir(
-						&test_repo.dir,
-						[
+					let mut p =
+						CliTester::new_from_dir(&test_repo.dir, [
 							"--nsec",
 							TEST_KEY_1_NSEC,
 							"--password",
 							TEST_PASSWORD,
 							"--disable-cli-spinners",
 							"push",
-						],
-					);
+						]);
 					p.expect_end_eventually()?;
 
 					for p in [51, 52, 53, 55, 56] {

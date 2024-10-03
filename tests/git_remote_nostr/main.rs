@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use futures::join;
 use git2::Oid;
 use nostr::nips::nip01::Coordinate;
-use nostr_sdk::{secp256k1::rand, Event, JsonUtil, Kind, ToBech32};
+use nostr_sdk::{Event, JsonUtil, Kind, ToBech32, secp256k1::rand};
 use relay::Relay;
 use serial_test::serial;
 use test_utils::{git::GitTestRepo, *};
@@ -57,10 +57,11 @@ fn clone_git_repo_with_nostr_url() -> Result<GitTestRepo> {
 	let path = current_dir()?
 		.join(format!("tmpgit-clone{}", rand::random::<u64>()));
 	std::fs::create_dir(path.clone())?;
-	CliTester::new_git_with_remote_helper_from_dir(
-		&path,
-		["clone", &get_nostr_remote_url()?, "."],
-	)
+	CliTester::new_git_with_remote_helper_from_dir(&path, [
+		"clone",
+		&get_nostr_remote_url()?,
+		".",
+	])
 	.expect_end_eventually_and_print()?;
 	let test_repo = GitTestRepo::open(&path)?;
 	set_git_nostr_login_config(&test_repo)?;
