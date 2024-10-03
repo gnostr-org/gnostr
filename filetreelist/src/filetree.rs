@@ -1,8 +1,8 @@
 use std::{collections::BTreeSet, path::Path, usize};
 
 use crate::{
-	error::Result, filetreeitems::FileTreeItems,
-	tree_iter::TreeIterator, TreeItemInfo,
+	TreeItemInfo, error::Result, filetreeitems::FileTreeItems,
+	tree_iter::TreeIterator,
 };
 
 ///

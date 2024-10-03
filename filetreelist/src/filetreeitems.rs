@@ -5,10 +5,10 @@ use std::{
 };
 
 use crate::{
+	FileTreeItem,
 	error::{Error, Result},
 	item::{FileTreeItemKind, PathCollapsed},
 	treeitems_iter::TreeItemsIterator,
-	FileTreeItem,
 };
 
 ///
@@ -489,10 +489,10 @@ mod tests {
 			.map(|i| i.info().full_path_str().to_string())
 			.collect::<Vec<_>>();
 
-		assert_eq!(
-			res,
-			vec![String::from("a"), String::from("a/file.txt"),]
-		);
+		assert_eq!(res, vec![
+			String::from("a"),
+			String::from("a/file.txt"),
+		]);
 	}
 
 	#[test]
@@ -550,14 +550,11 @@ mod tests {
 			.map(|i| i.info().full_path_str().to_string())
 			.collect::<Vec<_>>();
 
-		assert_eq!(
-			res,
-			vec![
-				String::from("a"),
-				String::from("a/file.txt"),
-				String::from("a/file2.txt"),
-			]
-		);
+		assert_eq!(res, vec![
+			String::from("a"),
+			String::from("a/file.txt"),
+			String::from("a/file2.txt"),
+		]);
 	}
 
 	#[test]
@@ -623,29 +620,23 @@ mod tests {
 
 		let visibles = get_visible(&tree);
 
-		assert_eq!(
-			visibles,
-			vec![
-				true,  //
-				true,  //
-				false, //
-				true,
-			]
-		);
+		assert_eq!(visibles, vec![
+			true,  //
+			true,  //
+			false, //
+			true,
+		]);
 
 		tree.expand(1, false);
 
 		let visibles = get_visible(&tree);
 
-		assert_eq!(
-			visibles,
-			vec![
-				true, //
-				true, //
-				true, //
-				true,
-			]
-		);
+		assert_eq!(visibles, vec![
+			true, //
+			true, //
+			true, //
+			true,
+		]);
 	}
 
 	#[test]
@@ -667,29 +658,23 @@ mod tests {
 		tree.collapse(1, false);
 		tree.collapse(0, false);
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true,  //
-				false, //
-				false, //
-				false, //
-				false,
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true,  //
+			false, //
+			false, //
+			false, //
+			false,
+		]);
 
 		tree.expand(0, false);
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true,  //
-				true,  //
-				false, //
-				true,  //
-				true,
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true,  //
+			true,  //
+			false, //
+			true,  //
+			true,
+		]);
 	}
 
 	#[test]
@@ -711,15 +696,12 @@ mod tests {
 
 		let visibles = get_visible(&tree);
 
-		assert_eq!(
-			visibles,
-			vec![
-				true,  //
-				false, //
-				true,  //
-				true,
-			]
-		);
+		assert_eq!(visibles, vec![
+			true,  //
+			false, //
+			true,  //
+			true,
+		]);
 	}
 
 	#[test]
@@ -741,43 +723,34 @@ mod tests {
 
 		let visibles = get_visible(&tree);
 
-		assert_eq!(
-			visibles,
-			vec![
-				true,  //
-				true,  //
-				false, //
-				true,
-			]
-		);
+		assert_eq!(visibles, vec![
+			true,  //
+			true,  //
+			false, //
+			true,
+		]);
 
 		tree.collapse(0, false);
 
 		let visibles = get_visible(&tree);
 
-		assert_eq!(
-			visibles,
-			vec![
-				true,  //
-				false, //
-				false, //
-				false,
-			]
-		);
+		assert_eq!(visibles, vec![
+			true,  //
+			false, //
+			false, //
+			false,
+		]);
 
 		tree.expand(0, false);
 
 		let visible = get_visible(&tree);
 
-		assert_eq!(
-			visible,
-			vec![
-				true,  //
-				true,  //
-				false, //
-				true,
-			]
-		);
+		assert_eq!(visible, vec![
+			true,  //
+			true,  //
+			false, //
+			true,
+		]);
 	}
 
 	#[test]
@@ -805,17 +778,14 @@ mod tests {
 		assert!(tree.tree_items[3].kind().is_path());
 		assert!(!tree.tree_items[3].kind().is_path_collapsed());
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true,  //
-				true,  //
-				false, //
-				true,  //
-				true,  //
-				true,
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true,  //
+			true,  //
+			false, //
+			true,  //
+			true,  //
+			true,
+		]);
 	}
 
 	#[test]
@@ -834,26 +804,20 @@ mod tests {
 
 		tree.collapse(0, true);
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true,  //
-				false, //
-				false, //
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true,  //
+			false, //
+			false, //
+		]);
 
 		let res = tree.show_element(1).unwrap();
 		assert_eq!(res, 2);
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true, //
-				true, //
-				true, //
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true, //
+			true, //
+			true, //
+		]);
 	}
 
 	#[test]
@@ -878,16 +842,13 @@ mod tests {
 		let res = tree.show_element(2).unwrap();
 		assert_eq!(res, 4);
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true, //
-				true, //
-				true, //
-				true, //
-				true, //
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true, //
+			true, //
+			true, //
+			true, //
+			true, //
+		]);
 	}
 
 	#[test]
@@ -904,26 +865,20 @@ mod tests {
 
 		tree.collapse(0, true);
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true,  //
-				false, //
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true,  //
+			false, //
+		]);
 
 		let res = tree.show_element(1).unwrap();
 		assert_eq!(res, 1);
 		assert!(tree.tree_items[0].kind().is_path());
 		assert!(!tree.tree_items[0].kind().is_path_collapsed());
 
-		assert_eq!(
-			get_visible(&tree),
-			vec![
-				true, //
-				true, //
-			]
-		);
+		assert_eq!(get_visible(&tree), vec![
+			true, //
+			true, //
+		]);
 	}
 }
 
