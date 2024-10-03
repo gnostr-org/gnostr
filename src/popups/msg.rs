@@ -1,20 +1,20 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Rect},
 	text::{Line, Span},
 	widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
-	Frame,
 };
 use ui::style::SharedTheme;
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, ScrollType, VerticalScroll,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType, VerticalScroll, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	strings,
 	strings::order,
 	ui,

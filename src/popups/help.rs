@@ -5,21 +5,21 @@ use asyncgit::hash;
 use crossterm::event::Event;
 use itertools::Itertools;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Constraint, Direction, Layout, Rect},
 	style::{Modifier, Style},
 	text::{Line, Span},
 	widgets::{Block, BorderType, Borders, Clear, Paragraph},
-	Frame,
 };
 use ui::style::SharedTheme;
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	strings, ui,
 };
 
