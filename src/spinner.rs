@@ -1,8 +1,8 @@
 use std::{cell::Cell, char, io};
 
 use ratatui::{
-	backend::{Backend, CrosstermBackend},
 	Terminal,
+	backend::{Backend, CrosstermBackend},
 };
 
 // static SPINNER_CHARS: &[char] = &['◢', '◣', '◤', '◥'];
