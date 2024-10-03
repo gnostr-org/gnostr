@@ -69,7 +69,7 @@ pub fn repo_init_bare() -> (TempDir, Repository) {
 fn sandbox_config_files() {
 	use std::sync::Once;
 
-	use git2::{opts::set_search_path, ConfigLevel};
+	use git2::{ConfigLevel, opts::set_search_path};
 
 	static INIT: Once = Once::new();
 
