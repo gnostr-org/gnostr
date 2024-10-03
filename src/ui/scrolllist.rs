@@ -1,10 +1,10 @@
 use ratatui::{
+	Frame,
 	buffer::Buffer,
 	layout::Rect,
 	style::Style,
 	text::{Span, Text},
 	widgets::{Block, Borders, List, ListItem, Widget},
-	Frame,
 };
 
 use super::style::SharedTheme;

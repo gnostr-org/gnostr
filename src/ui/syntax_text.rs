@@ -7,8 +7,8 @@ use std::{
 };
 
 use asyncgit::{
-	asyncjob::{AsyncJob, RunParams},
 	ProgressPercent,
+	asyncjob::{AsyncJob, RunParams},
 };
 use once_cell::sync::Lazy;
 use ratatui::text::{Line, Span};
