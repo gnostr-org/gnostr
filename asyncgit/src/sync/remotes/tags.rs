@@ -11,10 +11,10 @@ use crate::{
 	error::Result,
 	progress::ProgressPercent,
 	sync::{
-		cred::BasicAuthCredential,
-		remotes::{proxy_auto, Callbacks},
-		repository::repo,
 		RepoPath,
+		cred::BasicAuthCredential,
+		remotes::{Callbacks, proxy_auto},
+		repository::repo,
 	},
 };
 
@@ -163,6 +163,7 @@ mod tests {
 
 	use super::*;
 	use crate::{
+		PushType,
 		sync::{
 			self, delete_tag,
 			remotes::{
@@ -171,7 +172,6 @@ mod tests {
 			},
 			tests::{repo_clone, repo_init_bare},
 		},
-		PushType,
 	};
 
 	#[test]
@@ -255,10 +255,9 @@ mod tests {
 		let tags =
 			remote_tag_refs(clone2_dir, "origin", None).unwrap();
 
-		assert_eq!(
-			tags.as_slice(),
-			&[String::from("refs/tags/tag1")]
-		);
+		assert_eq!(tags.as_slice(), &[String::from(
+			"refs/tags/tag1"
+		)]);
 	}
 
 	#[test]
@@ -286,10 +285,9 @@ mod tests {
 		let tags_missing =
 			tags_missing_remote(clone1_dir, "origin", None).unwrap();
 
-		assert_eq!(
-			tags_missing.as_slice(),
-			&[String::from("refs/tags/tag1")]
-		);
+		assert_eq!(tags_missing.as_slice(), &[String::from(
+			"refs/tags/tag1"
+		)]);
 		push_tags(clone1_dir, "origin", None, None).unwrap();
 		let tags_missing =
 			tags_missing_remote(clone1_dir, "origin", None).unwrap();

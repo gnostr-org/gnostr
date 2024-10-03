@@ -10,11 +10,11 @@ use scopetime::scope_time;
 use serde::{Deserialize, Serialize};
 
 use super::{
+	CommitId, RepoPath,
 	commit_files::{
-		get_commit_diff, get_compare_commits_diff, OldNew,
+		OldNew, get_commit_diff, get_compare_commits_diff,
 	},
 	utils::{get_head_repo, work_dir},
-	CommitId, RepoPath,
 };
 use crate::{
 	error::{Error, Result},
@@ -433,10 +433,9 @@ mod tests {
 	use crate::{
 		error::Result,
 		sync::{
-			commit, stage_add_file,
-			status::{get_status, StatusType},
+			RepoPath, commit, stage_add_file,
+			status::{StatusType, get_status},
 			tests::{get_statuses, repo_init, repo_init_empty},
-			RepoPath,
 		},
 	};
 

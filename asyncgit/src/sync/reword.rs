@@ -1,10 +1,10 @@
 use git2::{Oid, RebaseOptions, Repository};
 
 use super::{
+	CommitId, RepoPath,
 	commit::signature_allow_undefined_name,
 	repo,
 	utils::{bytes2string, get_head_refname, get_head_repo},
-	CommitId, RepoPath,
 };
 use crate::error::{Error, Result};
 

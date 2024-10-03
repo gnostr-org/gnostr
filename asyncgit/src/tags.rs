@@ -7,11 +7,11 @@ use crossbeam_channel::Sender;
 use sync::Tags;
 
 use crate::{
+	AsyncGitNotification,
 	asyncjob::{AsyncJob, AsyncSingleJob, RunParams},
 	error::Result,
 	hash,
 	sync::{self, RepoPath},
-	AsyncGitNotification,
 };
 
 ///

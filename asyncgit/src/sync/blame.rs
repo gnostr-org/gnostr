@@ -9,7 +9,7 @@ use std::{
 use git2::BlameOptions;
 use scopetime::scope_time;
 
-use super::{utils, CommitId, RepoPath};
+use super::{CommitId, RepoPath, utils};
 use crate::{
 	error::{Error, Result},
 	sync::{get_commits_info, repository::repo},

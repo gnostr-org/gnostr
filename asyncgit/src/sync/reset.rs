@@ -1,7 +1,7 @@
-use git2::{build::CheckoutBuilder, ObjectType, ResetType};
+use git2::{ObjectType, ResetType, build::CheckoutBuilder};
 use scopetime::scope_time;
 
-use super::{utils::get_head_repo, CommitId, RepoPath};
+use super::{CommitId, RepoPath, utils::get_head_repo};
 use crate::{error::Result, sync::repository::repo};
 
 ///
@@ -68,14 +68,13 @@ mod tests {
 	use crate::{
 		error::Result,
 		sync::{
-			commit,
-			status::{get_status, StatusType},
+			RepoPath, commit,
+			status::{StatusType, get_status},
 			tests::{
 				debug_cmd_print, get_statuses, repo_init,
 				repo_init_empty,
 			},
 			utils::{stage_add_all, stage_add_file},
-			RepoPath,
 		},
 	};
 

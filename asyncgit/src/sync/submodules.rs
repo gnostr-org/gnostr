@@ -7,8 +7,8 @@ use git2::{
 };
 use scopetime::scope_time;
 
-use super::{repo, CommitId, RepoPath};
-use crate::{error::Result, sync::utils::work_dir, Error};
+use super::{CommitId, RepoPath, repo};
+use crate::{Error, error::Result, sync::utils::work_dir};
 
 ///
 #[derive(Debug)]
@@ -162,7 +162,7 @@ mod tests {
 
 	use super::get_submodules;
 	use crate::sync::{
-		submodules::submodule_parent_info, tests::repo_init, RepoPath,
+		RepoPath, submodules::submodule_parent_info, tests::repo_init,
 	};
 
 	#[test]

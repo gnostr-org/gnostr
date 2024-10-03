@@ -3,14 +3,14 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
+	AsyncGitNotification,
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
 	sync::{
+		RepoPath,
 		cred::BasicAuthCredential,
 		remotes::{get_default_remote, tags_missing_remote},
-		RepoPath,
 	},
-	AsyncGitNotification,
 };
 
 enum JobState {

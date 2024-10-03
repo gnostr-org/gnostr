@@ -4,7 +4,7 @@ use scopetime::scope_time;
 
 use crate::{
 	error::Result,
-	sync::{repository::repo, RepoPath},
+	sync::{RepoPath, repository::repo},
 };
 
 /// Rename the branch reference
@@ -26,7 +26,7 @@ pub fn rename_branch(
 #[cfg(test)]
 mod test {
 	use super::{
-		super::{checkout_branch, create_branch, RepoPath},
+		super::{RepoPath, checkout_branch, create_branch},
 		rename_branch,
 	};
 	use crate::sync::tests::repo_init;

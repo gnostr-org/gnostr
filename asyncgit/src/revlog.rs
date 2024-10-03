@@ -1,7 +1,7 @@
 use std::{
 	sync::{
-		atomic::{AtomicBool, Ordering},
 		Arc, Mutex,
+		atomic::{AtomicBool, Ordering},
 	},
 	thread,
 	time::{Duration, Instant},
@@ -11,11 +11,11 @@ use crossbeam_channel::Sender;
 use scopetime::scope_time;
 
 use crate::{
+	AsyncGitNotification, Error,
 	error::Result,
 	sync::{
-		repo, CommitId, LogWalker, RepoPath, SharedCommitFilterFn,
+		CommitId, LogWalker, RepoPath, SharedCommitFilterFn, repo,
 	},
-	AsyncGitNotification, Error,
 };
 
 ///

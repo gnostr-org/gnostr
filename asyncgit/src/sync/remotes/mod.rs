@@ -13,12 +13,12 @@ use utils::bytes2string;
 
 use super::RepoPath;
 use crate::{
+	ProgressPercent,
 	error::{Error, Result},
 	sync::{
 		cred::BasicAuthCredential,
 		remotes::push::ProgressNotification, repository::repo, utils,
 	},
-	ProgressPercent,
 };
 
 /// origin
@@ -349,10 +349,10 @@ mod tests {
 
 		let remotes = get_remotes(repo_path).unwrap();
 
-		assert_eq!(
-			remotes,
-			vec![String::from("origin"), String::from("second")]
-		);
+		assert_eq!(remotes, vec![
+			String::from("origin"),
+			String::from("second")
+		]);
 
 		let first =
 			get_default_remote_in_repo(&repo(repo_path).unwrap())
@@ -386,10 +386,10 @@ mod tests {
 		// alphabetically
 		let remotes = get_remotes(repo_path).unwrap();
 
-		assert_eq!(
-			remotes,
-			vec![String::from("alternate"), String::from("origin")]
-		);
+		assert_eq!(remotes, vec![
+			String::from("alternate"),
+			String::from("origin")
+		]);
 
 		let first =
 			get_default_remote_in_repo(&repo(repo_path).unwrap())
@@ -420,13 +420,10 @@ mod tests {
 		);
 
 		let remotes = get_remotes(repo_path).unwrap();
-		assert_eq!(
-			remotes,
-			vec![
-				String::from("alternate"),
-				String::from("someremote")
-			]
-		);
+		assert_eq!(remotes, vec![
+			String::from("alternate"),
+			String::from("someremote")
+		]);
 
 		let default_remote =
 			get_default_remote_in_repo(&repo(repo_path).unwrap());

@@ -35,39 +35,40 @@ mod tags;
 mod tree;
 pub mod utils;
 
-pub use blame::{blame_file, BlameHunk, FileBlame};
+pub use blame::{BlameHunk, FileBlame, blame_file};
 pub use branch::{
+	BranchCompare, BranchDetails, BranchInfo,
 	branch_compare_upstream, checkout_branch, checkout_commit,
 	config_is_pull_rebase, create_branch, delete_branch,
 	get_branch_remote, get_branches_info,
 	merge_commit::merge_upstream_commit,
 	merge_ff::branch_merge_upstream_fastforward,
 	merge_rebase::merge_upstream_rebase, rename::rename_branch,
-	validate_branch_name, BranchCompare, BranchDetails, BranchInfo,
+	validate_branch_name,
 };
 pub use commit::{amend, commit, tag_commit};
 pub use commit_details::{
-	get_commit_details, CommitDetails, CommitMessage, CommitSignature,
+	CommitDetails, CommitMessage, CommitSignature, get_commit_details,
 };
 pub use commit_files::get_commit_files;
 pub use commit_filter::{
-	diff_contains_file, filter_commit_by_search, LogFilterSearch,
-	LogFilterSearchOptions, SearchFields, SearchOptions,
-	SharedCommitFilterFn,
+	LogFilterSearch, LogFilterSearchOptions, SearchFields,
+	SearchOptions, SharedCommitFilterFn, diff_contains_file,
+	filter_commit_by_search,
 };
 pub use commit_revert::{commit_revert, revert_commit, revert_head};
 pub use commits_info::{
-	get_commit_info, get_commits_info, CommitId, CommitInfo,
+	CommitId, CommitInfo, get_commit_info, get_commits_info,
 };
 pub use config::{
-	get_config_string, untracked_files_config,
-	ShowUntrackedFilesConfig,
+	ShowUntrackedFilesConfig, get_config_string,
+	untracked_files_config,
 };
 pub use diff::get_diff_commit;
 pub use git2::{BranchType, ResetType};
 pub use hooks::{
-	hooks_commit_msg, hooks_post_commit, hooks_pre_commit,
-	hooks_prepare_commit_msg, HookResult, PrepareCommitMsgSource,
+	HookResult, PrepareCommitMsgSource, hooks_commit_msg,
+	hooks_post_commit, hooks_pre_commit, hooks_prepare_commit_msg,
 };
 pub use hunks::{reset_hunk, stage_hunk, unstage_hunk};
 pub use ignore::add_to_ignore;
@@ -91,20 +92,20 @@ pub use staging::{discard_lines, stage_lines};
 pub use stash::{
 	get_stashes, stash_apply, stash_drop, stash_pop, stash_save,
 };
-pub use state::{repo_state, RepoState};
+pub use state::{RepoState, repo_state};
 pub use status::is_workdir_clean;
 pub use submodules::{
-	get_submodules, submodule_parent_info, update_submodule,
 	SubmoduleInfo, SubmoduleParentInfo, SubmoduleStatus,
+	get_submodules, submodule_parent_info, update_submodule,
 };
 pub use tags::{
-	delete_tag, get_tags, get_tags_with_metadata, CommitTags, Tag,
-	TagWithMetadata, Tags,
+	CommitTags, Tag, TagWithMetadata, Tags, delete_tag, get_tags,
+	get_tags_with_metadata,
 };
-pub use tree::{tree_file_content, tree_files, TreeFile};
+pub use tree::{TreeFile, tree_file_content, tree_files};
 pub use utils::{
-	get_head, get_head_tuple, repo_dir, repo_open_error,
-	stage_add_all, stage_add_file, stage_addremoved, Head,
+	Head, get_head, get_head_tuple, repo_dir, repo_open_error,
+	stage_add_all, stage_add_file, stage_addremoved,
 };
 
 #[cfg(test)]
@@ -115,12 +116,11 @@ mod tests {
 	use tempfile::TempDir;
 
 	use super::{
-		commit,
+		CommitId, LogWalker, RepoPath, commit,
 		repository::repo,
 		stage_add_file,
-		status::{get_status, StatusType},
+		status::{StatusType, get_status},
 		utils::{get_head_repo, repo_write_file},
-		CommitId, LogWalker, RepoPath,
 	};
 	use crate::error::Result;
 
@@ -131,7 +131,7 @@ mod tests {
 	fn sandbox_config_files() {
 		use std::sync::Once;
 
-		use git2::{opts::set_search_path, ConfigLevel};
+		use git2::{ConfigLevel, opts::set_search_path};
 
 		static INIT: Once = Once::new();
 

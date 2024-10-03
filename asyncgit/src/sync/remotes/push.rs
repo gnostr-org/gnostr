@@ -6,11 +6,11 @@ use crate::{
 	error::{Error, Result},
 	progress::ProgressPercent,
 	sync::{
+		CommitId, RepoPath,
 		branch::branch_set_upstream_after_push,
 		cred::BasicAuthCredential,
-		remotes::{proxy_auto, Callbacks},
+		remotes::{Callbacks, proxy_auto},
 		repository::repo,
-		CommitId, RepoPath,
 	},
 };
 

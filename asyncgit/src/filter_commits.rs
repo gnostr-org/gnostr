@@ -1,7 +1,7 @@
 use std::{
 	sync::{
-		atomic::{AtomicBool, AtomicUsize, Ordering},
 		Arc, Mutex,
+		atomic::{AtomicBool, AtomicUsize, Ordering},
 	},
 	time::{Duration, Instant},
 };
@@ -12,10 +12,10 @@ use rayon::{
 };
 
 use crate::{
+	AsyncGitNotification, ProgressPercent,
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
 	sync::{self, CommitId, RepoPath, SharedCommitFilterFn},
-	AsyncGitNotification, ProgressPercent,
 };
 
 ///
