@@ -1,9 +1,9 @@
 use std::{path::Path, thread, time::Duration};
 
 use anyhow::Result;
-use crossbeam_channel::{unbounded, Sender};
+use crossbeam_channel::{Sender, unbounded};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
-use notify_debouncer_mini::{new_debouncer, DebounceEventResult};
+use notify_debouncer_mini::{DebounceEventResult, new_debouncer};
 use scopetime::scope_time;
 
 pub struct RepoWatcher {

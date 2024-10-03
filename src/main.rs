@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
-#![deny(
+#![warn(
 	unused_imports,
+)]
+#![deny(
 	unused_must_use,
 	dead_code,
 	unstable_name_collisions,
@@ -58,20 +60,20 @@ use std::{
 	time::{Duration, Instant},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use app::QuitState;
 use asyncgit::{
-	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
+	sync::{RepoPath, utils::repo_work_dir},
 };
 use backtrace::Backtrace;
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
+use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
 use crossterm::{
-	terminal::{
-		disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
-		LeaveAlternateScreen,
-	},
 	ExecutableCommand,
+	terminal::{
+		EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+		enable_raw_mode,
+	},
 };
 use input::{Input, InputEvent, InputState};
 use keys::KeyConfig;
@@ -325,6 +327,13 @@ fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 }
 
 fn valid_path(repo_path: &RepoPath) -> bool {
+	// use repo discover from git2
+	// to intercept this error
+	// pass a valid parent repo path if available.
+	//
+	// if none available - start gnostr-tui in
+	// a welcome screen - present options
+	// gnostr-cli init:?
 	let error = asyncgit::sync::repo_open_error(repo_path);
 	if let Some(error) = &error {
 		log::error!("repo open error: {error}");

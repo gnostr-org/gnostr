@@ -3,10 +3,10 @@ use std::{
 };
 
 use asyncgit::{
-	sync::{
-		diff::DiffLinePosition, CommitId, LogFilterSearchOptions,
-	},
 	PushType,
+	sync::{
+		CommitId, LogFilterSearchOptions, diff::DiffLinePosition,
+	},
 };
 use bitflags::bitflags;
 
