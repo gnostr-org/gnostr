@@ -5,11 +5,11 @@ use std::{
 	str::FromStr,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use console::Style;
 use nostr::{
-	nips::nip01::Coordinate, FromBech32, PublicKey, Tag, TagStandard,
-	ToBech32,
+	FromBech32, PublicKey, Tag, TagStandard, ToBech32,
+	nips::nip01::Coordinate,
 };
 use nostr_sdk::{Kind, NostrSigner, Timestamp};
 use serde::{Deserialize, Serialize};
@@ -21,10 +21,10 @@ use crate::{
 		Interactor, InteractorPrompt, PromptInputParms,
 	},
 	client::{
-		get_event_from_global_cache, get_events_from_cache,
-		sign_event, Connect,
+		Connect, get_event_from_global_cache, get_events_from_cache,
+		sign_event,
 	},
-	git::{nostr_url::NostrUrlDecoded, Repo, RepoActions},
+	git::{Repo, RepoActions, nostr_url::NostrUrlDecoded},
 };
 
 #[derive(Default)]
@@ -414,11 +414,11 @@ async fn get_repo_coordinates_from_maintainers_yaml(
 				.kind(nostr::Kind::GitRepoAnnouncement)
 				.reference(git_repo.get_root_commit()?.to_string())
 				.authors(maintainers.clone());
-			let mut events = get_events_from_cache(
-				git_repo.get_path()?,
-				vec![filter.clone()],
-			)
-			.await?;
+			let mut events =
+				get_events_from_cache(git_repo.get_path()?, vec![
+					filter.clone(),
+				])
+				.await?;
 			if events.is_empty() {
 				events = get_event_from_global_cache(
 					git_repo.get_path()?,
@@ -567,14 +567,11 @@ pub fn save_repo_config_to_yaml(
 				.context("cannot convert public key into npub")?,
 		);
 	}
-	serde_yaml::to_writer(
-		file,
-		&RepoConfigYaml {
-			identifier: Some(identifier),
-			maintainers: maintainers_npubs,
-			relays,
-		},
-	)
+	serde_yaml::to_writer(file, &RepoConfigYaml {
+		identifier: Some(identifier),
+		maintainers: maintainers_npubs,
+		relays,
+	})
 	.context(
 		"cannot write maintainers to maintainers.yaml file serde_yaml",
 	)
