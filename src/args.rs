@@ -4,11 +4,12 @@ use std::{
 	path::PathBuf,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use asyncgit::sync::RepoPath;
+//use clap::arg;
 use clap::{
-	crate_authors, crate_description, crate_name, Arg,
-	Command as ClapApp,
+	Arg, Command as ClapApp, crate_authors, crate_description,
+	crate_name,
 };
 use simplelog::{Config, LevelFilter, WriteLogger};
 
@@ -25,6 +26,52 @@ pub fn process_cmdline() -> Result<CliArgs> {
 
 	let arg_matches = app.get_matches();
 
+	let sec = arg_matches
+		.get_one::<String>("sec")
+		.map_or_else(|| String::from(""), String::from);
+	let t = arg_matches
+		.get_one::<String>("t")
+		.map_or_else(|| String::from(""), String::from);
+	let tag = arg_matches
+		.get_one::<String>("tag")
+		.map_or_else(|| String::from(""), String::from);
+
+	if sec.len() != 0 {
+		print!("sec={}\n", sec);
+		print!(
+			"BEGIN gnostr --sec --tag <string> <string> -t <string> --content \"<string>\" ect...\n"
+		);
+		if arg_matches.get_flag("t") {
+			if sec.len() > 0 {
+				print!("sec={}\n", sec);
+				print!("t={}\n", t);
+			} else {
+				print!("sec={}\n", sec);
+				print!("t={}\n", t);
+			}
+		}
+		if arg_matches.get_flag("tag") {
+			if sec.len() > 0 {
+				print!("sec={}\n", sec);
+				print!("t={}\n", tag);
+			} else {
+				print!("sec={}\n", sec);
+				print!("t={}\n", tag);
+			}
+		}
+	} else {
+	}
+	if arg_matches.get_flag("cli") {
+		if sec.len() > 0 {
+			print!("sec={}\n", sec);
+			print!("cli!!");
+		} else {
+			print!("sec={}\n", sec);
+			print!("cli!!");
+		}
+	}
+	//std::process::exit(0);
+
 	if arg_matches.get_flag("bugreport") {
 		bug_report::generate_bugreport();
 		std::process::exit(0);
@@ -33,62 +80,62 @@ pub fn process_cmdline() -> Result<CliArgs> {
 		setup_logging()?;
 	}
 
-	//TODO: gnostr-tui cli sub-command
+	// //TODO: gnostr-tui cli sub-command
 	if arg_matches.get_flag("cli") {
 		//setup_logging()?;
 		print!("cli!!");
 		std::process::exit(0);
 	}
-	if arg_matches.get_flag("sec") {
-		//setup_logging()?;
-		print!("handle --sec");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("tag") {
-		//setup_logging()?;
-		print!("handle a --tag");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("t") {
-		//setup_logging()?;
-		print!("handle a -t");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("envelope") {
-		//setup_logging()?;
-		print!("handle a --envelope");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("created-at") {
-		//setup_logging()?;
-		print!("handle --created-at");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("e") {
-		//setup_logging()?;
-		print!("handle -e");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("p") {
-		//setup_logging()?;
-		print!("handle -p");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("pow") {
-		//setup_logging()?;
-		print!("handle --pow");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("dm") {
-		//setup_logging()?;
-		print!("handle --dm");
-		std::process::exit(0);
-	}
-	if arg_matches.get_flag("kind") {
-		//setup_logging()?;
-		print!("handle --kind");
-		std::process::exit(0);
-	}
+	// if arg_matches.get_flag("sec") {
+	// 	//setup_logging()?;
+	// 	print!("handle --sec");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("tag") {
+	// 	//setup_logging()?;
+	// 	print!("handle a --tag");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("t") {
+	// 	//setup_logging()?;
+	// 	print!("handle a -t");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("envelope") {
+	// 	//setup_logging()?;
+	// 	print!("handle a --envelope");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("created-at") {
+	// 	//setup_logging()?;
+	// 	print!("handle --created-at");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("e") {
+	// 	//setup_logging()?;
+	// 	print!("handle -e");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("p") {
+	// 	//setup_logging()?;
+	// 	print!("handle -p");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("pow") {
+	// 	//setup_logging()?;
+	// 	print!("handle --pow");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("dm") {
+	// 	//setup_logging()?;
+	// 	print!("handle --dm");
+	// 	std::process::exit(0);
+	// }
+	// if arg_matches.get_flag("kind") {
+	// 	//setup_logging()?;
+	// 	print!("handle --kind");
+	// 	std::process::exit(0);
+	// }
 
 	let workdir =
 		arg_matches.get_one::<String>("workdir").map(PathBuf::from);
@@ -136,19 +183,54 @@ fn app() -> ClapApp {
 		",
 		)
 		.arg(
-			Arg::new("theme")
-				.help("Set color theme filename loaded from config directory")
-				.short('t')
-				.long("theme")
-				.value_name("THEME_FILE")
-				.default_value("theme.ron")
-				.num_args(1),
-		)
+			Arg::new("sec")
+			.help("sec help")
+			.value_name("SEC")
+			.default_value("")
+			.long("sec")
+			.num_args(1)
+			.action(clap::ArgAction::Append),
+			)
+		.arg(
+			Arg::new("tag")
+			.help("--tag <string> <string>")
+			.value_name("TAG")
+			.default_value("")
+			.long("tag")
+			.num_args(2)
+			.action(clap::ArgAction::Append),
+			)
+		//.arg(
+		//	Arg::new("t")
+		//	.help("-t <string>")
+		//	.value_name("T")
+		//	.default_value("")
+		//	.long("t")
+		//	.num_args(1)
+		//	.action(clap::ArgAction::Append),
+		//	)
+		.arg(
+			Arg::new("content")
+			.help("--content <string>")
+			.value_name("CONTENT")
+			.default_value("")
+			.long("content")
+			.num_args(1)
+			.action(clap::ArgAction::Append),
+			)
 		.arg(
 			Arg::new("cli")
 				.help("Stores logging output into a cache directory")
 				.long("cli")
 				.num_args(0),
+		)
+		.arg(
+			Arg::new("theme")
+				.help("Set color theme filename loaded from config directory")
+				.long("theme")
+				.value_name("THEME_FILE")
+				.default_value("theme.ron")
+				.num_args(1),
 		)
 		.arg(
 			Arg::new("logging")
