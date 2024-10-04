@@ -1,7 +1,5 @@
 #![forbid(unsafe_code)]
-#![warn(
-	unused_imports,
-)]
+#![warn(unused_imports)]
 #![deny(
 	unused_must_use,
 	dead_code,
@@ -127,6 +125,10 @@ enum Updater {
 	NotifyWatcher,
 }
 
+fn gnostr_cli() {
+	println!("invoke gnostr_cli dialogue");
+	std::process::exit(0);
+}
 fn main() -> Result<()> {
 	let app_start = Instant::now();
 
@@ -135,10 +137,12 @@ fn main() -> Result<()> {
 	asyncgit::register_tracing_logging();
 
 	if !valid_path(&cliargs.repo_path) {
-		eprintln!(
-			"invalid path\nplease run gitui inside of a non-bare git repository"
-		);
-		return Ok(());
+		// eprintln!(
+		// 	"invalid path\nplease run gitui inside of a non-bare git
+		// repository" );
+		gnostr_cli();
+		//return Ok(());
+	} else {
 	}
 
 	let key_config = KeyConfig::init()
