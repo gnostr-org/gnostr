@@ -56,6 +56,14 @@ cargo-test:### 	cargo-test
 	cargo +$(TOOLCHAIN) test -- --nocapture || \
 	(\
 		cargo +$(TOOLCHAIN) test)
+cargo-tr:cargo-test-release
+test-release:cargo-test
+cargo-test-release:### 	cargo-test
+	@. $(HOME)/.cargo/env || true
+	cargo +nightly fmt #-- --check
+	cargo +$(TOOLCHAIN) test --release -- --nocapture || \
+	(\
+		cargo +$(TOOLCHAIN) test --release)
 cargo-tests:tests
 tests:cargo-test-all-features
 cargo-test-all-features:### 	cargo-test-all-features
