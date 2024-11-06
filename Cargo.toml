@@ -14,6 +14,10 @@ categories = ["command-line-utilities"]
 keywords = ["git", "gui", "cli", "terminal", "ui"]
 build = "build.rs"
 
+[[bin]]
+name = "gnostr-tui"
+path = "src/main.rs"
+
 [lib]
 name = "ngit"
 path = "src/lib/mod.rs"
@@ -25,6 +29,7 @@ path = "src/bin/ngit/main.rs"
 [[bin]]
 name = "git-remote-nostr"
 path = "src/bin/git_remote_nostr/main.rs"
+
 
 [dependencies]
 
