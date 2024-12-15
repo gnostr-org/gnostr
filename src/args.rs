@@ -126,7 +126,7 @@ fn app() -> ClapApp {
 
 fn setup_logging() -> Result<()> {
 	let mut path = get_app_cache_path()?;
-	path.push("gitui.log");
+	path.push("gnostr-tui.log");
 
 	println!("Logging enabled. log written to: {path:?}");
 
@@ -143,7 +143,7 @@ fn get_app_cache_path() -> Result<PathBuf> {
 	let mut path = dirs::cache_dir()
 		.ok_or_else(|| anyhow!("failed to find os cache dir."))?;
 
-	path.push("gitui");
+	path.push("gnostr-tui");
 	fs::create_dir_all(&path)?;
 	Ok(path)
 }
