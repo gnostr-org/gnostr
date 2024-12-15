@@ -188,6 +188,18 @@ impl CommitList {
 			);
 		}
 	}
+	#[allow(clippy::needless_pass_by_ref_mut)]
+	pub fn comment(&mut self) {
+		if let Some(commit_hash) =
+			self.selected_entry().map(|entry| entry.id)
+		{
+			try_or_popup!(
+				self,
+				"failed to checkout commit:",
+				checkout_commit(&self.repo.borrow(), commit_hash)
+			);
+		}
+	}
 
 	///
 	pub fn set_local_branches(
@@ -715,6 +727,7 @@ impl CommitList {
 
 	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn selection_highlighted(&mut self) -> bool {
+
 		let commit = self.commits[self.selection];
 
 		self.highlights
@@ -867,8 +880,14 @@ impl Component for CommitList {
 				} else if key_match(
 					k,
 					self.key_config.keys.log_checkout_commit,
-				) {
+				) { //
 					self.checkout();
+					true
+				} else if key_match(
+					k,
+					self.key_config.keys.log_comment_commit,
+				) { //
+					self.comment();
 					true
 				} else {
 					false
