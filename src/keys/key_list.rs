@@ -86,6 +86,7 @@ pub struct KeysList {
 	pub log_tag_commit: GituiKeyEvent,
 	pub log_mark_commit: GituiKeyEvent,
 	pub log_checkout_commit: GituiKeyEvent,
+	pub log_comment_commit: GituiKeyEvent, //backslash \ - use compare - add commenting implace of edit
 	pub log_reset_commit: GituiKeyEvent,
 	pub log_reword_commit: GituiKeyEvent,
 	pub log_find: GituiKeyEvent,
@@ -179,6 +180,7 @@ impl Default for KeysList {
 			log_tag_commit: GituiKeyEvent::new(KeyCode::Char('t'),  KeyModifiers::empty()),
 			log_mark_commit: GituiKeyEvent::new(KeyCode::Char(' '),  KeyModifiers::empty()),
 			log_checkout_commit: GituiKeyEvent { code: KeyCode::Char('S'), modifiers: KeyModifiers::SHIFT },
+			log_comment_commit: GituiKeyEvent { code: KeyCode::Char('\\'), modifiers: KeyModifiers::empty() },// blackslash - easy pinky access
 			log_reset_commit: GituiKeyEvent { code: KeyCode::Char('R'), modifiers: KeyModifiers::SHIFT },
 			log_reword_commit: GituiKeyEvent { code: KeyCode::Char('r'), modifiers: KeyModifiers::empty() },
 			log_find: GituiKeyEvent { code: KeyCode::Char('f'), modifiers: KeyModifiers::empty() },
