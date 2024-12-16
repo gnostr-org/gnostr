@@ -2,9 +2,11 @@
 #![deny(
 	unused_imports,
 	unused_must_use,
-	dead_code,
 	unstable_name_collisions,
 	unused_assignments
+)]
+#![allow(
+	dead_code,
 )]
 #![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
 #![deny(
