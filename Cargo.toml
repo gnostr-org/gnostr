@@ -1,5 +1,5 @@
 [package]
-name = "nostr-tool"
+name = "gnostr"
 version = "0.5.1"
 edition = "2021"
 description = "A CLI tool to interact with nostr"
