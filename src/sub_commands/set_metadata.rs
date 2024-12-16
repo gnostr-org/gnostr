@@ -15,6 +15,9 @@ pub struct SetMetadataSubCommand {
     /// Set your profile image URL
     #[arg(short, long)]
     picture: Option<String>,
+    /// Set your profile image URL
+    #[arg(short, long)]
+    banner: Option<String>,
     /// Set your NIP-05
     #[arg(long)]
     nip05: Option<String>,
@@ -64,6 +67,11 @@ pub async fn set_metadata(
     if let Some(picture_url) = &sub_command_args.picture {
         let url = Url::parse(picture_url)?;
         metadata = metadata.picture(url);
+    };
+    // Banner URL
+    if let Some(banner_url) = &sub_command_args.banner {
+        let url = Url::parse(banner_url)?;
+        metadata = metadata.banner(url);
     };
 
     // NIP-05 identifier
