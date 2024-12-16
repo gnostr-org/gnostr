@@ -1,14 +1,14 @@
 [package]
 name = "gnostr"
-version = "0.5.1"
+version = "0.0.1"
 edition = "2021"
 description = "A CLI tool to interact with nostr"
-authors = ["0xtr <oxtrr@protonmail.com>"]
+authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>"]
 readme = "README.md"
-homepage = "https://github.com/0xtrr/nostr-tool"
-repository = "https://github.com/0xtrr/nostr-tool"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
 license = "MIT"
-keywords = ["nostr", "tool"]
+keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 
 [dependencies]
