@@ -77,10 +77,10 @@ pub fn tab_files(key_config: &SharedKeyConfig) -> String {
 		key_config.get_hint(key_config.keys.tab_files)
 	)
 }
-pub fn tab_home(key_config: &SharedKeyConfig) -> String {
+pub fn tab_chat(key_config: &SharedKeyConfig) -> String {
 	format!(
 		"Home [{}]",
-		key_config.get_hint(key_config.keys.tab_home)
+		key_config.get_hint(key_config.keys.tab_chat)
 	)
 }
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
