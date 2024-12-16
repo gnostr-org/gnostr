@@ -6,8 +6,8 @@ mod utils;
 
 /// Simple CLI application to interact with nostr
 #[derive(Parser)]
-#[command(name = "nostr-tool")]
-#[command(author = "0xtr. <oxtrr@protonmail.com")]
+#[command(name = "gnostr")]
+#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.5")]
 #[command(author, version, about, long_about = None)]
 struct Cli {
