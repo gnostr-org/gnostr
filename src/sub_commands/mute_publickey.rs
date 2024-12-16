@@ -25,7 +25,7 @@ pub async fn mute_publickey(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     // Set up pubkey to mute

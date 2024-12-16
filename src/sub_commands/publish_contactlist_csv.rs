@@ -38,7 +38,7 @@ pub async fn publish_contact_list_from_csv_file(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let mut rdr = csv::Reader::from_path(&sub_command_args.filepath)?;

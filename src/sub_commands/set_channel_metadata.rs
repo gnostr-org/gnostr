@@ -32,7 +32,7 @@ pub async fn set_channel_metadata(
     }
 
     // Process keypair and create a nostr client
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
     let channel_id: EventId = EventId::from_hex(sub_command_args.channel_id.clone())?;

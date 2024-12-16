@@ -18,7 +18,7 @@ pub async fn broadcast_events(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(None, true).await?;
+    let keys = parse_private_key(None, false).await?;
     let client = create_client(&keys, relays.clone(), 0).await?;
 
     let file = std::fs::File::open(&sub_command_args.file_path)?;

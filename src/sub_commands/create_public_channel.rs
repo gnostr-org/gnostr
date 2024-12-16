@@ -27,7 +27,7 @@ pub async fn create_public_channel(
     }
 
     // Process keypair and create a nostr client
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
     // Create metadata

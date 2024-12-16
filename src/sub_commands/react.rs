@@ -32,7 +32,7 @@ pub async fn react_to_event(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     if sub_command_args.reaction.trim().is_empty() {
