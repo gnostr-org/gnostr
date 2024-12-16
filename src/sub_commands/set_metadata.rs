@@ -31,10 +31,10 @@ pub struct SetMetadataSubCommand {
     #[arg(short, long)]
     identities: Vec<String>,
     /// Arbitrary fields not in the protocol. Use this syntax: "key:value"
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = Some(String::from("gnostr:gnostr")))]
     extra_field: Vec<String>,
     /// Print keys as hex
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "true")]
     hex: bool,
 }
 
