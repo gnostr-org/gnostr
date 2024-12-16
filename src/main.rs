@@ -15,7 +15,7 @@ struct Cli {
     command: Commands,
     /// Hex or bech32 formatted private key
     #[arg(short, long)]
-    private_key: Option<String>,
+    sec: Option<String>,
     /// Relay to connect to
     #[arg(short, long, action = clap::ArgAction::Append)]
     relays: Vec<String>,
@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
         Commands::SetMetadata(sub_command_args) => {
             {
                 sub_commands::set_metadata::set_metadata(
-                    args.private_key,
+                    args.sec,
                     args.relays,
                     args.difficulty_target,
                     sub_command_args,
@@ -92,7 +92,7 @@ async fn main() -> Result<()> {
         }
         Commands::TextNote(sub_command_args) => {
             sub_commands::text_note::broadcast_textnote(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -101,7 +101,7 @@ async fn main() -> Result<()> {
         }
         Commands::PublishContactListCsv(sub_command_args) => {
             sub_commands::publish_contactlist_csv::publish_contact_list_from_csv_file(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -110,7 +110,7 @@ async fn main() -> Result<()> {
         }
         Commands::DeleteEvent(sub_command_args) => {
             sub_commands::delete_event::delete(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -119,7 +119,7 @@ async fn main() -> Result<()> {
         }
         Commands::DeleteProfile(sub_command_args) => {
             sub_commands::delete_profile::delete(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -128,7 +128,7 @@ async fn main() -> Result<()> {
         }
         Commands::React(sub_command_args) => {
             sub_commands::react::react_to_event(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -147,7 +147,7 @@ async fn main() -> Result<()> {
         Commands::Vanity(sub_command_args) => sub_commands::vanity::vanity(sub_command_args).await,
         Commands::CreatePublicChannel(sub_command_args) => {
             sub_commands::create_public_channel::create_public_channel(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -156,7 +156,7 @@ async fn main() -> Result<()> {
         }
         Commands::SetChannelMetadata(sub_command_args) => {
             sub_commands::set_channel_metadata::set_channel_metadata(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -165,7 +165,7 @@ async fn main() -> Result<()> {
         }
         Commands::SendChannelMessage(sub_command_args) => {
             sub_commands::send_channel_message::send_channel_message(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -174,7 +174,7 @@ async fn main() -> Result<()> {
         }
         Commands::HidePublicChannelMessage(sub_command_args) => {
             sub_commands::hide_public_channel_message::hide_public_channel_message(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -183,7 +183,7 @@ async fn main() -> Result<()> {
         }
         Commands::MutePublicKey(sub_command_args) => {
             sub_commands::mute_publickey::mute_publickey(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -195,7 +195,7 @@ async fn main() -> Result<()> {
         }
         Commands::CreateBadge(sub_command_args) => {
             sub_commands::create_badge::create_badge(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -204,7 +204,7 @@ async fn main() -> Result<()> {
         }
         Commands::AwardBadge(sub_command_args) => {
             sub_commands::award_badge::award_badge(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -213,7 +213,7 @@ async fn main() -> Result<()> {
         }
         Commands::ProfileBadges(sub_command_args) => {
             sub_commands::profile_badges::set_profile_badges(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -222,7 +222,7 @@ async fn main() -> Result<()> {
         }
         Commands::CustomEvent(sub_command_args) => {
             sub_commands::custom_event::create_custom_event(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -231,7 +231,7 @@ async fn main() -> Result<()> {
         }
         Commands::SetUserStatus(sub_command_args) => {
             sub_commands::user_status::set_user_status(
-                args.private_key,
+                args.sec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
