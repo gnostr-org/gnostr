@@ -73,7 +73,7 @@ pub enum StackablePopupOpen {
 }
 
 pub enum AppTabs {
-	Home,
+	Chat,
 	Status,
 	Log,
 	Files,
