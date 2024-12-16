@@ -31,10 +31,10 @@ pub struct SetMetadataSubCommand {
     #[arg(short, long)]
     identities: Vec<String>,
     /// Arbitrary fields not in the protocol. Use this syntax: "key:value"
-    #[arg(short, long, default_value_t = Some(String::from("gnostr:gnostr")))]
+    #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["gnostr:gnostr".to_string()])]
     extra_field: Vec<String>,
     /// Print keys as hex
-    #[arg(long, default_value = "true")]
+    #[arg(long, default_value = "false")]
     hex: bool,
 }
 
@@ -48,7 +48,7 @@ pub async fn set_metadata(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let mut metadata = Metadata::new();

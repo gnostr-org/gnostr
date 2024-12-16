@@ -37,7 +37,7 @@ pub async fn create_custom_event(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     // Parse kind input
@@ -68,9 +68,9 @@ pub async fn create_custom_event(
     let event_id = client.send_event(event).await?;
 
     if !sub_command_args.hex {
-        println!("Published custom event with id: {}", event_id.to_bech32()?);
+        println!("{}", event_id.to_bech32()?);
     } else {
-        println!("Published custom event with id: {}", event_id.to_hex());
+        println!("{}", event_id.to_hex());
     }
 
     Ok(())

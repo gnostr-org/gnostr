@@ -26,7 +26,7 @@ pub async fn set_profile_badges(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client: Client = create_client(&keys, relays, difficulty_target).await?;
 
     let badge_definition_event_ids: Vec<EventId> = sub_command_args

@@ -25,7 +25,7 @@ pub async fn award_badge(
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let keys = parse_private_key(private_key, true).await?;
+    let keys = parse_private_key(private_key, false).await?;
     let client: Client = create_client(&keys, relays, difficulty_target).await?;
 
     let event_id: EventId = EventId::from_str(sub_command_args.badge_event_id.as_str())?;
