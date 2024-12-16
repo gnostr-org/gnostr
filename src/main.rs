@@ -17,7 +17,7 @@ struct Cli {
     #[arg(short, long)]
     sec: Option<String>,
     /// Relay to connect to
-    #[arg(short, long, action = clap::ArgAction::Append)]
+    #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
