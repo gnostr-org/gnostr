@@ -6,7 +6,7 @@ mod stashlist;
 mod status;
 
 pub use files::FilesTab;
-pub use home::HomeTab;
+pub use home::Chatlog;
 pub use revlog::Revlog;
 pub use stashing::{Stashing, StashingOptions};
 pub use stashlist::StashList;
