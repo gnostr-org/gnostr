@@ -37,7 +37,7 @@ impl From<&GituiKeyEvent> for KeyEvent {
 #[derive(Debug, Clone, Patch)]
 #[patch_derive(Deserialize, Debug)]
 pub struct KeysList {
-	pub tab_home: GituiKeyEvent,
+	pub tab_chat: GituiKeyEvent,
 	pub tab_status: GituiKeyEvent,
 	pub tab_log: GituiKeyEvent,
 	pub tab_files: GituiKeyEvent,
@@ -131,7 +131,7 @@ pub struct KeysList {
 impl Default for KeysList {
 	fn default() -> Self {
 		Self {
-			tab_home: GituiKeyEvent::new(KeyCode::Char('1'), KeyModifiers::empty()),
+			tab_chat: GituiKeyEvent::new(KeyCode::Char('1'), KeyModifiers::empty()),
 			tab_status: GituiKeyEvent::new(KeyCode::Char('2'), KeyModifiers::empty()),
 			tab_log: GituiKeyEvent::new(KeyCode::Char('3'),  KeyModifiers::empty()),
 			tab_files: GituiKeyEvent::new(KeyCode::Char('4'),  KeyModifiers::empty()),
