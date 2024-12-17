@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
+use ngit::*;
 
 mod sub_commands;
 mod utils;
