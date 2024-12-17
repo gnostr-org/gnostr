@@ -1064,7 +1064,6 @@ dependencies = [
  "clap",
  "csv",
  "ngit",
- "nostr-git-remote-helper",
  "nostr-sdk",
  "num_cpus",
  "serde",
@@ -1732,16 +1731,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "nostr-git-remote-helper"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "clap",
- "futures",
- "tokio",
 ]
 
 [[package]]

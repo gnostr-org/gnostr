@@ -9,3 +9,4 @@ build-all-release:
 
 install-all:
     cargo install --force --path .
+    cargo install --force --path ./crates/ngit
