@@ -1,3 +1,4 @@
+[workspace]
 [package]
 name = "nostr-git-remote-helper"
 version = "0.0.1"
