@@ -1,6 +1,5 @@
 use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
-use ngit::*;
 
 mod sub_commands;
 mod utils;
@@ -27,6 +26,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Ngit sub commands
+    Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.
     SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
     /// Send text note
@@ -80,6 +81,7 @@ async fn main() -> Result<()> {
 
     // Post event
     match &args.command {
+        Commands::Ngit(sub_command_args) => sub_commands::ngit::ngit(sub_command_args).await,
         Commands::SetMetadata(sub_command_args) => {
             {
                 sub_commands::set_metadata::set_metadata(
