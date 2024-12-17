@@ -1,12 +1,12 @@
 #![forbid(unsafe_code)]
 #![deny(
-	unused_imports,
 	unused_must_use,
 	unstable_name_collisions,
 	unused_assignments
 )]
-#![allow(
+#![warn(
 	dead_code,
+	unused_imports,
 )]
 #![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
 #![deny(
