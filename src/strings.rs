@@ -79,8 +79,7 @@ pub fn tab_files(key_config: &SharedKeyConfig) -> String {
 }
 pub fn tab_chat(key_config: &SharedKeyConfig) -> String {
 	format!(
-		"Home [{}]",
-		key_config.get_hint(key_config.keys.tab_chat)
+		"gnostr",
 	)
 }
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
@@ -110,6 +109,7 @@ pub fn msg_title_error(_key_config: &SharedKeyConfig) -> String {
 pub fn msg_title_info(_key_config: &SharedKeyConfig) -> String {
 	"Info".to_string()
 }
+
 pub fn commit_title() -> String {
 	"Commit".to_string()
 }
