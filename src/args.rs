@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::{Result, anyhow};
 use asyncgit::sync::RepoPath;
+use clap::Parser;
 use clap::{
 	Arg, Command as ClapApp, crate_authors, crate_description,
 	crate_name,
@@ -14,16 +15,30 @@ use simplelog::{Config, LevelFilter, WriteLogger};
 
 use crate::bug_report;
 
+use crate::cli::{Cli, Commands};
+
+use crate::sub_commands::*;
+
 pub struct CliArgs {
 	pub theme: PathBuf,
 	pub repo_path: RepoPath,
 	pub notify_watcher: bool,
 }
 
-pub fn process_cmdline() -> Result<CliArgs> {
+pub async fn process_cmdline() -> Result<CliArgs> {
 	let app = app();
 
 	let arg_matches = app.get_matches();
+
+	let arg_theme = arg_matches
+		.get_one::<String>("theme")
+		.map_or_else(|| PathBuf::from("theme.ron"), PathBuf::from);
+
+	let theme = get_app_config_path()?.join(arg_theme);
+
+	let notify_watcher: bool =
+		*arg_matches.get_one("watcher").unwrap_or(&false);
+
 
 	if arg_matches.get_flag("bugreport") {
 		bug_report::generate_bugreport();
@@ -43,17 +58,42 @@ pub fn process_cmdline() -> Result<CliArgs> {
 	let repo_path = if let Some(w) = workdir {
 		RepoPath::Workdir { gitdir, workdir: w }
 	} else {
-		RepoPath::Path(gitdir)
+
+        //ngit functionality must be invoked from within the repo
+       let cli = Cli::parse();
+        //
+       let _ = match &cli.command {
+        //
+               Commands::Fetch(args) => {
+                       fetch::launch(&cli, &args).await
+               }
+        //
+               Commands::Login(args) => {
+                       login::launch(&cli, &args).await
+               }
+        //
+               Commands::Init(args) => {
+                       init::launch(&cli, &args).await
+               }
+        //
+               Commands::Send(args) => {
+                       send::launch(&cli, &args, false).await
+               }
+        //
+               Commands::List => list::launch().await,
+        //
+               Commands::Pull => pull::launch().await,
+        //
+               Commands::Push(args) => {
+        //
+                       push::launch(&cli, &args).await
+               }
+        //
+        };
+
+	RepoPath::Path(gitdir)
+
 	};
-
-	let arg_theme = arg_matches
-		.get_one::<String>("theme")
-		.map_or_else(|| PathBuf::from("theme.ron"), PathBuf::from);
-
-	let theme = get_app_config_path()?.join(arg_theme);
-
-	let notify_watcher: bool =
-		*arg_matches.get_one("watcher").unwrap_or(&false);
 
 	Ok(CliArgs {
 		theme,
