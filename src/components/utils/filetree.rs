@@ -7,7 +7,7 @@ use std::{
 	path::Path,
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use asyncgit::StatusItem;
 
 /// holds the information shared among all `FileTreeItem` in a
@@ -286,18 +286,15 @@ mod tests {
 		let res =
 			FileTreeItems::new(&items, &BTreeSet::new()).unwrap();
 
-		assert_eq!(
-			res.items,
-			vec![FileTreeItem {
-				info: TreeItemInfo {
-					path: items[0].path.clone(),
-					full_path: items[0].path.clone(),
-					indent: 0,
-					visible: true,
-				},
-				kind: FileTreeItemKind::File(items[0].clone())
-			}]
-		);
+		assert_eq!(res.items, vec![FileTreeItem {
+			info: TreeItemInfo {
+				path: items[0].path.clone(),
+				full_path: items[0].path.clone(),
+				indent: 0,
+				visible: true,
+			},
+			kind: FileTreeItemKind::File(items[0].clone())
+		}]);
 
 		let items = string_vec_to_status(&[
 			"file.txt",  //
@@ -324,10 +321,10 @@ mod tests {
 			.map(|i| i.info.full_path.clone())
 			.collect::<Vec<_>>();
 
-		assert_eq!(
-			res,
-			vec![String::from("a"), items[0].path.clone(),]
-		);
+		assert_eq!(res, vec![
+			String::from("a"),
+			items[0].path.clone(),
+		]);
 	}
 
 	#[test]
@@ -381,14 +378,11 @@ mod tests {
 			.map(|i| i.info.full_path.clone())
 			.collect::<Vec<_>>();
 
-		assert_eq!(
-			res,
-			vec![
-				String::from("a"),
-				items[0].path.clone(),
-				items[1].path.clone()
-			]
-		);
+		assert_eq!(res, vec![
+			String::from("a"),
+			items[0].path.clone(),
+			items[1].path.clone()
+		]);
 	}
 
 	#[test]

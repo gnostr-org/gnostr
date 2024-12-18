@@ -4,37 +4,37 @@ use std::{
 
 use anyhow::Result;
 use asyncgit::{
+	AsyncGitNotification, AsyncTreeFilesJob,
 	asyncjob::AsyncSingleJob,
 	sync::{
-		get_commit_info, CommitId, CommitInfo, RepoPathRef, TreeFile,
+		CommitId, CommitInfo, RepoPathRef, TreeFile, get_commit_info,
 	},
-	AsyncGitNotification, AsyncTreeFilesJob,
 };
 use crossterm::event::Event;
 use filetreelist::{FileTree, FileTreeItem};
 use ratatui::{
+	Frame,
 	layout::{Constraint, Direction, Layout, Rect},
 	text::Span,
 	widgets::{Block, Borders},
-	Frame,
 };
 use unicode_truncate::UnicodeTruncateStr;
 use unicode_width::UnicodeWidthStr;
 
 use super::{
-	utils::scroll_vertical::VerticalScroll, CommandBlocking,
-	CommandInfo, Component, DrawableComponent, EventState,
-	FuzzyFinderTarget, SyntaxTextComponent,
+	CommandBlocking, CommandInfo, Component, DrawableComponent,
+	EventState, FuzzyFinderTarget, SyntaxTextComponent,
+	utils::scroll_vertical::VerticalScroll,
 };
 use crate::{
+	AsyncNotification,
 	app::Environment,
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	popups::{BlameFileOpen, FileRevOpen},
 	queue::{InternalEvent, Queue, StackablePopupOpen},
 	strings::{self, order, symbol},
 	try_or_popup,
 	ui::{self, common_nav, style::SharedTheme},
-	AsyncNotification,
 };
 
 enum Focus {
