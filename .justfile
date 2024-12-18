@@ -52,11 +52,16 @@ lint:
 run:
     cargo run --bin gnostr || true
 
+install-all:install install-ngit
 install:
     cargo install --path .
 
+install-ngit:
+    cargo install --path crates/ngit
+
 build:
     cargo build --bins || true
+    cargo b --manifest-path crates/ngit/Cargo.toml || true
 
 build-examples:
     cargo build --examples || true
