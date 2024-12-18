@@ -52,6 +52,9 @@ lint:
 run:
     cargo run --bin gnostr || true
 
+install:
+    cargo install --path .
+
 build:
     cargo build --bins || true
 
