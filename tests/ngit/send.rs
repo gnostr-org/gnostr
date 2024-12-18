@@ -59,10 +59,9 @@ mod when_commits_behind_ask_to_proceed {
 	fn asked_with_default_no() -> Result<()> {
 		let test_repo = prep_test_repo()?;
 
-		let mut p = CliTester::new_from_dir(
-			&test_repo.dir,
-			["send", "HEAD~2"],
-		);
+		let mut p = CliTester::new_from_dir(&test_repo.dir, [
+			"send", "HEAD~2",
+		]);
 		expect_confirm_prompt(&mut p)?;
 		p.exit()?;
 		Ok(())
@@ -73,10 +72,9 @@ mod when_commits_behind_ask_to_proceed {
 	fn when_response_is_false_aborts() -> Result<()> {
 		let test_repo = prep_test_repo()?;
 
-		let mut p = CliTester::new_from_dir(
-			&test_repo.dir,
-			["send", "HEAD~2"],
-		);
+		let mut p = CliTester::new_from_dir(&test_repo.dir, [
+			"send", "HEAD~2",
+		]);
 
 		expect_confirm_prompt(&mut p)?.succeeds_with(Some(false))?;
 
@@ -92,10 +90,9 @@ mod when_commits_behind_ask_to_proceed {
 	fn when_response_is_true_proceeds() -> Result<()> {
 		let test_repo = prep_test_repo()?;
 
-		let mut p = CliTester::new_from_dir(
-			&test_repo.dir,
-			["send", "HEAD~2"],
-		);
+		let mut p = CliTester::new_from_dir(&test_repo.dir, [
+			"send", "HEAD~2",
+		]);
 		expect_confirm_prompt(&mut p)?.succeeds_with(Some(true))?;
 		p.expect("? include cover letter")?;
 		p.exit()?;
@@ -2081,7 +2078,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 }
 
 mod in_reply_to_mentions_issue {
-	use nostr::{serde_json, ToBech32};
+	use nostr::{ToBech32, serde_json};
 
 	use super::*;
 
