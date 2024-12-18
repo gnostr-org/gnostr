@@ -1,4 +1,5 @@
 mod changes;
+mod chat_details;
 mod command;
 mod commit_details;
 mod commitlist;
@@ -8,13 +9,16 @@ mod revision_files;
 mod status_tree;
 mod syntax_text;
 mod textinput;
+mod topiclist;
 mod utils;
 
 use anyhow::Result;
 pub use changes::ChangesComponent;
 pub use command::{CommandInfo, CommandText};
 pub use commit_details::CommitDetailsComponent;
+pub use chat_details::ChatDetailsComponent;
 pub use commitlist::CommitList;
+pub use topiclist::TopicList;
 pub use cred::CredComponent;
 use crossterm::event::Event;
 pub use diff::DiffComponent;

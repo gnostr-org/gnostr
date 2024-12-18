@@ -34,7 +34,7 @@ use crate::{
 	components::{
 		visibility_blocking, CommandBlocking, CommandInfo,
 		CommitDetailsComponent, CommitList, Component,
-		DrawableComponent, EventState,
+		DrawableComponent, EventState, TopicList, ChatDetailsComponent
 	},
 	keys::{key_match, SharedKeyConfig},
 	popups::{FileTreeOpen, InspectCommitOpen},
@@ -64,8 +64,8 @@ enum LogSearch {
 ///
 pub struct Chatlog {
 	repo: RepoPathRef,
-	commit_details: CommitDetailsComponent,
-	list: CommitList,
+	commit_details: ChatDetailsComponent,
+	list: TopicList,
 	git_log: AsyncLog,
 	search: LogSearch,
 	git_tags: AsyncTags,
@@ -84,8 +84,8 @@ impl Chatlog {
 		Self {
 			repo: env.repo.clone(),
 			queue: env.queue.clone(),
-			commit_details: CommitDetailsComponent::new(env),
-			list: CommitList::new(
+			commit_details: ChatDetailsComponent::new(env),
+			list: TopicList::new(
 				env,
 				&strings::log_title(&env.key_config),
 			),
