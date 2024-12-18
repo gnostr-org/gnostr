@@ -2,8 +2,8 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use asyncgit::{
-	sync::{self, status::StatusType, RepoPathRef},
 	AsyncGitNotification, AsyncStatus, StatusParams,
+	sync::{self, RepoPathRef, status::StatusType},
 };
 use crossterm::event::Event;
 use ratatui::{
@@ -16,11 +16,11 @@ use crate::{
 	accessors,
 	app::Environment,
 	components::{
-		command_pump, event_pump, visibility_blocking,
 		CommandBlocking, CommandInfo, Component, DrawableComponent,
-		EventState, StatusTreeComponent,
+		EventState, StatusTreeComponent, command_pump, event_pump,
+		visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, Queue},
 	strings,
 	ui::style::SharedTheme,
