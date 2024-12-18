@@ -1,14 +1,14 @@
 use std::{
 	sync::{
-		atomic::{AtomicBool, Ordering},
 		Arc,
+		atomic::{AtomicBool, Ordering},
 	},
 	thread,
 	time::Duration,
 };
 
 use anyhow::Result;
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender, unbounded};
 use crossterm::event::{self, Event, Event::Key, KeyEventKind};
 
 use crate::notify_mutex::NotifyableMutex;

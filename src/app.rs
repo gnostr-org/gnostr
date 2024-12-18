@@ -4,36 +4,35 @@ use std::{
 	rc::Rc,
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use asyncgit::{
-	sync::{
-		self,
-		utils::{repo_work_dir, undo_last_commit},
-		RepoPath, RepoPathRef,
-	},
 	AsyncGitNotification, PushType,
+	sync::{
+		self, RepoPath, RepoPathRef,
+		utils::{repo_work_dir, undo_last_commit},
+	},
 };
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use ratatui::{
+	Frame,
 	layout::{
 		Alignment, Constraint, Direction, Layout, Margin, Rect,
 	},
 	text::{Line, Span},
 	widgets::{Block, Borders, Paragraph, Tabs},
-	Frame,
 };
 use unicode_width::UnicodeWidthStr;
 
 use crate::{
-	accessors,
+	AsyncAppNotification, AsyncNotification, accessors,
 	cmdbar::CommandBar,
 	components::{
-		command_pump, event_pump, CommandInfo, Component,
-		DrawableComponent, FuzzyFinderTarget,
+		CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
+		command_pump, event_pump,
 	},
 	input::{Input, InputEvent, InputState},
-	keys::{key_match, KeyConfig, SharedKeyConfig},
+	keys::{KeyConfig, SharedKeyConfig, key_match},
 	options::{Options, SharedOptions},
 	popup_stack::PopupStack,
 	popups::{
@@ -52,10 +51,9 @@ use crate::{
 	},
 	setup_popups,
 	strings::{self, ellipsis_trim_start, order},
-	tabs::{FilesTab, Chatlog, Revlog, StashList, Stashing, Status},
+	tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
 	try_or_popup,
 	ui::style::{SharedTheme, Theme},
-	AsyncAppNotification, AsyncNotification,
 };
 
 #[derive(Clone)]
@@ -437,7 +435,7 @@ impl App {
 			|| self.revlog.any_work_pending()
 			|| self.stashing_tab.anything_pending()
 			|| self.files_tab.anything_pending()
-                        || self.chat_tab.any_work_pending()
+			|| self.chat_tab.any_work_pending()
 			|| self.blame_file_popup.any_work_pending()
 			|| self.file_revlog_popup.any_work_pending()
 			|| self.inspect_commit_popup.any_work_pending()
@@ -464,73 +462,67 @@ impl App {
 
 // private impls
 impl App {
-	accessors!(
-		self,
-		[
-			log_search_popup,
-			fuzzy_find_popup,
-			msg_popup,
-			confirm_popup,
-			commit_popup,
-			blame_file_popup,
-			file_revlog_popup,
-			stashmsg_popup,
-			inspect_commit_popup,
-			compare_commits_popup,
-			external_editor_popup,
-			push_popup,
-			push_tags_popup,
-			pull_popup,
-			fetch_popup,
-			tag_commit_popup,
-			reset_popup,
-			create_branch_popup,
-			rename_branch_popup,
-			select_branch_popup,
-			revision_files_popup,
-			submodule_popup,
-			tags_popup,
-			options_popup,
-			help_popup,
-			revlog,
-			status_tab,
-			files_tab,
-			chat_tab,
-			stashing_tab,
-			stashlist_tab
-		]
-	);
+	accessors!(self, [
+		log_search_popup,
+		fuzzy_find_popup,
+		msg_popup,
+		confirm_popup,
+		commit_popup,
+		blame_file_popup,
+		file_revlog_popup,
+		stashmsg_popup,
+		inspect_commit_popup,
+		compare_commits_popup,
+		external_editor_popup,
+		push_popup,
+		push_tags_popup,
+		pull_popup,
+		fetch_popup,
+		tag_commit_popup,
+		reset_popup,
+		create_branch_popup,
+		rename_branch_popup,
+		select_branch_popup,
+		revision_files_popup,
+		submodule_popup,
+		tags_popup,
+		options_popup,
+		help_popup,
+		revlog,
+		status_tab,
+		files_tab,
+		chat_tab,
+		stashing_tab,
+		stashlist_tab
+	]);
 
-	setup_popups!(
-		self,
-		[
-			commit_popup,
-			stashmsg_popup,
-			help_popup,
-			inspect_commit_popup,
-			compare_commits_popup,
-			blame_file_popup,
-			file_revlog_popup,
-			external_editor_popup,
-			tag_commit_popup,
-			select_branch_popup,
-			submodule_popup,
-			tags_popup,
-			reset_popup,
-			create_branch_popup,
-			rename_branch_popup,
-			revision_files_popup,
-			fuzzy_find_popup,
-			log_search_popup,
-			push_popup,
-			push_tags_popup,
-			pull_popup,
-			fetch_popup,
-			options_popup,
-			confirm_popup,
-			msg_popup
-		]
-	);
+	setup_popups!(self, [
+		commit_popup,
+		stashmsg_popup,
+		help_popup,
+		inspect_commit_popup,
+		compare_commits_popup,
+		blame_file_popup,
+		file_revlog_popup,
+		external_editor_popup,
+		tag_commit_popup,
+		select_branch_popup,
+		submodule_popup,
+		tags_popup,
+		reset_popup,
+		create_branch_popup,
+		rename_branch_popup,
+		revision_files_popup,
+		fuzzy_find_popup,
+		log_search_popup,
+		push_popup,
+		push_tags_popup,
+		pull_popup,
+		fetch_popup,
+		options_popup,
+		confirm_popup,
+		msg_popup
+	]);
 
 	fn check_quit(&mut self, ev: &Event) -> bool {
 		if self.any_popup_visible() {
