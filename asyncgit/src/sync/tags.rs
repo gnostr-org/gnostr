@@ -5,7 +5,7 @@ use std::{
 
 use scopetime::scope_time;
 
-use super::{get_commits_info, CommitId, RepoPath};
+use super::{CommitId, RepoPath, get_commits_info};
 use crate::{
 	error::Result,
 	sync::{repository::repo, utils::bytes2string},

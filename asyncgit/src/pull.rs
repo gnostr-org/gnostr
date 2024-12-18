@@ -3,16 +3,16 @@ use std::{
 	thread,
 };
 
-use crossbeam_channel::{unbounded, Sender};
+use crossbeam_channel::{Sender, unbounded};
 
 use crate::{
+	AsyncGitNotification, RemoteProgress,
 	error::{Error, Result},
 	sync::{
+		RepoPath,
 		cred::BasicAuthCredential,
 		remotes::{fetch, push::ProgressNotification},
-		RepoPath,
 	},
-	AsyncGitNotification, RemoteProgress,
 };
 
 ///

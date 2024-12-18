@@ -1,6 +1,6 @@
 use git2::{
-	build::CheckoutBuilder, Oid, Repository, StashApplyOptions,
-	StashFlags,
+	Oid, Repository, StashApplyOptions, StashFlags,
+	build::CheckoutBuilder,
 };
 use scopetime::scope_time;
 

@@ -9,10 +9,10 @@ use crossbeam_channel::{Receiver, Sender};
 use git2::PackBuilderStage;
 
 use crate::{
+	AsyncGitNotification,
 	error::Result,
 	progress::ProgressPercent,
 	sync::remotes::push::{AsyncProgress, ProgressNotification},
-	AsyncGitNotification,
 };
 
 /// used for push/pull
