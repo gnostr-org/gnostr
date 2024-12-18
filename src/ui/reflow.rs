@@ -439,16 +439,13 @@ mod test {
 			text,
 			width,
 		);
-		assert_eq!(
-			word_wrapper,
-			vec![
-				"abcd efghij",
-				"klmnopabcdefghijklmn",
-				"opabcdefghijkl",
-				"mnopab cdefghi j",
-				"klmno",
-			]
-		);
+		assert_eq!(word_wrapper, vec![
+			"abcd efghij",
+			"klmnopabcdefghijklmn",
+			"opabcdefghijkl",
+			"mnopab cdefghi j",
+			"klmno",
+		]);
 	}
 
 	#[test]
@@ -472,10 +469,9 @@ mod test {
 			"は、",
 		];
 		assert_eq!(word_wrapper, wrapped);
-		assert_eq!(
-			word_wrapper_width,
-			vec![width, width, width, width, 4]
-		);
+		assert_eq!(word_wrapper_width, vec![
+			width, width, width, width, 4
+		]);
 	}
 
 	#[test]
@@ -550,17 +546,14 @@ mod test {
 			text,
 			width,
 		);
-		assert_eq!(
-			word_wrapper,
-			vec![
-				"コンピュ",
-				"ータ上で文字を扱う場",
-				"合、 典型的には文",
-				"字による 通信を行",
-				"う場合にその両端点で",
-				"は、",
-			]
-		);
+		assert_eq!(word_wrapper, vec![
+			"コンピュ",
+			"ータ上で文字を扱う場",
+			"合、 典型的には文",
+			"字による 通信を行",
+			"う場合にその両端点で",
+			"は、",
+		]);
 		// Odd-sized lines have a space in them.
 		assert_eq!(word_wrapper_width, vec![8, 20, 17, 17, 20, 4]);
 	}
@@ -576,10 +569,10 @@ mod test {
 			text,
 			width,
 		);
-		assert_eq!(
-			word_wrapper,
-			vec!["AAAAAAAAAAAAAAA", "AAAA\u{00a0}AAA",]
-		);
+		assert_eq!(word_wrapper, vec![
+			"AAAAAAAAAAAAAAA",
+			"AAAA\u{00a0}AAA",
+		]);
 
 		// Ensure that if the character was a regular space, it would
 		// be wrapped differently.
@@ -589,10 +582,10 @@ mod test {
 			&text_space,
 			width,
 		);
-		assert_eq!(
-			word_wrapper_space,
-			vec!["AAAAAAAAAAAAAAA AAAA", "AAA",]
-		);
+		assert_eq!(word_wrapper_space, vec![
+			"AAAAAAAAAAAAAAA AAAA",
+			"AAA",
+		]);
 	}
 
 	#[test]
@@ -604,10 +597,10 @@ mod test {
 			text,
 			width,
 		);
-		assert_eq!(
-			word_wrapper,
-			vec!["AAAAAAAAAAAAAAAAAAAA", "   AAA",]
-		);
+		assert_eq!(word_wrapper, vec![
+			"AAAAAAAAAAAAAAAAAAAA",
+			"   AAA",
+		]);
 	}
 
 	#[test]
@@ -619,12 +612,9 @@ mod test {
 			text,
 			width,
 		);
-		assert_eq!(
-			word_wrapper,
-			vec![
-				"AAA AAA", "AAAAA AA", "AAAAAA", " B", "  C", "   D"
-			]
-		);
+		assert_eq!(word_wrapper, vec![
+			"AAA AAA", "AAAAA AA", "AAAAAA", " B", "  C", "   D"
+		]);
 	}
 
 	#[test]
@@ -638,16 +628,13 @@ mod test {
 			text,
 			width,
 		);
-		assert_eq!(
-			word_wrapper,
-			vec![
-				"          ",
-				"    4",
-				"Indent",
-				"          ",
-				"      must",
-				"wrap!"
-			]
-		);
+		assert_eq!(word_wrapper, vec![
+			"          ",
+			"    4",
+			"Indent",
+			"          ",
+			"      must",
+			"wrap!"
+		]);
 	}
 }

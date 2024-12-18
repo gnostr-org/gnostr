@@ -1,5 +1,6 @@
 use easy_cast::CastFloat;
 use ratatui::{
+	Frame,
 	buffer::Buffer,
 	layout::{Margin, Rect},
 	style::Style,
@@ -8,7 +9,6 @@ use ratatui::{
 		line::{DOUBLE_HORIZONTAL, DOUBLE_VERTICAL},
 	},
 	widgets::Widget,
-	Frame,
 };
 
 use super::style::SharedTheme;
