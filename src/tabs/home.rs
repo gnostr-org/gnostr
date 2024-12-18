@@ -425,8 +425,8 @@ impl DrawableComponent for Chatlog {
 			.direction(Direction::Horizontal)
 			.constraints(
 				[
-					Constraint::Percentage(0),
-					Constraint::Percentage(100),
+					Constraint::Percentage(7),
+					Constraint::Percentage(93),
 				]
 				.as_ref(),
 			)
