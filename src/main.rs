@@ -4,10 +4,7 @@
 	unstable_name_collisions,
 	unused_assignments
 )]
-#![warn(
-	dead_code,
-	unused_imports,
-)]
+#![warn(dead_code, unused_imports)]
 #![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
 #![deny(
 	clippy::unwrap_used,
@@ -60,20 +57,20 @@ use std::{
 	time::{Duration, Instant},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use app::QuitState;
 use asyncgit::{
-	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
+	sync::{RepoPath, utils::repo_work_dir},
 };
 use backtrace::Backtrace;
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
+use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
 use crossterm::{
-	terminal::{
-		disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
-		LeaveAlternateScreen,
-	},
 	ExecutableCommand,
+	terminal::{
+		EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+		enable_raw_mode,
+	},
 };
 use input::{Input, InputEvent, InputState};
 use keys::KeyConfig;

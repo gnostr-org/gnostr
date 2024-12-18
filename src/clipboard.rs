@@ -4,7 +4,7 @@ use std::{
 	process::{Command, Stdio},
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use which::which;
 
 fn exec_copy_with_args(

@@ -8,12 +8,12 @@ use std::{
 
 use anyhow::Result;
 use asyncgit::sync::{
-	diff::DiffOptions, repo_dir, RepoPathRef,
-	ShowUntrackedFilesConfig,
+	RepoPathRef, ShowUntrackedFilesConfig, diff::DiffOptions,
+	repo_dir,
 };
 use ron::{
 	de::from_bytes,
-	ser::{to_string_pretty, PrettyConfig},
+	ser::{PrettyConfig, to_string_pretty},
 };
 use serde::{Deserialize, Serialize};
 

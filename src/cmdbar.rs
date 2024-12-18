@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
 use ratatui::{
+	Frame,
 	layout::{Alignment, Rect},
 	text::{Line, Span},
 	widgets::Paragraph,
-	Frame,
 };
 use unicode_width::UnicodeWidthStr;
 

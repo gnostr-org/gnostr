@@ -4,11 +4,11 @@ use std::{
 	path::PathBuf,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use asyncgit::sync::RepoPath;
 use clap::{
-	crate_authors, crate_description, crate_name, Arg,
-	Command as ClapApp,
+	Arg, Command as ClapApp, crate_authors, crate_description,
+	crate_name,
 };
 use simplelog::{Config, LevelFilter, WriteLogger};
 
