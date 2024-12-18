@@ -5,14 +5,14 @@ use std::{
 	time::Instant,
 };
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
 use ngit::{
 	git::{
+		Repo, RepoActions,
 		nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
 		utils::check_ssh_keys,
-		Repo, RepoActions,
 	},
 	git_events::tag_value,
 	login::get_curent_user,
@@ -22,12 +22,12 @@ use nostr::nips::nip19;
 use nostr_sdk::ToBech32;
 
 use crate::utils::{
-	count_lines_per_msg_vec,
+	Direction, count_lines_per_msg_vec,
 	fetch_or_list_error_is_not_authentication_failure,
 	find_proposal_and_patches_by_branch_name,
 	get_oids_from_fetch_batch, get_open_proposals,
 	get_read_protocols_to_try, join_with_and,
-	set_protocol_preference, Direction,
+	set_protocol_preference,
 };
 
 pub async fn run_fetch(
