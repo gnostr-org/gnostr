@@ -187,6 +187,8 @@ impl TopicList {
 			);
 		}
 	}
+
+	///
 	#[allow(clippy::needless_pass_by_ref_mut)]
 	pub fn comment(&mut self) {
 		if let Some(commit_hash) =
@@ -544,19 +546,19 @@ impl TopicList {
 		//	style_time,
 		//));
 
-		txt.push(splitter.clone());
+		//txt.push(splitter.clone());
 
 		let author_width =
 			(width.saturating_sub(19) / 3).clamp(3, 20);
 		let author = string_width_align(&e.author, author_width);
 
-		// commit author
-		// insert nostr pubkey
-		// txt.push(Span::styled(author, style_author));
+		//commit author
+		//insert nostr pubkey
+		//txt.push(Span::styled(author, style_author));
 
-		txt.push(splitter.clone());
+		//txt.push(splitter.clone());
 
-		// commit tags
+		//commit tags
 		//if let Some(tags) = tags {
 		//	txt.push(splitter.clone());
 		//	txt.push(Span::styled(tags, style_tags));
