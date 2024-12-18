@@ -12,11 +12,11 @@ use std::{
 	str::FromStr,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use client::{
-	consolidate_fetch_reports, get_repo_ref_from_cache, Connect,
+	Connect, consolidate_fetch_reports, get_repo_ref_from_cache,
 };
-use git::{nostr_url::NostrUrlDecoded, RepoActions};
+use git::{RepoActions, nostr_url::NostrUrlDecoded};
 use ngit::{client, git};
 use nostr::nips::nip01::Coordinate;
 use utils::read_line;
