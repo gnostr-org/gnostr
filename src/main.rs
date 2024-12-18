@@ -33,7 +33,6 @@
 mod app;
 mod args;
 mod bug_report;
-mod cli;
 mod clipboard;
 mod cmdbar;
 mod components;
@@ -67,7 +66,6 @@ use asyncgit::{
 };
 use backtrace::Backtrace;
 use clap::Parser;
-use cli::{Cli, Commands};
 
 use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
 use crossterm::{
@@ -136,38 +134,6 @@ enum Updater {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-
-//        //
-//	let cli = Cli::parse();
-//        //
-//	match &cli.command {
-//        //
-//		Commands::Fetch(args) => {
-//			sub_commands::fetch::launch(&cli, args).await.expect("REASON")
-//		}
-//        //
-//		Commands::Login(args) => {
-//			sub_commands::login::launch(&cli, args).await.expect("REASON")
-//		}
-//        //
-//		Commands::Init(args) => {
-//			sub_commands::init::launch(&cli, args).await.expect("REASON")
-//		}
-//        //
-//		Commands::Send(args) => {
-//			sub_commands::send::launch(&cli, args, false).await.expect("REASON")
-//		}
-//        //
-//		Commands::List => sub_commands::list::launch().await.expect("REASON"),
-//        //
-//		Commands::Pull => sub_commands::pull::launch().await.expect("REASON"),
-//        //
-//		Commands::Push(args) => {
-//        //
-//			sub_commands::push::launch(&cli, args).await.expect("REASON")
-//		}
-//        //
-//	}
 
 	let app_start = Instant::now();
 

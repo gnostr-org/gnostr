@@ -7,7 +7,7 @@ use nostr::{
 use nostr_sdk::Kind;
 
 use crate::{
-	cli::Cli,
+	args::Cli,
 	cli_interactor::{
 		Interactor, InteractorPrompt, PromptInputParms,
 	},
