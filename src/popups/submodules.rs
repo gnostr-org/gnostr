@@ -2,18 +2,17 @@ use std::cell::Cell;
 
 use anyhow::Result;
 use asyncgit::sync::{
-	get_submodules, repo_dir, submodule_parent_info,
-	update_submodule, RepoPathRef, SubmoduleInfo,
-	SubmoduleParentInfo,
+	RepoPathRef, SubmoduleInfo, SubmoduleParentInfo, get_submodules,
+	repo_dir, submodule_parent_info, update_submodule,
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{
 		Alignment, Constraint, Direction, Layout, Margin, Rect,
 	},
 	text::{Line, Span, Text},
 	widgets::{Block, Borders, Clear, Paragraph},
-	Frame,
 };
 use ui::style::SharedTheme;
 use unicode_truncate::UnicodeTruncateStr;
@@ -21,10 +20,10 @@ use unicode_truncate::UnicodeTruncateStr;
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, ScrollType, VerticalScroll,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType, VerticalScroll, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, NeedsUpdate, Queue},
 	strings, try_or_popup,
 	ui::{self, Size},

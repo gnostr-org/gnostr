@@ -1,28 +1,28 @@
 use anyhow::Result;
 use asyncgit::{
+	AsyncFetchJob, AsyncGitNotification, ProgressPercent,
 	asyncjob::AsyncSingleJob,
 	sync::{
-		cred::{
-			extract_username_password, need_username_password,
-			BasicAuthCredential,
-		},
 		RepoPathRef,
+		cred::{
+			BasicAuthCredential, extract_username_password,
+			need_username_password,
+		},
 	},
-	AsyncFetchJob, AsyncGitNotification, ProgressPercent,
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::Rect,
 	text::Span,
 	widgets::{Block, BorderType, Borders, Clear, Gauge},
-	Frame,
 };
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		CredComponent, DrawableComponent, EventState,
+		CommandBlocking, CommandInfo, Component, CredComponent,
+		DrawableComponent, EventState, visibility_blocking,
 	},
 	keys::SharedKeyConfig,
 	queue::{InternalEvent, NeedsUpdate, Queue},

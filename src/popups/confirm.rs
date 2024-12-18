@@ -2,17 +2,17 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use crossterm::event::Event;
-use ratatui::{layout::Rect, text::Text, widgets::Clear, Frame};
+use ratatui::{Frame, layout::Rect, text::Text, widgets::Clear};
 use ui::style::SharedTheme;
 
 use super::popup_paragraph;
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{Action, InternalEvent, Queue},
 	strings, ui,
 };

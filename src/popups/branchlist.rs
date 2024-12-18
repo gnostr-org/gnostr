@@ -2,25 +2,25 @@ use std::cell::Cell;
 
 use anyhow::Result;
 use asyncgit::{
-	sync::{
-		self,
-		branch::{
-			checkout_remote_branch, BranchDetails, LocalBranch,
-			RemoteBranch,
-		},
-		checkout_branch, get_branches_info, BranchInfo, BranchType,
-		CommitId, RepoPathRef, RepoState,
-	},
 	AsyncGitNotification,
+	sync::{
+		self, BranchInfo, BranchType, CommitId, RepoPathRef,
+		RepoState,
+		branch::{
+			BranchDetails, LocalBranch, RemoteBranch,
+			checkout_remote_branch,
+		},
+		checkout_branch, get_branches_info,
+	},
 };
 use crossterm::event::{Event, KeyEvent};
 use ratatui::{
+	Frame,
 	layout::{
 		Alignment, Constraint, Direction, Layout, Margin, Rect,
 	},
 	text::{Line, Span, Text},
 	widgets::{Block, BorderType, Borders, Clear, Paragraph, Tabs},
-	Frame,
 };
 use ui::style::SharedTheme;
 use unicode_truncate::UnicodeTruncateStr;
@@ -29,11 +29,11 @@ use super::InspectCommitOpen;
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, FuzzyFinderTarget, ScrollType,
-		VerticalScroll,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, FuzzyFinderTarget, ScrollType, VerticalScroll,
+		visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{
 		Action, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen,
 	},

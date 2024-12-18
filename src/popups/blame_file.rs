@@ -2,34 +2,34 @@ use std::path::Path;
 
 use anyhow::Result;
 use asyncgit::{
+	AsyncBlame, AsyncGitNotification, BlameParams,
 	asyncjob::AsyncSingleJob,
 	sync::{BlameHunk, CommitId, FileBlame, RepoPathRef},
-	AsyncBlame, AsyncGitNotification, BlameParams,
 };
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Rect},
 	symbols::line::VERTICAL,
 	text::{Span, Text},
 	widgets::{Block, Borders, Cell, Clear, Row, Table, TableState},
-	Frame,
 };
 
 use crate::{
+	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
 	app::Environment,
 	components::{
-		string_width_align, time_to_string, visibility_blocking,
 		CommandBlocking, CommandInfo, Component, DrawableComponent,
-		EventState, ScrollType,
+		EventState, ScrollType, string_width_align, time_to_string,
+		visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	popups::{FileRevOpen, InspectCommitOpen},
 	queue::{InternalEvent, Queue, StackablePopupOpen},
 	string_utils::tabs_to_spaces,
 	strings,
-	ui::{self, style::SharedTheme, AsyncSyntaxJob, SyntaxText},
-	AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress,
+	ui::{self, AsyncSyntaxJob, SyntaxText, style::SharedTheme},
 };
 
 static NO_COMMIT_ID: &str = "0000000";

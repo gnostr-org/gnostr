@@ -1,41 +1,40 @@
 use anyhow::Result;
 use asyncgit::{
+	AsyncGitNotification,
 	asyncjob::AsyncSingleJob,
 	remote_tags::AsyncRemoteTagsJob,
 	sync::{
-		self,
+		self, RepoPathRef, TagWithMetadata,
 		cred::{
-			extract_username_password, need_username_password,
-			BasicAuthCredential,
+			BasicAuthCredential, extract_username_password,
+			need_username_password,
 		},
-		get_tags_with_metadata, RepoPathRef, TagWithMetadata,
+		get_tags_with_metadata,
 	},
-	AsyncGitNotification,
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Margin, Rect},
 	text::Span,
 	widgets::{
 		Block, BorderType, Borders, Cell, Clear, Row, Table,
 		TableState,
 	},
-	Frame,
 };
 use ui::style::SharedTheme;
 
 use crate::{
+	AsyncNotification,
 	app::Environment,
 	components::{
-		time_to_string, visibility_blocking, CommandBlocking,
-		CommandInfo, Component, DrawableComponent, EventState,
-		ScrollType,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType, time_to_string, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{Action, InternalEvent, Queue},
 	strings,
 	ui::{self, Size},
-	AsyncNotification,
 };
 
 ///

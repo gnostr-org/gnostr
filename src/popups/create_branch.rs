@@ -2,15 +2,16 @@ use anyhow::Result;
 use asyncgit::sync::{self, RepoPathRef};
 use crossterm::event::Event;
 use easy_cast::Cast;
-use ratatui::{layout::Rect, widgets::Paragraph, Frame};
+use ratatui::{Frame, layout::Rect, widgets::Paragraph};
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, InputType, TextInputComponent,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, InputType, TextInputComponent,
+		visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, NeedsUpdate, Queue},
 	strings,
 	ui::style::SharedTheme,
