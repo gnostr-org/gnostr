@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use nostr::{
-	nips::nip01::Coordinate, FromBech32, PublicKey, ToBech32,
+	FromBech32, PublicKey, ToBech32, nips::nip01::Coordinate,
 };
 use nostr_sdk::Kind;
 
@@ -12,15 +12,14 @@ use crate::{
 		Interactor, InteractorPrompt, PromptInputParms,
 	},
 	client::{
-		fetching_with_report, get_repo_ref_from_cache, send_events,
-		Client, Connect,
+		Client, Connect, fetching_with_report,
+		get_repo_ref_from_cache, send_events,
 	},
-	git::{nostr_url::convert_clone_url_to_https, Repo, RepoActions},
+	git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
 	login,
 	repo_ref::{
-		extract_pks, get_repo_config_from_yaml,
+		RepoRef, extract_pks, get_repo_config_from_yaml,
 		save_repo_config_to_yaml, try_and_get_repo_coordinates,
-		RepoRef,
 	},
 };
 
@@ -257,10 +256,9 @@ pub async fn launch(
 			}) {
 				maintainers.join(" ")
 			} else {
-				[
-					maintainers,
-					vec![signer.public_key().await?.to_bech32()?],
-				]
+				[maintainers, vec![
+					signer.public_key().await?.to_bech32()?,
+				]]
 				.concat()
 				.join(" ")
 			}
