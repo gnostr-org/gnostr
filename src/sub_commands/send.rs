@@ -13,7 +13,7 @@ use nostr::{
 use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
 
 use crate::{
-	cli::Cli,
+	args::Cli,
 	cli_interactor::{
 		Interactor, InteractorPrompt, PromptConfirmParms,
 		PromptInputParms, PromptMultiChoiceParms,

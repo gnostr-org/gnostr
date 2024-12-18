@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap;
 
 use crate::{
-	cli::Cli,
+	args::Cli,
 	client::{Client, Connect},
 	git::Repo,
 	login,

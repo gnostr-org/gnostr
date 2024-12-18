@@ -6,7 +6,7 @@ use ngit::{
 use nostr_sdk::PublicKey;
 
 use crate::{
-	cli::Cli,
+	args::Cli,
 	client::{
 		Client, Connect, fetching_with_report,
 		get_all_proposal_patch_events_from_cache,
