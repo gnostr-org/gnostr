@@ -1,6 +1,6 @@
 use std::{io::Write, ops::Add};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use ngit::{
 	client::{
 		get_all_proposal_patch_events_from_cache,
@@ -20,10 +20,10 @@ use crate::{
 		PromptConfirmParms,
 	},
 	client::{
-		fetching_with_report, get_events_from_cache,
-		get_repo_ref_from_cache, Client, Connect,
+		Client, Connect, fetching_with_report, get_events_from_cache,
+		get_repo_ref_from_cache,
 	},
-	git::{str_to_sha1, Repo, RepoActions},
+	git::{Repo, RepoActions, str_to_sha1},
 	git_events::{
 		commit_msg_from_patch_oneliner, event_is_revision_root,
 		event_to_cover_letter, patch_supports_commit_ids,
@@ -65,9 +65,8 @@ pub async fn launch() -> Result<()> {
 	}
 
 	let statuses: Vec<nostr::Event> = {
-		let mut statuses = get_events_from_cache(
-			git_repo_path,
-			vec![
+		let mut statuses =
+			get_events_from_cache(git_repo_path, vec![
 				nostr::Filter::default()
 					.kinds(status_kinds().clone())
 					.events(
@@ -75,9 +74,8 @@ pub async fn launch() -> Result<()> {
 							.iter()
 							.map(nostr::Event::id),
 					),
-			],
-		)
-		.await?;
+			])
+			.await?;
 		statuses.sort_by_key(|e| e.created_at);
 		statuses.reverse();
 		statuses
