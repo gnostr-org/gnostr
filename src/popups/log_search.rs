@@ -6,21 +6,22 @@ use asyncgit::sync::{
 use crossterm::event::Event;
 use easy_cast::Cast;
 use ratatui::{
+	Frame,
 	layout::{
 		Alignment, Constraint, Direction, Layout, Margin, Rect,
 	},
 	text::{Line, Span},
 	widgets::{Block, Borders, Clear, Paragraph},
-	Frame,
 };
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, InputType, TextInputComponent,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, InputType, TextInputComponent,
+		visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, Queue},
 	strings::{self, POPUP_COMMIT_SHA_INVALID},
 	ui::{self, style::SharedTheme},

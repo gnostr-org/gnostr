@@ -1,27 +1,27 @@
 use std::{env, ffi::OsStr, io, path::Path, process::Command};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use asyncgit::sync::{
-	get_config_string, utils::repo_work_dir, RepoPath,
+	RepoPath, get_config_string, utils::repo_work_dir,
 };
 use crossterm::{
+	ExecutableCommand,
 	event::Event,
 	terminal::{EnterAlternateScreen, LeaveAlternateScreen},
-	ExecutableCommand,
 };
 use ratatui::{
+	Frame,
 	layout::Rect,
 	text::{Line, Span},
 	widgets::{Block, BorderType, Borders, Clear, Paragraph},
-	Frame,
 };
 use scopeguard::defer;
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, visibility_blocking,
 	},
 	keys::SharedKeyConfig,
 	strings,

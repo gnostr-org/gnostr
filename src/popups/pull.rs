@@ -1,29 +1,28 @@
 use anyhow::Result;
 use asyncgit::{
+	AsyncGitNotification, AsyncPull, FetchRequest, RemoteProgress,
 	sync::{
-		self,
+		self, RepoPathRef,
 		cred::{
-			extract_username_password_for_fetch,
-			need_username_password_for_fetch, BasicAuthCredential,
+			BasicAuthCredential, extract_username_password_for_fetch,
+			need_username_password_for_fetch,
 		},
 		remotes::get_default_remote_for_fetch,
-		RepoPathRef,
 	},
-	AsyncGitNotification, AsyncPull, FetchRequest, RemoteProgress,
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::Rect,
 	text::Span,
 	widgets::{Block, BorderType, Borders, Clear, Gauge},
-	Frame,
 };
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		CredComponent, DrawableComponent, EventState,
+		CommandBlocking, CommandInfo, Component, CredComponent,
+		DrawableComponent, EventState, visibility_blocking,
 	},
 	keys::SharedKeyConfig,
 	popups::PushPopup,
