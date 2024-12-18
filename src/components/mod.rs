@@ -14,23 +14,23 @@ mod utils;
 
 use anyhow::Result;
 pub use changes::ChangesComponent;
+pub use chat_details::ChatDetailsComponent;
 pub use command::{CommandInfo, CommandText};
 pub use commit_details::CommitDetailsComponent;
-pub use chat_details::ChatDetailsComponent;
 pub use commitlist::CommitList;
-pub use topiclist::TopicList;
 pub use cred::CredComponent;
 use crossterm::event::Event;
 pub use diff::DiffComponent;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Rect},
 	text::{Span, Text},
 	widgets::{Block, Borders, Paragraph},
-	Frame,
 };
 pub use revision_files::RevisionFilesComponent;
 pub use syntax_text::SyntaxTextComponent;
 pub use textinput::{InputType, TextInputComponent};
+pub use topiclist::TopicList;
 pub use utils::{
 	filetree::FileTreeItemKind, logitems::ItemBatch,
 	scroll_vertical::VerticalScroll, string_width_align,

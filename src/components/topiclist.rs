@@ -5,36 +5,35 @@ use std::{
 
 use anyhow::Result;
 use asyncgit::sync::{
-	self, checkout_commit, BranchDetails, BranchInfo, CommitId,
-	RepoPathRef, Tags,
+	self, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+	checkout_commit,
 };
 use chrono::{DateTime, Local};
 use crossterm::event::Event;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Rect},
 	style::Style,
 	text::{Line, Span},
 	widgets::{Block, Borders, Paragraph},
-	Frame,
 };
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::{
 	app::Environment,
 	components::{
-		utils::string_width_align, CommandBlocking, CommandInfo,
-		Component, DrawableComponent, EventState, ScrollType,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType, utils::string_width_align,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, Queue},
 	strings::{self, symbol},
 	try_or_popup,
 	ui::{
-		calc_scroll_top, draw_scrollbar,
+		Orientation, calc_scroll_top, draw_scrollbar,
 		style::{SharedTheme, Theme},
-		Orientation,
 	},
 };
 
@@ -198,8 +197,8 @@ impl TopicList {
 				"failed to invoke chat:",
 				checkout_commit(&self.repo.borrow(), commit_hash)
 			);
-                        //add chat to tui screen
-                        //get private key from padded commit hash
+			//add chat to tui screen
+			//get private key from padded commit hash
 		}
 	}
 
@@ -240,9 +239,9 @@ impl TopicList {
 			self.commits = commits;
 			self.fetch_commits(false);
 		}
-                //push each commit to nostr
-                for commit in &self.commits {}
-                for commit in self.commits.clone() {}
+		//push each commit to nostr
+		for commit in &self.commits {}
+		for commit in self.commits.clone() {}
 	}
 
 	///
@@ -552,7 +551,7 @@ impl TopicList {
 		let author = string_width_align(&e.author, author_width);
 
 		// commit author
-                // insert nostr pubkey
+		// insert nostr pubkey
 		// txt.push(Span::styled(author, style_author));
 
 		txt.push(splitter.clone());
@@ -563,7 +562,7 @@ impl TopicList {
 		//	txt.push(Span::styled(tags, style_tags));
 		//}
 
-                // nostr git remotes
+		// nostr git remotes
 		//if let Some(local_branches) = local_branches {
 		//	txt.push(splitter.clone());
 		//	//txt.push(Span::styled(local_branches, style_branches));
@@ -576,7 +575,7 @@ impl TopicList {
 		//txt.push(splitter);
 
 		let message_width = width.saturating_sub(
-			txt.iter().map(|span| span.content.len()/10).sum(),
+			txt.iter().map(|span| span.content.len() / 10).sum(),
 			//txt.iter().map(|span| 1).sum(),
 		);
 		//let message_width = (width.saturating_sub(19) / 3);
@@ -640,7 +639,7 @@ impl TopicList {
 				local_branches,
 				self.remote_branches_string(e),
 				&self.theme,
-				width/2,
+				width / 2,
 				now,
 				marked,
 			));
@@ -738,7 +737,6 @@ impl TopicList {
 
 	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn selection_highlighted(&mut self) -> bool {
-
 		let commit = self.commits[self.selection];
 
 		self.highlights
@@ -804,7 +802,7 @@ impl TopicList {
 impl DrawableComponent for TopicList {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		let current_size = (
-			area.width.saturating_sub(2)/2,
+			area.width.saturating_sub(2) / 2,
 			area.height.saturating_sub(2),
 		);
 		self.current_size.set(Some(current_size));
@@ -817,7 +815,8 @@ impl DrawableComponent for TopicList {
 			height_in_lines,
 			selection,
 		));
-                // title
+
+		// title
 		let title = format!(
 			"Topic {}/{}",
 			//self.title,
@@ -891,13 +890,15 @@ impl Component for TopicList {
 				} else if key_match(
 					k,
 					self.key_config.keys.log_checkout_commit,
-				) { //
+				) {
+					//
 					self.checkout();
 					true
 				} else if key_match(
 					k,
 					self.key_config.keys.log_comment_commit,
-				) { //
+				) {
+					//
 					self.comment();
 					true
 				} else {
