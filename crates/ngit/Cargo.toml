@@ -11,6 +11,10 @@ license = "MIT"
 keywords = ["nostr", "git"]
 categories = ["command-line-utilities","git"]
 
+[[bin]]
+name = "gnostr-ngit"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = "1.0.75"
 async-trait = "0.1.73"
