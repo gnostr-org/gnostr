@@ -1,10 +1,10 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
+	AsyncGitNotification,
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
-	sync::{branch::get_branches_info, BranchInfo, RepoPath},
-	AsyncGitNotification,
+	sync::{BranchInfo, RepoPath, branch::get_branches_info},
 };
 
 enum JobState {

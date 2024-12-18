@@ -1,7 +1,7 @@
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 
-use super::{repository::repo, RepoPath};
+use super::{RepoPath, repository::repo};
 use crate::error::Result;
 
 ///

@@ -1,18 +1,18 @@
 use std::{
 	hash::Hash,
 	sync::{
-		atomic::{AtomicUsize, Ordering},
 		Arc, Mutex,
+		atomic::{AtomicUsize, Ordering},
 	},
 };
 
 use crossbeam_channel::Sender;
 
 use crate::{
+	AsyncGitNotification,
 	error::Result,
 	hash,
 	sync::{self, CommitId, FileBlame, RepoPath},
-	AsyncGitNotification,
 };
 
 ///

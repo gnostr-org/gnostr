@@ -2,7 +2,7 @@ use sync::Head;
 
 use crate::{
 	error::Result,
-	sync::{self, branch::get_branch_name, RepoPathRef},
+	sync::{self, RepoPathRef, branch::get_branch_name},
 };
 
 ///

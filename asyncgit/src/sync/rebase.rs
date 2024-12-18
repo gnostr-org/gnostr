@@ -189,12 +189,12 @@ mod test_conflict_free_rebase {
 
 	use super::conflict_free_rebase;
 	use crate::sync::{
-		checkout_branch, create_branch,
-		rebase::{rebase_branch, RebaseState},
+		CommitId, RepoPath, RepoState, checkout_branch,
+		create_branch,
+		rebase::{RebaseState, rebase_branch},
 		repo_state,
 		repository::repo,
 		tests::{repo_init, write_commit_file},
-		CommitId, RepoPath, RepoState,
 	};
 
 	fn parent_ids(repo: &Repository, c: CommitId) -> Vec<CommitId> {
@@ -287,14 +287,13 @@ mod test_rebase {
 	use git2::BranchType;
 
 	use crate::sync::{
-		checkout_branch, create_branch,
+		RepoPath, RepoState, checkout_branch, create_branch,
 		rebase::{
-			abort_rebase, get_rebase_progress, RebaseProgress,
-			RebaseState,
+			RebaseProgress, RebaseState, abort_rebase,
+			get_rebase_progress,
 		},
 		rebase_branch, repo_state,
 		tests::{repo_init, write_commit_file},
-		RepoPath, RepoState,
 	};
 
 	#[test]

@@ -6,7 +6,7 @@ use std::{
 
 use scopetime::scope_time;
 
-use super::{utils::work_dir, RepoPath};
+use super::{RepoPath, utils::work_dir};
 use crate::{
 	error::{Error, Result},
 	sync::repository::repo,

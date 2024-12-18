@@ -5,7 +5,7 @@ use git2::Repository;
 use scopetime::scope_time;
 use serde::{Deserialize, Serialize};
 
-use super::{repository::repo, RepoPath};
+use super::{RepoPath, repository::repo};
 use crate::error::Result;
 
 // see https://git-scm.com/docs/git-config#Documentation/git-config.txt-statusshowUntrackedFiles

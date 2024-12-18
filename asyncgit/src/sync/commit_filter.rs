@@ -4,7 +4,7 @@ use bitflags::bitflags;
 use fuzzy_matcher::FuzzyMatcher;
 use git2::{Diff, Repository};
 
-use super::{commit_files::get_commit_diff, CommitId};
+use super::{CommitId, commit_files::get_commit_diff};
 use crate::error::Result;
 
 ///

@@ -5,7 +5,7 @@ use scopetime::scope_time;
 use super::BranchType;
 use crate::{
 	error::{Error, Result},
-	sync::{repository::repo, RepoPath},
+	sync::{RepoPath, repository::repo},
 };
 
 ///

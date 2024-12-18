@@ -1,7 +1,7 @@
 use git2::Signature;
 use scopetime::scope_time;
 
-use super::{commits_info::get_message, CommitId, RepoPath};
+use super::{CommitId, RepoPath, commits_info::get_message};
 use crate::{error::Result, sync::repository::repo};
 
 ///
@@ -124,11 +124,11 @@ pub fn get_commit_details(
 mod tests {
 	use std::{fs::File, io::Write, path::Path};
 
-	use super::{get_commit_details, CommitMessage};
+	use super::{CommitMessage, get_commit_details};
 	use crate::{
 		error::Result,
 		sync::{
-			commit, stage_add_file, tests::repo_init_empty, RepoPath,
+			RepoPath, commit, stage_add_file, tests::repo_init_empty,
 		},
 	};
 

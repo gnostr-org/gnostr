@@ -7,9 +7,8 @@ use super::apply_selection;
 use crate::{
 	error::{Error, Result},
 	sync::{
-		diff::DiffLinePosition,
+		RepoPath, diff::DiffLinePosition,
 		patches::get_file_diff_patch_and_hunklines, repository::repo,
-		RepoPath,
 	},
 };
 
@@ -89,15 +88,10 @@ mod test {
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		stage_lines(
-			path,
-			"test.txt",
-			false,
-			&[DiffLinePosition {
-				old_lineno: None,
-				new_lineno: Some(2),
-			}],
-		)
+		stage_lines(path, "test.txt", false, &[DiffLinePosition {
+			old_lineno: None,
+			new_lineno: Some(2),
+		}])
 		.unwrap();
 
 		let diff = get_diff(path, "test.txt", true, None).unwrap();
@@ -122,21 +116,16 @@ c = 4";
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		stage_lines(
-			path,
-			"test.txt",
-			false,
-			&[
-				DiffLinePosition {
-					old_lineno: Some(1),
-					new_lineno: None,
-				},
-				DiffLinePosition {
-					old_lineno: Some(2),
-					new_lineno: None,
-				},
-			],
-		)
+		stage_lines(path, "test.txt", false, &[
+			DiffLinePosition {
+				old_lineno: Some(1),
+				new_lineno: None,
+			},
+			DiffLinePosition {
+				old_lineno: Some(2),
+				new_lineno: None,
+			},
+		])
 		.unwrap();
 
 		let diff = get_diff(path, "test.txt", true, None).unwrap();
@@ -174,15 +163,10 @@ c = 4";
 
 		assert_eq!(diff_before.lines, 5);
 
-		stage_lines(
-			path,
-			"test.txt",
-			true,
-			&[DiffLinePosition {
-				old_lineno: None,
-				new_lineno: Some(2),
-			}],
-		)
+		stage_lines(path, "test.txt", true, &[DiffLinePosition {
+			old_lineno: None,
+			new_lineno: Some(2),
+		}])
 		.unwrap();
 
 		assert_eq!(get_statuses(path), (1, 1));

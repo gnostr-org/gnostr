@@ -2,8 +2,8 @@ use git2::{ApplyLocation, ApplyOptions, Diff};
 use scopetime::scope_time;
 
 use super::{
-	diff::{get_diff_raw, DiffOptions, HunkHeader},
 	RepoPath,
+	diff::{DiffOptions, HunkHeader, get_diff_raw},
 };
 use crate::{
 	error::{Error, Result},

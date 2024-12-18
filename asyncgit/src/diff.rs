@@ -1,21 +1,21 @@
 use std::{
 	hash::Hash,
 	sync::{
-		atomic::{AtomicUsize, Ordering},
 		Arc, Mutex,
+		atomic::{AtomicUsize, Ordering},
 	},
 };
 
 use crossbeam_channel::Sender;
 
 use crate::{
+	AsyncGitNotification, FileDiff,
 	error::Result,
 	hash,
 	sync::{
-		self, commit_files::OldNew, diff::DiffOptions, CommitId,
-		RepoPath,
+		self, CommitId, RepoPath, commit_files::OldNew,
+		diff::DiffOptions,
 	},
-	AsyncGitNotification, FileDiff,
 };
 
 ///

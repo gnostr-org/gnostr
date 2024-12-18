@@ -4,9 +4,9 @@ use super::{apply_selection, load_file};
 use crate::{
 	error::Result,
 	sync::{
-		diff::DiffLinePosition,
+		RepoPath, diff::DiffLinePosition,
 		patches::get_file_diff_patch_and_hunklines, repository::repo,
-		utils::repo_write_file, RepoPath,
+		utils::repo_write_file,
 	},
 };
 
@@ -78,20 +78,16 @@ mod test {
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[
-				DiffLinePosition {
-					old_lineno: Some(3),
-					new_lineno: None,
-				},
-				DiffLinePosition {
-					old_lineno: None,
-					new_lineno: Some(2),
-				},
-			],
-		)
+		discard_lines(path, "test.txt", &[
+			DiffLinePosition {
+				old_lineno: Some(3),
+				new_lineno: None,
+			},
+			DiffLinePosition {
+				old_lineno: None,
+				new_lineno: Some(2),
+			},
+		])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
@@ -123,14 +119,10 @@ end
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[DiffLinePosition {
-				old_lineno: None,
-				new_lineno: Some(3),
-			}],
-		)
+		discard_lines(path, "test.txt", &[DiffLinePosition {
+			old_lineno: None,
+			new_lineno: Some(3),
+		}])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
@@ -162,20 +154,16 @@ end
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[
-				DiffLinePosition {
-					old_lineno: Some(2),
-					new_lineno: None,
-				},
-				DiffLinePosition {
-					old_lineno: None,
-					new_lineno: Some(2),
-				},
-			],
-		)
+		discard_lines(path, "test.txt", &[
+			DiffLinePosition {
+				old_lineno: Some(2),
+				new_lineno: None,
+			},
+			DiffLinePosition {
+				old_lineno: None,
+				new_lineno: Some(2),
+			},
+		])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
@@ -209,20 +197,16 @@ end
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[
-				DiffLinePosition {
-					old_lineno: None,
-					new_lineno: Some(2),
-				},
-				DiffLinePosition {
-					old_lineno: None,
-					new_lineno: Some(4),
-				},
-			],
-		)
+		discard_lines(path, "test.txt", &[
+			DiffLinePosition {
+				old_lineno: None,
+				new_lineno: Some(2),
+			},
+			DiffLinePosition {
+				old_lineno: None,
+				new_lineno: Some(4),
+			},
+		])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
@@ -252,20 +236,16 @@ end
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[
-				DiffLinePosition {
-					old_lineno: None,
-					new_lineno: Some(1),
-				},
-				DiffLinePosition {
-					old_lineno: None,
-					new_lineno: Some(2),
-				},
-			],
-		)
+		discard_lines(path, "test.txt", &[
+			DiffLinePosition {
+				old_lineno: None,
+				new_lineno: Some(1),
+			},
+			DiffLinePosition {
+				old_lineno: None,
+				new_lineno: Some(2),
+			},
+		])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
@@ -298,14 +278,10 @@ end
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[DiffLinePosition {
-				old_lineno: Some(2),
-				new_lineno: None,
-			}],
-		)
+		discard_lines(path, "test.txt", &[DiffLinePosition {
+			old_lineno: Some(2),
+			new_lineno: None,
+		}])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
@@ -331,14 +307,10 @@ end
 
 		repo_write_file(&repo, "test.txt", FILE_2).unwrap();
 
-		discard_lines(
-			path,
-			"test.txt",
-			&[DiffLinePosition {
-				old_lineno: None,
-				new_lineno: Some(2),
-			}],
-		)
+		discard_lines(path, "test.txt", &[DiffLinePosition {
+			old_lineno: None,
+			new_lineno: Some(2),
+		}])
 		.unwrap();
 
 		let result_file = load_file(&repo, "test.txt").unwrap();
