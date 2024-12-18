@@ -3,10 +3,10 @@ use std::{
 	path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use git2::{DiffOptions, Oid, Revwalk};
 pub use identify_ahead_behind::identify_ahead_behind;
-use nostr_sdk::hashes::{sha1::Hash as Sha1Hash, Hash};
+use nostr_sdk::hashes::{Hash, sha1::Hash as Sha1Hash};
 
 use crate::git_events::{get_commit_id_from_patch, tag_value};
 pub mod identify_ahead_behind;
@@ -1705,13 +1705,10 @@ mod tests {
 						&oid_to_sha1(&feature_oid),
 					)?;
 				assert_eq!(ahead, vec![]);
-				assert_eq!(
-					behind,
-					vec![
-						oid_to_sha1(&behind_2_oid),
-						oid_to_sha1(&behind_1_oid),
-					],
-				);
+				assert_eq!(behind, vec![
+					oid_to_sha1(&behind_2_oid),
+					oid_to_sha1(&behind_1_oid),
+				],);
 				Ok(())
 			}
 
@@ -1742,13 +1739,10 @@ mod tests {
 						&oid_to_sha1(&main_oid),
 						&oid_to_sha1(&ahead_2_oid),
 					)?;
-				assert_eq!(
-					ahead,
-					vec![
-						oid_to_sha1(&ahead_2_oid),
-						oid_to_sha1(&ahead_1_oid),
-					],
-				);
+				assert_eq!(ahead, vec![
+					oid_to_sha1(&ahead_2_oid),
+					oid_to_sha1(&ahead_1_oid),
+				],);
 				assert_eq!(behind, vec![]);
 				Ok(())
 			}
@@ -1795,20 +1789,14 @@ mod tests {
 						&oid_to_sha1(&behind_2_oid),
 						&oid_to_sha1(&ahead_2_oid),
 					)?;
-				assert_eq!(
-					ahead,
-					vec![
-						oid_to_sha1(&ahead_2_oid),
-						oid_to_sha1(&ahead_1_oid)
-					],
-				);
-				assert_eq!(
-					behind,
-					vec![
-						oid_to_sha1(&behind_2_oid),
-						oid_to_sha1(&behind_1_oid)
-					],
-				);
+				assert_eq!(ahead, vec![
+					oid_to_sha1(&ahead_2_oid),
+					oid_to_sha1(&ahead_1_oid)
+				],);
+				assert_eq!(behind, vec![
+					oid_to_sha1(&behind_2_oid),
+					oid_to_sha1(&behind_1_oid)
+				],);
 				Ok(())
 			}
 		}
@@ -2544,10 +2532,9 @@ mod tests {
 					let test_repo = GitTestRepo::default();
 					test_repo.populate()?;
 					let git_repo = Repo::from_path(&test_repo.dir)?;
-					git_repo.apply_patch_chain(
-						BRANCH_NAME,
-						vec![patch_events.pop().unwrap()],
-					)?;
+					git_repo.apply_patch_chain(BRANCH_NAME, vec![
+						patch_events.pop().unwrap(),
+					])?;
 					git_repo.apply_patch_chain(
 						BRANCH_NAME,
 						patch_events,
@@ -2573,10 +2560,9 @@ mod tests {
 					let test_repo = GitTestRepo::default();
 					test_repo.populate()?;
 					let git_repo = Repo::from_path(&test_repo.dir)?;
-					git_repo.apply_patch_chain(
-						BRANCH_NAME,
-						vec![patch_events.pop().unwrap()],
-					)?;
+					git_repo.apply_patch_chain(BRANCH_NAME, vec![
+						patch_events.pop().unwrap(),
+					])?;
 					let res = git_repo.apply_patch_chain(
 						BRANCH_NAME,
 						patch_events,
@@ -2596,10 +2582,9 @@ mod tests {
 					let test_repo = GitTestRepo::default();
 					test_repo.populate()?;
 					let git_repo = Repo::from_path(&test_repo.dir)?;
-					git_repo.apply_patch_chain(
-						BRANCH_NAME,
-						vec![patch_events.pop().unwrap()],
-					)?;
+					git_repo.apply_patch_chain(BRANCH_NAME, vec![
+						patch_events.pop().unwrap(),
+					])?;
 					git_repo.checkout("main")?;
 					git_repo.apply_patch_chain(
 						BRANCH_NAME,
@@ -2626,10 +2611,9 @@ mod tests {
 					let test_repo = GitTestRepo::default();
 					test_repo.populate()?;
 					let git_repo = Repo::from_path(&test_repo.dir)?;
-					git_repo.apply_patch_chain(
-						BRANCH_NAME,
-						vec![patch_events.pop().unwrap()],
-					)?;
+					git_repo.apply_patch_chain(BRANCH_NAME, vec![
+						patch_events.pop().unwrap(),
+					])?;
 					git_repo.checkout("main")?;
 					git_repo.apply_patch_chain(
 						BRANCH_NAME,
@@ -2650,10 +2634,9 @@ mod tests {
 					let test_repo = GitTestRepo::default();
 					test_repo.populate()?;
 					let git_repo = Repo::from_path(&test_repo.dir)?;
-					git_repo.apply_patch_chain(
-						BRANCH_NAME,
-						vec![patch_events.pop().unwrap()],
-					)?;
+					git_repo.apply_patch_chain(BRANCH_NAME, vec![
+						patch_events.pop().unwrap(),
+					])?;
 					git_repo.checkout("main")?;
 					let res = git_repo.apply_patch_chain(
 						BRANCH_NAME,

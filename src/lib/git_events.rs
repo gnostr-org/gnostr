@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use nostr::nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19};
 use nostr_sdk::{
-	hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId,
-	FromBech32, Kind, PublicKey, Tag, TagKind, TagStandard,
-	UncheckedUrl,
+	Event, EventBuilder, EventId, FromBech32, Kind, PublicKey, Tag,
+	TagKind, TagStandard, UncheckedUrl,
+	hashes::sha1::Hash as Sha1Hash,
 };
 use nostr_signer::NostrSigner;
 

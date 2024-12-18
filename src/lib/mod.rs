@@ -14,7 +14,7 @@ pub mod repo_ref;
 /// ngit::repo_state
 pub mod repo_state;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use directories::ProjectDirs;
 
 pub fn get_dirs() -> Result<ProjectDirs> {
