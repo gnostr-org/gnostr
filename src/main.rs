@@ -152,7 +152,7 @@ match_args {{increase|decrease}} <integer>
 	);
 }
 
-#[tokio::main]
+//#[tokio::main]
 async fn tui() -> Result<()> {
 	let app_start = Instant::now();
 
@@ -213,13 +213,16 @@ async fn tui() -> Result<()> {
 
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
 	use std::env;
 	let args: Vec<String> = env::args().collect();
 	dbg!(&args);
 
 	let cli = Cli::parse();
 
+//let _ = async {
+	dbg!(&args);
 	match args.len() {
 		// no arguments passed
 		1 => {
@@ -300,6 +303,7 @@ fn main() -> Result<()> {
 
 		}
 	};
+//};
 
 	Ok(())
 }
