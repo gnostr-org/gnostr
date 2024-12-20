@@ -7,12 +7,15 @@ use std::{
 use anyhow::{Result, anyhow};
 use asyncgit::sync::RepoPath;
 use clap::{
-	Arg, Command as ClapApp, crate_authors, crate_description,
+	Arg, Command as ClapApp, Parser, Subcommand,
+	crate_authors, crate_description,
 	crate_name,
 };
 use simplelog::{Config, LevelFilter, WriteLogger};
 
 use crate::bug_report;
+
+use crate::sub_commands;
 
 pub struct CliArgs {
 	pub theme: PathBuf,
