@@ -7,9 +7,8 @@ use std::{
 use anyhow::{Result, anyhow};
 use asyncgit::sync::RepoPath;
 use clap::{
-	Arg, Command as ClapApp, Parser, Subcommand,
-	crate_authors, crate_description,
-	crate_name,
+	Arg, Command as ClapApp, Parser, Subcommand, crate_authors,
+	crate_description, crate_name,
 };
 use simplelog::{Config, LevelFilter, WriteLogger};
 
@@ -17,10 +16,29 @@ use crate::bug_report;
 
 use crate::sub_commands;
 
+#[derive(Parser)]
 pub struct CliArgs {
+	/// theme
 	pub theme: PathBuf,
+	/// repo_path
 	pub repo_path: RepoPath,
+	/// notify_watcher
 	pub notify_watcher: bool,
+	/// remote signer address
+	#[arg(long, global = true)]
+	pub bunker_uri: Option<String>,
+	/// remote signer app secret key
+	#[arg(long, global = true)]
+	pub bunker_app_key: Option<String>,
+	/// nsec or hex private key
+	#[arg(short, long, global = true)]
+	pub nsec: Option<String>,
+	/// password to decrypt nsec
+	#[arg(short, long, global = true)]
+	pub password: Option<String>,
+	/// disable spinner animations
+	#[arg(long, action)]
+	pub disable_cli_spinners: bool,
 }
 
 pub fn process_cmdline() -> Result<CliArgs> {
@@ -61,10 +79,21 @@ pub fn process_cmdline() -> Result<CliArgs> {
 	let notify_watcher: bool =
 		*arg_matches.get_one("watcher").unwrap_or(&false);
 
+	let bunker_uri: Option<String> = None;
+	let bunker_app_key: Option<String> = None;
+	let nsec: Option<String> = None;
+	let password: Option<String> = None;
+	let disable_cli_spinners: bool = false;
+
 	Ok(CliArgs {
 		theme,
 		repo_path,
 		notify_watcher,
+		bunker_uri,
+		bunker_app_key,
+		nsec,
+		password,
+		disable_cli_spinners,
 	})
 }
 
