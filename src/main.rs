@@ -167,6 +167,8 @@ async fn main() -> Result<()> {
 				"My name is 'match_args'. Try passing some arguments!"
 			);
 
+			let _ = help();
+
 			//invoke tui
 		}
 		// one argument passed
@@ -203,9 +205,9 @@ async fn main() -> Result<()> {
 					.expect("REASON")
 			}
 			_ => println!("Ain't special"),
-		//2 => match args[1].parse() {
-		//        Ok(42) => println!("This is the answer!"),
-		//        _ => println!("This is not the answer."),
+			//2 => match args[1].parse() {
+			//        Ok(42) => println!("This is the answer!"),
+			//        _ => println!("This is not the answer."),
 		},
 		3 => {
 			let cmd = &args[1];
@@ -234,63 +236,65 @@ async fn main() -> Result<()> {
 		// all the other cases
 		_ => {
 			// show a help message
-			let _ = help();
-		}
-	};
+			//let _ = help();
 
-	let app_start = Instant::now();
+			let app_start = Instant::now();
 
-	let cliargs = process_cmdline()?;
+			let cliargs = process_cmdline()?;
 
-	asyncgit::register_tracing_logging();
+			asyncgit::register_tracing_logging();
 
-	if !valid_path(&cliargs.repo_path) {
-		eprintln!(
-			"invalid path\nplease run gitui inside of a non-bare git repository"
-		);
-		return Ok(());
-	}
-
-	let key_config = KeyConfig::init()
-		.map_err(|e| eprintln!("KeyConfig loading error: {e}"))
-		.unwrap_or_default();
-	let theme = Theme::init(&cliargs.theme);
-
-	setup_terminal()?;
-	defer! {
-		shutdown_terminal();
-	}
-
-	set_panic_handlers()?;
-
-	let mut terminal = start_terminal(io::stdout())?;
-	let mut repo_path = cliargs.repo_path;
-	let input = Input::new();
-
-	let updater = if cliargs.notify_watcher {
-		Updater::NotifyWatcher
-	} else {
-		Updater::Ticker
-	};
-
-	loop {
-		let quit_state = run_app(
-			app_start,
-			repo_path.clone(),
-			theme.clone(),
-			key_config.clone(),
-			&input,
-			updater,
-			&mut terminal,
-		)?;
-
-		match quit_state {
-			QuitState::OpenSubmodule(p) => {
-				repo_path = p;
+			if !valid_path(&cliargs.repo_path) {
+				eprintln!(
+					"invalid path\nplease run gitui inside of a non-bare git repository"
+				);
+				return Ok(());
 			}
-			_ => break,
+
+			let key_config = KeyConfig::init()
+				.map_err(|e| {
+					eprintln!("KeyConfig loading error: {e}")
+				})
+				.unwrap_or_default();
+			let theme = Theme::init(&cliargs.theme);
+
+			setup_terminal()?;
+			defer! {
+				shutdown_terminal();
+			}
+
+			set_panic_handlers()?;
+
+			let mut terminal = start_terminal(io::stdout())?;
+			let mut repo_path = cliargs.repo_path;
+			let input = Input::new();
+
+			let updater = if cliargs.notify_watcher {
+				Updater::NotifyWatcher
+			} else {
+				Updater::Ticker
+			};
+
+			loop {
+				let quit_state = run_app(
+					app_start,
+					repo_path.clone(),
+					theme.clone(),
+					key_config.clone(),
+					&input,
+					updater,
+					&mut terminal,
+				)?;
+
+				match quit_state {
+					QuitState::OpenSubmodule(p) => {
+						repo_path = p;
+					}
+					_ => break,
+				}
+			}
 		}
-	}
+	};
 
 	Ok(())
 }
