@@ -168,9 +168,7 @@ async fn tui() -> Result<()> {
 	}
 
 	let key_config = KeyConfig::init()
-		.map_err(|e| {
-			eprintln!("KeyConfig loading error: {e}")
-		})
+		.map_err(|e| eprintln!("KeyConfig loading error: {e}"))
 		.unwrap_or_default();
 	let theme = Theme::init(&cliargs.theme);
 
@@ -206,11 +204,9 @@ async fn tui() -> Result<()> {
 			QuitState::OpenSubmodule(p) => {
 				repo_path = p;
 			}
-                        _ => break Ok(()),
+			_ => break Ok(()),
 		}
 	}
-
-
 }
 
 #[tokio::main]
@@ -221,7 +217,7 @@ async fn main() -> Result<()> {
 
 	let cli = Cli::parse();
 
-//let _ = async {
+	//let _ = async {
 	dbg!(&args);
 	match args.len() {
 		// no arguments passed
@@ -300,10 +296,9 @@ async fn main() -> Result<()> {
 		_ => {
 			// show a help message
 			let _ = help();
-
 		}
 	};
-//};
+	//};
 
 	Ok(())
 }
