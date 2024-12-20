@@ -23,6 +23,8 @@ pub struct Cli {
 	/// disable spinner animations
 	#[arg(long, action)]
 	pub disable_cli_spinners: bool,
+	#[arg(long, action)]
+	pub tui: bool,
 }
 
 #[derive(Subcommand)]
@@ -43,4 +45,5 @@ pub enum Commands {
 	Pull,
 	/// run with --nsec flag to change npub
 	Login(sub_commands::login::SubCommandArgs),
+	Tui,
 }

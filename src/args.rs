@@ -33,6 +33,9 @@ pub fn process_cmdline() -> Result<CliArgs> {
 		setup_logging()?;
 	}
 
+	let ngit =
+		arg_matches.get_one::<String>("ngit").map(PathBuf::from);
+
 	let workdir =
 		arg_matches.get_one::<String>("workdir").map(PathBuf::from);
 	let gitdir = arg_matches
