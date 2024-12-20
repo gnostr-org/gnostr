@@ -203,6 +203,9 @@ async fn main() -> Result<()> {
 					.expect("REASON")
 			}
 			_ => println!("Ain't special"),
+		//2 => match args[1].parse() {
+		//        Ok(42) => println!("This is the answer!"),
+		//        _ => println!("This is not the answer."),
 		},
 		3 => {
 			let cmd = &args[1];
