@@ -134,28 +134,108 @@ enum Updater {
 	NotifyWatcher,
 }
 
+async fn increase(number: i32) {
+	println!("{}", number + 1);
+}
+
+async fn decrease(number: i32) {
+	println!("{}", number - 1);
+}
+
+async fn help() {
+	println!(
+		"usage:
+match_args <string>
+    Check whether given string is the answer.
+match_args {{increase|decrease}} <integer>
+    Increase or decrease given integer by one."
+	);
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+	use std::env;
+	let args: Vec<String> = env::args().collect();
+	dbg!(&args);
+
+	match args.len() {
+		// no arguments passed
+		1 => {
+			println!(
+				"My name is 'match_args'. Try passing some arguments!"
+			);
+		}
+		// one argument passed
+		2 => match args[1].parse() {
+			Ok(42) => println!("This is the answer!"),
+			_ => println!("This is not the answer."),
+		},
+		// one command and one argument passed
+		3 => {
+			let cmd = &args[1];
+			let num = &args[2];
+			// parse the number
+			let number: i32 = match num.parse() {
+				Ok(n) => n,
+				Err(_) => {
+					eprintln!(
+						"error: second argument not an integer"
+					);
+					let _ = help();
+					0
+				}
+			};
+			// parse the command
+			match &cmd[..] {
+				"increase" => increase(number).await,
+				"decrease" => decrease(number).await,
+				_ => {
+					eprintln!("error: invalid command");
+					let _ = help();
+				}
+			}
+		}
+		// all the other cases
+		_ => {
+			// show a help message
+			let _ = help();
+		}
+	}
 
 	let cli = Cli::parse();
 	match &cli.command {
 		Commands::Fetch(args) => {
-			sub_commands::fetch::launch(&cli, args).await.expect("REASON")
+			sub_commands::fetch::launch(&cli, args)
+				.await
+				.expect("REASON")
 		}
 		Commands::Login(args) => {
-			sub_commands::login::launch(&cli, args).await.expect("REASON")
+			sub_commands::login::launch(&cli, args)
+				.await
+				.expect("REASON")
 		}
 		Commands::Init(args) => {
-			sub_commands::init::launch(&cli, args).await.expect("REASON")
+			sub_commands::init::launch(&cli, args)
+				.await
+				.expect("REASON")
 		}
 		Commands::Send(args) => {
-			sub_commands::send::launch(&cli, args, false).await.expect("REASON")
+			sub_commands::send::launch(&cli, args, false)
+				.await
+				.expect("REASON")
 		}
-		Commands::List => sub_commands::list::launch().await.expect("REASON"),
-		Commands::Pull => sub_commands::pull::launch().await.expect("REASON"),
+		Commands::List => {
+			sub_commands::list::launch().await.expect("REASON")
+		}
+		Commands::Pull => {
+			sub_commands::pull::launch().await.expect("REASON")
+		}
 		Commands::Push(args) => {
-			sub_commands::push::launch(&cli, args).await.expect("REASON")
+			sub_commands::push::launch(&cli, args)
+				.await
+				.expect("REASON")
 		}
+		_ => println!("Ain't special"),
 	}
 
 	let app_start = Instant::now();
