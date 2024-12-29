@@ -44,7 +44,7 @@ pub struct NgitSubCommand {
     login: bool,
     /// ngit --help
     #[arg(long, default_value_t = false)]
-    help: bool,
+    ngit_help: bool,
     /// Prefixes
     #[arg(short, long, required = false, action = clap::ArgAction::Append)]
     prefixes: Vec<String>,
@@ -72,8 +72,8 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     if sub_command_args.login {
         println!("sub_command_args.login={}", sub_command_args.login);
     }
-    if sub_command_args.help {
-        println!("sub_command_args.help={}", sub_command_args.help);
+    if sub_command_args.ngit_help {
+        println!("sub_command_args.ngit_help={}", sub_command_args.ngit_help);
     }
 
     if sub_command_args.prefixes.len() > 0 {
