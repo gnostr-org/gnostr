@@ -22,7 +22,7 @@ use nostr_sdk::prelude::*;
 //   -V, --version               Print version
 //
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct NgitSubCommand {
     /// ngit --init
     #[arg(long, default_value_t = false)]
@@ -54,28 +54,28 @@ pub struct NgitSubCommand {
 }
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
+
     if sub_command_args.init {
         println!("sub_command_args.init={}", sub_command_args.init);
-    }
+    } else
     if sub_command_args.send {
         println!("sub_command_args.send={}", sub_command_args.send);
-    }
+    } else
     if sub_command_args.list {
         println!("sub_command_args.list={}", sub_command_args.list);
-    }
+    } else
     if sub_command_args.push {
         println!("sub_command_args.push={}", sub_command_args.push);
-    }
+    } else
     if sub_command_args.pull {
         println!("sub_command_args.pull={}", sub_command_args.pull);
-    }
+    } else
     if sub_command_args.login {
         println!("sub_command_args.login={}", sub_command_args.login);
-    }
+    } else
     if sub_command_args.ngit_help {
         println!("sub_command_args.ngit_help={}", sub_command_args.ngit_help);
-    }
-
+    } else
     if sub_command_args.prefixes.len() > 0 {
         let num_cores = num_cpus::get();
         let keys = Keys::vanity(
@@ -91,6 +91,11 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         }
 
         println!("Private key: {}", keys.secret_key()?.to_bech32()?);
+
+    } else {
+
+        println!("sub_command_args={:?}", sub_command_args);
+
     }
 
     Ok(())
