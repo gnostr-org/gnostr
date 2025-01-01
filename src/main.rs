@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
-
+use crate::Commands::CustomEvent;
+use crate::sub_commands::custom_event::CustomEventCommand;
 mod sub_commands;
 mod utils;
 
@@ -12,7 +13,7 @@ mod utils;
 #[command(author, version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
     /// Hex or bech32 formatted private key
     #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     sec: Option<String>,
@@ -81,8 +82,8 @@ async fn main() -> Result<()> {
 
     // Post event
     match &args.command {
-        Commands::Ngit(sub_command_args) => sub_commands::ngit::ngit(sub_command_args).await,
-        Commands::SetMetadata(sub_command_args) => {
+        Some(Commands::Ngit(sub_command_args)) => sub_commands::ngit::ngit(sub_command_args).await,
+        Some(Commands::SetMetadata(sub_command_args)) => {
             {
                 sub_commands::set_metadata::set_metadata(
                     args.sec,
@@ -93,7 +94,7 @@ async fn main() -> Result<()> {
             }
             .await
         }
-        Commands::TextNote(sub_command_args) => {
+        Some(Commands::TextNote(sub_command_args)) => {
             sub_commands::text_note::broadcast_textnote(
                 args.sec,
                 args.relays,
@@ -102,7 +103,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::PublishContactListCsv(sub_command_args) => {
+        Some(Commands::PublishContactListCsv(sub_command_args)) => {
             sub_commands::publish_contactlist_csv::publish_contact_list_from_csv_file(
                 args.sec,
                 args.relays,
@@ -111,7 +112,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::DeleteEvent(sub_command_args) => {
+        Some(Commands::DeleteEvent(sub_command_args)) => {
             sub_commands::delete_event::delete(
                 args.sec,
                 args.relays,
@@ -120,7 +121,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::DeleteProfile(sub_command_args) => {
+        Some(Commands::DeleteProfile(sub_command_args)) => {
             sub_commands::delete_profile::delete(
                 args.sec,
                 args.relays,
@@ -129,7 +130,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::React(sub_command_args) => {
+        Some(Commands::React(sub_command_args)) => {
             sub_commands::react::react_to_event(
                 args.sec,
                 args.relays,
@@ -138,17 +139,17 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::ListEvents(sub_command_args) => {
+        Some(Commands::ListEvents(sub_command_args)) => {
             sub_commands::list_events::list_events(args.relays, sub_command_args).await
         }
-        Commands::GenerateKeypair(sub_command_args) => {
+        Some(Commands::GenerateKeypair(sub_command_args)) => {
             sub_commands::generate_keypair::get_new_keypair(sub_command_args).await
         }
-        Commands::ConvertKey(sub_command_args) => {
+        Some(Commands::ConvertKey(sub_command_args)) => {
             sub_commands::convert_key::convert_key(sub_command_args).await
         }
-        Commands::Vanity(sub_command_args) => sub_commands::vanity::vanity(sub_command_args).await,
-        Commands::CreatePublicChannel(sub_command_args) => {
+        Some(Commands::Vanity(sub_command_args)) => sub_commands::vanity::vanity(sub_command_args).await,
+        Some(Commands::CreatePublicChannel(sub_command_args)) => {
             sub_commands::create_public_channel::create_public_channel(
                 args.sec,
                 args.relays,
@@ -157,7 +158,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::SetChannelMetadata(sub_command_args) => {
+        Some(Commands::SetChannelMetadata(sub_command_args)) => {
             sub_commands::set_channel_metadata::set_channel_metadata(
                 args.sec,
                 args.relays,
@@ -166,7 +167,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::SendChannelMessage(sub_command_args) => {
+        Some(Commands::SendChannelMessage(sub_command_args)) => {
             sub_commands::send_channel_message::send_channel_message(
                 args.sec,
                 args.relays,
@@ -175,7 +176,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::HidePublicChannelMessage(sub_command_args) => {
+        Some(Commands::HidePublicChannelMessage(sub_command_args)) => {
             sub_commands::hide_public_channel_message::hide_public_channel_message(
                 args.sec,
                 args.relays,
@@ -184,7 +185,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::MutePublicKey(sub_command_args) => {
+        Some(Commands::MutePublicKey(sub_command_args)) => {
             sub_commands::mute_publickey::mute_publickey(
                 args.sec,
                 args.relays,
@@ -193,10 +194,10 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::BroadcastEvents(sub_command_args) => {
+        Some(Commands::BroadcastEvents(sub_command_args)) => {
             sub_commands::broadcast_events::broadcast_events(args.relays, sub_command_args).await
         }
-        Commands::CreateBadge(sub_command_args) => {
+        Some(Commands::CreateBadge(sub_command_args)) => {
             sub_commands::create_badge::create_badge(
                 args.sec,
                 args.relays,
@@ -205,7 +206,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::AwardBadge(sub_command_args) => {
+        Some(Commands::AwardBadge(sub_command_args)) => {
             sub_commands::award_badge::award_badge(
                 args.sec,
                 args.relays,
@@ -214,7 +215,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::ProfileBadges(sub_command_args) => {
+        Some(Commands::ProfileBadges(sub_command_args)) => {
             sub_commands::profile_badges::set_profile_badges(
                 args.sec,
                 args.relays,
@@ -223,7 +224,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::CustomEvent(sub_command_args) => {
+        Some(Commands::CustomEvent(sub_command_args)) => {
             sub_commands::custom_event::create_custom_event(
                 args.sec,
                 args.relays,
@@ -232,7 +233,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        Commands::SetUserStatus(sub_command_args) => {
+        Some(Commands::SetUserStatus(sub_command_args)) => {
             sub_commands::user_status::set_user_status(
                 args.sec,
                 args.relays,
@@ -241,5 +242,12 @@ async fn main() -> Result<()> {
             )
             .await
         }
+        None => Ok({
+        println!("None");
+
+
+        })
     }
+
+
 }

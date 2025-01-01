@@ -21,6 +21,8 @@ pub struct TextNoteSubCommand {
     /// Event references
     #[arg(long, action = clap::ArgAction::Append)]
     etag: Vec<String>,
+    #[arg(short, long, action = clap::ArgAction::Append)]
+    tag: Vec<String>,
     /// Seconds till expiration (NIP-40)
     #[arg(long)]
     expiration: Option<u64>,
@@ -57,6 +59,11 @@ pub async fn broadcast_textnote(
     // Add e-tags
     for etag in sub_command_args.etag.iter() {
         let event_id = EventId::from_hex(etag)?;
+        tags.push(Tag::event(event_id));
+    }
+    // Add e-tags
+    for tag in sub_command_args.tag.iter() {
+        let event_id = EventId::from_hex(tag)?;
         tags.push(Tag::event(event_id));
     }
     // Set expiration tag
