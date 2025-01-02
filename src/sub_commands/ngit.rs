@@ -1,5 +1,5 @@
-#[cfg_attr(not(test), warn(clippy::pedantic))]
-#[cfg_attr(not(test), warn(clippy::expect_used))]
+#![cfg_attr(not(test), warn(clippy::pedantic))]
+#![cfg_attr(not(test), warn(clippy::expect_used))]
 use nostr_sdk::prelude::*;
 //use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
@@ -56,7 +56,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     } else if sub_command_args.ngit_help {
         println!("sub_command_args.ngit_help={}", sub_command_args.ngit_help);
     } else {
-        println!("sub_command_args={:?}", sub_command_args);
+        println!("sub_command_args={sub_command_args:?}");
     }
 
     Ok(())
