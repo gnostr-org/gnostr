@@ -1,26 +1,19 @@
-use clap::Args;
+#[cfg_attr(not(test), warn(clippy::pedantic))]
+#[cfg_attr(not(test), warn(clippy::expect_used))]
 use nostr_sdk::prelude::*;
+//use anyhow::Result;
+use clap::{Args, Parser, Subcommand};
 
-// cli for code collaboration over nostr with nip34 support
+//use ngit::*;
 //
-// Usage: ngit [OPTIONS] <COMMAND>
-//
-// Commands:
-//   init   signal you are this repo's maintainer accepting proposals via nostr
-//   send   issue commits as a proposal
-//   list   list proposals; checkout, apply or download selected
-//   push   send proposal revision
-//   pull   fetch and apply new proposal commits / revisions linked to branch
-//   login  run with --nsec flag to change npub
-//   help   Print this message or the help of the given subcommand(s)
-//
-// Options:
-//   -n, --nsec <NSEC>           nsec or hex private key
-//   -p, --password <PASSWORD>   password to decrypt nsec
-//       --disable-cli-spinners  disable spinner animations
-//   -h, --help                  Print help
-//   -V, --version               Print version
-//
+//use ngit::cli_interactor;
+//use ngit::client;
+//use ngit::config;
+//use ngit::git;
+//use ngit::key_handling;
+//use ngit::login;
+//use ngit::repo_ref;
+use ngit::sub_commands;
 
 #[derive(Args, Debug)]
 pub struct NgitSubCommand {
@@ -68,3 +61,49 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 
     Ok(())
 }
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+pub struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+    /// nsec or hex private key
+    #[arg(short, long, global = true)]
+    nsec: Option<String>,
+    /// password to decrypt nsec
+    #[arg(short, long, global = true)]
+    password: Option<String>,
+    /// disable spinner animations
+    #[arg(long, action)]
+    disable_cli_spinners: bool,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// signal you are this repo's maintainer accepting proposals via nostr
+    Init(sub_commands::init::SubCommandArgs),
+    /// issue commits as a proposal
+    Send(sub_commands::send::SubCommandArgs),
+    /// list proposals; checkout, apply or download selected
+    List,
+    /// send proposal revision
+    Push(sub_commands::push::SubCommandArgs),
+    /// fetch and apply new proposal commits / revisions linked to branch
+    Pull,
+    /// run with --nsec flag to change npub
+    Login(sub_commands::login::SubCommandArgs),
+}
+
+//#[tokio::main]
+//async fn main() -> Result<()> {
+//    let cli = Cli::parse();
+//    match &cli.command {
+//        Commands::Login(args) => sub_commands::login::launch(&cli, args).await,
+//        Commands::Init(args) => sub_commands::init::launch(&cli, args).await,
+//        Commands::Send(args) => sub_commands::send::launch(&cli, args).await,
+//        Commands::List => sub_commands::list::launch().await,
+//        Commands::Pull => sub_commands::pull::launch().await,
+//        Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
+//    }
+//}
