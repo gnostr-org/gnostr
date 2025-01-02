@@ -1,7 +1,7 @@
+//use crate::sub_commands::custom_event::CustomEventCommand;
+//use crate::Commands::CustomEvent;
 use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
-use crate::Commands::CustomEvent;
-use crate::sub_commands::custom_event::CustomEventCommand;
 mod sub_commands;
 mod utils;
 
@@ -148,7 +148,9 @@ async fn main() -> Result<()> {
         Some(Commands::ConvertKey(sub_command_args)) => {
             sub_commands::convert_key::convert_key(sub_command_args).await
         }
-        Some(Commands::Vanity(sub_command_args)) => sub_commands::vanity::vanity(sub_command_args).await,
+        Some(Commands::Vanity(sub_command_args)) => {
+            sub_commands::vanity::vanity(sub_command_args).await
+        }
         Some(Commands::CreatePublicChannel(sub_command_args)) => {
             sub_commands::create_public_channel::create_public_channel(
                 args.sec,
@@ -243,11 +245,7 @@ async fn main() -> Result<()> {
             .await
         }
         None => Ok({
-        println!("None");
-
-
-        })
+            println!("None");
+        }),
     }
-
-
 }
