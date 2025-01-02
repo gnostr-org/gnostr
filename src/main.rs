@@ -244,8 +244,11 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        None => Ok({
-            println!("None");
-        }),
+        None => {
+            {
+                println!("None");
+            };
+            Ok(())
+        }
     }
 }
