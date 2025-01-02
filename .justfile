@@ -5,6 +5,7 @@ alias uc := update-cargo-dependencies
 alias r := run
 alias t := cargo-test
 alias b := build
+alias c := check
 alias rr := run-release
 alias cw := cargo-watch
 
@@ -65,6 +66,9 @@ build:
 
 build-examples:
     cargo build --examples || true
+
+check:
+    cargo check || true
 
 run-release:
     cargo run --release --bin gnostr || true
