@@ -1,17 +1,17 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
-use anyhow::Result;
+//use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod cli_interactor;
-mod client;
-mod config;
-mod git;
-mod key_handling;
-mod login;
-mod repo_ref;
-mod sub_commands;
+pub mod cli_interactor;
+pub mod client;
+pub mod config;
+pub mod git;
+pub mod key_handling;
+pub mod login;
+pub mod repo_ref;
+pub mod sub_commands;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
