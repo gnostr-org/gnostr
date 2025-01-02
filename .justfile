@@ -50,7 +50,7 @@ lint:
     nix flake check
 
 run:
-    cargo run --bin gnostr || true
+    cargo run --bin gnostr -- -h || true
 
 install-all:install install-ngit
 install:
