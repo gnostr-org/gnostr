@@ -25,10 +25,10 @@ use nostr_sdk::prelude::*;
 #[derive(Args, Debug)]
 pub struct NgitSubCommand {
     /// ngit --init
-    #[arg(long, default_value_t = false)]
+    #[arg(long, short, default_value_t = false)]
     init: bool,
     /// ngit --send
-    #[arg(long, default_value_t = false)]
+    #[arg(long, short, default_value_t = false)]
     send: bool,
     /// ngit --list
     #[arg(long, default_value_t = false)]
@@ -40,17 +40,11 @@ pub struct NgitSubCommand {
     #[arg(long, default_value_t = false)]
     pull: bool,
     /// ngit --login
-    #[arg(long, default_value_t = false)]
+    #[arg(long, short, default_value_t = false)]
     login: bool,
     /// ngit --help
-    #[arg(long, default_value_t = false)]
+    #[arg(long, short, default_value_t = false)]
     ngit_help: bool,
-    /// Prefixes
-    #[arg(short, long, required = false, action = clap::ArgAction::Append)]
-    prefixes: Vec<String>,
-    /// Vanity pubkey in hex format
-    #[arg(long, default_value_t = false)]
-    hex: bool,
 }
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
@@ -68,21 +62,6 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         println!("sub_command_args.login={}", sub_command_args.login);
     } else if sub_command_args.ngit_help {
         println!("sub_command_args.ngit_help={}", sub_command_args.ngit_help);
-    } else if sub_command_args.prefixes.len() > 0 {
-        let num_cores = num_cpus::get();
-        let keys = Keys::vanity(
-            sub_command_args.prefixes.clone(),
-            !sub_command_args.hex,
-            num_cores,
-        )?;
-
-        if sub_command_args.hex {
-            println!("Public key (hex): {}", keys.public_key());
-        } else {
-            println!("Public key: {}", keys.public_key().to_bech32()?);
-        }
-
-        println!("Private key: {}", keys.secret_key()?.to_bech32()?);
     } else {
         println!("sub_command_args={:?}", sub_command_args);
     }
