@@ -6,6 +6,9 @@ alias r := run
 alias t := cargo-test
 alias b := build
 alias c := check
+alias i := install
+alias ia := install-all
+alias in := install-ngit
 alias rr := run-release
 alias cw := cargo-watch
 
