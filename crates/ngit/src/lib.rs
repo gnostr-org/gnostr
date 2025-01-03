@@ -31,7 +31,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     /// signal you are this repo's maintainer accepting proposals via nostr
     Init(sub_commands::init::SubCommandArgs),
     /// issue commits as a proposal
