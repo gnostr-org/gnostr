@@ -25,6 +25,7 @@ pub struct NgitSubCommand {
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     let cli = Cli::parse();
+    println!("{:?}", cli);
     match &sub_command_args.command {
         Commands::Login(args) => ngit::sub_commands::login::launch(&cli, &args).await?,
         Commands::Init(args) => ngit::sub_commands::init::launch(&cli, &&args).await?,

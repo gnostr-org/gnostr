@@ -13,7 +13,7 @@ pub mod login;
 pub mod repo_ref;
 pub mod sub_commands;
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct Cli {
@@ -31,6 +31,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
+#[derive(Debug)]
 pub enum Commands {
     /// signal you are this repo's maintainer accepting proposals via nostr
     Init(sub_commands::init::SubCommandArgs),
