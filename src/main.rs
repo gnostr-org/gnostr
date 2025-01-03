@@ -82,7 +82,12 @@ async fn main() -> Result<()> {
 
     // Post event
     match &args.command {
-        Some(Commands::Ngit(sub_command_args)) => sub_commands::ngit::ngit(sub_command_args).await,
+        Some(Commands::Ngit(sub_command_args)) => {
+
+            //println!("sub_command_args:{:?}", Some(sub_command_args));
+
+            sub_commands::ngit::ngit(sub_command_args).await
+        }
         Some(Commands::SetMetadata(sub_command_args)) => {
             {
                 sub_commands::set_metadata::set_metadata(
