@@ -30,20 +30,20 @@ use crate::{
 pub struct SubCommandArgs {
     #[arg(default_value = "")]
     /// commits to send as proposal; like in `git format-patch` eg. HEAD~2
-    pub(crate) since_or_range: String,
+    pub since_or_range: String,
     #[clap(long, value_parser, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
-    pub(crate) in_reply_to: Vec<String>,
+    pub  in_reply_to: Vec<String>,
     /// don't prompt for a cover letter
     #[arg(long, action)]
-    pub(crate) no_cover_letter: bool,
+    pub  no_cover_letter: bool,
     /// optional cover letter title
     #[clap(short, long)]
-    pub(crate) title: Option<String>,
+    pub  title: Option<String>,
     #[clap(short, long)]
     /// optional cover letter description
-    pub(crate) description: Option<String>,
+    pub  description: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]

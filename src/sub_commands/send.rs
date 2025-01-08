@@ -11,11 +11,13 @@ use nostr::{
 use nostr_sdk::{hashes::sha1::Hash as Sha1Hash, TagStandard};
 
 use super::list::tag_value;
+
 #[cfg(not(test))]
-use crate::client::Client;
+use ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::{
+use ngit::client::MockConnect;
+
+use ngit::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
@@ -178,7 +180,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
     } else {
         None
     };
-    let (keys, user_ref) = login::launch(&cli_args.sec, &cli_args.password, Some(&client)).await?;
+    let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
 
     client.set_keys(&keys).await;
 

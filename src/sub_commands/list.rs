@@ -4,10 +4,10 @@ use anyhow::{bail, Context, Result};
 
 use super::send::event_is_patch_set_root;
 #[cfg(not(test))]
-use crate::client::Client;
+use ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::{
+use ngit::client::MockConnect;
+use ngit::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::Connect,
     git::{str_to_sha1, Repo, RepoActions},

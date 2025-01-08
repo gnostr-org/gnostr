@@ -3,10 +3,10 @@ use nostr::{FromBech32, PublicKey, ToBech32};
 
 use super::send::send_events;
 #[cfg(not(test))]
-use crate::client::Client;
+use ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::{
+use ngit::client::MockConnect;
+use ngit::{
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
     client::Connect,
     git::{Repo, RepoActions},
@@ -59,7 +59,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
     #[cfg(test)]
     let mut client = <MockConnect as std::default::Default>::default();
 
-    let (keys, user_ref) = login::launch(&cli_args.sec, &cli_args.password, Some(&client)).await?;
+    let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
 
     client.set_keys(&keys).await;
 

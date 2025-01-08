@@ -2,10 +2,10 @@ use anyhow::{bail, Context, Result};
 
 use super::list::{get_commit_id_from_patch, tag_value};
 #[cfg(not(test))]
-use crate::client::Client;
+use ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::{
+use ngit::client::MockConnect;
+use ngit::{
     client::Connect,
     git::{str_to_sha1, Repo, RepoActions},
     repo_ref,
