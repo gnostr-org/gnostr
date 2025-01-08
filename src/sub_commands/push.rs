@@ -106,7 +106,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
         println!("preparing to force push proposal revision...");
         sub_commands::send::launch(
             cli_args,
-            &sub_commands::send::SubCommandArgs {
+            &sub_commands::send::SendSubCommandArgs {
                 since_or_range: String::new(),
                 in_reply_to: vec![proposal_root_event.id.to_string()],
                 title: None,
