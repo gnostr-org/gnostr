@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
 
+use ngit::*;
+
 mod sub_commands;
 mod utils;
 
@@ -14,10 +16,10 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
     /// Hex or bech32 formatted private key
-    #[arg(short, long)]
+    #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     sec: Option<String>,
     /// Relay to connect to
-    #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string()])]
+    #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
