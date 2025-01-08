@@ -24,6 +24,15 @@ struct Cli {
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     difficulty_target: u8,
+    /// nsec or hex private key
+    #[arg(short, long, global = true)]
+    nsec: Option<String>,
+    /// password to decrypt nsec
+    #[arg(long, global = true)]
+    password: Option<String>,
+    /// disable spinner animations
+    #[arg(long, action)]
+    disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand)]

@@ -121,7 +121,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 
     } else {
 
-        println!("sub_command_args={:?}", sub_command_args);
+        println!("ngit:else:sub_command_args={:?}", sub_command_args);
 
     }
 
