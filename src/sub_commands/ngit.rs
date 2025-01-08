@@ -2,25 +2,41 @@
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
 use nostr_sdk::prelude::*;
-use ngit::*;
+//use ngit::*;
 //use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 
-use ngit::cli_interactor;
-use ngit::client;
-use ngit::config;
-use ngit::git;
-use ngit::key_handling;
-use ngit::login;
-use ngit::repo_ref;
-use ngit::sub_commands;
+use crate::sub_commands as gnostr_subcommands;
+use crate::sub_commands::init;
+use crate::sub_commands::push;
+use crate::sub_commands::pull;
+use crate::sub_commands::send;
+use crate::sub_commands::list;
+use crate::sub_commands::login;
+//
+use crate::Commands as GnostrCommands;
+use crate::Cli as GnostrCli;
+
+use ngit::Commands as NgitCommands;
+//use ngit::Subcommand as NgitSubcommand;
+use ngit::Cli as NgitCli;
+
+//use ngit::cli_interactor;
+//use ngit::client;
+//use ngit::config;
+//use ngit::git;
+//use ngit::key_handling;
+//use ngit::login;
+//use ngit::repo_ref;
+//use ngit::sub_commands as Ngit_Sub_Commands;
+//use ngit::sub_commands::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
-pub struct Cli {
+pub struct LocalCli {
     #[command(subcommand)]
-    command: Commands,
+    command: LocalCommands,
     /// nsec or hex private key
     #[arg(short, long, global = true)]
     nsec: Option<String>,
@@ -33,19 +49,19 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-enum Commands {
+enum LocalCommands {
     /// signal you are this repo's maintainer accepting proposals via nostr
-    Init(sub_commands::init::SubCommandArgs),
+    Init(init::SubCommandArgs),
     /// issue commits as a proposal
-    Send(sub_commands::send::SubCommandArgs),
+    Send(send::SubCommandArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
+    Push(push::SubCommandArgs),
     /// fetch and apply new proposal commits / revisions linked to branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(sub_commands::login::SubCommandArgs),
+    Login(login::SubCommandArgs),
 }
 
 
@@ -82,26 +98,27 @@ pub struct NgitSubCommand {
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 
+    //let cli = NgitCli::parse();
     if sub_command_args.init {
-        println!("sub_command_args.init={}", sub_command_args.init);
+        println!("ngit:sub_command_args.init={}", sub_command_args.init);
     } else
     if sub_command_args.send {
-        println!("sub_command_args.send={}", sub_command_args.send);
+        println!("ngit:sub_command_args.send={}", sub_command_args.send);
     } else
     if sub_command_args.list {
-        println!("sub_command_args.list={}", sub_command_args.list);
+        println!("ngit:sub_command_args.list={}", sub_command_args.list);
     } else
     if sub_command_args.push {
-        println!("sub_command_args.push={}", sub_command_args.push);
+        println!("ngit:sub_command_args.push={}", sub_command_args.push);
     } else
     if sub_command_args.pull {
-        println!("sub_command_args.pull={}", sub_command_args.pull);
+        println!("ngit:sub_command_args.pull={}", sub_command_args.pull);
     } else
     if sub_command_args.login {
-        println!("sub_command_args.login={}", sub_command_args.login);
+        println!("ngit:sub_command_args.login={}", sub_command_args.login);
     } else
     if sub_command_args.ngit_help {
-        println!("sub_command_args.ngit_help={}", sub_command_args.ngit_help);
+        println!("ngit:sub_command_args.ngit_help={}", sub_command_args.ngit_help);
     } else
     if sub_command_args.prefixes.len() > 0 {
         let num_cores = num_cpus::get();
@@ -122,8 +139,16 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     } else {
 
         println!("ngit:else:sub_command_args={:?}", sub_command_args);
-
-    }
+        let cli = NgitCli::parse();
+        let _ = match &cli.command {
+            NgitCommands::Login(args) => ngit::sub_commands::login::launch(&cli, args).await,
+            NgitCommands::Init(args) => ngit::sub_commands::init::launch(&cli, args).await,
+            NgitCommands::Send(args) => ngit::sub_commands::send::launch(&cli, args).await,
+            NgitCommands::List => ngit::sub_commands::list::launch().await,
+            NgitCommands::Pull => ngit::sub_commands::pull::launch().await,
+            NgitCommands::Push(args) => ngit::sub_commands::push::launch(&cli, args).await,
+			};
+	};
 
     Ok(())
 }
