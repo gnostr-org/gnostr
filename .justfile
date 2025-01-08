@@ -5,6 +5,10 @@ alias uc := update-cargo-dependencies
 alias r := run
 alias t := cargo-test
 alias b := build
+alias c := check
+alias i := install
+alias ia := install-all
+alias in := install-ngit
 alias rr := run-release
 alias cw := cargo-watch
 
@@ -50,7 +54,7 @@ lint:
     nix flake check
 
 run:
-    cargo run --bin gnostr || true
+    cargo run --bin gnostr -- -h || true
 
 install-all:install install-ngit
 install:
@@ -66,8 +70,11 @@ build:
 build-examples:
     cargo build --examples || true
 
+check:
+    cargo check || true
+
 run-release:
-    cargo run --release --bin gnostr || true
+    cargo run --release --bin gnostr -h || true
 
 doc:
     cargo doc --open --offline
