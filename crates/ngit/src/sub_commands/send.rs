@@ -27,7 +27,7 @@ use crate::{
 };
 
 #[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+pub struct SendSubCommandArgs {
     #[arg(default_value = "")]
     /// commits to send as proposal; like in `git format-patch` eg. HEAD~2
     pub since_or_range: String,
@@ -47,7 +47,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &SendSubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let (main_branch_name, main_tip) = git_repo

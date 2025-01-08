@@ -1,68 +1,26 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
-use nostr_sdk::prelude::*;
 //use ngit::*;
 //use anyhow::Result;
-use clap::{Args, Parser, Subcommand};
-
-use crate::sub_commands as gnostr_subcommands;
-use crate::sub_commands::init;
-use crate::sub_commands::list;
-use crate::sub_commands::login;
-use crate::sub_commands::pull;
-use crate::sub_commands::push;
-use crate::sub_commands::send;
-//
-use crate::Cli as GnostrCli;
-use crate::Commands as GnostrCommands;
-
-use ngit::Commands as NgitCommands;
-//use ngit::Subcommand as NgitSubcommand;
-use ngit::Cli as NgitCli;
-
-//use ngit::cli_interactor;
-//use ngit::client;
-//use ngit::config;
-//use ngit::git;
-//use ngit::key_handling;
-//use ngit::login;
-//use ngit::repo_ref;
-//use ngit::sub_commands as Ngit_Sub_Commands;
+//use ngit::sub_commands;
 //use ngit::sub_commands::*;
+use ngit::sub_commands::init;
+use ngit::sub_commands::list;
+use ngit::sub_commands::login;
+use ngit::sub_commands::pull;
+use ngit::sub_commands::push;
+use ngit::sub_commands::send;
 
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct LocalCli {
-    #[command(subcommand)]
-    command: LocalCommands,
-    /// nsec or hex private key
-    #[arg(short, long, global = true)]
-    nsec: Option<String>,
-    /// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    password: Option<String>,
-    /// disable spinner animations
-    #[arg(long, action)]
-    disable_cli_spinners: bool,
-}
+use ngit::sub_commands::init::InitSubCommandArgs;
+use ngit::sub_commands::login::LoginSubCommandArgs;
+use ngit::sub_commands::push::PushSubCommandArgs;
+use ngit::sub_commands::send::SendSubCommandArgs;
 
-#[derive(Subcommand)]
-enum LocalCommands {
-    /// signal you are this repo's maintainer accepting proposals via nostr
-    Init(init::SubCommandArgs),
-    /// issue commits as a proposal
-    Send(send::SubCommandArgs),
-    /// list proposals; checkout, apply or download selected
-    List,
-    /// send proposal revision
-    Push(push::SubCommandArgs),
-    /// fetch and apply new proposal commits / revisions linked to branch
-    Pull,
-    /// run with --nsec flag to change npub
-    Login(login::SubCommandArgs),
-}
+use ngit::Cli as NgitCli;
+use nostr_sdk::prelude::*;
+
+use clap::{Args, Parser, Subcommand};
 
 #[derive(Args, Debug)]
 pub struct NgitSubCommand {
@@ -130,21 +88,43 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 
         println!("Private key: {}", keys.secret_key()?.to_bech32()?);
     } else {
+		use std::env;
+		let args: Vec<String> = env::args().collect();
+        println!("ngit:else:args={:?}", args);
         println!("ngit:else:sub_command_args={:?}", sub_command_args);
         let command = NgitCli::parse();
+        //println!("ngit:else:command={:?}", command);
         let cli = ngit::Cli {
             command: command.command,
             nsec: Some(String::from("")),
             password: Some(String::from("")),
             disable_cli_spinners: true,
         };
-        let _ = match &cli.command {
-            NgitCommands::Login(args) => ngit::sub_commands::login::launch(&cli, &args).await,
-            NgitCommands::Init(args) => ngit::sub_commands::init::launch(&cli, &args).await,
-            NgitCommands::Send(args) => ngit::sub_commands::send::launch(&cli, &args).await,
-            NgitCommands::List => ngit::sub_commands::list::launch().await,
-            NgitCommands::Pull => ngit::sub_commands::pull::launch().await,
-            NgitCommands::Push(args) => ngit::sub_commands::push::launch(&cli, &args).await,
+        //let _ = match &cli.command {
+		if sub_command_args.login {
+            login::launch(&cli, &args).await;
+		} else
+		if sub_command_args.init {
+            //let args = Commands::Init(args);
+            init::launch(&cli, &args).await;
+		} else
+		if sub_command_args.send {
+            //let args = Commands::Send(args);
+            send::launch(&cli, &args).await;
+		} else
+		if sub_command_args.list {
+            //let args = Commands::List(args);
+            list::launch().await;
+		} else
+		if sub_command_args.pull {
+            //let args = Commands::Pull(args);
+            //sub_commands::pull::launch().await;
+            pull::launch().await;
+		} else
+		if sub_command_args.push {
+            //let args = Commands::Push(args);
+            push::launch(&cli, &args).await;
+            //Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
         };
     };
 

@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+pub struct InitSubCommandArgs {
     #[clap(short, long)]
     /// name of repository
     title: Option<String>,
@@ -44,7 +44,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &InitSubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let root_commit = git_repo
