@@ -252,5 +252,10 @@ async fn main() -> Result<()> {
             )
             .await
         }
+        _ => Ok({
+            println!("{:?}", args.nsec.unwrap());
+            println!("{:?}", args.password.unwrap());
+            println!("{:?}", args.sec.unwrap());
+        }),
     }
 }

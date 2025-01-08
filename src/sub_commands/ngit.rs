@@ -8,14 +8,14 @@ use clap::{Args, Parser, Subcommand};
 
 use crate::sub_commands as gnostr_subcommands;
 use crate::sub_commands::init;
-use crate::sub_commands::push;
-use crate::sub_commands::pull;
-use crate::sub_commands::send;
 use crate::sub_commands::list;
 use crate::sub_commands::login;
+use crate::sub_commands::pull;
+use crate::sub_commands::push;
+use crate::sub_commands::send;
 //
-use crate::Commands as GnostrCommands;
 use crate::Cli as GnostrCli;
+use crate::Commands as GnostrCommands;
 
 use ngit::Commands as NgitCommands;
 //use ngit::Subcommand as NgitSubcommand;
@@ -64,7 +64,6 @@ enum LocalCommands {
     Login(login::SubCommandArgs),
 }
 
-
 #[derive(Args, Debug)]
 pub struct NgitSubCommand {
     /// ngit --init
@@ -97,30 +96,25 @@ pub struct NgitSubCommand {
 }
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
-
     //let cli = NgitCli::parse();
     if sub_command_args.init {
         println!("ngit:sub_command_args.init={}", sub_command_args.init);
-    } else
-    if sub_command_args.send {
+    } else if sub_command_args.send {
         println!("ngit:sub_command_args.send={}", sub_command_args.send);
-    } else
-    if sub_command_args.list {
+    } else if sub_command_args.list {
         println!("ngit:sub_command_args.list={}", sub_command_args.list);
-    } else
-    if sub_command_args.push {
+    } else if sub_command_args.push {
         println!("ngit:sub_command_args.push={}", sub_command_args.push);
-    } else
-    if sub_command_args.pull {
+    } else if sub_command_args.pull {
         println!("ngit:sub_command_args.pull={}", sub_command_args.pull);
-    } else
-    if sub_command_args.login {
+    } else if sub_command_args.login {
         println!("ngit:sub_command_args.login={}", sub_command_args.login);
-    } else
-    if sub_command_args.ngit_help {
-        println!("ngit:sub_command_args.ngit_help={}", sub_command_args.ngit_help);
-    } else
-    if sub_command_args.prefixes.len() > 0 {
+    } else if sub_command_args.ngit_help {
+        println!(
+            "ngit:sub_command_args.ngit_help={}",
+            sub_command_args.ngit_help
+        );
+    } else if sub_command_args.prefixes.len() > 0 {
         let num_cores = num_cpus::get();
         let keys = Keys::vanity(
             sub_command_args.prefixes.clone(),
@@ -135,9 +129,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         }
 
         println!("Private key: {}", keys.secret_key()?.to_bech32()?);
-
     } else {
-
         println!("ngit:else:sub_command_args={:?}", sub_command_args);
         let cli = NgitCli::parse();
         let _ = match &cli.command {
@@ -147,8 +139,8 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
             NgitCommands::List => ngit::sub_commands::list::launch().await,
             NgitCommands::Pull => ngit::sub_commands::pull::launch().await,
             NgitCommands::Push(args) => ngit::sub_commands::push::launch(&cli, args).await,
-			};
-	};
+        };
+    };
 
     Ok(())
 }
@@ -165,4 +157,3 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 //        Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
 //    }
 //}
-

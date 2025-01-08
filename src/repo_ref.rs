@@ -441,30 +441,27 @@ mod tests {
 
             #[test]
             fn identifier() {
-                assert!(
-                    create()
-                        .tags
-                        .iter()
-                        .any(|t| t.as_vec()[0].eq("d") && t.as_vec()[1].eq("123412341"))
-                )
+                assert!(create()
+                    .tags
+                    .iter()
+                    .any(|t| t.as_vec()[0].eq("d") && t.as_vec()[1].eq("123412341")))
             }
 
             #[test]
             fn name() {
-                assert!(
-                    create()
-                        .tags
-                        .iter()
-                        .any(|t| t.as_vec()[0].eq("name") && t.as_vec()[1].eq("test name"))
-                )
+                assert!(create()
+                    .tags
+                    .iter()
+                    .any(|t| t.as_vec()[0].eq("name") && t.as_vec()[1].eq("test name")))
             }
 
             #[test]
             fn alt() {
-                assert!(
-                    create().tags.iter().any(|t| t.as_vec()[0].eq("alt")
-                        && t.as_vec()[1].eq("git repository: test name"))
-                )
+                assert!(create()
+                    .tags
+                    .iter()
+                    .any(|t| t.as_vec()[0].eq("alt")
+                        && t.as_vec()[1].eq("git repository: test name")))
             }
 
             #[test]
