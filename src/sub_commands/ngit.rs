@@ -131,14 +131,17 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         println!("Private key: {}", keys.secret_key()?.to_bech32()?);
     } else {
         println!("ngit:else:sub_command_args={:?}", sub_command_args);
-        let cli = NgitCli::parse();
+		for arg in sub_command_args {
+			print!("{}", arg);
+		}
+        //let cli = NgitCli::parse();
         let _ = match &cli.command {
-            NgitCommands::Login(args) => ngit::sub_commands::login::launch(&cli, args).await,
-            NgitCommands::Init(args) => ngit::sub_commands::init::launch(&cli, args).await,
-            NgitCommands::Send(args) => ngit::sub_commands::send::launch(&cli, args).await,
+            NgitCommands::Login(args) => ngit::sub_commands::login::launch(&cli, &args).await,
+            NgitCommands::Init(args) => ngit::sub_commands::init::launch(&cli, &args).await,
+            NgitCommands::Send(args) => ngit::sub_commands::send::launch(&cli, &args).await,
             NgitCommands::List => ngit::sub_commands::list::launch().await,
             NgitCommands::Pull => ngit::sub_commands::pull::launch().await,
-            NgitCommands::Push(args) => ngit::sub_commands::push::launch(&cli, args).await,
+            NgitCommands::Push(args) => ngit::sub_commands::push::launch(&cli, &args).await,
         };
     };
 
