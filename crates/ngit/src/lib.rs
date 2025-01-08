@@ -21,13 +21,13 @@ pub struct Cli {
     pub command: Commands,
     /// nsec or hex private key
     #[arg(short, long, global = true)]
-    nsec: Option<String>,
+    pub nsec: Option<String>,
     /// password to decrypt nsec
     #[arg(short, long, global = true)]
-    password: Option<String>,
+    pub password: Option<String>,
     /// disable spinner animations
     #[arg(long, action)]
-    disable_cli_spinners: bool,
+    pub disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand)]
