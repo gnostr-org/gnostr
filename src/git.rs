@@ -1026,8 +1026,8 @@ mod tests {
         }
 
         #[test]
-        fn correctly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_false()
-        -> Result<()> {
+        fn correctly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_false(
+        ) -> Result<()> {
             let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -1037,8 +1037,8 @@ mod tests {
         }
 
         #[test]
-        fn incorrectly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_error()
-        -> Result<()> {
+        fn incorrectly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_error(
+        ) -> Result<()> {
             let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -1568,8 +1568,8 @@ mod tests {
             use super::*;
 
             #[test]
-            fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature()
-            -> Result<()> {
+            fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature(
+            ) -> Result<()> {
                 let source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
@@ -1709,11 +1709,9 @@ mod tests {
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
-                    assert!(
-                        git_repo
-                            .get_local_branch_names()?
-                            .contains(&BRANCH_NAME.to_string())
-                    );
+                    assert!(git_repo
+                        .get_local_branch_names()?
+                        .contains(&BRANCH_NAME.to_string()));
                     Ok(())
                 }
 
@@ -1800,11 +1798,9 @@ mod tests {
                     test_repo.stage_and_commit("add m3.md")?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
-                    assert!(
-                        git_repo
-                            .get_local_branch_names()?
-                            .contains(&BRANCH_NAME.to_string())
-                    );
+                    assert!(git_repo
+                        .get_local_branch_names()?
+                        .contains(&BRANCH_NAME.to_string()));
                     Ok(())
                 }
 

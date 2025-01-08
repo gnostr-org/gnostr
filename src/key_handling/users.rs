@@ -1010,8 +1010,8 @@ mod tests {
             }
 
             #[tokio::test]
-            async fn when_userref_write_relays_not_present_fetches_from_fallback_relays()
-            -> Result<()> {
+            async fn when_userref_write_relays_not_present_fetches_from_fallback_relays(
+            ) -> Result<()> {
                 let mut m = MockUserManager::default();
                 let mut client = generate_mock_client();
                 m.config_manager.expect_load().returning(|| {

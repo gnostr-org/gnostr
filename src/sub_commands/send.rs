@@ -587,72 +587,80 @@ pub fn generate_cover_letter_and_patch_events(
     let mut events = vec![];
 
     if let Some((title, description)) = cover_letter_title_description {
-        events.push(EventBuilder::new(
-        nostr::event::Kind::Custom(PATCH_KIND),
-        format!(
+        events.push(
+            EventBuilder::new(
+                nostr::event::Kind::Custom(PATCH_KIND),
+                format!(
             "From {} Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/{}] {title}\n\n{description}",
             commits.last().unwrap(),
             commits.len()
         ),
-        [
-            vec![
-                // TODO: why not tag all maintainer identifiers?
-                Tag::coordinate(Coordinate {
-                    kind: nostr::Kind::Custom(REPO_REF_KIND),
-                    public_key: *repo_ref.maintainers.first()
-                        .context("repo reference should always have at least one maintainer")?,
-                    identifier: repo_ref.identifier.to_string(),
-                    relays: repo_ref.relays.clone(),
-                }),
-                Tag::from_standardized(TagStandard::Reference(format!("{root_commit}"))),
-                Tag::hashtag("cover-letter"),
-                Tag::custom(
-                    nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
-                    vec![format!("git patch cover letter: {}", title.clone())],
-                ),
-            ],
-            if let Some(event_ref) = root_proposal_id.clone() {
-                vec![
-                    Tag::hashtag("root"),
-                    Tag::hashtag("revision-root"),
-                    // TODO check if id is for a root proposal (perhaps its for an issue?)
-                    event_tag_from_nip19_or_hex(&event_ref,"proposal",Marker::Reply, false, false)?,
-                ]
-            } else {
-                vec![
-                    Tag::hashtag("root"),
-                ]
-            },
-            mentions.to_vec(),
-            // this is not strictly needed but makes for prettier branch names
-            // eventually a prefix will be needed of the event id to stop 2 proposals with the same name colliding
-            // a change like this, or the removal of this tag will require the actual branch name to be tracked
-            // so pulling and pushing still work
-            if let Ok(branch_name) = git_repo.get_checked_out_branch_name() {
-                if !branch_name.eq("main")
-                    && !branch_name.eq("master")
-                    && !branch_name.eq("origin/main")
-                    && !branch_name.eq("origin/master")
-                {
+                [
                     vec![
+                        // TODO: why not tag all maintainer identifiers?
+                        Tag::coordinate(Coordinate {
+                            kind: nostr::Kind::Custom(REPO_REF_KIND),
+                            public_key: *repo_ref.maintainers.first().context(
+                                "repo reference should always have at least one maintainer",
+                            )?,
+                            identifier: repo_ref.identifier.to_string(),
+                            relays: repo_ref.relays.clone(),
+                        }),
+                        Tag::from_standardized(TagStandard::Reference(format!("{root_commit}"))),
+                        Tag::hashtag("cover-letter"),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("branch-name")),
-                            vec![branch_name],
+                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                            vec![format!("git patch cover letter: {}", title.clone())],
                         ),
-                    ]
-                }
-                else { vec![] }
-            } else {
-                vec![]
-            },
-            repo_ref.maintainers
-                .iter()
-                .map(|pk| Tag::public_key(*pk))
-                .collect(),
-        ].concat(),
-    )
-    .to_event(keys)
-    .context("failed to create cover-letter event")?);
+                    ],
+                    if let Some(event_ref) = root_proposal_id.clone() {
+                        vec![
+                            Tag::hashtag("root"),
+                            Tag::hashtag("revision-root"),
+                            // TODO check if id is for a root proposal (perhaps its for an issue?)
+                            event_tag_from_nip19_or_hex(
+                                &event_ref,
+                                "proposal",
+                                Marker::Reply,
+                                false,
+                                false,
+                            )?,
+                        ]
+                    } else {
+                        vec![Tag::hashtag("root")]
+                    },
+                    mentions.to_vec(),
+                    // this is not strictly needed but makes for prettier branch names
+                    // eventually a prefix will be needed of the event id to stop 2 proposals with the same name colliding
+                    // a change like this, or the removal of this tag will require the actual branch name to be tracked
+                    // so pulling and pushing still work
+                    if let Ok(branch_name) = git_repo.get_checked_out_branch_name() {
+                        if !branch_name.eq("main")
+                            && !branch_name.eq("master")
+                            && !branch_name.eq("origin/main")
+                            && !branch_name.eq("origin/master")
+                        {
+                            vec![Tag::custom(
+                                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("branch-name")),
+                                vec![branch_name],
+                            )]
+                        } else {
+                            vec![]
+                        }
+                    } else {
+                        vec![]
+                    },
+                    repo_ref
+                        .maintainers
+                        .iter()
+                        .map(|pk| Tag::public_key(*pk))
+                        .collect(),
+                ]
+                .concat(),
+            )
+            .to_event(keys)
+            .context("failed to create cover-letter event")?,
+        );
     }
 
     for (i, commit) in commits.iter().enumerate() {
