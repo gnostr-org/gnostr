@@ -44,7 +44,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     /// Ngit sub commands
     Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.

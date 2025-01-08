@@ -18,7 +18,7 @@ pub mod sub_commands;
 #[command(propagate_version = true)]
 pub struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    pub command: Commands,
     /// nsec or hex private key
     #[arg(short, long, global = true)]
     nsec: Option<String>,
@@ -31,7 +31,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     /// signal you are this repo's maintainer accepting proposals via nostr
     Init(sub_commands::init::SubCommandArgs),
     /// issue commits as a proposal
