@@ -102,15 +102,15 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         };
         //let _ = match &cli.command {
 		if sub_command_args.login {
-            login::launch(&cli, &args).await;
+            login::launch(&cli, &args as &LoginSubCommandArgs).await;
 		} else
 		if sub_command_args.init {
             //let args = Commands::Init(args);
-            init::launch(&cli, &args).await;
+            init::launch(&cli, &args as &InitSubCommandArgs).await;
 		} else
 		if sub_command_args.send {
             //let args = Commands::Send(args);
-            send::launch(&cli, &args).await;
+            send::launch(&cli, &args as &SendSubCommandArgs).await;
 		} else
 		if sub_command_args.list {
             //let args = Commands::List(args);
@@ -123,7 +123,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 		} else
 		if sub_command_args.push {
             //let args = Commands::Push(args);
-            push::launch(&cli, &args).await;
+            push::launch(&cli, &args as &PushSubCommandArgs).await;
             //Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
         };
     };
