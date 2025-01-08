@@ -74,7 +74,7 @@ check:
     cargo check || true
 
 run-release:
-    cargo run --release --bin gnostr -h || true
+    cargo run --release --bin gnostr || true
 
 doc:
     cargo doc --open --offline
