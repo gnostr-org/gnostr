@@ -1,55 +1,53 @@
 use std::{str::FromStr, time::Duration};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use console::Style;
 use futures::future::join_all;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use nostr::{
-    nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
     EventBuilder, FromBech32, Tag, TagKind, ToBech32, UncheckedUrl,
+    nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
 };
-use nostr_sdk::{hashes::sha1::Hash as Sha1Hash, TagStandard};
+use nostr_sdk::{TagStandard, hashes::sha1::Hash as Sha1Hash};
 
 use super::list::tag_value;
-
 #[cfg(not(test))]
-use ngit::client::Client;
+use crate::client::Client;
 #[cfg(test)]
-use ngit::client::MockConnect;
-
-use ngit::{
+use crate::client::MockConnect;
+use crate::{
+    Cli,
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
     client::Connect,
     git::{Repo, RepoActions},
     login,
-    repo_ref::{self, RepoRef, REPO_REF_KIND},
-    Cli,
+    repo_ref::{self, REPO_REF_KIND, RepoRef},
 };
 
 #[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+pub struct SendSubCommandArgs {
     #[arg(default_value = "")]
     /// commits to send as proposal; like in `git format-patch` eg. HEAD~2
-    pub(crate) since_or_range: String,
+    pub since_or_range: String,
     #[clap(long, value_parser, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
-    pub(crate) in_reply_to: Vec<String>,
+    pub in_reply_to: Vec<String>,
     /// don't prompt for a cover letter
     #[arg(long, action)]
-    pub(crate) no_cover_letter: bool,
+    pub no_cover_letter: bool,
     /// optional cover letter title
     #[clap(short, long)]
-    pub(crate) title: Option<String>,
+    pub title: Option<String>,
     #[clap(short, long)]
     /// optional cover letter description
-    pub(crate) description: Option<String>,
+    pub description: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &SendSubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let (main_branch_name, main_tip) = git_repo
@@ -528,10 +526,9 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                 public_key: _,
             }) => {
                 let events = client
-                    .get_events(
-                        repo_relays.to_vec(),
-                        vec![nostr::Filter::new().id(*event_id)],
-                    )
+                    .get_events(repo_relays.to_vec(), vec![
+                        nostr::Filter::new().id(*event_id),
+                    ])
                     .await
                     .context("whilst getting events specified in --in-reply-to")?;
                 if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {
@@ -587,80 +584,72 @@ pub fn generate_cover_letter_and_patch_events(
     let mut events = vec![];
 
     if let Some((title, description)) = cover_letter_title_description {
-        events.push(
-            EventBuilder::new(
-                nostr::event::Kind::Custom(PATCH_KIND),
-                format!(
+        events.push(EventBuilder::new(
+        nostr::event::Kind::Custom(PATCH_KIND),
+        format!(
             "From {} Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/{}] {title}\n\n{description}",
             commits.last().unwrap(),
             commits.len()
         ),
-                [
-                    vec![
-                        // TODO: why not tag all maintainer identifiers?
-                        Tag::coordinate(Coordinate {
-                            kind: nostr::Kind::Custom(REPO_REF_KIND),
-                            public_key: *repo_ref.maintainers.first().context(
-                                "repo reference should always have at least one maintainer",
-                            )?,
-                            identifier: repo_ref.identifier.to_string(),
-                            relays: repo_ref.relays.clone(),
-                        }),
-                        Tag::from_standardized(TagStandard::Reference(format!("{root_commit}"))),
-                        Tag::hashtag("cover-letter"),
-                        Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
-                            vec![format!("git patch cover letter: {}", title.clone())],
-                        ),
-                    ],
-                    if let Some(event_ref) = root_proposal_id.clone() {
-                        vec![
-                            Tag::hashtag("root"),
-                            Tag::hashtag("revision-root"),
-                            // TODO check if id is for a root proposal (perhaps its for an issue?)
-                            event_tag_from_nip19_or_hex(
-                                &event_ref,
-                                "proposal",
-                                Marker::Reply,
-                                false,
-                                false,
-                            )?,
-                        ]
-                    } else {
-                        vec![Tag::hashtag("root")]
-                    },
-                    mentions.to_vec(),
-                    // this is not strictly needed but makes for prettier branch names
-                    // eventually a prefix will be needed of the event id to stop 2 proposals with the same name colliding
-                    // a change like this, or the removal of this tag will require the actual branch name to be tracked
-                    // so pulling and pushing still work
-                    if let Ok(branch_name) = git_repo.get_checked_out_branch_name() {
-                        if !branch_name.eq("main")
-                            && !branch_name.eq("master")
-                            && !branch_name.eq("origin/main")
-                            && !branch_name.eq("origin/master")
-                        {
-                            vec![Tag::custom(
-                                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("branch-name")),
-                                vec![branch_name],
-                            )]
-                        } else {
-                            vec![]
-                        }
-                    } else {
-                        vec![]
-                    },
-                    repo_ref
-                        .maintainers
-                        .iter()
-                        .map(|pk| Tag::public_key(*pk))
-                        .collect(),
+        [
+            vec![
+                // TODO: why not tag all maintainer identifiers?
+                Tag::coordinate(Coordinate {
+                    kind: nostr::Kind::Custom(REPO_REF_KIND),
+                    public_key: *repo_ref.maintainers.first()
+                        .context("repo reference should always have at least one maintainer")?,
+                    identifier: repo_ref.identifier.to_string(),
+                    relays: repo_ref.relays.clone(),
+                }),
+                Tag::from_standardized(TagStandard::Reference(format!("{root_commit}"))),
+                Tag::hashtag("cover-letter"),
+                Tag::custom(
+                    nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                    vec![format!("git patch cover letter: {}", title.clone())],
+                ),
+            ],
+            if let Some(event_ref) = root_proposal_id.clone() {
+                vec![
+                    Tag::hashtag("root"),
+                    Tag::hashtag("revision-root"),
+                    // TODO check if id is for a root proposal (perhaps its for an issue?)
+                    event_tag_from_nip19_or_hex(&event_ref,"proposal",Marker::Reply, false, false)?,
                 ]
-                .concat(),
-            )
-            .to_event(keys)
-            .context("failed to create cover-letter event")?,
-        );
+            } else {
+                vec![
+                    Tag::hashtag("root"),
+                ]
+            },
+            mentions.to_vec(),
+            // this is not strictly needed but makes for prettier branch names
+            // eventually a prefix will be needed of the event id to stop 2 proposals with the same name colliding
+            // a change like this, or the removal of this tag will require the actual branch name to be tracked
+            // so pulling and pushing still work
+            if let Ok(branch_name) = git_repo.get_checked_out_branch_name() {
+                if !branch_name.eq("main")
+                    && !branch_name.eq("master")
+                    && !branch_name.eq("origin/main")
+                    && !branch_name.eq("origin/master")
+                {
+                    vec![
+                        Tag::custom(
+                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("branch-name")),
+                            vec![branch_name],
+                        ),
+                    ]
+                }
+                else { vec![] }
+            } else {
+                vec![]
+            },
+            repo_ref.maintainers
+                .iter()
+                .map(|pk| Tag::public_key(*pk))
+                .collect(),
+        ].concat(),
+    )
+    .to_event(keys)
+    .context("failed to create cover-letter event")?);
     }
 
     for (i, commit) in commits.iter().enumerate() {
@@ -1195,10 +1184,10 @@ mod tests {
                 identify_ahead_behind(&git_repo, &Some("feature".to_string()), &None)?;
 
             assert_eq!(from_branch, "feature");
-            assert_eq!(
-                ahead,
-                vec![oid_to_sha1(&feature_oid), oid_to_sha1(&dev_oid_first)]
-            );
+            assert_eq!(ahead, vec![
+                oid_to_sha1(&feature_oid),
+                oid_to_sha1(&dev_oid_first)
+            ]);
             assert_eq!(to_branch, "main");
             assert_eq!(behind, vec![]);
 
