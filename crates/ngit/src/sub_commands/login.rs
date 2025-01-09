@@ -7,7 +7,7 @@ use crate::client::Client;
 use crate::client::MockConnect;
 use crate::{client::Connect, login, Cli};
 
-#[derive(clap::Args)]
+#[derive(Debug, clap::Args)]
 pub struct LoginSubCommandArgs {
     /// don't fetch user metadata and relay list from relays
     #[arg(long, action)]

@@ -23,8 +23,21 @@ use nostr_sdk::prelude::*;
 use clap::{Args, Parser, Subcommand};
 use std::env;
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug/*, Parser*/)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
 pub struct NgitSubCommand {
+    #[command(subcommand)]
+    command: Commands,
+    /// nsec or hex private key
+    #[arg(short, long, global = true)]
+    nsec: Option<String>,
+    /// password to decrypt nsec
+    #[arg(short, long, global = true)]
+    password: Option<String>,
+    /// disable spinner animations
+    #[arg(long, action)]
+    disable_cli_spinners: bool,
     /// ngit --init
     #[arg(long, default_value_t = false)]
     init: bool,
@@ -47,18 +60,77 @@ pub struct NgitSubCommand {
     #[arg(long, default_value_t = false)]
     ngit_help: bool,
     /// Prefixes
-    #[arg(short, long, required = false, action = clap::ArgAction::Append)]
+    #[arg(long, required = false, action = clap::ArgAction::Append)]
     prefixes: Vec<String>,
     /// Vanity pubkey in hex format
     #[arg(long, default_value_t = false)]
     hex: bool,
 }
 
+#[derive(Debug, Subcommand)]
+enum Commands {
+     /// signal you are this repo's maintainer accepting proposals via nostr
+    Init(init::InitSubCommandArgs),
+     /// issue commits as a proposal
+    Send(send::SendSubCommandArgs),
+     /// list proposals; checkout, apply or download selected
+    List,
+     /// send proposal revision
+    Push(push::PushSubCommandArgs),
+     /// fetch and apply new proposal commits / revisions linked to branch
+    Pull,
+     /// run with --nsec flag to change npub
+    Login(login::LoginSubCommandArgs),
+}
+
+// #[derive(Args, Debug)]
+// #[derive(Subcommand)]
+// pub struct NgitSubCommand {
+//     /// ngit --init
+//     #[arg(long, default_value_t = false)]
+//     init: bool,
+//     /// ngit --send
+//     #[arg(long, default_value_t = false)]
+//     send: bool,
+//     /// ngit --list
+//     #[arg(long, default_value_t = false)]
+//     list: bool,
+//     /// ngit --push
+//     #[arg(long, default_value_t = false)]
+//     push: bool,
+//     /// ngit --pull
+//     #[arg(long, default_value_t = false)]
+//     pull: bool,
+//     /// ngit --login
+//     #[arg(long, default_value_t = false)]
+//     login: bool,
+//     /// ngit --help
+//     #[arg(long, default_value_t = false)]
+//     ngit_help: bool,
+//     /// Prefixes
+//     #[arg(short, long, required = false, action = clap::ArgAction::Append)]
+//     prefixes: Vec<String>,
+//     /// Vanity pubkey in hex format
+//     #[arg(long, default_value_t = false)]
+//     hex: bool,
+// }
+
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     let args: Vec<String> = env::args().collect();
+	let _ = args.clone().into_iter().skip(1);
     println!("ngit:args={:?}", args);
     println!("ngit:sub_command_args={:?}", sub_command_args);
     //let cli = NgitCli::parse();
+	//if args[1] == "init" {println!("args[1]:{}", args[1]);}
+	if args[2] == "init" {println!("args[2]:{}", args[2]);}
+	if args[2] == "send" {println!("args[2]:{}", args[2]);}
+	if args[2] == "list" {println!("args[2]:{}", args[2]);}
+	if args[2] == "push" {println!("args[2]:{}", args[2]);}
+	if args[2] == "pull" {println!("args[2]:{}", args[2]);}
+	if args[2] == "login" {println!("args[2]:{}", args[2]);}
+	if args[2] == "ngit_help" {println!("args[2]:{}", args[2]);}
+	if args[2] == "ngit_help" {println!("args[2]:{}", args[2]);}
+	//if args[3] == "init" {println!("args[3]:{}", args[3]);}
     if sub_command_args.init {
         println!("ngit:sub_command_args.init={}", sub_command_args.init);
     } else if sub_command_args.send {
@@ -94,8 +166,10 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     } else {
         let args: Vec<String> = env::args().collect();
         println!("ngit:else:args={:?}", args);
+		let _ = args.clone().into_iter().skip(1);
+        println!("ngit:else:args={:?}", args);
         println!("ngit:else:sub_command_args={:?}", sub_command_args);
-        let command = NgitCli::parse();
+		let command = NgitCli::parse();
         let cli = ngit::Cli {
             command: command.command,
             nsec: Some(String::from("")),
