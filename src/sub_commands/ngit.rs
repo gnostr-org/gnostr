@@ -125,8 +125,10 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     if args[2] == "init" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.init={}", sub_command_args.init);
-        println!("ngit:sub_command_args.command={:?}", sub_command_args.command);
-    }
+        if Some(&sub_command_args.command).is_some() {
+        println!("is_some-->ngit:sub_command_args.command={:?}", sub_command_args.command);
+		}
+	}
     if args[2] == "send" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.send={}", sub_command_args.send);
