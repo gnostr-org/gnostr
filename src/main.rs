@@ -96,8 +96,8 @@ enum Commands {
 //    BroadcastEvents(sub_commands::broadcast_events::BroadcastEventsSubCommand),
 //    /// Create a new badge
 //    CreateBadge(sub_commands::create_badge::CreateBadgeSubCommand),
-//    /// Publish award badge event
-//    AwardBadge(sub_commands::award_badge::AwardBadgeSubCommand),
+      /// Publish award badge event
+      AwardBadge(sub_commands::award_badge::AwardBadgeSubCommandArgs),
 //    /// Set profile badges
 //    ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
 //    /// Create custom event
@@ -239,15 +239,13 @@ async fn main() -> Result<()> {
         //    )
         //    .await
         //}
-        //Some(Commands::AwardBadge(sub_command_args)) => {
-        //    sub_commands::award_badge::award_badge(
-        //        args.sec,
-        //        args.relays,
-        //        args.difficulty_target,
-        //        sub_command_args,
-        //    )
-        //    .await
-        //}
+
+
+        Some(Commands::AwardBadge(args)) => {
+        let cli = Cli::parse();
+        sub_commands::award_badge::launch(&cli, args).await}
+
+
         //Some(Commands::ProfileBadges(sub_command_args)) => {
         //    sub_commands::profile_badges::set_profile_badges(
         //        args.sec,
