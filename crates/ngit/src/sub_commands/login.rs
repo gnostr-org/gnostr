@@ -11,7 +11,7 @@ use crate::{client::Connect, login, Cli};
 pub struct LoginSubCommandArgs {
     /// don't fetch user metadata and relay list from relays
     #[arg(long, action)]
-    offline: bool,
+    pub offline: bool,
 }
 
 pub async fn launch(args: &Cli, command_args: &LoginSubCommandArgs) -> Result<()> {

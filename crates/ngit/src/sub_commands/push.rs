@@ -25,10 +25,10 @@ use crate::{
 pub struct PushSubCommandArgs {
     #[arg(long, action)]
     /// send proposal revision from checked out proposal branch
-    force: bool,
+    pub force: bool,
     #[arg(long, action)]
     /// dont prompt for cover letter when force pushing
-    no_cover_letter: bool,
+    pub no_cover_letter: bool,
 }
 
 #[allow(clippy::too_many_lines)]
