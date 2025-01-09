@@ -2,14 +2,14 @@
 name = "gnostr"
 version = "0.0.49"
 edition = "2021"
-description = "A CLI tool to interact with nostr"
-authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>"]
+description = "cli for code collaboration over nostr with nip34 support"
+authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
 readme = "README.md"
-homepage = "https://github.com/gnostr-org/gnostr"
-repository = "https://github.com/gnostr-org/gnostr"
+homepage = "https://gitworkshop.dev/repo/ngit"
+repository = "https://codeberg.org/DanConwayDev/ngit-cli"
 license = "MIT"
-keywords = ["gnostr", "tool", "nostr"]
-categories = ["command-line-utilities"]
+keywords = ["nostr", "git"]
+categories = ["command-line-utilities","git"]
 
 [dependencies]
 anyhow = "1.0.75"
@@ -30,7 +30,6 @@ log = "0.4"
 ngit = { version = "1.2.1", path = "crates/ngit" }
 nostr = "0.32.0"
 nostr-sdk = "0.32.0"
-#nostr-sdk = "0.32.0"
 num_cpus = "1.16.0"
 passwords = "3.1.13"
 scrypt = "0.11.0"
@@ -43,3 +42,17 @@ tokio = { version = "1.38.0", features = ["full"] }
 url = "2.5.0"
 #tokio = "1.33.0"
 zeroize = "1.6.0"
+
+[dev-dependencies]
+assert_cmd = "2.0.12"
+duplicate = "1.0.0"
+mockall = "0.11.4"
+once_cell = "1.18.0"
+rexpect = "0.5.0"
+serial_test = "2.0.0"
+gnostr_test_utils = { path = "test_utils" }
+
+[workspace]
+members = [
+    "test_utils",
+]

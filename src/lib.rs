@@ -12,6 +12,7 @@ pub mod key_handling;
 pub mod login;
 pub mod repo_ref;
 pub mod sub_commands;
+pub mod utils;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

@@ -26,6 +26,7 @@ deny:
 
 cargo-test:
     cargo test
+    gnostr ngit --init -p nsec --hex --
 
 cargo-diet:
     nix develop .#lintShell --command cargo diet
@@ -74,7 +75,7 @@ check:
     cargo check || true
 
 run-release:
-    cargo run --release --bin gnostr -h || true
+    cargo run --release --bin gnostr -- -h || true
 
 doc:
     cargo doc --open --offline
