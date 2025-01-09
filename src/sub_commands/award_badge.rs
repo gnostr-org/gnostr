@@ -114,155 +114,155 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
             }),
     )?,
     };
-    //let name = match &args.title {
-    //    Some(t) => t.clone(),
-    //    None => Interactor::default().input(
-    //        PromptInputParms::default()
-    //            .with_prompt("name")
-    //            .with_default(if let Some(repo_ref) = &repo_ref {
-    //                repo_ref.name.clone()
-    //            } else {
-    //                String::new()
-    //            }),
-    //    )?,
-    //};
+    let name = match &args.title {
+        Some(t) => t.clone(),
+        None => Interactor::default().input(
+            PromptInputParms::default()
+                .with_prompt("name")
+                .with_default(if let Some(repo_ref) = &repo_ref {
+                    repo_ref.name.clone()
+                } else {
+                    String::new()
+                }),
+        )?,
+    };
 
-    //let identifier = match &args.identifier {
-    //    Some(t) => t.clone(),
-    //    None => Interactor::default().input(
-    //        PromptInputParms::default()
-    //            .with_prompt("identifier")
-    //            .with_default(if let Some(repo_ref) = &repo_ref {
-    //                repo_ref.identifier.clone()
-    //            } else {
-    //                name.clone()
-    //                    .replace(' ', "-")
-    //                    .chars()
-    //                    .map(|c| {
-    //                        if c.is_ascii_alphanumeric() || c.eq(&'/') {
-    //                            c
-    //                        } else {
-    //                            '-'
-    //                        }
-    //                    })
-    //                    .collect()
-    //            }),
-    //    )?,
-    //};
+    let identifier = match &args.identifier {
+        Some(t) => t.clone(),
+        None => Interactor::default().input(
+            PromptInputParms::default()
+                .with_prompt("identifier")
+                .with_default(if let Some(repo_ref) = &repo_ref {
+                    repo_ref.identifier.clone()
+                } else {
+                    name.clone()
+                        .replace(' ', "-")
+                        .chars()
+                        .map(|c| {
+                            if c.is_ascii_alphanumeric() || c.eq(&'/') {
+                                c
+                            } else {
+                                '-'
+                            }
+                        })
+                        .collect()
+                }),
+        )?,
+    };
 
-    //let description = match &args.description {
-    //    Some(t) => t.clone(),
-    //    None => Interactor::default().input(
-    //        PromptInputParms::default()
-    //            .with_prompt("description")
-    //            .with_default(if let Some(repo_ref) = &repo_ref {
-    //                repo_ref.description.clone()
-    //            } else {
-    //                String::new()
-    //            }),
-    //    )?,
-    //};
+    let description = match &args.description {
+        Some(t) => t.clone(),
+        None => Interactor::default().input(
+            PromptInputParms::default()
+                .with_prompt("description")
+                .with_default(if let Some(repo_ref) = &repo_ref {
+                    repo_ref.description.clone()
+                } else {
+                    String::new()
+                }),
+        )?,
+    };
 
-    //let git_server = if args.clone_url.is_empty() {
-    //    Interactor::default()
-    //        .input(
-    //            PromptInputParms::default()
-    //                .with_prompt("clone url")
-    //                .with_default(if let Some(repo_ref) = &repo_ref {
-    //                    repo_ref.git_server.clone().join(" ")
-    //                } else if let Ok(git_repo) = git_repo.get_origin_url() {
-    //                    git_repo
-    //                } else {
-    //                    String::new()
-    //                }),
-    //        )?
-    //        .split(' ')
-    //        .map(std::string::ToString::to_string)
-    //        .collect()
-    //} else {
-    //    args.clone_url.clone()
-    //};
+    let git_server = if args.clone_url.is_empty() {
+        Interactor::default()
+            .input(
+                PromptInputParms::default()
+                    .with_prompt("clone url")
+                    .with_default(if let Some(repo_ref) = &repo_ref {
+                        repo_ref.git_server.clone().join(" ")
+                    } else if let Ok(git_repo) = git_repo.get_origin_url() {
+                        git_repo
+                    } else {
+                        String::new()
+                    }),
+            )?
+            .split(' ')
+            .map(std::string::ToString::to_string)
+            .collect()
+    } else {
+        args.clone_url.clone()
+    };
 
-    //let web: Vec<String> = if args.web.is_empty() {
-    //    Interactor::default()
-    //        .input(
-    //            PromptInputParms::default()
-    //                .with_prompt("web")
-    //                .optional()
-    //                .with_default(if let Some(repo_ref) = &repo_ref {
-    //                    repo_ref.web.clone().join(" ")
-    //                } else {
-    //                    format!("https://gitworkshop.dev/repo/{}", &identifier)
-    //                }),
-    //        )?
-    //        .split(' ')
-    //        .map(std::string::ToString::to_string)
-    //        .collect()
-    //} else {
-    //    args.web.clone()
-    //};
+    let web: Vec<String> = if args.web.is_empty() {
+        Interactor::default()
+            .input(
+                PromptInputParms::default()
+                    .with_prompt("web")
+                    .optional()
+                    .with_default(if let Some(repo_ref) = &repo_ref {
+                        repo_ref.web.clone().join(" ")
+                    } else {
+                        format!("https://gitworkshop.dev/repo/{}", &identifier)
+                    }),
+            )?
+            .split(' ')
+            .map(std::string::ToString::to_string)
+            .collect()
+    } else {
+        args.web.clone()
+    };
 
-    //let maintainers: Vec<PublicKey> = {
-    //    let mut dont_ask = !args.other_maintainers.is_empty();
-    //    let mut maintainers_string = if !args.other_maintainers.is_empty() {
-    //        [args.other_maintainers.clone()].concat().join(" ")
-    //    } else if repo_ref.is_none() && repo_config_result.is_err() {
-    //        keys.public_key().to_bech32()?
-    //    } else {
-    //        let maintainers = if let Ok(config) = &repo_config_result {
-    //            config.maintainers.clone()
-    //        } else if let Some(repo_ref) = &repo_ref {
-    //            repo_ref
-    //                .maintainers
-    //                .clone()
-    //                .iter()
-    //                .map(|k| k.to_bech32().unwrap())
-    //                .collect()
-    //        } else {
-    //            //unreachable
-    //            vec![keys.public_key().to_bech32()?]
-    //        };
-    //        // add current user if not present
-    //        if maintainers.iter().any(|m| {
-    //            if let Ok(m_pubkey) = PublicKey::from_bech32(m) {
-    //                user_ref.public_key.eq(&m_pubkey)
-    //            } else {
-    //                false
-    //            }
-    //        }) {
-    //            maintainers.join(" ")
-    //        } else {
-    //            [maintainers, vec![keys.public_key().to_bech32()?]]
-    //                .concat()
-    //                .join(" ")
-    //        }
-    //    };
-    //    'outer: loop {
-    //        if !dont_ask {
-    //            println!("{}", &maintainers_string);
-    //            maintainers_string = Interactor::default().input(
-    //                PromptInputParms::default()
-    //                    .with_prompt("maintainers")
-    //                    .with_default(maintainers_string),
-    //            )?;
-    //        }
-    //        let mut maintainers: Vec<PublicKey> = vec![];
-    //        for m in maintainers_string.split(' ') {
-    //            if let Ok(m_pubkey) = PublicKey::from_bech32(m) {
-    //                maintainers.push(m_pubkey);
-    //            } else {
-    //                println!("not a valid set of npubs seperated by a space");
-    //                dont_ask = false;
-    //                continue 'outer;
-    //            }
-    //        }
-    //        // add current user incase removed
-    //        if !maintainers.iter().any(|m| user_ref.public_key.eq(m)) {
-    //            maintainers.push(keys.public_key());
-    //        }
-    //        break maintainers;
-    //    }
-    //};
+    let maintainers: Vec<PublicKey> = {
+        let mut dont_ask = !args.other_maintainers.is_empty();
+        let mut maintainers_string = if !args.other_maintainers.is_empty() {
+            [args.other_maintainers.clone()].concat().join(" ")
+        } else if repo_ref.is_none() && repo_config_result.is_err() {
+            keys.public_key().to_bech32()?
+        } else {
+            let maintainers = if let Ok(config) = &repo_config_result {
+                config.maintainers.clone()
+            } else if let Some(repo_ref) = &repo_ref {
+                repo_ref
+                    .maintainers
+                    .clone()
+                    .iter()
+                    .map(|k| k.to_bech32().unwrap())
+                    .collect()
+            } else {
+                //unreachable
+                vec![keys.public_key().to_bech32()?]
+            };
+            // add current user if not present
+            if maintainers.iter().any(|m| {
+                if let Ok(m_pubkey) = PublicKey::from_bech32(m) {
+                    user_ref.public_key.eq(&m_pubkey)
+                } else {
+                    false
+                }
+            }) {
+                maintainers.join(" ")
+            } else {
+                [maintainers, vec![keys.public_key().to_bech32()?]]
+                    .concat()
+                    .join(" ")
+            }
+        };
+        'outer: loop {
+            if !dont_ask {
+                println!("{}", &maintainers_string);
+                maintainers_string = Interactor::default().input(
+                    PromptInputParms::default()
+                        .with_prompt("maintainers")
+                        .with_default(maintainers_string),
+                )?;
+            }
+            let mut maintainers: Vec<PublicKey> = vec![];
+            for m in maintainers_string.split(' ') {
+                if let Ok(m_pubkey) = PublicKey::from_bech32(m) {
+                    maintainers.push(m_pubkey);
+                } else {
+                    println!("not a valid set of npubs seperated by a space");
+                    dont_ask = false;
+                    continue 'outer;
+                }
+            }
+            // add current user incase removed
+            if !maintainers.iter().any(|m| user_ref.public_key.eq(m)) {
+                maintainers.push(keys.public_key());
+            }
+            break maintainers;
+        }
+    };
 
     // TODO: check if relays are free to post to so contributors can submit patches
     // TODO: recommend some reliable free ones
@@ -317,6 +317,7 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
 
     println!("publishing repostory reference...");
 
+	let identifier = String::from(format!("identifier={}", identifier));
     let repo_event = RepoRef {
         identifier,
         name,
