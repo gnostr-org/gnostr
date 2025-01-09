@@ -33,17 +33,17 @@ pub struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// signal you are this repo's maintainer accepting proposals via nostr
-    Init(sub_commands::init::SubCommandArgs),
+    Init(sub_commands::init::InitSubCommandArgs),
     /// issue commits as a proposal
-    Send(sub_commands::send::SubCommandArgs),
+    Send(sub_commands::send::SendSubCommandArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
+    Push(sub_commands::push::PushSubCommandArgs),
     /// fetch and apply new proposal commits / revisions linked to branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(sub_commands::login::SubCommandArgs),
+    Login(sub_commands::login::LoginSubCommandArgs),
 }
 
 #[tokio::main]
@@ -53,8 +53,8 @@ async fn main() -> Result<()> {
         Commands::Login(args) => sub_commands::login::launch(&cli, args).await,
         Commands::Init(args) => sub_commands::init::launch(&cli, args).await,
         Commands::Send(args) => sub_commands::send::launch(&cli, args).await,
-        Commands::List => sub_commands::list::launch().await,
-        Commands::Pull => sub_commands::pull::launch().await,
+        Commands::List => sub_commands::list::launch().await, //
+        Commands::Pull => sub_commands::pull::launch().await, //
         Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
     }
 }

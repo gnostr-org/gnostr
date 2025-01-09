@@ -1,47 +1,45 @@
 {
-  description = "Nostr-tool flake";
-
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nixpkgs.url = "nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
+  outputs = { nixpkgs, rust-overlay, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ rust-overlay.overlays.default ];
-        pkgs = import nixpkgs { inherit system overlays; };
-        rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-        inputs = [
-          rust
-          pkgs.rust-analyzer
-          pkgs.openssl
-          pkgs.zlib
-          pkgs.gcc
-          pkgs.pkg-config
-          pkgs.clang
-        ];
-      in
-      {
-        packages.default = pkgs.rustPlatform.buildRustPackage {
-          name = "nostr-tool";
-          src = ./.;
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-          };
-          nativeBuildInputs = inputs;
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
         };
-        formatter = pkgs.nixpkgs-fmt;
+      in
+      with pkgs;
+      {
+        devShells.default = mkShell {
 
-        devShells.default = pkgs.mkShell {
-          packages = inputs;
+          nativeBuildInputs = [
+            # override rustfmt with nightly toolchain version to support unstable features
+            # ideally this wouldn't be pinned to a specific nightly version but
+            # selectLatestNightlyWith isn't support with mixed toolchains
+            # https://github.com/oxalica/rust-overlay/issues/136
+            (lib.hiPrio rust-bin.nightly."2024-04-05".rustfmt)
+            # (rust-bin.stable.latest.override { extensions = [ "rust-analyzer" ]; })
+            rust-bin.stable.latest.default
+          ];
+
+          buildInputs = [
+            pkg-config # required by git2
+            gitlint
+            openssl
+          ];
           shellHook = ''
-            	    export LIBCLANG_PATH=${pkgs.libclang.lib}/lib/
-                        export LD_LIBRARY_PATH=${pkgs.openssl}/lib:$LD_LIBRARY_PATH
+            # auto-install git hooks
+            dot_git="$(git rev-parse --git-common-dir)"
+            if [[ ! -d "$dot_git/hooks" ]]; then mkdir "$dot_git/hooks"; fi
+            for hook in git_hooks/* ; do ln -sf "$(pwd)/$hook" "$dot_git/hooks/" ; done
+
+            # For rust-analyzer 'hover' tooltips to work.
+            export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
           '';
         };
       }
