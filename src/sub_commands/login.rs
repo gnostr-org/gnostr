@@ -2,19 +2,19 @@ use anyhow::Result;
 use clap;
 
 #[cfg(not(test))]
-use ngit::client::Client;
+use crate::client::Client;
 #[cfg(test)]
-use ngit::client::MockConnect;
-use ngit::{client::Connect, login, Cli};
+use crate::client::MockConnect;
+use crate::{Cli, client::Connect, login};
 
-#[derive(clap::Args)]
-pub struct SubCommandArgs {
+#[derive(Debug, clap::Args)]
+pub struct LoginSubCommandArgs {
     /// don't fetch user metadata and relay list from relays
     #[arg(long, action)]
-    offline: bool,
+    pub offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &Cli, command_args: &LoginSubCommandArgs) -> Result<()> {
     if command_args.offline {
         login::launch(&args.nsec, &args.password, None).await?;
         Ok(())

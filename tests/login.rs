@@ -23,7 +23,7 @@ fn standard_login() -> Result<CliTester> {
 mod with_relays {
     use anyhow::Ok;
     use futures::join;
-    use test_utils::relay::{shutdown_relay, ListenerReqFunc, Relay};
+    use test_utils::relay::{ListenerReqFunc, Relay, shutdown_relay};
 
     use super::*;
 
@@ -126,25 +126,17 @@ mod with_relays {
                 async fn when_latest_metadata_and_relay_list_on_all_relays() -> Result<()> {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                     )
@@ -159,18 +151,14 @@ mod with_relays {
                     async fn when_metadata_contains_only_display_name() -> Result<()> {
                         run_test_displays_correct_name(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                                relay.respond_events(
-                                    client_id,
-                                    &subscription_id,
-                                    &vec![
-                                        nostr::event::EventBuilder::metadata(
-                                            &nostr::Metadata::new().display_name("fred"),
-                                        )
-                                        .to_event(&TEST_KEY_1_KEYS)
-                                        .unwrap(),
-                                        generate_test_key_1_relay_list_event_same_as_fallback(),
-                                    ],
-                                )?;
+                                relay.respond_events(client_id, &subscription_id, &vec![
+                                    nostr::event::EventBuilder::metadata(
+                                        &nostr::Metadata::new().display_name("fred"),
+                                    )
+                                    .to_event(&TEST_KEY_1_KEYS)
+                                    .unwrap(),
+                                    generate_test_key_1_relay_list_event_same_as_fallback(),
+                                ])?;
                                 Ok(())
                             }),
                             None,
@@ -196,19 +184,14 @@ mod with_relays {
 
                         run_test_displays_correct_name(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                                relay.respond_events(
-                                    client_id,
-                                    &subscription_id,
-                                    &vec![
-                                        nostr::event::EventBuilder::metadata(
-                                            &nostr::Metadata::new()
-                                                .custom_field("displayName", "fred"),
-                                        )
-                                        .to_event(&TEST_KEY_1_KEYS)
-                                        .unwrap(),
-                                        generate_test_key_1_relay_list_event_same_as_fallback(),
-                                    ],
-                                )?;
+                                relay.respond_events(client_id, &subscription_id, &vec![
+                                    nostr::event::EventBuilder::metadata(
+                                        &nostr::Metadata::new().custom_field("displayName", "fred"),
+                                    )
+                                    .to_event(&TEST_KEY_1_KEYS)
+                                    .unwrap(),
+                                    generate_test_key_1_relay_list_event_same_as_fallback(),
+                                ])?;
                                 Ok(())
                             }),
                             None,
@@ -235,18 +218,12 @@ mod with_relays {
 
                         run_test_displays_fallback_to_npub(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                                relay.respond_events(
-                                    client_id,
-                                    &subscription_id,
-                                    &vec![
-                                        nostr::event::EventBuilder::metadata(
-                                            &nostr::Metadata::new(),
-                                        )
+                                relay.respond_events(client_id, &subscription_id, &vec![
+                                    nostr::event::EventBuilder::metadata(&nostr::Metadata::new())
                                         .to_event(&TEST_KEY_1_KEYS)
                                         .unwrap(),
-                                        generate_test_key_1_relay_list_event_same_as_fallback(),
-                                    ],
-                                )?;
+                                    generate_test_key_1_relay_list_event_same_as_fallback(),
+                                ])?;
                                 Ok(())
                             }),
                             None,
@@ -261,14 +238,10 @@ mod with_relays {
                 -> Result<()> {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                         None,
@@ -282,19 +255,15 @@ mod with_relays {
                 {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![generate_test_key_1_metadata_event("fred")],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                            ])?;
                             Ok(())
                         }),
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![generate_test_key_1_relay_list_event_same_as_fallback()],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                     )
@@ -306,22 +275,16 @@ mod with_relays {
                 async fn when_some_relays_return_old_metadata_event() -> Result<()> {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![generate_test_key_1_metadata_event_old("fred old")],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event_old("fred old"),
+                            ])?;
                             Ok(())
                         }),
                     )
@@ -333,22 +296,16 @@ mod with_relays {
                 async fn when_some_relays_return_other_users_metadata() -> Result<()> {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![generate_test_key_2_metadata_event("carole")],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_2_metadata_event("carole"),
+                            ])?;
                             Ok(())
                         }),
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event_old("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event_old("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                     )
@@ -361,22 +318,16 @@ mod with_relays {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
                             let event = generate_test_key_1_kind_event(nostr::Kind::TextNote);
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![make_event_old_or_change_user(event, &TEST_KEY_1_KEYS, 0)],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                make_event_old_or_change_user(event, &TEST_KEY_1_KEYS, 0),
+                            ])?;
                             Ok(())
                         }),
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event_old("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event_old("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         }),
                     )
@@ -391,14 +342,10 @@ mod with_relays {
                     async fn displays_correct_name() -> Result<()> {
                         run_test_when_specifying_command_line_nsec_only_displays_correct_name(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                                relay.respond_events(
-                                    client_id,
-                                    &subscription_id,
-                                    &vec![
-                                        generate_test_key_1_metadata_event("fred"),
-                                        generate_test_key_1_relay_list_event_same_as_fallback(),
-                                    ],
-                                )?;
+                                relay.respond_events(client_id, &subscription_id, &vec![
+                                    generate_test_key_1_metadata_event("fred"),
+                                    generate_test_key_1_relay_list_event_same_as_fallback(),
+                                ])?;
                                 Ok(())
                             }),
                             None,
@@ -444,14 +391,10 @@ mod with_relays {
                     async fn displays_correct_name() -> Result<()> {
                         run_test_when_specifying_command_line_password_only_displays_correct_name(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                                relay.respond_events(
-                                    client_id,
-                                    &subscription_id,
-                                    &vec![
-                                        generate_test_key_1_metadata_event("fred"),
-                                        generate_test_key_1_relay_list_event_same_as_fallback(),
-                                    ],
-                                )?;
+                                relay.respond_events(client_id, &subscription_id, &vec![
+                                    generate_test_key_1_metadata_event("fred"),
+                                    generate_test_key_1_relay_list_event_same_as_fallback(),
+                                ])?;
                                 Ok(())
                             }),
                             None,
@@ -621,11 +564,9 @@ mod with_relays {
                 async fn warm_user_and_displays_name() -> Result<()> {
                     run_test_when_no_relay_list_found_warns_user_and_uses_npub(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![generate_test_key_1_metadata_event("fred")],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                            ])?;
                             Ok(())
                         }),
                         None,
@@ -690,14 +631,10 @@ mod with_relays {
                 async fn dislays_logged_in_with_correct_name() -> Result<()> {
                     run_test_dislays_logged_in_with_correct_name(Some(
                         &|relay, client_id, subscription_id, _| -> Result<()> {
-                            relay.respond_events(
-                                client_id,
-                                &subscription_id,
-                                &vec![
-                                    generate_test_key_1_metadata_event("fred"),
-                                    generate_test_key_1_relay_list_event_same_as_fallback(),
-                                ],
-                            )?;
+                            relay.respond_events(client_id, &subscription_id, &vec![
+                                generate_test_key_1_metadata_event("fred"),
+                                generate_test_key_1_relay_list_event_same_as_fallback(),
+                            ])?;
                             Ok(())
                         },
                     ))
@@ -803,25 +740,17 @@ mod with_relays {
             async fn displays_correct_name() -> Result<()> {
                 run_test_displays_correct_name(
                     Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                        relay.respond_events(
-                            client_id,
-                            &subscription_id,
-                            &vec![
-                                generate_test_key_1_metadata_event_old("Fred"),
-                                generate_test_key_1_relay_list_event(),
-                            ],
-                        )?;
+                        relay.respond_events(client_id, &subscription_id, &vec![
+                            generate_test_key_1_metadata_event_old("Fred"),
+                            generate_test_key_1_relay_list_event(),
+                        ])?;
                         Ok(())
                     }),
                     Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                        relay.respond_events(
-                            client_id,
-                            &subscription_id,
-                            &vec![
-                                generate_test_key_1_metadata_event("fred"),
-                                generate_test_key_1_relay_list_event(),
-                            ],
-                        )?;
+                        relay.respond_events(client_id, &subscription_id, &vec![
+                            generate_test_key_1_metadata_event("fred"),
+                            generate_test_key_1_relay_list_event(),
+                        ])?;
                         Ok(())
                     }),
                 )

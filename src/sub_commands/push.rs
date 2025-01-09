@@ -1,13 +1,14 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
 
 #[cfg(not(test))]
-use ngit::client::Client;
+use crate::client::Client;
 #[cfg(test)]
-use ngit::client::MockConnect;
-use ngit::{
+use crate::client::MockConnect;
+use crate::{
+    Cli,
     client::Connect,
-    git::{str_to_sha1, Repo, RepoActions},
+    git::{Repo, RepoActions, str_to_sha1},
     login,
     repo_ref::{self, RepoRef},
     sub_commands::{
@@ -18,21 +19,20 @@ use ngit::{
         },
         send::{event_is_revision_root, event_to_cover_letter, generate_patch_event, send_events},
     },
-    Cli,
 };
 
 #[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+pub struct PushSubCommandArgs {
     #[arg(long, action)]
     /// send proposal revision from checked out proposal branch
-    force: bool,
+    pub force: bool,
     #[arg(long, action)]
     /// dont prompt for cover letter when force pushing
-    no_cover_letter: bool,
+    pub no_cover_letter: bool,
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &PushSubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let (main_or_master_branch_name, _) = git_repo
@@ -104,16 +104,13 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
 
     if args.force {
         println!("preparing to force push proposal revision...");
-        sub_commands::send::launch(
-            cli_args,
-            &sub_commands::send::SendSubCommandArgs {
-                since_or_range: String::new(),
-                in_reply_to: vec![proposal_root_event.id.to_string()],
-                title: None,
-                description: None,
-                no_cover_letter: args.no_cover_letter,
-            },
-        )
+        sub_commands::send::launch(cli_args, &sub_commands::send::SendSubCommandArgs {
+            since_or_range: String::new(),
+            in_reply_to: vec![proposal_root_event.id.to_string()],
+            title: None,
+            description: None,
+            no_cover_letter: args.no_cover_letter,
+        })
         .await?;
         println!("force pushed proposal revision");
         return Ok(());

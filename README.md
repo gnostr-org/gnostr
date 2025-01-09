@@ -1,27 +1,32 @@
-# Nostr-tool
+# ngit
 
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/86188777/209737084-492f91bb-1283-4b54-956b-e9816d909d12.png" width="256" title="Nostradamus" alt="banner">
-</p>
+a command-line tool to send and review patches via nostr
 
-[![crates.io](https://img.shields.io/crates/v/nostr-tool.svg)](https://crates.io/crates/nostr-tool)
-[![crates.io - Downloads](https://img.shields.io/crates/d/nostr-tool)](https://crates.io/crates/nostr-tool)
-[![Docker Pulls](https://img.shields.io/docker/pulls/0xtr/nostr-tool)](https://hub.docker.com/r/0xtr/nostr-tool)
-[![MIT](https://img.shields.io/crates/l/nostr-tool.svg)](LICENSE)
+* works seemlessly with [gitworkshop.dev](https://gitworkshop.dev)
+* fully compatible with [nip34 draft](https://github.com/nostr-protocol/nips/pull/997)
+* enables proposals to be managed as branches, similar to GitHub PRs via nip34+
 
-A CLI tool to make it simple to specific send nostr events.
+see [gitworkshop.dev/ngit](https://gitworkshop.dev/ngit) and [gitworkshop.dev/about](https://gitworkshop.dev/about) for more details
 
-## Install
-Installation instructions can be found in [INSTALL.md](docs/INSTALL.md).
+### Commands
 
-## Usage
-Run `nostr-tool -h` to see available options and subcommands. To get help with the sub commands, run `nostr-tool [subcommand] -h`, e.g. `nostr-tool text-note -h`.
-More examples can be found in [EXAMPLES.md](docs/EXAMPLES.md).
+run from the directory of the git repository:
 
-## Contributions
+* `ngit init` signal you are this repo's maintainer accepting proposals via nostr
+* `ngit send` issue commits as a proposal
 
-Contributions are always welcome! If you find something the CLI is missing, a PR is very appreciated. If you can't 
-develop it yourself, please make an issue for it so that me or someone else can take a stab at it.
+* `ngit list` list proposals; checkout, apply or donwload selected
 
-Thank you for your contributions! Your help is greatly appreciated.
+and when on a proposal branch:
 
+* `ngit push` send proposal revision
+
+* `ngit pull` fetch and apply new proposal commits / revisions linked to branch
+
+## Contributions Welcome!
+
+use ngit to submit proposals!
+
+[gitworkshop.dev/repo/ngit](https://gitworkshop.dev/repo/ngit) to report issues and see proposals
+
+install the tool with `cargo install ngit`, use a prebuilt binary or build from source off the master branch.

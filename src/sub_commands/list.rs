@@ -1,20 +1,20 @@
 use std::{io::Write, ops::Add};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 use super::send::event_is_patch_set_root;
 #[cfg(not(test))]
-use ngit::client::Client;
+use crate::client::Client;
 #[cfg(test)]
-use ngit::client::MockConnect;
-use ngit::{
+use crate::client::MockConnect;
+use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::Connect,
-    git::{str_to_sha1, Repo, RepoActions},
-    repo_ref::{self, RepoRef, REPO_REF_KIND},
+    git::{Repo, RepoActions, str_to_sha1},
+    repo_ref::{self, REPO_REF_KIND, RepoRef},
     sub_commands::send::{
-        commit_msg_from_patch_oneliner, event_is_cover_letter, event_is_revision_root,
-        event_to_cover_letter, patch_supports_commit_ids, PATCH_KIND,
+        PATCH_KIND, commit_msg_from_patch_oneliner, event_is_cover_letter, event_is_revision_root,
+        event_to_cover_letter, patch_supports_commit_ids,
     },
 };
 
@@ -199,18 +199,16 @@ pub async fn launch() -> Result<()> {
         if !git_repo.does_commit_exist(&proposal_base_commit.to_string())? {
             println!("your '{main_branch_name}' branch may not be up-to-date.");
             println!("the proposal parent commit doesnt exist in your local repository.");
-            return match Interactor::default().choice(
-                PromptChoiceParms::default()
-                    .with_default(0)
-                    .with_choices(vec![
-                        format!(
+            return match Interactor::default().choice(PromptChoiceParms::default().with_default(0).with_choices(
+                vec![
+                    format!(
                         "manually run `git pull` on '{main_branch_name}' and select proposal again"
                     ),
-                        format!("apply to current branch with `git am`"),
-                        format!("download to ./patches"),
-                        "back".to_string(),
-                    ]),
-            )? {
+                    format!("apply to current branch with `git am`"),
+                    format!("download to ./patches"),
+                    "back".to_string(),
+                ],
+            ))? {
                 0 | 3 => continue,
                 1 => launch_git_am_with_patches(most_recent_proposal_patch_chain),
                 2 => save_patches_to_dir(most_recent_proposal_patch_chain, &git_repo),
@@ -233,20 +231,17 @@ pub async fn launch() -> Result<()> {
 
         // branch doesnt exist
         if !branch_exists {
-            return match Interactor::default().choice(
-                PromptChoiceParms::default()
-                    .with_default(0)
-                    .with_choices(vec![
-                        format!(
+            return match Interactor::default()
+                .choice(PromptChoiceParms::default().with_default(0).with_choices(vec![
+                format!(
                     "create and checkout proposal branch ({} ahead {} behind '{main_branch_name}')",
                     most_recent_proposal_patch_chain.len(),
                     proposal_behind_main.len(),
                 ),
-                        format!("apply to current branch with `git am`"),
-                        format!("download to ./patches"),
-                        "back".to_string(),
-                    ]),
-            )? {
+                format!("apply to current branch with `git am`"),
+                format!("download to ./patches"),
+                "back".to_string(),
+            ]))? {
                 0 => {
                     check_clean(&git_repo)?;
                     let _ = git_repo
@@ -730,33 +725,28 @@ pub async fn find_proposal_events(
     root_commit: &str,
 ) -> Result<Vec<nostr::Event>> {
     let mut proposals = client
-        .get_events(
-            repo_ref.relays.clone(),
-            vec![
-                nostr::Filter::default()
-                    .kind(nostr::Kind::Custom(PATCH_KIND))
-                    .custom_tag(
-                        nostr::SingleLetterTag::lowercase(nostr::Alphabet::T),
-                        vec!["root"],
-                    )
-                    .custom_tag(
-                        nostr::SingleLetterTag::lowercase(nostr::Alphabet::A),
-                        repo_ref
-                            .maintainers
-                            .iter()
-                            .map(|m| format!("{REPO_REF_KIND}:{m}:{}", repo_ref.identifier)),
-                    ),
-                // also pick up proposals from the same repo but no target at our maintainers repo
-                // events
-                nostr::Filter::default()
-                    .kind(nostr::Kind::Custom(PATCH_KIND))
-                    .custom_tag(
-                        nostr::SingleLetterTag::lowercase(nostr::Alphabet::T),
-                        vec!["root"],
-                    )
-                    .reference(root_commit),
-            ],
-        )
+        .get_events(repo_ref.relays.clone(), vec![
+            nostr::Filter::default()
+                .kind(nostr::Kind::Custom(PATCH_KIND))
+                .custom_tag(nostr::SingleLetterTag::lowercase(nostr::Alphabet::T), vec![
+                    "root",
+                ])
+                .custom_tag(
+                    nostr::SingleLetterTag::lowercase(nostr::Alphabet::A),
+                    repo_ref
+                        .maintainers
+                        .iter()
+                        .map(|m| format!("{REPO_REF_KIND}:{m}:{}", repo_ref.identifier)),
+                ),
+            // also pick up proposals from the same repo but no target at our maintainers repo
+            // events
+            nostr::Filter::default()
+                .kind(nostr::Kind::Custom(PATCH_KIND))
+                .custom_tag(nostr::SingleLetterTag::lowercase(nostr::Alphabet::T), vec![
+                    "root",
+                ])
+                .reference(root_commit),
+        ])
         .await
         .context("cannot get proposal events")?
         .iter()
@@ -789,17 +779,16 @@ pub async fn find_commits_for_proposal_root_events(
     repo_ref: &RepoRef,
 ) -> Result<Vec<nostr::Event>> {
     let mut patch_events: Vec<nostr::Event> = client
-        .get_events(
-            repo_ref.relays.clone(),
-            vec![nostr::Filter::default()
+        .get_events(repo_ref.relays.clone(), vec![
+            nostr::Filter::default()
                 .kind(nostr::Kind::Custom(PATCH_KIND))
                 .events(
                     proposal_root_events
                         .iter()
                         .map(|e| e.id)
                         .collect::<Vec<nostr::EventId>>(),
-                )],
-        )
+                ),
+        ])
         .await
         .context("cannot fetch patch events")?
         .iter()

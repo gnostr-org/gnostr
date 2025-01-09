@@ -12,7 +12,7 @@
 // want to inadvertlty use other features of nightly that might be removed.
 use std::{fmt::Write, time::Duration};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use async_trait::async_trait;
 use futures::stream::{self, StreamExt};
 use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};

@@ -3,48 +3,48 @@ use nostr::{FromBech32, PublicKey, ToBech32};
 
 use super::send::send_events;
 #[cfg(not(test))]
-use ngit::client::Client;
+use crate::client::Client;
 #[cfg(test)]
-use ngit::client::MockConnect;
-use ngit::{
+use crate::client::MockConnect;
+use crate::{
+    Cli,
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
     client::Connect,
     git::{Repo, RepoActions},
     login,
-    repo_ref::{self, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml, RepoRef},
-    Cli,
+    repo_ref::{self, RepoRef, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml},
 };
 
 #[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+pub struct InitSubCommandArgs {
     #[clap(short, long)]
     /// name of repository
-    title: Option<String>,
+    pub title: Option<String>,
     #[clap(short, long)]
     /// optional description
-    description: Option<String>,
+    pub description: Option<String>,
     #[clap(long)]
     /// git server url users can clone from
-    clone_url: Vec<String>,
+    pub clone_url: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// homepage
-    web: Vec<String>,
+    pub web: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// relays contributors push patches and comments to
-    relays: Vec<String>,
+    pub relays: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// npubs of other maintainers
-    other_maintainers: Vec<String>,
+    pub other_maintainers: Vec<String>,
     #[clap(long)]
     /// usually root commit but will be more recent commit for forks
-    earliest_unique_commit: Option<String>,
+    pub earliest_unique_commit: Option<String>,
     #[clap(short, long)]
     /// shortname with no spaces or special characters
-    identifier: Option<String>,
+    pub identifier: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &InitSubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let root_commit = git_repo

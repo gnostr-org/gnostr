@@ -1,7 +1,7 @@
 use anyhow::Result;
 #[cfg(test)]
 use mockall::*;
-use nostr::{prelude::*, Keys};
+use nostr::{Keys, prelude::*};
 
 #[derive(Default)]
 pub struct Encryptor;
