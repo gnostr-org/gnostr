@@ -93,38 +93,75 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         println!("ngit:else:args={:?}", args);
         println!("ngit:else:sub_command_args={:?}", sub_command_args);
         let command = NgitCli::parse();
-        //println!("ngit:else:command={:?}", command);
         let cli = ngit::Cli {
             command: command.command,
             nsec: Some(String::from("")),
             password: Some(String::from("")),
             disable_cli_spinners: true,
         };
-        //let _ = match &cli.command {
 		if sub_command_args.login {
-            login::launch(&cli, &args as &LoginSubCommandArgs).await;
+/// run with --nsec flag to change npub
+/// 
+/// Usage: ngit login [OPTIONS]
+/// 
+/// Options:
+///       --offline              don't fetch user metadata and relay list from relays
+///   -n, --nsec <NSEC>          nsec or hex private key
+///   -p, --password <PASSWORD>  password to decrypt nsec
+///   -h, --help                 Print help
+///   -V, --version              Print version
+/// 
+			let args = ngit::sub_commands::login::LoginSubCommandArgs { offline: false };
+            login::launch(&cli, &args).await;
 		} else
 		if sub_command_args.init {
-            //let args = Commands::Init(args);
-            init::launch(&cli, &args as &InitSubCommandArgs).await;
+
+
+/// Usage: ngit init [OPTIONS]
+/// 
+/// Options:
+///   -t, --title <TITLE>
+///           name of repository
+///   -d, --description <DESCRIPTION>
+///           optional description
+///       --clone-url <CLONE_URL>
+///           git server url users can clone from
+///   -w, --web <WEB>...
+///           homepage
+///   -r, --relays <RELAYS>...
+///           relays contributors push patches and comments to
+///   -o, --other-maintainers <OTHER_MAINTAINERS>...
+///           npubs of other maintainers
+///       --earliest-unique-commit <EARLIEST_UNIQUE_COMMIT>
+///           usually root commit but will be more recent commit for forks
+///   -n, --nsec <NSEC>
+///           nsec or hex private key
+///   -i, --identifier <IDENTIFIER>
+///           shortname with no spaces or special characters
+///   -p, --password <PASSWORD>
+///           password to decrypt nsec
+///   -h, --help
+///           Print help
+///   -V, --version
+///           Print version
+
+
+			let args = ngit::sub_commands::init::InitSubCommandArgs { title: Some(String::from("")), description:Some(String::from("")), clone_url: vec![String::from("")], earliest_unique_commit: Some(String::from("")), identifier: Some(String::from("")), other_maintainers: vec![String::from("")], relays: vec![String::from("")], web: vec![String::from("")] };
+            init::launch(&cli, &args).await;
 		} else
 		if sub_command_args.send {
-            //let args = Commands::Send(args);
-            send::launch(&cli, &args as &SendSubCommandArgs).await;
+			let args = ngit::sub_commands::send::SendSubCommandArgs { in_reply_to: vec![String::from("")], no_cover_letter: false, description: Some(String::from("")), since_or_range: String::from(""), title: Some(String::from("")) };
+            send::launch(&cli, &args).await;
 		} else
 		if sub_command_args.list {
-            //let args = Commands::List(args);
             list::launch().await;
 		} else
 		if sub_command_args.pull {
-            //let args = Commands::Pull(args);
-            //sub_commands::pull::launch().await;
             pull::launch().await;
 		} else
 		if sub_command_args.push {
-            //let args = Commands::Push(args);
-            push::launch(&cli, &args as &PushSubCommandArgs).await;
-            //Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
+			let args = ngit::sub_commands::push::PushSubCommandArgs { force: true, no_cover_letter: true };
+            push::launch(&cli, &args).await;
         };
     };
 

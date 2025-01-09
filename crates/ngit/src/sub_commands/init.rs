@@ -19,28 +19,28 @@ use crate::{
 pub struct InitSubCommandArgs {
     #[clap(short, long)]
     /// name of repository
-    title: Option<String>,
+    pub title: Option<String>,
     #[clap(short, long)]
     /// optional description
-    description: Option<String>,
+    pub description: Option<String>,
     #[clap(long)]
     /// git server url users can clone from
-    clone_url: Vec<String>,
+    pub clone_url: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// homepage
-    web: Vec<String>,
+    pub web: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// relays contributors push patches and comments to
-    relays: Vec<String>,
+    pub relays: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// npubs of other maintainers
-    other_maintainers: Vec<String>,
+    pub other_maintainers: Vec<String>,
     #[clap(long)]
     /// usually root commit but will be more recent commit for forks
-    earliest_unique_commit: Option<String>,
+    pub earliest_unique_commit: Option<String>,
     #[clap(short, long)]
     /// shortname with no spaces or special characters
-    identifier: Option<String>,
+    pub identifier: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
