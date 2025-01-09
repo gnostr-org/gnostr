@@ -133,28 +133,35 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     if args[2] == "send" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.send={}", sub_command_args.send);
+		process::exit(0);
     }
     if args[2] == "list" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.list={}", sub_command_args.list);
+		process::exit(0);
     }
     if args[2] == "push" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.push={}", sub_command_args.push);
+		process::exit(0);
     }
     if args[2] == "pull" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.pull={}", sub_command_args.pull);
+		process::exit(0);
     }
     if args[2] == "login" {
         println!("args[2]:{}", args[2]);
         println!("ngit:sub_command_args.login={}", sub_command_args.login);
+		process::exit(0);
     }
     if args[2] == "ngit_help" {
         println!("args[2]:{}", args[2]);
+		process::exit(0);
     }
     if args[2] == "ngit_help" {
         println!("args[2]:{}", args[2]);
+		process::exit(0);
     }
     //if args[3] == "init" {println!("args[3]:{}", args[3]);}
     if sub_command_args.init {
