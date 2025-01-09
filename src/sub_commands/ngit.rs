@@ -153,7 +153,22 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
             };
             let _ = init::launch(&cli, &args).await;
         } else if sub_command_args.send {
+            // issue commits as a proposal
             //
+            // Usage: ngit send [OPTIONS] [SINCE_OR_RANGE]
+            //
+            // Arguments:
+            //   [SINCE_OR_RANGE]  commits to send as proposal; like in `git format-patch` eg. HEAD~2 [default: ]
+            //
+            // Options:
+            //       --in-reply-to [<IN_REPLY_TO>...]  references to an existing proposal for which this is a new version and/or events / npubs to tag as mentions
+            //       --no-cover-letter                 don't prompt for a cover letter
+            //   -t, --title <TITLE>                   optional cover letter title
+            //   -d, --description <DESCRIPTION>       optional cover letter description
+            //   -n, --nsec <NSEC>                     nsec or hex private key
+            //   -p, --password <PASSWORD>             password to decrypt nsec
+            //   -h, --help                            Print help
+            //   -V, --version                         Print version
             let args = ngit::sub_commands::send::SendSubCommandArgs {
                 in_reply_to: vec![String::from("")],
                 no_cover_letter: false,
