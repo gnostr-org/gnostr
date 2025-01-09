@@ -22,7 +22,7 @@ use nostr_sdk::prelude::*;
 
 use clap::{Args, Parser, Subcommand};
 use std::env;
-
+use std::process;
 #[derive(Args, Debug /*, Parser*/)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -127,6 +127,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
         println!("ngit:sub_command_args.init={}", sub_command_args.init);
         if Some(&sub_command_args.command).is_some() {
         println!("is_some-->ngit:sub_command_args.command={:?}", sub_command_args.command);
+		process::exit(0);
 		}
 	}
     if args[2] == "send" {
