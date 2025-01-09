@@ -26,6 +26,7 @@ deny:
 
 cargo-test:
     cargo test
+    gnostr ngit --init -p nsec --hex --
 
 cargo-diet:
     nix develop .#lintShell --command cargo diet
