@@ -72,54 +72,45 @@ fn cli_tester_create_proposal(
     create_and_populate_branch(test_repo, branch_name, prefix, false)?;
 
     if let Some(in_reply_to) = in_reply_to {
-        let mut p = CliTester::new_from_dir(
-            &test_repo.dir,
-            [
-                "--nsec",
-                TEST_KEY_1_NSEC,
-                "--password",
-                TEST_PASSWORD,
-                "--disable-cli-spinners",
-                "send",
-                "HEAD~2",
-                "--no-cover-letter",
-                "--in-reply-to",
-                in_reply_to.as_str(),
-            ],
-        );
+        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+            "--nsec",
+            TEST_KEY_1_NSEC,
+            "--password",
+            TEST_PASSWORD,
+            "--disable-cli-spinners",
+            "send",
+            "HEAD~2",
+            "--no-cover-letter",
+            "--in-reply-to",
+            in_reply_to.as_str(),
+        ]);
         p.expect_end_eventually()?;
     } else if let Some((title, description)) = cover_letter_title_and_description {
-        let mut p = CliTester::new_from_dir(
-            &test_repo.dir,
-            [
-                "--nsec",
-                TEST_KEY_1_NSEC,
-                "--password",
-                TEST_PASSWORD,
-                "--disable-cli-spinners",
-                "send",
-                "HEAD~2",
-                "--title",
-                format!("\"{title}\"").as_str(),
-                "--description",
-                format!("\"{description}\"").as_str(),
-            ],
-        );
+        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+            "--nsec",
+            TEST_KEY_1_NSEC,
+            "--password",
+            TEST_PASSWORD,
+            "--disable-cli-spinners",
+            "send",
+            "HEAD~2",
+            "--title",
+            format!("\"{title}\"").as_str(),
+            "--description",
+            format!("\"{description}\"").as_str(),
+        ]);
         p.expect_end_eventually()?;
     } else {
-        let mut p = CliTester::new_from_dir(
-            &test_repo.dir,
-            [
-                "--nsec",
-                TEST_KEY_1_NSEC,
-                "--password",
-                TEST_PASSWORD,
-                "--disable-cli-spinners",
-                "send",
-                "HEAD~2",
-                "--no-cover-letter",
-            ],
-        );
+        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+            "--nsec",
+            TEST_KEY_1_NSEC,
+            "--password",
+            TEST_PASSWORD,
+            "--disable-cli-spinners",
+            "send",
+            "HEAD~2",
+            "--no-cover-letter",
+        ]);
         p.expect_end_eventually()?;
     }
     Ok(())

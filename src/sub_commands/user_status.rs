@@ -3,8 +3,8 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use clap::Args;
-use nostr_sdk::prelude::*;
 use nostr_sdk::TagKind::SingleLetter;
+use nostr_sdk::prelude::*;
 
 use crate::utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key};
 

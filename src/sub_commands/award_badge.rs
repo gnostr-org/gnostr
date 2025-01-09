@@ -17,7 +17,6 @@ use crate::{
 
 #[derive(Debug, clap::Args)]
 pub struct AwardBadgeSubCommandArgs {
-
     /// Badge definition event id
     #[arg(short, long)]
     badge_event_id: Option<String>,
@@ -25,8 +24,6 @@ pub struct AwardBadgeSubCommandArgs {
     #[arg(long, action = clap::ArgAction::Append)]
     ptag: Option<String>,
     //ptag: Option<Vec<String>>,
-
-
     #[clap(short, long)]
     /// name of repository
     pub title: Option<String>,
@@ -51,6 +48,19 @@ pub struct AwardBadgeSubCommandArgs {
     #[clap(short, long)]
     /// shortname with no spaces or special characters
     pub identifier: Option<String>,
+}
+
+pub async fn weeble() -> String {
+    let weeble = String::from("weeble");
+    weeble.to_string()
+}
+pub async fn blockheight() -> String {
+    let blockheight = String::from("blockheight");
+    blockheight.to_string()
+}
+pub async fn wobble() -> String {
+    let wobble = String::from("wobble");
+    wobble.to_string()
 }
 
 #[allow(clippy::too_many_lines)]
@@ -103,16 +113,16 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
         )?,
     };
     let ptag = match &args.ptag {
-    Some(t) => t.clone(),
-    None => Interactor::default().input(
-        PromptInputParms::default()
-            .with_prompt("badge_event_id")
-            .with_default(if let Some(repo_ref) = &repo_ref {
-                repo_ref.name.clone()
-            } else {
-                String::new()
-            }),
-    )?,
+        Some(t) => t.clone(),
+        None => Interactor::default().input(
+            PromptInputParms::default()
+                .with_prompt("badge_event_id")
+                .with_default(if let Some(repo_ref) = &repo_ref {
+                    repo_ref.name.clone()
+                } else {
+                    String::new()
+                }),
+        )?,
     };
     let name = match &args.title {
         Some(t) => t.clone(),
@@ -122,7 +132,13 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                 .with_default(if let Some(repo_ref) = &repo_ref {
                     repo_ref.name.clone()
                 } else {
-                    String::new()
+                    format!(
+                        "{:?}/{:?}/{:?}{}",
+                        weeble().await,
+                        blockheight().await,
+                        wobble().await,
+                        String::new()
+                    )
                 }),
         )?,
     };
@@ -317,7 +333,7 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
 
     println!("publishing repostory reference...");
 
-	let identifier = String::from(format!("identifier={}", identifier));
+    let identifier = String::from(format!("identifier={}", identifier));
     let repo_event = RepoRef {
         identifier,
         name,

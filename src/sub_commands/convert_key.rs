@@ -3,7 +3,7 @@ use std::str::FromStr;
 use clap::Args;
 use nostr_sdk::prelude::*;
 
-use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
+use crate::utils::{Prefix, parse_key_or_id_to_hex_string};
 
 #[derive(Args)]
 pub struct ConvertKeySubCommand {

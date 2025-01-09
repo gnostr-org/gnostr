@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::join;
-use serial_test::serial;
 use gnostr_test_utils::{git::GitTestRepo, relay::Relay, *};
+use serial_test::serial;
 
 static FEATURE_BRANCH_NAME_1: &str = "feature-example-t";
 static FEATURE_BRANCH_NAME_2: &str = "feature-example-f";

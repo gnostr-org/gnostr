@@ -1,10 +1,10 @@
 use std::{ffi::OsStr, path::PathBuf, str::FromStr};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use dialoguer::theme::{ColorfulTheme, Theme};
 use directories::ProjectDirs;
-use nostr::{self, nips::nip65::RelayMetadata, Kind, Tag};
-use nostr_sdk::{serde_json, TagStandard};
+use nostr::{self, Kind, Tag, nips::nip65::RelayMetadata};
+use nostr_sdk::{TagStandard, serde_json};
 use once_cell::sync::Lazy;
 use rexpect::session::{Options, PtySession};
 use strip_ansi_escapes::strip_str;
@@ -50,43 +50,35 @@ pub fn generate_test_key_1_kind_event(kind: Kind) -> nostr::Event {
 }
 
 pub fn generate_test_key_1_relay_list_event() -> nostr::Event {
-    nostr::event::EventBuilder::new(
-        nostr::Kind::RelayList,
-        "",
-        [
-            nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8053").unwrap(),
-                metadata: Some(RelayMetadata::Write),
-            }),
-            nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8054").unwrap(),
-                metadata: Some(RelayMetadata::Read),
-            }),
-            nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8055").unwrap(),
-                metadata: None,
-            }),
-        ],
-    )
+    nostr::event::EventBuilder::new(nostr::Kind::RelayList, "", [
+        nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+            relay_url: nostr::Url::from_str("ws://localhost:8053").unwrap(),
+            metadata: Some(RelayMetadata::Write),
+        }),
+        nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+            relay_url: nostr::Url::from_str("ws://localhost:8054").unwrap(),
+            metadata: Some(RelayMetadata::Read),
+        }),
+        nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+            relay_url: nostr::Url::from_str("ws://localhost:8055").unwrap(),
+            metadata: None,
+        }),
+    ])
     .to_event(&TEST_KEY_1_KEYS)
     .unwrap()
 }
 
 pub fn generate_test_key_1_relay_list_event_same_as_fallback() -> nostr::Event {
-    nostr::event::EventBuilder::new(
-        nostr::Kind::RelayList,
-        "",
-        [
-            nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8051").unwrap(),
-                metadata: Some(RelayMetadata::Write),
-            }),
-            nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8052").unwrap(),
-                metadata: Some(RelayMetadata::Write),
-            }),
-        ],
-    )
+    nostr::event::EventBuilder::new(nostr::Kind::RelayList, "", [
+        nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+            relay_url: nostr::Url::from_str("ws://localhost:8051").unwrap(),
+            metadata: Some(RelayMetadata::Write),
+        }),
+        nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+            relay_url: nostr::Url::from_str("ws://localhost:8052").unwrap(),
+            metadata: Some(RelayMetadata::Write),
+        }),
+    ])
     .to_event(&TEST_KEY_1_KEYS)
     .unwrap()
 }
@@ -140,44 +132,40 @@ pub fn generate_repo_ref_event() -> nostr::Event {
     // TODO - this may not be consistant across computers as it might take the
     // author and committer from global git config
     let root_commit = "9ee507fc4357d7ee16a5d8901bedcd103f23c17d";
-    nostr::event::EventBuilder::new(
-        nostr::Kind::Custom(REPOSITORY_KIND),
-        "",
-        [
-            Tag::identifier(
-                // root_commit.to_string()
-                format!("{}-consider-it-random", root_commit),
-            ),
-            Tag::from_standardized(TagStandard::Reference(root_commit.to_string())),
-            Tag::from_standardized(TagStandard::Name("example name".into())),
-            Tag::from_standardized(TagStandard::Description("example description".into())),
-            Tag::custom(
-                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
-                vec!["git:://123.gitexample.com/test".to_string()],
-            ),
-            Tag::custom(
-                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
-                vec![
-                    "https://exampleproject.xyz".to_string(),
-                    "https://gitworkshop.dev/123".to_string(),
-                ],
-            ),
-            Tag::custom(
-                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
-                vec![
-                    "ws://localhost:8055".to_string(),
-                    "ws://localhost:8056".to_string(),
-                ],
-            ),
-            Tag::custom(
-                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
-                vec![
-                    TEST_KEY_1_KEYS.public_key().to_string(),
-                    TEST_KEY_2_KEYS.public_key().to_string(),
-                ],
-            ),
-        ],
-    )
+    nostr::event::EventBuilder::new(nostr::Kind::Custom(REPOSITORY_KIND), "", [
+        Tag::identifier(
+            // root_commit.to_string()
+            format!("{}-consider-it-random", root_commit),
+        ),
+        Tag::from_standardized(TagStandard::Reference(root_commit.to_string())),
+        Tag::from_standardized(TagStandard::Name("example name".into())),
+        Tag::from_standardized(TagStandard::Description("example description".into())),
+        Tag::custom(
+            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
+            vec!["git:://123.gitexample.com/test".to_string()],
+        ),
+        Tag::custom(
+            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
+            vec![
+                "https://exampleproject.xyz".to_string(),
+                "https://gitworkshop.dev/123".to_string(),
+            ],
+        ),
+        Tag::custom(
+            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
+            vec![
+                "ws://localhost:8055".to_string(),
+                "ws://localhost:8056".to_string(),
+            ],
+        ),
+        Tag::custom(
+            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
+            vec![
+                TEST_KEY_1_KEYS.public_key().to_string(),
+                TEST_KEY_2_KEYS.public_key().to_string(),
+            ],
+        ),
+    ])
     .to_event(&TEST_KEY_1_KEYS)
     .unwrap()
 }
@@ -450,14 +438,10 @@ impl CliTesterConfirmPrompt<'_> {
         let mut s = String::new();
         self.tester
             .formatter
-            .format_confirm_prompt_selection(
-                &mut s,
-                self.prompt.as_str(),
-                match input {
-                    None => self.default,
-                    Some(_) => input,
-                },
-            )
+            .format_confirm_prompt_selection(&mut s, self.prompt.as_str(), match input {
+                None => self.default,
+                Some(_) => input,
+            })
             .expect("diagluer theme formatter should succeed");
         if !s.contains(self.prompt.as_str()) {
             panic!("dialoguer must be broken as formatted prompt success doesnt contain prompt");
@@ -895,13 +879,10 @@ where
     cmd.env("RUST_BACKTRACE", "0");
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )
+    rexpect::session::spawn_with_options(cmd, Options {
+        timeout_ms: Some(timeout_ms),
+        strip_ansi_escape_codes: true,
+    })
 }
 
 pub fn rexpect_with_from_dir<I, S>(
@@ -919,13 +900,10 @@ where
     cmd.current_dir(dir);
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )
+    rexpect::session::spawn_with_options(cmd, Options {
+        timeout_ms: Some(timeout_ms),
+        strip_ansi_escape_codes: true,
+    })
 }
 
 /// backup and remove application config and data

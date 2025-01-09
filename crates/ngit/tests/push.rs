@@ -71,22 +71,19 @@ fn cli_tester_create_proposal(
 ) -> Result<()> {
     create_and_populate_branch(test_repo, branch_name, prefix, false)?;
 
-    let mut p = CliTester::new_from_dir(
-        &test_repo.dir,
-        [
-            "--nsec",
-            TEST_KEY_1_NSEC,
-            "--password",
-            TEST_PASSWORD,
-            "--disable-cli-spinners",
-            "send",
-            "HEAD~2",
-            "--title",
-            format!("\"{title}\"").as_str(),
-            "--description",
-            format!("\"{description}\"").as_str(),
-        ],
-    );
+    let mut p = CliTester::new_from_dir(&test_repo.dir, [
+        "--nsec",
+        TEST_KEY_1_NSEC,
+        "--password",
+        TEST_PASSWORD,
+        "--disable-cli-spinners",
+        "send",
+        "HEAD~2",
+        "--title",
+        format!("\"{title}\"").as_str(),
+        "--description",
+        format!("\"{description}\"").as_str(),
+    ]);
     p.expect_end_eventually()?;
     Ok(())
 }
@@ -330,17 +327,14 @@ mod when_branch_is_checked_out {
                         std::fs::write(test_repo.dir.join("a5.md"), "some content")?;
                         test_repo.stage_and_commit("add a5.md".to_string().as_str())?;
 
-                        let mut p = CliTester::new_from_dir(
-                            &test_repo.dir,
-                            [
-                                "--nsec",
-                                TEST_KEY_1_NSEC,
-                                "--password",
-                                TEST_PASSWORD,
-                                "--disable-cli-spinners",
-                                "push",
-                            ],
-                        );
+                        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+                            "--nsec",
+                            TEST_KEY_1_NSEC,
+                            "--password",
+                            TEST_PASSWORD,
+                            "--disable-cli-spinners",
+                            "push",
+                        ]);
                         p.expect("finding proposal root event...\r\n")?;
                         p.expect("found proposal root event. finding commits...\r\n")?;
                         p.expect(
@@ -411,17 +405,14 @@ mod when_branch_is_checked_out {
 
                 create_and_populate_branch(&test_repo, FEATURE_BRANCH_NAME_1, "a", false)?;
 
-                let mut p = CliTester::new_from_dir(
-                    &test_repo.dir,
-                    [
-                        "--nsec",
-                        TEST_KEY_1_NSEC,
-                        "--password",
-                        TEST_PASSWORD,
-                        "--disable-cli-spinners",
-                        "push",
-                    ],
-                );
+                let mut p = CliTester::new_from_dir(&test_repo.dir, [
+                    "--nsec",
+                    TEST_KEY_1_NSEC,
+                    "--password",
+                    TEST_PASSWORD,
+                    "--disable-cli-spinners",
+                    "push",
+                ]);
                 p.expect_end_eventually()?;
 
                 for p in [51, 52, 53, 55, 56] {
@@ -556,19 +547,16 @@ mod when_branch_is_checked_out {
                         std::fs::write(test_repo.dir.join("amazing.md"), "some content")?;
                         test_repo.stage_and_commit("commit for rebasing on top of")?;
                         create_and_populate_branch(&test_repo, FEATURE_BRANCH_NAME_1, "a", false)?;
-                        let mut p = CliTester::new_from_dir(
-                            &test_repo.dir,
-                            [
-                                "--nsec",
-                                TEST_KEY_1_NSEC,
-                                "--password",
-                                TEST_PASSWORD,
-                                "--disable-cli-spinners",
-                                "push",
-                                "--force",
-                                "--no-cover-letter",
-                            ],
-                        );
+                        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+                            "--nsec",
+                            TEST_KEY_1_NSEC,
+                            "--password",
+                            TEST_PASSWORD,
+                            "--disable-cli-spinners",
+                            "push",
+                            "--force",
+                            "--no-cover-letter",
+                        ]);
                         p.expect("finding proposal root event...\r\n")?;
                         p.expect("found proposal root event. finding commits...\r\n")?;
                         p.expect("preparing to force push proposal revision...\r\n")?;
@@ -576,9 +564,8 @@ mod when_branch_is_checked_out {
                         p.expect("creating proposal revision for: ")?;
                         // proposal id will be printed in this gap
                         p.expect_eventually("\r\n")?;
-                        let mut selector = p.expect_multi_select(
-                            "select commits for proposal",
-                            vec![
+                        let mut selector =
+                            p.expect_multi_select("select commits for proposal", vec![
                                 "(Joe Bloggs) add a4.md [feature-example-t] 355bdf1".to_string(),
                                 "(Joe Bloggs) add a3.md dbd1115".to_string(),
                                 "(Joe Bloggs) commit for rebasing on top of [main] 1aa2cfe"
@@ -586,8 +573,7 @@ mod when_branch_is_checked_out {
                                 "(Joe Bloggs) add t2.md 431b84e".to_string(),
                                 "(Joe Bloggs) add t1.md af474d8".to_string(),
                                 "(Joe Bloggs) Initial commit 9ee507f".to_string(),
-                            ],
-                        )?;
+                            ])?;
                         selector.succeeds_with(vec![0, 1], false, vec![0, 1])?;
                         p.expect("creating proposal from 2 commits:\r\n")?;
                         p.expect("355bdf1 add a4.md\r\n")?;

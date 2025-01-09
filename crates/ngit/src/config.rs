@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufReader};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use directories::ProjectDirs;
 #[cfg(test)]
 use mockall::*;

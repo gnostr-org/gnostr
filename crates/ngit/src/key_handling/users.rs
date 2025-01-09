@@ -185,19 +185,16 @@ impl UserManagement for UserManager {
             }
 
             let events: Vec<Event> = match client
-                .get_events(
-                    relays_to_search,
-                    vec![
-                        nostr::Filter::default()
-                            .author(*public_key)
-                            .since(nostr::Timestamp::from(user_ref.metadata.created_at + 1))
-                            .kind(Kind::Metadata),
-                        nostr::Filter::default()
-                            .author(*public_key)
-                            .since(nostr::Timestamp::from(user_ref.relays.created_at + 1))
-                            .kind(Kind::RelayList),
-                    ],
-                )
+                .get_events(relays_to_search, vec![
+                    nostr::Filter::default()
+                        .author(*public_key)
+                        .since(nostr::Timestamp::from(user_ref.metadata.created_at + 1))
+                        .kind(Kind::Metadata),
+                    nostr::Filter::default()
+                        .author(*public_key)
+                        .since(nostr::Timestamp::from(user_ref.relays.created_at + 1))
+                        .kind(Kind::RelayList),
+                ])
                 .await
             {
                 Ok(events) => events,
@@ -563,47 +560,39 @@ mod tests {
         use crate::client::MockConnect;
 
         fn generate_relaylist_event() -> nostr::Event {
-            nostr::event::EventBuilder::new(
-                nostr::Kind::RelayList,
-                "",
-                [
-                    nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                        relay_url: nostr::Url::from_str("wss://fredswrite1.relay/").unwrap(),
-                        metadata: Some(RelayMetadata::Write),
-                    }),
-                    nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                        relay_url: nostr::Url::from_str("wss://fredsread1.relay/").unwrap(),
-                        metadata: Some(RelayMetadata::Read),
-                    }),
-                    nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                        relay_url: nostr::Url::from_str("wss://fredsreadwrite.relay/").unwrap(),
-                        metadata: None,
-                    }),
-                ],
-            )
+            nostr::event::EventBuilder::new(nostr::Kind::RelayList, "", [
+                nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+                    relay_url: nostr::Url::from_str("wss://fredswrite1.relay/").unwrap(),
+                    metadata: Some(RelayMetadata::Write),
+                }),
+                nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+                    relay_url: nostr::Url::from_str("wss://fredsread1.relay/").unwrap(),
+                    metadata: Some(RelayMetadata::Read),
+                }),
+                nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+                    relay_url: nostr::Url::from_str("wss://fredsreadwrite.relay/").unwrap(),
+                    metadata: None,
+                }),
+            ])
             .to_event(&TEST_KEY_1_KEYS)
             .unwrap()
         }
 
         fn generate_relaylist_event_user_2() -> nostr::Event {
-            nostr::event::EventBuilder::new(
-                nostr::Kind::RelayList,
-                "",
-                [
-                    nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                        relay_url: nostr::Url::from_str("wss://carolswrite1.relay/").unwrap(),
-                        metadata: Some(RelayMetadata::Write),
-                    }),
-                    nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                        relay_url: nostr::Url::from_str("wss://carolsread1.relay/").unwrap(),
-                        metadata: Some(RelayMetadata::Read),
-                    }),
-                    nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                        relay_url: nostr::Url::from_str("wss://carolsreadwrite.relay/").unwrap(),
-                        metadata: None,
-                    }),
-                ],
-            )
+            nostr::event::EventBuilder::new(nostr::Kind::RelayList, "", [
+                nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+                    relay_url: nostr::Url::from_str("wss://carolswrite1.relay/").unwrap(),
+                    metadata: Some(RelayMetadata::Write),
+                }),
+                nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+                    relay_url: nostr::Url::from_str("wss://carolsread1.relay/").unwrap(),
+                    metadata: Some(RelayMetadata::Read),
+                }),
+                nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
+                    relay_url: nostr::Url::from_str("wss://carolsreadwrite.relay/").unwrap(),
+                    metadata: None,
+                }),
+            ])
             .to_event(&TEST_KEY_2_KEYS)
             .unwrap()
         }

@@ -4,9 +4,7 @@ use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
 #[cfg_attr(not(test), warn(clippy::pedantic))]
 #[cfg_attr(not(test), warn(clippy::expect_used))]
-
 //use anyhow::Result;
-
 mod cli_interactor;
 mod client;
 mod config;
@@ -58,52 +56,52 @@ enum Commands {
     Pull,
     /// run with --nsec flag to change npub
     Login(sub_commands::login::LoginSubCommandArgs),
-//    /// Ngit sub commands
-//    Ngit(sub_commands::ngit::NgitSubCommand),
-//    /// Set metadata. Be aware that this will simply replace your current kind 0 event.
-//    SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
-//    /// Send text note
-//    TextNote(sub_commands::text_note::TextNoteSubCommand),
-//    /// Publish contacts from a CSV file
-//    PublishContactListCsv(sub_commands::publish_contactlist_csv::PublishContactListCsvSubCommand),
-//    /// Delete an event
-//    DeleteEvent(sub_commands::delete_event::DeleteEventSubCommand),
-//    /// Delete a profile
-//    DeleteProfile(sub_commands::delete_profile::DeleteProfileSubCommand),
-//    /// React to an event
-//    React(sub_commands::react::ReactionSubCommand),
-//    /// Get all events
-//    ListEvents(sub_commands::list_events::ListEventsSubCommand),
-//    /// Generate a new keypair
-//    GenerateKeypair(sub_commands::generate_keypair::GenerateKeypairSubCommand),
-//    /// Convert key from bech32 to hex or hex to bech32
-//    ConvertKey(sub_commands::convert_key::ConvertKeySubCommand),
-//    /// Vanity public key mining
-//    Vanity(sub_commands::vanity::VanitySubCommand),
-//    /// Create a new public channel
-//    CreatePublicChannel(sub_commands::create_public_channel::CreatePublicChannelSubCommand),
-//    /// Update channel metadata
-//    SetChannelMetadata(sub_commands::set_channel_metadata::SetChannelMetadataSubCommand),
-//    /// Send a message to a public channel
-//    SendChannelMessage(sub_commands::send_channel_message::SendChannelMessageSubCommand),
-//    /// Hide a message in a public chat room
-//    HidePublicChannelMessage(
-//        sub_commands::hide_public_channel_message::HidePublicChannelMessageSubCommand,
-//    ),
-//    /// Mute a public key
-//    MutePublicKey(sub_commands::mute_publickey::MutePublickeySubCommand),
-//    /// Broadcast events from file
-//    BroadcastEvents(sub_commands::broadcast_events::BroadcastEventsSubCommand),
-//    /// Create a new badge
-//    CreateBadge(sub_commands::create_badge::CreateBadgeSubCommand),
-      /// Publish award badge event
-      AwardBadge(sub_commands::award_badge::AwardBadgeSubCommandArgs),
-//    /// Set profile badges
-//    ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
-//    /// Create custom event
-//    CustomEvent(sub_commands::custom_event::CustomEventCommand),
-//    /// Create a user status event
-//    SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
+    //    /// Ngit sub commands
+    //    Ngit(sub_commands::ngit::NgitSubCommand),
+    //    /// Set metadata. Be aware that this will simply replace your current kind 0 event.
+    //    SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
+    //    /// Send text note
+    //    TextNote(sub_commands::text_note::TextNoteSubCommand),
+    //    /// Publish contacts from a CSV file
+    //    PublishContactListCsv(sub_commands::publish_contactlist_csv::PublishContactListCsvSubCommand),
+    //    /// Delete an event
+    //    DeleteEvent(sub_commands::delete_event::DeleteEventSubCommand),
+    //    /// Delete a profile
+    //    DeleteProfile(sub_commands::delete_profile::DeleteProfileSubCommand),
+    //    /// React to an event
+    //    React(sub_commands::react::ReactionSubCommand),
+    //    /// Get all events
+    //    ListEvents(sub_commands::list_events::ListEventsSubCommand),
+    //    /// Generate a new keypair
+    //    GenerateKeypair(sub_commands::generate_keypair::GenerateKeypairSubCommand),
+    //    /// Convert key from bech32 to hex or hex to bech32
+    //    ConvertKey(sub_commands::convert_key::ConvertKeySubCommand),
+    //    /// Vanity public key mining
+    //    Vanity(sub_commands::vanity::VanitySubCommand),
+    //    /// Create a new public channel
+    //    CreatePublicChannel(sub_commands::create_public_channel::CreatePublicChannelSubCommand),
+    //    /// Update channel metadata
+    //    SetChannelMetadata(sub_commands::set_channel_metadata::SetChannelMetadataSubCommand),
+    //    /// Send a message to a public channel
+    //    SendChannelMessage(sub_commands::send_channel_message::SendChannelMessageSubCommand),
+    //    /// Hide a message in a public chat room
+    //    HidePublicChannelMessage(
+    //        sub_commands::hide_public_channel_message::HidePublicChannelMessageSubCommand,
+    //    ),
+    //    /// Mute a public key
+    //    MutePublicKey(sub_commands::mute_publickey::MutePublickeySubCommand),
+    //    /// Broadcast events from file
+    //    BroadcastEvents(sub_commands::broadcast_events::BroadcastEventsSubCommand),
+    //    /// Create a new badge
+    //    CreateBadge(sub_commands::create_badge::CreateBadgeSubCommand),
+    /// Publish award badge event
+    AwardBadge(sub_commands::award_badge::AwardBadgeSubCommandArgs),
+    //    /// Set profile badges
+    //    ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
+    //    /// Create custom event
+    //    CustomEvent(sub_commands::custom_event::CustomEventCommand),
+    //    /// Create a user status event
+    //    SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
 }
 
 #[tokio::main]
@@ -239,12 +237,10 @@ async fn main() -> Result<()> {
         //    )
         //    .await
         //}
-
-
         Some(Commands::AwardBadge(args)) => {
-        let cli = Cli::parse();
-        sub_commands::award_badge::launch(&cli, args).await}
-
+            let cli = Cli::parse();
+            sub_commands::award_badge::launch(&cli, args).await
+        }
 
         //Some(Commands::ProfileBadges(sub_command_args)) => {
         //    sub_commands::profile_badges::set_profile_badges(
@@ -274,44 +270,49 @@ async fn main() -> Result<()> {
         //    .await
         //}
         Some(Commands::Login(args)) => {
-        let cli = Cli::parse();
+            let cli = Cli::parse();
 
-			sub_commands::login::launch(&cli, args).await}
+            sub_commands::login::launch(&cli, args).await
+        }
         Some(Commands::Init(args)) => {
-        let cli = Cli::parse();
+            let cli = Cli::parse();
 
-			sub_commands::init::launch(&cli, args).await}
+            sub_commands::init::launch(&cli, args).await
+        }
         Some(Commands::Send(args)) => {
-        let cli = Cli::parse();
+            let cli = Cli::parse();
 
-			sub_commands::send::launch(&cli, args).await}
+            sub_commands::send::launch(&cli, args).await
+        }
         Some(Commands::List) => {
-        let cli = Cli::parse();
+            let cli = Cli::parse();
 
-			sub_commands::list::launch().await}
+            sub_commands::list::launch().await
+        }
         Some(Commands::Pull) => {
-        let cli = Cli::parse();
+            let cli = Cli::parse();
 
-			sub_commands::pull::launch().await}
+            sub_commands::pull::launch().await
+        }
         Some(Commands::Push(args)) => {
-        let cli = Cli::parse();
+            let cli = Cli::parse();
 
-			sub_commands::push::launch(&cli, args).await}
+            sub_commands::push::launch(&cli, args).await
+        }
 
         None => {
             {
                 println!("None");
             };
             Ok(())
-        }
-    //let cli = Cli::parse();
-    //match &cli.command {
-    //    Commands::Login(args) => sub_commands::login::launch(&cli, args).await,
-    //    Commands::Init(args) => sub_commands::init::launch(&cli, args).await,
-    //    Commands::Send(args) => sub_commands::send::launch(&cli, args).await,
-    //    Commands::List => sub_commands::list::launch().await, //
-    //    Commands::Pull => sub_commands::pull::launch().await, //
-    //    Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
-    //}
+        } //let cli = Cli::parse();
+          //match &cli.command {
+          //    Commands::Login(args) => sub_commands::login::launch(&cli, args).await,
+          //    Commands::Init(args) => sub_commands::init::launch(&cli, args).await,
+          //    Commands::Send(args) => sub_commands::send::launch(&cli, args).await,
+          //    Commands::List => sub_commands::list::launch().await, //
+          //    Commands::Pull => sub_commands::pull::launch().await, //
+          //    Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
+          //}
     }?)
 }

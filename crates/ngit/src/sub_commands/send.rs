@@ -1,14 +1,14 @@
 use std::{str::FromStr, time::Duration};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use console::Style;
 use futures::future::join_all;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use nostr::{
-    nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
     EventBuilder, FromBech32, Tag, TagKind, ToBech32, UncheckedUrl,
+    nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
 };
-use nostr_sdk::{hashes::sha1::Hash as Sha1Hash, TagStandard};
+use nostr_sdk::{TagStandard, hashes::sha1::Hash as Sha1Hash};
 
 use super::list::tag_value;
 #[cfg(not(test))]
@@ -16,14 +16,14 @@ use crate::client::Client;
 #[cfg(test)]
 use crate::client::MockConnect;
 use crate::{
+    Cli,
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
     client::Connect,
     git::{Repo, RepoActions},
     login,
-    repo_ref::{self, RepoRef, REPO_REF_KIND},
-    Cli,
+    repo_ref::{self, REPO_REF_KIND, RepoRef},
 };
 
 #[derive(Debug, clap::Args)]
@@ -34,16 +34,16 @@ pub struct SendSubCommandArgs {
     #[clap(long, value_parser, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
-    pub  in_reply_to: Vec<String>,
+    pub in_reply_to: Vec<String>,
     /// don't prompt for a cover letter
     #[arg(long, action)]
-    pub  no_cover_letter: bool,
+    pub no_cover_letter: bool,
     /// optional cover letter title
     #[clap(short, long)]
-    pub  title: Option<String>,
+    pub title: Option<String>,
     #[clap(short, long)]
     /// optional cover letter description
-    pub  description: Option<String>,
+    pub description: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -526,10 +526,9 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                 public_key: _,
             }) => {
                 let events = client
-                    .get_events(
-                        repo_relays.to_vec(),
-                        vec![nostr::Filter::new().id(*event_id)],
-                    )
+                    .get_events(repo_relays.to_vec(), vec![
+                        nostr::Filter::new().id(*event_id),
+                    ])
                     .await
                     .context("whilst getting events specified in --in-reply-to")?;
                 if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {
@@ -1185,10 +1184,10 @@ mod tests {
                 identify_ahead_behind(&git_repo, &Some("feature".to_string()), &None)?;
 
             assert_eq!(from_branch, "feature");
-            assert_eq!(
-                ahead,
-                vec![oid_to_sha1(&feature_oid), oid_to_sha1(&dev_oid_first)]
-            );
+            assert_eq!(ahead, vec![
+                oid_to_sha1(&feature_oid),
+                oid_to_sha1(&dev_oid_first)
+            ]);
             assert_eq!(to_branch, "main");
             assert_eq!(behind, vec![]);
 

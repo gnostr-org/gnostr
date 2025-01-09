@@ -1,6 +1,6 @@
 use std::{io::Write, ops::Add};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 use super::send::event_is_patch_set_root;
 #[cfg(not(test))]
@@ -10,11 +10,11 @@ use crate::client::MockConnect;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::Connect,
-    git::{str_to_sha1, Repo, RepoActions},
-    repo_ref::{self, RepoRef, REPO_REF_KIND},
+    git::{Repo, RepoActions, str_to_sha1},
+    repo_ref::{self, REPO_REF_KIND, RepoRef},
     sub_commands::send::{
-        commit_msg_from_patch_oneliner, event_is_cover_letter, event_is_revision_root,
-        event_to_cover_letter, patch_supports_commit_ids, PATCH_KIND,
+        PATCH_KIND, commit_msg_from_patch_oneliner, event_is_cover_letter, event_is_revision_root,
+        event_to_cover_letter, patch_supports_commit_ids,
     },
 };
 
@@ -725,33 +725,28 @@ pub async fn find_proposal_events(
     root_commit: &str,
 ) -> Result<Vec<nostr::Event>> {
     let mut proposals = client
-        .get_events(
-            repo_ref.relays.clone(),
-            vec![
-                nostr::Filter::default()
-                    .kind(nostr::Kind::Custom(PATCH_KIND))
-                    .custom_tag(
-                        nostr::SingleLetterTag::lowercase(nostr::Alphabet::T),
-                        vec!["root"],
-                    )
-                    .custom_tag(
-                        nostr::SingleLetterTag::lowercase(nostr::Alphabet::A),
-                        repo_ref
-                            .maintainers
-                            .iter()
-                            .map(|m| format!("{REPO_REF_KIND}:{m}:{}", repo_ref.identifier)),
-                    ),
-                // also pick up proposals from the same repo but no target at our maintainers repo
-                // events
-                nostr::Filter::default()
-                    .kind(nostr::Kind::Custom(PATCH_KIND))
-                    .custom_tag(
-                        nostr::SingleLetterTag::lowercase(nostr::Alphabet::T),
-                        vec!["root"],
-                    )
-                    .reference(root_commit),
-            ],
-        )
+        .get_events(repo_ref.relays.clone(), vec![
+            nostr::Filter::default()
+                .kind(nostr::Kind::Custom(PATCH_KIND))
+                .custom_tag(nostr::SingleLetterTag::lowercase(nostr::Alphabet::T), vec![
+                    "root",
+                ])
+                .custom_tag(
+                    nostr::SingleLetterTag::lowercase(nostr::Alphabet::A),
+                    repo_ref
+                        .maintainers
+                        .iter()
+                        .map(|m| format!("{REPO_REF_KIND}:{m}:{}", repo_ref.identifier)),
+                ),
+            // also pick up proposals from the same repo but no target at our maintainers repo
+            // events
+            nostr::Filter::default()
+                .kind(nostr::Kind::Custom(PATCH_KIND))
+                .custom_tag(nostr::SingleLetterTag::lowercase(nostr::Alphabet::T), vec![
+                    "root",
+                ])
+                .reference(root_commit),
+        ])
         .await
         .context("cannot get proposal events")?
         .iter()
@@ -784,19 +779,16 @@ pub async fn find_commits_for_proposal_root_events(
     repo_ref: &RepoRef,
 ) -> Result<Vec<nostr::Event>> {
     let mut patch_events: Vec<nostr::Event> = client
-        .get_events(
-            repo_ref.relays.clone(),
-            vec![
-                nostr::Filter::default()
-                    .kind(nostr::Kind::Custom(PATCH_KIND))
-                    .events(
-                        proposal_root_events
-                            .iter()
-                            .map(|e| e.id)
-                            .collect::<Vec<nostr::EventId>>(),
-                    ),
-            ],
-        )
+        .get_events(repo_ref.relays.clone(), vec![
+            nostr::Filter::default()
+                .kind(nostr::Kind::Custom(PATCH_KIND))
+                .events(
+                    proposal_root_events
+                        .iter()
+                        .map(|e| e.id)
+                        .collect::<Vec<nostr::EventId>>(),
+                ),
+        ])
         .await
         .context("cannot fetch patch events")?
         .iter()
