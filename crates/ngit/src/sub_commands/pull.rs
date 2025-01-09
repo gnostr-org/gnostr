@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 use super::list::{get_commit_id_from_patch, tag_value};
 #[cfg(not(test))]
@@ -7,7 +7,7 @@ use crate::client::Client;
 use crate::client::MockConnect;
 use crate::{
     client::Connect,
-    git::{str_to_sha1, Repo, RepoActions},
+    git::{Repo, RepoActions, str_to_sha1},
     repo_ref,
     sub_commands::{
         list::get_most_recent_patch_with_ancestors,

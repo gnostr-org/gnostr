@@ -1,6 +1,6 @@
 use anyhow::Result;
-use serial_test::serial;
 use gnostr_test_utils::*;
+use serial_test::serial;
 
 static EXPECTED_NSEC_PROMPT: &str = "login with nsec (or hex private key)";
 static EXPECTED_SET_PASSWORD_PROMPT: &str = "encrypt with password";

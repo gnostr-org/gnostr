@@ -302,8 +302,8 @@ fn unix_timestamp_after_now_plus_secs(timestamp: u64, secs: u64) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use nostr;
     use gnostr_test_utils::*;
+    use nostr;
 
     use super::*;
     use crate::{

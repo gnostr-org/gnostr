@@ -1,6 +1,6 @@
 use anyhow::Result;
-use serial_test::serial;
 use gnostr_test_utils::{git::GitTestRepo, *};
+use serial_test::serial;
 
 fn expect_msgs_first(p: &mut CliTester) -> Result<()> {
     p.expect("searching for profile and relay updates...\r\n")?;

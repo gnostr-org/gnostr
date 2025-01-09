@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::join;
-use serial_test::serial;
 use gnostr_test_utils::{git::GitTestRepo, relay::Relay, *};
+use serial_test::serial;
 
 #[test]
 fn when_no_main_or_master_branch_return_error() -> Result<()> {

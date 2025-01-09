@@ -1,7 +1,7 @@
 use std::{fs::File, io::BufReader, str::FromStr};
 
-use anyhow::{bail, Context, Result};
-use nostr::{nips::nip19::Nip19, FromBech32, PublicKey, Tag, TagStandard, ToBech32};
+use anyhow::{Context, Result, bail};
+use nostr::{FromBech32, PublicKey, Tag, TagStandard, ToBech32, nips::nip19::Nip19};
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(test))]
@@ -289,13 +289,10 @@ pub fn save_repo_config_to_yaml(
                 .context("cannot convert public key into npub")?,
         );
     }
-    serde_yaml::to_writer(
-        file,
-        &RepoConfigYaml {
-            maintainers: maintainers_npubs,
-            relays,
-        },
-    )
+    serde_yaml::to_writer(file, &RepoConfigYaml {
+        maintainers: maintainers_npubs,
+        relays,
+    })
     .context("cannot write maintainers to maintainers.yaml file serde_yaml")
 }
 
@@ -400,37 +397,33 @@ mod tests {
 
         #[test]
         fn git_server() {
-            assert_eq!(
-                RepoRef::try_from(create()).unwrap().git_server,
-                vec!["https://localhost:1000"],
-            )
+            assert_eq!(RepoRef::try_from(create()).unwrap().git_server, vec![
+                "https://localhost:1000"
+            ],)
         }
 
         #[test]
         fn web() {
-            assert_eq!(
-                RepoRef::try_from(create()).unwrap().web,
-                vec![
-                    "https://exampleproject.xyz".to_string(),
-                    "https://gitworkshop.dev/123".to_string()
-                ],
-            )
+            assert_eq!(RepoRef::try_from(create()).unwrap().web, vec![
+                "https://exampleproject.xyz".to_string(),
+                "https://gitworkshop.dev/123".to_string()
+            ],)
         }
 
         #[test]
         fn relays() {
-            assert_eq!(
-                RepoRef::try_from(create()).unwrap().relays,
-                vec!["ws://relay1.io".to_string(), "ws://relay2.io".to_string()],
-            )
+            assert_eq!(RepoRef::try_from(create()).unwrap().relays, vec![
+                "ws://relay1.io".to_string(),
+                "ws://relay2.io".to_string()
+            ],)
         }
 
         #[test]
         fn maintainers() {
-            assert_eq!(
-                RepoRef::try_from(create()).unwrap().maintainers,
-                vec![TEST_KEY_1_KEYS.public_key(), TEST_KEY_2_KEYS.public_key()],
-            )
+            assert_eq!(RepoRef::try_from(create()).unwrap().maintainers, vec![
+                TEST_KEY_1_KEYS.public_key(),
+                TEST_KEY_2_KEYS.public_key()
+            ],)
         }
     }
 
