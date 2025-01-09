@@ -178,13 +178,42 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
             };
             let _ = send::launch(&cli, &args).await;
         } else if sub_command_args.list {
-            //
+            // list proposals; checkout, apply or download selected
+            // 
+            // Usage: ngit list [OPTIONS]
+            // 
+            // Options:
+            //   -n, --nsec <NSEC>          nsec or hex private key
+            //   -p, --password <PASSWORD>  password to decrypt nsec
+            //   -h, --help                 Print help
+            //   -V, --version              Print version
+            // 
             let _ = list::launch().await;
         } else if sub_command_args.pull {
-            //
+            // fetch and apply new proposal commits / revisions linked to branch
+            // 
+            // Usage: ngit pull [OPTIONS]
+            // 
+            // Options:
+            //   -n, --nsec <NSEC>          nsec or hex private key
+            //   -p, --password <PASSWORD>  password to decrypt nsec
+            //   -h, --help                 Print help
+            //   -V, --version              Print version
+            // 
             let _ = pull::launch().await;
         } else if sub_command_args.push {
-            //
+            // send proposal revision
+            // 
+            // Usage: ngit push [OPTIONS]
+            // 
+            // Options:
+            //       --force                send proposal revision from checked out proposal branch
+            //       --no-cover-letter      dont prompt for cover letter when force pushing
+            //   -n, --nsec <NSEC>          nsec or hex private key
+            //   -p, --password <PASSWORD>  password to decrypt nsec
+            //   -h, --help                 Print help
+            //   -V, --version              Print version
+            // 
             let args = ngit::sub_commands::push::PushSubCommandArgs {
                 force: true,
                 no_cover_letter: true,
