@@ -15,6 +15,13 @@ use crate::{
     repo_ref::{self, RepoRef, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml},
 };
 
+use std::{process::exit, str::FromStr, time::Duration};
+
+use clap::Args;
+use nostr_sdk::prelude::*;
+
+use crate::utils::{create_client, parse_private_key};
+
 #[derive(Debug, clap::Args)]
 pub struct AwardBadgeSubCommandArgs {
     /// Badge definition event id
@@ -333,7 +340,10 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
 
     println!("publishing repostory reference...");
 
-    let identifier = String::from(format!("identifier={}", identifier));
+    let identifier = String::from(format!("{:?}/{:?}/{:?}-{}", weeble().await, blockheight().await,wobble().await,identifier));
+    let description = String::from(format!("{:?}/{:?}/{:?}-{}", weeble().await, blockheight().await,wobble().await,description));
+    let name = String::from(format!("{:?}/{:?}/{:?}-{}", weeble().await, blockheight().await,wobble().await,name));
+    let web = vec![String::from(format!("{:?}/{:?}/{:?}-{:?}", weeble().await, blockheight().await,wobble().await,web))];
     let repo_event = RepoRef {
         identifier,
         name,
