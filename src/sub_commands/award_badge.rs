@@ -59,7 +59,7 @@ pub struct AwardBadgeSubCommandArgs {
 
 pub async fn weeble() -> String {
     let weeble = String::from("weeble");
-    weeble.to_string()
+    weeble
 }
 pub async fn blockheight() -> String {
     let blockheight = String::from("blockheight");
@@ -115,7 +115,13 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                 .with_default(if let Some(repo_ref) = &repo_ref {
                     repo_ref.name.clone()
                 } else {
-                    String::new()
+                    format!(
+                        "{:?}/{:?}/{:?}-{}",
+                        weeble().await,
+                        blockheight().await,
+                        wobble().await,
+                        String::new()
+                    )
                 }),
         )?,
     };
@@ -127,7 +133,13 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                 .with_default(if let Some(repo_ref) = &repo_ref {
                     repo_ref.name.clone()
                 } else {
-                    String::new()
+                    format!(
+                        "{:?}/{:?}/{:?}-{}",
+                        weeble().await,
+                        blockheight().await,
+                        wobble().await,
+                        String::new()
+                    )
                 }),
         )?,
     };
@@ -140,7 +152,7 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                     repo_ref.name.clone()
                 } else {
                     format!(
-                        "{:?}/{:?}/{:?}{}",
+                        "{:?}/{:?}/{:?}-{}",
                         weeble().await,
                         blockheight().await,
                         wobble().await,
@@ -160,6 +172,7 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                 } else {
                     name.clone()
                         .replace(' ', "-")
+                        .replace('"', "")
                         .chars()
                         .map(|c| {
                             if c.is_ascii_alphanumeric() || c.eq(&'/') {
@@ -181,7 +194,12 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                 .with_default(if let Some(repo_ref) = &repo_ref {
                     repo_ref.description.clone()
                 } else {
-                    String::new()
+                    format!(
+                        "{:?}/{:?}/{:?}-{}",
+                        weeble().await,
+                        blockheight().await,
+                        wobble().await,
+                        String::new())
                 }),
         )?,
     };
@@ -196,7 +214,12 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                     } else if let Ok(git_repo) = git_repo.get_origin_url() {
                         git_repo
                     } else {
-                        String::new()
+                    format!(
+                        "{:?}/{:?}/{:?}-{}",
+                        weeble().await,
+                        blockheight().await,
+                        wobble().await,
+                        String::new())
                     }),
             )?
             .split(' ')
@@ -340,10 +363,10 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
 
     println!("publishing repostory reference...");
 
-    let identifier = String::from(format!("{:?}/{:?}/{:?}-{}", weeble().await, blockheight().await,wobble().await,identifier));
-    let description = String::from(format!("{:?}/{:?}/{:?}-{}", weeble().await, blockheight().await,wobble().await,description));
-    let name = String::from(format!("{:?}/{:?}/{:?}-{}", weeble().await, blockheight().await,wobble().await,name));
-    let web = vec![String::from(format!("{:?}/{:?}/{:?}-{:?}", weeble().await, blockheight().await,wobble().await,web))];
+    let identifier = String::from(format!("{:}/{:}/{:}/{}", weeble().await, blockheight().await,wobble().await,identifier));
+    let description = String::from(format!("{:}/{:}/{:}/{}", weeble().await, blockheight().await,wobble().await,description));
+    let name = String::from(format!("{:}/{:}/{:}/{}", weeble().await, blockheight().await,wobble().await,name));
+    let web = vec![String::from(format!("{:}/{:}/{:}", weeble().await, blockheight().await,wobble().await)), web[0].clone()];
     let repo_event = RepoRef {
         identifier,
         name,
