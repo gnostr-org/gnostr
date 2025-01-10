@@ -72,17 +72,18 @@ pub async fn launch(cli_args: &Cli, args: &CustomEventSubCommandArgs) -> Result<
 
     let padded_repo_ref_root_commit = format!("{:0>64}", repo_ref.root_commit.to_string());
     //println!("{:0>64?}", padded_repo_ref_root_commit);
-    println!("{:?}", padded_repo_ref_root_commit);
+    //println!("{:?}", padded_repo_ref_root_commit);
 
     // Or use your already existing (from hex or bech32)
     let commit_keys = Keys::parse(padded_repo_ref_root_commit)?;
     println!(
         "Commit Public key: {}",
+        commit_keys.public_key()
+    );
+    println!(
+        "Commit Public key: {}",
         commit_keys.public_key().to_bech32()?
     );
-
-    // Convert public key to bech32
-    println!("Public key: {}", commit_keys.public_key().to_bech32()?);
 
     let (proposal_root_event, commit_events) = fetch_proposal_root_and_most_recent_patch_chain(
         &client,
