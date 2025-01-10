@@ -102,6 +102,8 @@ enum Commands {
     CustomEvent(sub_commands::custom_event::CustomEventSubCommandArgs),
     //    /// Create a user status event
     //    SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
+    /// Create legit event
+    Legit(sub_commands::legit::LegitSubCommandArgs),
 }
 
 #[tokio::main]
@@ -254,6 +256,10 @@ async fn main() -> Result<()> {
         Some(Commands::CustomEvent(args)) => {
             let cli = Cli::parse();
             sub_commands::custom_event::launch(&cli, args).await
+        }
+        Some(Commands::Legit(args)) => {
+            let cli = Cli::parse();
+            sub_commands::legit::launch(&cli, args).await
         }
         //Some(Commands::CustomEvent(sub_command_args)) => {
         //    sub_commands::custom_event::create_custom_event(
