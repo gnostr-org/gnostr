@@ -63,16 +63,12 @@ pub struct AwardBadgeSubCommandArgs {
 
 pub async fn weeble() -> String {
 
-
-let body = reqwest::get("https://www.rust-lang.org")
-    .await.expect("REASON")
-    .text()
-    .await;
-
-println!("body = {body:?}");
-
-    let weeble = String::from("weeble");
-    weeble
+    let blockheight = blockheight().await;
+    let blockheight = blockheight.parse::<u64>().unwrap();
+	let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+    let weeble = timestamp / blockheight;
+	println!("{}", weeble);
+    weeble.to_string()
 }
 pub async fn blockheight() -> String {
 
@@ -80,23 +76,15 @@ pub async fn blockheight() -> String {
     .await.expect("REASON")
     .text()
     .await;
-
-    //println!("blockheight = {blockheight:?}");
-
-    //let blockheight = String::from("blockheight");
     blockheight.unwrap()
 }
 pub async fn wobble() -> String {
 
-
-	let body = reqwest::get("https://www.rust-lang.org")
-    .await.expect("REASON")
-    .text()
-    .await;
-
-println!("body = {body:?}");
-
-    let wobble = String::from("wobble");
+    let blockheight = blockheight().await;
+    let blockheight = blockheight.parse::<u64>().unwrap();
+	let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+    let wobble = timestamp % blockheight;
+	println!("{}", wobble);
     wobble.to_string()
 }
 
