@@ -67,7 +67,7 @@ pub async fn weeble() -> String {
     let blockheight = blockheight.parse::<u64>().unwrap();
 	let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
     let weeble = timestamp / blockheight;
-	println!("{}", weeble);
+	//println!("{}", weeble);
     weeble.to_string()
 }
 pub async fn blockheight() -> String {
@@ -84,7 +84,7 @@ pub async fn wobble() -> String {
     let blockheight = blockheight.parse::<u64>().unwrap();
 	let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
     let wobble = timestamp % blockheight;
-	println!("{}", wobble);
+	//println!("{}", wobble);
     wobble.to_string()
 }
 
