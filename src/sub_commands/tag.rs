@@ -22,8 +22,9 @@ use nostr_sdk::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 
+use reqwest::header::{HeaderMap, AUTHORIZATION};
 use reqwest::get;
-use reqwest::header::{AUTHORIZATION, HeaderMap};
+
 
 #[derive(Debug, clap::Args)]
 pub struct AwardBadgeSubCommandArgs {
@@ -61,32 +62,35 @@ pub struct AwardBadgeSubCommandArgs {
 }
 
 pub async fn weeble() -> String {
+
     let blockheight = blockheight().await;
     let blockheight = blockheight.parse::<u64>().unwrap();
-    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+	let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
     let weeble = timestamp / blockheight;
-    //println!("{}", weeble);
+	//println!("{}", weeble);
     weeble.to_string()
 }
 pub async fn blockheight() -> String {
-    let blockheight = reqwest::get("https://mempool.space/api/blocks/tip/height")
-        .await
-        .expect("REASON")
-        .text()
-        .await;
+
+	let blockheight = reqwest::get("https://mempool.space/api/blocks/tip/height")
+    .await.expect("REASON")
+    .text()
+    .await;
     blockheight.unwrap()
 }
 pub async fn wobble() -> String {
+
     let blockheight = blockheight().await;
     let blockheight = blockheight.parse::<u64>().unwrap();
-    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+	let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
     let wobble = timestamp % blockheight;
-    //println!("{}", wobble);
+	//println!("{}", wobble);
     wobble.to_string()
 }
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<()> {
+
     if args.relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -218,8 +222,7 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                         weeble().await,
                         blockheight().await,
                         wobble().await,
-                        String::new()
-                    )
+                        String::new())
                 }),
         )?,
     };
@@ -234,13 +237,12 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
                     } else if let Ok(git_repo) = git_repo.get_origin_url() {
                         git_repo
                     } else {
-                        format!(
-                            "{:?}/{:?}/{:?}-{}",
-                            weeble().await,
-                            blockheight().await,
-                            wobble().await,
-                            String::new()
-                        )
+                    format!(
+                        "{:?}/{:?}/{:?}-{}",
+                        weeble().await,
+                        blockheight().await,
+                        wobble().await,
+                        String::new())
                     }),
             )?
             .split(' ')
@@ -384,36 +386,10 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
 
     println!("publishing repostory reference...");
 
-    let identifier = String::from(format!(
-        "{:}/{:}/{:}/{}",
-        weeble().await,
-        blockheight().await,
-        wobble().await,
-        identifier
-    ));
-    let description = String::from(format!(
-        "{:}/{:}/{:}/{}",
-        weeble().await,
-        blockheight().await,
-        wobble().await,
-        description
-    ));
-    let name = String::from(format!(
-        "{:}/{:}/{:}/{}",
-        weeble().await,
-        blockheight().await,
-        wobble().await,
-        name
-    ));
-    let web = vec![
-        String::from(format!(
-            "{:}/{:}/{:}",
-            weeble().await,
-            blockheight().await,
-            wobble().await
-        )),
-        web[0].clone(),
-    ];
+    let identifier = String::from(format!("{:}/{:}/{:}/{}", weeble().await, blockheight().await,wobble().await,identifier));
+    let description = String::from(format!("{:}/{:}/{:}/{}", weeble().await, blockheight().await,wobble().await,description));
+    let name = String::from(format!("{:}/{:}/{:}/{}", weeble().await, blockheight().await,wobble().await,name));
+    let web = vec![String::from(format!("{:}/{:}/{:}", weeble().await, blockheight().await,wobble().await)), web[0].clone()];
     let repo_event = RepoRef {
         identifier,
         name,
