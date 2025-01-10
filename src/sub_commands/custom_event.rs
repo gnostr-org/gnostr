@@ -1,77 +1,294 @@
-use std::borrow::Cow;
+use anyhow::{Context, Result, bail};
+use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
 
-use clap::Args;
-use nostr_sdk::prelude::*;
+use nostr::Keys;
 
-use crate::utils::{create_client, parse_private_key};
+use nostr::prelude::*;
 
-#[derive(Args)]
-pub struct CustomEventCommand {
-    /// Event kind
-    #[arg(short, long)]
-    kind: u16,
+#[cfg(not(test))]
+use crate::client::Client;
+#[cfg(test)]
+use crate::client::MockConnect;
+use crate::{
+    Cli,
+    client::Connect,
+    git::{Repo, RepoActions, str_to_sha1},
+    login,
+    repo_ref::{self, RepoRef},
+    sub_commands::{
+        self,
+        list::{
+            find_commits_for_proposal_root_events, find_proposal_events, get_commit_id_from_patch,
+            get_most_recent_patch_with_ancestors, tag_value,
+        },
+        send::{event_is_revision_root, event_to_cover_letter, generate_patch_event, send_events},
+    },
+};
 
-    /// Note content
-    #[arg(short, long)]
-    content: Option<String>,
-
-    /// Arbitrary tags. Specify first the tag key, then separate each string you want in the array with the character '|'.
-    /// Example for adding an a-tag: "a|30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark|wss://nostr.oxtr.dev"
-    ///
-    /// This will result in an array that looks like this: ["a", "30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark", "wss://nostr.oxtr.dev"]
-    #[arg(short, long, action = clap::ArgAction::Append)]
-    tags: Vec<String>,
-
-    // Print keys as hex
-    #[arg(long, default_value = "false")]
-    hex: bool,
+#[derive(Debug, clap::Args)]
+pub struct CustomEventSubCommandArgs {
+    #[arg(long, action)]
+    /// send proposal revision from checked out proposal branch
+    pub force: bool,
+    #[arg(long, action)]
+    /// dont prompt for cover letter when force pushing
+    pub no_cover_letter: bool,
 }
 
-pub async fn create_custom_event(
-    private_key: Option<String>,
-    relays: Vec<String>,
-    difficulty_target: u8,
-    sub_command_args: &CustomEventCommand,
-) -> Result<()> {
-    if relays.is_empty() {
-        panic!("No relays specified, at least one relay is required!")
+#[allow(clippy::too_many_lines)]
+pub async fn launch(cli_args: &Cli, args: &CustomEventSubCommandArgs) -> Result<()> {
+    let git_repo = Repo::discover().context("cannot find a git repository")?;
+
+    let (main_or_master_branch_name, _) = git_repo
+        .get_main_or_master_branch()
+        .context("no main or master branch")?;
+
+    let root_commit = git_repo
+        .get_root_commit()
+        .context("failed to get root commit of the repository")?;
+
+    let branch_name = git_repo
+        .get_checked_out_branch_name()
+        .context("cannot get checked out branch name")?;
+
+    if branch_name == main_or_master_branch_name {
+        bail!("checkout a branch associated with a proposal first")
+    }
+    #[cfg(not(test))]
+    let mut client = Client::default();
+    #[cfg(test)]
+    let mut client = <MockConnect as std::default::Default>::default();
+
+    let repo_ref = repo_ref::fetch(
+        &git_repo,
+        root_commit.to_string(),
+        &client,
+        client.get_fallback_relays().clone(),
+        true,
+    )
+    .await?;
+	println!("{:?}", branch_name);
+	println!("{:?}", repo_ref.root_commit.to_string());
+
+    let padded_repo_ref_root_commit = format!("{:0>64}", repo_ref.root_commit.to_string());
+    //println!("{:0>64?}", padded_repo_ref_root_commit);
+    println!("{:?}", padded_repo_ref_root_commit);
+
+    let (proposal_root_event, commit_events) = fetch_proposal_root_and_most_recent_patch_chain(
+        &client,
+        &repo_ref,
+        &root_commit,
+        &branch_name,
+    )
+    .await?;
+
+    let most_recent_proposal_patch_chain = get_most_recent_patch_with_ancestors(commit_events)
+        .context("cannot get most recent patch for proposal")?;
+
+    let branch_tip = git_repo.get_tip_of_branch(&branch_name)?;
+
+    let most_recent_patch_commit_id = str_to_sha1(
+        &get_commit_id_from_patch(
+            most_recent_proposal_patch_chain
+                .first()
+                .context("no patches found")?,
+        )
+        .context("latest patch event doesnt have a commit tag")?,
+    )
+    .context("latest patch event commit tag isn't a valid SHA1 hash")?;
+
+    let proposal_base_commit_id = str_to_sha1(
+        &tag_value(
+            most_recent_proposal_patch_chain
+                .last()
+                .context("no patches found")?,
+            "parent-commit",
+        )
+        .context("patch is incorrectly formatted")?,
+    )
+    .context("latest patch event parent-commit tag isn't a valid SHA1 hash")?;
+
+    if most_recent_patch_commit_id.eq(&branch_tip) {
+        bail!("proposal already up-to-date with local branch");
     }
 
-    let keys = parse_private_key(private_key, false).await?;
-    let client = create_client(&keys, relays, difficulty_target).await?;
-
-    // Parse kind input
-    let kind = Kind::Custom(sub_command_args.kind);
-
-    // Set content
-    let content = sub_command_args
-        .content
-        .clone()
-        .unwrap_or_else(|| String::from(""));
-
-    // Set up tags
-    let mut tags: Vec<Tag> = vec![];
-
-    for tag in sub_command_args.tags.clone().iter() {
-        let parts: Vec<String> = tag.split('|').map(String::from).collect();
-        let tag_kind = parts.first().unwrap().clone();
-        tags.push(Tag::custom(
-            TagKind::Custom(Cow::from(tag_kind)),
-            parts[1..].to_vec(),
-        ));
+    if args.force {
+        println!("preparing to force push proposal revision...");
+        sub_commands::send::launch(cli_args, &sub_commands::send::SendSubCommandArgs {
+            since_or_range: String::new(),
+            in_reply_to: vec![proposal_root_event.id.to_string()],
+            title: None,
+            description: None,
+            no_cover_letter: args.no_cover_letter,
+        })
+        .await?;
+        println!("force pushed proposal revision");
+        return Ok(());
     }
 
-    // Initialize event builder
-    let event = EventBuilder::new(kind, content, tags).to_pow_event(&keys, difficulty_target)?;
-
-    // Publish event
-    let event_id = client.send_event(event).await?;
-
-    if !sub_command_args.hex {
-        println!("{}", event_id.to_bech32()?);
-    } else {
-        println!("{}", event_id.to_hex());
+    if most_recent_proposal_patch_chain.iter().any(|e| {
+        let c = tag_value(e, "parent-commit").unwrap_or_default();
+        c.eq(&branch_tip.to_string())
+    }) {
+        bail!("proposal is ahead of local branch");
     }
+
+    let Ok((ahead, behind)) = git_repo
+        .get_commits_ahead_behind(&most_recent_patch_commit_id, &branch_tip)
+        .context("the latest patch in proposal doesnt share an ancestor with your branch.")
+    else {
+        if git_repo.ancestor_of(&proposal_base_commit_id, &branch_tip)? {
+            bail!("local unpublished proposal ammendments. consider force pushing.");
+        }
+        bail!("local unpublished proposal has been rebased. consider force pushing");
+    };
+
+    if !behind.is_empty() {
+        bail!(
+            "your local proposal branch is {} behind patches on nostr. consider rebasing or force pushing",
+            behind.len()
+        )
+    }
+
+    println!(
+        "{} commits ahead. preparing to create creating patch events.",
+        ahead.len()
+    );
+
+    let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
+
+    // Or use your already existing (from hex or bech32)
+    let commit_keys = Keys::parse(padded_repo_ref_root_commit)?;
+    println!("Commit Public key: {}", commit_keys.public_key().to_bech32()?);
+
+    // Convert public key to bech32
+    println!("Public key: {}", keys.public_key().to_bech32()?);
+
+    let metadata = Metadata::new()
+        .name("username")
+        .display_name("My Username")
+        .about("Description")
+        .picture(Url::parse("https://example.com/avatar.png")?)
+        .banner(Url::parse("https://example.com/banner.png")?)
+        .nip05("username@example.com")
+        .lud16("pay@yukikishimoto.com")
+        .custom_field("custom_field", "my value");
+
+
+	let event = vec![EventBuilder::metadata(&metadata).to_event(&commit_keys)?];
+	
+    //let event: Event = EventBuilder::metadata(&metadata).sign_with_keys(&keys)?;
+    //let event: Event = EventBuilder::metadata(&metadata);
+
+    // New text note
+    //let event: Event = EventBuilder::text_note("Hello from rust-nostr").sign_with_keys(&keys)?;
+
+    // New POW text note
+    //let event: Event = EventBuilder::text_note("POW text note from rust-nostr").pow(20).sign_with_keys(&keys)?;
+
+
+    // Convert client nessage to JSON
+	let json = ClientMessage::event(event[0].clone()).as_json();
+    println!("{json}");
+
+
+    send_events(
+        &client,
+        event.clone(),
+        user_ref.relays.write(),
+        repo_ref.relays.clone(),
+        !cli_args.disable_cli_spinners,
+    )
+    .await?;
+
+
+    client.set_keys(&keys).await;
+
+    let mut patch_events: Vec<nostr::Event> = vec![];
+    for commit in &ahead {
+		println!("{}", commit);
+        patch_events.push(
+            generate_patch_event(
+                &git_repo,
+                &root_commit,
+                commit,
+                Some(proposal_root_event.id),
+                &keys,
+                &repo_ref,
+                patch_events.last().map(nostr::Event::id),
+                None,
+                None,
+                &None,
+                &[],
+            )
+            .context("cannot make patch event from commit")?,
+        );
+    }
+    println!("pushing {} commits", ahead.len());
+
+    send_events(
+        &client,
+        patch_events,
+        user_ref.relays.write(),
+        repo_ref.relays.clone(),
+        !cli_args.disable_cli_spinners,
+    )
+    .await?;
+
+    println!("pushed {} commits", ahead.len());
 
     Ok(())
+}
+
+pub async fn fetch_proposal_root_and_most_recent_patch_chain(
+    #[cfg(test)] client: &crate::client::MockConnect,
+    #[cfg(not(test))] client: &Client,
+    repo_ref: &RepoRef,
+    root_commit: &Sha1Hash,
+    branch_name: &String,
+) -> Result<(nostr::Event, Vec<nostr::Event>)> {
+    println!("finding proposal root event...");
+
+    let proposal_events_and_revisions: Vec<nostr::Event> =
+        find_proposal_events(client, repo_ref, &root_commit.to_string())
+            .await
+            .context("cannot get proposal events for repo")?;
+
+    let proposal_events: Vec<&nostr::Event> = proposal_events_and_revisions
+        .iter()
+        .filter(|e| !event_is_revision_root(e))
+        .collect::<Vec<&nostr::Event>>();
+
+    let proposal_root_event: &nostr::Event = proposal_events
+        .iter()
+        .find(|e| {
+            event_to_cover_letter(e).is_ok_and(|cl| cl.branch_name.eq(branch_name))
+            // TODO remove the dependancy on same branch name and replace with
+            // references stored in .git/ngit
+        })
+        .context("cannot find a proposal root event associated with the checked out branch name")?
+        .to_owned();
+
+    println!("found proposal root event. finding commits...");
+
+    let commits_events: Vec<nostr::Event> = find_commits_for_proposal_root_events(
+        client,
+        &[
+            vec![proposal_root_event],
+            proposal_events_and_revisions
+                .iter()
+                .filter(|e| {
+                    e.tags.iter().any(|t| {
+                        t.as_vec().len().gt(&1)
+                            && t.as_vec()[1].eq(&proposal_root_event.id.to_string())
+                    })
+                })
+                .collect::<Vec<&nostr::Event>>(),
+        ]
+        .concat(),
+        repo_ref,
+    )
+    .await?;
+
+    Ok((proposal_root_event.clone(), commits_events))
 }
