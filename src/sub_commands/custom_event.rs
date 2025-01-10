@@ -67,12 +67,22 @@ pub async fn launch(cli_args: &Cli, args: &CustomEventSubCommandArgs) -> Result<
         true,
     )
     .await?;
-	println!("{:?}", branch_name);
-	println!("{:?}", repo_ref.root_commit.to_string());
+    println!("{:?}", branch_name);
+    println!("{:?}", repo_ref.root_commit.to_string());
 
     let padded_repo_ref_root_commit = format!("{:0>64}", repo_ref.root_commit.to_string());
     //println!("{:0>64?}", padded_repo_ref_root_commit);
     println!("{:?}", padded_repo_ref_root_commit);
+
+    // Or use your already existing (from hex or bech32)
+    let commit_keys = Keys::parse(padded_repo_ref_root_commit)?;
+    println!(
+        "Commit Public key: {}",
+        commit_keys.public_key().to_bech32()?
+    );
+
+    // Convert public key to bech32
+    println!("Public key: {}", commit_keys.public_key().to_bech32()?);
 
     let (proposal_root_event, commit_events) = fetch_proposal_root_and_most_recent_patch_chain(
         &client,
@@ -157,10 +167,6 @@ pub async fn launch(cli_args: &Cli, args: &CustomEventSubCommandArgs) -> Result<
 
     let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
 
-    // Or use your already existing (from hex or bech32)
-    let commit_keys = Keys::parse(padded_repo_ref_root_commit)?;
-    println!("Commit Public key: {}", commit_keys.public_key().to_bech32()?);
-
     // Convert public key to bech32
     println!("Public key: {}", keys.public_key().to_bech32()?);
 
@@ -174,24 +180,12 @@ pub async fn launch(cli_args: &Cli, args: &CustomEventSubCommandArgs) -> Result<
         .lud16("pay@yukikishimoto.com")
         .custom_field("custom_field", "my value");
 
-
-	let event = vec![EventBuilder::metadata(&metadata).to_event(&commit_keys)?];
-	
-    //let event: Event = EventBuilder::metadata(&metadata).sign_with_keys(&keys)?;
-    //let event: Event = EventBuilder::metadata(&metadata);
-
-    // New text note
-    //let event: Event = EventBuilder::text_note("Hello from rust-nostr").sign_with_keys(&keys)?;
-
-    // New POW text note
-    //let event: Event = EventBuilder::text_note("POW text note from rust-nostr").pow(20).sign_with_keys(&keys)?;
-
-
+    let event = vec![EventBuilder::metadata(&metadata).to_event(&commit_keys)?];
     // Convert client nessage to JSON
-	let json = ClientMessage::event(event[0].clone()).as_json();
+    let json = ClientMessage::event(event[0].clone()).as_json();
     println!("{json}");
 
-
+    client.set_keys(&commit_keys).await;
     send_events(
         &client,
         event.clone(),
@@ -201,12 +195,11 @@ pub async fn launch(cli_args: &Cli, args: &CustomEventSubCommandArgs) -> Result<
     )
     .await?;
 
-
     client.set_keys(&keys).await;
 
     let mut patch_events: Vec<nostr::Event> = vec![];
     for commit in &ahead {
-		println!("{}", commit);
+        println!("{}", commit);
         patch_events.push(
             generate_patch_event(
                 &git_repo,

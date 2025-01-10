@@ -98,8 +98,8 @@ enum Commands {
     AwardBadge(sub_commands::award_badge::AwardBadgeSubCommandArgs),
     //    /// Set profile badges
     //    ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
-    //    /// Create custom event
-    //    CustomEvent(sub_commands::custom_event::CustomEventCommand),
+    /// Create custom event
+    CustomEvent(sub_commands::custom_event::CustomEventSubCommandArgs),
     //    /// Create a user status event
     //    SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
 }
@@ -251,6 +251,10 @@ async fn main() -> Result<()> {
         //    )
         //    .await
         //}
+        Some(Commands::CustomEvent(args)) => {
+            let cli = Cli::parse();
+            sub_commands::custom_event::launch(&cli, args).await
+        }
         //Some(Commands::CustomEvent(sub_command_args)) => {
         //    sub_commands::custom_event::create_custom_event(
         //        args.sec,

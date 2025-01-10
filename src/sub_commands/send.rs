@@ -264,6 +264,7 @@ pub async fn launch(cli_args: &Cli, args: &SendSubCommandArgs) -> Result<()> {
     Ok(())
 }
 
+//send_events
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::too_many_lines)]
 pub async fn send_events(
@@ -381,6 +382,7 @@ pub async fn send_events(
         }
         pb.inc(0); // need to make pb display intially
         let mut failed = false;
+        //for event in &events
         for event in &events {
             match client.send_event_to(relay.as_str(), event.clone()).await {
                 Ok(_) => pb.inc(1),
