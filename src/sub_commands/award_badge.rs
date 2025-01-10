@@ -44,10 +44,10 @@ pub struct AwardBadgeSubCommandArgs {
     #[clap(long)]
     /// git server url users can clone from
     pub clone_url: Vec<String>,
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[clap(long, value_parser, num_args = 1..)]
     /// homepage
     pub web: Vec<String>,
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[clap(long, value_parser, num_args = 1..)]
     /// relays contributors push patches and comments to
     pub relays: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
@@ -90,6 +90,11 @@ pub async fn wobble() -> String {
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<()> {
+
+    if args.relays.is_empty() {
+        panic!("No relays specified, at least one relay is required!")
+    }
+
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let root_commit = git_repo
@@ -147,7 +152,7 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
         Some(t) => t.clone(),
         None => Interactor::default().input(
             PromptInputParms::default()
-                .with_prompt("badge_event_id")
+                .with_prompt("ptag")
                 .with_default(if let Some(repo_ref) = &repo_ref {
                     repo_ref.name.clone()
                 } else {
