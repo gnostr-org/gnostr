@@ -22,6 +22,10 @@ use nostr_sdk::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 
+use reqwest::header::{HeaderMap, AUTHORIZATION};
+use reqwest::get;
+
+
 #[derive(Debug, clap::Args)]
 pub struct AwardBadgeSubCommandArgs {
     /// Badge definition event id
@@ -58,14 +62,40 @@ pub struct AwardBadgeSubCommandArgs {
 }
 
 pub async fn weeble() -> String {
+
+
+let body = reqwest::get("https://www.rust-lang.org")
+    .await.expect("REASON")
+    .text()
+    .await;
+
+println!("body = {body:?}");
+
     let weeble = String::from("weeble");
     weeble
 }
 pub async fn blockheight() -> String {
-    let blockheight = String::from("blockheight");
-    blockheight.to_string()
+
+	let blockheight = reqwest::get("https://mempool.space/api/blocks/tip/height")
+    .await.expect("REASON")
+    .text()
+    .await;
+
+    //println!("blockheight = {blockheight:?}");
+
+    //let blockheight = String::from("blockheight");
+    blockheight.unwrap()
 }
 pub async fn wobble() -> String {
+
+
+	let body = reqwest::get("https://www.rust-lang.org")
+    .await.expect("REASON")
+    .text()
+    .await;
+
+println!("body = {body:?}");
+
     let wobble = String::from("wobble");
     wobble.to_string()
 }
