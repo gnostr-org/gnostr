@@ -57,10 +57,12 @@ lint:
 run:
     cargo run --bin gnostr -- -h || true
 
-install-all:install install-ngit
+install-all:install install-legit install-ngit
 install:
     cargo install --path .
 
+install-legit:
+    cargo install --path crates/legit
 install-ngit:
     cargo install --path crates/ngit
 
