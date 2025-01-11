@@ -99,10 +99,15 @@ pub async fn launch(cli_args: &Cli, args: &AwardBadgeSubCommandArgs) -> Result<(
 
     nostr_sdk_client.connect().await;
 
+    let weeble_string = weeble().await;
+    let wobble_string = wobble().await;
+    let blockheight_string = blockheight().await;
+    let weeble_blockheight_wobble: String = format!("{}/{}/{}", weeble_string, blockheight_string, wobble_string);
+
     let metadata = Metadata::new()
-        .name("username")
-        .display_name("My Username")
-        .about("Description")
+        .name(&weeble_blockheight_wobble)
+        .display_name("")
+        .about("weeble/blockheight/wobble")
         .picture(Url::parse("https://example.com/avatar.png")?)
         .banner(Url::parse("https://example.com/banner.png")?)
         .nip05("username@example.com")
