@@ -2,6 +2,31 @@ use std::time::Duration;
 
 use nostr_sdk::prelude::*;
 
+pub async fn weeble() -> String {
+    let blockheight = blockheight().await;
+    let blockheight = blockheight.parse::<u64>().unwrap();
+    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+    let weeble = timestamp / blockheight;
+    //println!("{}", weeble);
+    weeble.to_string()
+}
+pub async fn blockheight() -> String {
+    let blockheight = reqwest::get("https://mempool.space/api/blocks/tip/height")
+        .await
+        .expect("REASON")
+        .text()
+        .await;
+    blockheight.unwrap()
+}
+pub async fn wobble() -> String {
+    let blockheight = blockheight().await;
+    let blockheight = blockheight.parse::<u64>().unwrap();
+    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+    let wobble = timestamp % blockheight;
+    //println!("{}", wobble);
+    wobble.to_string()
+}
+
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key
     let keys = match private_key {

@@ -1,7 +1,6 @@
 pub mod init;
 pub mod list;
 pub mod login;
-pub mod ngit;
 pub mod pull;
 pub mod push;
 pub mod send;
