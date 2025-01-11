@@ -8,6 +8,10 @@ use nostr_sdk::hashes::{Hash, sha1::Hash as Sha1Hash};
 
 use crate::sub_commands::list::{get_commit_id_from_patch, tag_value};
 
+mod gitminer;
+mod worker;
+mod repo;
+
 pub struct Repo {
     git_repo: git2::Repository,
 }
