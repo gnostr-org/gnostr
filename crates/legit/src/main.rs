@@ -84,26 +84,26 @@ fn main() -> io::Result<()> {
 
     let start = time::get_time();
     let epoch = get_epoch_ms();
-    //println!("{}", epoch);
+    println!("{}", epoch);
     let system_time = SystemTime::now();
 
     let datetime: DateTime<Utc> = system_time.into();
-    //println!("{}", datetime.format("%d/%m/%Y %T/%s"));
-    //println!("{}", datetime.format("%d/%m/%Y %T"));
+    println!("{}", datetime.format("%d/%m/%Y %T/%s"));
+    println!("{}", datetime.format("%d/%m/%Y %T"));
 
     //let cwd = get_current_working_dir();
     let cwd = get_pwd();
     //#[cfg(debug_assertions)]
     //println!("Debugging enabled");
-    //println!("{:#?}", cwd);
+    println!("{:#?}", cwd);
     let state = repo::state();
-    //println!("{:#?}", state);
+    println!("{:#?}", state);
     //
     let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
-    //println!("repo_root={:?}", repo_root.as_str());
+    println!("repo_root={:?}", repo_root.as_str());
     let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
-    //println!("{} state={:?}", repo.path().display(), repo.state());
-    //println!("state={:?}", repo.state());
+    println!("{} state={:?}", repo.path().display(), repo.state());
+    println!("state={:?}", repo.state());
 
     //println!("clean {:?}", repo.state());
     #[allow(clippy::if_same_then_else)]
@@ -135,7 +135,7 @@ fn main() -> io::Result<()> {
     let path = String::from_utf8(repo_path.stdout)
         .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
         .unwrap();
-    //println!("path={:?}", path);
+    println!("path={:?}", path);
 
     //#!/bin/bash
     //declare -a RELAYS
@@ -153,31 +153,31 @@ fn main() -> io::Result<()> {
     //gnostr-get-relays
 
     //#!/bin/bash
-    //gnostr-git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
+    //git config --global --replace-all gnostr.relays "$(gnostr-get-relays)" #&& git config -l | grep gnostr.relays
     #[allow(clippy::if_same_then_else)]
     let set_relays = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", "gnostr-set-relays"])
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     } else if cfg!(target_os = "macos") {
         Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     } else if cfg!(target_os = "linux") {
         Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     } else {
         Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
-            .expect("try:\ngnostr-git config -l | grep gnostr.relays")
+            .expect("try:\ngit config -l | grep gnostr.relays")
     };
 
     let count = thread::available_parallelism()?.get();
@@ -245,106 +245,13 @@ fn main() -> io::Result<()> {
     //sha256sum <(echo gnostr-legit)
     let pwd_hash: String = format!("{:x}", hasher.finalize());
     //println!("pwd_hash={:?}", pwd_hash);
-
-    #[allow(clippy::if_same_then_else)]
-    let gnostr_weeble = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "gnostr-weeble || echo weeble"])
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
-            .output()
-            .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
-            .output()
-            .expect("failed to execute process")
-    };
-
-    let weeble = String::from_utf8(gnostr_weeble.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-
-    //assert_eq!(weeble.is_empty(), true); // a)
-    //
-    //println!("weeble={}", weeble);
-
-    #[allow(clippy::if_same_then_else)]
-    let gnostr_wobble = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "gnostr-wobble"])
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-wobble || echo wobble")
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-wobble || echo wobble")
-            .output()
-            .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-wobble || echo wobble")
-            .output()
-            .expect("failed to execute process")
-    };
-
-    let wobble = String::from_utf8(gnostr_wobble.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-    //println!("wobble={}", wobble);
-    #[allow(clippy::if_same_then_else)]
-    let gnostr_blockheight = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "gnostr-blockheight"])
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-blockheight || echo blockheight")
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-blockheight || echo blockheight")
-            .output()
-            .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg("gnostr-blockheight || echo blockheight")
-            .output()
-            .expect("failed to execute process")
-    };
-
-    let blockheight = String::from_utf8(gnostr_blockheight.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-    //println!("blockheight={}", blockheight);
-
     let path = env::current_dir()?;
 
-    //println!("The current directory is {}", path.display());
+    println!("The current directory is {}", path.display());
 
+    let weeble = String::from("");
+    let wobble = String::from("");
+    let blockheight = String::from("");
     let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
         target: "00000".to_string(), //default 00000
@@ -401,74 +308,6 @@ fn main() -> io::Result<()> {
     //println!("s: {:?}", s);
     // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
     //
-    //
-    //shell test
-    let touch = Command::new("sh")
-        .args(["-c", "touch ", &hash])
-        .output()
-        .expect("failed to execute process");
-    let touch_event = String::from_utf8(touch.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-    let cat = Command::new("sh")
-        .args(["-c", "touch ", &hash])
-        .output()
-        .expect("failed to execute process");
-    let cat_event = String::from_utf8(cat.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-    //shell test
-    //git rev-parse --verify HEAD
-    #[allow(clippy::if_same_then_else)]
-    let event = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-                .args(["/C", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
-                .output()
-                .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-                .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git show HEAD)\" "])
-                .output()
-                .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-                .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
-                .output()
-                .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-                .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
-                .output()
-                .expect("failed to execute process")
-    };
-
-    let gnostr_event = String::from_utf8(event.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-
-    //assert...
-    //echo gnostr|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
-
-    //gnostr-legit must only return a sha256 generated by the
-    //recent commit hash
-    //to enable nested commands
-    //REF:
-    //gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD")
-    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD"))
-    //Example:
-    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "#gnostr will exist!")) --envelope --content "$(gnostr-git log -n 1)" | gnostr-cat -u wss://relay.damus.io
-    //
-    //
-    //
-    let duration = time::get_time() - start;
-    //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
-    //
-    //
-    let relay_url = "wss://nos.lol";
-    let event: Event = serde_json::from_str(&gnostr_event).unwrap();
-    gnostr_bins::post_event(relay_url, event);
-
-    println!("{}", gnostr_event);
     Ok(())
 }
 
