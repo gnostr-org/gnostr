@@ -20,7 +20,7 @@ use std::{process::exit, str::FromStr, time::Duration};
 use clap::Args;
 use nostr_sdk::prelude::*;
 
-use crate::utils::{create_client, parse_private_key};
+use crate::utils::{create_client, parse_private_key, weeble, blockheight, wobble};
 
 use reqwest::get;
 use reqwest::header::{AUTHORIZATION, HeaderMap};
@@ -58,31 +58,6 @@ pub struct AwardBadgeSubCommandArgs {
     #[clap(short, long)]
     /// shortname with no spaces or special characters
     pub identifier: Option<String>,
-}
-
-pub async fn weeble() -> String {
-    let blockheight = blockheight().await;
-    let blockheight = blockheight.parse::<u64>().unwrap();
-    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
-    let weeble = timestamp / blockheight;
-    //println!("{}", weeble);
-    weeble.to_string()
-}
-pub async fn blockheight() -> String {
-    let blockheight = reqwest::get("https://mempool.space/api/blocks/tip/height")
-        .await
-        .expect("REASON")
-        .text()
-        .await;
-    blockheight.unwrap()
-}
-pub async fn wobble() -> String {
-    let blockheight = blockheight().await;
-    let blockheight = blockheight.parse::<u64>().unwrap();
-    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
-    let wobble = timestamp % blockheight;
-    //println!("{}", wobble);
-    wobble.to_string()
 }
 
 #[allow(clippy::too_many_lines)]
