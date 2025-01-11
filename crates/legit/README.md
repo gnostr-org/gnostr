@@ -1,10 +1,6 @@
-# [gnostr-legit](https://github.com/gnostr-org/gnostr-legit.git) [![gnostr-legit](https://github.com/gnostr-org/gnostr-legit/actions/workflows/automate.yml/badge.svg)](https://github.com/gnostr-org/gnostr-legit/actions/workflows/automate.yml)
+# [Legit](https://github.com/RandyMcMillan/legit.git) [![legit](https://github.com/RandyMcMillan/legit/actions/workflows/automate.yml/badge.svg)](https://github.com/RandyMcMillan/legit/actions/workflows/automate.yml)
 
-##### gnostr-legit adds Proof of Work (PoW) to a git commit hash prefix.
-
-###### gnostr-legit is part of the *[gnostr.org](https://gnostr.org)* command line utility suite. 
-
----
+#### Legit adds Proof of Work (PoW) to a git commit hash prefix.
 
 #### install rustup:
 
@@ -15,11 +11,15 @@ curl -sSf https://static.rust-lang.org/rustup.sh | sh
 #### cargo:
 
 ```
-cargo install gnostr-legit
+cargo install legit
 ```
 
-example:
+#### `Example`
 
 ```
-gnostr-legit . -p 00000 -m "gnostr-legit commit"
+git log | grep "0000006"
 ```
+
+`commit` [000000615b90566ae8559dd45852190edea79a8c](https://github.com/RandyMcMillan/legit/commit/000000615b90566ae8559dd45852190edea79a8c)
+
+`commit` [000000615b90566ae8559dd45852190edea79a8c](https://github.com/RandyMcMillan/legit/commit/000000615b90566ae8559dd45852190edea79a8c)

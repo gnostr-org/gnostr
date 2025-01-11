@@ -1,5 +1,3 @@
+.gnostr
 target/
 .DS_Store
-.gnostr
-.nvmrc
-.gnostr/proxy
