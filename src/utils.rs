@@ -64,7 +64,7 @@ pub async fn create_client(keys: &Keys, relays: Vec<String>, difficulty: u8) -> 
         .send_timeout(Some(Duration::from_secs(15)))
         .wait_for_send(true)
         .difficulty(difficulty);
-    let client = Client::with_opts(keys, opts);
+    let client = nostr_sdk::Client::with_opts(keys, opts);
     client.add_relays(relays).await?;
     client.connect().await;
     Ok(client)
