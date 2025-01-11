@@ -121,6 +121,7 @@ impl Connect for Client {
         &self.blaster_relays
     }
 
+	///
     async fn send_event_to(&self, url: &str, event: Event) -> Result<nostr::EventId> {
         self.client.add_relay(url).await?;
         #[allow(clippy::large_futures)]

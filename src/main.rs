@@ -22,14 +22,14 @@ pub struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
     //command: Commands,
-    /// Hex or bech32 formatted private key
-    #[arg(long, global = true, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
-    sec: Option<String>,
+    ///// Hex or bech32 formatted private key
+    //#[arg(long, global = true, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    //sec: Option<String>,
     /// Relay to connect to
     #[arg(long, global = true, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
     relays: Vec<String>,
-    /// Proof of work difficulty target
-    #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
+    /// main.rs Proof of work difficulty target
+    #[arg(short, long, global = true, action = clap::ArgAction::Append, default_value_t = 0)]
     difficulty_target: u8,
     /// nsec or hex private key
     #[arg(long, global = true, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
