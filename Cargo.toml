@@ -56,6 +56,7 @@ syntect = { version = "5.2", default-features = false, features = [
     "parsing",
     "default-syntaxes",
     "default-themes",
+    "plist-load",
     "html",
 ] }
 tui-textarea = "0.7"
