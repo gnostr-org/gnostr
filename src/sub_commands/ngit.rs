@@ -131,13 +131,28 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 
 
 	//filter
+	//login
+    if args.clone().into_iter().skip(1).any(|arg| arg == "login".to_string()) {
+        println!("The argument 'login' was found after the subcommand.");
+    } else {
+        println!("The argument 'login' was not found after the subcommand.");
+    }
+	//init
     if args.clone().into_iter().skip(1).any(|arg| arg == "init".to_string()) {
         println!("The argument 'init' was found after the subcommand.");
-        // Your logic to handle the presence of "-t"
     } else {
         println!("The argument 'init' was not found after the subcommand.");
-        // Your logic if "-t" is not present
     }
+	//send
+    if args.clone().into_iter().skip(1).any(|arg| arg == "send".to_string()) {
+        println!("The argument 'send' was found after the subcommand.");
+    } else {
+        println!("The argument 'send' was not found after the subcommand.");
+    }
+
+
+
+
     if args.clone().into_iter().skip(3).any(|arg| arg == "-t".to_string()) {
         println!("The argument '-t' was found after the subcommand.");
         // Your logic to handle the presence of "-t"
