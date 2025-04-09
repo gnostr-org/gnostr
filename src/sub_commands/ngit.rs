@@ -117,9 +117,56 @@ enum Commands {
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     let args: Vec<String> = env::args().collect();
-    let _ = args.clone().into_iter().skip(1);
+    let _ = args.clone().into_iter().skip(2);
     println!("ngit:args={:?}", args);
     println!("ngit:sub_command_args={:?}", sub_command_args);
+    println!("\n\n\nngit:sub_command_args.command={:?}\n\n\n", sub_command_args.command);
+    //println!("\n\n\nngit:sub_command_args.command={:?}\n\n\n", sub_command_args.command.title);
+
+
+    //let args_clone = args.clone().into_iter().skip(3);
+	//for arg_clone in args_clone {
+	//	println!("clone\n{}", arg_clone);
+	//}
+
+
+	//filter
+    if args.clone().into_iter().skip(1).any(|arg| arg == "init".to_string()) {
+        println!("The argument 'init' was found after the subcommand.");
+        // Your logic to handle the presence of "-t"
+    } else {
+        println!("The argument 'init' was not found after the subcommand.");
+        // Your logic if "-t" is not present
+    }
+    if args.clone().into_iter().skip(3).any(|arg| arg == "-t".to_string()) {
+        println!("The argument '-t' was found after the subcommand.");
+        // Your logic to handle the presence of "-t"
+    } else {
+        println!("The argument '-t' was not found after the subcommand.");
+        // Your logic if "-t" is not present
+    }
+
+	let mut arg_count = 0;
+	for arg in &args.clone() {
+		println!("{}:{}", arg_count, arg); arg_count +=1;
+	}
+    //match args.clone() {
+	//	////
+    //    //Commands::Login(args) => sub_commands::login::launch(&cli, args).await,
+	//	////
+    //    //Commands::Init(args) => sub_commands::init::launch(&cli, args).await,
+	//	////
+    //    //Commands::Send(args) => sub_commands::send::launch(&cli, args).await,
+	//	////
+    //    //Commands::List => sub_commands::list::launch().await,
+	//	////
+    //    //Commands::Pull => sub_commands::pull::launch().await,
+	//	////
+    //    //Commands::Push(args) => sub_commands::push::launch(&cli, args).await,
+    //}
+
+
+
     //let cli = NgitCli::parse();
     //if args[1] == "init" {println!("args[1]:{}", args[1]);}
     if args[2] == "init" {
