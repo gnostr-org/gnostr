@@ -13,8 +13,6 @@ mod utils;
 #[command(version = "0.0.1")]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[command(subcommand)]
-    command: Commands,
     /// Hex or bech32 formatted private key
     #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     sec: Option<String>,
@@ -33,6 +31,8 @@ struct Cli {
     /// disable spinner animations
     #[arg(long, action)]
     disable_cli_spinners: bool,
+    #[command(subcommand)]
+    command: Commands,
 }
 
 #[derive(Subcommand)]
