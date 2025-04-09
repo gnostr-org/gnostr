@@ -3,7 +3,7 @@ use nostr_sdk::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct CreatePublicChannelSubCommand {
     /// Channel name
     #[arg(short, long)]

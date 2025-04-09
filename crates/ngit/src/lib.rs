@@ -13,12 +13,12 @@ pub mod login;
 pub mod repo_ref;
 pub mod sub_commands;
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
-pub struct Cli {
+pub struct NgitCli {
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: NgitCommands,
     /// nsec or hex private key
     #[arg(short, long, global = true)]
     pub nsec: Option<String>,
@@ -30,8 +30,8 @@ pub struct Cli {
     pub disable_cli_spinners: bool,
 }
 
-#[derive(Subcommand)]
-pub enum Commands {
+#[derive(Debug, Subcommand)]
+pub enum NgitCommands {
     /// signal you are this repo's maintainer accepting proposals via nostr
     Init(sub_commands::init::InitSubCommandArgs),
     /// issue commits as a proposal

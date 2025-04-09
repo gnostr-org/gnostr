@@ -3,7 +3,7 @@ use nostr_sdk::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct CreateBadgeSubCommand {
     /// Unique identifier for the badge
     #[arg(short, long)]

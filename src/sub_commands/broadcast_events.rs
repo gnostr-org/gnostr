@@ -3,7 +3,7 @@ use nostr_sdk::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct BroadcastEventsSubCommand {
     /// Input file path, should contain an array of JSON events
     #[arg(short, long)]

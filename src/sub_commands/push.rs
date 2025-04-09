@@ -18,7 +18,7 @@ use ngit::{
         },
         send::{event_is_revision_root, event_to_cover_letter, generate_patch_event, send_events},
     },
-    Cli,
+    NgitCli,
 };
 
 #[derive(Debug, clap::Args)]
@@ -32,7 +32,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &NgitCli, args: &SubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let (main_or_master_branch_name, _) = git_repo

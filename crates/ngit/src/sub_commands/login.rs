@@ -5,7 +5,7 @@ use clap;
 use crate::client::Client;
 #[cfg(test)]
 use crate::client::MockConnect;
-use crate::{client::Connect, login, Cli};
+use crate::{client::Connect, login, NgitCli};
 
 #[derive(Debug, clap::Args)]
 pub struct LoginSubCommandArgs {
@@ -14,7 +14,7 @@ pub struct LoginSubCommandArgs {
     pub offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &LoginSubCommandArgs) -> Result<()> {
+pub async fn launch(args: &NgitCli, command_args: &LoginSubCommandArgs) -> Result<()> {
     if command_args.offline {
         login::launch(&args.nsec, &args.password, None).await?;
         Ok(())

@@ -2,7 +2,7 @@ use crate::utils::{create_client, parse_private_key};
 use clap::Args;
 use nostr_sdk::prelude::*;
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct SendChannelMessageSubCommand {
     /// Channel id to send message to (must be hex)
     #[arg(short, long)]

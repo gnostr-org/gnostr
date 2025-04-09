@@ -2,12 +2,12 @@ use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
 
 //use ngit::*;
-
+use ngit::NgitCli;
 mod sub_commands;
 mod utils;
 
 /// Simple CLI application to interact with nostr
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
@@ -35,10 +35,10 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 enum Commands {
     /// Ngit sub commands
-    Ngit(sub_commands::ngit::NgitSubCommand),
+    //Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.
     SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
     /// Send text note
@@ -89,10 +89,11 @@ enum Commands {
 async fn main() -> Result<()> {
     // Parse input
     let args: Cli = Cli::parse();
+    //let ngit_args: NgitCli = NgitCli::parse();
 
     // Post event
     match &args.command {
-        Commands::Ngit(sub_command_args) => sub_commands::ngit::ngit(sub_command_args).await,
+        //Commands::Ngit(sub_command_args) => sub_commands::ngit::ngit(NgitCli::parse(), sub_command_args).await,
         Commands::SetMetadata(sub_command_args) => {
             {
                 sub_commands::set_metadata::set_metadata(
@@ -252,10 +253,17 @@ async fn main() -> Result<()> {
             )
             .await
         }
-        _ => Ok({
-            println!("{:?}", args.nsec.unwrap());
-            println!("{:?}", args.password.unwrap());
-            println!("{:?}", args.sec.unwrap());
-        }),
+        _ => match &args.command {
+//			Commands::Ngit(sub_command_args) => sub_commands::ngit::ngit(NgitCli::parse(), sub_command_args).await,
+            //println!("{:?}", args.nsec.unwrap());
+            //println!("{:?}", args.password.unwrap());
+            //println!("{:?}", args.sec.unwrap());
+			//sub_commands::ngit::ngit(NgitCli::parse(), sub_command_args).await?;
+			//let ngit_args: NgitCli = NgitCli::parse();
+			_ => Ok((
+
+
+			))
+		},
     }
 }

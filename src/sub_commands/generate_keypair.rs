@@ -1,7 +1,7 @@
 use clap::Args;
 use nostr_sdk::prelude::*;
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct GenerateKeypairSubCommand {
     /// Print keys in hex. Defaults to printing bech32 encoded keys.
     #[arg(short, long, default_value = "false")]

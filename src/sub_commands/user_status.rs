@@ -8,7 +8,7 @@ use nostr_sdk::TagKind::SingleLetter;
 
 use crate::utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key};
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct UserStatusSubCommand {
     /// Text note content
     #[arg(short, long)]

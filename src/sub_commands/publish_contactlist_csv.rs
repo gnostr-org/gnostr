@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use crate::utils::{create_client, parse_private_key};
 
-#[derive(Args)]
+#[derive(Debug, Args)]
 pub struct PublishContactListCsvSubCommand {
     /// Path to CSV file. CSV file should be have the following format:
     /// pubkey,relay_url,petname. See example in resources/contact_list.csv

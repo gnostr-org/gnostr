@@ -12,7 +12,7 @@ use crate::{
     git::{Repo, RepoActions},
     login,
     repo_ref::{self, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml, RepoRef},
-    Cli,
+    NgitCli,
 };
 
 #[derive(Debug, clap::Args)]
@@ -44,7 +44,7 @@ pub struct InitSubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &InitSubCommandArgs) -> Result<()> {
+pub async fn launch(cli_args: &NgitCli, args: &InitSubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let root_commit = git_repo

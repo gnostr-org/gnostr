@@ -5,7 +5,7 @@ use clap;
 use ngit::client::Client;
 #[cfg(test)]
 use ngit::client::MockConnect;
-use ngit::{client::Connect, login, Cli};
+use ngit::{client::Connect, login, NgitCli};
 
 #[derive(clap::Args)]
 pub struct SubCommandArgs {
@@ -14,7 +14,7 @@ pub struct SubCommandArgs {
     offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &NgitCli, command_args: &SubCommandArgs) -> Result<()> {
     if command_args.offline {
         login::launch(&args.nsec, &args.password, None).await?;
         Ok(())
