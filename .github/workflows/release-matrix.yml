@@ -1,0 +1,228 @@
+name: build-install-matrix
+
+# Controls when the action will run.
+on:
+  schedule:
+    - cron: '*/10 * * * *' # run every 10 minutes
+  pull_request:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'ma**'
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'ma**'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    env:
+      GNOSTR: "gnostr"
+      NOSTRIL: "nostril"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        rustup: [stable]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: echo test
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo NOSTRIL=${{ env.NOSTRIL }}
+          echo MEMPOOL=${{ env.MEMPOOL }}
+        env:
+          MEMPOOL: "mempool"
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'true'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+        #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap nostorg/nostr || true
+        #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      - run: brew tap randymcmillan/homebrew-randymcmillan || true
+        #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      - run: rustup default ${{ matrix.rustup }}
+      - run: cargo search gnostr --limit 100
+      - run: cargo install --locked cargo-binstall@1.9.0
+      #- run: cargo-binstall --no-confirm gnostr-bins
+      - run: cargo-binstall --no-confirm mempool_space
+      - run: cargo-binstall --no-confirm gnostr-xq
+      - run: mkdir -p ~/bin
+
+      #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      ## objective: ensure make detect installs all needed depends/libs/etc
+      ## make detect is first for brew install sequence OR sudo make detect for apt install
+      - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
+      - run: make detect || sudo make detect
+      - run: pipx install virtualenv || true
+
+      ## objective: test non-cmake build gnostr-am
+      - run: make all || sudo make all
+      - run: make install || sudo make install
+      - run: ./nostril --hash
+      - run: ./nostril --hash
+      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+      ##
+      ## WEEBLE-WOBBLE
+      ## GNOSTR DETEMINISTIC ALIASES
+      ##
+      - run: |
+          PRIVATE_KEY=$(./nostril --hash)
+          echo PRIVATE_KEY=$PRIVATE_KEY
+
+          WEEBLE=$(gnostr-weeble)
+          echo WEEBLE=$WEEBLE
+          WEEBLE_SHA256=$(nostril --hash $(gnostr-weeble))
+          echo WEEBLE_SHA256=$WEEBLE_SHA256
+
+          BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
+          echo BLOCKS_TIP_HASH=$BLOCKS_TIP_HASH
+
+          BLOCKHEIGHT=$(gnostr-blockheight)
+          echo BLOCKHEIGHT=$BLOCKHEIGHT
+
+          BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
+          echo BLOCKHEIGHT_SHA256=$BLOCKHEIGHT_SHA256
+
+          WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
+          echo WEEBLE_ALIAS=$WEEBLE_ALIAS
+
+          ./nostril --sec $PRIVATE_KEY \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr-$BLOCKS_TIP_HASH \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event -r wss://e.nos.lol || true
+
+          ./nostril --sec $BLOCKS_TIP_HASH \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr-$BLOCKS_TIP_HASH \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event -r wss://e.nos.lol || true
+
+          ./nostril --sec $BLOCKHEIGHT_SHA256 \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr-$BLOCKS_TIP_HASH \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event -r wss://e.nos.lol || true
+
+          ./nostril --sec $WEEBLE_SHA256 \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr-$BLOCKS_TIP_HASH \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event -r wss://e.nos.lol || true
+
+          ./nostril --sec $WEEBLE_ALIAS \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t gnostr-$BLOCKS_TIP_HASH \
+          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          --tag weeble $(gnostr-weeble) \
+          --tag blockheight $(gnostr-blockheight) \
+          --tag wobble $(gnostr-wobble) | \
+          gnostr-post-event -r wss://e.nos.lol || true
+
+          ./nostril --sec $(mempool-space --blocks_tip_hash) \
+          --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
+          --tag blocks_tip_height $(mempool-space --blocks_tip_height) |
+          gnostr-post-event -r wss://e.nos.lol || true
+
+          ./mempool_space_bot wss://e.nos.lol || true
+
+      - run: ./nip-0034 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
+
+      - run: ./nip-0034 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
+
+      ## objective: test cmake build gnostr
+      ## objective: test cargo build/install gnostr-bins
+      - run: cmake .
+      - run: V=1 make all || sudo make all
+      - run: V=1 make nostril || sudo make nostril
+      - run: V=1 make install || sudo make install
+
+      - run: V=1 sudo make docs || true
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
