@@ -100,15 +100,15 @@ jobs:
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
       - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
-      - run: make detect || sudo make detect
+      ##- run: make detect || sudo make detect
       - run: pipx install virtualenv || true
 
       ## objective: test non-cmake build gnostr-am
       - run: make all || sudo make all
-      - run: make install || sudo make install
-      - run: ./nostril --hash
-      - run: ./nostril --hash
-      - run: ./nostril --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+      - run: make cargo-install || sudo make install
+      - run: gnostr hash
+      - run: gnostr
+      - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
       ##
       ## WEEBLE-WOBBLE
       ## GNOSTR DETEMINISTIC ALIASES
@@ -134,7 +134,7 @@ jobs:
           WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
 
-          ./nostril --sec $PRIVATE_KEY \
+          gnostr --sec $PRIVATE_KEY \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr-$BLOCKS_TIP_HASH \
           --tag blocks_tip_hash $BLOCKS_TIP_HASH \
@@ -143,7 +143,7 @@ jobs:
           --tag wobble $(gnostr-wobble) | \
           gnostr-post-event -r wss://e.nos.lol || true
 
-          ./nostril --sec $BLOCKS_TIP_HASH \
+          gnostr --sec $BLOCKS_TIP_HASH \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr-$BLOCKS_TIP_HASH \
           --tag blocks_tip_hash $BLOCKS_TIP_HASH \
@@ -152,7 +152,7 @@ jobs:
           --tag wobble $(gnostr-wobble) | \
           gnostr-post-event -r wss://e.nos.lol || true
 
-          ./nostril --sec $BLOCKHEIGHT_SHA256 \
+          gnostr --sec $BLOCKHEIGHT_SHA256 \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr-$BLOCKS_TIP_HASH \
           --tag blocks_tip_hash $BLOCKS_TIP_HASH \
@@ -161,7 +161,7 @@ jobs:
           --tag wobble $(gnostr-wobble) | \
           gnostr-post-event -r wss://e.nos.lol || true
 
-          ./nostril --sec $WEEBLE_SHA256 \
+          gnostr --sec $WEEBLE_SHA256 \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr-$BLOCKS_TIP_HASH \
           --tag blocks_tip_hash $BLOCKS_TIP_HASH \
@@ -170,7 +170,7 @@ jobs:
           --tag wobble $(gnostr-wobble) | \
           gnostr-post-event -r wss://e.nos.lol || true
 
-          ./nostril --sec $WEEBLE_ALIAS \
+          gnostr --sec $WEEBLE_ALIAS \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr-$BLOCKS_TIP_HASH \
           --tag blocks_tip_hash $BLOCKS_TIP_HASH \
@@ -179,7 +179,7 @@ jobs:
           --tag wobble $(gnostr-wobble) | \
           gnostr-post-event -r wss://e.nos.lol || true
 
-          ./nostril --sec $(mempool-space --blocks_tip_hash) \
+          gnostr --sec $(mempool-space --blocks_tip_hash) \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
           --tag blocks_tip_height $(mempool-space --blocks_tip_height) |
           gnostr-post-event -r wss://e.nos.lol || true
@@ -194,10 +194,10 @@ jobs:
 
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
-      - run: cmake .
-      - run: V=1 make all || sudo make all
-      - run: V=1 make nostril || sudo make nostril
-      - run: V=1 make install || sudo make install
+      ##- run: cmake .
+      ##- run: V=1 make all || sudo make all
+      ##- run: V=1 make nostril || sudo make nostril
+      ##- run: V=1 make install || sudo make install
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
