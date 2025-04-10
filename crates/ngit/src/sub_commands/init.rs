@@ -12,7 +12,6 @@ use crate::{
     git::{Repo, RepoActions},
     login,
     repo_ref::{self, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml, RepoRef},
-    Cli,
 };
 
 #[derive(Debug, clap::Args)]
