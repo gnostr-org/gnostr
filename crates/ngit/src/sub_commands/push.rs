@@ -29,10 +29,15 @@ pub struct SubCommandArgs {
     #[arg(long, action)]
     /// dont prompt for cover letter when force pushing
     no_cover_letter: bool,
+    #[arg(long, action)]
+    /// dont prompt for cover letter when force pushing
+    nsec: Option<String>,
+    password: Option<String>,
+	disable_cli_spinners: bool,
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &SubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let (main_or_master_branch_name, _) = git_repo
@@ -105,13 +110,15 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
     if args.force {
         println!("preparing to force push proposal revision...");
         sub_commands::send::launch(
-            cli_args,
             &sub_commands::send::SubCommandArgs {
                 since_or_range: String::new(),
                 in_reply_to: vec![proposal_root_event.id.to_string()],
                 title: None,
                 description: None,
                 no_cover_letter: args.no_cover_letter,
+                password: args.password.clone(),
+				nsec: args.nsec.clone(),
+				disable_cli_spinners: args.disable_cli_spinners,
             },
         )
         .await?;
@@ -148,7 +155,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
         ahead.len()
     );
 
-    let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
+    let (keys, user_ref) = login::launch(&args.nsec, &args.password, Some(&client)).await?;
 
     client.set_keys(&keys).await;
 
@@ -178,7 +185,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
         patch_events,
         user_ref.relays.write(),
         repo_ref.relays.clone(),
-        !cli_args.disable_cli_spinners,
+        !args.disable_cli_spinners,
     )
     .await?;
 

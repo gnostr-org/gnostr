@@ -44,10 +44,15 @@ pub struct SubCommandArgs {
     #[clap(short, long)]
     /// optional cover letter description
     pub(crate) description: Option<String>,
+    #[clap(short, long)]
+    /// optional cover letter description
+    pub nsec: Option<String>,
+    pub password: Option<String>,
+	pub disable_cli_spinners: bool,
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &SubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let (main_branch_name, main_tip) = git_repo
@@ -178,7 +183,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
     } else {
         None
     };
-    let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
+    let (keys, user_ref) = login::launch(&args.nsec, &args.password, Some(&client)).await?;
 
     client.set_keys(&keys).await;
 
@@ -233,7 +238,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
         events.clone(),
         user_ref.relays.write(),
         repo_ref.relays.clone(),
-        !cli_args.disable_cli_spinners,
+        !args.disable_cli_spinners,
     )
     .await?;
 

@@ -33,7 +33,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 #[derive(Debug)]
 pub enum Commands {
-    /// signal you are this repo's maintainer accepting proposals via nostr
+    /// ngit/src/lib:signal you are this repo's maintainer accepting proposals via nostr
     Init(sub_commands::init::SubCommandArgs),
     /// issue commits as a proposal
     Send(sub_commands::send::SubCommandArgs),
