@@ -107,7 +107,7 @@ jobs:
       - run: make all || sudo make all
       - run: make cargo-install || sudo make install
       - run: gnostr --help
-      - run: gnostr ngit
+      - run: gnostr ngit 2>/dev/null
       #- run: gnostr ngit init
       - run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
       ##
