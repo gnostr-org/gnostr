@@ -106,7 +106,7 @@ jobs:
 
       ## objective: test non-cmake build gnostr-am
       - run: make all || sudo make all
-      - run: make cargo-install || sudo make install
+      - run: make cargo-install || sudo make cargo-install
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       #- run: gnostr ngit init

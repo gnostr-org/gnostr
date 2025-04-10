@@ -86,7 +86,62 @@ fn install_pkg_config() {
 }
 
 fn main() {
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+
+    match target_arch.as_str() {
+        "x86_64" => {
+            println!("cargo:warning=Building for x86_64 architecture.");
+            println!("cargo:rustc-cfg=target_arch_x86_64");
+            // Add x86_64 specific build logic here
+
+            if target_os == "linux" {}
+            if target_os == "macos" {}
+            if target_os == "windows" {}
+        }
+        "aarch64" => {
+            println!("cargo:warning=Building for aarch64 architecture.");
+            println!("cargo:rustc-cfg=target_arch_aarch64");
+            // Add aarch64 specific build logic here
+            if target_os == "linux" {}
+            if target_os == "macos" {}
+            if target_os == "windows" {}
+        }
+        "arm" => {
+            println!("cargo:warning=Building for arm architecture.");
+            println!("cargo:rustc-cfg=target_arch_arm");
+            // Add arm specific build logic here
+            if target_os == "linux" {}
+            if target_os == "macos" {}
+            if target_os == "windows" {}
+        }
+        "wasm32" => {
+            println!("cargo:warning=Building for wasm32 architecture.");
+            println!("cargo:rustc-cfg=target_arch_wasm32");
+            // Add wasm32 specific build logic here
+            if target_os == "linux" {}
+            if target_os == "macos" {}
+            if target_os == "windows" {}
+        }
+        "riscv64" => {
+            println!("cargo:warning=Building for riscv64 architecture.");
+            println!("cargo:rustc-cfg=target_arch_riscv64");
+            // Add riscv64 specific build logic here
+            if target_os == "linux" {}
+            if target_os == "macos" {}
+            if target_os == "windows" {}
+        }
+        _ => {
+            println!(
+                "cargo:warning=Building for an unknown architecture: {}",
+                target_arch
+            );
+            // Handle unknown architectures or provide a default
+            if target_os == "linux" {}
+            if target_os == "macos" {}
+            if target_os == "windows" {}
+        }
+    }
 
     if !if_windows() {
         //try
