@@ -1,120 +1,63 @@
-alias d := doc
-alias l := lint
-alias uf := update-flake-dependencies
-alias uc := update-cargo-dependencies
-alias r := run
-alias t := cargo-test
-alias b := build
-alias c := check
-alias i := install
-alias ia := install-all
-alias in := install-ngit
-alias rr := run-release
-alias cw := cargo-watch
-
 default:
-    @just --choose || true
+  just --choose
 
-clippy:
-    cargo clippy --all-targets --all-features
+help:
+  @make help
 
-actionlint:
-    nix develop .#actionlintShell --command actionlint
+all:
+  @make all
 
-deny:
-    cargo deny check
+bin:
+  @make bin
+
+cargo-help:
+  @make cargo-help
+
+cargo-release-all:
+  @make cargo-release-all
+
+cargo-clean-release:
+  @make cargo-clean-release
+
+cargo-publish-all:
+  @make cargo-publish-all
+
+cargo-install-bins:
+  @make cargo-install-bins
+
+cargo-build:
+  @make cargo-build
+
+cargo-install:
+  @make cargo-install
+
+cargo-build-release:
+  @make cargo-build-release
+
+cargo-check:
+  @make cargo-check
+
+cargo-bench:
+  @make cargo-bench
 
 cargo-test:
-    cargo test
+  @make cargo-test
 
-cargo-diet:
-    nix develop .#lintShell --command cargo diet
+cargo-test-nightly:
+  @make cargo-test-nightly
 
-cargo-tarpaulin:
-    nix develop .#lintShell --command cargo tarpaulin --out html --exclude-files "benches/*"
+cargo-report:
+  @make cargo-report
 
-cargo-public-api:
-    nix develop .#lintShell --command cargo public-api
+cargo-run:
+  @make cargo-run
 
-cargo-diff:
-    nix develop .#lintShell --command cargo public-api diff
+cargo-dist:
+  @make cargo-dist
 
-lint:
-    nix develop .#lintShell --command cargo diet
-    nix develop .#lintShell --command cargo deny check licenses sources
-    nix develop .#lintShell --command typos
-    nix develop .#lintShell --command lychee *.md
-    nix develop .#fmtShell --command treefmt --fail-on-change
-    nix develop .#lintShell --command cargo udeps
-    nix develop .#lintShell --command cargo machete
-    nix develop .#lintShell --command cargo outdated
-    nix develop .#lintShell --command taplo lint
-    nix develop .#actionlintShell --command actionlint --ignore SC2002
-    cargo check --future-incompat-report
-    nix flake check
+cargo-dist-build:
+  @make cargo-dist-build
 
-run:
-    cargo run --bin gnostr -- -h || true
+cargo-dist-manifest:
+  @make cargo-dist-manifest
 
-install-all:install install-ngit
-install:
-    cargo install --path .
-
-install-ngit:
-    cargo install --path crates/ngit
-
-build:
-    cargo build --bins || true
-    cargo b --manifest-path crates/ngit/Cargo.toml || true
-
-build-examples:
-    cargo build --examples || true
-
-check:
-    cargo check || true
-
-run-release:
-    cargo run --release --bin gnostr -h || true
-
-doc:
-    cargo doc --open --offline
-
-# Update and then commit the `Cargo.lock` file
-update-cargo-dependencies:
-    cargo update
-    git add Cargo.lock
-    git commit Cargo.lock -m "update(cargo): \`Cargo.lock\`"
-
-# Future incompatibility report, run regularly
-cargo-future:
-    cargo check --future-incompat-report
-
-update-flake-dependencies:
-    nix flake update --commit-lock-file
-
-cargo-watch:
-    cargo watch -x check -x test -x build
-
-# build all examples
-examples:
-    nix develop --command $SHELL
-    example_list=$(cargo build --example 2>&1 | sed '1,2d' | awk '{print $1}')
-
-    # Build each example
-    # shellcheck disable=SC2068
-    for example in ${example_list[@]}; do
-    cargo build --example "$example"
-    done
-
-examples-msrv:
-    set -x
-    nix develop .#msrvShell --command
-    rustc --version
-    cargo --version
-    example_list=$(cargo build --example 2>&1 | grep -v ":")
-
-    # Build each example
-    # shellcheck disable=SC2068
-    for example in ${example_list[@]}; do
-    cargo build --example "$example"
-    done
