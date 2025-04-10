@@ -611,6 +611,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 
 [[package]]
+name = "comma"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55b672471b4e9f9e95499ea597ff64941a309b2cdbffcc46f2cc5e2d971fd335"
+
+[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -836,7 +842,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1130,6 +1136,7 @@ dependencies = [
  "nostr",
  "nostr-sdk",
  "passwords",
+ "rexpect",
  "scrypt",
  "serde",
  "serde_json",
@@ -1733,6 +1740,17 @@ dependencies = [
  "cfg-if",
  "libc",
  "memoffset 0.7.1",
+]
+
+[[package]]
+name = "nix"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2eb04e9c688eff1c89d72b407f168cf79bb9e867a9d3323ed6c01519eb9cc053"
+dependencies = [
+ "bitflags 2.5.0",
+ "cfg-if",
+ "libc",
 ]
 
 [[package]]
@@ -2360,6 +2378,17 @@ dependencies = [
  "web-sys",
  "webpki-roots",
  "winreg",
+]
+
+[[package]]
+name = "rexpect"
+version = "0.5.0"
+dependencies = [
+ "comma",
+ "nix 0.27.1",
+ "regex",
+ "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -3530,7 +3559,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "hex",
- "nix",
+ "nix 0.26.4",
  "once_cell",
  "ordered-stream",
  "rand",
