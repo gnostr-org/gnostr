@@ -94,6 +94,7 @@ jobs:
       #- run: cargo-binstall --no-confirm gnostr-bins
       - run: cargo-binstall --no-confirm mempool_space
       - run: cargo-binstall --no-confirm gnostr-xq
+      - run: cargo-binstall --no-confirm gnostr-bins
       - run: mkdir -p ~/bin
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
