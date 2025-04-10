@@ -1095,10 +1095,10 @@ dependencies = [
  "env_logger",
  "futures",
  "git2",
+ "gnostr-ngit",
  "indicatif",
  "keyring",
  "log",
- "ngit",
  "nostr",
  "nostr-sdk",
  "num_cpus",
@@ -1109,6 +1109,32 @@ dependencies = [
  "serde_yaml",
  "tokio",
  "url",
+ "zeroize",
+]
+
+[[package]]
+name = "gnostr-ngit"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chacha20poly1305",
+ "clap",
+ "console",
+ "dialoguer",
+ "directories",
+ "futures",
+ "git2",
+ "indicatif",
+ "keyring",
+ "nostr",
+ "nostr-sdk",
+ "passwords",
+ "scrypt",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tokio",
  "zeroize",
 ]
 
@@ -1696,32 +1722,6 @@ name = "negentropy"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e664971378a3987224f7a0e10059782035e89899ae403718ee07de85bec42afe"
-
-[[package]]
-name = "ngit"
-version = "1.2.1"
-dependencies = [
- "anyhow",
- "async-trait",
- "chacha20poly1305",
- "clap",
- "console",
- "dialoguer",
- "directories",
- "futures",
- "git2",
- "indicatif",
- "keyring",
- "nostr",
- "nostr-sdk",
- "passwords",
- "scrypt",
- "serde",
- "serde_json",
- "serde_yaml",
- "tokio",
- "zeroize",
-]
 
 [[package]]
 name = "nix"

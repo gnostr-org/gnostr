@@ -27,7 +27,7 @@ git2 = "0.18.1"
 indicatif = "0.17.7"
 keyring = "2.0.5"
 log = "0.4"
-ngit = { version = "1.2.1", path = "crates/ngit" }
+gnostr-ngit = { version = "0.0.1", path = "crates/ngit" }
 nostr = "0.32.0"
 nostr-sdk = "0.32.0"
 #nostr-sdk = "0.32.0"
