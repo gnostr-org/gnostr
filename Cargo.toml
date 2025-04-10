@@ -1,8 +1,8 @@
 [package]
 name = "gnostr"
-version = "0.0.50"
+version = "0.0.51"
 edition = "2021"
-description = "A CLI tool to interact with nostr"
+description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>"]
 readme = "README.md"
 homepage = "https://github.com/gnostr-org/gnostr"
