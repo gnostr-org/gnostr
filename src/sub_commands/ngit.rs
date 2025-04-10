@@ -25,7 +25,7 @@ pub struct NgitSubCommand {
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
 
-	println!("args={:?}", sub_command_args);
+	//println!("args={:?}", sub_command_args);
 	let args = sub_command_args;
     //let cli = NgitCli::parse();
     //println!("{:?}", cli);
