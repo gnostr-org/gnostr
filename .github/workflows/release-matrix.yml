@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        rustup: [stable]
+        rustup: [stable, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
