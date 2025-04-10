@@ -80,7 +80,7 @@ impl Connect for Client {
         let blaster_relays: Vec<String> = if std::env::var("NGITTEST").is_ok() {
             vec!["ws://localhost:8057".to_string()]
         } else {
-            vec!["wss://nostr.mutinywallet.com".to_string()]
+            vec!["wss://relay.damus.io".to_string()]
         };
         Client {
             client: nostr_sdk::Client::new(&nostr::Keys::generate()),
@@ -181,7 +181,7 @@ impl Connect for Client {
             .clone()
             .iter()
             // don't look for events on blaster
-            .filter(|r| !r.contains("nostr.mutinywallet.com"))
+            .filter(|r| !r.contains("")) //
             .map(|r| {
                 (
                     relays_map.get(&nostr::Url::parse(r).unwrap()).unwrap(),

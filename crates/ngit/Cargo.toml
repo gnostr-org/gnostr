@@ -1,14 +1,14 @@
 [package]
-name = "ngit"
-version = "1.2.1"
+name = "gnostr-ngit"
+version = "0.0.1"
 edition = "2021"
-description = "cli for code collaboration over nostr with nip34 support"
-authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
+description = "gnostr: fork of ngit"
+authors = ["gnostr <admin@gnostr.org>", "DanConwayDev <DanConwayDev@protonmail.com>"]
 readme = "README.md"
-homepage = "https://gitworkshop.dev/repo/ngit"
-repository = "https://codeberg.org/DanConwayDev/ngit-cli"
+homepage = "https://github.com/gnostr-org/gnostr.git"
+repository = "https://gnostr.org"
 license = "MIT"
-keywords = ["nostr", "git"]
+keywords = ["nostr", "git", "gnostr"]
 categories = ["command-line-utilities","git"]
 
 [dependencies]
