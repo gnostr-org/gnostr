@@ -9,7 +9,7 @@ homepage = "https://github.com/gnostr-org/gnostr.git"
 repository = "https://gnostr.org"
 license = "MIT"
 keywords = ["nostr", "git", "gnostr"]
-categories = ["command-line-utilities","git"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.75"
