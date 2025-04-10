@@ -18,7 +18,6 @@ use crate::{
         },
         send::{event_is_revision_root, event_to_cover_letter, generate_patch_event, send_events},
     },
-    Cli,
 };
 
 #[derive(Debug, clap::Args)]

@@ -4,7 +4,7 @@ use clap;
 use crate::client::Client;
 #[cfg(test)]
 use crate::client::MockConnect;
-use crate::{client::Connect, login, Cli};
+use crate::{client::Connect, login};
 
 #[derive(clap::Args)]
 #[derive(Debug)]

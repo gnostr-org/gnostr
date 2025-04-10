@@ -23,7 +23,6 @@ use crate::{
     git::{Repo, RepoActions},
     login,
     repo_ref::{self, RepoRef, REPO_REF_KIND},
-    Cli,
 };
 
 #[derive(Debug, clap::Args)]
