@@ -116,27 +116,63 @@ jobs:
       ## GNOSTR DETEMINISTIC ALIASES
       ##
       - run: |
-          PRIVATE_KEY=$(./nostril --hash)
+          #PRIVATE_KEY=$(./nostril --hash)
           echo PRIVATE_KEY=$PRIVATE_KEY
 
-          WEEBLE=$(gnostr-weeble)
+          #WEEBLE=$(gnostr-weeble)
           echo WEEBLE=$WEEBLE
-          WEEBLE_SHA256=$(nostril --hash $(gnostr-weeble))
+          #WEEBLE_SHA256=$(nostril --hash $(gnostr-weeble))
           echo WEEBLE_SHA256=$WEEBLE_SHA256
 
-          BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
+          #BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
           echo BLOCKS_TIP_HASH=$BLOCKS_TIP_HASH
 
-          BLOCKHEIGHT=$(gnostr-blockheight)
+          #BLOCKHEIGHT=$(gnostr-blockheight)
           echo BLOCKHEIGHT=$BLOCKHEIGHT
 
-          BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
+          #BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
           echo BLOCKHEIGHT_SHA256=$BLOCKHEIGHT_SHA256
 
-          WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
+          #WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
 
-          gnostr --sec $PRIVATE_KEY \
+          #gnostr --sec $PRIVATE_KEY \
+          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          #-t gnostr-$BLOCKS_TIP_HASH \
+          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          #--tag weeble $(gnostr-weeble) \
+          #--tag blockheight $(gnostr-blockheight) \
+          #--tag wobble $(gnostr-wobble) | \
+          #gnostr-post-event -r wss://e.nos.lol || true
+
+          #gnostr --sec $BLOCKS_TIP_HASH \
+          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          #-t gnostr-$BLOCKS_TIP_HASH \
+          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          #--tag weeble $(gnostr-weeble) \
+          #--tag blockheight $(gnostr-blockheight) \
+          #--tag wobble $(gnostr-wobble) | \
+          #gnostr-post-event -r wss://e.nos.lol || true
+
+          #gnostr --sec $BLOCKHEIGHT_SHA256 \
+          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          #-t gnostr-$BLOCKS_TIP_HASH \
+          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          #--tag weeble $(gnostr-weeble) \
+          #--tag blockheight $(gnostr-blockheight) \
+          #--tag wobble $(gnostr-wobble) | \
+          #gnostr-post-event -r wss://e.nos.lol || true
+
+          #gnostr --sec $WEEBLE_SHA256 \
+          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          #-t gnostr-$BLOCKS_TIP_HASH \
+          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          #--tag weeble $(gnostr-weeble) \
+          #--tag blockheight $(gnostr-blockheight) \
+          #--tag wobble $(gnostr-wobble) | \
+          #gnostr-post-event -r wss://e.nos.lol || true
+
+          #gnostr --sec $WEEBLE_ALIAS \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr-$BLOCKS_TIP_HASH \
           --tag blocks_tip_hash $BLOCKS_TIP_HASH \
@@ -145,43 +181,7 @@ jobs:
           --tag wobble $(gnostr-wobble) | \
           gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr --sec $BLOCKS_TIP_HASH \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-          -t gnostr-$BLOCKS_TIP_HASH \
-          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          --tag weeble $(gnostr-weeble) \
-          --tag blockheight $(gnostr-blockheight) \
-          --tag wobble $(gnostr-wobble) | \
-          gnostr-post-event -r wss://e.nos.lol || true
-
-          gnostr --sec $BLOCKHEIGHT_SHA256 \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-          -t gnostr-$BLOCKS_TIP_HASH \
-          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          --tag weeble $(gnostr-weeble) \
-          --tag blockheight $(gnostr-blockheight) \
-          --tag wobble $(gnostr-wobble) | \
-          gnostr-post-event -r wss://e.nos.lol || true
-
-          gnostr --sec $WEEBLE_SHA256 \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-          -t gnostr-$BLOCKS_TIP_HASH \
-          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          --tag weeble $(gnostr-weeble) \
-          --tag blockheight $(gnostr-blockheight) \
-          --tag wobble $(gnostr-wobble) | \
-          gnostr-post-event -r wss://e.nos.lol || true
-
-          gnostr --sec $WEEBLE_ALIAS \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-          -t gnostr-$BLOCKS_TIP_HASH \
-          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          --tag weeble $(gnostr-weeble) \
-          --tag blockheight $(gnostr-blockheight) \
-          --tag wobble $(gnostr-wobble) | \
-          gnostr-post-event -r wss://e.nos.lol || true
-
-          gnostr --sec $(mempool-space --blocks_tip_hash) \
+          #gnostr --sec $(mempool-space --blocks_tip_hash) \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
           --tag blocks_tip_height $(mempool-space --blocks_tip_height) |
           gnostr-post-event -r wss://e.nos.lol || true
