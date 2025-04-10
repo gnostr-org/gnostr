@@ -17,6 +17,8 @@ struct Cli {
     /// Hex or bech32 formatted private key
     #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     sec: Option<String>,
+    #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    nsec: Option<String>,
     /// Relay to connect to
     #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
     relays: Vec<String>,

@@ -19,6 +19,14 @@ use crate::{
 pub struct SubCommandArgs {
     #[clap(short, long)]
     /// name of repository
+    nsec: Option<String>,
+    #[clap(short, long)]
+    /// name of repository
+    password: Option<String>,
+    #[clap(long)]
+    /// name of repository
+    disable_cli_spinners: bool,
+    /// name of repository
     title: Option<String>,
     #[clap(short, long)]
     /// optional description
@@ -44,7 +52,8 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
+//pub async fn launch(args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &SubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
 
     let root_commit = git_repo
@@ -59,7 +68,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
     #[cfg(test)]
     let mut client = <MockConnect as std::default::Default>::default();
 
-    let (keys, user_ref) = login::launch(&cli_args.nsec, &cli_args.password, Some(&client)).await?;
+    let (keys, user_ref) = login::launch(&args.nsec, &args.password, Some(&client)).await?;
 
     client.set_keys(&keys).await;
 
@@ -300,7 +309,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
         vec![repo_event],
         user_ref.relays.write(),
         relays.clone(),
-        !cli_args.disable_cli_spinners,
+        !args.disable_cli_spinners,
     )
     .await?;
 
