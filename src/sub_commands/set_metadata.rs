@@ -117,8 +117,24 @@ pub async fn set_metadata(
         .add_tags(identity_tags)
         .to_pow_event(&keys, difficulty_target)
         .unwrap();
+    //let mut tag_counter = 0;
+    //for tag in &event.tags.clone() {
+    //    //println!("tag {:?}\n{:?}", tag, &event.tags[tag_counter]);
+    //    tag_counter += 1;
+    //}
+    //println!(
+    //    "{} {} {} {} {:?} {} {}",
+    //    &event.id,
+    //    &event.pubkey,
+    //    &event.created_at,
+    //    &event.kind,
+    //    &event.tags,
+    //    &event.content,
+    //    &event.sig
+    //);
     let event_id = client.send_event(event).await?;
     println!("New metadata event: {}", event_id.to_bech32()?);
+    println!("New metadata event: {}", event_id);
 
     Ok(())
 }
