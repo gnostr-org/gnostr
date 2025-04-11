@@ -26,6 +26,9 @@ pub struct TextNoteSubCommand {
     /// Seconds till expiration (NIP-40)
     #[arg(long)]
     expiration: Option<u64>,
+    // Print event id as hex
+    #[arg(long, default_value = "false")]
+    hex: bool,
 }
 
 pub async fn broadcast_textnote(
@@ -76,9 +79,13 @@ pub async fn broadcast_textnote(
     let event_id = client
         .publish_text_note(sub_command_args.content.clone(), tags)
         .await?;
-    print!("{{\"id\":\"{}\"}}", event_id.to_hex());
-    print!("{{\"bech32\":\"{}\"}}", event_id.to_bech32()?);
-
+    if sub_command_args.hex {
+        print!("{{\"id\":\"{}\"}}", event_id.to_hex());
+        print!("{{\"bech32\":\"{}\"}}", event_id.to_hex());
+    } else {
+        print!("{{\"id\":\"{}\"}}", event_id.to_bech32()?);
+        print!("{{\"bech32\":\"{}\"}}", event_id.to_bech32()?);
+    }
     std::process::exit(0);
     #[allow(unreachable_code)]
     Ok(())
