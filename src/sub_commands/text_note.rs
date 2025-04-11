@@ -76,9 +76,8 @@ pub async fn broadcast_textnote(
     let event_id = client
         .publish_text_note(sub_command_args.content.clone(), tags)
         .await?;
-    println!("Published text note with id:");
-    println!("Hex: {}", event_id.to_hex());
-    println!("Bech32: {}", event_id.to_bech32()?);
+    print!("{{\"id\":\"{}\"}}", event_id.to_hex());
+    print!("{{\"bech32\":\"{}\"}}", event_id.to_bech32()?);
 
     Ok(())
 }
