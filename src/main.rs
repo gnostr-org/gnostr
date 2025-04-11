@@ -2,6 +2,8 @@
 //use crate::Commands::CustomEvent;
 use clap::{Parser, Subcommand};
 use nostr_sdk::Result;
+use sha2::{Digest, Sha256};
+use std::env;
 mod sub_commands;
 mod utils;
 
@@ -14,12 +16,13 @@ mod utils;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
-    /// Hex or bech32 formatted private key
-    #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
-    sec: Option<String>,
+    ///
     #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     nsec: Option<String>,
-    /// Relay to connect to
+    ///
+    #[arg(long, value_name = "STRING", help = "gnostr --hash '<string>'")]
+    hash: Option<String>,
+    ///
     #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
@@ -80,7 +83,28 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse input
+    let env_args: Vec<String> = env::args().collect();
+
     let args: Cli = Cli::parse();
+
+    //if args.sec.is_some() && args.nsec.is_none() {
+    //		args.nsec = Some(args.sec.clone().expect("REASON"));
+    //}
+
+    if !args.hash.is_none() {
+        //not none
+        if let Some(input_string) = args.hash {
+            let mut hasher = Sha256::new();
+            hasher.update(input_string.as_bytes());
+            let result = hasher.finalize();
+            if env_args.len() == 3 {
+                println!("{:x}", result);
+            }
+        } else {
+        }
+    } else {
+        if args.hash.is_none() {}
+    }
 
     // Post event
     match &args.command {
@@ -88,7 +112,7 @@ async fn main() -> Result<()> {
         Some(Commands::SetMetadata(sub_command_args)) => {
             {
                 sub_commands::set_metadata::set_metadata(
-                    args.sec,
+                    args.nsec,
                     args.relays,
                     args.difficulty_target,
                     sub_command_args,
@@ -98,7 +122,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::TextNote(sub_command_args)) => {
             sub_commands::text_note::broadcast_textnote(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -107,7 +131,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::PublishContactListCsv(sub_command_args)) => {
             sub_commands::publish_contactlist_csv::publish_contact_list_from_csv_file(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -116,7 +140,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::DeleteEvent(sub_command_args)) => {
             sub_commands::delete_event::delete(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -125,7 +149,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::DeleteProfile(sub_command_args)) => {
             sub_commands::delete_profile::delete(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -134,7 +158,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::React(sub_command_args)) => {
             sub_commands::react::react_to_event(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -155,7 +179,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::CreatePublicChannel(sub_command_args)) => {
             sub_commands::create_public_channel::create_public_channel(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -164,7 +188,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::SetChannelMetadata(sub_command_args)) => {
             sub_commands::set_channel_metadata::set_channel_metadata(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -173,7 +197,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::SendChannelMessage(sub_command_args)) => {
             sub_commands::send_channel_message::send_channel_message(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -182,7 +206,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::HidePublicChannelMessage(sub_command_args)) => {
             sub_commands::hide_public_channel_message::hide_public_channel_message(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -191,7 +215,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::MutePublicKey(sub_command_args)) => {
             sub_commands::mute_publickey::mute_publickey(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -203,7 +227,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::CreateBadge(sub_command_args)) => {
             sub_commands::create_badge::create_badge(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -212,7 +236,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::AwardBadge(sub_command_args)) => {
             sub_commands::award_badge::award_badge(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -221,7 +245,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::ProfileBadges(sub_command_args)) => {
             sub_commands::profile_badges::set_profile_badges(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -230,7 +254,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::CustomEvent(sub_command_args)) => {
             sub_commands::custom_event::create_custom_event(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -239,7 +263,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::SetUserStatus(sub_command_args)) => {
             sub_commands::user_status::set_user_status(
-                args.sec,
+                args.nsec,
                 args.relays,
                 args.difficulty_target,
                 sub_command_args,
@@ -248,8 +272,9 @@ async fn main() -> Result<()> {
         }
         None => {
             {
-                println!("None");
+                //println!("gnostr -h");
             };
+            //println!("gnostr -h");
             Ok(())
         }
     }
