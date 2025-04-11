@@ -198,7 +198,8 @@ jobs:
       ## objective: test cargo build/install gnostr-bins
       - run: gnostr custom-event -k 1 -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "a|blah" -t "a|$(date +%s)" -t "$(gnostr-weeble)" -t "$(gnostr-blockheight)" -t "$(gnostr-wobble)"
       - run: gnostr custom-event -k 1 -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "a|blah" -t "a|$(date +%s)" -t "$(gnostr-weeble)" -t "$(gnostr-blockheight)" -t "$(gnostr-wobble)" --hex
-      ##- run: V=1 make all || sudo make all
+      - run: gnostr react -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f -r "hello $(date +%s)" | gnostr-xq
+      - run: gnostr react -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f -r "hello $(date +%s)" --hex | gnostr-xq
       ##- run: V=1 make nostril || sudo make nostril
       ##- run: V=1 make install || sudo make install
 
