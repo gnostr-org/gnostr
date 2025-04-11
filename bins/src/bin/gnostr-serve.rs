@@ -10,7 +10,7 @@ use hyper::body::to_bytes;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Server};
 use route_recognizer::Params;
-use sysinfo::{get_current_pid, Pid, System};
+use sysinfo::{get_current_pid, Pid, ProcessExt, System, SystemExt};
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
