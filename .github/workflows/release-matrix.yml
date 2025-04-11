@@ -197,6 +197,7 @@ jobs:
       ## objective: test cmake build gnostr
       ## objective: test cargo build/install gnostr-bins
       - run: gnostr custom-event -k 1 -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "a|blah" -t "a|$(date +%s)" -t "$(gnostr-weeble)" -t "$(gnostr-blockheight)" -t "$(gnostr-wobble)"
+      - run: gnostr custom-event -k 1 -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "a|blah" -t "a|$(date +%s)" -t "$(gnostr-weeble)" -t "$(gnostr-blockheight)" -t "$(gnostr-wobble)" --hex
       ##- run: V=1 make all || sudo make all
       ##- run: V=1 make nostril || sudo make nostril
       ##- run: V=1 make install || sudo make install
