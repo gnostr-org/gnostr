@@ -78,6 +78,10 @@ jobs:
           fetch-tags: 'true'
 
       ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew install openssl@3 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
