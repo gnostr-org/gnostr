@@ -12,7 +12,7 @@ pub struct ReactionSubCommand {
     #[arg(short, long)]
     event_id: String,
     /// Author pubkey of the event you are reacting to. Must be hex format.
-    #[arg(short, long)]
+    #[arg(short, long, default_value = "")]
     author_pubkey: String,
     /// Reaction content. Set to '+' for like or '-' for dislike. Single emojis are also often used for reactions, such as in Damus Web.
     #[arg(short, long)]
@@ -40,11 +40,16 @@ pub async fn react_to_event(
         exit(0)
     }
 
+    let subscription: Filter;
     let event_id = EventId::from_hex(&sub_command_args.event_id)?;
-    let author_pubkey = PublicKey::from_hex(sub_command_args.author_pubkey.clone())?;
+    if sub_command_args.author_pubkey.len() > 0 {
+        let author_pubkey = PublicKey::from_hex(sub_command_args.author_pubkey.clone())?;
+        subscription = Filter::new().event(event_id).author(author_pubkey);
+    } else {
+        subscription = Filter::new().event(event_id);
+    }
 
-    let subscription = Filter::new().event(event_id).author(author_pubkey);
-
+    //println!("{:?}", subscription);
     let events = client
         .get_events_of_with_opts(
             vec![subscription],
@@ -63,11 +68,19 @@ pub async fn react_to_event(
     let id = client
         .reaction(event_to_react_to, sub_command_args.reaction.clone())
         .await?;
-    println!(
-        "Reacted to {} with {} in event {}",
-        event_id.to_bech32()?,
-        sub_command_args.reaction,
-        id.to_bech32()?
-    );
+
+    if sub_command_args.hex {
+        print!(
+            "{{\"event_id\":\"{}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
+            event_id, sub_command_args.reaction, id
+        );
+    } else {
+        print!(
+            "{{\"event_id\":\"{}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
+            event_id.to_bech32()?,
+            sub_command_args.reaction,
+            id.to_bech32()?
+        );
+    }
     Ok(())
 }
