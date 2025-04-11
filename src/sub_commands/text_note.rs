@@ -79,5 +79,7 @@ pub async fn broadcast_textnote(
     print!("{{\"id\":\"{}\"}}", event_id.to_hex());
     print!("{{\"bech32\":\"{}\"}}", event_id.to_bech32()?);
 
+    std::process::exit(0);
+    #[allow(unreachable_code)]
     Ok(())
 }
