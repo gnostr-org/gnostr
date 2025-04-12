@@ -6,8 +6,12 @@ use crate::global_rt::global_rt;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
+use std::env::args;
 mod sub_commands;
 mod utils;
+
+use tracing::{debug, error, info, span, trace, warn, Level};
+use tracing_subscriber::FmtSubscriber;
 
 use std::{io::stdout, time::Duration};
 
@@ -37,11 +41,16 @@ struct Cli {
     #[arg(long, value_name = "STRING", help = "gnostr --hash '<string>'")]
     hash: Option<String>,
     ///
-    #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
+    #[arg(short, long, action = clap::ArgAction::Append,
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     difficulty_target: u8,
+
+    /// Enable debug logging
+    #[clap(long, default_value = "true")]
+    debug: bool,
 }
 
 #[derive(Subcommand)]
@@ -109,30 +118,81 @@ async fn print_events() {
         let mut event = reader.next().fuse();
 
         select! {
-            _ = delay => { println!(".\r"); },
-            maybe_event = event => {
-                match maybe_event {
-                    Some(Ok(event)) => {
-                        println!("Event::{:?}\r", event);
+                _ = delay => {
+					let my_span = span!(Level::DEBUG, "\r122:print_events\rdelay\r");
+					let _enter = my_span.enter();
+					tracing::debug!("124:.\r");
+				},
+                maybe_event = event => {
+                    match maybe_event {
+                        Some(Ok(event)) => {
+                            let my_span = span!(Level::DEBUG, "\rprint_events\r", key = "130:value");
+                            let _enter = my_span.enter();
+        //trace!("This is a trace message within the span.\n");
+                            debug!("\r\r132:print_events.\r");
+        //info!("This is an info message within the span.\n");
+        //warn!("This is a warning message within the span.\n");
+        //error!("This is an error message within the span.\n");
 
-                        if event == Event::Key(KeyCode::Char('c').into()) {
-                            println!("Cursor position: {:?}\r", position());
-                        }
+        let child_span = span!(parent: &my_span, Level::DEBUG, "print_events:child_operation\r", child_key = "child_value");
+        //let _child_enter = child_span.enter();
+        //debug!("Debug message from child span");
+        tracing::debug!("Event::{:?}\r", event);
+        if event == Event::Key(KeyCode::Char('c').into()) {
+        let my_span = span!(Level::INFO, "\r\rprint_events\r\r", key = "144:value");
+        let _enter = my_span.enter();
+        //trace!("This is a trace message within the span.\n");
+        debug!("\r\rThis is a debug message within the span. {:?}\r", event);
+        //info!("This is an info message within the span.\n");
+        //warn!("This is a warning message within the span.\n");
+        //error!("This is an error message within the span.\n");
 
-                        if event == Event::Key(KeyCode::Esc.into()) {
-                            break;
-                        }
-                    }
-                    Some(Err(e)) => println!("Error: {:?}\r", e),
-                    None => break,
-                }
-            }
+        //let child_span = span!(parent: &my_span, Level::DEBUG, "child_operation\n", child_key = "child_value");
+        //let _child_enter = child_span.enter();
+        //debug!("Debug message from child span");
+        tracing::debug!("\r\rCursor position: {:?}\r\r", position());
+        }
+        if event == Event::Key(KeyCode::Esc.into()) {
+        //let my_span = span!(Level::INFO, "my_operation", key = "value");
+        //let _enter = my_span.enter();
+        //trace!("This is a trace message within the span.");
+        //debug!("This is a debug message within the span.");
+        //info!("This is an info message within the span.");
+        //warn!("This is a warning message within the span.");
+        //error!("This is an error message within the span.");
+
+        //let child_span = span!(parent: &my_span, Level::DEBUG, "child_operation", child_key = "child_value");
+        //let _child_enter = child_span.enter();
+        //debug!("Debug message from child span");
+        break;
+        }
+        }
+        Some(Err(e)) => error!("Error: {:?}\r", e),
+        None => break,
+        }
+        }
         };
     }
 }
 
 async fn interactive() -> Result<()> {
-    println!("{}", HELP);
+    // Create a span to group related log messages.
+    //let my_span = span!(Level::INFO, "my_operation", key = "value");
+
+    // Enter the span.
+    //let _enter = my_span.enter();
+
+    //trace!("This is a trace message within the span.");
+    //debug!("This is a debug message within the span.");
+    //info!("This is an info message within the span.");
+    //warn!("This is a warning message within the span.");
+    //error!("This is an error message within the span.");
+
+    //let child_span =
+    //    span!(parent: &my_span, Level::DEBUG, "child_operation", child_key = "child_value");
+    //let _child_enter = child_span.enter();
+    //debug!("Debug message from child span");
+    tracing::info!("{}", HELP);
     enable_raw_mode()?;
     let mut stdout = stdout();
     execute!(stdout, EnableMouseCapture)?;
@@ -143,30 +203,62 @@ async fn interactive() -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args: Cli = Cli::parse();
+    let level = if args.debug {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
+    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
     let env_args: Vec<String> = env::args().collect();
 
     let global_rt_result = global_rt().spawn(async move {
-        if env_args.len().clone() == 1 {
-            // No arguments, read from stdin (using tokio).
+        if env_args
+            .clone()
+            .iter()
+            .any(|arg| arg == "--debug" || arg == "-d")
+        {
+            debug!("Debug mode enabled.");
             if let Err(e) = interactive().await {
                 eprintln!("Error processing stdin: {}", e);
                 std::process::exit(1);
             }
         } else {
+            trace!("Debug mode disabled.");
         }
         String::from("global_rt async task!")
     });
-    println!("global_rt_result={:?}", global_rt_result.await);
+    debug!("global_rt_result={:?}", global_rt_result.await);
     let global_rt_result = global_rt().spawn(async move { String::from("global_rt async task!") });
-    println!("global_rt_result={:?}", global_rt_result.await);
+    debug!("global_rt_result={:?}", global_rt_result.await);
 
-    let env_args: Vec<String> = env::args().collect();
+    // Create a span to group related log messages.
+    let my_span = span!(Level::INFO, "main", key = "value");
+
+    // Enter the span.
+    let _enter = my_span.enter();
+
+    //trace!("This is a trace message within the span.");
+    //debug!("This is a debug message within the span.");
+    //info!("This is an info message within the span.");
+    //warn!("This is a warning message within the span.");
+    //error!("This is an error message within the span.");
+
+    // Using a child span
+    let child_span =
+        span!(parent: &my_span, Level::DEBUG, "main:child_operation", child_key = "child_value");
+    let _child_enter = child_span.enter();
+    //debug!("Debug message from child span");
+
     let args: Cli = Cli::parse();
 
     //if args.sec.is_some() && args.nsec.is_none() {
     //		args.nsec = Some(args.sec.clone().expect("REASON"));
     //}
 
+    let env_args: Vec<String> = env::args().collect();
     if !args.hash.is_none() {
         //not none
         if let Some(input_string) = args.hash {
