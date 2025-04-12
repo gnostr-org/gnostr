@@ -1,11 +1,25 @@
 //use crate::sub_commands::custom_event::CustomEventCommand;
 //use crate::Commands::CustomEvent;
 use clap::{Parser, Subcommand};
+mod global_rt;
+use crate::global_rt::global_rt;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
 mod sub_commands;
 mod utils;
+
+use std::{io::stdout, time::Duration};
+
+use futures::{future::FutureExt, select, StreamExt};
+use futures_timer::Delay;
+
+use crossterm::{
+    cursor::position,
+    event::{DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
 
 /// Simple CLI application to interact with nostr
 #[derive(Parser)]
@@ -80,11 +94,73 @@ enum Commands {
     SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
 }
 
+const HELP: &str = r#"EventStream based on futures_util::Stream with tokio
+ - Keyboard, mouse and terminal resize events enabled
+ - Prints "." every second if there's no event
+ - Hit "c" to print current cursor position
+ - Use Esc to quit
+"#;
+
+async fn print_events() {
+    let mut reader = EventStream::new();
+
+    loop {
+        let mut delay = Delay::new(Duration::from_millis(1_000)).fuse();
+        let mut event = reader.next().fuse();
+
+        select! {
+            _ = delay => { println!(".\r"); },
+            maybe_event = event => {
+                match maybe_event {
+                    Some(Ok(event)) => {
+                        println!("Event::{:?}\r", event);
+
+                        if event == Event::Key(KeyCode::Char('c').into()) {
+                            println!("Cursor position: {:?}\r", position());
+                        }
+
+                        if event == Event::Key(KeyCode::Esc.into()) {
+                            break;
+                        }
+                    }
+                    Some(Err(e)) => println!("Error: {:?}\r", e),
+                    None => break,
+                }
+            }
+        };
+    }
+}
+
+async fn interactive() -> Result<()> {
+    println!("{}", HELP);
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnableMouseCapture)?;
+    print_events().await;
+    execute!(stdout, DisableMouseCapture)?;
+    Ok(disable_raw_mode()?)
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Parse input
     let env_args: Vec<String> = env::args().collect();
 
+    let global_rt_result = global_rt().spawn(async move {
+        if env_args.len().clone() == 1 {
+            // No arguments, read from stdin (using tokio).
+            if let Err(e) = interactive().await {
+                eprintln!("Error processing stdin: {}", e);
+                std::process::exit(1);
+            }
+        } else {
+        }
+        String::from("global_rt async task!")
+    });
+    println!("global_rt_result={:?}", global_rt_result.await);
+    let global_rt_result = global_rt().spawn(async move { String::from("global_rt async task!") });
+    println!("global_rt_result={:?}", global_rt_result.await);
+
+    let env_args: Vec<String> = env::args().collect();
     let args: Cli = Cli::parse();
 
     //if args.sec.is_some() && args.nsec.is_none() {
@@ -97,7 +173,7 @@ async fn main() -> Result<()> {
             let mut hasher = Sha256::new();
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
-            if env_args.len() == 3 {
+            if env_args.len().clone() == 3 {
                 println!("{:x}", result);
             }
         } else {
