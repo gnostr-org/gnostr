@@ -1272,6 +1272,8 @@ dependencies = [
  "sha2",
  "temp-env",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "url",
  "zeroize",
 ]
