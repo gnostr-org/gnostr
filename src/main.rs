@@ -6,8 +6,12 @@ use crate::global_rt::global_rt;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
+use std::env::args;
 mod sub_commands;
 mod utils;
+
+use tracing::{debug, error, info, span, trace, warn, Level};
+use tracing_subscriber::FmtSubscriber;
 
 use std::{io::stdout, time::Duration};
 
@@ -37,11 +41,16 @@ struct Cli {
     #[arg(long, value_name = "STRING", help = "gnostr --hash '<string>'")]
     hash: Option<String>,
     ///
-    #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
+    #[arg(short, long, action = clap::ArgAction::Append,
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     difficulty_target: u8,
+
+    /// Enable debug logging
+    #[clap(long, default_value = "true")]
+    debug: bool,
 }
 
 #[derive(Subcommand)]
@@ -143,30 +152,44 @@ async fn interactive() -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args: Cli = Cli::parse();
+    let level = if args.debug {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
+    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
     let env_args: Vec<String> = env::args().collect();
 
     let global_rt_result = global_rt().spawn(async move {
-        if env_args.len().clone() == 1 {
-            // No arguments, read from stdin (using tokio).
+        if env_args
+            .clone()
+            .iter()
+            .any(|arg| arg == "--debug" || arg == "-d")
+        {
+            debug!("Debug mode enabled.");
             if let Err(e) = interactive().await {
                 eprintln!("Error processing stdin: {}", e);
                 std::process::exit(1);
             }
         } else {
+            trace!("Debug mode disabled.");
         }
         String::from("global_rt async task!")
     });
-    println!("global_rt_result={:?}", global_rt_result.await);
+    debug!("global_rt_result={:?}", global_rt_result.await);
     let global_rt_result = global_rt().spawn(async move { String::from("global_rt async task!") });
     println!("global_rt_result={:?}", global_rt_result.await);
 
-    let env_args: Vec<String> = env::args().collect();
     let args: Cli = Cli::parse();
 
     //if args.sec.is_some() && args.nsec.is_none() {
     //		args.nsec = Some(args.sec.clone().expect("REASON"));
     //}
 
+    let env_args: Vec<String> = env::args().collect();
     if !args.hash.is_none() {
         //not none
         if let Some(input_string) = args.hash {
