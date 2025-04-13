@@ -71,7 +71,7 @@ pub async fn react_to_event(
 
     if sub_command_args.hex {
         print!(
-            "{{\"event_id\":\"{}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
+            "{{\"event_id\":\"{:?}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
             event_id, sub_command_args.reaction, id
         );
     } else {
