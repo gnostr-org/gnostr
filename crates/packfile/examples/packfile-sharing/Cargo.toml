@@ -1,0 +1,29 @@
+[package]
+name = "packfile-sharing"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT"
+
+[package.metadata.release]
+release = false
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.38", features = ["full"] }
+clap = { version = "4.5.6", features = ["derive"] }
+futures = "0.3.30"
+libp2p = { version = "0.54.1", features = [ "tokio", "cbor", "dns", "kad", "noise", "macros",
+"request-response", "tcp", "websocket", "yamux", "floodsub"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3", features = ["env-filter"]}   
+packfile = "0.1.2"
+
+[lints]
+rust.unreachable_pub = "warn"
+clippy.used_underscore_binding = "warn"
+clippy.pedantic = { level = "allow", priority = -1 }
+clippy.type_complexity = "allow"
+clippy.unnecessary_wraps = "warn"
+clippy.manual_let_else = "warn"
+clippy.dbg_macro = "warn"
