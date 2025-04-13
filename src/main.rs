@@ -6,11 +6,10 @@ use crate::global_rt::global_rt;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
-use std::env::args;
 mod sub_commands;
 mod utils;
 
-use tracing::{debug, error, info, span, trace, warn, Level};
+use tracing::{debug, /*error, info, span,*/ trace, /* warn,*/ Level};
 use tracing_subscriber::FmtSubscriber;
 
 use std::{io::stdout, time::Duration};
@@ -42,15 +41,19 @@ struct Cli {
     hash: Option<String>,
     ///
     #[arg(short, long, action = clap::ArgAction::Append,
-		default_values_t = ["wss://relay.damus.io".to_string(),"wss://e.nos.lol".to_string()])]
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     difficulty_target: u8,
 
     /// Enable debug logging
-    #[clap(long, default_value = "true")]
+    #[clap(long, default_value = "false")]
     debug: bool,
+
+    /// Enable trace logging
+    #[clap(long, default_value = "false")]
+    trace: bool,
 }
 
 #[derive(Subcommand)]
@@ -155,6 +158,8 @@ async fn main() -> Result<()> {
     let args: Cli = Cli::parse();
     let level = if args.debug {
         Level::DEBUG
+    } else if args.trace {
+        Level::TRACE
     } else {
         Level::INFO
     };
@@ -163,28 +168,30 @@ async fn main() -> Result<()> {
 
     let env_args: Vec<String> = env::args().collect();
 
-    let global_rt_result = global_rt().spawn(async move {
-        if env_args
-            .clone()
-            .iter()
-            .any(|arg| arg == "--debug" || arg == "-d")
-        {
-            debug!("Debug mode enabled.");
-            if let Err(e) = interactive().await {
-                eprintln!("Error processing stdin: {}", e);
-                std::process::exit(1);
-            }
-        } else {
-            trace!("Debug mode disabled.");
-        }
-        String::from("global_rt async task!")
-    });
-    debug!("global_rt_result={:?}", global_rt_result.await);
-    let global_rt_result = global_rt().spawn(async move { String::from("global_rt async task!") });
-    println!("global_rt_result={:?}", global_rt_result.await);
+    //let global_rt_result = global_rt().spawn(async move {
+    //    if env_args
+    //        .clone()
+    //        .iter()
+    //        .any(|arg| arg == "--debug" || arg == "-d")
+    //    {
+    //        debug!("Debug mode enabled.");
+    //        if let Err(e) = interactive().await {
+    //            eprintln!("Error processing stdin: {}", e);
+    //            std::process::exit(1);
+    //        }
+    //    } else {
+    //        trace!("Debug mode disabled.");
+    //    }
+    //    String::from("global_rt async task!")
+    //});
+    //trace!("global_rt_result={:?}", global_rt_result.await);
+    //let global_rt_result = global_rt().spawn(async move { String::from("global_rt async task!") });
+    //trace!("global_rt_result={:?}", global_rt_result.await);
 
-    let args: Cli = Cli::parse();
+    let mut args: Cli = Cli::parse();
 
+    //if args.nsec.is_some() {}
+    //let nsec = args.nsec.clone();
     //if args.sec.is_some() && args.nsec.is_none() {
     //		args.nsec = Some(args.sec.clone().expect("REASON"));
     //}
@@ -197,12 +204,21 @@ async fn main() -> Result<()> {
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
             if env_args.len().clone() == 3 {
-                println!("{:x}", result);
+                print!("{:x}", result);
             }
+            //if args.nsec.is_some() {//if --hash flag in multi flag context
+            //we assume they want this as their private key
+            //for this session
+            //override the --nsec flag
+            args.nsec = format!("{:x}", result).into();
+            //}
         } else {
+            //drop into sha256-from-input
         }
     } else {
-        if args.hash.is_none() {}
+        if args.hash.is_none() {
+            //drop into sha256-from-input
+        }
     }
 
     // Post event
@@ -375,6 +391,6 @@ async fn main() -> Result<()> {
             };
             //println!("gnostr -h");
             Ok(())
-        }
+        } //_ => {Ok(())}
     }
 }
