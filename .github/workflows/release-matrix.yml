@@ -101,7 +101,7 @@ jobs:
       #- run: cargo-binstall --no-confirm gnostr-bins
       - run: cargo-binstall --no-confirm mempool_space
       - run: cargo-binstall --no-confirm gnostr-xq
-      - run: cargo-binstall --no-confirm gnostr-bins
+      - run: cargo install gnostr-bins --force
       - run: mkdir -p ~/bin
 
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
@@ -117,7 +117,7 @@ jobs:
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       #- run: gnostr ngit init
-      #- run: gnostr --sec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+      - run: gnostr --nsec $(gnostr-sha256 $(gnostr-weeble)) text-note --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #-t gnostr --tag weeble -t $(gnostr-weeble) --tag blockheight -t $(gnostr-blockheight) --tag wobble -t $(gnostr-wobble) #| gnostr-post-event
       ##
       ## WEEBLE-WOBBLE
       ## GNOSTR DETEMINISTIC ALIASES
