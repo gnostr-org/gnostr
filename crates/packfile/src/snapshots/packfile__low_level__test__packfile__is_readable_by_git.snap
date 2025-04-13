@@ -1,0 +1,10 @@
+---
+source: src/low_level.rs
+expression: stdout
+---
+95d09f2b10159347eece71399a7e2e907ea3df4f blob   11 21 12
+33afd6485aadae927bc4bc2986ea9a0d86d5d699 tree   42 55 33
+b740d25b3a4f2cfe1c472542712249a70e1463eb commit 144 108 88
+non delta: 3 objects
+/path/to/example.pack: ok
+

@@ -1,0 +1,43 @@
+[package]
+name = "packfile"
+authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
+description = "A simple library providing utilities to generate Git Packfiles in memory and send them to clients"
+version = "0.1.2"
+edition = "2021"
+license = "WTFPL"
+keywords = ["git", "packfile", "in-memory", "protocol"]
+categories = ["development-tools"]
+exclude = ["/.github"]
+repository = "https://github.com/w4/packfile"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bytes = "1.2"
+flate2 = "1.0"
+hex = "0.4"
+indexmap = "2.0"
+itoa = "1.0"
+sha1 = "0.10"
+thiserror = "1.0"
+time = "0.3.15"
+tokio-util = { version = "0.7", features = ["codec"], optional = true }
+tracing = { version = "0.1", optional = true }
+
+##[dev-dependencies]
+insta = { version = "1.29", features = ["filters"] }
+tempfile = "3.5"
+##[dependencies]
+##libp2p = { version = "0.50", features = ["tcp-tokio","noise-tokio", "mplex-tokio", "floodsub", "tokio"] }
+async-std = "1.12"
+futures = "0.3"
+tokio = { version = "1", features = ["full"] }
+#tokio-util = { version = "0.7", features = ["codec"] }
+#libp2p = { version = "0.55.0", features = ["tcp", "tokio", "noise", "yamux", "floodsub"] }
+serde = { version = "1.0", features = ["derive"] }
+clap = { version = "4.5.6", features = ["derive"] }
+libp2p = { version = "0.55.0", features = [ "tokio", "cbor", "dns", "floodsub", "kad", "noise", "macros", "request-response", "tcp", "websocket", "yamux"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+
+[features]
+default = ["tokio-util", "tracing"]

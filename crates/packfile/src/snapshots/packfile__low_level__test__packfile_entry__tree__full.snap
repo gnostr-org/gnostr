@@ -1,0 +1,5 @@
+---
+source: src/low_level.rs
+expression: actual
+---
+b"\xa1\x02x\x9c340031Q\xc8H\xcd\xc9\xc9g\xc0\x06\0YU\x03d"
