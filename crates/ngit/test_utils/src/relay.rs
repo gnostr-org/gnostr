@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use nostr::{ClientMessage, JsonUtil, RelayMessage};
 
 use crate::CliTester;
@@ -48,7 +48,7 @@ impl<'a> Relay<'a> {
         let ok_json = RelayMessage::Ok {
             event_id: event.id,
             status: error.is_none(),
-            message: error.unwrap_or("").to_string(),
+            message: error.unwrap_or("").to_string().into(),
         }
         .as_json();
         // bail!(format!("{}", &ok_json));
@@ -63,7 +63,7 @@ impl<'a> Relay<'a> {
         let responder = self.clients.get(&client_id).unwrap();
 
         Ok(responder.send(simple_websockets::Message::Text(
-            RelayMessage::EndOfStoredEvents(subscription_id).as_json(),
+            RelayMessage::EndOfStoredEvents(std::borrow::Cow::Borrowed(&subscription_id)).as_json(),
         )))
     }
 
@@ -79,8 +79,8 @@ impl<'a> Relay<'a> {
         for event in events {
             let res = responder.send(simple_websockets::Message::Text(
                 RelayMessage::Event {
-                    subscription_id: subscription_id.clone(),
-                    event: Box::new(event.clone()),
+                    subscription_id: std::borrow::Cow::Borrowed(subscription_id),
+                    event: std::borrow::Cow::Borrowed(event),
                 }
                 .as_json(),
             ));
@@ -97,23 +97,15 @@ impl<'a> Relay<'a> {
         client_id: u64,
         subscription_id: &nostr::SubscriptionId,
         // TODO: enable filters
-        _filters: &[nostr::Filter],
+        filters: &[nostr::Filter],
     ) -> Result<bool> {
-        // let t: Vec<nostr::Kind> = self.events.iter().map(|e| e.kind).collect();
-        // .filter(|e| filters.iter().any(|filter| filter.match_event(e)))
-        // println!("letsgo{:?}", t);
-
         self.respond_events(
             client_id,
             subscription_id,
             &self
                 .events
                 .iter()
-                // FIXME:
-                // `filter.match_events` does not exist anymore
-                // it has been moved to `nostr_database_::FilterIndex`
-                // but it's private now
-                // .filter(|e| filters.iter().any(|filter|filter.match_event(e)))
+                .filter(|e| filters.iter().any(|filter| filter.match_event(e)))
                 .filter(|_| true)
                 .cloned()
                 .collect(),
@@ -164,12 +156,14 @@ impl<'a> Relay<'a> {
                         }
                     }
 
-                    if let Ok((subscription_id, filters)) = get_nreq(&message) {
-                        self.reqs.push(filters.clone());
+                    if let Ok((subscription_id, filter)) = get_nreq(&message) {
+                        self.reqs.push(vec![filter.clone()]);
                         if let Some(listner) = self.req_listener {
-                            listner(self, client_id, subscription_id, filters)?;
+                            listner(self, client_id, subscription_id, vec![filter.clone()])?;
                         } else {
-                            self.respond_standard_req(client_id, &subscription_id, &filters)?;
+                            self.respond_standard_req(client_id, &subscription_id, &[
+                                filter.clone()
+                            ])?;
                             // self.respond_eose(client_id, subscription_id)?;
                         }
                         // respond with events
@@ -206,8 +200,7 @@ fn get_nevent(message: &simple_websockets::Message) -> Result<nostr::Event> {
     if let simple_websockets::Message::Text(s) = message.clone() {
         let cm_result = ClientMessage::from_json(s);
         if let Ok(ClientMessage::Event(event)) = cm_result {
-            let e = *event;
-            return Ok(e.clone());
+            return Ok(event.into_owned());
         }
     }
     bail!("not nostr event")
@@ -215,15 +208,15 @@ fn get_nevent(message: &simple_websockets::Message) -> Result<nostr::Event> {
 
 fn get_nreq(
     message: &simple_websockets::Message,
-) -> Result<(nostr::SubscriptionId, Vec<nostr::Filter>)> {
+) -> Result<(nostr::SubscriptionId, nostr::Filter)> {
     if let simple_websockets::Message::Text(s) = message.clone() {
         let cm_result = ClientMessage::from_json(s);
         if let Ok(ClientMessage::Req {
             subscription_id,
-            filters,
+            filter,
         }) = cm_result
         {
-            return Ok((subscription_id, filters));
+            return Ok((subscription_id.into_owned(), filter.into_owned()));
         }
     }
     bail!("not nostr event")

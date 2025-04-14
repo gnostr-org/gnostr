@@ -1,19 +1,28 @@
-use std::{ffi::OsStr, path::PathBuf, str::FromStr};
+use std::{
+    collections::HashSet,
+    ffi::OsStr,
+    path::{Path, PathBuf},
+    str::FromStr,
+    sync::Arc,
+    time::Duration,
+};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use dialoguer::theme::{ColorfulTheme, Theme};
-use directories::ProjectDirs;
-use nostr::{self, nips::nip65::RelayMetadata, Kind, Tag};
-use nostr_sdk::{serde_json, TagStandard};
+use futures::{executor::block_on, future::join_all};
+use git::GitTestRepo;
+use git2::{Signature, Time};
+use nostr::{self, Kind, Tag, nips::nip65::RelayMetadata};
+use nostr_database::NostrEventsDatabase;
+use nostr_lmdb::NostrLMDB;
+use nostr_sdk::{Client, Event, NostrSigner, TagStandard, serde_json};
 use once_cell::sync::Lazy;
 use rexpect::session::{Options, PtySession};
 use strip_ansi_escapes::strip_str;
+use tokio::runtime::Handle;
 
 pub mod git;
 pub mod relay;
-
-pub static PATCH_KIND: u16 = 1617;
-pub static REPOSITORY_KIND: u16 = 30617;
 
 pub static TEST_KEY_1_NSEC: &str =
     "nsec1ppsg5sm2aexq06juxmu9evtutr6jkwkhp98exxxvwamhru9lyx9s3rwseq";
@@ -29,9 +38,16 @@ pub static TEST_KEY_1_ENCRYPTED_WEAK: &str = "ncryptsec1qg835almhlrmyxqtqeva44d5
 pub static TEST_KEY_1_KEYS: Lazy<nostr::Keys> =
     Lazy::new(|| nostr::Keys::from_str(TEST_KEY_1_NSEC).unwrap());
 
+pub static TEST_KEY_1_SIGNER: Lazy<Arc<dyn NostrSigner>> =
+    Lazy::new(|| Arc::new(nostr::Keys::from_str(TEST_KEY_1_NSEC).unwrap()));
+
+pub fn generate_test_key_1_signer() -> Arc<dyn NostrSigner> {
+    Arc::new(nostr::Keys::from_str(TEST_KEY_1_NSEC).unwrap())
+}
+
 pub fn generate_test_key_1_metadata_event(name: &str) -> nostr::Event {
     nostr::event::EventBuilder::metadata(&nostr::Metadata::new().name(name))
-        .to_event(&TEST_KEY_1_KEYS)
+        .sign_with_keys(&TEST_KEY_1_KEYS)
         .unwrap()
 }
 
@@ -44,58 +60,54 @@ pub fn generate_test_key_1_metadata_event_old(name: &str) -> nostr::Event {
 }
 
 pub fn generate_test_key_1_kind_event(kind: Kind) -> nostr::Event {
-    nostr::event::EventBuilder::new(kind, "", [])
-        .to_event(&TEST_KEY_1_KEYS)
+    nostr::event::EventBuilder::new(kind, "")
+        .tags([])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
         .unwrap()
 }
 
 pub fn generate_test_key_1_relay_list_event() -> nostr::Event {
-    nostr::event::EventBuilder::new(
-        nostr::Kind::RelayList,
-        "",
-        [
+    nostr::event::EventBuilder::new(nostr::Kind::RelayList, "")
+        .tags([
             nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8053").unwrap(),
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8053").unwrap(),
                 metadata: Some(RelayMetadata::Write),
             }),
             nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8054").unwrap(),
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8054").unwrap(),
                 metadata: Some(RelayMetadata::Read),
             }),
             nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8055").unwrap(),
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8055").unwrap(),
                 metadata: None,
             }),
-        ],
-    )
-    .to_event(&TEST_KEY_1_KEYS)
-    .unwrap()
+        ])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 pub fn generate_test_key_1_relay_list_event_same_as_fallback() -> nostr::Event {
-    nostr::event::EventBuilder::new(
-        nostr::Kind::RelayList,
-        "",
-        [
+    nostr::event::EventBuilder::new(nostr::Kind::RelayList, "")
+        .tags([
             nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8051").unwrap(),
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8051").unwrap(),
                 metadata: Some(RelayMetadata::Write),
             }),
             nostr::Tag::from_standardized(nostr::TagStandard::RelayMetadata {
-                relay_url: nostr::Url::from_str("ws://localhost:8052").unwrap(),
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8052").unwrap(),
                 metadata: Some(RelayMetadata::Write),
             }),
-        ],
-    )
-    .to_event(&TEST_KEY_1_KEYS)
-    .unwrap()
+        ])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 pub static TEST_KEY_2_NSEC: &str =
     "nsec1ypglg6nj6ep0g2qmyfqcv2al502gje3jvpwye6mthmkvj93tqkesknv6qm";
 pub static TEST_KEY_2_NPUB: &str =
     "npub1h2yz2eh0798nh25hvypenrz995nla9dktfuk565ljf3ghnkhdljsul834e";
-
+pub static TEST_KEY_2_PUBKEY_HEX: &str =
+    "ba882566eff14f3baa976103998c452d27fe95b65a796a6a9f92628bced76fe5";
 pub static TEST_KEY_2_DISPLAY_NAME: &str = "carole";
 pub static TEST_KEY_2_ENCRYPTED: &str = "...2";
 pub static TEST_KEY_2_KEYS: Lazy<nostr::Keys> =
@@ -103,7 +115,7 @@ pub static TEST_KEY_2_KEYS: Lazy<nostr::Keys> =
 
 pub fn generate_test_key_2_metadata_event(name: &str) -> nostr::Event {
     nostr::event::EventBuilder::metadata(&nostr::Metadata::new().name(name))
-        .to_event(&TEST_KEY_2_KEYS)
+        .sign_with_keys(&TEST_KEY_2_KEYS)
         .unwrap()
 }
 
@@ -118,9 +130,9 @@ pub fn make_event_old_or_change_user(
     keys: &nostr::Keys,
     how_old_in_secs: u64,
 ) -> nostr::Event {
-    let mut unsigned =
-        nostr::event::EventBuilder::new(event.kind, event.content.clone(), event.tags.clone())
-            .to_unsigned_event(keys.public_key());
+    let mut unsigned = nostr::event::EventBuilder::new(event.kind, event.content.clone())
+        .tags(event.tags.clone())
+        .build(keys.public_key());
 
     unsigned.created_at =
         nostr::types::Timestamp::from(nostr::types::Timestamp::now().as_u64() - how_old_in_secs);
@@ -128,22 +140,24 @@ pub fn make_event_old_or_change_user(
         &keys.public_key(),
         &unsigned.created_at,
         &unsigned.kind,
-        &unsigned.tags,
+        &unsigned.tags.clone(),
         &unsigned.content,
     ));
 
-    unsigned.sign(keys).unwrap()
+    unsigned.sign_with_keys(keys).unwrap()
 }
 
 pub fn generate_repo_ref_event() -> nostr::Event {
+    generate_repo_ref_event_with_git_server(vec!["git:://123.gitexample.com/test".to_string()])
+}
+
+pub fn generate_repo_ref_event_with_git_server(git_servers: Vec<String>) -> nostr::Event {
     // taken from test git_repo
     // TODO - this may not be consistant across computers as it might take the
     // author and committer from global git config
     let root_commit = "9ee507fc4357d7ee16a5d8901bedcd103f23c17d";
-    nostr::event::EventBuilder::new(
-        nostr::Kind::Custom(REPOSITORY_KIND),
-        "",
-        [
+    nostr::event::EventBuilder::new(nostr::Kind::GitRepoAnnouncement, "")
+        .tags([
             Tag::identifier(
                 // root_commit.to_string()
                 format!("{}-consider-it-random", root_commit),
@@ -153,7 +167,7 @@ pub fn generate_repo_ref_event() -> nostr::Event {
             Tag::from_standardized(TagStandard::Description("example description".into())),
             Tag::custom(
                 nostr::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
-                vec!["git:://123.gitexample.com/test".to_string()],
+                git_servers,
             ),
             Tag::custom(
                 nostr::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
@@ -176,15 +190,14 @@ pub fn generate_repo_ref_event() -> nostr::Event {
                     TEST_KEY_2_KEYS.public_key().to_string(),
                 ],
             ),
-        ],
-    )
-    .to_event(&TEST_KEY_1_KEYS)
-    .unwrap()
+        ])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 /// enough to fool event_is_patch_set_root
 pub fn get_pretend_proposal_root_event() -> nostr::Event {
-    serde_json::from_str(r#"{"id":"8cb75aa4cda10a3a0f3242dc49d36159d30b3185bf63414cf6ce17f5c14a73b1","pubkey":"f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768","created_at":1714984571,"kind":1617,"tags":[["t","root"]],"content":"","sig":"6c197314b8c4c61da696dff888198333004d1ecc5d7bae2c554857f2f2b0d3ecc09369a5d8ba089c1bf89e3c6f5be40ade873fd698438ef8b303ffc6df35eb3f"}"#).unwrap()
+    serde_json::from_str(r#"{"id":"431e58eb8e1b4e20292d1d5bbe81d5cfb042e1bc165de32eddfdd52245a4cce4","pubkey":"f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768","created_at":1721404213,"kind":1617,"tags":[["a","30617:ba882566eff14f3baa976103998c452d27fe95b65a796a6a9f92628bced76fe5:9ee507fc4357d7ee16a5d8901bedcd103f23c17d-consider-it-random"],["a","30617:f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768:9ee507fc4357d7ee16a5d8901bedcd103f23c17d-consider-it-random"],["r","9ee507fc4357d7ee16a5d8901bedcd103f23c17d"],["t","cover-letter"],["alt","git patch cover letter: exampletitle"],["t","root"],["e","8cb75aa4cda10a3a0f3242dc49d36159d30b3185bf63414cf6ce17f5c14a73b1","","mention"],["branch-name","feature"],["p","ba882566eff14f3baa976103998c452d27fe95b65a796a6a9f92628bced76fe5"],["p","f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768"]],"content":"From fe973a840fba2a8ab37dd505c154854a69a6505c Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/2] exampletitle\n\nexampledescription","sig":"37d5b2338bf9fd9d598e6494ae88af9a8dbd52330cfe9d025ee55e35e2f3f55e931ba039d9f7fed8e6fc40206e47619a24f730f8eddc2a07ccfb3988a5005170"}"#).unwrap()
 }
 
 /// wrapper for a cli testing tool - currently wraps rexpect and dialoguer
@@ -317,6 +330,14 @@ impl CliTesterInputPrompt<'_> {
     }
 
     pub fn succeeds_with(&mut self, input: &str) -> Result<&mut Self> {
+        self.succeeds_with_optional_shortened_report(input, false)
+    }
+
+    pub fn succeeds_with_optional_shortened_report(
+        &mut self,
+        input: &str,
+        shorten_report_to_15_chars: bool,
+    ) -> Result<&mut Self> {
         self.tester.send_line(input)?;
         self.tester
             .expect(input)
@@ -326,9 +347,14 @@ impl CliTesterInputPrompt<'_> {
             .context("expect new line after input to be printed")?;
 
         let mut s = String::new();
+        let printed_input = if shorten_report_to_15_chars {
+            shorten_string(input)
+        } else {
+            input.to_string()
+        };
         self.tester
             .formatter
-            .format_input_prompt_selection(&mut s, self.prompt.as_str(), input)
+            .format_input_prompt_selection(&mut s, self.prompt.as_str(), &printed_input)
             .expect("diagluer theme formatter should succeed");
         if !s.contains(self.prompt.as_str()) {
             panic!("dialoguer must be broken as formatted prompt success doesnt contain prompt");
@@ -339,6 +365,61 @@ impl CliTesterInputPrompt<'_> {
             .expect(formatted_success.as_str())
             .context("expect immediate prompt success")?;
         Ok(self)
+    }
+
+    pub fn fails_with_optional_shortened_report(
+        &mut self,
+        input: &str,
+        prefix: Option<&str>,
+        shorten_report_to_15_chars: bool,
+    ) -> Result<&mut Self> {
+        self.tester.send_line(input)?;
+        self.tester
+            .expect(input)
+            .context("expect input to be printed")?;
+        self.tester
+            .expect("\r")
+            .context("expect new line after input to be printed")?;
+
+        let mut s = String::new();
+        let printed_input = if shorten_report_to_15_chars {
+            shorten_string(input)
+        } else {
+            input.to_string()
+        };
+        self.tester
+            .formatter
+            .format_error(
+                &mut s,
+                &format!(
+                    "{}{}: {}",
+                    prefix.unwrap_or_default(),
+                    &self.prompt,
+                    if input.is_empty() {
+                        "empty".to_string()
+                    } else {
+                        format!("\"{printed_input}\"")
+                    }
+                ),
+            )
+            .expect("diagluer theme formatter should succeed");
+        if !s.contains(self.prompt.as_str()) {
+            panic!("dialoguer must be broken as formatted prompt success doesnt contain prompt");
+        }
+        let formatted_success = format!("{}\r\n", sanatize(s));
+
+        self.tester
+            .expect(formatted_success.as_str())
+            .context("expect immediate prompt success")?;
+        Ok(self)
+    }
+}
+
+fn shorten_string(s: &str) -> String {
+    if s.len() < 15 {
+        s.to_string()
+    } else {
+        format!("{}...", &s[..15])
     }
 }
 
@@ -438,11 +519,11 @@ impl CliTesterConfirmPrompt<'_> {
     }
 
     pub fn succeeds_with(&mut self, input: Option<bool>) -> Result<&mut Self> {
-        self.tester.send_line(match input {
-            None => "",
-            Some(true) => "y",
-            Some(false) => "n",
-        })?;
+        match input {
+            None => self.tester.send_line(""),
+            Some(true) => self.tester.send("y"),
+            Some(false) => self.tester.send("n"),
+        }?;
         self.tester
             .expect("\r")
             .context("expect new line after confirm input to be printed")?;
@@ -450,14 +531,10 @@ impl CliTesterConfirmPrompt<'_> {
         let mut s = String::new();
         self.tester
             .formatter
-            .format_confirm_prompt_selection(
-                &mut s,
-                self.prompt.as_str(),
-                match input {
-                    None => self.default,
-                    Some(_) => input,
-                },
-            )
+            .format_confirm_prompt_selection(&mut s, self.prompt.as_str(), match input {
+                None => self.default,
+                Some(_) => input,
+            })
             .expect("diagluer theme formatter should succeed");
         if !s.contains(self.prompt.as_str()) {
             panic!("dialoguer must be broken as formatted prompt success doesnt contain prompt");
@@ -687,7 +764,7 @@ impl CliTester {
         S: AsRef<OsStr>,
     {
         Self {
-            rexpect_session: rexpect_with(args, 2000).expect("rexpect to spawn new process"),
+            rexpect_session: rexpect_with(args, 4000).expect("rexpect to spawn new process"),
             formatter: ColorfulTheme::default(),
         }
     }
@@ -697,18 +774,39 @@ impl CliTester {
         S: AsRef<OsStr>,
     {
         Self {
-            rexpect_session: rexpect_with_from_dir(dir, args, 2000)
+            rexpect_session: rexpect_with_from_dir(dir, args, 4000)
                 .expect("rexpect to spawn new process"),
             formatter: ColorfulTheme::default(),
         }
     }
-    pub fn new_with_timeout<I, S>(timeout_ms: u64, args: I) -> Self
+    pub fn new_with_timeout_from_dir<I, S>(timeout_ms: u64, dir: &PathBuf, args: I) -> Self
     where
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
         Self {
-            rexpect_session: rexpect_with(args, timeout_ms).expect("rexpect to spawn new process"),
+            rexpect_session: rexpect_with_from_dir(dir, args, timeout_ms)
+                .expect("rexpect to spawn new process"),
+            formatter: ColorfulTheme::default(),
+        }
+    }
+
+    pub fn new_remote_helper_from_dir(dir: &PathBuf, nostr_remote_url: &str) -> Self {
+        Self {
+            rexpect_session: remote_helper_rexpect_with_from_dir(dir, nostr_remote_url, 4000)
+                .expect("rexpect to spawn new process"),
+            formatter: ColorfulTheme::default(),
+        }
+    }
+
+    pub fn new_git_with_remote_helper_from_dir<I, S>(dir: &PathBuf, args: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr>,
+    {
+        Self {
+            rexpect_session: git_with_remote_helper_rexpect_with_from_dir(dir, args, 4000)
+                .expect("rexpect to spawn new process"),
             formatter: ColorfulTheme::default(),
         }
     }
@@ -722,7 +820,7 @@ impl CliTester {
             .process
             .exit()
             .expect("process to exit");
-        self.rexpect_session = rexpect_with(args, 2000).expect("rexpect to spawn new process");
+        self.rexpect_session = rexpect_with(args, 4000).expect("rexpect to spawn new process");
         self
     }
 
@@ -762,6 +860,17 @@ impl CliTester {
         let message_string = message.into();
         let message = message_string.as_str();
         let before = self.exp_string(message).context("exp_string failed")?;
+        Ok(before)
+    }
+
+    pub fn expect_eventually_and_print<S>(&mut self, message: S) -> Result<String>
+    where
+        S: Into<String>,
+    {
+        let message_string = message.into();
+        let message = message_string.as_str();
+        let before = self.exp_string(message).context("exp_string failed")?;
+        println!("{before}");
         Ok(before)
     }
 
@@ -860,7 +969,7 @@ impl CliTester {
         self.expect_end()
     }
 
-    fn send_line(&mut self, line: &str) -> Result<()> {
+    pub fn send_line(&mut self, line: &str) -> Result<()> {
         self.rexpect_session
             .send_line(line)
             .context("send_line failed")?;
@@ -895,13 +1004,10 @@ where
     cmd.env("RUST_BACKTRACE", "0");
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )
+    rexpect::session::spawn_with_options(cmd, Options {
+        timeout_ms: Some(timeout_ms),
+        strip_ansi_escape_codes: true,
+    })
 }
 
 pub fn rexpect_with_from_dir<I, S>(
@@ -919,60 +1025,474 @@ where
     cmd.current_dir(dir);
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )
+    rexpect::session::spawn_with_options(cmd, Options {
+        timeout_ms: Some(timeout_ms),
+        strip_ansi_escape_codes: true,
+    })
 }
 
-/// backup and remove application config and data
-pub fn before() -> Result<()> {
-    backup_existing_config()
+pub fn remote_helper_rexpect_with_from_dir(
+    dir: &PathBuf,
+    nostr_remote_url: &str,
+    timeout_ms: u64,
+) -> Result<PtySession, rexpect::error::Error> {
+    let mut cmd = std::process::Command::new(assert_cmd::cargo::cargo_bin("git-remote-nostr"));
+    cmd.env("NGITTEST", "TRUE");
+    cmd.env("GIT_DIR", dir);
+    cmd.env("RUST_BACKTRACE", "0");
+    cmd.current_dir(dir);
+    cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
+    // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
+    rexpect::session::spawn_with_options(cmd, Options {
+        timeout_ms: Some(timeout_ms),
+        strip_ansi_escape_codes: true,
+    })
 }
 
-/// restore backuped application config and data
-pub fn after() -> Result<()> {
-    restore_config_backup()
-}
-
-/// run func between before and after scripts which backup, reset and restore
-/// application config
-///
-/// TODO: fix issue: if func panics, after() is not run.
-pub fn with_fresh_config<F>(func: F) -> Result<()>
+pub fn git_with_remote_helper_rexpect_with_from_dir<I, S>(
+    dir: &PathBuf,
+    args: I,
+    timeout_ms: u64,
+) -> Result<PtySession>
 where
-    F: Fn() -> Result<()>,
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
 {
-    before()?;
-    func()?;
-    after()
+    let git_exec_dir = dir.parent().unwrap().join("tmpgit-git-exec-path");
+    if !git_exec_dir.exists() {
+        std::fs::create_dir_all(&git_exec_dir)?;
+        let src = PathBuf::from(
+            String::from_utf8_lossy(
+                &std::process::Command::new("git")
+                    .arg("--exec-path")
+                    .output()?
+                    .stdout,
+            )
+            .trim()
+            .to_string(),
+        );
+        for entry in (std::fs::read_dir(src)?).flatten() {
+            let src_path = entry.path();
+            if let Some(name) = src_path.file_name() {
+                let _ = std::fs::copy(&src_path, git_exec_dir.join(name));
+            }
+        }
+    }
+    std::fs::copy(
+        assert_cmd::cargo::cargo_bin("git-remote-nostr"),
+        git_exec_dir.join("git-remote-nostr"),
+    )?;
+
+    let mut cmd = std::process::Command::new("git");
+    cmd.env("GIT_EXEC_PATH", git_exec_dir);
+    cmd.env("NGITTEST", "TRUE");
+    cmd.env("RUST_BACKTRACE", "0");
+    cmd.current_dir(dir);
+    cmd.args(args);
+    // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
+    rexpect::session::spawn_with_options(cmd, Options {
+        timeout_ms: Some(timeout_ms),
+        strip_ansi_escape_codes: true,
+    })
+    .context("spawning failed")
 }
 
-fn backup_existing_config() -> Result<()> {
-    let config_path = get_dirs().config_dir().join("config.json");
-    let backup_config_path = get_dirs().config_dir().join("config-backup.json");
-    if config_path.exists() {
-        std::fs::rename(config_path, backup_config_path)?;
+/** copied from client.rs */
+async fn get_local_cache_database(git_repo_path: &Path) -> Result<NostrLMDB> {
+    NostrLMDB::open(git_repo_path.join(".git/nostr-cache.lmdb"))
+        .context("failed to open or create nostr cache database at .git/nostr-cache.lmdb")
+}
+
+/** copied from client.rs */
+pub async fn get_events_from_cache(
+    git_repo_path: &Path,
+    filters: Vec<nostr::Filter>,
+) -> Result<Vec<nostr::Event>> {
+    let db = get_local_cache_database(git_repo_path).await?;
+
+    let query_results = join_all(filters.into_iter().map(|filter| async {
+        db.query(filter).await.context(
+            "failed to execute query on opened git repo nostr cache database .git/nostr-cache.lmdb",
+        )
+    }))
+    .await;
+
+    // no Event is being mutated, just new items added to the set
+    #[allow(clippy::mutable_key_type)]
+    let mut events: HashSet<Event> = HashSet::new();
+
+    for result in query_results {
+        events.extend(result?);
+    }
+
+    Ok(events.into_iter().collect())
+}
+
+pub fn get_proposal_branch_name(
+    test_repo: &GitTestRepo,
+    branch_name_in_event: &str,
+) -> Result<String> {
+    let events = block_on(get_events_from_cache(&test_repo.dir, vec![
+        nostr::Filter::default()
+            .kind(nostr_sdk::Kind::GitPatch)
+            .hashtag("root"),
+    ]))?;
+    get_proposal_branch_name_from_events(&events, branch_name_in_event)
+}
+
+pub fn get_proposal_branch_name_from_events(
+    events: &[nostr::Event],
+    branch_name_in_event: &str,
+) -> Result<String> {
+    let mut events = events.to_owned();
+    events.reverse();
+    for event in events {
+        if !event
+            .tags
+            .iter()
+            .any(|t| t.as_slice()[1].eq("revision-root"))
+            && event.tags.iter().any(|t| {
+                t.as_slice()[0].eq("branch-name") && t.as_slice()[1].eq(branch_name_in_event)
+            })
+        {
+            return Ok(format!(
+                "pr/{}({})",
+                branch_name_in_event,
+                &event.id.to_hex().as_str()[..8],
+            ));
+        }
+    }
+    bail!("failed to find proposal root with branch-name tag matching title")
+}
+
+pub static FEATURE_BRANCH_NAME_1: &str = "feature-example-t";
+pub static FEATURE_BRANCH_NAME_2: &str = "feature-example-f";
+pub static FEATURE_BRANCH_NAME_3: &str = "feature-example-c";
+pub static FEATURE_BRANCH_NAME_4: &str = "feature-example-d";
+
+pub static PROPOSAL_TITLE_1: &str = "proposal a";
+pub static PROPOSAL_TITLE_2: &str = "proposal b";
+pub static PROPOSAL_TITLE_3: &str = "proposal c";
+
+pub fn cli_tester_create_proposals() -> Result<GitTestRepo> {
+    let git_repo = GitTestRepo::default();
+    git_repo.populate()?;
+    cli_tester_create_proposal(
+        &git_repo,
+        FEATURE_BRANCH_NAME_1,
+        "a",
+        Some((PROPOSAL_TITLE_1, "proposal a description")),
+        None,
+    )?;
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    cli_tester_create_proposal(
+        &git_repo,
+        FEATURE_BRANCH_NAME_2,
+        "b",
+        Some((PROPOSAL_TITLE_2, "proposal b description")),
+        None,
+    )?;
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    cli_tester_create_proposal(
+        &git_repo,
+        FEATURE_BRANCH_NAME_3,
+        "c",
+        Some((PROPOSAL_TITLE_3, "proposal c description")),
+        None,
+    )?;
+    Ok(git_repo)
+}
+
+pub fn cli_tester_create_proposal_branches_ready_to_send() -> Result<GitTestRepo> {
+    let git_repo = GitTestRepo::default();
+    git_repo.populate()?;
+    create_and_populate_branch(&git_repo, FEATURE_BRANCH_NAME_1, "a", false, None)?;
+    create_and_populate_branch(&git_repo, FEATURE_BRANCH_NAME_2, "b", false, None)?;
+    create_and_populate_branch(&git_repo, FEATURE_BRANCH_NAME_3, "c", false, None)?;
+    Ok(git_repo)
+}
+
+pub fn create_and_populate_branch(
+    test_repo: &GitTestRepo,
+    branch_name: &str,
+    prefix: &str,
+    only_one_commit: bool,
+    commiter: Option<&Signature>,
+) -> Result<()> {
+    test_repo.checkout("main")?;
+    test_repo.create_branch(branch_name)?;
+    test_repo.checkout(branch_name)?;
+    let file_name = format!("{}3.md", prefix);
+    std::fs::write(test_repo.dir.join(&file_name), "some content")?;
+    test_repo.stage_and_commit_custom_signature(
+        &format!("add {}3.md", prefix),
+        Some(
+            &Signature::new(
+                "Joe Bloggs",
+                "joe.bloggs@pm.me",
+                &Time::new(deterministic_timestamp(&file_name), 0),
+            )
+            .unwrap(),
+        ),
+        commiter,
+    )?;
+    if !only_one_commit {
+        let file_name = format!("{}4.md", prefix);
+        std::fs::write(test_repo.dir.join(&file_name), "some content")?;
+        test_repo.stage_and_commit_custom_signature(
+            &format!("add {}4.md", prefix),
+            Some(
+                &Signature::new(
+                    "Joe Bloggs",
+                    "joe.bloggs@pm.me",
+                    &Time::new(deterministic_timestamp(&file_name), 0),
+                )
+                .unwrap(),
+            ),
+            commiter,
+        )?;
     }
     Ok(())
 }
 
-fn restore_config_backup() -> Result<()> {
-    let config_path = get_dirs().config_dir().join("config.json");
-    let backup_config_path = get_dirs().config_dir().join("config-backup.json");
-    if config_path.exists() {
-        std::fs::remove_file(&config_path)?;
-    }
-    if backup_config_path.exists() {
-        std::fs::rename(backup_config_path, config_path)?;
+use sha2::{Digest, Sha256};
+
+fn deterministic_timestamp(input: &str) -> i64 {
+    // Create a SHA-256 hasher
+    let mut hasher = Sha256::new();
+
+    // Hash the input string
+    hasher.update(input);
+
+    // Get the hash result
+    let result = hasher.finalize();
+
+    // Convert the first 8 bytes of the hash to an i64
+    let timestamp_bytes = &result[..8];
+    let timestamp = i64::from_be_bytes(
+        timestamp_bytes
+            .try_into()
+            .expect("slice with incorrect length"),
+    );
+
+    // Normalize the timestamp to a valid Unix timestamp
+    // You can adjust this to fit your needs, e.g., adding a base timestamp
+    timestamp.abs() % 1_000_000_000 // Keep it within a reasonable range
+}
+
+pub fn cli_tester_create_proposal(
+    test_repo: &GitTestRepo,
+    branch_name: &str,
+    prefix: &str,
+    cover_letter_title_and_description: Option<(&str, &str)>,
+    in_reply_to: Option<String>,
+) -> Result<()> {
+    create_and_populate_branch(test_repo, branch_name, prefix, false, None)?;
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    if let Some(in_reply_to) = in_reply_to {
+        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+            "--nsec",
+            TEST_KEY_1_NSEC,
+            "--password",
+            TEST_PASSWORD,
+            "--disable-cli-spinners",
+            "send",
+            "HEAD~2",
+            "--no-cover-letter",
+            "--in-reply-to",
+            in_reply_to.as_str(),
+        ]);
+        p.expect_end_eventually()?;
+    } else if let Some((title, description)) = cover_letter_title_and_description {
+        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+            "--nsec",
+            TEST_KEY_1_NSEC,
+            "--password",
+            TEST_PASSWORD,
+            "--disable-cli-spinners",
+            "send",
+            "HEAD~2",
+            "--title",
+            format!("\"{title}\"").as_str(),
+            "--description",
+            format!("\"{description}\"").as_str(),
+        ]);
+        p.expect_end_eventually()?;
+    } else {
+        let mut p = CliTester::new_from_dir(&test_repo.dir, [
+            "--nsec",
+            TEST_KEY_1_NSEC,
+            "--password",
+            TEST_PASSWORD,
+            "--disable-cli-spinners",
+            "send",
+            "HEAD~2",
+            "--no-cover-letter",
+        ]);
+        p.expect_end_eventually()?;
     }
     Ok(())
 }
 
-fn get_dirs() -> ProjectDirs {
-    ProjectDirs::from("", "CodeCollaboration", "ngit")
-        .expect("rust directories crate should return ProjectDirs")
+/// returns (originating_repo, test_repo)
+pub fn create_proposals_and_repo_with_proposal_pulled_and_checkedout(
+    proposal_number: u16,
+) -> Result<(GitTestRepo, GitTestRepo)> {
+    Ok((
+        cli_tester_create_proposals()?,
+        create_repo_with_proposal_branch_pulled_and_checkedout(proposal_number)?,
+    ))
+}
+
+pub fn create_repo_with_proposal_branch_pulled_and_checkedout(
+    proposal_number: u16,
+) -> Result<GitTestRepo> {
+    let test_repo = GitTestRepo::default();
+    test_repo.populate()?;
+    use_ngit_list_to_download_and_checkout_proposal_branch(&test_repo, proposal_number)?;
+    Ok(test_repo)
+}
+
+pub fn use_ngit_list_to_download_and_checkout_proposal_branch(
+    test_repo: &GitTestRepo,
+    proposal_number: u16,
+) -> Result<()> {
+    let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
+    p.expect("fetching updates...\r\n")?;
+    p.expect_eventually("\r\n")?; // some updates listed here
+    let mut c = p.expect_choice("all proposals", vec![
+        format!("\"{PROPOSAL_TITLE_3}\""),
+        format!("\"{PROPOSAL_TITLE_2}\""),
+        format!("\"{PROPOSAL_TITLE_1}\""),
+    ])?;
+    c.succeeds_with(
+        if proposal_number == 3 {
+            0
+        } else if proposal_number == 2 {
+            1
+        } else {
+            2
+        },
+        true,
+        None,
+    )?;
+    let mut c = p.expect_choice("", vec![
+        format!("create and checkout proposal branch (2 ahead 0 behind 'main')"),
+        format!("apply to current branch with `git am`"),
+        format!("download to ./patches"),
+        format!("back"),
+    ])?;
+    c.succeeds_with(0, true, Some(0))?;
+    p.expect_end_eventually()?;
+    Ok(())
+}
+
+pub fn remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
+    test_repo: &GitTestRepo,
+) -> Result<String> {
+    let branch_name = test_repo.get_checked_out_branch_name()?;
+    test_repo.checkout("main")?;
+    test_repo.git_repo.branch(
+        &branch_name,
+        &test_repo
+            .git_repo
+            .find_commit(test_repo.get_tip_of_local_branch(&branch_name)?)?
+            .parent(0)?,
+        true,
+    )?;
+    Ok(branch_name)
+}
+
+pub fn amend_last_commit(test_repo: &GitTestRepo, commit_msg: &str) -> Result<String> {
+    let branch_name =
+        remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(test_repo)?;
+    // add another commit (so we have an ammened local branch)
+    test_repo.checkout(&branch_name)?;
+    std::fs::write(test_repo.dir.join("ammended-commit.md"), commit_msg)?;
+    test_repo.stage_and_commit(commit_msg)?;
+    Ok(branch_name)
+}
+
+pub fn create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebased_proposal()
+-> Result<(GitTestRepo, GitTestRepo)> {
+    let (_, test_repo) = create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
+
+    // recreate proposal 1 on top of a another commit (like a rebase on top
+    // of one extra commit)
+    let second_originating_repo = GitTestRepo::default();
+    second_originating_repo.populate()?;
+    std::fs::write(
+        second_originating_repo.dir.join("amazing.md"),
+        "some content",
+    )?;
+    second_originating_repo.stage_and_commit("commit for rebasing on top of")?;
+    cli_tester_create_proposal(
+        &second_originating_repo,
+        FEATURE_BRANCH_NAME_1,
+        "a",
+        Some((PROPOSAL_TITLE_1, "proposal a description")),
+        Some(get_first_proposal_event_id()?.to_string()),
+    )?;
+
+    // pretend we have pulled the updated main branch
+    let branch_name = test_repo.get_checked_out_branch_name()?;
+    test_repo.checkout("main")?;
+    std::fs::write(test_repo.dir.join("amazing.md"), "some content")?;
+    test_repo.stage_and_commit("commit for rebasing on top of")?;
+    test_repo.checkout(&branch_name)?;
+    Ok((second_originating_repo, test_repo))
+}
+
+fn get_first_proposal_event_id() -> Result<nostr::EventId> {
+    // get proposal id of first
+    let client = Client::default();
+    Handle::current().block_on(client.add_relay("ws://localhost:8055"))?;
+    Handle::current().block_on(client.connect_relay("ws://localhost:8055"))?;
+    let proposals = Handle::current()
+        .block_on(
+            client.fetch_events(
+                nostr::Filter::default()
+                    .kind(nostr::Kind::GitPatch)
+                    .custom_tags(nostr::SingleLetterTag::lowercase(nostr::Alphabet::T), vec![
+                        "root",
+                    ]),
+                Duration::from_millis(500),
+            ),
+        )?
+        .to_vec();
+    Handle::current().block_on(client.disconnect());
+
+    let proposal_1_id = proposals
+        .iter()
+        .find(|e| {
+            e.tags
+                .iter()
+                .any(|t| t.as_slice()[1].eq(&FEATURE_BRANCH_NAME_1))
+        })
+        .unwrap()
+        .id;
+    Ok(proposal_1_id)
+}
+
+pub fn create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()
+-> Result<(GitTestRepo, GitTestRepo)> {
+    let (originating_repo, test_repo) =
+        create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
+
+    use_ngit_list_to_download_and_checkout_proposal_branch(&originating_repo, 1)?;
+
+    amend_last_commit(&originating_repo, "add some ammended-commit.md")?;
+
+    let mut p = CliTester::new_from_dir(&originating_repo.dir, [
+        "--nsec",
+        TEST_KEY_1_NSEC,
+        "--password",
+        TEST_PASSWORD,
+        "--disable-cli-spinners",
+        "push",
+        "--force",
+    ]);
+    p.expect_end_eventually()?;
+
+    Ok((originating_repo, test_repo))
 }
