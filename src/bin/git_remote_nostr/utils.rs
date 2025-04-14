@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use git2::Repository;
-use ngit::{
+use gnostr_ngit::{
     client::{
         get_all_proposal_patch_events_from_cache, get_events_from_local_cache,
         get_proposals_and_revisions_from_cache,

@@ -4,12 +4,10 @@
 
 use anyhow::Result;
 use clap::Parser;
-use cli::{AccountCommands, Cli, Commands};
+use gnostr_ngit::cli::{AccountCommands, Cli, Commands};
+use gnostr_ngit::{cli_interactor, client, git, git_events, login, repo_ref};
 
-mod cli;
-use ngit::{cli_interactor, client, git, git_events, login, repo_ref};
-
-mod sub_commands;
+use gnostr_ngit::sub_commands;
 
 #[tokio::main]
 async fn main() -> Result<()> {
