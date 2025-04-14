@@ -59,6 +59,11 @@ cargo-test: 	### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
 	cargo test
+
+cargo-test-crates-tui: 	### 	cargo-test-crates-tui
+	@. $(HOME)/.cargo/env
+	cargo t -vv --manifest-path ./crates/tui/Cargo.toml -- --nocapture
+
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. $(HOME)/.cargo/env
 	#@cargo test
