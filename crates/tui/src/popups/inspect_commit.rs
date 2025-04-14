@@ -68,18 +68,19 @@ pub struct InspectCommitPopup {
 impl DrawableComponent for InspectCommitPopup {
 	fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
 		if self.is_visible() {
+			//
 			let percentages = if self.diff.focused() {
-				(0, 100)
+				(20, 80)//
 			} else {
-				(50, 50)
+				(50, 50)//
 			};
 
 			let chunks = Layout::default()
 				.direction(Direction::Horizontal)
 				.constraints(
 					[
-						Constraint::Percentage(percentages.0),
 						Constraint::Percentage(percentages.1),
+						Constraint::Percentage(percentages.0),
 					]
 					.as_ref(),
 				)

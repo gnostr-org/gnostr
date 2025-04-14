@@ -220,7 +220,9 @@ impl Theme {
 
 	pub fn commit_hash(&self, selected: bool) -> Style {
 		self.apply_select(
-			Style::default().fg(self.commit_hash),
+			//Style::default().fg(self.commit_hash),
+			Style::default().fg(self.disabled_fg),
+			//Style::default().fg(self.commit_hash),
 			selected,
 		)
 	}
@@ -242,6 +244,7 @@ impl Theme {
 	pub fn commit_time(&self, selected: bool) -> Style {
 		self.apply_select(
 			Style::default().fg(self.commit_time),
+			//Style::default().fg(self.disabled_fg),
 			selected,
 		)
 	}
@@ -249,6 +252,7 @@ impl Theme {
 	pub fn commit_author(&self, selected: bool) -> Style {
 		self.apply_select(
 			Style::default().fg(self.commit_author),
+			//Style::default().fg(self.disabled_fg),
 			selected,
 		)
 	}
@@ -345,8 +349,8 @@ impl Default for Theme {
 			diff_file_removed: Color::LightRed,
 			diff_file_moved: Color::LightMagenta,
 			diff_file_modified: Color::Yellow,
-			commit_hash: Color::Magenta,
-			commit_time: Color::LightCyan,
+			commit_hash: Color::Reset,
+			commit_time: Color::Reset,
 			commit_author: Color::Green,
 			danger_fg: Color::Red,
 			push_gauge_bg: Color::Reset,

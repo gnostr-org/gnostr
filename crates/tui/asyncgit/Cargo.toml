@@ -39,6 +39,8 @@ invalidstring = { path = "../invalidstring", version = "0.1" }
 pretty_assertions = "1.4"
 serial_test = "3.1"
 tempfile = "3"
+tokio = { version = "1", features = ["full"] }
+
 
 [features]
 default = ["trace-libgit"]
