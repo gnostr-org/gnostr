@@ -25,6 +25,7 @@ struct OptionsData {
 	pub commit_msgs: Vec<String>,
 }
 
+//
 const COMMIT_MSG_HISTORY_LENGTH: usize = 20;
 
 #[derive(Clone)]
@@ -108,6 +109,7 @@ impl Options {
 		self.save();
 	}
 
+	//
 	pub fn add_commit_msg(&mut self, msg: &str) {
 		self.data.commit_msgs.push(msg.to_owned());
 		while self.data.commit_msgs.len() > COMMIT_MSG_HISTORY_LENGTH
@@ -117,10 +119,12 @@ impl Options {
 		self.save();
 	}
 
+	//
 	pub fn has_commit_msg_history(&self) -> bool {
 		!self.data.commit_msgs.is_empty()
 	}
 
+	//
 	pub fn commit_msg(&self, idx: usize) -> Option<String> {
 		if self.data.commit_msgs.is_empty() {
 			None

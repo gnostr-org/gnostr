@@ -13,7 +13,11 @@ use bitflags::bitflags;
 use crate::{
 	components::FuzzyFinderTarget,
 	popups::{
+		                        //FileRevOpen
 		AppOption, BlameFileOpen, FileRevOpen, FileTreeOpen,
+		//
+		//
+		//InspectCommitOpen
 		InspectCommitOpen,
 	},
 	tabs::StashingOptions,
@@ -63,6 +67,7 @@ pub enum StackablePopupOpen {
 	///
 	BlameFile(BlameFileOpen),
 	///
+	///
 	FileRevlog(FileRevOpen),
 	///
 	FileTree(FileTreeOpen),
@@ -73,7 +78,7 @@ pub enum StackablePopupOpen {
 }
 
 pub enum AppTabs {
-	Chat,
+	Chat,//
 	Status,
 	Log,
 	Files,
@@ -90,11 +95,13 @@ pub enum InternalEvent {
 	///
 	ShowErrorMsg(String),
 	///
+	///
 	ShowInfoMsg(String),
 	///
 	Update(NeedsUpdate),
 	///
 	StatusLastFileMoved,
+	/// open commit msg input
 	/// open commit msg input
 	OpenCommit,
 	///
@@ -103,6 +110,7 @@ pub enum InternalEvent {
 	TabSwitchStatus,
 	///
 	TabSwitch(AppTabs),
+	///
 	///
 	SelectCommitInRevlog(CommitId),
 	///
@@ -133,6 +141,7 @@ pub enum InternalEvent {
 	FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
 	///
 	FetchRemotes,
+	///
 	///
 	OpenPopup(StackablePopupOpen),
 	///

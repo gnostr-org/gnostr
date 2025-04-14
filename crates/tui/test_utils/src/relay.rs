@@ -146,7 +146,7 @@ impl<'a> Relay<'a> {
 					client_id,
 					message,
 				) => {
-					// println!("bla{:?}", &message);
+					println!("bla{:?}", &message);
 
 					println!(
 						"{} Received a message from client #{}: {:?}",

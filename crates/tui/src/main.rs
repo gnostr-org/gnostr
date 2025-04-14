@@ -38,18 +38,26 @@ mod args;
 mod bug_report;
 mod clipboard;
 mod cmdbar;
+//
 mod components;
 mod input;
 mod keys;
 mod notify_mutex;
 mod options;
+//
 mod popup_stack;
+//
 mod popups;
+//
 mod queue;
+//
 mod spinner;
+//
 mod string_utils;
+//
 mod strings;
 mod tabs;
+//
 mod ui;
 mod watcher;
 
