@@ -270,7 +270,8 @@ impl TopicList {
 		{
 			None
 		} else {
-			highlighting
+			None
+//			highlighting
 		};
 
 		self.select_next_highlight();
@@ -390,6 +391,7 @@ impl TopicList {
 		let speed_int = usize::try_from(self.scroll_state.1 as i64)?.max(1);
 
 		let page_offset = usize::from(
+			//
 			self.current_size.get().unwrap_or_default().1,
 		)
 		.saturating_sub(1);
@@ -492,6 +494,7 @@ impl TopicList {
 		let normal = !self.items.highlighting()
 			|| (self.items.highlighting() && e.highlighted);
 
+		//
 		let splitter_txt = Cow::from(symbol::EMPTY_SPACE);
 		let splitter = Span::styled(
 			splitter_txt,
@@ -516,26 +519,34 @@ impl TopicList {
 		}
 
 		let style_hash = normal
-			.then(|| theme.commit_hash(selected))
+			//
+			.then(|| theme.commit_unhighlighted())
+			//.then(|| theme.commit_hash(selected)).unwrap();
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_time = normal
-			.then(|| theme.commit_time(selected))
+			.then(|| theme.commit_unhighlighted())
+			//.then(|| theme.commit_time(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_author = normal
-			.then(|| theme.commit_author(selected))
+			.then(|| theme.commit_unhighlighted())
+		//	.then(|| theme.commit_author(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_tags = normal
-			.then(|| theme.tags(selected))
+			.then(|| theme.commit_unhighlighted())
+			//.then(|| theme.tags(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_branches = normal
-			.then(|| theme.branch(selected, true))
+			//.then(|| theme.commit_unhighlighted())
+			.then(|| theme.branch(selected, false))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_msg = normal
-			.then(|| theme.text(true, selected))
+			.then(|| theme.commit_unhighlighted())
+			//.then(|| theme.text(false, selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 
 		// commit hash
 		txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+		//txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
 
 		txt.push(splitter.clone());
 
@@ -548,7 +559,7 @@ impl TopicList {
 		txt.push(splitter.clone());
 
 		let author_width =
-			(width.saturating_sub(19) / 3).clamp(3, 20);
+			(width.saturating_sub(19) / 4).clamp(3, 20);
 		let author = string_width_align(&e.author, author_width);
 
 		// commit author
@@ -804,8 +815,10 @@ impl TopicList {
 impl DrawableComponent for TopicList {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		let current_size = (
-			area.width.saturating_sub(2)/2,
-			area.height.saturating_sub(2),
+			//area.width.saturating_sub(2),
+			area.width.saturating_sub(0),
+			//area.height.saturating_sub(2),
+			area.height.saturating_sub(0),
 		);
 		self.current_size.set(Some(current_size));
 
@@ -817,26 +830,30 @@ impl DrawableComponent for TopicList {
 			height_in_lines,
 			selection,
 		));
-                // title
+            // title
 		let title = format!(
-			"Topic {}/{}",
+			"topiclist.rs:Topic {}/{}",
 			//self.title,
 			self.commits.len().saturating_sub(self.selection),
-			self.commits.len(),
+			self.commits.len().saturating_sub(self.selection),
+			//self.commits.len(),
+			//self.commits.len(),
 		);
 
 		f.render_widget(
 			Paragraph::new(
 				self.get_text(
-					height_in_lines,
+					height_in_lines,//10 as usize
 					current_size.0 as usize,
+					//current_size.1 as usize,
 				),
 			)
 			.block(
 				Block::default()
 					.borders(Borders::ALL)
 					.title(Span::styled(
-						title.as_str(),
+						"title",
+						//title.as_str(),
 						self.theme.title(true),
 					))
 					.border_style(self.theme.block(true)),
@@ -845,14 +862,14 @@ impl DrawableComponent for TopicList {
 			area,
 		);
 
-		draw_scrollbar(
-			f,
-			area,
-			&self.theme,
-			self.commits.len(),
-			self.selection,
-			Orientation::Vertical,
-		);
+		//draw_scrollbar(
+		//	f,
+		//	area,
+		//	&self.theme,
+		//	self.commits.len(),
+		//	self.selection,
+		//	Orientation::Vertical,
+		//);
 
 		Ok(())
 	}
