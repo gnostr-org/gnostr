@@ -44,6 +44,7 @@ pub mod symbol {
 	pub const FOLDER_ICON_COLLAPSED: &str = "\u{25b8}"; //▸
 	pub const FOLDER_ICON_EXPANDED: &str = "\u{25be}"; //▾
 	pub const EMPTY_STR: &str = "";
+	pub const DOT: &str = "•";
 	pub const ELLIPSIS: char = '\u{2026}'; // …
 }
 

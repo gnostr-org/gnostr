@@ -18,6 +18,7 @@ pub struct LogEntry {
 	pub author: BoxStr,
 	pub msg: BoxStr,
 	//TODO: use tinyvec here
+	pub hash: BoxStr,
 	pub hash_short: BoxStr,
 	pub id: CommitId,
 	pub highlighted: bool,
@@ -25,6 +26,7 @@ pub struct LogEntry {
 
 impl From<CommitInfo> for LogEntry {
 	fn from(c: CommitInfo) -> Self {
+		let hash = c.id.to_string().into();
 		let hash_short = c.id.get_short_string().into();
 
 		let time = {
@@ -56,6 +58,7 @@ impl From<CommitInfo> for LogEntry {
 			author: author.into(),
 			msg: msg.into(),
 			time,
+			hash,
 			hash_short,
 			id: c.id,
 			highlighted: false,

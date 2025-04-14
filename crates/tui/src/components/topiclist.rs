@@ -195,11 +195,9 @@ impl TopicList {
 		{
 			try_or_popup!(
 				self,
-				"failed to invoke chat:",
+				"failed to checkout commit:",
 				checkout_commit(&self.repo.borrow(), commit_hash)
 			);
-                        //add chat to tui screen
-                        //get private key from padded commit hash
 		}
 	}
 
@@ -240,9 +238,6 @@ impl TopicList {
 			self.commits = commits;
 			self.fetch_commits(false);
 		}
-                //push each commit to nostr
-                for commit in &self.commits {}
-                for commit in self.commits.clone() {}
 	}
 
 	///
@@ -270,8 +265,7 @@ impl TopicList {
 		{
 			None
 		} else {
-			None
-//			highlighting
+			highlighting
 		};
 
 		self.select_next_highlight();
@@ -391,7 +385,6 @@ impl TopicList {
 		let speed_int = usize::try_from(self.scroll_state.1 as i64)?.max(1);
 
 		let page_offset = usize::from(
-			//
 			self.current_size.get().unwrap_or_default().1,
 		)
 		.saturating_sub(1);
@@ -422,6 +415,7 @@ impl TopicList {
 		Ok(needs_update)
 	}
 
+	// mark
 	fn mark(&mut self) {
 		if let Some(e) = self.selected_entry() {
 			let id = e.id;
@@ -483,18 +477,19 @@ impl TopicList {
 		local_branches: Option<String>,
 		remote_branches: Option<String>,
 		theme: &Theme,
-		width: usize,
+		width: usize,//width
 		now: DateTime<Local>,
 		marked: Option<bool>,
 	) -> Line<'a> {
+
+		//
 		let mut txt: Vec<Span> = Vec::with_capacity(
-			ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 },
+			ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 },
 		);
 
 		let normal = !self.items.highlighting()
 			|| (self.items.highlighting() && e.highlighted);
 
-		//
 		let splitter_txt = Cow::from(symbol::EMPTY_SPACE);
 		let splitter = Span::styled(
 			splitter_txt,
@@ -509,96 +504,88 @@ impl TopicList {
 		if let Some(marked) = marked {
 			txt.push(Span::styled(
 				Cow::from(if marked {
-					symbol::CHECKMARK
+					symbol::CHECKMARK//offset in home component
 				} else {
-					symbol::EMPTY_SPACE
+					symbol::DOT
 				}),
 				theme.log_marker(selected),
 			));
-			txt.push(splitter.clone());
+		//	txt.push(splitter.clone());
+		} else {
 		}
+		txt.push(splitter.clone());
 
 		let style_hash = normal
-			//
-			.then(|| theme.commit_unhighlighted())
-			//.then(|| theme.commit_hash(selected)).unwrap();
+			.then(|| theme.commit_hash(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_time = normal
-			.then(|| theme.commit_unhighlighted())
-			//.then(|| theme.commit_time(selected))
+			.then(|| theme.commit_time(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_author = normal
-			.then(|| theme.commit_unhighlighted())
-		//	.then(|| theme.commit_author(selected))
+			.then(|| theme.commit_author(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_tags = normal
-			.then(|| theme.commit_unhighlighted())
-			//.then(|| theme.tags(selected))
+			.then(|| theme.tags(selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_branches = normal
-			//.then(|| theme.commit_unhighlighted())
-			.then(|| theme.branch(selected, false))
+			.then(|| theme.branch(selected, true))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 		let style_msg = normal
-			.then(|| theme.commit_unhighlighted())
-			//.then(|| theme.text(false, selected))
+			.then(|| theme.text(true, selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 
 		// commit hash
-		txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
-		//txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
+		//txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+		txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
 
 		txt.push(splitter.clone());
 
-		// commit timestamp
+		//weeble/blockheight/wobble
+		//// commit timestamp
 		//txt.push(Span::styled(
-		//	Cow::from(e.time_to_string(now)),
+		//	//Cow::from(e.time_to_string(now)),
+		//	//             //add a column in home
+		//	Cow::from(String::from("       weeble/blockheight/wobble")),
 		//	style_time,
 		//));
 
-		txt.push(splitter.clone());
+		//txt.push(splitter.clone());
 
-		let author_width =
-			(width.saturating_sub(19) / 4).clamp(3, 20);
-		let author = string_width_align(&e.author, author_width);
+		//let author_width =
+		//	(width.saturating_sub(0) / 3).clamp(3, 20);//replace with nostr metadata
+		//let author = string_width_align(&e.author, author_width);
 
 		// commit author
-                // insert nostr pubkey
-		// txt.push(Span::styled(author, style_author));
+		//txt.push(Span::styled(author, style_author));
 
 		txt.push(splitter.clone());
 
 		// commit tags
-		//if let Some(tags) = tags {
-		//	txt.push(splitter.clone());
-		//	txt.push(Span::styled(tags, style_tags));
-		//}
+		if let Some(tags) = tags {
+			txt.push(splitter.clone());
+			//txt.push(Span::styled(tags, style_tags));
+		}
 
-                // nostr git remotes
-		//if let Some(local_branches) = local_branches {
-		//	txt.push(splitter.clone());
-		//	//txt.push(Span::styled(local_branches, style_branches));
-		//}
-		//if let Some(remote_branches) = remote_branches {
-		//	txt.push(splitter.clone());
-		//	txt.push(Span::styled(remote_branches, style_branches));
-		//}
+		if let Some(local_branches) = local_branches {
+			txt.push(splitter.clone());
+			//txt.push(Span::styled(local_branches, style_branches));
+		}
+		if let Some(remote_branches) = remote_branches {
+			txt.push(splitter.clone());
+			//txt.push(Span::styled(remote_branches, style_branches));
+		}
 
 		//txt.push(splitter);
 
 		let message_width = width.saturating_sub(
-			txt.iter().map(|span| span.content.len()/10).sum(),
-			//txt.iter().map(|span| 1).sum(),
+			txt.iter().map(|span| span.content.len()).sum(),
 		);
-		//let message_width = (width.saturating_sub(19) / 3);
 
-		// commit msg
-		// commit msg
-		// commit msg
-		//txt.push(Span::styled(
-		//	format!("{:message_width$}", &e.msg),
-		//	style_msg,
-		//));
+		// // commit msg
+		// txt.push(Span::styled(
+		// 	format!("{:message_width$}", &e.msg),
+		// 	style_msg,
+		// ));
 
 		Line::from(txt)
 	}
@@ -651,7 +638,7 @@ impl TopicList {
 				local_branches,
 				self.remote_branches_string(e),
 				&self.theme,
-				width/2,
+				width,
 				now,
 				marked,
 			));
@@ -815,10 +802,8 @@ impl TopicList {
 impl DrawableComponent for TopicList {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		let current_size = (
-			//area.width.saturating_sub(2),
-			area.width.saturating_sub(0),
-			//area.height.saturating_sub(2),
-			area.height.saturating_sub(0),
+			area.width.saturating_sub(2),
+			area.height.saturating_sub(2),
 		);
 		self.current_size.set(Some(current_size));
 
@@ -830,30 +815,26 @@ impl DrawableComponent for TopicList {
 			height_in_lines,
 			selection,
 		));
-            // title
+
 		let title = format!(
-			"topiclist.rs:Topic {}/{}",
-			//self.title,
+			"{} {}/{}",
+			self.title,
 			self.commits.len().saturating_sub(self.selection),
-			self.commits.len().saturating_sub(self.selection),
-			//self.commits.len(),
-			//self.commits.len(),
+			self.commits.len(),
 		);
 
 		f.render_widget(
 			Paragraph::new(
 				self.get_text(
-					height_in_lines,//10 as usize
+					height_in_lines,
 					current_size.0 as usize,
-					//current_size.1 as usize,
 				),
 			)
 			.block(
 				Block::default()
 					.borders(Borders::ALL)
 					.title(Span::styled(
-						"title",
-						//title.as_str(),
+						title.as_str(),
 						self.theme.title(true),
 					))
 					.border_style(self.theme.block(true)),
@@ -862,14 +843,14 @@ impl DrawableComponent for TopicList {
 			area,
 		);
 
-		//draw_scrollbar(
-		//	f,
-		//	area,
-		//	&self.theme,
-		//	self.commits.len(),
-		//	self.selection,
-		//	Orientation::Vertical,
-		//);
+		draw_scrollbar(
+			f,
+			area,
+			&self.theme,
+			self.commits.len(),
+			self.selection,
+			Orientation::Vertical,
+		);
 
 		Ok(())
 	}
