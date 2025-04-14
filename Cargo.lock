@@ -1905,7 +1905,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.56"
+version = "0.0.57"
 dependencies = [
  "anyhow",
  "async-std",
@@ -1964,7 +1964,6 @@ dependencies = [
  "nostr 0.32.0",
  "nostr-sdk 0.32.0",
  "passwords",
- "rexpect",
  "scrypt",
  "serde",
  "serde_json",
