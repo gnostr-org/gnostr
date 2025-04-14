@@ -58,7 +58,7 @@ name = "ngit"
 path = "src/lib/mod.rs"
 
 [[bin]]
-name = "ngit"
+name = "gnostr-ngit"
 path = "src/bin/ngit/main.rs"
 
 [[bin]]
