@@ -29,6 +29,7 @@ use futures::{
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressState, ProgressStyle};
 #[cfg(test)]
 use mockall::*;
+use mockall::mock;
 use nostr::{
     Event,
     nips::{nip01::Coordinate, nip19::Nip19Coordinate},
@@ -55,6 +56,15 @@ use crate::{
 
 #[allow(clippy::struct_field_names)]
 pub struct Client {
+    client: nostr_sdk::Client,
+    fallback_relays: Vec<String>,
+    more_fallback_relays: Vec<String>,
+    blaster_relays: Vec<String>,
+    fallback_signer_relays: Vec<String>,
+}
+
+#[allow(clippy::struct_field_names)]
+pub struct MockClient {
     client: nostr_sdk::Client,
     fallback_relays: Vec<String>,
     more_fallback_relays: Vec<String>,

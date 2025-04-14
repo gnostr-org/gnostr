@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap;
-use ngit::{
+use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
     git::{get_git_config_item, remove_git_config_item},
     login::{SignerInfoSource, existing::load_existing_login},
@@ -12,7 +12,7 @@ use crate::{
     git::Repo,
     login::fresh::fresh_login_or_signup,
 };
-
+ use crate::client;
 #[derive(clap::Args)]
 pub struct SubCommandArgs {
     /// login to the local git repository only
@@ -25,10 +25,18 @@ pub struct SubCommandArgs {
 }
 
 pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+
+	#[cfg(not(test))]
     let client = if command_args.offline {
         None
     } else {
         Some(Client::default())
+    };
+	#[cfg(test)]
+    let client = if command_args.offline {
+        None
+    } else {
+        Some(<client::MockConnect as client::Connect>::default())
     };
 
     let git_repo_result = Repo::discover().context("failed to find a git repository");

@@ -17,7 +17,7 @@ use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
 use git2::{Oid, Repository};
-use ngit::{
+use gnostr_ngit::{
     cli_interactor::count_lines_per_msg_vec,
     client::{self, get_event_from_cache_by_id},
     git::{

@@ -1,7 +1,7 @@
 use std::{io::Write, ops::Add};
 
 use anyhow::{Context, Result, bail};
-use ngit::{
+use crate::{
     client::{get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache},
     git_events::{
         get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
@@ -12,7 +12,7 @@ use nostr_sdk::Kind;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::{
-        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
+        MockClient, Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
     },
     git::{Repo, RepoActions, str_to_sha1},
     git_events::{
@@ -21,6 +21,8 @@ use crate::{
     },
     repo_ref::get_repo_coordinates_when_remote_unknown,
 };
+
+use crate::client;
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch() -> Result<()> {
@@ -31,6 +33,11 @@ pub async fn launch() -> Result<()> {
     // TODO: check for existing maintaiers file
     // TODO: check for other claims
 
+
+    #[cfg(test)]
+    let mut client = &<client::MockConnect as client::Connect>::default();
+
+    #[cfg(not(test))]
     let client = Client::default();
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;

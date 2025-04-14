@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use ngit::login::SignerInfo;
+use crate::login::SignerInfo;
 
 use crate::sub_commands;
 

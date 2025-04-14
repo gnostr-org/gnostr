@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use ngit::{
+use crate::{
     git::remove_git_config_item,
     login::{SignerInfoSource, existing::load_existing_login},
 };
