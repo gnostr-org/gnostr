@@ -4,14 +4,13 @@
 #![allow(clippy::single_match_else)]
 use anyhow::Result;
 use clap::Parser;
-use cli::{Cli, Commands};
+use ngit::cli::{Cli, Commands};
 
-mod cli;
 use ngit::{
 	cli_interactor, client, git, git_events, login, repo_ref,
 };
 
-mod sub_commands;
+use ngit::sub_commands;
 
 #[tokio::main]
 async fn main() -> Result<()> {

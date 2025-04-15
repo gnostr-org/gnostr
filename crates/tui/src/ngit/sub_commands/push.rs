@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use ngit::{
+use crate::{
 	client::send_events,
 	git_events::{is_event_proposal_root_for_branch, tag_value},
 };

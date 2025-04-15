@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::{bail, Context, Result};
 use console::Style;
-use ngit::{
+use crate::{
 	client::send_events,
 	git_events::generate_cover_letter_and_patch_events,
 };

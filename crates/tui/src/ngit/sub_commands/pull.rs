@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use ngit::git_events::is_event_proposal_root_for_branch;
+use crate::git_events::is_event_proposal_root_for_branch;
 use nostr_sdk::PublicKey;
 
 use crate::{
