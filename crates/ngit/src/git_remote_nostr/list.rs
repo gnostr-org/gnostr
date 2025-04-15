@@ -1,11 +1,11 @@
 use core::str;
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
-use gnostr_ngit::{
+use ngit::{
     client,
     git::{
         self,
@@ -218,11 +218,12 @@ pub fn list_from_remote(
             .as_str(),
         )?;
 
-        let formatted_url = server_url.format_as(protocol, &decoded_nostr_url.user)?;
+        let formatted_url = server_url.format_as(protocol)?;
         let res = list_from_remote_url(
             git_repo,
             &formatted_url,
             [ServerProtocol::UnauthHttps, ServerProtocol::UnauthHttp].contains(protocol),
+            decoded_nostr_url.ssh_key_file_path().as_ref(),
             term,
         );
 
@@ -245,9 +246,18 @@ pub fn list_from_remote(
             }
             Err(error) => {
                 term.clear_last_lines(1)?;
-                term.write_line(
-                    format!("list: {formatted_url} failed over {protocol}: {error}").as_str(),
-                )?;
+                term.write_line(&format!(
+                    "list: {formatted_url} failed over {protocol}{}: {error}",
+                    if protocol == &ServerProtocol::Ssh {
+                        if let Some(ssh_key_file) = &decoded_nostr_url.ssh_key_file_path() {
+                            format!(" with ssh key from {ssh_key_file}")
+                        } else {
+                            String::new()
+                        }
+                    } else {
+                        String::new()
+                    }
+                ))?;
                 failed_protocols.push(protocol);
                 if protocol == &ServerProtocol::Ssh
                     && fetch_or_list_error_is_not_authentication_failure(&error)
@@ -283,13 +293,26 @@ fn list_from_remote_url(
     git_repo: &Repo,
     git_server_remote_url: &str,
     dont_authenticate: bool,
+    ssh_key_file: Option<&String>,
     term: &console::Term,
 ) -> Result<HashMap<String, String>> {
     let git_config = git_repo.git_repo.config()?;
 
     let mut git_server_remote = git_repo.git_repo.remote_anonymous(git_server_remote_url)?;
-    // authentication may be required
-    let auth = GitAuthenticator::default();
+    let auth = {
+        if dont_authenticate {
+            GitAuthenticator::default()
+        } else if git_server_remote_url.contains("git@") {
+            if let Some(ssh_key_file) = ssh_key_file {
+                GitAuthenticator::default()
+                    .add_ssh_key_from_file(PathBuf::from_str(ssh_key_file)?, None)
+            } else {
+                GitAuthenticator::default()
+            }
+        } else {
+            GitAuthenticator::default()
+        }
+    };
     let mut remote_callbacks = git2::RemoteCallbacks::new();
     if !dont_authenticate {
         remote_callbacks.credentials(auth.credentials(&git_config));

@@ -2,8 +2,7 @@ use super::*;
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
-async fn fetch_downloads_specified_commits_from_git_server() -> Result<()> {
+async fn fetch_downloads_speficied_commits_from_git_server() -> Result<()> {
     let source_git_repo = prep_git_repo()?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -73,11 +72,9 @@ mod when_first_git_server_fails_ {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<()> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
-        // let source_path =
-        // source_git_repo.dir.to_str().unwrap().to_string();
+        // let source_path = source_git_repo.dir.to_str().unwrap().to_string();
         let error_path = "./path-doesnt-exist".to_string();
 
         let main_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
@@ -93,8 +90,7 @@ mod when_first_git_server_fails_ {
             ]),
             state_event,
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -143,7 +139,6 @@ mod when_first_git_server_fails_ {
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
 async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<()> {
     let (events, _) = prep_source_repo_and_events_including_proposals().await?;
 

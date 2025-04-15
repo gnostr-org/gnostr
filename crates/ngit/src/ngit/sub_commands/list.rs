@@ -1,21 +1,23 @@
 use std::{io::Write, ops::Add};
 
 use anyhow::{Context, Result, bail};
+use ngit::{
+    client::{get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache},
+    git_events::{
+        get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
+    },
+};
 use nostr_sdk::Kind;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
-    client,
     client::{
-        Client, Connect, MockClient, fetching_with_report,
-        get_all_proposal_patch_events_from_cache, get_events_from_local_cache,
-        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
+        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
     },
     git::{Repo, RepoActions, str_to_sha1},
     git_events::{
         commit_msg_from_patch_oneliner, event_is_revision_root, event_to_cover_letter,
-        get_commit_id_from_patch, get_most_recent_patch_with_ancestors, patch_supports_commit_ids,
-        status_kinds, tag_value,
+        patch_supports_commit_ids,
     },
     repo_ref::get_repo_coordinates_when_remote_unknown,
 };
@@ -29,10 +31,6 @@ pub async fn launch() -> Result<()> {
     // TODO: check for existing maintaiers file
     // TODO: check for other claims
 
-    #[cfg(test)]
-    let mut client = &<client::MockConnect as client::Connect>::default();
-
-    #[cfg(not(test))]
     let client = Client::default();
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
@@ -49,14 +47,11 @@ pub async fn launch() -> Result<()> {
     }
 
     let statuses: Vec<nostr::Event> = {
-        let mut statuses = get_events_from_local_cache(
-            git_repo_path,
-            vec![
-                nostr::Filter::default()
-                    .kinds(status_kinds().clone())
-                    .events(proposals_and_revisions.iter().map(|e| e.id)),
-            ],
-        )
+        let mut statuses = get_events_from_local_cache(git_repo_path, vec![
+            nostr::Filter::default()
+                .kinds(status_kinds().clone())
+                .events(proposals_and_revisions.iter().map(|e| e.id)),
+        ])
         .await?;
         statuses.sort_by_key(|e| e.created_at);
         statuses.reverse();
@@ -289,18 +284,16 @@ pub async fn launch() -> Result<()> {
         if !git_repo.does_commit_exist(&proposal_base_commit.to_string())? {
             println!("your '{main_branch_name}' branch may not be up-to-date.");
             println!("the proposal parent commit doesnt exist in your local repository.");
-            return match Interactor::default().choice(
-                PromptChoiceParms::default()
-                    .with_default(0)
-                    .with_choices(vec![
-                        format!(
+            return match Interactor::default().choice(PromptChoiceParms::default().with_default(0).with_choices(
+                vec![
+                    format!(
                         "manually run `git pull` on '{main_branch_name}' and select proposal again"
                     ),
-                        format!("apply to current branch with `git am`"),
-                        format!("download to ./patches"),
-                        "back".to_string(),
-                    ]),
-            )? {
+                    format!("apply to current branch with `git am`"),
+                    format!("download to ./patches"),
+                    "back".to_string(),
+                ],
+            ))? {
                 0 | 3 => continue,
                 1 => launch_git_am_with_patches(most_recent_proposal_patch_chain),
                 2 => save_patches_to_dir(most_recent_proposal_patch_chain, &git_repo),
@@ -323,20 +316,17 @@ pub async fn launch() -> Result<()> {
 
         // branch doesnt exist
         if !branch_exists {
-            return match Interactor::default().choice(
-                PromptChoiceParms::default()
-                    .with_default(0)
-                    .with_choices(vec![
-                        format!(
+            return match Interactor::default()
+                .choice(PromptChoiceParms::default().with_default(0).with_choices(vec![
+                format!(
                     "create and checkout proposal branch ({} ahead {} behind '{main_branch_name}')",
                     most_recent_proposal_patch_chain.len(),
                     proposal_behind_main.len(),
                 ),
-                        format!("apply to current branch with `git am`"),
-                        format!("download to ./patches"),
-                        "back".to_string(),
-                    ]),
-            )? {
+                format!("apply to current branch with `git am`"),
+                format!("download to ./patches"),
+                "back".to_string(),
+            ]))? {
                 0 => {
                     check_clean(&git_repo)?;
                     let _ = git_repo

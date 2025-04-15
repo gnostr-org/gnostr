@@ -27,17 +27,11 @@ use futures::{
     stream::{self, StreamExt},
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressState, ProgressStyle};
-use mockall::mock;
 #[cfg(test)]
 use mockall::*;
-use nostr::{
-    Event,
-    nips::{nip01::Coordinate, nip19::Nip19Coordinate},
-    signer::SignerBackend,
-};
-use nostr_database::{NostrEventsDatabase, SaveEventStatus};
+use nostr::{Event, nips::nip01::Coordinate, signer::SignerBackend};
+use nostr_database::NostrEventsDatabase;
 use nostr_lmdb::NostrLMDB;
-use nostr_relay_pool::relay::ReqExitPolicy;
 use nostr_sdk::{
     EventBuilder, EventId, Kind, NostrSigner, Options, PublicKey, RelayUrl, SingleLetterTag,
     Timestamp, prelude::RelayLimits,
@@ -56,15 +50,6 @@ use crate::{
 
 #[allow(clippy::struct_field_names)]
 pub struct Client {
-    client: nostr_sdk::Client,
-    fallback_relays: Vec<String>,
-    more_fallback_relays: Vec<String>,
-    blaster_relays: Vec<String>,
-    fallback_signer_relays: Vec<String>,
-}
-
-#[allow(clippy::struct_field_names)]
-pub struct MockClient {
     client: nostr_sdk::Client,
     fallback_relays: Vec<String>,
     more_fallback_relays: Vec<String>,
@@ -104,7 +89,7 @@ pub trait Connect {
     async fn fetch_all<'a>(
         &self,
         git_repo_path: Option<&'a Path>,
-        repo_coordinates: Option<&'a Nip19Coordinate>,
+        repo_coordinates: Option<&'a Coordinate>,
         user_profiles: &HashSet<PublicKey>,
     ) -> Result<(Vec<Result<FetchReport>>, MultiProgress)>;
     async fn fetch_all_from_relay<'a>(
@@ -197,8 +182,8 @@ impl Connect for Client {
 
         if !relay.is_connected() {
             #[allow(clippy::large_futures)]
-            let _ = relay
-                .try_connect(std::time::Duration::from_secs(CONNECTION_TIMEOUT))
+            relay
+                .connect(Some(std::time::Duration::from_secs(CONNECTION_TIMEOUT)))
                 .await;
         }
 
@@ -209,7 +194,7 @@ impl Connect for Client {
     }
 
     async fn disconnect(&self) -> Result<()> {
-        self.client.disconnect().await;
+        self.client.disconnect().await?;
         Ok(())
     }
 
@@ -238,7 +223,11 @@ impl Connect for Client {
         self.client.add_relay(url).await?;
         #[allow(clippy::large_futures)]
         self.client.connect_relay(url).await?;
-        self.client.relay(url).await?.send_event(&event).await?;
+        self.client
+            .relay(url)
+            .await?
+            .send_event(event.clone())
+            .await?;
         if let Some(git_repo_path) = git_repo_path {
             save_event_in_local_cache(git_repo_path, &event).await?;
         }
@@ -340,7 +329,7 @@ impl Connect for Client {
     async fn fetch_all<'a>(
         &self,
         git_repo_path: Option<&'a Path>,
-        trusted_maintainer_coordinate: Option<&'a Nip19Coordinate>,
+        trusted_maintainer_coordinate: Option<&'a Coordinate>,
         user_profiles: &HashSet<PublicKey>,
     ) -> Result<(Vec<Result<FetchReport>>, MultiProgress)> {
         let fallback_relays = &self
@@ -515,7 +504,7 @@ impl Connect for Client {
         request: FetchRequest,
         pb: &Option<ProgressBar>,
     ) -> Result<FetchReport> {
-        let mut fresh_coordinates: HashSet<Nip19Coordinate> = HashSet::new();
+        let mut fresh_coordinates: HashSet<Coordinate> = HashSet::new();
         for (c, _) in request.repo_coordinates_without_relays.clone() {
             fresh_coordinates.insert(c);
         }
@@ -628,8 +617,8 @@ async fn get_events_of(
 
     if !relay.is_connected() {
         #[allow(clippy::large_futures)]
-        let _ = relay
-            .try_connect(std::time::Duration::from_secs(CONNECTION_TIMEOUT))
+        relay
+            .connect(Some(std::time::Duration::from_secs(CONNECTION_TIMEOUT)))
             .await;
     }
 
@@ -638,27 +627,16 @@ async fn get_events_of(
     } else if let Some(pb) = pb {
         pb.set_prefix(format!("connected  {}", relay.url()));
     }
-
-    let events_res = join_all(filters.into_iter().map(|filter| async {
-        relay
-            .fetch_events(
-                filter,
-                // 20 is nostr_sdk default
-                std::time::Duration::from_secs(GET_EVENTS_TIMEOUT),
-                ReqExitPolicy::ExitOnEOSE,
-            )
-            .await
-    }))
-    .await;
-
-    // no Event is being mutated, just new items added to the set
-    #[allow(clippy::mutable_key_type)]
-    let mut events: HashSet<Event> = HashSet::new();
-
-    for res in events_res {
-        events.extend(res?);
-    }
-    Ok(events.into_iter().collect())
+    let events = relay
+        .fetch_events(
+            filters,
+            // 20 is nostr_sdk default
+            std::time::Duration::from_secs(GET_EVENTS_TIMEOUT),
+            nostr_sdk::FilterOptions::ExitOnEOSE,
+        )
+        .await?
+        .to_vec();
+    Ok(events)
 }
 
 #[derive(Default)]
@@ -685,14 +663,10 @@ fn get_dedup_events(relay_results: Vec<Result<Vec<nostr::Event>>>) -> Vec<Event>
 pub async fn sign_event(
     event_builder: EventBuilder,
     signer: &Arc<dyn NostrSigner>,
-    description: String,
 ) -> Result<nostr::Event> {
     if signer.backend() == SignerBackend::NostrConnect {
         let term = console::Term::stderr();
-        term.write_line(&format!(
-            "signing event ({}) with remote signer...",
-            description
-        ))?;
+        term.write_line("signing event with remote signer...")?;
         let event = signer
             .sign_event(event_builder.build(signer.get_public_key().await?))
             .await
@@ -796,81 +770,50 @@ pub async fn get_events_from_local_cache(
     git_repo_path: &Path,
     filters: Vec<nostr::Filter>,
 ) -> Result<Vec<nostr::Event>> {
-    let db = get_local_cache_database(git_repo_path).await?;
-
-    let query_results = join_all(filters.into_iter().map(|filter| async {
-        db.query(filter)
-            .await
-            .context("failed to execute query on opened ngit nostr cache database")
-    }))
-    .await;
-
-    // no Event is being mutated, just new items added to the set
-    #[allow(clippy::mutable_key_type)]
-    let mut events: HashSet<Event> = HashSet::new();
-
-    for result in query_results {
-        events.extend(result?);
-    }
-
-    Ok(events.into_iter().collect())
+    Ok(get_local_cache_database(git_repo_path)
+        .await?
+        .query(filters.clone())
+        .await
+        .context(
+            "failed to execute query on opened git repo nostr cache database .git/nostr-cache.lmdb",
+        )?
+        .to_vec())
 }
 
 pub async fn get_event_from_global_cache(
     git_repo_path: Option<&Path>,
     filters: Vec<nostr::Filter>,
 ) -> Result<Vec<nostr::Event>> {
-    let db = get_global_cache_database(git_repo_path).await?;
-
-    let query_results = join_all(filters.into_iter().map(|filter| async {
-        db.query(filter)
-            .await
-            .context("failed to execute query on opened ngit nostr cache database")
-    }))
-    .await;
-
-    // no Event is being mutated, just new items added to the set
-    #[allow(clippy::mutable_key_type)]
-    let mut events: HashSet<Event> = HashSet::new();
-
-    for result in query_results {
-        events.extend(result?);
-    }
-
-    Ok(events.into_iter().collect())
+    Ok(get_global_cache_database(git_repo_path)
+        .await?
+        .query(filters.clone())
+        .await
+        .context("failed to execute query on opened ngit nostr cache database")?
+        .to_vec())
 }
 
 pub async fn save_event_in_local_cache(git_repo_path: &Path, event: &nostr::Event) -> Result<bool> {
-    match get_local_cache_database(git_repo_path)
+    get_local_cache_database(git_repo_path)
         .await?
         .save_event(event)
         .await
-        .context("failed to save event in local cache")?
-    {
-        SaveEventStatus::Success => Ok(true),
-        _ => Ok(false),
-    }
+        .context("failed to save event in local cache")
 }
 
 pub async fn save_event_in_global_cache(
     git_repo_path: Option<&Path>,
     event: &nostr::Event,
 ) -> Result<bool> {
-    match get_global_cache_database(git_repo_path)
+    get_global_cache_database(git_repo_path)
         .await?
         .save_event(event)
         .await
         .context("failed to save event in local cache")
-    {
-        Ok(SaveEventStatus::Success) => Ok(true),
-        Ok(_) => Ok(false),
-        Err(e) => Err(e).context("failed to save event in local cache"),
-    }
 }
 
 pub async fn get_repo_ref_from_cache(
     git_repo_path: Option<&Path>,
-    repo_coordinate: &Nip19Coordinate,
+    repo_coordinate: &Coordinate,
 ) -> Result<RepoRef> {
     let mut maintainers = HashSet::new();
     let mut new_coordinate: bool;
@@ -881,12 +824,10 @@ pub async fn get_repo_ref_from_cache(
         new_coordinate = false;
         let repo_events_filter =
             get_filter_repo_events(&HashSet::from_iter(maintainers.iter().map(|m| {
-                Nip19Coordinate {
-                    coordinate: Coordinate {
-                        kind: Kind::GitRepoAnnouncement,
-                        public_key: *m,
-                        identifier: repo_coordinate.identifier.to_string(),
-                    },
+                Coordinate {
+                    kind: Kind::GitRepoAnnouncement,
+                    public_key: *m,
+                    identifier: repo_coordinate.identifier.to_string(),
                     relays: vec![],
                 }
             })));
@@ -918,21 +859,19 @@ pub async fn get_repo_ref_from_cache(
     let repo_ref = RepoRef::try_from((
         repo_events
             .first()
-            .context("no repo announcement event found at specified Nip19Coordinates. if you are the repository maintainer consider running `ngit init` to create one")?
+            .context("no repo announcement event found at specified coordinates. if you are the repository maintainer consider running `ngit init` to create one")?
             .clone(),
         Some(repo_coordinate.public_key),
     ))?;
 
-    let mut events: HashMap<Nip19Coordinate, nostr::Event> = HashMap::new();
+    let mut events: HashMap<Coordinate, nostr::Event> = HashMap::new();
     for m in &maintainers {
         if let Some(e) = repo_events.iter().find(|e| e.pubkey.eq(m)) {
             events.insert(
-                Nip19Coordinate {
-                    coordinate: Coordinate {
-                        kind: e.kind,
-                        identifier: e.tags.identifier().unwrap().to_string(),
-                        public_key: e.pubkey,
-                    },
+                Coordinate {
+                    kind: e.kind,
+                    identifier: e.tags.identifier().unwrap().to_string(),
+                    public_key: e.pubkey,
                     relays: vec![],
                 },
                 e.clone(),
@@ -955,18 +894,16 @@ pub async fn get_state_from_cache(
 ) -> Result<RepoState> {
     if let Some(git_repo_path) = git_repo_path {
         RepoState::try_from(
-            get_events_from_local_cache(
-                git_repo_path,
-                vec![get_filter_state_events(&repo_ref.coordinates())],
-            )
+            get_events_from_local_cache(git_repo_path, vec![get_filter_state_events(
+                &repo_ref.coordinates(),
+            )])
             .await?,
         )
     } else {
         RepoState::try_from(
-            get_event_from_global_cache(
-                git_repo_path,
-                vec![get_filter_state_events(&repo_ref.coordinates())],
-            )
+            get_event_from_global_cache(git_repo_path, vec![get_filter_state_events(
+                &repo_ref.coordinates(),
+            )])
             .await?,
         )
     }
@@ -975,7 +912,7 @@ pub async fn get_state_from_cache(
 #[allow(clippy::too_many_lines)]
 async fn create_relays_request(
     git_repo_path: Option<&Path>,
-    trusted_maintainer_coordinate: Option<&Nip19Coordinate>,
+    trusted_maintainer_coordinate: Option<&Coordinate>,
     user_profiles: &HashSet<PublicKey>,
     fallback_relays: HashSet<RelayUrl>,
 ) -> Result<FetchRequest> {
@@ -992,9 +929,9 @@ async fn create_relays_request(
     };
 
     let repo_coordinates = {
-        // add Nip19Coordinates of users listed in maintainers to explicitly
-        // specified coodinates
-        let mut set: HashSet<Nip19Coordinate> = HashSet::new();
+        // add coordinates of users listed in maintainers to explicitly specified
+        // coodinates
+        let mut set: HashSet<Coordinate> = HashSet::new();
         if let Some(trusted_maintainer_coordinate) = trusted_maintainer_coordinate {
             set.insert(trusted_maintainer_coordinate.clone());
         }
@@ -1014,12 +951,10 @@ async fn create_relays_request(
     let repo_coordinates_without_relays = {
         let mut set = HashSet::new();
         for c in &repo_coordinates {
-            set.insert(Nip19Coordinate {
-                coordinate: Coordinate {
-                    kind: c.kind,
-                    identifier: c.identifier.clone(),
-                    public_key: c.public_key,
-                },
+            set.insert(Coordinate {
+                kind: c.kind,
+                identifier: c.identifier.clone(),
+                public_key: c.public_key,
                 relays: vec![],
             });
         }
@@ -1038,20 +973,17 @@ async fn create_relays_request(
         }
 
         if let Some(git_repo_path) = git_repo_path {
-            for event in &get_events_from_local_cache(
-                git_repo_path,
-                vec![
-                    nostr::Filter::default()
-                        .kinds(vec![Kind::GitPatch])
-                        .custom_tags(
-                            SingleLetterTag::lowercase(nostr_sdk::Alphabet::A),
-                            repo_coordinates_without_relays
-                                .iter()
-                                .map(|c| c.coordinate.to_string())
-                                .collect::<Vec<String>>(),
-                        ),
-                ],
-            )
+            for event in &get_events_from_local_cache(git_repo_path, vec![
+                nostr::Filter::default()
+                    .kinds(vec![Kind::GitPatch])
+                    .custom_tag(
+                        SingleLetterTag::lowercase(nostr_sdk::Alphabet::A),
+                        repo_coordinates_without_relays
+                            .iter()
+                            .map(std::string::ToString::to_string)
+                            .collect::<Vec<String>>(),
+                    ),
+            ])
             .await?
             {
                 if event_is_patch_set_root(event) || event_is_revision_root(event) {
@@ -1061,11 +993,11 @@ async fn create_relays_request(
             }
         }
 
-        let profile_events = get_event_from_global_cache(
-            git_repo_path,
-            vec![get_filter_contributor_profiles(contributors.clone())],
-        )
-        .await?;
+        let profile_events =
+            get_event_from_global_cache(git_repo_path, vec![get_filter_contributor_profiles(
+                contributors.clone(),
+            )])
+            .await?;
         for c in &contributors {
             if let Some(event) = profile_events
                 .iter()
@@ -1221,7 +1153,7 @@ async fn process_fetched_events(
     events: Vec<nostr::Event>,
     request: &FetchRequest,
     git_repo_path: Option<&Path>,
-    fresh_coordinates: &mut HashSet<Nip19Coordinate>,
+    fresh_coordinates: &mut HashSet<Coordinate>,
     fresh_proposal_roots: &mut HashSet<EventId>,
     fresh_profiles: &mut HashSet<PublicKey>,
     report: &mut FetchReport,
@@ -1256,12 +1188,10 @@ async fn process_fetched_events(
                         });
                 if update_to_existing {
                     report.updated_repo_announcements.push((
-                        Nip19Coordinate {
-                            coordinate: Coordinate {
-                                kind: event.kind,
-                                public_key: event.pubkey,
-                                identifier: event.tags.identifier().unwrap().to_owned(),
-                            },
+                        Coordinate {
+                            kind: event.kind,
+                            public_key: event.pubkey,
+                            identifier: event.tags.identifier().unwrap().to_owned(),
                             relays: vec![],
                         },
                         event.created_at,
@@ -1274,16 +1204,14 @@ async fn process_fetched_events(
                             .repo_coordinates_without_relays // prexisting maintainers
                             .iter()
                             .map(|(c, _)| c.clone())
-                            .collect::<HashSet<Nip19Coordinate>>()
+                            .collect::<HashSet<Coordinate>>()
                             .union(&report.repo_coordinates_without_relays) // already added maintainers
                             .any(|c| c.identifier.eq(&repo_ref.identifier) && m.eq(&c.public_key))
                         {
-                            let c = Nip19Coordinate {
-                                coordinate: Coordinate {
-                                    kind: event.kind,
-                                    public_key: *m,
-                                    identifier: repo_ref.identifier.clone(),
-                                },
+                            let c = Coordinate {
+                                kind: event.kind,
+                                public_key: *m,
+                                identifier: repo_ref.identifier.clone(),
                                 relays: vec![],
                             };
                             fresh_coordinates.insert(c.clone());
@@ -1415,7 +1343,7 @@ pub fn consolidate_fetch_reports(reports: Vec<Result<FetchReport>>) -> FetchRepo
     report
 }
 pub fn get_fetch_filters(
-    repo_coordinates: &HashSet<Nip19Coordinate>,
+    repo_coordinates: &HashSet<Coordinate>,
     proposal_ids: &HashSet<EventId>,
     required_profiles: &HashSet<PublicKey>,
 ) -> Vec<nostr::Filter> {
@@ -1428,11 +1356,11 @@ pub fn get_fetch_filters(
                 get_filter_repo_events(repo_coordinates),
                 nostr::Filter::default()
                     .kinds(vec![Kind::GitPatch, Kind::EventDeletion])
-                    .custom_tags(
+                    .custom_tag(
                         SingleLetterTag::lowercase(nostr_sdk::Alphabet::A),
                         repo_coordinates
                             .iter()
-                            .map(|c| c.coordinate.to_string())
+                            .map(std::string::ToString::to_string)
                             .collect::<Vec<String>>(),
                     ),
             ]
@@ -1455,7 +1383,7 @@ pub fn get_fetch_filters(
     .concat()
 }
 
-pub fn get_filter_repo_events(repo_coordinates: &HashSet<Nip19Coordinate>) -> nostr::Filter {
+pub fn get_filter_repo_events(repo_coordinates: &HashSet<Coordinate>) -> nostr::Filter {
     nostr::Filter::default()
         .kind(Kind::GitRepoAnnouncement)
         .identifiers(
@@ -1473,7 +1401,7 @@ pub fn get_filter_repo_events(repo_coordinates: &HashSet<Nip19Coordinate>) -> no
 }
 
 pub static STATE_KIND: nostr::Kind = Kind::Custom(30618);
-pub fn get_filter_state_events(repo_coordinates: &HashSet<Nip19Coordinate>) -> nostr::Filter {
+pub fn get_filter_state_events(repo_coordinates: &HashSet<Coordinate>) -> nostr::Filter {
     nostr::Filter::default()
         .kind(STATE_KIND)
         .identifiers(
@@ -1498,8 +1426,8 @@ pub fn get_filter_contributor_profiles(contributors: HashSet<PublicKey>) -> nost
 
 #[derive(Default)]
 pub struct FetchReport {
-    repo_coordinates_without_relays: HashSet<Nip19Coordinate>,
-    updated_repo_announcements: Vec<(Nip19Coordinate, Timestamp)>,
+    repo_coordinates_without_relays: HashSet<Coordinate>,
+    updated_repo_announcements: Vec<(Coordinate, Timestamp)>,
     updated_state: Option<(Timestamp, EventId)>,
     proposals: HashSet<EventId>,
     /// commits against existing propoals
@@ -1590,7 +1518,7 @@ pub struct FetchRequest {
     repo_relays: HashSet<RelayUrl>,
     selected_relay: Option<RelayUrl>,
     relay_column_width: usize,
-    repo_coordinates_without_relays: Vec<(Nip19Coordinate, Option<Timestamp>)>,
+    repo_coordinates_without_relays: Vec<(Coordinate, Option<Timestamp>)>,
     state: Option<(Timestamp, EventId)>,
     proposals: HashSet<EventId>,
     contributors: HashSet<PublicKey>,
@@ -1604,7 +1532,7 @@ pub async fn fetching_with_report(
     git_repo_path: &Path,
     #[cfg(test)] client: &crate::client::MockConnect,
     #[cfg(not(test))] client: &Client,
-    trusted_maintainer_coordinate: &Nip19Coordinate,
+    trusted_maintainer_coordinate: &Coordinate,
 ) -> Result<FetchReport> {
     let term = console::Term::stderr();
     term.write_line("fetching updates...")?;
@@ -1629,22 +1557,19 @@ pub async fn fetching_with_report(
 
 pub async fn get_proposals_and_revisions_from_cache(
     git_repo_path: &Path,
-    repo_coordinates: HashSet<Nip19Coordinate>,
+    repo_coordinates: HashSet<Coordinate>,
 ) -> Result<Vec<nostr::Event>> {
-    let mut proposals = get_events_from_local_cache(
-        git_repo_path,
-        vec![
-            nostr::Filter::default()
-                .kind(nostr::Kind::GitPatch)
-                .custom_tags(
-                    nostr::SingleLetterTag::lowercase(nostr_sdk::Alphabet::A),
-                    repo_coordinates
-                        .iter()
-                        .map(|c| c.coordinate.to_string())
-                        .collect::<Vec<String>>(),
-                ),
-        ],
-    )
+    let mut proposals = get_events_from_local_cache(git_repo_path, vec![
+        nostr::Filter::default()
+            .kind(nostr::Kind::GitPatch)
+            .custom_tag(
+                nostr::SingleLetterTag::lowercase(nostr_sdk::Alphabet::A),
+                repo_coordinates
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<String>>(),
+            ),
+    ])
     .await?
     .iter()
     .filter(|e| event_is_patch_set_root(e))
@@ -1660,29 +1585,23 @@ pub async fn get_all_proposal_patch_events_from_cache(
     repo_ref: &RepoRef,
     proposal_id: &nostr::EventId,
 ) -> Result<Vec<nostr::Event>> {
-    let mut commit_events = get_events_from_local_cache(
-        git_repo_path,
-        vec![
-            nostr::Filter::default()
-                .kind(nostr::Kind::GitPatch)
-                .event(*proposal_id),
-            nostr::Filter::default()
-                .kind(nostr::Kind::GitPatch)
-                .id(*proposal_id),
-        ],
-    )
+    let mut commit_events = get_events_from_local_cache(git_repo_path, vec![
+        nostr::Filter::default()
+            .kind(nostr::Kind::GitPatch)
+            .event(*proposal_id),
+        nostr::Filter::default()
+            .kind(nostr::Kind::GitPatch)
+            .id(*proposal_id),
+    ])
     .await?;
 
-    let permissioned_users: HashSet<PublicKey> = [
-        repo_ref.maintainers.clone(),
-        vec![
-            commit_events
-                .iter()
-                .find(|e| e.id.eq(proposal_id))
-                .context("proposal not in cache")?
-                .pubkey,
-        ],
-    ]
+    let permissioned_users: HashSet<PublicKey> = [repo_ref.maintainers.clone(), vec![
+        commit_events
+            .iter()
+            .find(|e| e.id.eq(proposal_id))
+            .context("proposal not in cache")?
+            .pubkey,
+    ]]
     .concat()
     .iter()
     .copied()
@@ -1696,15 +1615,12 @@ pub async fn get_all_proposal_patch_events_from_cache(
         .collect();
 
     if !revision_roots.is_empty() {
-        for event in get_events_from_local_cache(
-            git_repo_path,
-            vec![
-                nostr::Filter::default()
-                    .kind(nostr::Kind::GitPatch)
-                    .events(revision_roots)
-                    .authors(permissioned_users.clone()),
-            ],
-        )
+        for event in get_events_from_local_cache(git_repo_path, vec![
+            nostr::Filter::default()
+                .kind(nostr::Kind::GitPatch)
+                .events(revision_roots)
+                .authors(permissioned_users.clone()),
+        ])
         .await?
         {
             commit_events.push(event);
@@ -1719,10 +1635,9 @@ pub async fn get_all_proposal_patch_events_from_cache(
 }
 
 pub async fn get_event_from_cache_by_id(git_repo: &Repo, event_id: &EventId) -> Result<Event> {
-    Ok(get_events_from_local_cache(
-        git_repo.get_path()?,
-        vec![nostr::Filter::default().id(*event_id)],
-    )
+    Ok(get_events_from_local_cache(git_repo.get_path()?, vec![
+        nostr::Filter::default().id(*event_id),
+    ])
     .await?
     .first()
     .context("failed to find event in cache")?
@@ -1866,12 +1781,11 @@ pub async fn send_events(
                 Err(e) => {
                     pb.set_style(pb_after_style_failed.clone());
                     pb.finish_with_message(
-                        console::style(format!(
-                            "error: {}",
+                        console::style(
                             e.to_string()
-                                .replace("relay pool error:", "")
-                                .replace("event not published: ", "")
-                        ))
+                                .replace("relay pool error:", "error:")
+                                .replace("event not published: ", "error: "),
+                        )
                         .for_stderr()
                         .red()
                         .to_string(),
