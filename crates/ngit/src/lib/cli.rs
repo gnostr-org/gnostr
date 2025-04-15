@@ -1,8 +1,7 @@
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use ngit::login::SignerInfo;
 
-use crate::sub_commands;
+use crate::{login::SignerInfo, sub_commands};
 
 #[derive(Parser)]
 #[command(

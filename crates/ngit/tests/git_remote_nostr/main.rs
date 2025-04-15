@@ -89,9 +89,9 @@ fn cli_expect_nostr_fetch(p: &mut CliTester) -> Result<()> {
     Ok(())
 }
 
-/// git runs `list for-push` before `push`. in `push` we use the git server
-/// remote refs downloaded by `list` to assess how to push to git servers.
-/// we are therefore running it this way in our tests
+/// git runs `list for-push` before `push`. in `push` we use the git
+/// server remote refs downloaded by `list` to assess how to push to
+/// git servers. we are therefore running it this way in our tests
 fn cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
     git_repo: &GitTestRepo,
 ) -> Result<CliTester> {
@@ -134,9 +134,7 @@ async fn generate_repo_with_state_event() -> Result<(nostr::Event, GitTestRepo)>
         let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
         p.send_line("push refs/heads/main:refs/heads/main")?;
         p.send_line("")?;
-
-        p.expect_eventually("ok ")?;
-        p.expect("refs/heads/main\r\n")?;
+        p.expect("ok refs/heads/main\r\n")?;
         p.expect_eventually("\r\n\r\n")?;
         p.exit()?;
         for p in [51, 52, 53, 55, 56, 57] {
@@ -241,7 +239,8 @@ mod initially_runs_fetch {
                 source_git_repo.dir.to_str().unwrap().to_string(),
             ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
+        // (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),

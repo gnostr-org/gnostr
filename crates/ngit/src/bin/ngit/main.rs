@@ -1,15 +1,14 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![allow(clippy::large_futures)]
+#![allow(clippy::single_match_else)]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
 use anyhow::Result;
 use clap::Parser;
-use cli::{AccountCommands, Cli, Commands};
-
-mod cli;
-use ngit::{cli_interactor, client, git, git_events, login, repo_ref};
-
-mod sub_commands;
+use gnostr_ngit::{
+    cli::{AccountCommands, Cli, Commands},
+    cli_interactor, client, git, git_events, login, repo_ref, sub_commands,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {

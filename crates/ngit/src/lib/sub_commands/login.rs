@@ -1,18 +1,14 @@
 use anyhow::{Context, Result};
 use clap;
-use ngit::{
-    cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
-    git::{get_git_config_item, remove_git_config_item},
-    login::{SignerInfoSource, existing::load_existing_login},
-};
-
+use clap::Parser;
 use crate::{
     cli::{Cli, extract_signer_cli_arguments},
+    cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
+    client,
     client::{Client, Connect},
-    git::Repo,
-    login::fresh::fresh_login_or_signup,
+    git::{Repo, get_git_config_item, remove_git_config_item},
+    login::{SignerInfoSource, existing::load_existing_login, fresh::fresh_login_or_signup},
 };
-
 #[derive(clap::Args)]
 pub struct SubCommandArgs {
     /// login to the local git repository only
@@ -24,11 +20,19 @@ pub struct SubCommandArgs {
     offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(command_args: &SubCommandArgs) -> Result<()> {
+	let cli_args = Cli::parse();
+    #[cfg(not(test))]
     let client = if command_args.offline {
         None
     } else {
         Some(Client::default())
+    };
+    #[cfg(test)]
+    let client = if command_args.offline {
+        None
+    } else {
+        Some(<client::MockConnect as client::Connect>::default())
     };
 
     let git_repo_result = Repo::discover().context("failed to find a git repository");
@@ -44,7 +48,7 @@ pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
         fresh_login_or_signup(
             &git_repo.as_ref(),
             client.as_ref(),
-            extract_signer_cli_arguments(args)?,
+            extract_signer_cli_arguments(&cli_args)?,
             log_in_locally_only || command_args.local,
         )
         .await?;

@@ -14,7 +14,7 @@ use std::{
 use anyhow::{Context, Result, bail};
 use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
 use git::{RepoActions, nostr_url::NostrUrlDecoded};
-use ngit::{client, git, login::existing::load_existing_login};
+use gnostr_ngit::{client, git, login::existing::load_existing_login};
 use nostr::nips::nip19::Nip19Coordinate;
 use utils::read_line;
 
