@@ -26,8 +26,7 @@ mod without_state_announcement {
                 source_git_repo.dir.to_str().unwrap().to_string(),
             ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -89,7 +88,6 @@ mod with_state_announcement {
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn lists_head_and_2_branches_and_commit_ids_announcement() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -106,8 +104,7 @@ mod with_state_announcement {
                 ]),
                 state_event,
             ];
-            // fallback (51,52) user write (53, 55) repo (55, 56)
-            // blaster (57)
+            // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
                 Relay::new(8051, None, None),
                 Relay::new(8052, None, None),
@@ -126,8 +123,7 @@ mod with_state_announcement {
                     format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
                 )?;
                 p.expect("list: connecting...\r\n\r\r\r")?;
-                // println!("{}",
-                // p.expect_eventually("\r\n\r\n")?);
+                // println!("{}", p.expect_eventually("\r\n\r\n")?);
                 let res = p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
@@ -165,7 +161,6 @@ mod with_state_announcement {
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn anouncement_state_is_used() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -193,8 +188,7 @@ mod with_state_announcement {
                 ]),
                 state_event,
             ];
-            // fallback (51,52) user write (53, 55) repo (55, 56)
-            // blaster (57)
+            // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
                 Relay::new(8051, None, None),
                 Relay::new(8052, None, None),
@@ -221,8 +215,7 @@ mod with_state_announcement {
                     .as_str(),
                 )?;
 
-                // println!("{}",
-                // p.expect_eventually("\r\n\r\n")?);
+                // println!("{}", p.expect_eventually("\r\n\r\n")?);
                 let res = p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
@@ -264,7 +257,6 @@ mod with_state_announcement {
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn open_proposal_listed_in_prs_namespace() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -282,8 +274,7 @@ mod with_state_announcement {
                 ]),
                 state_event,
             ];
-            // fallback (51,52) user write (53, 55) repo (55, 56)
-            // blaster (57)
+            // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
                 Relay::new(8051, None, None),
                 Relay::new(8052, None, None),
@@ -304,8 +295,7 @@ mod with_state_announcement {
                     format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
                 )?;
                 p.expect("list: connecting...\r\n\r\r\r")?;
-                // println!("{}",
-                // p.expect_eventually("\r\n\r\n")?);
+                // println!("{}", p.expect_eventually("\r\n\r\n")?);
                 let res = p.expect_eventually("\r\n\r\n")?;
 
                 p.exit()?;

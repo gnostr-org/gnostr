@@ -372,7 +372,7 @@ pub fn generate_nostr_connect_app(
         client
             .get_fallback_signer_relays()
             .iter()
-            .flat_map(|s| RelayUrl::parse(s))
+            .flat_map(RelayUrl::parse)
             .collect::<Vec<RelayUrl>>()
     } else {
         vec![]

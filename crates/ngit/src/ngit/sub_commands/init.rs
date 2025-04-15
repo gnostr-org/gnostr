@@ -1,34 +1,32 @@
 use std::collections::{HashMap, HashSet};
-use clap::Parser;
+
 use anyhow::{Context, Result};
 use console::{Style, Term};
+use ngit::{
+    cli_interactor::PromptConfirmParms,
+    git::nostr_url::{NostrUrlDecoded, save_nip05_to_git_config_cache},
+};
 use nostr::{
     FromBech32, PublicKey, ToBech32,
     nips::{
         nip01::Coordinate,
         nip05::{self},
-        nip19::Nip19Coordinate,
     },
 };
 use nostr_sdk::{Kind, RelayUrl};
 
 use crate::{
     cli::{Cli, extract_signer_cli_arguments},
-    cli_interactor::{Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms},
-    client,
-    client::{
-        Client, Connect, MockClient, fetching_with_report, get_repo_ref_from_cache, send_events,
-    },
-    git::{
-        Repo, RepoActions,
-        nostr_url::{NostrUrlDecoded, convert_clone_url_to_https, save_nip05_to_git_config_cache},
-    },
+    cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
+    client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
+    git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
     login,
     repo_ref::{
         RepoRef, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml,
         try_and_get_repo_coordinates_when_remote_unknown,
     },
 };
+
 #[derive(Debug, clap::Args)]
 pub struct SubCommandArgs {
     #[clap(short, long)]
@@ -58,8 +56,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(args: &SubCommandArgs) -> Result<()> {
-	let cli_args = Cli::parse();
+pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
@@ -70,7 +67,6 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
     // TODO: check for empty repo
     // TODO: check for existing maintaiers file
 
-    //#[cfg(automock)]
     let mut client = Client::default();
 
     let repo_coordinate = if let Ok(repo_coordinate) =
@@ -81,7 +77,6 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
         None
     };
 
-    #[cfg(not(test))]
     let repo_ref = if let Some(repo_coordinate) = &repo_coordinate {
         fetching_with_report(git_repo_path, &client, repo_coordinate).await?;
         if let Ok(repo_ref) = get_repo_ref_from_cache(Some(git_repo_path), repo_coordinate).await {
@@ -93,39 +88,11 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
         None
     };
 
-    #[cfg(test)]
-    let repo_ref = if let Some(repo_coordinate) = &repo_coordinate {
-        fetching_with_report(
-            git_repo_path,
-            &<client::MockConnect as client::Connect>::default(),
-            repo_coordinate,
-        )
-        .await?;
-        if let Ok(repo_ref) = get_repo_ref_from_cache(Some(git_repo_path), repo_coordinate).await {
-            Some(repo_ref)
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
-    #[cfg(not(test))]
-    let (signer, user_ref, _) = login::login_or_signup(
-        &Some(&git_repo),
-        &extract_signer_cli_arguments(&cli_args).unwrap_or(None),
-        &cli_args.password,
-        Some(&client),
-        true,
-    )
-    .await?;
-
-    #[cfg(test)]
     let (signer, user_ref, _) = login::login_or_signup(
         &Some(&git_repo),
         &extract_signer_cli_arguments(cli_args).unwrap_or(None),
         &cli_args.password,
-        Some(&<client::MockConnect as client::Connect>::default()),
+        Some(&client),
         true,
     )
     .await?;
@@ -456,22 +423,8 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
 
     client.set_signer(signer).await;
 
-    #[cfg(not(test))]
     send_events(
         &client,
-        Some(git_repo_path),
-        vec![repo_event],
-        user_ref.relays.write(),
-        relays.clone(),
-        !cli_args.disable_cli_spinners,
-        false,
-    )
-    .await?;
-
-    #[cfg(test)]
-    send_events(
-        //&<client::MockConnect as client::Connect>,
-        &<client::MockConnect as client::Connect>::default(),
         Some(git_repo_path),
         vec![repo_event],
         user_ref.relays.write(),
@@ -484,12 +437,10 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
     // TODO - does this git config item do more harm than good?
     git_repo.save_git_config_item(
         "nostr.repo",
-        &Nip19Coordinate {
-            coordinate: Coordinate {
-                kind: Kind::GitRepoAnnouncement,
-                public_key: user_ref.public_key,
-                identifier: identifier.clone(),
-            },
+        &Coordinate {
+            kind: Kind::GitRepoAnnouncement,
+            public_key: user_ref.public_key,
+            identifier: identifier.clone(),
             relays: vec![],
         }
         .to_bech32()?,
@@ -520,12 +471,10 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
                 repo_ref.set_nostr_git_url(NostrUrlDecoded {
                     original_string: String::new(),
                     nip05: Some(nip05.clone()),
-                    coordinate: Nip19Coordinate {
-                        coordinate: Coordinate {
-                            kind: Kind::GitRepoAnnouncement,
-                            public_key: user_ref.public_key,
-                            identifier: repo_ref.identifier.clone(),
-                        },
+                    coordinate: Coordinate {
+                        kind: Kind::GitRepoAnnouncement,
+                        public_key: user_ref.public_key,
+                        identifier: repo_ref.identifier.clone(),
                         relays: if inter.next().is_some() || relays.is_empty() {
                             vec![]
                         } else {
@@ -533,7 +482,7 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
                         },
                     },
                     protocol: None,
-                    user: None,
+                    ssh_key_file: None,
                 });
                 if inter.next().is_some() {
                     "note: point your NIP-05 relays to one of the repo relays for a cleaner nostr:// remote URL.".to_string()
@@ -594,6 +543,8 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
             "this optional file helps in identifying who the maintainers are over time through the commit history"
         );
     }
+
+    println!("view on https://gitworkshop.dev/r/dan@gitworkhop.dev/ngit");
     Ok(())
 }
 

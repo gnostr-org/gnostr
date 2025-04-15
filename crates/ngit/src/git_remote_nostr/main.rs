@@ -14,8 +14,8 @@ use std::{
 use anyhow::{Context, Result, bail};
 use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
 use git::{RepoActions, nostr_url::NostrUrlDecoded};
-use gnostr_ngit::{client, git, login::existing::load_existing_login};
-use nostr::nips::nip19::Nip19Coordinate;
+use ngit::{client, git, login::existing::load_existing_login};
+use nostr::nips::nip01::Coordinate;
 use utils::read_line;
 
 use crate::{client::Client, git::Repo};
@@ -148,7 +148,7 @@ async fn process_args() -> Result<Option<(NostrUrlDecoded, Repo)>> {
 async fn fetching_with_report_for_helper(
     git_repo_path: &Path,
     client: &Client,
-    trusted_maintainer_coordinate: &Nip19Coordinate,
+    trusted_maintainer_coordinate: &Coordinate,
 ) -> Result<()> {
     let term = console::Term::stderr();
     term.write_line("nostr: fetching...")?;

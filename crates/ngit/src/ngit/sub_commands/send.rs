@@ -1,7 +1,8 @@
 use std::path::Path;
-use clap::Parser;
+
 use anyhow::{Context, Result, bail};
 use console::Style;
+use ngit::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use nostr::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
@@ -13,16 +14,11 @@ use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
-    client,
     client::{
-        Client, Connect, MockClient, fetching_with_report, get_events_from_local_cache,
-        get_repo_ref_from_cache, send_events,
+        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
     },
     git::{Repo, RepoActions, identify_ahead_behind},
-    git_events::{
-        event_is_patch_set_root, event_tag_from_nip19_or_hex,
-        generate_cover_letter_and_patch_events,
-    },
+    git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,
     repo_ref::get_repo_coordinates_when_remote_unknown,
 };
@@ -48,10 +44,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
-//pub async fn launch(cli_args: &Cli, no_fetch: bool) -> Result<()> {
-//pub async fn launch(args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
-    let cli_args = Cli::parse();
+pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
     let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
@@ -59,17 +52,11 @@ pub async fn launch(args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
         .get_main_or_master_branch()
         .context("the default branches (main or master) do not exist")?;
 
-    #[cfg(test)]
-    let mut client = &mut <client::MockConnect as client::Connect>::default();
-    #[cfg(not(test))]
     let mut client = Client::default();
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
     if !no_fetch {
-        #[cfg(test)]
-        fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
-        #[cfg(not(test))]
         fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
     }
 
@@ -191,11 +178,8 @@ pub async fn launch(args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
 
     let (signer, user_ref, _) = login::login_or_signup(
         &Some(&git_repo),
-        &extract_signer_cli_arguments(&cli_args).unwrap_or(None),
+        &extract_signer_cli_arguments(cli_args).unwrap_or(None),
         &cli_args.password,
-        #[cfg(test)]
-        Some(&<client::MockConnect as client::Connect>::default()),
-        #[cfg(not(test))]
         Some(&client),
         true,
     )
@@ -241,9 +225,6 @@ pub async fn launch(args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
     );
 
     send_events(
-        #[cfg(test)]
-        &<client::MockConnect as client::Connect>::default(),
-        #[cfg(not(test))]
         &client,
         Some(git_repo_path),
         events.clone(),
@@ -257,13 +238,7 @@ pub async fn launch(args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
     if root_proposal_id.is_none() {
         if let Some(event) = events.first() {
             let event_bech32 = if let Some(relay) = repo_ref.relays.first() {
-                Nip19Event {
-                    event_id: event.id,
-                    relays: vec![relay.clone()],
-                    author: None,
-                    kind: None,
-                }
-                .to_bech32()?
+                Nip19Event::new(event.id, vec![relay.to_string()]).to_bech32()?
             } else {
                 event.id.to_bech32()?
             };
@@ -394,10 +369,9 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                 public_key: _,
                 uppercase: false,
             }) => {
-                let events = get_events_from_local_cache(
-                    git_repo_path,
-                    vec![nostr::Filter::new().id(*event_id)],
-                )
+                let events = get_events_from_local_cache(git_repo_path, vec![
+                    nostr::Filter::new().id(*event_id),
+                ])
                 .await?;
 
                 if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {

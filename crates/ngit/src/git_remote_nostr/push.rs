@@ -2,6 +2,8 @@ use core::str;
 use std::{
     collections::{HashMap, HashSet},
     io::Stdin,
+    path::PathBuf,
+    str::FromStr,
     sync::{Arc, Mutex},
     time::Instant,
 };
@@ -17,12 +19,12 @@ use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
 use git2::{Oid, Repository};
-use gnostr_ngit::{
+use ngit::{
     cli_interactor::count_lines_per_msg_vec,
     client::{self, get_event_from_cache_by_id},
     git::{
         self,
-        nostr_url::{CloneUrl, NostrUrlDecoded},
+        nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
         oid_to_shorthand_string,
     },
     git_events::{self, event_to_cover_letter, get_event_root},
@@ -32,7 +34,7 @@ use gnostr_ngit::{
 };
 use nostr::nips::nip10::Marker;
 use nostr_sdk::{
-    Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag, TagStandard,
+    Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag,
     hashes::sha1::Hash as Sha1Hash,
 };
 use repo_ref::RepoRef;
@@ -423,12 +425,28 @@ fn push_to_remote(
     for protocol in &protocols_to_attempt {
         term.write_line(format!("push: {} over {protocol}...", server_url.short_name(),).as_str())?;
 
-        let formatted_url = server_url.format_as(protocol, &decoded_nostr_url.user)?;
+        let formatted_url = server_url.format_as(protocol)?;
 
-        if let Err(error) = push_to_remote_url(git_repo, &formatted_url, remote_refspecs, term) {
-            term.write_line(
-                format!("push: {formatted_url} failed over {protocol}: {error}").as_str(),
-            )?;
+        if let Err(error) = push_to_remote_url(
+            git_repo,
+            &formatted_url,
+            decoded_nostr_url.ssh_key_file_path().as_ref(),
+            remote_refspecs,
+            term,
+        ) {
+            term.write_line(&format!(
+                "push: {formatted_url} failed over {protocol}{}: {error}",
+                if protocol == &ServerProtocol::Ssh {
+                    if let Some(ssh_key_file) = &decoded_nostr_url.ssh_key_file_path() {
+                        format!(" with ssh key from {ssh_key_file}")
+                    } else {
+                        String::new()
+                    }
+                } else {
+                    String::new()
+                }
+            ))?;
+
             failed_protocols.push(protocol);
             if push_error_is_not_authentication_failure(&error) {
                 break;
@@ -463,12 +481,24 @@ fn push_to_remote(
 fn push_to_remote_url(
     git_repo: &Repo,
     git_server_url: &str,
+    ssh_key_file: Option<&String>,
     remote_refspecs: &[String],
     term: &Term,
 ) -> Result<()> {
     let git_config = git_repo.git_repo.config()?;
     let mut git_server_remote = git_repo.git_repo.remote_anonymous(git_server_url)?;
-    let auth = GitAuthenticator::default();
+    let auth = {
+        if git_server_url.contains("git@") {
+            if let Some(ssh_key_file) = ssh_key_file {
+                GitAuthenticator::default()
+                    .add_ssh_key_from_file(PathBuf::from_str(ssh_key_file)?, None)
+            } else {
+                GitAuthenticator::default()
+            }
+        } else {
+            GitAuthenticator::default()
+        }
+    };
     let mut push_options = git2::PushOptions::new();
     let mut remote_callbacks = git2::RemoteCallbacks::new();
     let push_reporter = Arc::new(Mutex::new(PushReporter::new(term)));
@@ -823,7 +853,7 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                 {
                     let (ahead, behind) =
                         git_repo.get_commits_ahead_behind(&from_tip, &remote_value_tip)?;
-                    if ahead.is_empty() {
+                    if behind.is_empty() {
                         // can soft push
                         refspecs_for_remote.push(refspec.clone());
                     } else {
@@ -1020,13 +1050,10 @@ async fn get_merged_status_events(
             let (ahead, _) =
                 git_repo.get_commits_ahead_behind(&tip_of_remote_branch, &tip_of_pushed_branch)?;
 
-            let commit_events = get_events_from_local_cache(
-                git_repo.get_path()?,
-                vec![
-                    nostr::Filter::default().kind(nostr::Kind::GitPatch),
-                    // TODO: limit by repo_ref
-                ],
-            )
+            let commit_events = get_events_from_local_cache(git_repo.get_path()?, vec![
+                nostr::Filter::default().kind(nostr::Kind::GitPatch),
+                // TODO: limit by repo_ref
+            ])
             .await?;
 
             let merged_proposals_info =
@@ -1103,12 +1130,9 @@ async fn get_merged_proposals_info(
                         proposals.entry(proposal_id).or_default();
                     // ignore revisions without all the merged commits
                     if entry_revision_id == &revision_id {
-                        merged_patches.insert(
-                            *commit_hash,
-                            MergedPRCommitType::PatchCommit {
-                                event_id: patch_event.id,
-                            },
-                        );
+                        merged_patches.insert(*commit_hash, MergedPRCommitType::PatchCommit {
+                            event_id: patch_event.id,
+                        });
                     }
                 }
             }
@@ -1133,12 +1157,9 @@ async fn get_merged_proposals_info(
                             proposals.entry(proposal_id).or_default();
                         // ignore revisions without all the applied commits
                         if entry_revision_id == &revision_id {
-                            merged_patches.insert(
-                                *commit_hash,
-                                MergedPRCommitType::PatchApplied {
-                                    event_id: patch_event.id,
-                                },
-                            );
+                            merged_patches.insert(*commit_hash, MergedPRCommitType::PatchApplied {
+                                event_id: patch_event.id,
+                            });
                         }
                     }
                 }
@@ -1321,13 +1342,7 @@ async fn create_merge_status(
                 repo_ref
                     .coordinates()
                     .iter()
-                    .map(|c| {
-                        Tag::from_standardized(TagStandard::Coordinate {
-                            coordinate: c.coordinate.clone(),
-                            relay_url: c.relays.first().cloned(),
-                            uppercase: false,
-                        })
-                    })
+                    .map(|c| Tag::coordinate(c.clone()))
                     .collect::<Vec<Tag>>(),
                 vec![
                     Tag::from_standardized(nostr::TagStandard::Reference(
@@ -1357,7 +1372,6 @@ async fn create_merge_status(
             .concat(),
         ),
         signer,
-        "PR merge".to_string(),
     )
     .await
 }
@@ -1374,7 +1388,7 @@ async fn get_proposal_and_revision_root_from_patch(
         patch.clone()
     } else {
         let proposal_or_revision_id = EventId::parse(
-            &if let Some(t) = patch.tags.iter().find(|t| t.is_root()) {
+            if let Some(t) = patch.tags.iter().find(|t| t.is_root()) {
                 t.clone()
             } else if let Some(t) = patch.tags.iter().find(|t| t.is_reply()) {
                 t.clone()
@@ -1385,10 +1399,9 @@ async fn get_proposal_and_revision_root_from_patch(
                 .clone(),
         )?;
 
-        get_events_from_local_cache(
-            git_repo.get_path()?,
-            vec![nostr::Filter::default().id(proposal_or_revision_id)],
-        )
+        get_events_from_local_cache(git_repo.get_path()?, vec![
+            nostr::Filter::default().id(proposal_or_revision_id),
+        ])
         .await?
         .first()
         .unwrap()
@@ -1406,12 +1419,13 @@ async fn get_proposal_and_revision_root_from_patch(
     {
         Ok((
             EventId::parse(
-                &proposal_or_revision
+                proposal_or_revision
                     .tags
                     .iter()
                     .find(|t| t.is_reply())
                     .unwrap()
-                    .as_slice()[1],
+                    .as_slice()[1]
+                    .clone(),
             )?,
             Some(proposal_or_revision.id),
         ))
@@ -1543,17 +1557,11 @@ impl BuildRepoState for RepoState {
     ) -> Result<RepoState> {
         let mut tags = vec![Tag::identifier(identifier.clone())];
         for (name, value) in &state {
-            tags.push(Tag::custom(
-                nostr_sdk::TagKind::Custom(name.into()),
-                vec![value.clone()],
-            ));
+            tags.push(Tag::custom(nostr_sdk::TagKind::Custom(name.into()), vec![
+                value.clone(),
+            ]));
         }
-        let event = sign_event(
-            EventBuilder::new(STATE_KIND, "").tags(tags),
-            signer,
-            "git state".to_string(),
-        )
-        .await?;
+        let event = sign_event(EventBuilder::new(STATE_KIND, "").tags(tags), signer).await?;
         Ok(RepoState {
             identifier,
             state,

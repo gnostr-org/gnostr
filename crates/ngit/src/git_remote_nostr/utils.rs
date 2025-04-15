@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use git2::Repository;
-use gnostr_ngit::{
+use ngit::{
     client::{
         get_all_proposal_patch_events_from_cache, get_events_from_local_cache,
         get_proposals_and_revisions_from_cache,
@@ -108,14 +108,11 @@ pub async fn get_open_or_draft_proposals(
             .collect();
 
     let statuses: Vec<nostr::Event> = {
-        let mut statuses = get_events_from_local_cache(
-            git_repo_path,
-            vec![
-                nostr::Filter::default()
-                    .kinds(status_kinds().clone())
-                    .events(proposals.iter().map(|e| e.id)),
-            ],
-        )
+        let mut statuses = get_events_from_local_cache(git_repo_path, vec![
+            nostr::Filter::default()
+                .kinds(status_kinds().clone())
+                .events(proposals.iter().map(|e| e.id)),
+        ])
         .await?;
         statuses.sort_by_key(|e| e.created_at);
         statuses.reverse();
