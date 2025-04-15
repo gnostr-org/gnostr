@@ -1,16 +1,18 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 use clap::Args;
+use gnostr_ngit::sub_commands::*;
 use gnostr_ngit::sub_commands::init;
-use gnostr_ngit::sub_commands::list;
-use gnostr_ngit::sub_commands::login;
-use gnostr_ngit::sub_commands::pull;
-use gnostr_ngit::sub_commands::push;
-use gnostr_ngit::sub_commands::send;
-use gnostr_ngit::Commands as NgitCommands;
+//use gnostr_ngit::sub_commands::list;
+//use gnostr_ngit::sub_commands::login;
+//use gnostr_ngit::sub_commands::pull;
+//use gnostr_ngit::sub_commands::push;
+//use gnostr_ngit::sub_commands::send;
+use gnostr_ngit::cli::Commands as NgitCommands;
 use nostr_sdk::prelude::*;
 
-#[derive(Args, Debug)]
+
+#[derive(Args)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitSubCommand {
@@ -28,14 +30,15 @@ pub struct NgitSubCommand {
 }
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
-    use gnostr_ngit::Commands;
+    use gnostr_ngit::cli::Commands;
     match &sub_command_args.command {
-        Commands::Login(args) => login::launch(&args).await?,
-        Commands::Init(args) => init::launch(&args).await?,
-        Commands::Send(args) => send::launch(&args).await?,
-        Commands::List => list::launch().await?,
-        Commands::Pull => pull::launch().await?,
-        Commands::Push(args) => push::launch(&args).await?,
+        //NgitCommands::Login(args) => gnostr_ngit::sub_commands::login::launch(&args).await?,
+        NgitCommands::Init(args) => gnostr_ngit::sub_commands::init::launch(&args).await?,
+        NgitCommands::Send(args) => gnostr_ngit::sub_commands::send::launch(&args, true).await?,
+        NgitCommands::List => gnostr_ngit::sub_commands::list::launch().await?,
+        //NgitCommands::Pull => gnostr_ngit::sub_commands::pull::launch().await?,
+        //NgitCommands::Push(args) => gnostr_ngit::sub_commands::push::launch(&args).await?,
+		&gnostr_ngit::cli::Commands::Account(_) => todo!(),
     }
     Ok(())
 }

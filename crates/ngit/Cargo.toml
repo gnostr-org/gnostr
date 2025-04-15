@@ -9,7 +9,10 @@ homepage = "https://gitworkshop.dev/r/naddr1qqzxuemfwsqs6amnwvaz7tmwdaejumr0dspz
 repository = "https://codeberg.org/DanConwayDev/ngit-cli"
 license = "MIT"
 keywords = ["nostr", "git"]
-categories = ["command-line-utilities","development-tools"]
+categories = ["command-line-utilities", "development-tools"]
+
+[features]
+expensive_tests = []
 
 [dependencies]
 anyhow = "1.0.75"
@@ -24,6 +27,7 @@ futures = "0.3.28"
 git2 = "0.19.0"
 indicatif = "0.17.7"
 keyring = "2.0.5"
+mockall = "0.11.4"
 nostr = { version = "0.40.0", features = ["nip05", "nip49"] }
 nostr-connect = "0.40.0"
 nostr-database = "0.40.0"
@@ -54,13 +58,16 @@ members = [
 ]
 
 [lib]
-name = "ngit"
+name = "gnostr_ngit"
 path = "src/lib/mod.rs"
 
 [[bin]]
-name = "ngit"
+name = "gnostr-ngit"
 path = "src/bin/ngit/main.rs"
 
 [[bin]]
 name = "git-remote-nostr"
 path = "src/bin/git_remote_nostr/main.rs"
+
+[build-dependencies]
+mockall = "0.11.4"

@@ -1,3 +1,4 @@
+pub mod cli;
 pub mod cli_interactor;
 pub mod client;
 pub mod git;
@@ -5,6 +6,7 @@ pub mod git_events;
 pub mod login;
 pub mod repo_ref;
 pub mod repo_state;
+pub mod sub_commands;
 
 use anyhow::{Result, anyhow};
 use directories::ProjectDirs;

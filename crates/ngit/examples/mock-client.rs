@@ -26,6 +26,16 @@ use futures::{
     future::join_all,
     stream::{self, StreamExt},
 };
+use gnostr_ngit::{
+    get_dirs,
+    git::{Repo, RepoActions},
+    git_events::{
+        event_is_cover_letter, event_is_patch_set_root, event_is_revision_root, status_kinds,
+    },
+    login::{get_likely_logged_in_user, user::get_user_ref_from_cache},
+    repo_ref::{RepoRef, try_and_get_repo_coordinates_when_remote_unknown},
+    repo_state::RepoState,
+};
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressState, ProgressStyle};
 use mockall::mock;
 #[cfg(test)]
@@ -43,28 +53,38 @@ use nostr_sdk::{
     Timestamp, prelude::RelayLimits,
 };
 
-use crate::{
-    get_dirs,
-    git::{Repo, RepoActions},
-    git_events::{
-        event_is_cover_letter, event_is_patch_set_root, event_is_revision_root, status_kinds,
-    },
-    login::{get_likely_logged_in_user, user::get_user_ref_from_cache},
-    repo_ref::RepoRef,
-    repo_state::RepoState,
-};
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    //async fn main() -> Result<()> {
 
-#[allow(clippy::struct_field_names)]
-pub struct Client {
-    client: nostr_sdk::Client,
-    fallback_relays: Vec<String>,
-    more_fallback_relays: Vec<String>,
-    blaster_relays: Vec<String>,
-    fallback_signer_relays: Vec<String>,
+    let git_repo = Repo::discover()
+        .context("failed to find a git repository")
+        .expect("");
+    let git_repo_path = git_repo.get_path().expect("");
+
+    let root_commit = git_repo
+        .get_root_commit()
+        .context("failed to get root commit of the repository")
+        .expect("");
+
+    // TODO: check for empty repo
+    // TODO: check for existing maintaiers file
+
+    let mut client = Client::default();
+
+    let repo_coordinate = if let Ok(repo_coordinate) =
+        try_and_get_repo_coordinates_when_remote_unknown(&git_repo).await
+    {
+        println!("{:?}", repo_coordinate);
+        Some(repo_coordinate)
+    } else {
+        None
+    };
+    Ok(())
 }
 
 #[allow(clippy::struct_field_names)]
-pub struct MockClient {
+pub struct Client {
     client: nostr_sdk::Client,
     fallback_relays: Vec<String>,
     more_fallback_relays: Vec<String>,

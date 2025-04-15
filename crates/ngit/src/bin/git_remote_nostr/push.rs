@@ -17,7 +17,7 @@ use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
 use git2::{Oid, Repository};
-use ngit::{
+use gnostr_ngit::{
     cli_interactor::count_lines_per_msg_vec,
     client::{self, get_event_from_cache_by_id},
     git::{
@@ -1020,10 +1020,13 @@ async fn get_merged_status_events(
             let (ahead, _) =
                 git_repo.get_commits_ahead_behind(&tip_of_remote_branch, &tip_of_pushed_branch)?;
 
-            let commit_events = get_events_from_local_cache(git_repo.get_path()?, vec![
-                nostr::Filter::default().kind(nostr::Kind::GitPatch),
-                // TODO: limit by repo_ref
-            ])
+            let commit_events = get_events_from_local_cache(
+                git_repo.get_path()?,
+                vec![
+                    nostr::Filter::default().kind(nostr::Kind::GitPatch),
+                    // TODO: limit by repo_ref
+                ],
+            )
             .await?;
 
             let merged_proposals_info =
@@ -1100,9 +1103,12 @@ async fn get_merged_proposals_info(
                         proposals.entry(proposal_id).or_default();
                     // ignore revisions without all the merged commits
                     if entry_revision_id == &revision_id {
-                        merged_patches.insert(*commit_hash, MergedPRCommitType::PatchCommit {
-                            event_id: patch_event.id,
-                        });
+                        merged_patches.insert(
+                            *commit_hash,
+                            MergedPRCommitType::PatchCommit {
+                                event_id: patch_event.id,
+                            },
+                        );
                     }
                 }
             }
@@ -1127,9 +1133,12 @@ async fn get_merged_proposals_info(
                             proposals.entry(proposal_id).or_default();
                         // ignore revisions without all the applied commits
                         if entry_revision_id == &revision_id {
-                            merged_patches.insert(*commit_hash, MergedPRCommitType::PatchApplied {
-                                event_id: patch_event.id,
-                            });
+                            merged_patches.insert(
+                                *commit_hash,
+                                MergedPRCommitType::PatchApplied {
+                                    event_id: patch_event.id,
+                                },
+                            );
                         }
                     }
                 }
@@ -1376,9 +1385,10 @@ async fn get_proposal_and_revision_root_from_patch(
                 .clone(),
         )?;
 
-        get_events_from_local_cache(git_repo.get_path()?, vec![
-            nostr::Filter::default().id(proposal_or_revision_id),
-        ])
+        get_events_from_local_cache(
+            git_repo.get_path()?,
+            vec![nostr::Filter::default().id(proposal_or_revision_id)],
+        )
         .await?
         .first()
         .unwrap()
@@ -1533,9 +1543,10 @@ impl BuildRepoState for RepoState {
     ) -> Result<RepoState> {
         let mut tags = vec![Tag::identifier(identifier.clone())];
         for (name, value) in &state {
-            tags.push(Tag::custom(nostr_sdk::TagKind::Custom(name.into()), vec![
-                value.clone(),
-            ]));
+            tags.push(Tag::custom(
+                nostr_sdk::TagKind::Custom(name.into()),
+                vec![value.clone()],
+            ));
         }
         let event = sign_event(
             EventBuilder::new(STATE_KIND, "").tags(tags),

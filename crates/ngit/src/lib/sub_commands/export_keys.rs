@@ -1,14 +1,14 @@
 use anyhow::{Context, Result};
-use ngit::{
+
+use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
+    git::Repo,
     login::{
         SignerInfo, SignerInfoSource,
         existing::{get_signer_info, load_existing_login},
         fresh::generate_qr,
     },
 };
-
-use crate::git::Repo;
 
 pub async fn launch() -> Result<()> {
     let git_repo_result = Repo::discover().context("failed to find a git repository");
