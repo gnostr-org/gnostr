@@ -164,7 +164,7 @@ impl DetailsComponent {
 					style_detail(&self.theme, &Detail::Author),
 					Span::styled(
 						Cow::from(format!(
-							"{} <{}>",
+							"chat_details/details.rs {} <{}>",
 							data.author.name, data.author.email
 						)),
 						self.theme.text(true, false),
