@@ -70,7 +70,7 @@ impl DrawableComponent for InspectCommitPopup {
 		if self.is_visible() {
 			//
 			let percentages = if self.diff.focused() {
-				(20, 80)//
+				(0, 100)//
 			} else {
 				(50, 50)//
 			};
@@ -79,8 +79,8 @@ impl DrawableComponent for InspectCommitPopup {
 				.direction(Direction::Horizontal)
 				.constraints(
 					[
-						Constraint::Percentage(percentages.1),
 						Constraint::Percentage(percentages.0),
+						Constraint::Percentage(percentages.1),
 					]
 					.as_ref(),
 				)
