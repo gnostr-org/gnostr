@@ -24,7 +24,7 @@ path = "src/ngit/mod.rs"
 
 [[bin]]
 name = "gnostr-cli"
-path = "src/bin/ngit/main.rs"
+path = "src/bin/ngit.rs"
 
 [[bin]]
 name = "git-remote-nostr"

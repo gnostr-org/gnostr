@@ -1,7 +1,7 @@
 use std::{io::Write, ops::Add};
 
 use anyhow::{bail, Context, Result};
-use ngit::{
+use crate::{
 	client::{
 		get_all_proposal_patch_events_from_cache,
 		get_proposals_and_revisions_from_cache,
