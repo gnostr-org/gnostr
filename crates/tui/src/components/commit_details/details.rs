@@ -164,7 +164,7 @@ impl DetailsComponent {
 					style_detail(&self.theme, &Detail::Author),
 					Span::styled(
 						Cow::from(format!(
-							"{} <{}>",
+							"commit_details/details.rs:     {} <{}>",
 							data.author.name, data.author.email
 						)),
 						self.theme.text(true, false),
@@ -263,7 +263,7 @@ impl DrawableComponent for DetailsComponent {
 		let chunks = Layout::default()
 			.direction(Direction::Vertical)
 			.constraints(
-				[Constraint::Length(8), Constraint::Min(10)].as_ref(),
+				[Constraint::Min(10), Constraint::Min(20)].as_ref(),
 			)
 			.split(rect);
 
@@ -306,7 +306,7 @@ impl DrawableComponent for DetailsComponent {
 		f.render_widget(
 			dialog_paragraph(
 				&format!(
-					"{} {}",
+					"commit_details/details/dialog_paragraph {} {}",
 					strings::commit::details_message_title(
 						&self.key_config,
 					),
