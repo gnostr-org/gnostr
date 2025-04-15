@@ -9,18 +9,15 @@ pub mod ui;
 pub mod args;
 pub mod clipboard;
 pub mod input;
-pub mod main;
+
 pub mod options;
 pub mod queue;
 pub mod strings;
 pub mod watcher;
-pub mod bin;
+
 pub mod cmdbar;
 pub mod keys;
 pub mod ngit;
 pub mod popup_stack;
-pub mod spinnerl
+pub mod spinner;
 pub mod tabs;
-
-
-
