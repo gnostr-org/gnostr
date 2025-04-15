@@ -150,11 +150,11 @@ impl DrawableComponent for CommitDetailsComponent {
 		} else {
 			let details_focused = self.details_focused();
 			let percentages = if self.file_tree.focused() {
-				(40, 60)
+				(50, 50)
 			} else if details_focused {
-				(60, 40)
+				(33, 66)
 			} else {
-				(40, 60)
+				(0, 100)
 			};
 
 			[
