@@ -306,7 +306,7 @@ impl DrawableComponent for DetailsComponent {
 		f.render_widget(
 			dialog_paragraph(
 				&format!(
-					"{} {}",
+					"chat_details/details.rs:commit::details_message_title:{} {}",
 					strings::commit::details_message_title(
 						&self.key_config,
 					),
