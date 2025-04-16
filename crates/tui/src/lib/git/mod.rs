@@ -3,10 +3,10 @@ use std::{
 	path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use git2::{DiffOptions, Oid, Revwalk};
 pub use identify_ahead_behind::identify_ahead_behind;
-use nostr_sdk::hashes::{sha1::Hash as Sha1Hash, Hash};
+use nostr_sdk::hashes::{Hash, sha1::Hash as Sha1Hash};
 
 use crate::git_events::{get_commit_id_from_patch, tag_value};
 pub mod identify_ahead_behind;

@@ -5,11 +5,11 @@ use std::{
 	str::FromStr,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use console::Style;
 use nostr::{
-	nips::nip01::Coordinate, FromBech32, PublicKey, Tag, TagStandard,
-	ToBech32,
+	FromBech32, PublicKey, Tag, TagStandard, ToBech32,
+	nips::nip01::Coordinate,
 };
 use nostr_sdk::{Kind, NostrSigner, Timestamp};
 use serde::{Deserialize, Serialize};
@@ -21,10 +21,10 @@ use crate::{
 		Interactor, InteractorPrompt, PromptInputParms,
 	},
 	client::{
-		get_event_from_global_cache, get_events_from_cache,
-		sign_event, Connect,
+		Connect, get_event_from_global_cache, get_events_from_cache,
+		sign_event,
 	},
-	git::{nostr_url::NostrUrlDecoded, Repo, RepoActions},
+	git::{Repo, RepoActions, nostr_url::NostrUrlDecoded},
 };
 
 #[derive(Default)]

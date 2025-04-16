@@ -19,7 +19,7 @@ use std::{
 	time::Duration,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use async_trait::async_trait;
 use console::Style;
 use futures::{
@@ -32,11 +32,11 @@ use indicatif::{
 };
 #[cfg(test)]
 use mockall::*;
-use nostr::{nips::nip01::Coordinate, Event};
+use nostr::{Event, nips::nip01::Coordinate};
 use nostr_database::{NostrDatabase, Order};
 use nostr_sdk::{
-	prelude::RelayLimits, EventBuilder, EventId, Kind, NostrSigner,
-	Options, PublicKey, SingleLetterTag, Timestamp, Url,
+	EventBuilder, EventId, Kind, NostrSigner, Options, PublicKey,
+	SingleLetterTag, Timestamp, Url, prelude::RelayLimits,
 };
 use nostr_sqlite::SQLiteDatabase;
 
