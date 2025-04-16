@@ -4,12 +4,12 @@ use anyhow::Result;
 use asyncgit::sync::{self, RepoPathRef};
 
 use crate::{
+	AsyncNotification,
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, RevisionFilesComponent,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, RevisionFilesComponent, visibility_blocking,
 	},
-	AsyncNotification,
 };
 
 pub struct FilesTab {

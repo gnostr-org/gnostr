@@ -1,42 +1,43 @@
 use std::{
 	rc::Rc,
 	sync::{
-		atomic::{AtomicBool, Ordering},
 		Arc,
+		atomic::{AtomicBool, Ordering},
 	},
 	time::Duration,
 };
 
 use anyhow::Result;
 use asyncgit::{
-	asyncjob::AsyncSingleJob,
-	sync::{
-		self, filter_commit_by_search, CommitId, LogFilterSearch,
-		LogFilterSearchOptions, RepoPathRef,
-	},
 	AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification,
 	AsyncLog, AsyncTags, CommitFilesParams, FetchStatus,
 	ProgressPercent,
+	asyncjob::AsyncSingleJob,
+	sync::{
+		self, CommitId, LogFilterSearch, LogFilterSearchOptions,
+		RepoPathRef, filter_commit_by_search,
+	},
 };
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use indexmap::IndexSet;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Constraint, Direction, Layout, Rect},
 	text::Span,
 	widgets::{Block, Borders, Paragraph},
-	Frame,
 };
 use sync::CommitTags;
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo,
+		ChatDetailsComponent, CommandBlocking, CommandInfo,
 		CommitDetailsComponent, CommitList, Component,
-		DrawableComponent, EventState, TopicList, ChatDetailsComponent
+		DrawableComponent, EventState, TopicList,
+		visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	popups::{FileTreeOpen, InspectCommitOpen},
 	queue::{InternalEvent, Queue, StackablePopupOpen},
 	strings::{self, order},
@@ -235,7 +236,9 @@ impl Chatlog {
 		if let Some(commit_id) = self.selected_commit() {
 			let tags = self.selected_commit_tags(&Some(commit_id));
 			self.queue.push(InternalEvent::OpenPopup(
+				//
 				StackablePopupOpen::InspectCommit(
+					//
 					InspectCommitOpen::new_with_tags(commit_id, tags),
 				),
 			));
@@ -407,6 +410,7 @@ impl Chatlog {
 	}
 }
 
+//ChatLog Layout
 impl DrawableComponent for Chatlog {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		let area = if self.is_in_search_mode() {
@@ -425,13 +429,15 @@ impl DrawableComponent for Chatlog {
 			.direction(Direction::Horizontal)
 			.constraints(
 				[
-					Constraint::Percentage(7),
-					Constraint::Percentage(93),
+					//ChatLog Split
+					Constraint::Percentage(33),
+					Constraint::Percentage(33),
 				]
 				.as_ref(),
 			)
 			.split(area[0]);
 
+		//commit details
 		if self.commit_details.is_visible() {
 			self.list.draw(f, chunks[0])?;
 			self.commit_details.draw(f, chunks[1])?;

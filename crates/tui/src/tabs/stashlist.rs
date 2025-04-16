@@ -5,10 +5,10 @@ use crossterm::event::Event;
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo,
-		CommitList, Component, DrawableComponent, EventState,
+		CommandBlocking, CommandInfo, CommitList, Component,
+		DrawableComponent, EventState, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	popups::InspectCommitOpen,
 	queue::{Action, InternalEvent, Queue, StackablePopupOpen},
 	strings,
