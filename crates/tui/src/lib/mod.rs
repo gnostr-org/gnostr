@@ -1,4 +1,6 @@
 //! ngit: a git+nostr command line utility and library
+/// ngit::cli
+pub mod cli;
 /// ngit::cli_interactor
 pub mod cli_interactor;
 /// ngit::client
@@ -13,8 +15,10 @@ pub mod login;
 pub mod repo_ref;
 /// ngit::repo_state
 pub mod repo_state;
+/// ngit::sub_commands
+pub mod sub_commands;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use directories::ProjectDirs;
 
 pub fn get_dirs() -> Result<ProjectDirs> {
