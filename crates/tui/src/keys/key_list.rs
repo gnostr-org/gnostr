@@ -2,7 +2,7 @@ use std::{fs::File, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::{Deserialize, Serialize};
-use struct_patch::{traits::Patch as PatchTrait, Patch};
+use struct_patch::{Patch, traits::Patch as PatchTrait};
 
 #[derive(Debug, PartialOrd, Clone, Copy, Serialize, Deserialize)]
 pub struct GituiKeyEvent {
@@ -86,7 +86,10 @@ pub struct KeysList {
 	pub log_tag_commit: GituiKeyEvent,
 	pub log_mark_commit: GituiKeyEvent,
 	pub log_checkout_commit: GituiKeyEvent,
-	pub log_comment_commit: GituiKeyEvent, //backslash \ - use compare - add commenting implace of edit
+	pub log_comment_commit: GituiKeyEvent, /* backslash \ - use
+	                                        * compare - add
+	                                        * commenting implace
+	                                        * of edit */
 	pub log_reset_commit: GituiKeyEvent,
 	pub log_reword_commit: GituiKeyEvent,
 	pub log_find: GituiKeyEvent,
