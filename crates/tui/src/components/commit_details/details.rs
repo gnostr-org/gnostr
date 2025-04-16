@@ -6,10 +6,10 @@ use asyncgit::sync::{
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Direction, Layout, Rect},
 	style::{Modifier, Style},
 	text::{Line, Span, Text},
-	Frame,
 };
 use sync::CommitTags;
 
@@ -17,13 +17,13 @@ use super::style::Detail;
 use crate::{
 	app::Environment,
 	components::{
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType,
 		commit_details::style::style_detail,
 		dialog_paragraph,
 		utils::{scroll_vertical::VerticalScroll, time_to_string},
-		CommandBlocking, CommandInfo, Component, DrawableComponent,
-		EventState, ScrollType,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	strings::{self, order},
 	ui::style::SharedTheme,
 };
@@ -164,7 +164,7 @@ impl DetailsComponent {
 					style_detail(&self.theme, &Detail::Author),
 					Span::styled(
 						Cow::from(format!(
-							"{} <{}>",
+							"commit_details/details.rs:     {} <{}>",
 							data.author.name, data.author.email
 						)),
 						self.theme.text(true, false),
@@ -263,7 +263,7 @@ impl DrawableComponent for DetailsComponent {
 		let chunks = Layout::default()
 			.direction(Direction::Vertical)
 			.constraints(
-				[Constraint::Length(8), Constraint::Min(10)].as_ref(),
+				[Constraint::Min(10), Constraint::Min(20)].as_ref(),
 			)
 			.split(rect);
 
@@ -306,7 +306,7 @@ impl DrawableComponent for DetailsComponent {
 		f.render_widget(
 			dialog_paragraph(
 				&format!(
-					"{} {}",
+					"commit_details/details/dialog_paragraph {} {}",
 					strings::commit::details_message_title(
 						&self.key_config,
 					),

@@ -2,32 +2,31 @@ use std::{borrow::Cow, cell::Cell, cmp, path::Path};
 
 use anyhow::Result;
 use asyncgit::{
-	hash,
-	sync::{self, diff::DiffLinePosition, RepoPathRef},
-	DiffLine, DiffLineType, FileDiff,
+	DiffLine, DiffLineType, FileDiff, hash,
+	sync::{self, RepoPathRef, diff::DiffLinePosition},
 };
 use bytesize::ByteSize;
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::Rect,
 	symbols,
 	text::{Line, Span},
 	widgets::{Block, Borders, Paragraph},
-	Frame,
 };
 
 use super::{
+	CommandBlocking, Direction, DrawableComponent,
+	HorizontalScrollType, ScrollType,
 	utils::{
 		scroll_horizontal::HorizontalScroll,
 		scroll_vertical::VerticalScroll,
 	},
-	CommandBlocking, Direction, DrawableComponent,
-	HorizontalScrollType, ScrollType,
 };
 use crate::{
 	app::Environment,
 	components::{CommandInfo, Component, EventState},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	options::SharedOptions,
 	queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
 	string_utils::{tabs_to_spaces, trim_offset},
@@ -709,7 +708,7 @@ impl DrawableComponent for DiffComponent {
 		);
 
 		let title = format!(
-			"{}{}",
+			"components/diff.rs {}{}",
 			strings::title_diff(&self.key_config),
 			self.current.path
 		);

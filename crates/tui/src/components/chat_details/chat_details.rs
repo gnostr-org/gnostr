@@ -2,23 +2,23 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use asyncgit::sync::{
-	self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef,
+	self, CommitDetails, CommitId, RepoPathRef, commit_files::OldNew,
 };
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Direction, Layout, Rect},
 	text::{Line, Span, Text},
-	Frame,
 };
 
 use crate::{
 	app::Environment,
 	components::{
-		chat_details::style::{style_detail, Detail},
-		dialog_paragraph,
-		utils::time_to_string,
 		CommandBlocking, CommandInfo, Component, DrawableComponent,
 		EventState,
+		chat_details::style::{Detail, style_detail},
+		dialog_paragraph,
+		utils::time_to_string,
 	},
 	strings::{self},
 	ui::style::SharedTheme,

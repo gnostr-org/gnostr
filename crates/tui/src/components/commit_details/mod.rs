@@ -4,25 +4,25 @@ mod style;
 
 use anyhow::Result;
 use asyncgit::{
-	sync::{commit_files::OldNew, CommitTags},
 	AsyncCommitFiles, CommitFilesParams,
+	sync::{CommitTags, commit_files::OldNew},
 };
 use compare_details::CompareDetailsComponent;
 use crossterm::event::Event;
 use details::DetailsComponent;
 use ratatui::{
-	layout::{Constraint, Direction, Layout, Rect},
 	Frame,
+	layout::{Constraint, Direction, Layout, Rect},
 };
 
 use super::{
-	command_pump, event_pump, CommandBlocking, CommandInfo,
-	Component, DrawableComponent, EventState, StatusTreeComponent,
+	CommandBlocking, CommandInfo, Component, DrawableComponent,
+	EventState, StatusTreeComponent, command_pump, event_pump,
 };
 use crate::{
 	accessors,
 	app::Environment,
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	strings,
 };
 
@@ -150,11 +150,11 @@ impl DrawableComponent for CommitDetailsComponent {
 		} else {
 			let details_focused = self.details_focused();
 			let percentages = if self.file_tree.focused() {
-				(40, 60)
+				(50, 50)
 			} else if details_focused {
-				(60, 40)
+				(33, 66)
 			} else {
-				(40, 60)
+				(0, 100)
 			};
 
 			[
