@@ -424,7 +424,7 @@ pub mod commit {
 	pub fn details_message_title(
 		_key_config: &SharedKeyConfig,
 	) -> String {
-		"Message".to_string()
+		"strings.rs:Message".to_string()
 	}
 	pub fn details_files_title(
 		_key_config: &SharedKeyConfig,
