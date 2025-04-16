@@ -27,8 +27,8 @@ env_logger = "0.11"
 futures = "0.3.28"
 futures-core = { version = "0.3", optional = false, default-features = false }
 futures-timer = "3.0"
-git2 = "0.18.1"
 gnostr-ngit = { version = "0.0.1", path = "crates/ngit" }
+gnostr-tui = { version = "0.0.62", path = "crates/tui" }
 indicatif = "0.17.7"
 keyring = "2.0.5"
 log = "0.4"
