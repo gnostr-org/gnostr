@@ -7,7 +7,7 @@ use std::{
 	path::Path,
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use asyncgit::StatusItem;
 
 /// holds the information shared among all `FileTreeItem` in a

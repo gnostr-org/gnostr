@@ -5,36 +5,35 @@ use std::{
 
 use anyhow::Result;
 use asyncgit::sync::{
-	self, checkout_commit, BranchDetails, BranchInfo, CommitId,
-	RepoPathRef, Tags,
+	self, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+	checkout_commit,
 };
 use chrono::{DateTime, Local};
 use crossterm::event::Event;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
+	Frame,
 	layout::{Alignment, Rect},
 	style::Style,
 	text::{Line, Span},
 	widgets::{Block, Borders, Paragraph},
-	Frame,
 };
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::{
 	app::Environment,
 	components::{
-		utils::string_width_align, CommandBlocking, CommandInfo,
-		Component, DrawableComponent, EventState, ScrollType,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, ScrollType, utils::string_width_align,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, Queue},
 	strings::{self, symbol},
 	try_or_popup,
 	ui::{
-		calc_scroll_top, draw_scrollbar,
+		Orientation, calc_scroll_top, draw_scrollbar,
 		style::{SharedTheme, Theme},
-		Orientation,
 	},
 };
 
@@ -64,6 +63,15 @@ pub struct TopicList {
 
 impl TopicList {
 	///
+	/// methods
+	/// `copy_items`
+	///
+	/// `clear_marked`
+	///
+	/// `marked_commits`
+	///
+	/// `set_commits`
+	/// are never used
 	pub fn new(env: &Environment, title: &str) -> Self {
 		Self {
 			repo: env.repo.clone(),
@@ -195,11 +203,9 @@ impl TopicList {
 		{
 			try_or_popup!(
 				self,
-				"failed to invoke chat:",
+				"failed to checkout commit:",
 				checkout_commit(&self.repo.borrow(), commit_hash)
 			);
-                        //add chat to tui screen
-                        //get private key from padded commit hash
 		}
 	}
 
@@ -235,14 +241,20 @@ impl TopicList {
 
 	///
 	pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
+		/// methods
+		/// `copy_items`
+		///
+		/// `clear_marked`
+		///
+		/// `marked_commits`
+		///
+		/// `set_commits`
+		/// are never used
 		if commits != self.commits {
 			self.items.clear();
 			self.commits = commits;
 			self.fetch_commits(false);
 		}
-                //push each commit to nostr
-                for commit in &self.commits {}
-                for commit in self.commits.clone() {}
 	}
 
 	///
@@ -420,6 +432,7 @@ impl TopicList {
 		Ok(needs_update)
 	}
 
+	// mark
 	fn mark(&mut self) {
 		if let Some(e) = self.selected_entry() {
 			let id = e.id;
@@ -481,12 +494,13 @@ impl TopicList {
 		local_branches: Option<String>,
 		remote_branches: Option<String>,
 		theme: &Theme,
-		width: usize,
+		width: usize, //width
 		now: DateTime<Local>,
 		marked: Option<bool>,
 	) -> Line<'a> {
+		//
 		let mut txt: Vec<Span> = Vec::with_capacity(
-			ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 },
+			ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 },
 		);
 
 		let normal = !self.items.highlighting()
@@ -506,14 +520,16 @@ impl TopicList {
 		if let Some(marked) = marked {
 			txt.push(Span::styled(
 				Cow::from(if marked {
-					symbol::CHECKMARK
+					symbol::CHECKMARK //offset in home component
 				} else {
-					symbol::EMPTY_SPACE
+					symbol::DOT
 				}),
 				theme.log_marker(selected),
 			));
-			txt.push(splitter.clone());
+			//txt.push(splitter.clone());
+		} else {
 		}
+		//txt.push(splitter.clone());
 
 		let style_hash = normal
 			.then(|| theme.commit_hash(selected))
@@ -534,60 +550,98 @@ impl TopicList {
 			.then(|| theme.text(true, selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 
-		// commit hash
-		txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+		txt.push(Span::styled("|||||| ", style_time));
 
-		txt.push(splitter.clone());
-
-		// commit timestamp
+		//weeble/blockheight/wobble
+		//// commit timestamp
 		//txt.push(Span::styled(
-		//	Cow::from(e.time_to_string(now)),
-		//	style_time,
+		//	Cow::from(e.time_to_string(now)),//todo Created At nostr
+		//	//             //add a column in home
+		//	//Cow::from(String::from("
+		// weeble/blockheight/wobble")), 	style_time,
 		//));
 
-		txt.push(splitter.clone());
+		//txt.push(splitter.clone());
 
-		let author_width =
-			(width.saturating_sub(19) / 3).clamp(3, 20);
-		let author = string_width_align(&e.author, author_width);
+		// commit hash
+		//txt.push(Span::styled(Cow::from(&*e.hash_short),
+		// style_hash));
+		txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
+		//txt.push(splitter.clone());
+
+		txt.push(Span::styled(" ||||||", style_time));
+		// marker
+		if let Some(marked) = marked {
+			txt.push(Span::styled(
+				Cow::from(if marked {
+					symbol::CHECKMARK //offset in home component
+				} else {
+					symbol::DOT
+				}),
+				theme.log_marker(selected),
+			));
+			//txt.push(splitter.clone());
+		} else {
+		}
+		//txt.push(splitter.clone());
+
+		//let author_width =
+		//	(width.saturating_sub(0) / 3).clamp(3, 20);//replace with
+		// nostr metadata let author = string_width_align(&e.author,
+		// author_width);
 
 		// commit author
-                // insert nostr pubkey
-		// txt.push(Span::styled(author, style_author));
+		//txt.push(Span::styled(author, style_author));
 
-		txt.push(splitter.clone());
+		//txt.push(splitter.clone());
+		//txt.push(splitter.clone());
+		//txt.push(splitter.clone());
+		//txt.push(splitter.clone());
+		//txt.push(splitter.clone());
 
 		// commit tags
-		//if let Some(tags) = tags {
-		//	txt.push(splitter.clone());
-		//	txt.push(Span::styled(tags, style_tags));
-		//}
+		if let Some(tags) = tags {
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(Span::styled(tags, style_tags));
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+		}
 
-                // nostr git remotes
-		//if let Some(local_branches) = local_branches {
-		//	txt.push(splitter.clone());
-		//	//txt.push(Span::styled(local_branches, style_branches));
-		//}
-		//if let Some(remote_branches) = remote_branches {
-		//	txt.push(splitter.clone());
-		//	txt.push(Span::styled(remote_branches, style_branches));
-		//}
+		if let Some(local_branches) = local_branches {
+			//	txt.push(splitter.clone());
+			//txt.push(Span::styled(local_branches, style_branches));
+		}
+		//git-remote-nostr helper
+		if let Some(remote_branches) = remote_branches {
+			//txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(Span::styled(remote_branches, style_branches));
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+			txt.push(splitter.clone());
+		}
 
-		//txt.push(splitter);
+		txt.push(splitter.clone());
+		txt.push(splitter.clone());
+		txt.push(splitter.clone());
+		txt.push(splitter.clone());
+		txt.push(splitter.clone());
 
 		let message_width = width.saturating_sub(
-			txt.iter().map(|span| span.content.len()/10).sum(),
-			//txt.iter().map(|span| 1).sum(),
+			txt.iter().map(|span| span.content.len()).sum(),
 		);
-		//let message_width = (width.saturating_sub(19) / 3);
 
 		// commit msg
-		// commit msg
-		// commit msg
-		//txt.push(Span::styled(
-		//	format!("{:message_width$}", &e.msg),
-		//	style_msg,
-		//));
+		txt.push(Span::styled(
+			format!("{:message_width$}", &e.msg),
+			style_msg,
+		));
 
 		Line::from(txt)
 	}
@@ -640,7 +694,7 @@ impl TopicList {
 				local_branches,
 				self.remote_branches_string(e),
 				&self.theme,
-				width/2,
+				width,
 				now,
 				marked,
 			));
@@ -738,7 +792,6 @@ impl TopicList {
 
 	#[allow(clippy::needless_pass_by_ref_mut)]
 	fn selection_highlighted(&mut self) -> bool {
-
 		let commit = self.commits[self.selection];
 
 		self.highlights
@@ -804,7 +857,7 @@ impl TopicList {
 impl DrawableComponent for TopicList {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		let current_size = (
-			area.width.saturating_sub(2)/2,
+			area.width.saturating_sub(2),
 			area.height.saturating_sub(2),
 		);
 		self.current_size.set(Some(current_size));
@@ -817,21 +870,21 @@ impl DrawableComponent for TopicList {
 			height_in_lines,
 			selection,
 		));
-                // title
+
 		let title = format!(
-			"Topic {}/{}",
-			//self.title,
+			" topiclist.rs {} {}/{} ",
+			self.title,
 			self.commits.len().saturating_sub(self.selection),
 			self.commits.len(),
 		);
 
+		//render commit info in topiclist
+		//
 		f.render_widget(
-			Paragraph::new(
-				self.get_text(
-					height_in_lines,
-					current_size.0 as usize,
-				),
-			)
+			Paragraph::new(self.get_text(
+				height_in_lines,
+				(current_size.0 + 10) as usize,
+			))
 			.block(
 				Block::default()
 					.borders(Borders::ALL)
@@ -842,7 +895,7 @@ impl DrawableComponent for TopicList {
 					.border_style(self.theme.block(true)),
 			)
 			.alignment(Alignment::Left),
-			area,
+			area, //constrain to half width
 		);
 
 		draw_scrollbar(
@@ -853,7 +906,6 @@ impl DrawableComponent for TopicList {
 			self.selection,
 			Orientation::Vertical,
 		);
-
 		Ok(())
 	}
 }
@@ -891,13 +943,15 @@ impl Component for TopicList {
 				} else if key_match(
 					k,
 					self.key_config.keys.log_checkout_commit,
-				) { //
+				) {
+					//
 					self.checkout();
 					true
 				} else if key_match(
 					k,
 					self.key_config.keys.log_comment_commit,
-				) { //
+				) {
+					//
 					self.comment();
 					true
 				} else {

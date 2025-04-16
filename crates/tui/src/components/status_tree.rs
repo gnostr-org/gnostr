@@ -1,21 +1,21 @@
 use std::{borrow::Cow, cell::Cell, path::Path};
 
 use anyhow::Result;
-use asyncgit::{hash, sync::CommitId, StatusItem, StatusItemType};
+use asyncgit::{StatusItem, StatusItemType, hash, sync::CommitId};
 use crossterm::event::Event;
-use ratatui::{layout::Rect, text::Span, Frame};
+use ratatui::{Frame, layout::Rect, text::Span};
 
 use super::{
+	CommandBlocking, DrawableComponent,
 	utils::{
 		filetree::{FileTreeItem, FileTreeItemKind},
 		statustree::{MoveSelection, StatusTree},
 	},
-	CommandBlocking, DrawableComponent,
 };
 use crate::{
 	app::Environment,
 	components::{CommandInfo, Component, EventState},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	popups::{BlameFileOpen, FileRevOpen},
 	queue::{InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
 	strings::{self, order},
