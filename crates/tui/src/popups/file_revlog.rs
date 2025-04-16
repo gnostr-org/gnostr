@@ -1,33 +1,33 @@
 use anyhow::Result;
 use asyncgit::{
-	sync::{
-		diff_contains_file, get_commits_info, CommitId, RepoPathRef,
-	},
 	AsyncDiff, AsyncGitNotification, AsyncLog, DiffParams, DiffType,
+	sync::{
+		CommitId, RepoPathRef, diff_contains_file, get_commits_info,
+	},
 };
 use chrono::{DateTime, Local};
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Direction, Layout, Rect},
 	text::{Line, Span, Text},
 	widgets::{Block, Borders, Cell, Clear, Row, Table, TableState},
-	Frame,
 };
 
 use super::{BlameFileOpen, InspectCommitOpen};
 use crate::{
 	app::Environment,
 	components::{
-		event_pump, visibility_blocking, CommandBlocking,
-		CommandInfo, Component, DiffComponent, DrawableComponent,
-		EventState, ItemBatch, ScrollType,
+		CommandBlocking, CommandInfo, Component, DiffComponent,
+		DrawableComponent, EventState, ItemBatch, ScrollType,
+		event_pump, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	options::SharedOptions,
 	queue::{InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
 	strings,
-	ui::{draw_scrollbar, style::SharedTheme, Orientation},
+	ui::{Orientation, draw_scrollbar, style::SharedTheme},
 };
 
 const SLICE_SIZE: usize = 1200;
@@ -340,7 +340,7 @@ impl FileRevlogPopup {
 
 	fn set_selection(&mut self, selection: usize) {
 		let height_in_items =
-			(self.current_height.get().saturating_sub(2)) / 2;
+			(self.current_height.get().saturating_sub(2)) / 4;
 
 		let offset = *self.table_state.get_mut().offset_mut();
 		let min_offset = selection
@@ -357,7 +357,7 @@ impl FileRevlogPopup {
 			self.table_state.get_mut().selected().unwrap_or(0);
 		let offset = *self.table_state.get_mut().offset_mut();
 		let height_in_items =
-			(self.current_height.get().saturating_sub(2)) / 2;
+			(self.current_height.get().saturating_sub(2)) / 4;
 		let new_max_offset =
 			selection.saturating_add(height_in_items);
 
@@ -381,7 +381,7 @@ impl FileRevlogPopup {
 			// type of change: (A)dded, (M)odified, (D)eleted
 			Constraint::Length(1),
 			// commit details
-			Constraint::Percentage(100),
+			Constraint::Percentage(50),
 		];
 
 		let now = Local::now();
@@ -468,7 +468,7 @@ impl DrawableComponent for FileRevlogPopup {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		if self.visible {
 			let percentages = if self.diff.focused() {
-				(0, 100)
+				(30, 70)
 			} else {
 				(50, 50)
 			};

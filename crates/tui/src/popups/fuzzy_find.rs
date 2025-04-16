@@ -4,21 +4,21 @@ use anyhow::Result;
 use crossterm::event::Event;
 use fuzzy_matcher::FuzzyMatcher;
 use ratatui::{
+	Frame,
 	layout::{Constraint, Direction, Layout, Margin, Rect},
 	text::{Line, Span},
 	widgets::{Block, Borders, Clear},
-	Frame,
 };
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
 	app::Environment,
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo, Component,
-		DrawableComponent, EventState, FuzzyFinderTarget, InputType,
-		ScrollType, TextInputComponent,
+		CommandBlocking, CommandInfo, Component, DrawableComponent,
+		EventState, FuzzyFinderTarget, InputType, ScrollType,
+		TextInputComponent, visibility_blocking,
 	},
-	keys::{key_match, SharedKeyConfig},
+	keys::{SharedKeyConfig, key_match},
 	queue::{InternalEvent, Queue},
 	string_utils::trim_length_left,
 	strings,
