@@ -161,7 +161,7 @@ async fn main() -> Result<()> {
     } else if args.trace {
         Level::TRACE
     } else {
-        Level::INFO
+        Level::WARN
     };
     let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
