@@ -7,14 +7,14 @@ mod syntax_text;
 
 use filetreelist::MoveSelection;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-pub use scrollbar::{draw_scrollbar, Orientation};
+pub use scrollbar::{Orientation, draw_scrollbar};
 pub use scrolllist::{draw_list, draw_list_block};
 pub use stateful_paragraph::{
 	ParagraphState, ScrollPos, StatefulParagraph,
 };
 pub use syntax_text::{AsyncSyntaxJob, SyntaxText};
 
-use crate::keys::{key_match, SharedKeyConfig};
+use crate::keys::{SharedKeyConfig, key_match};
 
 /// return the scroll position (line) necessary to have the
 /// `selection` in view if it is not already
@@ -160,7 +160,7 @@ mod test {
 	use pretty_assertions::assert_eq;
 	use ratatui::layout::Rect;
 
-	use super::{rect_inside, Size};
+	use super::{Size, rect_inside};
 
 	#[test]
 	fn test_small_rect_in_rect() {
