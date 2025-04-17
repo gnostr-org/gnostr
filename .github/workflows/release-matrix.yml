@@ -117,6 +117,8 @@ jobs:
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: |
+          gnostr --nsec $(gnostr --hash 🦀) text-note --content "🦀"
+      - run: |
           gnostr \
           -r wss://nos.lol \
           --nsec "$(gnostr-sha256)" \
