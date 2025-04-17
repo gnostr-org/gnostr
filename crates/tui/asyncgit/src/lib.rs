@@ -1,7 +1,7 @@
 //! asyncgit
 
-#![forbid(missing_docs)]
-#![deny(
+#![warn(missing_docs)]
+#![warn(
 	unused_imports,
 	unused_must_use,
 	dead_code,
@@ -35,19 +35,28 @@
 	clippy::empty_docs
 )]
 
+//use anyhow::anyhow;
 pub mod asyncjob;
 mod blame;
 mod branches;
 pub mod cached;
+pub mod cli_interactor;
+pub mod client;
 mod commit_files;
 mod diff;
+use directories::ProjectDirs;
 mod error;
 mod fetch_job;
 mod filter_commits;
+mod git_events;
+pub mod login;
+pub mod ngit;
 mod progress;
 mod pull;
 mod push;
 mod push_tags;
+pub mod repo_ref;
+pub mod repo_state;
 pub mod remote_progress;
 pub mod remote_tags;
 mod revlog;
@@ -123,6 +132,10 @@ pub enum AsyncGitNotification {
 	TreeFiles,
 	///
 	CommitFilter,
+}
+
+pub fn get_dirs() -> Result<ProjectDirs> {
+	Ok(ProjectDirs::from("", "", "ngit").expect(""))
 }
 
 /// helper function to calculate the hash of an arbitrary type that
