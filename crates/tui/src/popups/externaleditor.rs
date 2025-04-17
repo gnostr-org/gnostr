@@ -1,7 +1,7 @@
 use std::{env, ffi::OsStr, io, path::Path, process::Command};
 
 use anyhow::{Result, anyhow, bail};
-use asyncgit::sync::{
+use asyncgnit::sync::{
 	RepoPath, get_config_string, utils::repo_work_dir,
 };
 use crossterm::{

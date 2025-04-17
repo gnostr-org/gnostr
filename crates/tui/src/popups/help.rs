@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cmp};
 
 use anyhow::Result;
-use asyncgit::hash;
+use asyncgnit::hash;
 use crossterm::event::Event;
 use itertools::Itertools;
 use ratatui::{

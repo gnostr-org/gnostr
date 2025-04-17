@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncDiff, AsyncGitNotification, DiffParams, DiffType,
 	sync::{CommitId, CommitTags},
 };

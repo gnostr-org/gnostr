@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use asyncgit::sync::CommitId;
+use asyncgnit::sync::CommitId;
 use unicode_truncate::UnicodeTruncateStr;
 use unicode_width::UnicodeWidthStr;
 

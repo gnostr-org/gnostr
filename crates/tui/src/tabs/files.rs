@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use asyncgit::sync::{self, RepoPathRef};
+use asyncgnit::sync::{self, RepoPathRef};
 
 use crate::{
 	AsyncNotification,

@@ -3,7 +3,7 @@ mod details;
 mod style;
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncCommitFiles, CommitFilesParams,
 	sync::{CommitTags, commit_files::OldNew},
 };

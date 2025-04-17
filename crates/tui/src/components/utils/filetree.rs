@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::{Result, bail};
-use asyncgit::StatusItem;
+use asyncgnit::StatusItem;
 
 /// holds the information shared among all `FileTreeItem` in a
 /// `FileTree`
@@ -263,7 +263,7 @@ impl Index<usize> for FileTreeItems {
 
 #[cfg(test)]
 mod tests {
-	use asyncgit::StatusItemType;
+	use asyncgnit::StatusItemType;
 
 	use super::*;
 

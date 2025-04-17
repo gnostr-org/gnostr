@@ -1,7 +1,7 @@
 use std::{cmp, collections::BTreeSet};
 
 use anyhow::Result;
-use asyncgit::StatusItem;
+use asyncgnit::StatusItem;
 
 use super::filetree::{
 	FileTreeItem, FileTreeItemKind, FileTreeItems, PathCollapsed,
@@ -440,7 +440,7 @@ impl StatusTree {
 
 #[cfg(test)]
 mod tests {
-	use asyncgit::StatusItemType;
+	use asyncgnit::StatusItemType;
 
 	use super::*;
 

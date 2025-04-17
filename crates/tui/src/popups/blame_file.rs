@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncBlame, AsyncGitNotification, BlameParams,
 	asyncjob::AsyncSingleJob,
 	sync::{BlameHunk, CommitId, FileBlame, RepoPathRef},

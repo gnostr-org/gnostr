@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification, AsyncPushTags, PushTagsRequest,
 	sync::{
 		AsyncProgress, PushTagsProgress, RepoPathRef,

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{
+use asyncgnit::sync::{
 	CommitId, LogFilterSearchOptions, RepoPathRef, SearchFields,
 	SearchOptions,
 };

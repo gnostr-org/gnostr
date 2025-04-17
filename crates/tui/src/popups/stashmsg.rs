@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{self, RepoPathRef};
+use asyncgnit::sync::{self, RepoPathRef};
 use crossterm::event::Event;
 use ratatui::{Frame, layout::Rect};
 

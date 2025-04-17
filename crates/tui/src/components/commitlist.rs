@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Result;
-use asyncgit::sync::{
+use asyncgnit::sync::{
 	self, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 	checkout_commit,
 };

@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification,
 	sync::{
 		self, BranchInfo, BranchType, CommitId, RepoPathRef,

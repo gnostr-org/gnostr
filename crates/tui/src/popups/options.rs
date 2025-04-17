@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::ShowUntrackedFilesConfig;
+use asyncgnit::sync::ShowUntrackedFilesConfig;
 use crossterm::event::Event;
 use ratatui::{
 	Frame,

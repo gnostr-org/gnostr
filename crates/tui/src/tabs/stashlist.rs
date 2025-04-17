@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{self, CommitId, RepoPath, RepoPathRef};
+use asyncgnit::sync::{self, CommitId, RepoPath, RepoPathRef};
 use crossterm::event::Event;
 
 use crate::{

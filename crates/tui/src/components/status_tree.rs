@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cell::Cell, path::Path};
 
 use anyhow::Result;
-use asyncgit::{StatusItem, StatusItemType, hash, sync::CommitId};
+use asyncgnit::{StatusItem, StatusItemType, hash, sync::CommitId};
 use crossterm::event::Event;
 use ratatui::{Frame, layout::Rect, text::Span};
 

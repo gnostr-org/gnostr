@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cell::Cell, cmp, path::Path};
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	DiffLine, DiffLineType, FileDiff, hash,
 	sync::{self, RepoPathRef, diff::DiffLinePosition},
 };

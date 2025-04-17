@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification, AsyncPull, FetchRequest, RemoteProgress,
 	sync::{
 		self, RepoPathRef,

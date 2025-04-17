@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{Ok, Result, bail};
-use asyncgit::{
+use asyncgnit::{
 	StatusItem, StatusItemType, cached,
 	sync::{
 		self, CommitId, HookResult, PrepareCommitMsgSource,

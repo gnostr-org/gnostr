@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	StatusItem, StatusItemType,
 	sync::{self, RepoPathRef},
 };

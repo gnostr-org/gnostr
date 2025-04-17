@@ -2,7 +2,7 @@ use std::{
 	cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc,
 };
 
-use asyncgit::{
+use asyncgnit::{
 	sync::{
 		diff::DiffLinePosition, CommitId, LogFilterSearchOptions,
 	},

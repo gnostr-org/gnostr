@@ -6,7 +6,7 @@ use std::{
 	time::{Duration, Instant},
 };
 
-use asyncgit::{
+use asyncgnit::{
 	ProgressPercent,
 	asyncjob::{AsyncJob, RunParams},
 };
@@ -72,7 +72,7 @@ impl SyntaxText {
 		text: String,
 		file_path: &Path,
 		params: &RunParams<AsyncAppNotification, ProgressPercent>,
-	) -> asyncgit::Result<Self> {
+	) -> asyncgnit::Result<Self> {
 		scope_time!("syntax_highlighting");
 
 		let mut state = {
@@ -120,7 +120,7 @@ impl SyntaxText {
 					.parse_line(line, &SYNTAX_SET)
 					.map_err(|e| {
 						log::error!("syntax error: {:?}", e);
-						asyncgit::Error::Generic(
+						asyncgnit::Error::Generic(
 							"syntax error".to_string(),
 						)
 					})?;
@@ -253,7 +253,7 @@ impl AsyncJob for AsyncSyntaxJob {
 	fn run(
 		&mut self,
 		params: RunParams<Self::Notification, Self::Progress>,
-	) -> asyncgit::Result<Self::Notification> {
+	) -> asyncgnit::Result<Self::Notification> {
 		let mut state_mutex = self.state.lock()?;
 
 		if let Some(state) = state_mutex.take() {

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification,
 	asyncjob::AsyncSingleJob,
 	remote_tags::AsyncRemoteTagsJob,

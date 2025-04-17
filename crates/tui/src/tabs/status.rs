@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncDiff, AsyncGitNotification, AsyncStatus, DiffParams,
 	DiffType, PushType, StatusItem, StatusParams, cached,
 	sync::{

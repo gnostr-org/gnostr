@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification, AsyncStatus, StatusParams,
 	sync::{self, RepoPathRef, status::StatusType},
 };

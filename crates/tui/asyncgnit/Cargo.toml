@@ -1,11 +1,11 @@
 [package]
-name = "asyncgit"
-version = "0.26.3"
-authors = ["extrawurst <mail@rusticorn.com>"]
+name = "asyncgnit"
+version = "0.0.1"
+authors = ["gnostr <asming@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "allow using git2 in a asynchronous context"
-homepage = "https://github.com/extrawurst/gitui"
-repository = "https://github.com/extrawurst/gitui"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
 readme = "README.md"
 license = "MIT"
 categories = ["concurrency", "asynchronous"]
@@ -23,7 +23,7 @@ dirs = "5.0"
 easy-cast = "0.5"
 futures = "0.3.28"
 fuzzy-matcher = "0.3"
-git2 = "0.19"
+git2 = "^0.19"
 git2-hooks = { path = "../git2-hooks", version = "0.3" }
 indicatif = "0.17.7"
 log = "0.4"

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{
+use asyncgnit::sync::{
 	self, CommitId, RepoPathRef, get_config_string,
 };
 use crossterm::event::Event;

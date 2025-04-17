@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	cached,
 	sync::{CommitId, RepoPath, ResetType},
 };
@@ -131,7 +131,7 @@ impl ResetPopup {
 			try_or_popup!(
 				self,
 				"reset:",
-				asyncgit::sync::reset_repo(&self.repo, id, self.kind)
+				asyncgnit::sync::reset_repo(&self.repo, id, self.kind)
 			);
 		}
 

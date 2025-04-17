@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification, AsyncPush, PushRequest, PushType,
 	RemoteProgress, RemoteProgressState,
 	sync::{

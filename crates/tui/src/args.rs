@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use asyncgit::sync::RepoPath;
+use asyncgnit::sync::RepoPath;
 use clap::{
 	crate_authors, crate_description, crate_name, Arg,
 	Command as ClapApp,

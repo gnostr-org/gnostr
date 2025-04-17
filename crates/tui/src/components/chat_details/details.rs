@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cell::Cell};
 
 use anyhow::Result;
-use asyncgit::sync::{
+use asyncgnit::sync::{
 	self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag,
 };
 use crossterm::event::Event;

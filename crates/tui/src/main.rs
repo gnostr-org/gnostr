@@ -62,7 +62,7 @@ use std::{
 
 use anyhow::{bail, Result};
 use app::QuitState;
-use asyncgit::{
+use asyncgnit::{
 	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
 };
@@ -132,7 +132,7 @@ fn main() -> Result<()> {
 
 	let cliargs = process_cmdline()?;
 
-	asyncgit::register_tracing_logging();
+	asyncgnit::register_tracing_logging();
 
 	if !valid_path(&cliargs.repo_path) {
 		eprintln!(
@@ -327,7 +327,7 @@ fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 }
 
 fn valid_path(repo_path: &RepoPath) -> bool {
-	let error = asyncgit::sync::repo_open_error(repo_path);
+	let error = asyncgnit::sync::repo_open_error(repo_path);
 	if let Some(error) = &error {
 		log::error!("repo open error: {error}");
 	}

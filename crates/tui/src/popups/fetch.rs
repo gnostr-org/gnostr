@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncFetchJob, AsyncGitNotification, ProgressPercent,
 	asyncjob::AsyncSingleJob,
 	sync::{

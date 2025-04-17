@@ -1,6 +1,6 @@
 use std::{rc::Rc, slice::Iter};
 
-use asyncgit::sync::{CommitId, CommitInfo};
+use asyncgnit::sync::{CommitId, CommitInfo};
 use chrono::{DateTime, Duration, Local, Utc};
 use indexmap::IndexSet;
 

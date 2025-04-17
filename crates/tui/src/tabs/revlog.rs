@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification,
 	AsyncLog, AsyncTags, CommitFilesParams, FetchStatus,
 	ProgressPercent,

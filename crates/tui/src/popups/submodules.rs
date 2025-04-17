@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use anyhow::Result;
-use asyncgit::sync::{
+use asyncgnit::sync::{
 	RepoPathRef, SubmoduleInfo, SubmoduleParentInfo, get_submodules,
 	repo_dir, submodule_parent_info, update_submodule,
 };

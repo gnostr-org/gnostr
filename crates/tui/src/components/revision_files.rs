@@ -3,7 +3,7 @@ use std::{
 };
 
 use anyhow::Result;
-use asyncgit::{
+use asyncgnit::{
 	AsyncGitNotification, AsyncTreeFilesJob,
 	asyncjob::AsyncSingleJob,
 	sync::{
