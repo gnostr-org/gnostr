@@ -11,6 +11,7 @@ mod utils;
 
 use tracing::{debug, /*error, info, span,*/ trace, /* warn,*/ Level};
 use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 use std::{io::stdout, time::Duration};
 
@@ -157,14 +158,16 @@ async fn interactive() -> Result<()> {
 async fn main() -> Result<()> {
     let args: Cli = Cli::parse();
     let level = if args.debug {
-        Level::DEBUG
+        "debug" //Level::DEBUG
     } else if args.trace {
-        Level::TRACE
+        "trace" //Level::TRACE
     } else {
-        Level::WARN
+        "warn" //Level::WARN
     };
-    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+    let filter =
+        EnvFilter::new(level).add_directive("nostr_relay_pool::relay::internal=info".parse()?);
+    tracing_subscriber::registry().with(filter).init();
 
     let env_args: Vec<String> = env::args().collect();
 
