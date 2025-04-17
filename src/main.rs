@@ -213,12 +213,12 @@ async fn tui() -> Result<()> {
 async fn main() -> Result<()> {
 	use std::env;
 	let args: Vec<String> = env::args().collect();
-	dbg!(&args);
+	//dbg!(&args);
 
 	let cli = Cli::parse();
 
 	//let _ = async {
-	dbg!(&args);
+	//dbg!(&args);
 	match args.len() {
 		// no arguments passed
 		1 => {
