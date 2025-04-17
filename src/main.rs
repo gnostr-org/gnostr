@@ -41,7 +41,7 @@ struct Cli {
     hash: Option<String>,
     ///
     #[arg(short, long, action = clap::ArgAction::Append,
-		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
+		default_values_t = ["wss://relay.damus.io".to_string()])]
     relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
