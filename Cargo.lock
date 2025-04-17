@@ -457,23 +457,37 @@ dependencies = [
 name = "asyncgit"
 version = "0.26.3"
 dependencies = [
+ "anyhow",
+ "async-trait",
  "bitflags 2.9.0",
+ "console",
  "crossbeam-channel",
+ "dialoguer",
+ "directories",
  "dirs 5.0.1",
  "easy-cast",
+ "futures",
  "fuzzy-matcher",
  "git2",
  "git2-hooks",
+ "indicatif",
  "log",
+ "nostr 0.34.1",
+ "nostr-database 0.34.0",
+ "nostr-sdk 0.34.0",
+ "nostr-signer 0.34.0",
+ "nostr-sqlite",
  "openssl-sys",
  "rayon",
  "rayon-core",
  "scopetime",
  "serde",
+ "serde_yaml",
  "ssh-key",
  "thiserror 1.0.61",
  "unicode-truncate",
  "url",
+ "urlencoding",
 ]
 
 [[package]]
