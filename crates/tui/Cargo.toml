@@ -49,7 +49,7 @@ nostr-sdk = "0.34.0"
 nostr-signer = "0.34.0"
 nostr-sqlite = "0.34.0"
 serde_yaml = "0.9.27"
-test_utils = { path = "test_utils" }
+test_utils = { path = "test_utils", version = "0.1.0" }
 tokio = "1.33.0"
 urlencoding = "2.1.3"
 
