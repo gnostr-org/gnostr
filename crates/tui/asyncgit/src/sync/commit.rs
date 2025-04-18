@@ -1,6 +1,6 @@
 //! Git Api for Commits
 use git2::{
-	message_prettify, ErrorCode, ObjectType, Repository, Signature,
+	ErrorCode, ObjectType, Repository, Signature, message_prettify,
 };
 use scopetime::scope_time;
 
@@ -214,12 +214,11 @@ mod tests {
 	use crate::{
 		error::Result,
 		sync::{
-			commit, get_commit_details, get_commit_files,
-			stage_add_file,
-			tags::{get_tags, Tag},
+			LogWalker, RepoPath, commit, get_commit_details,
+			get_commit_files, stage_add_file,
+			tags::{Tag, get_tags},
 			tests::{get_statuses, repo_init, repo_init_empty},
 			utils::get_head,
-			LogWalker, RepoPath,
 		},
 	};
 
@@ -335,27 +334,25 @@ mod tests {
 
 		tag_commit(repo_path, &new_id, "tag", None)?;
 
-		assert_eq!(
-			get_tags(repo_path).unwrap()[&new_id],
-			vec![Tag::new("tag")]
-		);
+		assert_eq!(get_tags(repo_path).unwrap()[&new_id], vec![
+			Tag::new("tag")
+		]);
 
 		assert!(matches!(
 			tag_commit(repo_path, &new_id, "tag", None),
 			Err(_)
 		));
 
-		assert_eq!(
-			get_tags(repo_path).unwrap()[&new_id],
-			vec![Tag::new("tag")]
-		);
+		assert_eq!(get_tags(repo_path).unwrap()[&new_id], vec![
+			Tag::new("tag")
+		]);
 
 		tag_commit(repo_path, &new_id, "second-tag", None)?;
 
-		assert_eq!(
-			get_tags(repo_path).unwrap()[&new_id],
-			vec![Tag::new("second-tag"), Tag::new("tag")]
-		);
+		assert_eq!(get_tags(repo_path).unwrap()[&new_id], vec![
+			Tag::new("second-tag"),
+			Tag::new("tag")
+		]);
 
 		Ok(())
 	}

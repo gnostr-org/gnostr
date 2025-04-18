@@ -1,8 +1,8 @@
 use std::{
 	hash::Hash,
 	sync::{
-		atomic::{AtomicUsize, Ordering},
 		Arc, Mutex,
+		atomic::{AtomicUsize, Ordering},
 	},
 	time::{SystemTime, UNIX_EPOCH},
 };
@@ -10,12 +10,12 @@ use std::{
 use crossbeam_channel::Sender;
 
 use crate::{
+	AsyncGitNotification, StatusItem,
 	error::Result,
 	hash,
 	sync::{
-		self, status::StatusType, RepoPath, ShowUntrackedFilesConfig,
+		self, RepoPath, ShowUntrackedFilesConfig, status::StatusType,
 	},
-	AsyncGitNotification, StatusItem,
 };
 
 fn current_tick() -> u128 {

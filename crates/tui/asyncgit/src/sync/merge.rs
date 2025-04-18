@@ -2,18 +2,19 @@ use git2::{BranchType, Commit, MergeOptions, Repository};
 use scopetime::scope_time;
 
 use super::{
-	rebase::{RebaseProgress, RebaseState},
 	RepoPath,
+	rebase::{RebaseProgress, RebaseState},
 };
 use crate::{
 	error::{Error, Result},
 	sync::{
+		CommitId,
 		branch::merge_commit::commit_merge_with_head,
 		rebase::{
 			abort_rebase, continue_rebase, get_rebase_progress,
 		},
 		repository::repo,
-		reset_stage, reset_workdir, CommitId,
+		reset_stage, reset_workdir,
 	},
 };
 
@@ -157,9 +158,8 @@ mod tests {
 
 	use super::*;
 	use crate::sync::{
-		create_branch,
+		RepoPath, create_branch,
 		tests::{repo_init, write_commit_file},
-		RepoPath,
 	};
 
 	#[test]

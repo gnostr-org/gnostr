@@ -6,7 +6,7 @@ use scopetime::scope_time;
 use super::BranchType;
 use crate::{
 	error::{Error, Result},
-	sync::{merge_msg, repository::repo, CommitId, RepoPath},
+	sync::{CommitId, RepoPath, merge_msg, repository::repo},
 };
 
 /// merge upstream using a merge commit if we did not create
@@ -99,13 +99,12 @@ mod test {
 
 	use super::*;
 	use crate::sync::{
-		branch_compare_upstream,
+		RepoState, branch_compare_upstream,
 		remotes::{fetch, push::push_branch},
 		tests::{
 			debug_cmd_print, get_commit_ids, repo_clone,
 			repo_init_bare, write_commit_file, write_commit_file_at,
 		},
-		RepoState,
 	};
 
 	#[test]

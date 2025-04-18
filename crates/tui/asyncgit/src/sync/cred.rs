@@ -3,13 +3,13 @@
 use git2::CredentialHelper;
 
 use super::{
+	RepoPath,
 	remotes::{
 		get_default_remote_for_fetch_in_repo,
 		get_default_remote_for_push_in_repo,
 		get_default_remote_in_repo,
 	},
 	repository::repo,
-	RepoPath,
 };
 use crate::error::{Error, Result};
 
@@ -196,13 +196,13 @@ mod tests {
 	use serial_test::serial;
 
 	use crate::sync::{
+		RepoPath,
 		cred::{
-			extract_cred_from_url, extract_username_password,
-			need_username_password, BasicAuthCredential,
+			BasicAuthCredential, extract_cred_from_url,
+			extract_username_password, need_username_password,
 		},
 		remotes::DEFAULT_REMOTE_NAME,
 		tests::repo_init,
-		RepoPath,
 	};
 
 	#[test]

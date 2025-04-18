@@ -39,10 +39,10 @@ mod when_main_is_checked_out {
 
 					test_repo.checkout("main")?;
 
-					let mut p = CliTester::new_from_dir(
-						&test_repo.dir,
-						["pull"],
-					);
+					let mut p =
+						CliTester::new_from_dir(&test_repo.dir, [
+							"pull",
+						]);
 					p.expect(
 						"Error: checkout a branch associated with a proposal first\r\n",
 					)?;
@@ -107,10 +107,10 @@ mod when_branch_doesnt_exist {
 					test_repo.create_branch("random-name")?;
 					test_repo.checkout("random-name")?;
 
-					let mut p = CliTester::new_from_dir(
-						&test_repo.dir,
-						["pull"],
-					);
+					let mut p =
+						CliTester::new_from_dir(&test_repo.dir, [
+							"pull",
+						]);
 					p.expect("fetching updates...\r\n")?;
 					p.expect_eventually("\r\n")?; // some updates listed here
 					p.expect("Error: cannot find proposal that matches the current branch name\r\n")?;
@@ -240,10 +240,10 @@ mod when_branch_is_checked_out {
                         )?;
 					test_repo.checkout(&branch_name)?;
 
-					let mut p = CliTester::new_from_dir(
-						&test_repo.dir,
-						["pull"],
-					);
+					let mut p =
+						CliTester::new_from_dir(&test_repo.dir, [
+							"pull",
+						]);
 					p.expect_end_eventually()?;
 
 					for p in [51, 52, 53, 55, 56] {
@@ -476,10 +476,10 @@ mod when_branch_is_checked_out {
 						.stage_and_commit("add ammended-commit.md")?;
 
 					// run test
-					let mut p = CliTester::new_from_dir(
-						&test_repo.dir,
-						["pull"],
-					);
+					let mut p =
+						CliTester::new_from_dir(&test_repo.dir, [
+							"pull",
+						]);
 					p.expect("fetching updates...\r\n")?;
 					p.expect_eventually("\r\n")?; // some updates listed here
 					p.expect("local proposal branch exists with 1 unpublished commits on top of the most up-to-date version of the proposal\r\n")?;
