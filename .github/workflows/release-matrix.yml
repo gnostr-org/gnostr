@@ -107,17 +107,32 @@ jobs:
       #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
-      - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
+      ## - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
       ##- run: make detect || sudo make detect
-      - run: pipx install virtualenv || true
+      ## - run: pipx install virtualenv || true
 
       ## objective: test non-cmake build gnostr-am
-      - run: make all || sudo make all
-      - run: make cargo-install-crates || sudo make cargo-install-crates
+      ## - run: make cargo-install-crates || sudo make cargo-install-crates
+      - run: make cargo-install || sudo make cargo-install
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
-      #- run: gnostr
-      - run: gnostr --nsec $(gnostr-sha256 $(gnostr-weeble)) --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t gnostr --tag weeble $(gnostr-weeble) --tag blockheight $(gnostr-blockheight) --tag wobble $(gnostr-wobble) | gnostr-post-event
+      - run: |
+          gnostr --nsec $(gnostr --hash 🦀) text-note --content "🦀"
+      - run: |
+          gnostr \
+          -r wss://nos.lol \
+          --nsec "$(gnostr-sha256)" \
+          set-metadata \
+          -n gnostr \
+          -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
+          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png"
+      - run: |
+          gnostr \
+          -r wss://nos.lol \
+          --nsec "$(gnostr-sha256)" \
+          text-note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)"
       ##
       ## WEEBLE-WOBBLE
       ## GNOSTR DETEMINISTIC ALIASES
@@ -143,8 +158,10 @@ jobs:
           WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
 
-          #gnostr --nsec $PRIVATE_KEY \
-          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          gnostr --nsec $PRIVATE_KEY \
+          -r wss://nos.lol \
+          text-note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
           #-t gnostr-$BLOCKS_TIP_HASH \
           #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
           #--tag weeble $(gnostr-weeble) \
@@ -152,8 +169,10 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          #gnostr --sec $BLOCKS_TIP_HASH \
-          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          gnostr --nsec $BLOCKS_TIP_HASH \
+          -r wss://nos.lol \
+          text-note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
           #-t gnostr-$BLOCKS_TIP_HASH \
           #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
           #--tag weeble $(gnostr-weeble) \
@@ -161,8 +180,10 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          #gnostr --sec $BLOCKHEIGHT_SHA256 \
-          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          gnostr --nsec $BLOCKHEIGHT_SHA256 \
+          -r wss://nos.lol \
+          text-note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
           #-t gnostr-$BLOCKS_TIP_HASH \
           #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
           #--tag weeble $(gnostr-weeble) \
@@ -170,8 +191,10 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          #gnostr --sec $WEEBLE_SHA256 \
-          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          gnostr --nsec $WEEBLE_SHA256 \
+          -r wss://nos.lol \
+          text-note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
           #-t gnostr-$BLOCKS_TIP_HASH \
           #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
           #--tag weeble $(gnostr-weeble) \
@@ -179,21 +202,25 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          #gnostr --sec $WEEBLE_ALIAS \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-          -t gnostr-$BLOCKS_TIP_HASH \
-          --tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          --tag weeble $(gnostr-weeble) \
-          --tag blockheight $(gnostr-blockheight) \
-          --tag wobble $(gnostr-wobble) | \
-          gnostr-post-event -r wss://e.nos.lol || true
+          gnostr --nsec $WEEBLE_ALIAS \
+          -r wss://nos.lol \
+          text-note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
+          #-t gnostr-$BLOCKS_TIP_HASH \
+          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          #--tag weeble $(gnostr-weeble) \
+          #--tag blockheight $(gnostr-blockheight) \
+          #--tag wobble $(gnostr-wobble) | \
+          #gnostr-post-event -r wss://e.nos.lol || true
 
-          #gnostr --sec $(mempool-space --blocks_tip_hash) \
-          --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
-          --tag blocks_tip_height $(mempool-space --blocks_tip_height) |
-          gnostr-post-event -r wss://e.nos.lol || true
+          gnostr --nsec $(mempool-space --blocks_tip_hash) \
+          -r wss://nos.lol \
+          text-note \
+          --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" #\
+          #--tag blocks_tip_height $(mempool-space --blocks_tip_height) |
+          #gnostr-post-event -r wss://e.nos.lol || true
 
-          ./mempool_space_bot wss://e.nos.lol || true
+          #./mempool_space_bot wss://e.nos.lol || true
 
       - run: ./nip-0034 || true
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
@@ -201,14 +228,26 @@ jobs:
       - run: ./nip-0034 || true
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
 
-      ## objective: test cmake build gnostr
-      ## objective: test cargo build/install gnostr-bins
-      - run: gnostr custom-event -k 1 -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "a|blah" -t "a|$(date +%s)" -t "$(gnostr-weeble)" -t "$(gnostr-blockheight)" -t "$(gnostr-wobble)"
-      - run: gnostr custom-event -k 1 -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "a|blah" -t "a|$(date +%s)" -t "$(gnostr-weeble)" -t "$(gnostr-blockheight)" -t "$(gnostr-wobble)" --hex
-      - run: gnostr react -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f -r "hello $(date +%s)" | gnostr-xq
-      - run: gnostr react -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f -r "hello $(date +%s)" --hex | gnostr-xq
-      ##- run: V=1 make nostril || sudo make nostril
-      ##- run: V=1 make install || sudo make install
+      - run: |
+          gnostr \
+          -r wss://nos.lol \
+          custom-event \
+          -k 1 \
+          -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t "a|blah" \
+          -t "a|$(date +%s)" \
+          -t "$(gnostr-weeble)" \
+          -t "$(gnostr-blockheight)" \
+          -t "$(gnostr-wobble)" \
+          --hex
+
+      - run: |
+          gnostr \
+          -r wss://nos.lol \
+          react \
+          -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
+          -r "hello $(date +%s)" \
+          #| gnostr-xq
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
