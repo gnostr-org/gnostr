@@ -4,7 +4,10 @@
 	unstable_name_collisions,
 	unused_assignments
 )]
-#![warn(dead_code, unused_imports)]
+#![warn(
+	dead_code,
+	unused_imports,
+)]
 #![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
 #![deny(
 	clippy::unwrap_used,
@@ -33,7 +36,6 @@
 mod app;
 mod args;
 mod bug_report;
-use ngit::cli;
 mod clipboard;
 mod cmdbar;
 mod components;
@@ -47,7 +49,6 @@ mod queue;
 mod spinner;
 mod string_utils;
 mod strings;
-use ngit::sub_commands;
 mod tabs;
 mod ui;
 mod watcher;
@@ -59,31 +60,23 @@ use std::{
 	time::{Duration, Instant},
 };
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use app::QuitState;
 use asyncgit::{
+	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
-	sync::{RepoPath, utils::repo_work_dir},
 };
 use backtrace::Backtrace;
-use clap::Parser;
-use cli::{Cli, Commands};
-
-use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
+use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
-	ExecutableCommand,
 	terminal::{
-		EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
-		enable_raw_mode,
+		disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
+		LeaveAlternateScreen,
 	},
+	ExecutableCommand,
 };
 use input::{Input, InputEvent, InputState};
 use keys::KeyConfig;
-
-use ngit::{
-	cli_interactor, client, git, git_events, login, repo_ref,
-};
-
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::scope_time;
@@ -134,26 +127,7 @@ enum Updater {
 	NotifyWatcher,
 }
 
-async fn increase(number: i32) {
-	println!("{}", number + 1);
-}
-
-async fn decrease(number: i32) {
-	println!("{}", number - 1);
-}
-
-async fn help() {
-	println!(
-		"usage:
-match_args <string>
-    Check whether given string is the answer.
-match_args {{increase|decrease}} <integer>
-    Increase or decrease given integer by one."
-	);
-}
-
-//#[tokio::main]
-async fn tui() -> Result<()> {
+fn main() -> Result<()> {
 	let app_start = Instant::now();
 
 	let cliargs = process_cmdline()?;
@@ -204,101 +178,9 @@ async fn tui() -> Result<()> {
 			QuitState::OpenSubmodule(p) => {
 				repo_path = p;
 			}
-			_ => break Ok(()),
+			_ => break,
 		}
 	}
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-	use std::env;
-	let args: Vec<String> = env::args().collect();
-	//dbg!(&args);
-
-	let cli = Cli::parse();
-
-	//let _ = async {
-	//dbg!(&args);
-	match args.len() {
-		// no arguments passed
-		1 => {
-			println!(
-				"My name is 'match_args'. Try passing some arguments!"
-			);
-
-			let _ = help();
-
-			//invoke tui
-		}
-		// one argument passed
-		2 => match &cli.command {
-			Commands::Fetch(args) => {
-				sub_commands::fetch::launch(&cli, args)
-					.await
-					.expect("REASON")
-			}
-			Commands::Login(args) => {
-				sub_commands::login::launch(&cli, args)
-					.await
-					.expect("REASON")
-			}
-			Commands::Init(args) => {
-				sub_commands::init::launch(&cli, args)
-					.await
-					.expect("REASON")
-			}
-			Commands::Send(args) => {
-				sub_commands::send::launch(&cli, args, false)
-					.await
-					.expect("REASON")
-			}
-			Commands::List => {
-				sub_commands::list::launch().await.expect("REASON")
-			}
-			Commands::Pull => {
-				sub_commands::pull::launch().await.expect("REASON")
-			}
-			Commands::Push(args) => {
-				sub_commands::push::launch(&cli, args)
-					.await
-					.expect("REASON")
-			}
-			_ => println!("Ain't special"),
-			//2 => match args[1].parse() {
-			//        Ok(42) => println!("This is the answer!"),
-			//        _ => println!("This is not the answer."),
-		},
-		3 => {
-			let cmd = &args[1];
-			let num = &args[2];
-			// parse the number
-			let number: i32 = match num.parse() {
-				Ok(n) => n,
-				Err(_) => {
-					eprintln!(
-						"error: second argument not an integer"
-					);
-					let _ = help();
-					0
-				}
-			};
-			// parse the command
-			match &cmd[..] {
-				"increase" => increase(number).await,
-				"decrease" => decrease(number).await,
-				_ => {
-					eprintln!("error: invalid command");
-					let _ = help();
-				}
-			}
-		}
-		// all the other cases
-		_ => {
-			// show a help message
-			let _ = help();
-		}
-	};
-	//};
 
 	Ok(())
 }
