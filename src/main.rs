@@ -6,7 +6,7 @@ use crate::global_rt::global_rt;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
-mod sub_commands;
+use gnostr::sub_commands;
 use gnostr::utils;
 
 use tracing::{debug, /*error, info, span,*/ trace, /* warn,*/ Level};

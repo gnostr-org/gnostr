@@ -7,6 +7,7 @@ use ngit::sub_commands::login;
 use ngit::sub_commands::pull;
 use ngit::sub_commands::push;
 use ngit::sub_commands::send;
+use ngit::sub_commands::fetch;
 use ngit::cli::Commands as NgitCommands;
 use nostr_sdk::prelude::*;
 
@@ -31,10 +32,11 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
     match &sub_command_args.command {
         NgitCommands::Login(args) => login::launch(&args).await?,
         NgitCommands::Init(args) => init::launch(&args).await?,
-        NgitCommands::Send(args) => send::launch(&args).await?,
+        NgitCommands::Send(args) => send::launch(&args, true).await?,
         NgitCommands::List => list::launch().await?,
         NgitCommands::Pull => pull::launch().await?,
         NgitCommands::Push(args) => push::launch(&args).await?,
+        NgitCommands::Fetch(args) => fetch::launch(&args).await?,
     }
     Ok(())
 }

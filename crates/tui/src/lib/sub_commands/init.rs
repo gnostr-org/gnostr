@@ -50,11 +50,17 @@ pub struct SubCommandArgs {
 	#[clap(short, long)]
 	/// shortname with no spaces or special characters
 	identifier: Option<String>,
+        disable_cli_spinners: bool,
+        password: Option<String>,
+        nsec: Option<String>,
+        bunker_app_key: Option<String>,
+        bunker_uri: Option<String>,
+
 }
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch(
-	cli_args: &Cli,
+	//cli_args: &Cli,
 	args: &SubCommandArgs,
 ) -> Result<()> {
 	let git_repo =
@@ -95,10 +101,10 @@ pub async fn launch(
 
 	let (signer, user_ref) = login::launch(
 		&git_repo,
-		&cli_args.bunker_uri,
-		&cli_args.bunker_app_key,
-		&cli_args.nsec,
-		&cli_args.password,
+		&args.bunker_uri,
+		&args.bunker_app_key,
+		&args.nsec,
+		&args.password,
 		Some(&client),
 		false,
 		false,
@@ -380,7 +386,7 @@ pub async fn launch(
 		vec![repo_event],
 		user_ref.relays.write(),
 		relays.clone(),
-		!cli_args.disable_cli_spinners,
+		!args.disable_cli_spinners,
 		false,
 	)
 	.await?;
