@@ -236,7 +236,9 @@ impl Chatlog {
 		if let Some(commit_id) = self.selected_commit() {
 			let tags = self.selected_commit_tags(&Some(commit_id));
 			self.queue.push(InternalEvent::OpenPopup(
+				//
 				StackablePopupOpen::InspectCommit(
+					//
 					InspectCommitOpen::new_with_tags(commit_id, tags),
 				),
 			));
@@ -408,6 +410,7 @@ impl Chatlog {
 	}
 }
 
+//ChatLog Layout
 impl DrawableComponent for Chatlog {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		let area = if self.is_in_search_mode() {
@@ -426,13 +429,15 @@ impl DrawableComponent for Chatlog {
 			.direction(Direction::Horizontal)
 			.constraints(
 				[
-					Constraint::Percentage(7),
-					Constraint::Percentage(93),
+					//ChatLog Split
+					Constraint::Percentage(33),
+					Constraint::Percentage(33),
 				]
 				.as_ref(),
 			)
 			.split(area[0]);
 
+		//commit details
 		if self.commit_details.is_visible() {
 			self.list.draw(f, chunks[0])?;
 			self.commit_details.draw(f, chunks[1])?;

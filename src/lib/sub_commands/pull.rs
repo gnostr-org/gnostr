@@ -1,15 +1,15 @@
-use anyhow::{Context, Result, bail};
-use ngit::git_events::is_event_proposal_root_for_branch;
+use anyhow::{bail, Context, Result};
+use crate::git_events::is_event_proposal_root_for_branch;
 use nostr_sdk::PublicKey;
 
 use crate::{
 	client::{
-		Client, Connect, fetching_with_report,
+		fetching_with_report,
 		get_all_proposal_patch_events_from_cache,
 		get_proposals_and_revisions_from_cache,
-		get_repo_ref_from_cache,
+		get_repo_ref_from_cache, Client, Connect,
 	},
-	git::{Repo, RepoActions, str_to_sha1},
+	git::{str_to_sha1, Repo, RepoActions},
 	git_events::{
 		get_commit_id_from_patch,
 		get_most_recent_patch_with_ancestors, tag_value,

@@ -164,7 +164,7 @@ impl DetailsComponent {
 					style_detail(&self.theme, &Detail::Author),
 					Span::styled(
 						Cow::from(format!(
-							"{} <{}>",
+							"commit_details/details.rs:     {} <{}>",
 							data.author.name, data.author.email
 						)),
 						self.theme.text(true, false),
@@ -263,7 +263,7 @@ impl DrawableComponent for DetailsComponent {
 		let chunks = Layout::default()
 			.direction(Direction::Vertical)
 			.constraints(
-				[Constraint::Length(8), Constraint::Min(10)].as_ref(),
+				[Constraint::Min(10), Constraint::Min(20)].as_ref(),
 			)
 			.split(rect);
 
@@ -306,7 +306,7 @@ impl DrawableComponent for DetailsComponent {
 		f.render_widget(
 			dialog_paragraph(
 				&format!(
-					"{} {}",
+					"commit_details/details/dialog_paragraph {} {}",
 					strings::commit::details_message_title(
 						&self.key_config,
 					),
@@ -422,15 +422,18 @@ mod tests {
 	fn test_textwrap() {
 		let message = CommitMessage::from("Commit message");
 
-		assert_eq!(get_wrapped_lines(&message, 7), vec![
-			"Commit", "message"
-		]);
-		assert_eq!(get_wrapped_lines(&message, 14), vec![
-			"Commit message"
-		]);
-		assert_eq!(get_wrapped_lines(&message, 0), vec![
-			"Commit", "message"
-		]);
+		assert_eq!(
+			get_wrapped_lines(&message, 7),
+			vec!["Commit", "message"]
+		);
+		assert_eq!(
+			get_wrapped_lines(&message, 14),
+			vec!["Commit message"]
+		);
+		assert_eq!(
+			get_wrapped_lines(&message, 0),
+			vec!["Commit", "message"]
+		);
 
 		let message_with_newline =
 			CommitMessage::from("Commit message\n");
@@ -443,25 +446,33 @@ mod tests {
 			get_wrapped_lines(&message_with_newline, 14),
 			vec!["Commit message"]
 		);
-		assert_eq!(get_wrapped_lines(&message, 0), vec![
-			"Commit", "message"
-		]);
+		assert_eq!(
+			get_wrapped_lines(&message, 0),
+			vec!["Commit", "message"]
+		);
 
 		let message_with_body = CommitMessage::from(
 			"Commit message\nFirst line\nSecond line",
 		);
 
-		assert_eq!(get_wrapped_lines(&message_with_body, 7), vec![
-			"Commit", "message", "First", "line", "Second", "line"
-		]);
-		assert_eq!(get_wrapped_lines(&message_with_body, 14), vec![
-			"Commit message",
-			"First line",
-			"Second line"
-		]);
-		assert_eq!(get_wrapped_lines(&message_with_body, 7), vec![
-			"Commit", "message", "First", "line", "Second", "line"
-		]);
+		assert_eq!(
+			get_wrapped_lines(&message_with_body, 7),
+			vec![
+				"Commit", "message", "First", "line", "Second",
+				"line"
+			]
+		);
+		assert_eq!(
+			get_wrapped_lines(&message_with_body, 14),
+			vec!["Commit message", "First line", "Second line"]
+		);
+		assert_eq!(
+			get_wrapped_lines(&message_with_body, 7),
+			vec![
+				"Commit", "message", "First", "line", "Second",
+				"line"
+			]
+		);
 	}
 }
 

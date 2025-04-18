@@ -340,7 +340,7 @@ impl FileRevlogPopup {
 
 	fn set_selection(&mut self, selection: usize) {
 		let height_in_items =
-			(self.current_height.get().saturating_sub(2)) / 2;
+			(self.current_height.get().saturating_sub(2)) / 4;
 
 		let offset = *self.table_state.get_mut().offset_mut();
 		let min_offset = selection
@@ -357,7 +357,7 @@ impl FileRevlogPopup {
 			self.table_state.get_mut().selected().unwrap_or(0);
 		let offset = *self.table_state.get_mut().offset_mut();
 		let height_in_items =
-			(self.current_height.get().saturating_sub(2)) / 2;
+			(self.current_height.get().saturating_sub(2)) / 4;
 		let new_max_offset =
 			selection.saturating_add(height_in_items);
 
@@ -381,7 +381,7 @@ impl FileRevlogPopup {
 			// type of change: (A)dded, (M)odified, (D)eleted
 			Constraint::Length(1),
 			// commit details
-			Constraint::Percentage(100),
+			Constraint::Percentage(50),
 		];
 
 		let now = Local::now();
@@ -468,7 +468,7 @@ impl DrawableComponent for FileRevlogPopup {
 	fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
 		if self.visible {
 			let percentages = if self.diff.focused() {
-				(0, 100)
+				(30, 70)
 			} else {
 				(50, 50)
 			};

@@ -86,7 +86,10 @@ pub struct KeysList {
 	pub log_tag_commit: GituiKeyEvent,
 	pub log_mark_commit: GituiKeyEvent,
 	pub log_checkout_commit: GituiKeyEvent,
-	pub log_comment_commit: GituiKeyEvent, //backslash \ - use compare - add commenting implace of edit
+	pub log_comment_commit: GituiKeyEvent, /* backslash \ - use
+	                                        * compare - add
+	                                        * commenting implace
+	                                        * of edit */
 	pub log_reset_commit: GituiKeyEvent,
 	pub log_reword_commit: GituiKeyEvent,
 	pub log_find: GituiKeyEvent,

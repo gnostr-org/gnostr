@@ -4,62 +4,20 @@ use std::{
 	path::PathBuf,
 };
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use asyncgit::sync::RepoPath;
 use clap::{
-	Arg, Command as ClapApp, Parser, Subcommand, crate_authors,
-	crate_description, crate_name,
+	crate_authors, crate_description, crate_name, Arg,
+	Command as ClapApp,
 };
 use simplelog::{Config, LevelFilter, WriteLogger};
 
 use crate::bug_report;
 
-use crate::sub_commands;
-
-#[derive(Subcommand)]
-pub enum Commands {
-	/// update cache with latest updates from nostr
-	Fetch(sub_commands::fetch::SubCommandArgs),
-	/// signal you are this repo's maintainer accepting proposals via
-	/// nostr
-	Init(sub_commands::init::SubCommandArgs),
-	/// issue commits as a proposal
-	Send(sub_commands::send::SubCommandArgs),
-	/// list proposals; checkout, apply or download selected
-	List,
-	/// send proposal revision
-	Push(sub_commands::push::SubCommandArgs),
-	/// fetch and apply new proposal commits / revisions linked to
-	/// branch
-	Pull,
-	/// run with --nsec flag to change npub
-	Login(sub_commands::login::SubCommandArgs),
-	Tui,
-}
-
-#[derive(Parser)]
 pub struct CliArgs {
-	/// theme
 	pub theme: PathBuf,
-	/// repo_path
 	pub repo_path: RepoPath,
-	/// notify_watcher
 	pub notify_watcher: bool,
-	/// remote signer address
-	#[arg(long, global = true)]
-	pub bunker_uri: Option<String>,
-	/// remote signer app secret key
-	#[arg(long, global = true)]
-	pub bunker_app_key: Option<String>,
-	/// nsec or hex private key
-	#[arg(short, long, global = true)]
-	pub nsec: Option<String>,
-	/// password to decrypt nsec
-	#[arg(short, long, global = true)]
-	pub password: Option<String>,
-	/// disable spinner animations
-	#[arg(long, action)]
-	pub disable_cli_spinners: bool,
 }
 
 pub fn process_cmdline() -> Result<CliArgs> {
@@ -74,9 +32,6 @@ pub fn process_cmdline() -> Result<CliArgs> {
 	if arg_matches.get_flag("logging") {
 		setup_logging()?;
 	}
-
-	let ngit =
-		arg_matches.get_one::<String>("ngit").map(PathBuf::from);
 
 	let workdir =
 		arg_matches.get_one::<String>("workdir").map(PathBuf::from);
@@ -100,21 +55,10 @@ pub fn process_cmdline() -> Result<CliArgs> {
 	let notify_watcher: bool =
 		*arg_matches.get_one("watcher").unwrap_or(&false);
 
-	let bunker_uri: Option<String> = None;
-	let bunker_app_key: Option<String> = None;
-	let nsec: Option<String> = None;
-	let password: Option<String> = None;
-	let disable_cli_spinners: bool = false;
-
 	Ok(CliArgs {
 		theme,
 		repo_path,
 		notify_watcher,
-		bunker_uri,
-		bunker_app_key,
-		nsec,
-		password,
-		disable_cli_spinners,
 	})
 }
 

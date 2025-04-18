@@ -512,10 +512,13 @@ mod tests {
 		res.selection = Some(2);
 
 		res.update(&string_vec_to_status(&["a/b"])).unwrap();
-		assert_eq!(get_visible(&res), vec![
-			true,  //
-			false, //
-		]);
+		assert_eq!(
+			get_visible(&res),
+			vec![
+				true,  //
+				false, //
+			]
+		);
 		assert!(res.is_visible_index(res.selection.unwrap()));
 		assert_eq!(res.selection, Some(0));
 	}
@@ -536,11 +539,14 @@ mod tests {
 			vec![&&String::from("a")]
 		);
 
-		assert_eq!(get_visible(&res), vec![
-			true,  //
-			false, //
-			true,  //
-		]);
+		assert_eq!(
+			get_visible(&res),
+			vec![
+				true,  //
+				false, //
+				true,  //
+			]
+		);
 
 		res.update(&string_vec_to_status(&[
 			"a/b", //
@@ -554,12 +560,15 @@ mod tests {
 			vec![&&String::from("a")]
 		);
 
-		assert_eq!(get_visible(&res), vec![
-			true,  //
-			false, //
-			true,  //
-			true
-		]);
+		assert_eq!(
+			get_visible(&res),
+			vec![
+				true,  //
+				false, //
+				true,  //
+				true
+			]
+		);
 	}
 
 	#[test]
@@ -581,23 +590,29 @@ mod tests {
 
 		let visible = get_visible(&res);
 
-		assert_eq!(visible, vec![
-			true,  //
-			true,  //
-			false, //
-			true,
-		]);
+		assert_eq!(
+			visible,
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,
+			]
+		);
 
 		res.expand(&String::from("a/b"), 1);
 
 		let visible = get_visible(&res);
 
-		assert_eq!(visible, vec![
-			true, //
-			true, //
-			true, //
-			true,
-		]);
+		assert_eq!(
+			visible,
+			vec![
+				true, //
+				true, //
+				true, //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -619,23 +634,29 @@ mod tests {
 		res.collapse(&String::from("b"), 1);
 		res.collapse(&String::from("a"), 0);
 
-		assert_eq!(get_visible(&res), vec![
-			true,  //
-			false, //
-			false, //
-			false, //
-			false,
-		]);
+		assert_eq!(
+			get_visible(&res),
+			vec![
+				true,  //
+				false, //
+				false, //
+				false, //
+				false,
+			]
+		);
 
 		res.expand(&String::from("a"), 0);
 
-		assert_eq!(get_visible(&res), vec![
-			true,  //
-			true,  //
-			false, //
-			true,  //
-			true,
-		]);
+		assert_eq!(
+			get_visible(&res),
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,  //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -657,12 +678,15 @@ mod tests {
 
 		let visible = get_visible(&res);
 
-		assert_eq!(visible, vec![
-			true,  //
-			false, //
-			true,  //
-			true,
-		]);
+		assert_eq!(
+			visible,
+			vec![
+				true,  //
+				false, //
+				true,  //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -684,34 +708,43 @@ mod tests {
 
 		let visible = get_visible(&res);
 
-		assert_eq!(visible, vec![
-			true,  //
-			true,  //
-			false, //
-			true,
-		]);
+		assert_eq!(
+			visible,
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,
+			]
+		);
 
 		res.collapse(&String::from("a"), 0);
 
 		let visible = get_visible(&res);
 
-		assert_eq!(visible, vec![
-			true,  //
-			false, //
-			false, //
-			false,
-		]);
+		assert_eq!(
+			visible,
+			vec![
+				true,  //
+				false, //
+				false, //
+				false,
+			]
+		);
 
 		res.expand(&String::from("a"), 0);
 
 		let visible = get_visible(&res);
 
-		assert_eq!(visible, vec![
-			true,  //
-			true,  //
-			false, //
-			true,
-		]);
+		assert_eq!(
+			visible,
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,
+			]
+		);
 	}
 
 	#[test]
