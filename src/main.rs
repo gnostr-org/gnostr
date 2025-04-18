@@ -1,13 +1,13 @@
 //use crate::sub_commands::custom_event::CustomEventCommand;
 //use crate::Commands::CustomEvent;
 use clap::{Parser, Subcommand};
-mod global_rt;
+use gnostr::global_rt;
 use crate::global_rt::global_rt;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
 mod sub_commands;
-mod utils;
+use gnostr::utils;
 
 use tracing::{debug, /*error, info, span,*/ trace, /* warn,*/ Level};
 use tracing_subscriber::FmtSubscriber;

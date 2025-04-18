@@ -1,16 +1,16 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 use clap::Args;
-use gnostr_ngit::sub_commands::init;
-use gnostr_ngit::sub_commands::list;
-use gnostr_ngit::sub_commands::login;
-use gnostr_ngit::sub_commands::pull;
-use gnostr_ngit::sub_commands::push;
-use gnostr_ngit::sub_commands::send;
-use gnostr_ngit::Commands as NgitCommands;
+use ngit::sub_commands::init;
+use ngit::sub_commands::list;
+use ngit::sub_commands::login;
+use ngit::sub_commands::pull;
+use ngit::sub_commands::push;
+use ngit::sub_commands::send;
+use ngit::cli::Commands as NgitCommands;
 use nostr_sdk::prelude::*;
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitSubCommand {
@@ -28,14 +28,13 @@ pub struct NgitSubCommand {
 }
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
-    use gnostr_ngit::Commands;
     match &sub_command_args.command {
-        Commands::Login(args) => login::launch(&args).await?,
-        Commands::Init(args) => init::launch(&args).await?,
-        Commands::Send(args) => send::launch(&args).await?,
-        Commands::List => list::launch().await?,
-        Commands::Pull => pull::launch().await?,
-        Commands::Push(args) => push::launch(&args).await?,
+        NgitCommands::Login(args) => login::launch(&args).await?,
+        NgitCommands::Init(args) => init::launch(&args).await?,
+        NgitCommands::Send(args) => send::launch(&args).await?,
+        NgitCommands::List => list::launch().await?,
+        NgitCommands::Pull => pull::launch().await?,
+        NgitCommands::Push(args) => push::launch(&args).await?,
     }
     Ok(())
 }
