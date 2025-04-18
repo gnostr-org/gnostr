@@ -129,7 +129,7 @@ jobs:
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png"
       - run: |
           gnostr \
-          -r wss://nos.lol \
+          -r wss://relay.damus.io \
           --nsec "$(gnostr-sha256)" \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)"
@@ -170,7 +170,7 @@ jobs:
           #gnostr-post-event -r wss://e.nos.lol || true
 
           gnostr --nsec $BLOCKS_TIP_HASH \
-          -r wss://nos.lol \
+          -r wss://relay.damus.io \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
           #-t gnostr-$BLOCKS_TIP_HASH \
@@ -192,7 +192,7 @@ jobs:
           #gnostr-post-event -r wss://e.nos.lol || true
 
           gnostr --nsec $WEEBLE_SHA256 \
-          -r wss://nos.lol \
+          -r wss://relay.damus.io \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
           #-t gnostr-$BLOCKS_TIP_HASH \
@@ -214,7 +214,7 @@ jobs:
           #gnostr-post-event -r wss://e.nos.lol || true
 
           gnostr --nsec $(mempool-space --blocks_tip_hash) \
-          -r wss://nos.lol \
+          -r wss://relay.damus.io \
           text-note \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" #\
           #--tag blocks_tip_height $(mempool-space --blocks_tip_height) |
