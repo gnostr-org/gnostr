@@ -6,7 +6,7 @@ use std::{
 	str::FromStr,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use git2::Repository;
 use ngit::{
 	client::{
@@ -15,8 +15,8 @@ use ngit::{
 		get_proposals_and_revisions_from_cache,
 	},
 	git::{
-		Repo, RepoActions,
 		nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
+		Repo, RepoActions,
 	},
 	git_events::{
 		event_is_revision_root, get_most_recent_patch_with_ancestors,
@@ -127,13 +127,15 @@ pub async fn get_open_proposals(
 		.collect();
 
 	let statuses: Vec<nostr::Event> = {
-		let mut statuses =
-			get_events_from_cache(git_repo_path, vec![
+		let mut statuses = get_events_from_cache(
+			git_repo_path,
+			vec![
 				nostr::Filter::default()
 					.kinds(status_kinds().clone())
 					.events(proposals.iter().map(nostr::Event::id)),
-			])
-			.await?;
+			],
+		)
+		.await?;
 		statuses.sort_by_key(|e| e.created_at);
 		statuses.reverse();
 		statuses

@@ -208,10 +208,13 @@ mod tests {
 			)?;
 
 		assert_eq!(from_branch, "feature");
-		assert_eq!(ahead, vec![
-			oid_to_sha1(&feature_oid),
-			oid_to_sha1(&dev_oid_first)
-		]);
+		assert_eq!(
+			ahead,
+			vec![
+				oid_to_sha1(&feature_oid),
+				oid_to_sha1(&dev_oid_first)
+			]
+		);
 		assert_eq!(to_branch, "main");
 		assert_eq!(behind, vec![]);
 

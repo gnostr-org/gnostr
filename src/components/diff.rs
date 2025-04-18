@@ -708,7 +708,7 @@ impl DrawableComponent for DiffComponent {
 		);
 
 		let title = format!(
-			"{}{}",
+			"components/diff.rs {}{}",
 			strings::title_diff(&self.key_config),
 			self.current.path
 		);

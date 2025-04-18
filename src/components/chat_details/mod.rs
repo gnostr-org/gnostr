@@ -146,15 +146,26 @@ impl DrawableComponent for ChatDetailsComponent {
 		}
 
 		let constraints = if self.is_compare() {
+			//TODO interactive screen for nostr diff
 			[Constraint::Length(10), Constraint::Min(0)]
 		} else {
 			let details_focused = self.details_focused();
 			let percentages = if self.file_tree.focused() {
-				(40, 60)
-			} else if details_focused {
-				(60, 40)
+				(100, 0)
+			//} else if details_focused {
+			//	(50, 50)
 			} else {
-				(40, 60)
+				(/* Info Messages */ 50, /* Files */ 50) //vertical split for detail comps
+				//Info minimum 6 lines
+				//Author:
+				//Date:
+				//Commiter:
+				//Sha:
+				//Tags: TODO line break at comma seperators
+				//Message
+				//remainder
+				//Files
+				//remainder
 			};
 
 			[
@@ -171,7 +182,7 @@ impl DrawableComponent for ChatDetailsComponent {
 		if self.is_compare() {
 			self.compare_details.draw(f, chunks[0])?;
 		} else {
-			self.single_details.draw(f, chunks[0])?;
+			self.single_details.draw(f, chunks[0])?; //only single detail here?
 		}
 		self.file_tree.draw(f, chunks[1])?;
 
@@ -251,6 +262,6 @@ impl Component for ChatDetailsComponent {
 		self.single_details.focus(false);
 		self.compare_details.focus(false);
 		self.file_tree.focus(focus);
-		self.file_tree.show_selection(true);
+		self.file_tree.show_selection(true); //show selection
 	}
 }

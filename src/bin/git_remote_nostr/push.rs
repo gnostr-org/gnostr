@@ -6,19 +6,19 @@ use std::{
 	time::Instant,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use auth_git2::GitAuthenticator;
 use client::{
-	STATE_KIND, get_events_from_cache, get_state_from_cache,
-	send_events, sign_event,
+	get_events_from_cache, get_state_from_cache, send_events,
+	sign_event, STATE_KIND,
 };
 use console::Term;
-use git::{RepoActions, sha1_to_oid};
+use git::{sha1_to_oid, RepoActions};
+use git2::{Oid, Repository};
 use git_events::{
 	generate_cover_letter_and_patch_events, generate_patch_event,
 	get_commit_id_from_patch,
 };
-use git2::{Oid, Repository};
 use ngit::{
 	client::{self, get_event_from_cache_by_id},
 	git::{
@@ -32,8 +32,8 @@ use ngit::{
 };
 use nostr::nips::nip10::Marker;
 use nostr_sdk::{
-	Event, EventBuilder, EventId, Kind, PublicKey, Tag,
-	hashes::sha1::Hash as Sha1Hash,
+	hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId,
+	Kind, PublicKey, Tag,
 };
 use nostr_signer::NostrSigner;
 use repo_ref::RepoRef;
@@ -44,12 +44,12 @@ use crate::{
 	git::Repo,
 	list::list_from_remotes,
 	utils::{
-		Direction, count_lines_per_msg_vec,
+		count_lines_per_msg_vec,
 		find_proposal_and_patches_by_branch_name, get_all_proposals,
 		get_remote_name_by_url, get_short_git_server_name,
 		get_write_protocols_to_try, join_with_and,
 		push_error_is_not_authentication_failure, read_line,
-		set_protocol_preference,
+		set_protocol_preference, Direction,
 	},
 };
 
@@ -218,9 +218,10 @@ pub async fn run_push(
 					&all_proposals,
 					&current_user,
 				) {
-				if [repo_ref.maintainers.clone(), vec![
-					proposal.author(),
-				]]
+				if [
+					repo_ref.maintainers.clone(),
+					vec![proposal.author()],
+				]
 				.concat()
 				.contains(&user_ref.public_key)
 				{
@@ -1248,9 +1249,13 @@ async fn get_proposal_and_revision_root_from_patch(
 					.clone(),
 			)?;
 
-			get_events_from_cache(git_repo.get_path()?, vec![
-				nostr::Filter::default().id(proposal_or_revision_id),
-			])
+			get_events_from_cache(
+				git_repo.get_path()?,
+				vec![
+					nostr::Filter::default()
+						.id(proposal_or_revision_id),
+				],
+			)
 			.await?
 			.first()
 			.unwrap()

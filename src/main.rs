@@ -33,7 +33,7 @@
 mod app;
 mod args;
 mod bug_report;
-mod cli;
+use ngit::cli;
 mod clipboard;
 mod cmdbar;
 mod components;
@@ -47,7 +47,7 @@ mod queue;
 mod spinner;
 mod string_utils;
 mod strings;
-mod sub_commands;
+use ngit::sub_commands;
 mod tabs;
 mod ui;
 mod watcher;

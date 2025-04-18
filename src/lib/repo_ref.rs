@@ -414,11 +414,11 @@ async fn get_repo_coordinates_from_maintainers_yaml(
 				.kind(nostr::Kind::GitRepoAnnouncement)
 				.reference(git_repo.get_root_commit()?.to_string())
 				.authors(maintainers.clone());
-			let mut events =
-				get_events_from_cache(git_repo.get_path()?, vec![
-					filter.clone(),
-				])
-				.await?;
+			let mut events = get_events_from_cache(
+				git_repo.get_path()?,
+				vec![filter.clone()],
+			)
+			.await?;
 			if events.is_empty() {
 				events = get_event_from_global_cache(
 					git_repo.get_path()?,
@@ -567,11 +567,14 @@ pub fn save_repo_config_to_yaml(
 				.context("cannot convert public key into npub")?,
 		);
 	}
-	serde_yaml::to_writer(file, &RepoConfigYaml {
-		identifier: Some(identifier),
-		maintainers: maintainers_npubs,
-		relays,
-	})
+	serde_yaml::to_writer(
+		file,
+		&RepoConfigYaml {
+			identifier: Some(identifier),
+			maintainers: maintainers_npubs,
+			relays,
+		},
+	)
 	.context(
 		"cannot write maintainers to maintainers.yaml file serde_yaml",
 	)

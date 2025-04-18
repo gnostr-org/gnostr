@@ -181,12 +181,15 @@ mod test {
 			},
 		);
 
-		assert_eq!(rect, Rect {
-			x: 0,
-			y: 0,
-			width: 1,
-			height: 1
-		});
+		assert_eq!(
+			rect,
+			Rect {
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1
+			}
+		);
 	}
 
 	#[test]
@@ -208,11 +211,14 @@ mod test {
 			},
 		);
 
-		assert_eq!(rect, Rect {
-			x: 0,
-			y: 0,
-			width: 1,
-			height: 2
-		});
+		assert_eq!(
+			rect,
+			Rect {
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 2
+			}
+		);
 	}
 }
