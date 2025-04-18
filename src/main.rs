@@ -73,7 +73,6 @@ use std::{
 	io::{self, Stdout},
 	panic,
 	path::Path,
-	process,
 	time::{Duration, Instant},
 };
 use ui::style::Theme;
@@ -413,12 +412,6 @@ fn set_panic_handlers() -> Result<()> {
 
 	// global threadpool
 	rayon_core::ThreadPoolBuilder::new()
-		.panic_handler(|e| {
-			let backtrace = Backtrace::new();
-			shutdown_terminal();
-			log_eprintln!("\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/gitui-org/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}", e, backtrace);
-			process::abort();
-		})
 		.num_threads(4)
 		.build_global()?;
 
