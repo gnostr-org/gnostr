@@ -287,10 +287,8 @@ fn setup_terminal() -> Result<()> {
 }
 
 fn shutdown_terminal() {
-	let mut stdout = io::stdout();
-
 	let leave_screen =
-		stdout.execute(LeaveAlternateScreen).map(|_f| ());
+		io::stdout().execute(LeaveAlternateScreen).map(|_f| ());
 
 	if let Err(e) = leave_screen {
 		eprintln!("leave_screen failed:\n{e}");
@@ -300,10 +298,6 @@ fn shutdown_terminal() {
 
 	if let Err(e) = leave_raw_mode {
 		eprintln!("leave_raw_mode failed:\n{e}");
-	}
-
-	if let Err(e) = stdout.execute(crossterm::cursor::Show) {
-		eprintln!("Showing cursor failed:\n{e}");
 	}
 }
 
