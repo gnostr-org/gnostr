@@ -19,18 +19,18 @@ pub struct SubCommandArgs {
 }
 
 pub async fn launch(
-	args: &Cli,
-	command_args: &SubCommandArgs,
+	//args: &Cli,
+	args: &SubCommandArgs,
 ) -> Result<()> {
 	let _ = args;
 	let git_repo =
 		Repo::discover().context("cannot find a git repository")?;
 	let client = Client::default();
-	let repo_coordinates = if command_args.repo.is_empty() {
+	let repo_coordinates = if args.repo.is_empty() {
 		get_repo_coordinates(&git_repo, &client).await?
 	} else {
 		let mut repo_coordinates = HashSet::new();
-		for repo in &command_args.repo {
+		for repo in &args.repo {
 			repo_coordinates.insert(Coordinate::parse(repo.clone())?);
 		}
 		repo_coordinates
