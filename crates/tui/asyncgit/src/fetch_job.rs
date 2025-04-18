@@ -3,10 +3,10 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
+	AsyncGitNotification, ProgressPercent,
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
-	sync::{cred::BasicAuthCredential, remotes::fetch_all, RepoPath},
-	AsyncGitNotification, ProgressPercent,
+	sync::{RepoPath, cred::BasicAuthCredential, remotes::fetch_all},
 };
 
 enum JobState {

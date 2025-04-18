@@ -1,6 +1,6 @@
 use git2::{Diff, DiffLine, Patch, Repository};
 
-use super::diff::{get_diff_raw, DiffOptions, HunkHeader};
+use super::diff::{DiffOptions, HunkHeader, get_diff_raw};
 use crate::error::{Error, Result};
 
 #[allow(clippy::redundant_pub_crate)]

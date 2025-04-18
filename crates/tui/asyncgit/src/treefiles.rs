@@ -1,10 +1,10 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
+	AsyncGitNotification,
 	asyncjob::{AsyncJob, RunParams},
 	error::Result,
-	sync::{tree_files, CommitId, RepoPath, TreeFile},
-	AsyncGitNotification,
+	sync::{CommitId, RepoPath, TreeFile, tree_files},
 };
 
 ///

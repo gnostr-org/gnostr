@@ -165,8 +165,8 @@ mod tests {
 	use crate::{
 		error::Result,
 		sync::{
-			commit, stage_add_file, tests::repo_init_empty,
-			utils::get_head_repo, CommitId, RepoPath,
+			CommitId, RepoPath, commit, stage_add_file,
+			tests::repo_init_empty, utils::get_head_repo,
 		},
 	};
 

@@ -5,11 +5,11 @@ use std::collections::HashSet;
 use git2::{Diff, Repository};
 use scopetime::scope_time;
 
-use super::{diff::DiffOptions, CommitId, RepoPath};
+use super::{CommitId, RepoPath, diff::DiffOptions};
 use crate::{
+	StatusItem, StatusItemType,
 	error::Result,
 	sync::{get_stashes, repository::repo},
-	StatusItem, StatusItemType,
 };
 
 /// struct containing a new and an old version
@@ -187,13 +187,12 @@ mod tests {
 
 	use super::get_commit_files;
 	use crate::{
+		StatusItemType,
 		error::Result,
 		sync::{
-			commit, stage_add_file, stash_save,
+			RepoPath, commit, stage_add_file, stash_save,
 			tests::{get_statuses, repo_init},
-			RepoPath,
 		},
-		StatusItemType,
 	};
 
 	#[test]

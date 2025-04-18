@@ -120,12 +120,12 @@ mod tests {
 	use crate::{
 		error::Result,
 		sync::{
+			LogFilterSearch, LogFilterSearchOptions, RepoPath,
 			commit,
 			commit_filter::{SearchFields, SearchOptions},
 			diff_contains_file, filter_commit_by_search,
 			get_commits_info, stage_add_file,
 			tests::{repo_init_empty, write_commit_file},
-			LogFilterSearch, LogFilterSearchOptions, RepoPath,
 		},
 	};
 

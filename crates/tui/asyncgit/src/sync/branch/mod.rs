@@ -10,12 +10,12 @@ use std::collections::HashSet;
 use git2::{Branch, BranchType, Repository};
 use scopetime::scope_time;
 
-use super::{utils::bytes2string, RepoPath};
+use super::{RepoPath, utils::bytes2string};
 use crate::{
 	error::{Error, Result},
 	sync::{
-		remotes::get_default_remote_for_push_in_repo,
-		repository::repo, utils::get_head_repo, CommitId,
+		CommitId, remotes::get_default_remote_for_push_in_repo,
+		repository::repo, utils::get_head_repo,
 	},
 };
 
@@ -597,10 +597,10 @@ mod tests_branches {
 
 		//verify we got the remotes
 		let remotes = get_remotes(repo_path).unwrap();
-		assert_eq!(
-			remotes,
-			vec![String::from("r1"), String::from("r2")]
-		);
+		assert_eq!(remotes, vec![
+			String::from("r1"),
+			String::from("r2")
+		]);
 
 		//verify we got only master right now
 		let branches = get_branches_info(repo_path, true).unwrap();
@@ -747,8 +747,8 @@ mod tests_checkout {
 mod tests_checkout_commit {
 	use super::*;
 	use crate::sync::{
-		tests::{repo_init, write_commit_file},
 		RepoPath,
+		tests::{repo_init, write_commit_file},
 	};
 
 	#[test]

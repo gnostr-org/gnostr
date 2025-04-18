@@ -10,7 +10,7 @@ use git2::{IndexAddOption, Repository, RepositoryOpenFlags};
 use scopetime::scope_time;
 
 use super::{
-	repository::repo, CommitId, RepoPath, ShowUntrackedFilesConfig,
+	CommitId, RepoPath, ShowUntrackedFilesConfig, repository::repo,
 };
 use crate::{
 	error::{Error, Result},
@@ -224,7 +224,7 @@ pub(crate) fn repo_read_file(
 #[cfg(test)]
 mod tests {
 	use std::{
-		fs::{self, remove_file, File},
+		fs::{self, File, remove_file},
 		io::Write,
 		path::Path,
 	};
@@ -233,7 +233,7 @@ mod tests {
 	use crate::sync::{
 		commit,
 		diff::get_diff,
-		status::{get_status, StatusType},
+		status::{StatusType, get_status},
 		tests::{
 			debug_cmd_print, get_statuses, repo_init,
 			repo_init_empty, write_commit_file,

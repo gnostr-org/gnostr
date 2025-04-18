@@ -6,8 +6,8 @@ use scopetime::scope_time;
 use crate::{
 	error::{Error, Result},
 	sync::{
-		rebase::conflict_free_rebase, repository::repo, CommitId,
-		RepoPath,
+		CommitId, RepoPath, rebase::conflict_free_rebase,
+		repository::repo,
 	},
 };
 
@@ -40,13 +40,12 @@ mod test {
 
 	use super::*;
 	use crate::sync::{
-		branch_compare_upstream, get_commits_info,
+		RepoState, branch_compare_upstream, get_commits_info,
 		remotes::{fetch, push::push_branch},
 		tests::{
 			debug_cmd_print, get_commit_ids, repo_clone,
 			repo_init_bare, write_commit_file, write_commit_file_at,
 		},
-		RepoState,
 	};
 
 	fn get_commit_msgs(r: &Repository) -> Vec<String> {
@@ -164,14 +163,11 @@ mod test {
 		assert_eq!(state, RepoState::Clean);
 
 		let commits = get_commit_msgs(&clone1);
-		assert_eq!(
-			commits,
-			vec![
-				String::from("commit3"),
-				String::from("commit2"),
-				String::from("commit1")
-			]
-		);
+		assert_eq!(commits, vec![
+			String::from("commit3"),
+			String::from("commit2"),
+			String::from("commit1")
+		]);
 
 		assert_eq!(clone1.head_detached().unwrap(), false);
 	}
@@ -262,15 +258,12 @@ mod test {
 		assert_eq!(state, RepoState::Clean);
 
 		let commits = get_commit_msgs(&clone1);
-		assert_eq!(
-			commits,
-			vec![
-				String::from("commit4"),
-				String::from("commit3"),
-				String::from("commit2"),
-				String::from("commit1")
-			]
-		);
+		assert_eq!(commits, vec![
+			String::from("commit4"),
+			String::from("commit3"),
+			String::from("commit2"),
+			String::from("commit1")
+		]);
 
 		assert_eq!(clone1.head_detached().unwrap(), false);
 	}
@@ -350,9 +343,9 @@ mod test {
 		assert_eq!(state, RepoState::Clean);
 
 		let commits = get_commit_msgs(&clone1);
-		assert_eq!(
-			commits,
-			vec![String::from("commit3"), String::from("commit1")]
-		);
+		assert_eq!(commits, vec![
+			String::from("commit3"),
+			String::from("commit1")
+		]);
 	}
 }
