@@ -25,6 +25,7 @@ jobs:
     env:
       GNOSTR: "gnostr"
       NOSTRIL: "nostril"
+      POW: "1"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -36,6 +37,7 @@ jobs:
           echo GNOSTR=${{ env.GNOSTR }}
           echo NOSTRIL=${{ env.NOSTRIL }}
           echo MEMPOOL=${{ env.MEMPOOL }}
+          echo POW=${{ env.POW }}
         env:
           MEMPOOL: "mempool"
       - uses: styfle/cancel-workflow-action@0.11.0
@@ -117,11 +119,11 @@ jobs:
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: |
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           --nsec $(gnostr --hash 🦀) \
           text-note --content "🦀"
       - run: |
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           -r wss://nos.lol \
           --nsec "$(gnostr-sha256)" \
           set-metadata \
@@ -130,7 +132,7 @@ jobs:
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png"
       - run: |
-          gnostr -d 28\
+          gnostr -d ${{ env.POW }} \
           -r wss://nos.lol \
           --nsec "$(gnostr-sha256)" \
           text-note \
@@ -160,7 +162,7 @@ jobs:
           WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
 
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           --nsec $PRIVATE_KEY \
           -r wss://nos.lol \
           text-note \
@@ -172,7 +174,7 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           --nsec $BLOCKS_TIP_HASH \
           -r wss://nos.lol \
           text-note \
@@ -184,7 +186,7 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           --nsec $BLOCKHEIGHT_SHA256 \
           -r wss://nos.lol \
           text-note \
@@ -196,7 +198,7 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW } \
           --nsec $WEEBLE_SHA256 \
           -r wss://nos.lol \
           text-note \
@@ -208,7 +210,7 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           --nsec $WEEBLE_ALIAS \
           -r wss://nos.lol \
           text-note \
@@ -220,7 +222,7 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr -d 28 \
+          gnostr -d ${{ env.POW }} \
           --nsec $(mempool-space --blocks_tip_hash) \
           -r wss://nos.lol \
           text-note \
@@ -238,7 +240,8 @@ jobs:
 
       - run: |
           gnostr \
-          -r wss://nos.lol \
+          -d ${{ env.POW }} \
+          -r wss://relay.damus.io \
           custom-event \
           -k 1 \
           -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
@@ -251,6 +254,7 @@ jobs:
 
       - run: |
           gnostr \
+          -d ${{ env.POW }} \
           -r wss://nos.lol \
           react \
           -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
