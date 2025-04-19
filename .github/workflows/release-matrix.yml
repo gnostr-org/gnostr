@@ -25,7 +25,7 @@ jobs:
     env:
       GNOSTR: "gnostr"
       NOSTRIL: "nostril"
-      POW: "1"
+      POW: "28"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
