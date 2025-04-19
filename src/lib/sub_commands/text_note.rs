@@ -21,7 +21,7 @@ pub struct TextNoteSubCommand {
     /// Event references
     #[arg(long, action = clap::ArgAction::Append)]
     etag: Vec<String>,
-    #[arg(long, action = clap::ArgAction::Append)]
+    #[arg(short, long, action = clap::ArgAction::Append)]
     tag: Vec<String>,
     /// Seconds till expiration (NIP-40)
     #[arg(long)]
