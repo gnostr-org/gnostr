@@ -117,7 +117,7 @@ jobs:
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: |
-          gnostr --nsec $(gnostr --hash 🦀) text-note --content "🦀"
+          gnostr --nsec $(gnostr --hash 🦀) text-note --content "🦀" --pow 28
       - run: |
           gnostr \
           -r wss://nos.lol \
