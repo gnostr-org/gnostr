@@ -22,18 +22,18 @@ cargo-release-all: 	### 	cargo-release-all
 	for t in **Cargo.toml;  do echo $$t; cargo b -r -vv --manifest-path $$t; done
 cargo-clean-release: 	### 	cargo-clean-release - clean release artifacts
 ## 	cargo-clean-release 	recursively cargo clean --release
-	for t in *Cargo.toml;  do echo $$t && cargo clean --release -vv --manifest-path $$t 2>/dev/null; done
+	for t in **Cargo.toml;  do echo $$t && cargo clean --release -vv --manifest-path $$t 2>/dev/null; done
 cargo-publish-all: 	### 	cargo-publish-all
 ## 	cargo-publish-all 	recursively publish rust projects
-	for t in **Cargo.toml;  do echo $$t; cargo publish -vv --manifest-path $$t; done
+	for t in *Cargo.toml;  do echo $$t; cargo publish -vv --manifest-path $$t; done
 
-cargo-install-crates:### 	cargo-install-crates
+cargo-install-bins:### 	cargo-install-bins
 ## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
 ## 	*** cargo install -vv --force is NOT used.
 ## 	*** FORCE=--force cargo install -vv $(FORCE) is used.
 ## 	*** FORCE=--force cargo install -vv $(FORCE) --path <path>
 ## 	*** to overwrite deploy cargo.io crates.
-	export RUSTFLAGS=-Awarning;  for t in ./crates/*; do echo $$t; cargo install --bins --path  $$t -vv $(FORCE) 2>/dev/null || echo ""; done
+	export RUSTFLAGS=-Awarning;  for t in $(SUBMODULES); do echo $$t; cargo install --bins --path  $$t -vv $(FORCE) 2>/dev/null || echo ""; done
 	#for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t --force || echo ""; done
 
 cargo-build: 	## 	cargo build
