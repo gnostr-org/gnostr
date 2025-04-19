@@ -47,11 +47,10 @@ cargo-help: 	### 	cargo-help
 	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $\$1, $\$2}' \$(MAKEFILE_LIST)
 cargo-release-all: 	### 	cargo-release-all
 ## 	cargo-release-all recursively cargo build --release
-	for t in */Cargo.toml;  do echo $\$t; cargo b -r -vv --manifest-path $\$t; done
-	for t in ffi/*/Cargo.toml;  do echo $\$t; cargo b -r -vv --manifest-path $\$t; done
+	for t in **Cargo.toml;  do echo $\$t; cargo b -r -vv --manifest-path $\$t; done
 cargo-clean-release: 	### 	cargo-clean-release - clean release artifacts
 ## 	cargo-clean-release 	recursively cargo clean --release
-	for t in *Cargo.toml;  do echo $\$t && cargo clean --release -vv --manifest-path $\$t 2>/dev/null; done
+	for t in **Cargo.toml;  do echo $\$t && cargo clean --release -vv --manifest-path $\$t 2>/dev/null; done
 cargo-publish-all: 	### 	cargo-publish-all
 ## 	cargo-publish-all 	recursively publish rust projects
 	for t in *Cargo.toml;  do echo $\$t; cargo publish -vv --manifest-path $\$t; done
