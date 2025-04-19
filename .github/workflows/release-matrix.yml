@@ -161,7 +161,7 @@ jobs:
           gnostr --nsec $PRIVATE_KEY \
           -r wss://nos.lol \
           text-note \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" #\
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" --pow 28#\
           #-t gnostr-$BLOCKS_TIP_HASH \
           #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
           #--tag weeble $(gnostr-weeble) \
