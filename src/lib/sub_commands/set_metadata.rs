@@ -133,8 +133,8 @@ pub async fn set_metadata(
     //    &event.sig
     //);
     let event_id = client.send_event(event).await?;
-    println!("New metadata event: {}", event_id.to_bech32()?);
-    println!("New metadata event: {}", event_id);
+    print!("{{\"id\":\"{}\"}}", event_id.to_bech32()?);
+    print!("{{\"id\":\"{}\"}}", event_id);
 
     Ok(())
 }
