@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use clap::Args;
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -21,7 +21,7 @@ pub struct TextNoteSubCommand {
     /// Event references
     #[arg(long, action = clap::ArgAction::Append)]
     etag: Vec<String>,
-    #[arg(short, long, action = clap::ArgAction::Append)]
+    #[arg(long, action = clap::ArgAction::Append)]
     tag: Vec<String>,
     /// Seconds till expiration (NIP-40)
     #[arg(long)]
@@ -64,11 +64,17 @@ pub async fn broadcast_textnote(
         let event_id = EventId::from_hex(etag)?;
         tags.push(Tag::event(event_id));
     }
-    // Add e-tags
+    // Add tags
     for tag in sub_command_args.tag.iter() {
-        let event_id = EventId::from_hex(tag)?;
-        tags.push(Tag::event(event_id));
+		//
+        let hashtag = Tag::hashtag(tag);
+        tags.push(hashtag);
     }
+
+	for tag in &tags {
+		println!("{:?}", tag);
+	}
+
     // Set expiration tag
     if let Some(expiration) = sub_command_args.expiration {
         let timestamp = Timestamp::now().add(Duration::from_secs(expiration));
@@ -81,10 +87,8 @@ pub async fn broadcast_textnote(
         .await?;
     if sub_command_args.hex {
         print!("{{\"id\":\"{}\"}}", event_id.to_hex());
-        print!("{{\"bech32\":\"{}\"}}", event_id.to_hex());
     } else {
         print!("{{\"id\":\"{}\"}}", event_id.to_bech32()?);
-        print!("{{\"bech32\":\"{}\"}}", event_id.to_bech32()?);
     }
     std::process::exit(0);
     #[allow(unreachable_code)]

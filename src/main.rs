@@ -8,7 +8,8 @@ use sha2::{Digest, Sha256};
 use std::env;
 use gnostr::sub_commands;
 use gnostr::utils;
-
+use gnostr::tui::*;
+use gnostr::input::InputEvent;
 use tracing::{debug, /*error, info, span,*/ trace, /* warn,*/ Level};
 use tracing_subscriber::FmtSubscriber;
 
@@ -23,6 +24,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+use ratatui::prelude::CrosstermBackend;
 
 /// Simple CLI application to interact with nostr
 #[derive(Parser)]

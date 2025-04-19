@@ -3,7 +3,7 @@ name: build-install-matrix
 # Controls when the action will run.
 on:
   schedule:
-    - cron: '*/10 * * * *' # run every 10 minutes
+    - cron: '*/13 * * * *' # run every 10 minutes
   pull_request:
     branches:
       - '*'
@@ -25,6 +25,9 @@ jobs:
     env:
       GNOSTR: "gnostr"
       NOSTRIL: "nostril"
+      POW: "16"
+      DAMUS: "wss://relay.damus.io"
+      NOS: "wss://nos.lol"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -36,6 +39,9 @@ jobs:
           echo GNOSTR=${{ env.GNOSTR }}
           echo NOSTRIL=${{ env.NOSTRIL }}
           echo MEMPOOL=${{ env.MEMPOOL }}
+          echo POW=${{ env.POW }}
+          echo DAMUS=${{ env.DAMUS }}
+          echo NOS=${{ env.NOS }}
         env:
           MEMPOOL: "mempool"
       - uses: styfle/cancel-workflow-action@0.11.0
@@ -117,10 +123,12 @@ jobs:
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: |
-          gnostr --nsec $(gnostr --hash 🦀) text-note --content "🦀" || true
+          gnostr -d ${{ env.POW }} \
+          --nsec $(gnostr --hash 🦀) \
+          text-note --content "🦀" || true
       - run: |
-          gnostr \
-          -r wss://nos.lol \
+          gnostr -d ${{ env.POW }} \
+          -r ${{ env.DAMUS }} \
           --nsec "$(gnostr-sha256)" \
           set-metadata \
           -n gnostr \
@@ -128,8 +136,8 @@ jobs:
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
-          gnostr \
-          -r wss://relay.damus.io \
+          gnostr -d ${{ env.POW }} \
+          -r wss://nos.lol \
           --nsec "$(gnostr-sha256)" \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true
@@ -158,7 +166,8 @@ jobs:
           WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
           echo WEEBLE_ALIAS=$WEEBLE_ALIAS
 
-          gnostr --nsec $PRIVATE_KEY \
+          gnostr -d ${{ env.POW }} \
+          --nsec $PRIVATE_KEY \
           -r wss://nos.lol \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
@@ -169,18 +178,8 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr --nsec $BLOCKS_TIP_HASH \
-          -r wss://relay.damus.io \
-          text-note \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
-          #-t gnostr-$BLOCKS_TIP_HASH \
-          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          #--tag weeble $(gnostr-weeble) \
-          #--tag blockheight $(gnostr-blockheight) \
-          #--tag wobble $(gnostr-wobble) | \
-          #gnostr-post-event -r wss://e.nos.lol || true
-
-          gnostr --nsec $BLOCKHEIGHT_SHA256 \
+          gnostr -d ${{ env.POW }} \
+          --nsec $BLOCKS_TIP_HASH \
           -r wss://nos.lol \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
@@ -191,18 +190,32 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr --nsec $WEEBLE_SHA256 \
-          -r wss://relay.damus.io \
-          text-note \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
-          #-t gnostr-$BLOCKS_TIP_HASH \
-          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          #--tag weeble $(gnostr-weeble) \
-          #--tag blockheight $(gnostr-blockheight) \
-          #--tag wobble $(gnostr-wobble) | \
-          #gnostr-post-event -r wss://e.nos.lol || true
+          ## gnostr -d ${{ env.POW }} \
+          ## --nsec $BLOCKHEIGHT_SHA256 \
+          ## -r wss://nos.lol \
+          ## text-note \
+          ## --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
+          ## #-t gnostr-$BLOCKS_TIP_HASH \
+          ## #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          ## #--tag weeble $(gnostr-weeble) \
+          ## #--tag blockheight $(gnostr-blockheight) \
+          ## #--tag wobble $(gnostr-wobble) | \
+          ## #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr --nsec $WEEBLE_ALIAS \
+          ## gnostr -d ${{ env.POW }} \
+          ## --nsec $WEEBLE_SHA256 \
+          ## -r wss://nos.lol \
+          ## text-note \
+          ## --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
+          ## #-t gnostr-$BLOCKS_TIP_HASH \
+          ## #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
+          ## #--tag weeble $(gnostr-weeble) \
+          ## #--tag blockheight $(gnostr-blockheight) \
+          ## #--tag wobble $(gnostr-wobble) | \
+          ## #gnostr-post-event -r wss://e.nos.lol || true
+
+          gnostr -d ${{ env.POW }} \
+          --nsec $WEEBLE_ALIAS \
           -r wss://nos.lol \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
@@ -213,8 +226,9 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr --nsec $(mempool-space --blocks_tip_hash) \
-          -r wss://relay.damus.io \
+          gnostr -d ${{ env.POW }} \
+          --nsec $(mempool-space --blocks_tip_hash) \
+          -r wss://nos.lol \
           text-note \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" || true #\
           #--tag blocks_tip_height $(mempool-space --blocks_tip_height) |
@@ -230,7 +244,8 @@ jobs:
 
       - run: |
           gnostr \
-          -r wss://nos.lol \
+          -d ${{ env.POW }} \
+          -r wss://relay.damus.io \
           custom-event \
           -k 1 \
           -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
@@ -239,15 +254,16 @@ jobs:
           -t "$(gnostr-weeble)" \
           -t "$(gnostr-blockheight)" \
           -t "$(gnostr-wobble)" \
-          --hex || true
+          --hex
 
       - run: |
           gnostr \
+          -d ${{ env.POW }} \
           -r wss://nos.lol \
           react \
           -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
           -r "hello $(date +%s)" \
-          || true #| gnostr-xq
+          #| gnostr-xq
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'

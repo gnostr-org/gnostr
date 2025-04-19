@@ -1,5 +1,5 @@
 use clap::Args;
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_32_0::prelude::*;
 
 #[derive(Args)]
 pub struct GenerateKeypairSubCommand {

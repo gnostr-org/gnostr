@@ -1,14 +1,14 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 use clap::Args;
-use ngit::sub_commands::init;
-use ngit::sub_commands::list;
-use ngit::sub_commands::login;
-use ngit::sub_commands::pull;
-use ngit::sub_commands::push;
-use ngit::sub_commands::send;
-use ngit::sub_commands::fetch;
-use ngit::cli::Commands as NgitCommands;
+use crate::sub_commands::init;
+use crate::sub_commands::list;
+use crate::sub_commands::login;
+use crate::sub_commands::pull;
+use crate::sub_commands::push;
+use crate::sub_commands::send;
+use crate::sub_commands::fetch;
+use crate::cli::Commands as NgitCommands;
 use nostr_sdk::prelude::*;
 
 #[derive(Args)]
