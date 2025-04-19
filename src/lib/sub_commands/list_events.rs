@@ -1,7 +1,7 @@
 use std::{str::FromStr, time::Duration};
 
 use clap::Args;
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::create_client;
 

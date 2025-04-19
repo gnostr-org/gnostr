@@ -2,7 +2,7 @@ use std::process::exit;
 use std::time::Duration;
 
 use clap::Args;
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 

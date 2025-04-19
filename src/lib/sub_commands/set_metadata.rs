@@ -1,6 +1,6 @@
 use clap::Args;
-use nostr_sdk::nostr::nips::nip05;
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_32_0::nips::nip05;
+use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
 

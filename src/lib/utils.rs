@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_32_0::prelude::*;
 
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key

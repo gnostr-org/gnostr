@@ -20,3 +20,11 @@ pub mod set_metadata;
 pub mod text_note;
 pub mod user_status;
 pub mod vanity;
+
+pub mod fetch;
+pub mod init;
+pub mod list;
+pub mod login;
+pub mod pull;
+pub mod push;
+pub mod send;
