@@ -198,7 +198,7 @@ jobs:
           #--tag wobble $(gnostr-wobble) | \
           #gnostr-post-event -r wss://e.nos.lol || true
 
-          gnostr -d ${{ env.POW } \
+          gnostr -d ${{ env.POW }} \
           --nsec $WEEBLE_SHA256 \
           -r wss://nos.lol \
           text-note \
