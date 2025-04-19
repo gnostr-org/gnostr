@@ -3,7 +3,7 @@ name: build-install-matrix
 # Controls when the action will run.
 on:
   schedule:
-    - cron: '*/10 * * * *' # run every 10 minutes
+    - cron: '*/13 * * * *' # run every 10 minutes
   pull_request:
     branches:
       - '*'
@@ -117,7 +117,9 @@ jobs:
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: |
-          gnostr --nsec $(gnostr --hash 🦀) text-note --content "🦀" --pow 28
+          gnostr -d 28 \
+          --nsec $(gnostr --hash 🦀) \
+          text-note --content "🦀"
       - run: |
           gnostr -d 28 \
           -r wss://nos.lol \
