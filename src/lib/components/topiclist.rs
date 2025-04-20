@@ -192,6 +192,7 @@ impl TopicList {
 			try_or_popup!(
 				self,
 				"failed to checkout commit:",
+				//checkout_commit
 				checkout_commit(&self.repo.borrow(), commit_hash)
 			);
 		}
@@ -204,6 +205,7 @@ impl TopicList {
 			try_or_popup!(
 				self,
 				"failed to checkout commit:",
+				//checkout_commit
 				checkout_commit(&self.repo.borrow(), commit_hash)
 			);
 		}
@@ -522,7 +524,7 @@ impl TopicList {
 				Cow::from(if marked {
 					symbol::CHECKMARK //offset in home component
 				} else {
-					symbol::DOT
+					symbol::EMPTY_SPACE
 				}),
 				theme.log_marker(selected),
 			));
@@ -576,7 +578,7 @@ impl TopicList {
 				Cow::from(if marked {
 					symbol::CHECKMARK //offset in home component
 				} else {
-					symbol::DOT
+					symbol::EMPTY_SPACE
 				}),
 				theme.log_marker(selected),
 			));
