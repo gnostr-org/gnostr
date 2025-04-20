@@ -22,11 +22,11 @@ use serde_json::{Result as SerdeJsonResult, Value};
 use sha2::Digest;
 //use tokio::time::Duration;
 
-pub mod p2p;
-pub mod ui;
-pub use p2p::evt_loop;
-pub mod msg;
-pub use msg::*;
+use gnostr::chat::p2p;
+use gnostr::chat::ui;
+use gnostr::chat::p2p::evt_loop;
+use gnostr::chat::msg;
+use gnostr::chat::msg::*;
 
 //const TITLE: &str = include_str!("./title.txt");
 
