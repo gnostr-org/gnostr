@@ -566,9 +566,10 @@ impl TopicList {
 		//txt.push(splitter.clone());
 
 		// commit hash
-		//txt.push(Span::styled(Cow::from(&*e.hash_short),
 		// style_hash));
-		txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
+		//txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+		txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
+		//txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
 		//txt.push(splitter.clone());
 
 		//txt.push(Span::styled(" ||||||", style_time));
@@ -689,6 +690,7 @@ impl TopicList {
 				None
 			};
 
+			//get_entry_to_add
 			txt.push(self.get_entry_to_add(
 				e,
 				idx + self.scroll_top.get() == selection,

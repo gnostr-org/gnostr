@@ -34,6 +34,16 @@ impl CommitId {
 	pub fn get_short_string(&self) -> String {
 		self.to_string().chars().take(7).collect()
 	}
+	///
+	pub fn get_padded_hash_string(&self) -> String {
+		format!("{:0>64}",self.to_string())
+		//self.to_string().chars().take(7).collect()
+	}
+	///
+	pub fn get_padded_short_hash_string(&self) -> String {
+		format!("{:0>64}", self.get_short_string())
+		//self.to_string().chars().take(7).collect()
+	}
 
 	/// Tries to retrieve the `CommitId` form the revision if exists
 	/// in the given repository
