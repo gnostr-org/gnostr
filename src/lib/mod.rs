@@ -12,6 +12,9 @@ pub mod git_events;
 pub mod global_rt;
 /// ngit::login
 pub mod login;
+
+pub mod chat;
+
 /// ngit::repo_ref
 pub mod repo_ref;
 /// ngit::repo_state
