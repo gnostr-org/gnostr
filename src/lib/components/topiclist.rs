@@ -552,7 +552,7 @@ impl TopicList {
 			.then(|| theme.text(true, selected))
 			.unwrap_or_else(|| theme.commit_unhighlighted());
 
-		txt.push(Span::styled("|||||| ", style_time));
+		//txt.push(Span::styled("|||||| ", style_time));
 
 		//weeble/blockheight/wobble
 		//// commit timestamp
@@ -571,7 +571,7 @@ impl TopicList {
 		txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
 		//txt.push(splitter.clone());
 
-		txt.push(Span::styled(" ||||||", style_time));
+		//txt.push(Span::styled(" ||||||", style_time));
 		// marker
 		if let Some(marked) = marked {
 			txt.push(Span::styled(
