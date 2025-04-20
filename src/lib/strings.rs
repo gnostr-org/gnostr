@@ -1270,6 +1270,18 @@ pub mod commands {
 			CMD_GROUP_LOG,
 		)
 	}
+	pub fn chat_details_toggle(
+		key_config: &SharedKeyConfig,
+	) -> CommandText {
+		CommandText::new(
+			format!(
+				"Details [{}]",
+				key_config.get_hint(key_config.keys.enter),
+			),
+			"open details of selected commit",
+			CMD_GROUP_LOG,
+		)
+	}
 
 	pub fn commit_details_open(
 		key_config: &SharedKeyConfig,
