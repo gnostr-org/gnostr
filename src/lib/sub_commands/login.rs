@@ -13,7 +13,7 @@ pub struct SubCommandArgs {
 	/// don't fetch user metadata and relay list from relays
 	#[arg(long, action)]
 	offline: bool,
-    disable_cli_spinners: bool,
+    disable_cli_spinners: Option<bool>,
     password: Option<String>,
     nsec: Option<String>,
     bunker_app_key: Option<String>,
