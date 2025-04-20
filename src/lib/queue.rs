@@ -13,7 +13,7 @@ use bitflags::bitflags;
 use crate::{
 	components::FuzzyFinderTarget,
 	popups::{
-		AppOption, BlameFileOpen, FileRevOpen, FileTreeOpen,
+		AppOption, BlameFileOpen, DisplayChatOpen, FileRevOpen, FileTreeOpen,
 		InspectCommitOpen,
 	},
 	tabs::StashingOptions,
@@ -63,6 +63,8 @@ pub enum StackablePopupOpen {
 	///
 	BlameFile(BlameFileOpen),
 	///
+	DisplayChat(DisplayChatOpen),
+	///
 	FileRevlog(FileRevOpen),
 	///
 	FileTree(FileTreeOpen),
@@ -96,6 +98,7 @@ pub enum InternalEvent {
 	///
 	StatusLastFileMoved,
 	/// open commit msg input
+	//OpenCommit,
 	OpenCommit,
 	///
 	PopupStashing(StashingOptions),
