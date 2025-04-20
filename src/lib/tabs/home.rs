@@ -65,7 +65,7 @@ enum LogSearch {
 ///
 pub struct Chatlog {
 	repo: RepoPathRef,
-	commit_details: ChatDetailsComponent,
+	chat_details: ChatDetailsComponent,
 	list: TopicList,
 	git_log: AsyncLog,
 	search: LogSearch,
@@ -85,7 +85,7 @@ impl Chatlog {
 		Self {
 			repo: env.repo.clone(),
 			queue: env.queue.clone(),
-			commit_details: ChatDetailsComponent::new(env),
+			chat_details: ChatDetailsComponent::new(env),
 			list: TopicList::new(
 				env,
 				&strings::log_title(&env.key_config),
@@ -120,7 +120,7 @@ impl Chatlog {
 			|| self.git_tags.is_pending()
 			|| self.git_local_branches.is_pending()
 			|| self.git_remote_branches.is_pending()
-			|| self.commit_details.any_work_pending()
+			|| self.chat_details.any_work_pending()
 	}
 
 	const fn is_search_pending(&self) -> bool {
@@ -139,11 +139,11 @@ impl Chatlog {
 
 			self.git_tags.request(Duration::from_secs(3), false)?;
 
-			if self.commit_details.is_visible() {
+			if self.chat_details.is_visible() {
 				let commit = self.selected_commit();
 				let tags = self.selected_commit_tags(&commit);
 
-				self.commit_details.set_commits(
+				self.chat_details.set_commits(
 					commit.map(CommitFilesParams::from),
 					&tags,
 				)?;
@@ -451,9 +451,9 @@ impl DrawableComponent for Chatlog {
 			.split(area[0]);
 
 		//commit details
-		if self.commit_details.is_visible() {
+		if self.chat_details.is_visible() {
 			self.list.draw(f, chunks[0])?;
-			self.commit_details.draw(f, chunks[1])?;
+			self.chat_details.draw(f, chunks[1])?;
 		} else {
 			self.list.draw(f, area[0])?;
 		}
@@ -481,7 +481,7 @@ impl Component for Chatlog {
 
 
 					//self.commit_details.toggle_visible()?;
-					self.commit_details.toggle_visible()?;
+					self.chat_details.toggle_visible()?;
 					self.update()?;
 					return Ok(EventState::Consumed);
 
@@ -520,17 +520,26 @@ impl Component for Chatlog {
 							Ok(EventState::Consumed)
 						},
 					);
+
+
+
 				} else if key_match(
 					k,
 					//self.key_config.keys.move_right,
 					self.key_config.keys.move_right,
 				//) && self.commit_details.is_visible()
-				) && self.commit_details.is_visible()
+				) && self.chat_details.is_visible()
 				{
+
+
+
 					//
 					//self.display_chat();
 					self.inspect_commit();
 					return Ok(EventState::Consumed);
+
+
+
 				} else if key_match(
 					k,
 					self.key_config.keys.select_branch,
@@ -605,6 +614,7 @@ impl Component for Chatlog {
 					self.queue
 						.push(InternalEvent::OpenLogSearchPopup);
 					return Ok(EventState::Consumed);
+				//TODO impl compare_commits for nostr/ngit and chat
 				} else if key_match(
 					k,
 					self.key_config.keys.compare_commits,
@@ -670,9 +680,9 @@ impl Component for Chatlog {
 		));
 
 		out.push(CommandInfo::new(
-			strings::commands::commit_details_open(&self.key_config),
+			strings::commands::chat_details_toggle(&self.key_config),
 			true,
-			(self.visible && self.commit_details.is_visible())
+			(self.visible && self.chat_details.is_visible())
 				|| force_all,
 		));
 
