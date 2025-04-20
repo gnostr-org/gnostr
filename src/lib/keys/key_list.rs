@@ -37,6 +37,7 @@ impl From<&GituiKeyEvent> for KeyEvent {
 #[derive(Debug, Clone, Patch)]
 #[patch_derive(Deserialize, Debug)]
 pub struct KeysList {
+	//tab_chat
 	pub tab_chat: GituiKeyEvent,
 	pub tab_status: GituiKeyEvent,
 	pub tab_log: GituiKeyEvent,
@@ -59,6 +60,7 @@ pub struct KeysList {
 	pub move_down: GituiKeyEvent,
 	pub tree_collapse_recursive: GituiKeyEvent,
 	pub tree_expand_recursive: GituiKeyEvent,
+	//home
 	pub home: GituiKeyEvent,
 	pub end: GituiKeyEvent,
 	pub popup_up: GituiKeyEvent,
@@ -134,6 +136,7 @@ pub struct KeysList {
 impl Default for KeysList {
 	fn default() -> Self {
 		Self {
+			//tab_chat
 			tab_chat: GituiKeyEvent::new(KeyCode::Char('1'), KeyModifiers::empty()),
 			tab_status: GituiKeyEvent::new(KeyCode::Char('2'), KeyModifiers::empty()),
 			tab_log: GituiKeyEvent::new(KeyCode::Char('3'),  KeyModifiers::empty()),
@@ -145,7 +148,9 @@ impl Default for KeysList {
 			toggle_workarea: GituiKeyEvent::new(KeyCode::Char('w'),  KeyModifiers::empty()),
 			exit: GituiKeyEvent::new(KeyCode::Char('c'),  KeyModifiers::CONTROL),
 			quit: GituiKeyEvent::new(KeyCode::Char('q'),  KeyModifiers::empty()),
+			//exit_popup
 			exit_popup: GituiKeyEvent::new(KeyCode::Esc,  KeyModifiers::empty()),
+			//open_commit
 			open_commit: GituiKeyEvent::new(KeyCode::Char('c'),  KeyModifiers::empty()),
 			open_commit_editor: GituiKeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL),
 			open_help: GituiKeyEvent::new(KeyCode::Char('h'),  KeyModifiers::empty()),
@@ -154,6 +159,7 @@ impl Default for KeysList {
 			move_right: GituiKeyEvent::new(KeyCode::Right,  KeyModifiers::empty()),
 			tree_collapse_recursive: GituiKeyEvent::new(KeyCode::Left,  KeyModifiers::SHIFT),
 			tree_expand_recursive: GituiKeyEvent::new(KeyCode::Right,  KeyModifiers::SHIFT),
+			//home
 			home: GituiKeyEvent::new(KeyCode::Home,  KeyModifiers::empty()),
 			end: GituiKeyEvent::new(KeyCode::End,  KeyModifiers::empty()),
 			move_up: GituiKeyEvent::new(KeyCode::Up,  KeyModifiers::empty()),
@@ -164,6 +170,7 @@ impl Default for KeysList {
 			page_up: GituiKeyEvent::new(KeyCode::PageUp,  KeyModifiers::empty()),
 			shift_up: GituiKeyEvent::new(KeyCode::Up,  KeyModifiers::SHIFT),
 			shift_down: GituiKeyEvent::new(KeyCode::Down,  KeyModifiers::SHIFT),
+			//enter
 			enter: GituiKeyEvent::new(KeyCode::Enter,  KeyModifiers::empty()),
 			blame: GituiKeyEvent::new(KeyCode::Char('B'),  KeyModifiers::SHIFT),
 			file_history: GituiKeyEvent::new(KeyCode::Char('H'),  KeyModifiers::SHIFT),
@@ -179,10 +186,13 @@ impl Default for KeysList {
 			stash_apply: GituiKeyEvent::new(KeyCode::Char('a'),  KeyModifiers::empty()),
 			stash_open: GituiKeyEvent::new(KeyCode::Right,  KeyModifiers::empty()),
 			stash_drop: GituiKeyEvent::new(KeyCode::Char('D'),  KeyModifiers::SHIFT),
+			//cmd_bar_toggle
 			cmd_bar_toggle: GituiKeyEvent::new(KeyCode::Char('.'),  KeyModifiers::empty()),
 			log_tag_commit: GituiKeyEvent::new(KeyCode::Char('t'),  KeyModifiers::empty()),
 			log_mark_commit: GituiKeyEvent::new(KeyCode::Char(' '),  KeyModifiers::empty()),
+			//log_checkout_commit
 			log_checkout_commit: GituiKeyEvent { code: KeyCode::Char('S'), modifiers: KeyModifiers::SHIFT },
+			//log_comment_commit
 			log_comment_commit: GituiKeyEvent { code: KeyCode::Char('\\'), modifiers: KeyModifiers::empty() },// blackslash - easy pinky access
 			log_reset_commit: GituiKeyEvent { code: KeyCode::Char('R'), modifiers: KeyModifiers::SHIFT },
 			log_reword_commit: GituiKeyEvent { code: KeyCode::Char('r'), modifiers: KeyModifiers::empty() },
@@ -203,6 +213,7 @@ impl Default for KeysList {
 			tags: GituiKeyEvent::new(KeyCode::Char('T'),  KeyModifiers::SHIFT),
 			delete_tag: GituiKeyEvent::new(KeyCode::Char('D'),  KeyModifiers::SHIFT),
 			select_tag: GituiKeyEvent::new(KeyCode::Enter,  KeyModifiers::empty()),
+			//push
 			push: GituiKeyEvent::new(KeyCode::Char('p'),  KeyModifiers::empty()),
 			force_push: GituiKeyEvent::new(KeyCode::Char('P'),  KeyModifiers::SHIFT),
 			undo_commit: GituiKeyEvent::new(KeyCode::Char('U'),  KeyModifiers::SHIFT),
@@ -220,6 +231,7 @@ impl Default for KeysList {
 			view_submodule_parent: GituiKeyEvent::new(KeyCode::Char('p'),  KeyModifiers::empty()),
 			update_submodule: GituiKeyEvent::new(KeyCode::Char('u'),  KeyModifiers::empty()),
 			commit_history_next: GituiKeyEvent::new(KeyCode::Char('n'),  KeyModifiers::CONTROL),
+			//commit
 			commit: GituiKeyEvent::new(KeyCode::Char('d'),  KeyModifiers::CONTROL),
 			newline: GituiKeyEvent::new(KeyCode::Enter,  KeyModifiers::empty()),
 		}

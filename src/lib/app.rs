@@ -39,6 +39,7 @@ use crate::{
 	popups::{
 		AppOption, BlameFilePopup, BranchListPopup, CommitPopup,
 		CompareCommitsPopup, ConfirmPopup, CreateBranchPopup,
+		DisplayChatPopup,
 		ExternalEditorPopup, FetchPopup, FileRevlogPopup,
 		FuzzyFindPopup, HelpPopup, InspectCommitPopup,
 		LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup,
@@ -76,6 +77,7 @@ pub struct App {
 	blame_file_popup: BlameFilePopup,
 	file_revlog_popup: FileRevlogPopup,
 	stashmsg_popup: StashMsgPopup,
+	display_chat_popup: DisplayChatPopup,
 	inspect_commit_popup: InspectCommitPopup,
 	compare_commits_popup: CompareCommitsPopup,
 	external_editor_popup: ExternalEditorPopup,
@@ -183,6 +185,7 @@ impl App {
 			file_revlog_popup: FileRevlogPopup::new(&env),
 			revision_files_popup: RevisionFilesPopup::new(&env),
 			stashmsg_popup: StashMsgPopup::new(&env),
+			display_chat_popup: DisplayChatPopup::new(&env),
 			inspect_commit_popup: InspectCommitPopup::new(&env),
 			compare_commits_popup: CompareCommitsPopup::new(&env),
 			external_editor_popup: ExternalEditorPopup::new(&env),
@@ -440,6 +443,7 @@ impl App {
                         || self.chat_tab.any_work_pending()
 			|| self.blame_file_popup.any_work_pending()
 			|| self.file_revlog_popup.any_work_pending()
+			|| self.display_chat_popup.any_work_pending()//
 			|| self.inspect_commit_popup.any_work_pending()
 			|| self.compare_commits_popup.any_work_pending()
 			|| self.input.is_state_changing()
@@ -475,6 +479,7 @@ impl App {
 			blame_file_popup,
 			file_revlog_popup,
 			stashmsg_popup,
+			display_chat_popup,
 			inspect_commit_popup,
 			compare_commits_popup,
 			external_editor_popup,
@@ -507,6 +512,7 @@ impl App {
 			commit_popup,
 			stashmsg_popup,
 			help_popup,
+			display_chat_popup,
 			inspect_commit_popup,
 			compare_commits_popup,
 			blame_file_popup,
@@ -642,6 +648,7 @@ impl App {
 		//NOTE: set when any tree component changed selection
 		if flags.contains(NeedsUpdate::DIFF) {
 			self.status_tab.update_diff()?;
+			self.display_chat_popup.update_diff()?;
 			self.inspect_commit_popup.update_diff()?;
 			self.compare_commits_popup.update_diff()?;
 			self.file_revlog_popup.update_diff()?;
@@ -663,6 +670,9 @@ impl App {
 		match popup {
 			StackablePopupOpen::BlameFile(params) => {
 				self.blame_file_popup.open(params)?;
+			}
+			StackablePopupOpen::DisplayChat(param) => {
+				self.display_chat_popup.open(param)?;
 			}
 			StackablePopupOpen::FileRevlog(param) => {
 				self.file_revlog_popup.open(param)?;

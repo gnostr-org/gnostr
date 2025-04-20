@@ -26,14 +26,14 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct InspectCommitOpen {
+pub struct DisplayChatOpen {
 	pub commit_id: CommitId,
 	/// in case we wanna compare
 	pub compare_id: Option<CommitId>,
 	pub tags: Option<CommitTags>,
 }
 
-impl InspectCommitOpen {
+impl DisplayChatOpen {
 	pub const fn new(commit_id: CommitId) -> Self {
 		Self {
 			commit_id,
@@ -55,9 +55,9 @@ impl InspectCommitOpen {
 }
 
 //InspectCommitPopup
-pub struct InspectCommitPopup {
+pub struct DisplayChatPopup {
 	queue: Queue,
-	open_request: Option<InspectCommitOpen>,
+	open_request: Option<DisplayChatOpen>,
 	//diff
 	//DiffComponent
 	diff: DiffComponent,
@@ -69,7 +69,7 @@ pub struct InspectCommitPopup {
 	options: SharedOptions,
 }
 
-impl DrawableComponent for InspectCommitPopup {
+impl DrawableComponent for DisplayChatPopup {
 	fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
 		if self.is_visible() {
 			//
@@ -104,7 +104,7 @@ impl DrawableComponent for InspectCommitPopup {
 	}
 }
 
-impl Component for InspectCommitPopup {
+impl Component for DisplayChatPopup {
 	fn commands(
 		&self,
 		out: &mut Vec<CommandInfo>,
@@ -223,7 +223,7 @@ impl Component for InspectCommitPopup {
 	}
 }
 
-impl InspectCommitPopup {
+impl DisplayChatPopup {
 	accessors!(self, [diff, details]);
 
 	///
@@ -244,7 +244,7 @@ impl InspectCommitPopup {
 	}
 
 	///
-	pub fn open(&mut self, open: InspectCommitOpen) -> Result<()> {
+	pub fn open(&mut self, open: DisplayChatOpen) -> Result<()> {
 		self.open_request = Some(open);
 		self.show()?;
 
@@ -329,7 +329,7 @@ impl InspectCommitPopup {
 		if stack {
 			if let Some(open_request) = self.open_request.take() {
 				self.queue.push(InternalEvent::PopupStackPush(
-					StackablePopupOpen::InspectCommit(open_request),
+					StackablePopupOpen::DisplayChat(open_request),
 				));
 			}
 		} else {

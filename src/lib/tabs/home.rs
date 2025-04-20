@@ -38,7 +38,7 @@ use crate::{
 		visibility_blocking,
 	},
 	keys::{SharedKeyConfig, key_match},
-	popups::{FileTreeOpen, InspectCommitOpen},
+	popups::{DisplayChatOpen, FileTreeOpen, InspectCommitOpen},
 	queue::{InternalEvent, Queue, StackablePopupOpen},
 	strings::{self, order},
 	try_or_popup,
@@ -240,6 +240,19 @@ impl Chatlog {
 				StackablePopupOpen::InspectCommit(
 					//
 					InspectCommitOpen::new_with_tags(commit_id, tags),
+				),
+			));
+		}
+	}
+	fn display_chat(&self) {
+		if let Some(commit_id) = self.selected_commit() {
+			let tags = self.selected_commit_tags(&Some(commit_id));
+			self.queue.push(InternalEvent::OpenPopup(
+				//
+				StackablePopupOpen::DisplayChat(
+					//
+					DisplayChatOpen::new_with_tags(commit_id, tags),
+					//InspectCommitOpen::new_with_tags(commit_id, tags),
 				),
 			));
 		}
@@ -465,9 +478,14 @@ impl Component for Chatlog {
 				return Ok(EventState::Consumed);
 			} else if let Event::Key(k) = ev {
 				if key_match(k, self.key_config.keys.enter) {
+
+
+					//self.commit_details.toggle_visible()?;
 					self.commit_details.toggle_visible()?;
 					self.update()?;
 					return Ok(EventState::Consumed);
+
+
 				} else if key_match(
 					k,
 					self.key_config.keys.exit_popup,
@@ -486,6 +504,7 @@ impl Component for Chatlog {
 						self.list.copy_commit_hash()
 					);
 					return Ok(EventState::Consumed);
+					//push
 				} else if key_match(k, self.key_config.keys.push) {
 					self.queue.push(InternalEvent::PushTags);
 					return Ok(EventState::Consumed);
@@ -503,9 +522,13 @@ impl Component for Chatlog {
 					);
 				} else if key_match(
 					k,
+					//self.key_config.keys.move_right,
 					self.key_config.keys.move_right,
+				//) && self.commit_details.is_visible()
 				) && self.commit_details.is_visible()
 				{
+					//
+					//self.display_chat();
 					self.inspect_commit();
 					return Ok(EventState::Consumed);
 				} else if key_match(
