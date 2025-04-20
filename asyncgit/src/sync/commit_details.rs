@@ -86,6 +86,31 @@ impl CommitDetails {
 	pub fn short_hash(&self) -> &str {
 		&self.hash[0..7]
 	}
+
+	///
+	pub (crate) fn pad_commit_hash(input: &str, padding_char: char) -> String {
+		let target_length = 64;
+		let current_length = input.len();
+
+		if current_length >= target_length {
+			return input.to_string(); // No padding needed
+		}
+
+		let padding_needed = target_length - current_length;
+		let padding = padding_char.to_string().repeat(padding_needed);
+		format!("{}{}", input, padding)
+    }
+
+	///
+	pub fn padded_hash(&self) -> String {
+		Self::pad_commit_hash(&self.hash, '0')
+		//format!("{:0>64}", "".to_owned() + &self.hash[0..])
+	}
+
+	///
+	pub fn padded_short_hash(&self) -> String {
+		Self::pad_commit_hash(&self.hash[0..7], '0')
+	}
 }
 
 ///

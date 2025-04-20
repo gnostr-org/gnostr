@@ -116,7 +116,9 @@ impl DrawableComponent for CompareDetailsComponent {
 				dialog_paragraph(
 					&strings::commit::compare_details_info_title(
 						true,
-						data.old.short_hash(),
+						//data.old.short_hash(),
+						&data.old.padded_hash(),
+						//data.old.padded_short_hash(),
 					),
 					Text::from(self.get_commit_text(&data.old)),
 					&self.theme,
@@ -129,7 +131,8 @@ impl DrawableComponent for CompareDetailsComponent {
 				dialog_paragraph(
 					&strings::commit::compare_details_info_title(
 						false,
-						data.new.short_hash(),
+						//data.new.short_hash(),
+						&data.new.padded_short_hash(),
 					),
 					Text::from(self.get_commit_text(&data.new)),
 					&self.theme,

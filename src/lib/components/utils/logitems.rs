@@ -20,6 +20,7 @@ pub struct LogEntry {
 	//TODO: use tinyvec here
 	pub hash: BoxStr,
 	pub hash_short: BoxStr,
+	pub hash_padded: BoxStr,
 	pub id: CommitId,
 	pub highlighted: bool,
 }
@@ -28,6 +29,7 @@ impl From<CommitInfo> for LogEntry {
 	fn from(c: CommitInfo) -> Self {
 		let hash = c.id.to_string().into();
 		let hash_short = c.id.get_short_string().into();
+		let hash_padded = c.id.get_padded_hash_string().into();
 
 		let time = {
 			let date = DateTime::from_timestamp(c.time, 0)
@@ -60,6 +62,7 @@ impl From<CommitInfo> for LogEntry {
 			time,
 			hash,
 			hash_short,
+			hash_padded,
 			id: c.id,
 			highlighted: false,
 		}
