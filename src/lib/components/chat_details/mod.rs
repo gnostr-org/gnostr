@@ -144,21 +144,23 @@ impl DrawableComponent for ChatDetailsComponent {
         } else {
             let details_focused = self.details_focused();
             let percentages = if self.file_tree.focused() {
-                (100, 0)
-            //} else if details_focused {
-            //	(50, 50)
+                //file_tree refers to a File: widget that indicated
+                //which files are part of the commit
+                //once arrow right from topiclist or revlog
+                //
+                //Info
+                //Message (scrollable) TODO fix toggle
+                //
+                //filetree
+                //
+                (30, 70) //commit Info should remain visible
+            } else if details_focused {
+                //topiclist or revlog split
+                (90, 10) //commit Info and Message visible
+                         //filetree obfuscated
             } else {
-                (/* Info Messages */ 50, /* Files */ 50) //vertical split for detail comps
-                                                         //Info minimum 6 lines
-                                                         //Author:
-                                                         //Date:
-                                                         //Commiter:
-                                                         //Sha:
-                                                         //Tags: TODO line break at comma seperators
-                                                         //Message
-                                                         //remainder
-                                                         //Files
-                                                         //remainder
+                //commit message and filetree with toggle height
+                (0, 0)
             };
 
             [
