@@ -174,6 +174,9 @@ impl DrawableComponent for ChatDetailsComponent {
             .constraints(constraints.as_ref())
             .split(rect);
 
+        //notice the diff isnt rendered here
+        //this renders the left side of the
+        //commit inspection
         if self.is_compare() {
             self.compare_details.draw(f, chunks[0])?;
         } else {
@@ -181,6 +184,7 @@ impl DrawableComponent for ChatDetailsComponent {
         }
         self.file_tree.draw(f, chunks[1])?;
 
+        //render p2p chat
         Ok(())
     }
 }
