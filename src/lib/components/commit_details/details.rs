@@ -253,6 +253,7 @@ impl DrawableComponent for DetailsComponent {
         //this is deceptively rendered here
         //but appears in the inspect_commit
         //once right arrow from topiclist or revlist
+        //diff is not rendered here
         f.render_widget(
             dialog_paragraph(
                 &format!(
