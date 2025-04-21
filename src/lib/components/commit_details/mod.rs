@@ -152,13 +152,14 @@ impl DrawableComponent for CommitDetailsComponent {
                 //
                 //filetree
                 //
-                (50, 50)
+                (30, 70)//commit Info should remain visible
             } else if details_focused {
                 //topiclist or revlog split
-                (50, 50)
+                (90, 10)//commit Info and Message visible
+						//filetree obfuscated
             } else {
-                //3rd case
-                (50, 50)
+                //commit message and filetree with toggle height
+                (0, 0)
             };
 
             [
