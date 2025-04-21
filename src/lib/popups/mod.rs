@@ -4,12 +4,12 @@ mod commit;
 mod compare_commits;
 mod confirm;
 mod create_branch;
+mod display_chat;
 mod externaleditor;
 mod fetch;
 mod file_revlog;
 mod fuzzy_find;
 mod help;
-mod display_chat;
 mod inspect_commit;
 mod log_search;
 mod msg;
@@ -31,12 +31,12 @@ pub use commit::CommitPopup;
 pub use compare_commits::CompareCommitsPopup;
 pub use confirm::ConfirmPopup;
 pub use create_branch::CreateBranchPopup;
+pub use display_chat::{DisplayChatOpen, DisplayChatPopup};
 pub use externaleditor::ExternalEditorPopup;
 pub use fetch::FetchPopup;
 pub use file_revlog::{FileRevOpen, FileRevlogPopup};
 pub use fuzzy_find::FuzzyFindPopup;
 pub use help::HelpPopup;
-pub use display_chat::{DisplayChatOpen, DisplayChatPopup};
 pub use inspect_commit::{InspectCommitOpen, InspectCommitPopup};
 pub use log_search::LogSearchPopupPopup;
 pub use msg::MsgPopup;
@@ -45,9 +45,9 @@ pub use pull::PullPopup;
 pub use push::PushPopup;
 pub use push_tags::PushTagsPopup;
 use ratatui::{
-	layout::Alignment,
-	text::{Span, Text},
-	widgets::{Block, BorderType, Borders, Paragraph, Wrap},
+    layout::Alignment,
+    text::{Span, Text},
+    widgets::{Block, BorderType, Borders, Paragraph, Wrap},
 };
 pub use rename_branch::RenameBranchPopup;
 pub use reset::ResetPopup;
@@ -60,28 +60,28 @@ pub use taglist::TagListPopup;
 use crate::ui::style::Theme;
 
 fn popup_paragraph<'a, T>(
-	title: &'a str,
-	content: T,
-	theme: &Theme,
-	focused: bool,
-	block: bool,
+    title: &'a str,
+    content: T,
+    theme: &Theme,
+    focused: bool,
+    block: bool,
 ) -> Paragraph<'a>
 where
-	T: Into<Text<'a>>,
+    T: Into<Text<'a>>,
 {
-	let paragraph = Paragraph::new(content.into())
-		.alignment(Alignment::Left)
-		.wrap(Wrap { trim: true });
+    let paragraph = Paragraph::new(content.into())
+        .alignment(Alignment::Left)
+        .wrap(Wrap { trim: true });
 
-	if block {
-		paragraph.block(
-			Block::default()
-				.title(Span::styled(title, theme.title(focused)))
-				.borders(Borders::ALL)
-				.border_type(BorderType::Thick)
-				.border_style(theme.block(focused)),
-		)
-	} else {
-		paragraph
-	}
+    if block {
+        paragraph.block(
+            Block::default()
+                .title(Span::styled(title, theme.title(focused)))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Thick)
+                .border_style(theme.block(focused)),
+        )
+    } else {
+        paragraph
+    }
 }

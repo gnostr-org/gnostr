@@ -5,45 +5,45 @@ use std::sync::{Arc, Condvar, Mutex};
 #[derive(Clone, Debug)]
 pub struct NotifyableMutex<T>
 where
-	T: Send + Sync,
+    T: Send + Sync,
 {
-	data: Arc<(Mutex<T>, Condvar)>,
+    data: Arc<(Mutex<T>, Condvar)>,
 }
 
 impl<T> NotifyableMutex<T>
 where
-	T: Send + Sync,
+    T: Send + Sync,
 {
-	///
-	pub fn new(start_value: T) -> Self {
-		Self {
-			data: Arc::new((Mutex::new(start_value), Condvar::new())),
-		}
-	}
+    ///
+    pub fn new(start_value: T) -> Self {
+        Self {
+            data: Arc::new((Mutex::new(start_value), Condvar::new())),
+        }
+    }
 
-	///
-	pub fn wait(&self, condition: T)
-	where
-		T: PartialEq + Copy,
-	{
-		let mut data = self.data.0.lock().expect("lock err");
-		while *data != condition {
-			data = self.data.1.wait(data).expect("wait err");
-		}
-		drop(data);
-	}
+    ///
+    pub fn wait(&self, condition: T)
+    where
+        T: PartialEq + Copy,
+    {
+        let mut data = self.data.0.lock().expect("lock err");
+        while *data != condition {
+            data = self.data.1.wait(data).expect("wait err");
+        }
+        drop(data);
+    }
 
-	///
-	pub fn set_and_notify(&self, value: T) {
-		*self.data.0.lock().expect("set err") = value;
-		self.data.1.notify_one();
-	}
+    ///
+    pub fn set_and_notify(&self, value: T) {
+        *self.data.0.lock().expect("set err") = value;
+        self.data.1.notify_one();
+    }
 
-	///
-	pub fn get(&self) -> T
-	where
-		T: Copy,
-	{
-		*self.data.0.lock().expect("get err")
-	}
+    ///
+    pub fn get(&self) -> T
+    where
+        T: Copy,
+    {
+        *self.data.0.lock().expect("get err")
+    }
 }

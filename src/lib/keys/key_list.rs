@@ -2,134 +2,134 @@ use std::{fs::File, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::{Deserialize, Serialize};
-use struct_patch::{Patch, traits::Patch as PatchTrait};
+use struct_patch::{traits::Patch as PatchTrait, Patch};
 
 #[derive(Debug, PartialOrd, Clone, Copy, Serialize, Deserialize)]
 pub struct GituiKeyEvent {
-	pub code: KeyCode,
-	pub modifiers: KeyModifiers,
+    pub code: KeyCode,
+    pub modifiers: KeyModifiers,
 }
 
 impl GituiKeyEvent {
-	pub const fn new(code: KeyCode, modifiers: KeyModifiers) -> Self {
-		Self { code, modifiers }
-	}
+    pub const fn new(code: KeyCode, modifiers: KeyModifiers) -> Self {
+        Self { code, modifiers }
+    }
 }
 
 pub fn key_match(ev: &KeyEvent, binding: GituiKeyEvent) -> bool {
-	ev.code == binding.code && ev.modifiers == binding.modifiers
+    ev.code == binding.code && ev.modifiers == binding.modifiers
 }
 
 impl PartialEq for GituiKeyEvent {
-	fn eq(&self, other: &Self) -> bool {
-		let ev: KeyEvent = self.into();
-		let other: KeyEvent = other.into();
-		ev == other
-	}
+    fn eq(&self, other: &Self) -> bool {
+        let ev: KeyEvent = self.into();
+        let other: KeyEvent = other.into();
+        ev == other
+    }
 }
 
 impl From<&GituiKeyEvent> for KeyEvent {
-	fn from(other: &GituiKeyEvent) -> Self {
-		Self::new(other.code, other.modifiers)
-	}
+    fn from(other: &GituiKeyEvent) -> Self {
+        Self::new(other.code, other.modifiers)
+    }
 }
 
 #[derive(Debug, Clone, Patch)]
 #[patch_derive(Deserialize, Debug)]
 pub struct KeysList {
-	//tab_chat
-	pub tab_chat: GituiKeyEvent,
-	pub tab_status: GituiKeyEvent,
-	pub tab_log: GituiKeyEvent,
-	pub tab_files: GituiKeyEvent,
-	pub tab_stashing: GituiKeyEvent,
-	pub tab_stashes: GituiKeyEvent,
-	pub tab_toggle: GituiKeyEvent,
-	pub tab_toggle_reverse: GituiKeyEvent,
-	pub toggle_workarea: GituiKeyEvent,
-	pub exit: GituiKeyEvent,
-	pub quit: GituiKeyEvent,
-	pub exit_popup: GituiKeyEvent,
-	pub open_commit: GituiKeyEvent,
-	pub open_commit_editor: GituiKeyEvent,
-	pub open_help: GituiKeyEvent,
-	pub open_options: GituiKeyEvent,
-	pub move_left: GituiKeyEvent,
-	pub move_right: GituiKeyEvent,
-	pub move_up: GituiKeyEvent,
-	pub move_down: GituiKeyEvent,
-	pub tree_collapse_recursive: GituiKeyEvent,
-	pub tree_expand_recursive: GituiKeyEvent,
-	//home
-	pub home: GituiKeyEvent,
-	pub end: GituiKeyEvent,
-	pub popup_up: GituiKeyEvent,
-	pub popup_down: GituiKeyEvent,
-	pub page_down: GituiKeyEvent,
-	pub page_up: GituiKeyEvent,
-	pub shift_up: GituiKeyEvent,
-	pub shift_down: GituiKeyEvent,
-	pub enter: GituiKeyEvent,
-	pub blame: GituiKeyEvent,
-	pub file_history: GituiKeyEvent,
-	pub edit_file: GituiKeyEvent,
-	pub status_stage_all: GituiKeyEvent,
-	pub status_reset_item: GituiKeyEvent,
-	pub status_ignore_file: GituiKeyEvent,
-	pub diff_stage_lines: GituiKeyEvent,
-	pub diff_reset_lines: GituiKeyEvent,
-	pub stashing_save: GituiKeyEvent,
-	pub stashing_toggle_untracked: GituiKeyEvent,
-	pub stashing_toggle_index: GituiKeyEvent,
-	pub stash_apply: GituiKeyEvent,
-	pub stash_open: GituiKeyEvent,
-	pub stash_drop: GituiKeyEvent,
-	pub cmd_bar_toggle: GituiKeyEvent,
-	pub log_tag_commit: GituiKeyEvent,
-	pub log_mark_commit: GituiKeyEvent,
-	pub log_checkout_commit: GituiKeyEvent,
-	pub log_comment_commit: GituiKeyEvent, /* backslash \ - use
-	                                        * compare - add
-	                                        * commenting implace
-	                                        * of edit */
-	pub log_reset_commit: GituiKeyEvent,
-	pub log_reword_commit: GituiKeyEvent,
-	pub log_find: GituiKeyEvent,
-	pub find_commit_sha: GituiKeyEvent,
-	pub commit_amend: GituiKeyEvent,
-	pub toggle_signoff: GituiKeyEvent,
-	pub toggle_verify: GituiKeyEvent,
-	pub copy: GituiKeyEvent,
-	pub create_branch: GituiKeyEvent,
-	pub rename_branch: GituiKeyEvent,
-	pub select_branch: GituiKeyEvent,
-	pub delete_branch: GituiKeyEvent,
-	pub merge_branch: GituiKeyEvent,
-	pub rebase_branch: GituiKeyEvent,
-	pub reset_branch: GituiKeyEvent,
-	pub compare_commits: GituiKeyEvent,
-	pub tags: GituiKeyEvent,
-	pub delete_tag: GituiKeyEvent,
-	pub select_tag: GituiKeyEvent,
-	pub push: GituiKeyEvent,
-	pub open_file_tree: GituiKeyEvent,
-	pub file_find: GituiKeyEvent,
-	pub branch_find: GituiKeyEvent,
-	pub force_push: GituiKeyEvent,
-	pub fetch: GituiKeyEvent,
-	pub pull: GituiKeyEvent,
-	pub abort_merge: GituiKeyEvent,
-	pub undo_commit: GituiKeyEvent,
-	pub diff_hunk_next: GituiKeyEvent,
-	pub diff_hunk_prev: GituiKeyEvent,
-	pub stage_unstage_item: GituiKeyEvent,
-	pub tag_annotate: GituiKeyEvent,
-	pub view_submodules: GituiKeyEvent,
-	pub view_submodule_parent: GituiKeyEvent,
-	pub update_submodule: GituiKeyEvent,
-	pub commit_history_next: GituiKeyEvent,
-	pub commit: GituiKeyEvent,
-	pub newline: GituiKeyEvent,
+    //tab_chat
+    pub tab_chat: GituiKeyEvent,
+    pub tab_status: GituiKeyEvent,
+    pub tab_log: GituiKeyEvent,
+    pub tab_files: GituiKeyEvent,
+    pub tab_stashing: GituiKeyEvent,
+    pub tab_stashes: GituiKeyEvent,
+    pub tab_toggle: GituiKeyEvent,
+    pub tab_toggle_reverse: GituiKeyEvent,
+    pub toggle_workarea: GituiKeyEvent,
+    pub exit: GituiKeyEvent,
+    pub quit: GituiKeyEvent,
+    pub exit_popup: GituiKeyEvent,
+    pub open_commit: GituiKeyEvent,
+    pub open_commit_editor: GituiKeyEvent,
+    pub open_help: GituiKeyEvent,
+    pub open_options: GituiKeyEvent,
+    pub move_left: GituiKeyEvent,
+    pub move_right: GituiKeyEvent,
+    pub move_up: GituiKeyEvent,
+    pub move_down: GituiKeyEvent,
+    pub tree_collapse_recursive: GituiKeyEvent,
+    pub tree_expand_recursive: GituiKeyEvent,
+    //home
+    pub home: GituiKeyEvent,
+    pub end: GituiKeyEvent,
+    pub popup_up: GituiKeyEvent,
+    pub popup_down: GituiKeyEvent,
+    pub page_down: GituiKeyEvent,
+    pub page_up: GituiKeyEvent,
+    pub shift_up: GituiKeyEvent,
+    pub shift_down: GituiKeyEvent,
+    pub enter: GituiKeyEvent,
+    pub blame: GituiKeyEvent,
+    pub file_history: GituiKeyEvent,
+    pub edit_file: GituiKeyEvent,
+    pub status_stage_all: GituiKeyEvent,
+    pub status_reset_item: GituiKeyEvent,
+    pub status_ignore_file: GituiKeyEvent,
+    pub diff_stage_lines: GituiKeyEvent,
+    pub diff_reset_lines: GituiKeyEvent,
+    pub stashing_save: GituiKeyEvent,
+    pub stashing_toggle_untracked: GituiKeyEvent,
+    pub stashing_toggle_index: GituiKeyEvent,
+    pub stash_apply: GituiKeyEvent,
+    pub stash_open: GituiKeyEvent,
+    pub stash_drop: GituiKeyEvent,
+    pub cmd_bar_toggle: GituiKeyEvent,
+    pub log_tag_commit: GituiKeyEvent,
+    pub log_mark_commit: GituiKeyEvent,
+    pub log_checkout_commit: GituiKeyEvent,
+    pub log_comment_commit: GituiKeyEvent, /* backslash \ - use
+                                            * compare - add
+                                            * commenting implace
+                                            * of edit */
+    pub log_reset_commit: GituiKeyEvent,
+    pub log_reword_commit: GituiKeyEvent,
+    pub log_find: GituiKeyEvent,
+    pub find_commit_sha: GituiKeyEvent,
+    pub commit_amend: GituiKeyEvent,
+    pub toggle_signoff: GituiKeyEvent,
+    pub toggle_verify: GituiKeyEvent,
+    pub copy: GituiKeyEvent,
+    pub create_branch: GituiKeyEvent,
+    pub rename_branch: GituiKeyEvent,
+    pub select_branch: GituiKeyEvent,
+    pub delete_branch: GituiKeyEvent,
+    pub merge_branch: GituiKeyEvent,
+    pub rebase_branch: GituiKeyEvent,
+    pub reset_branch: GituiKeyEvent,
+    pub compare_commits: GituiKeyEvent,
+    pub tags: GituiKeyEvent,
+    pub delete_tag: GituiKeyEvent,
+    pub select_tag: GituiKeyEvent,
+    pub push: GituiKeyEvent,
+    pub open_file_tree: GituiKeyEvent,
+    pub file_find: GituiKeyEvent,
+    pub branch_find: GituiKeyEvent,
+    pub force_push: GituiKeyEvent,
+    pub fetch: GituiKeyEvent,
+    pub pull: GituiKeyEvent,
+    pub abort_merge: GituiKeyEvent,
+    pub undo_commit: GituiKeyEvent,
+    pub diff_hunk_next: GituiKeyEvent,
+    pub diff_hunk_prev: GituiKeyEvent,
+    pub stage_unstage_item: GituiKeyEvent,
+    pub tag_annotate: GituiKeyEvent,
+    pub view_submodules: GituiKeyEvent,
+    pub view_submodule_parent: GituiKeyEvent,
+    pub update_submodule: GituiKeyEvent,
+    pub commit_history_next: GituiKeyEvent,
+    pub commit: GituiKeyEvent,
+    pub newline: GituiKeyEvent,
 }
 
 #[rustfmt::skip]
@@ -239,70 +239,62 @@ impl Default for KeysList {
 }
 
 impl KeysList {
-	pub fn init(file: PathBuf) -> Self {
-		let mut keys_list = Self::default();
-		if let Ok(f) = File::open(file) {
-			match ron::de::from_reader(f) {
-				Ok(patch) => keys_list.apply(patch),
-				Err(e) => {
-					log::error!("KeysList parse error: {e}");
-				}
-			}
-		}
-		keys_list
-	}
+    pub fn init(file: PathBuf) -> Self {
+        let mut keys_list = Self::default();
+        if let Ok(f) = File::open(file) {
+            match ron::de::from_reader(f) {
+                Ok(patch) => keys_list.apply(patch),
+                Err(e) => {
+                    log::error!("KeysList parse error: {e}");
+                }
+            }
+        }
+        keys_list
+    }
 }
 
 #[cfg(test)]
 mod tests {
-	use std::io::Write;
+    use std::io::Write;
 
-	use pretty_assertions::assert_eq;
-	use tempfile::NamedTempFile;
+    use pretty_assertions::assert_eq;
+    use tempfile::NamedTempFile;
 
-	use super::*;
+    use super::*;
 
-	#[test]
-	fn test_apply_vim_style_example() {
-		let mut keys_list = KeysList::default();
-		let f = File::open("vim_style_key_config.ron")
-			.expect("vim style config should exist");
-		let patch = ron::de::from_reader(f)
-			.expect("vim style config format incorrect");
-		keys_list.apply(patch);
-	}
+    #[test]
+    fn test_apply_vim_style_example() {
+        let mut keys_list = KeysList::default();
+        let f = File::open("vim_style_key_config.ron").expect("vim style config should exist");
+        let patch = ron::de::from_reader(f).expect("vim style config format incorrect");
+        keys_list.apply(patch);
+    }
 
-	#[test]
-	fn test_smoke() {
-		let mut file = NamedTempFile::new().unwrap();
+    #[test]
+    fn test_smoke() {
+        let mut file = NamedTempFile::new().unwrap();
 
-		writeln!(
-			file,
-			r#"
+        writeln!(
+            file,
+            r#"
 (
 	move_down: Some(( code: Char('j'), modifiers: "CONTROL")),
 	move_up: Some((code: Char('h'), modifiers: ""))
 )
 "#
-		)
-		.unwrap();
+        )
+        .unwrap();
 
-		let keys = KeysList::init(file.path().to_path_buf());
+        let keys = KeysList::init(file.path().to_path_buf());
 
-		assert_eq!(keys.move_right, KeysList::default().move_right);
-		assert_eq!(
-			keys.move_down,
-			GituiKeyEvent::new(
-				KeyCode::Char('j'),
-				KeyModifiers::CONTROL
-			)
-		);
-		assert_eq!(
-			keys.move_up,
-			GituiKeyEvent::new(
-				KeyCode::Char('h'),
-				KeyModifiers::NONE
-			)
-		);
-	}
+        assert_eq!(keys.move_right, KeysList::default().move_right);
+        assert_eq!(
+            keys.move_down,
+            GituiKeyEvent::new(KeyCode::Char('j'), KeyModifiers::CONTROL)
+        );
+        assert_eq!(
+            keys.move_up,
+            GituiKeyEvent::new(KeyCode::Char('h'), KeyModifiers::NONE)
+        );
+    }
 }

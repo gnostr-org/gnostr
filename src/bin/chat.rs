@@ -22,11 +22,11 @@ use serde_json::{Result as SerdeJsonResult, Value};
 use sha2::Digest;
 //use tokio::time::Duration;
 
-use gnostr::chat::p2p;
-use gnostr::chat::ui;
-use gnostr::chat::p2p::evt_loop;
 use gnostr::chat::msg;
 use gnostr::chat::msg::*;
+use gnostr::chat::p2p;
+use gnostr::chat::p2p::evt_loop;
+use gnostr::chat::ui;
 
 //const TITLE: &str = include_str!("./title.txt");
 
@@ -316,7 +316,7 @@ fn global_rt() -> &'static tokio::runtime::Runtime {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let filter = EnvFilter::default()
-        .add_directive(Level::WARN.into())
+        .add_directive(Level::INFO.into())
         //.add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         //.add_directive("nostr_relay_pool=off".parse().unwrap())
         //.add_directive("libp2p_mdns=off".parse().unwrap())
@@ -326,7 +326,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .with(fmt::layer().with_writer(std::io::stdout))
         .with(filter);
 
-    //subscriber.try_init();
+    subscriber.try_init();
 
     //parse keys from sha256 hash
     let empty_hash_keys =
@@ -561,7 +561,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .unwrap();
     });
 
-    app.run()?;
+    //app.run()?;
 
     // say goodbye
     input_tx.blocking_send(Msg::default().set_kind(MsgKind::Leave))?;
