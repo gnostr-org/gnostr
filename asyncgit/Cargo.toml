@@ -20,6 +20,7 @@ fuzzy-matcher = "0.3"
 git2 = "^0.19"
 git2-hooks = { path = "../git2-hooks", version = "0.3" }
 log = "0.4"
+nostr-sdk = "0.37.0"
 # git2 = { path = "../../extern/git2-rs", features = ["vendored-openssl"]}
 # git2 = { git="https://github.com/extrawurst/git2-rs.git", rev="fc13dcc", features = ["vendored-openssl"]}
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
