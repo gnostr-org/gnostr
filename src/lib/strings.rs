@@ -334,7 +334,7 @@ pub mod commit {
         "Committer: ".to_string()
     }
     pub fn details_sha() -> String {
-        "Sha: ".to_string()
+        "commit ".to_string()
     }
     pub fn details_date() -> String {
         "Date: ".to_string()
