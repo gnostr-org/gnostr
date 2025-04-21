@@ -1,4 +1,5 @@
 mod changes;
+///mod chat_details;
 mod chat_details;
 mod command;
 mod commit_details;
@@ -9,6 +10,7 @@ mod revision_files;
 mod status_tree;
 mod syntax_text;
 mod textinput;
+///mod topiclist;
 mod topiclist;
 mod utils;
 

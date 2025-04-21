@@ -171,6 +171,7 @@ impl App {
             file_revlog_popup: FileRevlogPopup::new(&env),
             revision_files_popup: RevisionFilesPopup::new(&env),
             stashmsg_popup: StashMsgPopup::new(&env),
+            //display_chat_popup
             display_chat_popup: DisplayChatPopup::new(&env),
             inspect_commit_popup: InspectCommitPopup::new(&env),
             compare_commits_popup: CompareCommitsPopup::new(&env),
@@ -198,6 +199,7 @@ impl App {
             stashing_tab: Stashing::new(&env),
             stashlist_tab: StashList::new(&env),
             files_tab: FilesTab::new(&env),
+            //chat_tab
             chat_tab: Chatlog::new(&env),
             tab: 0,
             queue: env.queue,
@@ -226,9 +228,9 @@ impl App {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(2),
-                    Constraint::Min(2),
-                    Constraint::Length(self.cmdbar.borrow().height()),
+                    Constraint::Length(2),                             //first in
+                    Constraint::Min(2),                                //second in
+                    Constraint::Length(self.cmdbar.borrow().height()), //third in
                 ]
                 .as_ref(),
             )
@@ -236,7 +238,7 @@ impl App {
 
         self.cmdbar.borrow().draw(f, chunks_main[2]);
 
-        self.draw_top_bar(f, chunks_main[0]);
+        self.draw_top_bar(f, chunks_main[0]); //main tab bar
 
         //TODO: component property + a macro `fullscreen_popup_open!`
         // to make this scale better?
@@ -355,6 +357,7 @@ impl App {
         log::trace!("update_async: {:?}", ev);
 
         if let AsyncNotification::Git(ev) = ev {
+            //chat_tab.update_git
             self.chat_tab.update_git(ev)?;
             self.status_tab.update_git(ev)?;
             self.stashing_tab.update_git(ev)?;
@@ -433,10 +436,12 @@ impl App {
             fuzzy_find_popup,
             msg_popup,
             confirm_popup,
+            //commit_popup
             commit_popup,
             blame_file_popup,
             file_revlog_popup,
             stashmsg_popup,
+            //display_chat_popup
             display_chat_popup,
             inspect_commit_popup,
             compare_commits_popup,
@@ -467,10 +472,12 @@ impl App {
     setup_popups!(
         self,
         [
+            //commit_popup
             commit_popup,
             stashmsg_popup,
             help_popup,
             display_chat_popup,
+            //inspect_commit_popup
             inspect_commit_popup,
             compare_commits_popup,
             blame_file_popup,
@@ -549,6 +556,7 @@ impl App {
         } else if key_match(k, self.key_config.keys.tab_files) {
             self.switch_to_tab(&AppTabs::Files)?;
         } else if key_match(k, self.key_config.keys.tab_chat) {
+            //self.switch_to_tab(&AppTabs::Chat)?;
             self.switch_to_tab(&AppTabs::Chat)?;
         } else if key_match(k, self.key_config.keys.tab_stashing) {
             self.switch_to_tab(&AppTabs::Stashing)?;
@@ -577,6 +585,7 @@ impl App {
 
     fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {
         match tab {
+            //AppTabs::Chat => self.set_tab(0)?,
             AppTabs::Chat => self.set_tab(0)?,
             AppTabs::Status => self.set_tab(1)?,
             AppTabs::Log => self.set_tab(2)?,
@@ -606,6 +615,7 @@ impl App {
         //NOTE: set when any tree component changed selection
         if flags.contains(NeedsUpdate::DIFF) {
             self.status_tab.update_diff()?;
+            //self.display_chat_popup.update_diff()?;
             self.display_chat_popup.update_diff()?;
             self.inspect_commit_popup.update_diff()?;
             self.compare_commits_popup.update_diff()?;
@@ -626,12 +636,26 @@ impl App {
             StackablePopupOpen::BlameFile(params) => {
                 self.blame_file_popup.open(params)?;
             }
+            //
+            //
+            //
             StackablePopupOpen::DisplayChat(param) => {
                 self.display_chat_popup.open(param)?;
             }
+
+            //
+            //
+            //StackablePopupOpen::InspectCommit(param) => {
+            //    self.inspect_commit_popup.open(param)?;
+            //}
+            //
+            //
             StackablePopupOpen::FileRevlog(param) => {
                 self.file_revlog_popup.open(param)?;
             }
+            //
+            //
+            //
             StackablePopupOpen::FileTree(param) => {
                 self.revision_files_popup.open(param)?;
             }
@@ -682,6 +706,7 @@ impl App {
                 flags.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
             }
             InternalEvent::Update(u) => flags.insert(u),
+            //
             InternalEvent::OpenCommit => self.commit_popup.show()?,
             InternalEvent::RewordCommit(id) => {
                 self.commit_popup.open(Some(id))?;
@@ -714,6 +739,7 @@ impl App {
                 self.switch_to_tab(&tab)?;
                 flags.insert(NeedsUpdate::ALL);
             }
+            //
             InternalEvent::SelectCommitInRevlog(id) => {
                 if let Err(error) = self.revlog.select_commit(id) {
                     self.queue
@@ -956,6 +982,7 @@ impl App {
             )
             .order(order::NAV),
         );
+        //
         res.push(
             CommandInfo::new(
                 strings::commands::options_popup(&self.key_config),

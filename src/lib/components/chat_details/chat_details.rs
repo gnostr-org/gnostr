@@ -48,13 +48,18 @@ impl CompareDetailsComponent {
         });
     }
 
+    //commit header Info
     #[allow(unstable_name_collisions)]
     fn get_commit_text(&self, data: &CommitDetails) -> Vec<Line> {
+        //TODO git commit log formatting
         let mut res = vec![
             Line::from(vec![
                 style_detail(&self.theme, &Detail::Author),
                 Span::styled(
-                    Cow::from(format!("{} <{}>", data.author.name, data.author.email)),
+                    Cow::from(format!(
+                        "data.author.name {} data.author.email <{}>",
+                        data.author.name, data.author.email
+                    )),
                     self.theme.text(true, false),
                 ),
             ]),
@@ -67,15 +72,17 @@ impl CompareDetailsComponent {
             ]),
         ];
 
+        //commit message box
         res.push(Line::from(vec![
             style_detail(&self.theme, &Detail::Message),
             Span::styled(
-                Cow::from(
+                Cow::from(format!(
+                    "data.message {}",
                     data.message
                         .as_ref()
                         .map(|msg| msg.subject.clone())
                         .unwrap_or_default(),
-                ),
+                )),
                 self.theme.text(true, false),
             ),
         ]));
@@ -96,15 +103,16 @@ impl DrawableComponent for CompareDetailsComponent {
                 dialog_paragraph(
                     &strings::commit::compare_details_info_title(
                         true,
-                        //data.old.short_hash(),
-                        //&data.old.padded_hash(),
+                        //Nostr PublicKey
                         &Keys::parse(&data.old.padded_hash())
                             .unwrap()
                             .public_key()
                             .to_string(),
-                        //data.old.padded_short_hash(),
                     ),
-                    Text::from(self.get_commit_text(&data.old)),
+                    Text::from(format!(
+                        "self.get_commit_text {:?}",
+                        self.get_commit_text(&data.old)
+                    )),
                     &self.theme,
                     false,
                 ),
@@ -115,14 +123,15 @@ impl DrawableComponent for CompareDetailsComponent {
                 dialog_paragraph(
                     &strings::commit::compare_details_info_title(
                         false,
-                        //data.new.short_hash(),
-                        //&data.new.padded_short_hash(),
-                        &Keys::parse(&data.old.padded_hash())
+                        &Keys::parse(&data.new.padded_hash())
                             .unwrap()
                             .public_key()
                             .to_string(),
                     ),
-                    Text::from(self.get_commit_text(&data.new)),
+                    Text::from(format!(
+                        "self.get_commit_text {:?}",
+                        self.get_commit_text(&data.new)
+                    )),
                     &self.theme,
                     false,
                 ),

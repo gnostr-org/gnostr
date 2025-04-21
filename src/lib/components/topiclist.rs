@@ -515,7 +515,7 @@ impl TopicList {
         // style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
-        txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
+        txt.push(Span::styled(Cow::from(&*e.keys), style_msg));
         //txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
         //txt.push(splitter.clone());
 
@@ -583,13 +583,13 @@ impl TopicList {
         txt.push(splitter.clone());
         txt.push(splitter.clone());
 
-        let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
+        //let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
-        // commit msg
-        txt.push(Span::styled(
-            format!("{:message_width$}", &e.msg),
-            style_msg,
-        ));
+        //// commit msg
+        //txt.push(Span::styled(
+        //    format!("{:message_width$}", &e.msg),
+        //    style_msg,
+        //));
 
         Line::from(txt)
     }

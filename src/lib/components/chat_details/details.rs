@@ -37,6 +37,7 @@ pub struct DetailsComponent {
     key_config: SharedKeyConfig,
 }
 
+///type WrappedCommitMessage<'a>
 type WrappedCommitMessage<'a> = (Vec<Cow<'a, str>>, Vec<Cow<'a, str>>);
 
 impl DetailsComponent {
@@ -69,6 +70,9 @@ impl DetailsComponent {
 
     fn wrap_commit_details(message: &CommitMessage, width: usize) -> WrappedCommitMessage<'_> {
         let width = width.max(1);
+        //bwrap
+        //bwrap
+        //bwrap
         let wrapped_title = bwrap::wrap!(&message.subject, width)
             .lines()
             .map(String::from)
@@ -76,6 +80,9 @@ impl DetailsComponent {
             .collect();
 
         if let Some(ref body) = message.body {
+            //bwrap
+            //bwrap
+            //bwrap
             let wrapped_message: Vec<Cow<'_, str>> = bwrap::wrap!(body, width)
                 .lines()
                 .map(String::from)
@@ -134,65 +141,91 @@ impl DetailsComponent {
     fn get_text_info(&self) -> Vec<Line> {
         self.data.as_ref().map_or_else(Vec::new, |data| {
             let mut res = vec![
+                //
+                //commit formatting
+                //insert commit here
+                //adhere to git log formatting
+
+                //EXAMPLE
+                //commit 77aa531796ba0de324f928abd05c1f5314df9f74 (HEAD -> WEEBLE/BLOCKHEIGHT/WOBBLE/PARENT/CHILD-additonal_string)
+                //
+                //Author: randymcmillan <randymcmillan@protonmail.com>
+                //Date:   Sun Apr 20 21:37:43 2025 -0400
+                //
+                //    src/lib/components/topiclist.rs:commit keys
+                //
+                //    apply cargo fmt
+                //
+                Line::from(vec![
+                    Span::styled(
+                        Cow::from(format!(
+                            "162:chat_details/details.rs {}",
+                            strings::commit::details_sha()
+                        )),
+                        self.theme.text(false, false),
+                    ),
+                    Span::styled(Cow::from(data.hash.clone()), self.theme.text(true, false)),
+                ]),
+                //
                 Line::from(vec![
                     style_detail(&self.theme, &Detail::Author),
                     Span::styled(
                         Cow::from(format!(
-                            "chat_details/details.rs {} <{}>",
-                            data.author.name, data.author.email
+                            "176:chat_details/details.rs {} <{}>",
+                            //author.name/email
+                            data.author.name,
+                            data.author.email
                         )),
                         self.theme.text(true, false),
                     ),
                 ]),
-                Line::from(vec![
-                    style_detail(&self.theme, &Detail::Date),
-                    Span::styled(
-                        Cow::from(time_to_string(data.author.time, false)),
-                        self.theme.text(true, false),
-                    ),
-                ]),
+                //Line::from(vec![
+                //    style_detail(&self.theme, &Detail::Date),
+                //    Span::styled(
+                //        Cow::from(time_to_string(data.author.time, false)),
+                //        self.theme.text(true, false),
+                //    ),
+                //]),
             ];
 
             if let Some(ref committer) = data.committer {
                 res.extend(vec![
                     Line::from(vec![
-                        style_detail(&self.theme, &Detail::Committer),
+                        style_detail(&self.theme, &Detail::Date),
                         Span::styled(
-                            Cow::from(format!("{} <{}>", committer.name, committer.email)),
+                            Cow::from(format!(
+                                "200:chat_details/details.rs {}",
+                                time_to_string(committer.time, false)
+                            )),
                             self.theme.text(true, false),
                         ),
                     ]),
                     Line::from(vec![
-                        style_detail(&self.theme, &Detail::Date),
+                        style_detail(&self.theme, &Detail::Committer),
                         Span::styled(
-                            Cow::from(time_to_string(committer.time, false)),
+                            Cow::from(format!(
+                                "210:chat_details/details.rs {} <{}>",
+                                committer.name, committer.email
+                            )),
                             self.theme.text(true, false),
                         ),
                     ]),
                 ]);
             }
 
-            res.push(Line::from(vec![
-                Span::styled(
-                    Cow::from(strings::commit::details_sha()),
-                    self.theme.text(false, false),
-                ),
-                Span::styled(Cow::from(data.hash.clone()), self.theme.text(true, false)),
-            ]));
+            //if !self.tags.is_empty() {
+            //    res.push(Line::from(style_detail(&self.theme, &Detail::Sha)));
 
-            if !self.tags.is_empty() {
-                res.push(Line::from(style_detail(&self.theme, &Detail::Sha)));
-
-                res.push(Line::from(
-                    itertools::Itertools::intersperse(
-                        self.tags.iter().map(|tag| {
-                            Span::styled(Cow::from(&tag.name), self.theme.text(true, false))
-                        }),
-                        Span::styled(Cow::from(","), self.theme.text(true, false)),
-                    )
-                    .collect::<Vec<Span>>(),
-                ));
-            }
+            //    res.push(Line::from(
+            //        itertools::Itertools::intersperse(
+            //            self.tags.iter().map(|tag| {
+            //                Span::styled(Cow::from(&tag.name), self.theme.text(true, false))
+            //            }),
+            //            Span::styled(Cow::from(","), self.theme.text(true, false)),
+            //        )
+            //        .collect::<Vec<Span>>(),
+            //    ));
+            //}
 
             res
         })
@@ -215,6 +248,7 @@ impl DrawableComponent for DetailsComponent {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
+            //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
             .constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
             .split(rect);
 
@@ -252,7 +286,8 @@ impl DrawableComponent for DetailsComponent {
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "chat_details/details.rs:commit::details_message_title:{} {}",
+                    //"291:chat_details/details.rs:\ncommit::\ndetails_message_title:\n{} {}",
+                    "291:chat_details/details.rs:\ncommit::\ndetails_message_title:\n{} {}",
                     strings::commit::details_message_title(&self.key_config,),
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
@@ -267,12 +302,14 @@ impl DrawableComponent for DetailsComponent {
             chunks[1],
         );
 
+        //self.focused
         if self.focused {
             self.scroll.draw(f, chunks[1], &self.theme);
         }
 
         Ok(())
     }
+    //Files below this (in layout)
 }
 
 impl Component for DetailsComponent {

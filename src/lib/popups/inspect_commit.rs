@@ -16,7 +16,8 @@ use crate::{
     app::Environment,
     components::{
         command_pump, event_pump, visibility_blocking, CommandBlocking, CommandInfo,
-        CommitDetailsComponent, Component, DiffComponent, DrawableComponent, EventState,
+        /**/ CommitDetailsComponent, /**/
+        Component, DiffComponent, DrawableComponent, EventState,
     },
     keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
@@ -57,6 +58,8 @@ pub struct InspectCommitPopup {
     //diff
     //DiffComponent
     diff: DiffComponent,
+    //CommitDetailsComponent
+    //CommitDetailsComponent
     //CommitDetailsComponent
     details: CommitDetailsComponent,
     git_diff: AsyncDiff,
@@ -194,6 +197,7 @@ impl Component for InspectCommitPopup {
     }
 }
 
+///InspectCommitPopup
 impl InspectCommitPopup {
     accessors!(self, [diff, details]);
 
@@ -201,6 +205,7 @@ impl InspectCommitPopup {
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
+            //details: CommitDetailsComponent::new(env),
             details: CommitDetailsComponent::new(env),
             diff: DiffComponent::new(env, true),
             open_request: None,

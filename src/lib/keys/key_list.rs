@@ -38,6 +38,8 @@ impl From<&GituiKeyEvent> for KeyEvent {
 #[patch_derive(Deserialize, Debug)]
 pub struct KeysList {
     //tab_chat
+    //tab_chat
+    //tab_chat
     pub tab_chat: GituiKeyEvent,
     pub tab_status: GituiKeyEvent,
     pub tab_log: GituiKeyEvent,

@@ -715,7 +715,7 @@ impl DrawableComponent for CommitList {
         ));
 
         let title = format!(
-            "{} {}/{}",
+            "commitlist.rs {} {}/{}",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
