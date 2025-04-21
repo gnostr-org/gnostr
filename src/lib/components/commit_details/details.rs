@@ -220,6 +220,7 @@ impl DrawableComponent for DetailsComponent {
 
         f.render_widget(
             dialog_paragraph(
+                //
                 &strings::commit::details_info_title(&self.key_config),
                 Text::from(self.get_text_info()),
                 &self.theme,
@@ -249,10 +250,13 @@ impl DrawableComponent for DetailsComponent {
 
         let can_scroll = usize::from(height) < number_of_lines;
 
+        //this is deceptively rendered here
+        //but appears in the inspect_commit
+        //once right arrow from topiclist or revlist
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "commit_details/details/dialog_paragraph {} {}",
+                    "commit_details/details.rs dialog_paragraph {} {}",
                     strings::commit::details_message_title(&self.key_config,),
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
@@ -266,6 +270,8 @@ impl DrawableComponent for DetailsComponent {
             ),
             chunks[1],
         );
+
+        //construct and render p2p chat
 
         if self.focused {
             self.scroll.draw(f, chunks[1], &self.theme);

@@ -56,8 +56,8 @@ impl ChatDetailsComponent {
         let files_count = self.file_tree.file_count();
 
         format!(
-            "{} {}",
-            strings::commit::details_files_title(&self.key_config),
+            "chat_details/mod.rs:59:mod.rs get_files_title {} {}",
+            strings::commit::chat_details_files_title(&self.key_config),
             files_count
         )
     }

@@ -56,7 +56,7 @@ impl CommitDetailsComponent {
         let files_count = self.file_tree.file_count();
 
         format!(
-            "{} {}",
+            "59:commit_details/mod.rs CommitDetailsComponent {} {}",
             strings::commit::details_files_title(&self.key_config),
             files_count
         )
@@ -143,11 +143,22 @@ impl DrawableComponent for CommitDetailsComponent {
         } else {
             let details_focused = self.details_focused();
             let percentages = if self.file_tree.focused() {
+                //file_tree refers to a File: widget that indicated
+                //which files are part of the commit
+                //once arrow right from topiclist or revlog
+                //
+                //Info
+                //Message (scrollable) TODO fix toggle
+                //
+                //filetree
+                //
                 (50, 50)
             } else if details_focused {
-                (33, 66)
+                //topiclist or revlog split
+                (50, 50)
             } else {
-                (0, 100)
+                //3rd case
+                (50, 50)
             };
 
             [
@@ -168,6 +179,7 @@ impl DrawableComponent for CommitDetailsComponent {
         }
         self.file_tree.draw(f, chunks[1])?;
 
+        //render p2p chat
         Ok(())
     }
 }

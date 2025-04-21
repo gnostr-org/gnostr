@@ -357,6 +357,37 @@ pub mod commit {
     pub fn details_files_title(_key_config: &SharedKeyConfig) -> String {
         "Files:".to_string()
     }
+
+    pub fn chat_details_author() -> String {
+        "Author: ".to_string()
+    }
+    pub fn chat_details_committer() -> String {
+        "Committer: ".to_string()
+    }
+    pub fn chat_details_sha() -> String {
+        "commit ".to_string()
+    }
+    pub fn chat_details_date() -> String {
+        "Date: ".to_string()
+    }
+    pub fn chat_details_tags() -> String {
+        "Tags: ".to_string()
+    }
+    pub fn chat_details_message() -> String {
+        "Subject: ".to_string()
+    }
+    pub fn chat_details_info_title(_key_config: &SharedKeyConfig) -> String {
+        "Info".to_string()
+    }
+    pub fn chat_compare_details_info_title(old: bool, hash: &str) -> String {
+        format!("{}: {hash}", if old { "Old" } else { "New" })
+    }
+    pub fn chat_details_message_title(_key_config: &SharedKeyConfig) -> String {
+        "Message".to_string()
+    }
+    pub fn chat_details_files_title(_key_config: &SharedKeyConfig) -> String {
+        "Files:".to_string()
+    }
 }
 
 pub mod commands {

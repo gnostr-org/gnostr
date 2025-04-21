@@ -15,8 +15,8 @@ use crate::{
     accessors,
     app::Environment,
     components::{
-        command_pump, event_pump, visibility_blocking, CommandBlocking, CommandInfo,
-        CommitDetailsComponent, Component, DiffComponent, DrawableComponent, EventState,
+        command_pump, event_pump, visibility_blocking, ChatDetailsComponent, CommandBlocking,
+        CommandInfo, Component, DiffComponent, DrawableComponent, EventState,
     },
     keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
@@ -57,8 +57,8 @@ pub struct DisplayChatPopup {
     //diff
     //DiffComponent
     diff: DiffComponent,
-    //CommitDetailsComponent
-    details: CommitDetailsComponent,
+    //ChatDetailsComponent
+    details: ChatDetailsComponent,
     git_diff: AsyncDiff,
     visible: bool,
     key_config: SharedKeyConfig,
@@ -91,8 +91,12 @@ impl DrawableComponent for DisplayChatPopup {
             f.render_widget(Clear, rect);
 
             //0 OR 100
+            //
+            //
             self.details.draw(f, chunks[0])?;
             //50 OR 50
+            //
+            //
             self.diff.draw(f, chunks[1])?;
         }
 
@@ -201,7 +205,7 @@ impl DisplayChatPopup {
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
-            details: CommitDetailsComponent::new(env),
+            details: ChatDetailsComponent::new(env),
             diff: DiffComponent::new(env, true),
             open_request: None,
             git_diff: AsyncDiff::new(env.repo.borrow().clone(), &env.sender_git),
