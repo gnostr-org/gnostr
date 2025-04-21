@@ -514,6 +514,7 @@ dependencies = [
  "git2",
  "git2-hooks",
  "log",
+ "nostr-sdk 0.37.0",
  "openssl-sys",
  "rayon",
  "rayon-core",
