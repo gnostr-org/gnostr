@@ -614,6 +614,7 @@ impl DiffComponent {
 }
 
 impl DrawableComponent for DiffComponent {
+    //                     Frame     Rect
     fn draw(&self, f: &mut Frame, r: Rect) -> Result<()> {
         self.current_size
             .set((r.width.saturating_sub(2), r.height.saturating_sub(2)));
@@ -671,6 +672,8 @@ impl DrawableComponent for DiffComponent {
 }
 
 impl Component for DiffComponent {
+    //chunk navigation
+    //TODO generate private_key for each chunk
     fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
         out.push(CommandInfo::new(
             strings::commands::scroll(&self.key_config),
