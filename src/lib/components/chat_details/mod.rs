@@ -159,8 +159,8 @@ impl DrawableComponent for ChatDetailsComponent {
                 (90, 10) //commit Info and Message visible
                          //filetree obfuscated
             } else {
-                //commit message and filetree with toggle height
-                (0, 0)
+                //topiclist split
+                (50, 50)
             };
 
             [
