@@ -140,10 +140,11 @@ impl DrawableComponent for ChatDetailsComponent {
 
         let constraints = if self.is_compare() {
             //TODO interactive screen for nostr diff
-            [Constraint::Length(10), Constraint::Min(0)]
+            [Constraint::Length(10), Constraint::Min(0), Constraint::Min(0)]
         } else {
             let details_focused = self.details_focused();
-            let percentages = if self.file_tree.focused() {
+
+            let vertical_percentages = if self.file_tree.focused() {
                 //file_tree refers to a File: widget that indicated
                 //which files are part of the commit
                 //once arrow right from topiclist or revlog
@@ -153,23 +154,24 @@ impl DrawableComponent for ChatDetailsComponent {
                 //
                 //filetree
                 //
-                (30, 70) //commit Info should remain visible
+                (30, 70, 0) //commit Info should remain visible
             } else if details_focused {
                 //topiclist or revlog split
-                (90, 10) //commit Info and Message visible
+                (90, 10, 0) //commit Info and Message visible
                          //filetree obfuscated
             } else {
                 //topiclist split
-                (50, 50)
+                (10, 0, 90)
             };
 
             [
-                Constraint::Percentage(percentages.0),
-                Constraint::Percentage(percentages.1),
+                Constraint::Percentage(vertical_percentages.0),
+                Constraint::Percentage(vertical_percentages.1),
+                Constraint::Percentage(vertical_percentages.2),
             ]
         };
 
-        let chunks = Layout::default()
+        let vertical_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(constraints.as_ref())
             .split(rect);
@@ -178,12 +180,13 @@ impl DrawableComponent for ChatDetailsComponent {
         //this renders the left side of the
         //commit inspection
         if self.is_compare() {
-            self.compare_details.draw(f, chunks[0])?;
+            self.compare_details.draw(f, vertical_chunks[0])?;
         } else {
-            self.single_details.draw(f, chunks[0])?; //only single detail here?
+            self.single_details.draw(f, vertical_chunks[0])?; //only single detail here?
         }
-        self.file_tree.draw(f, chunks[1])?;
+        self.file_tree.draw(f, vertical_chunks[1])?;
 
+		//space for p2p widget vertical_chunks[2]
         //render p2p chat
         Ok(())
     }
