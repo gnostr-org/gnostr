@@ -66,14 +66,14 @@ pub async fn broadcast_textnote(
     }
     // Add tags
     for tag in sub_command_args.tag.iter() {
-		//
+        //
         let hashtag = Tag::hashtag(tag);
         tags.push(hashtag);
     }
 
-	for tag in &tags {
-		println!("{:?}", tag);
-	}
+    for tag in &tags {
+        println!("{:?}", tag);
+    }
 
     // Set expiration tag
     if let Some(expiration) = sub_command_args.expiration {

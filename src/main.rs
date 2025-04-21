@@ -1,15 +1,15 @@
 //use crate::sub_commands::custom_event::CustomEventCommand;
 //use crate::Commands::CustomEvent;
+use crate::global_rt::global_rt;
 use clap::{Parser, Subcommand};
 use gnostr::global_rt;
-use crate::global_rt::global_rt;
+use gnostr::input::InputEvent;
+use gnostr::sub_commands;
+use gnostr::tui::*;
+use gnostr::utils;
 use nostr_sdk::Result;
 use sha2::{Digest, Sha256};
 use std::env;
-use gnostr::sub_commands;
-use gnostr::utils;
-use gnostr::tui::*;
-use gnostr::input::InputEvent;
 use tracing::{debug, /*error, info, span,*/ trace, /* warn,*/ Level};
 use tracing_subscriber::FmtSubscriber;
 

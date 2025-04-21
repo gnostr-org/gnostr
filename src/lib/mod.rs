@@ -24,7 +24,6 @@ pub mod sub_commands;
 
 pub mod utils;
 
-
 pub mod app;
 pub mod args;
 pub mod bug_report;
@@ -44,14 +43,14 @@ pub mod components;
 pub mod keys;
 pub mod popups;
 pub mod tabs;
-pub mod ui;
 pub mod tui;
+pub mod ui;
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use directories::ProjectDirs;
 
 pub fn get_dirs() -> Result<ProjectDirs> {
-	ProjectDirs::from("", "", "ngit").ok_or(anyhow!(
+    ProjectDirs::from("", "", "ngit").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
 }

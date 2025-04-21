@@ -1,4 +1,8 @@
 use git2::Signature;
+use git2::ObjectType;
+
+//use nostr_sdk_0_37_0::prelude::*;
+use nostr_sdk::prelude::*;
 use scopetime::scope_time;
 
 use super::{CommitId, RepoPath, commits_info::get_message};
@@ -79,6 +83,8 @@ pub struct CommitDetails {
 	pub message: Option<CommitMessage>,
 	///
 	pub hash: String,
+	///
+	pub keys: Option<Keys>,
 }
 
 impl CommitDetails {
@@ -86,31 +92,30 @@ impl CommitDetails {
 	pub fn short_hash(&self) -> &str {
 		&self.hash[0..7]
 	}
-
 	///
 	pub (crate) fn pad_commit_hash(input: &str, padding_char: char) -> String {
 		let target_length = 64;
 		let current_length = input.len();
-
 		if current_length >= target_length {
 			return input.to_string(); // No padding needed
 		}
-
 		let padding_needed = target_length - current_length;
 		let padding = padding_char.to_string().repeat(padding_needed);
 		format!("{}{}", input, padding)
     }
-
 	///
 	pub fn padded_hash(&self) -> String {
 		Self::pad_commit_hash(&self.hash, '0')
 		//format!("{:0>64}", "".to_owned() + &self.hash[0..])
 	}
-
 	///
 	pub fn padded_short_hash(&self) -> String {
 		Self::pad_commit_hash(&self.hash[0..7], '0')
 	}
+	///
+	pub fn keys(&self) -> Result<Keys> {
+        Ok(Keys::parse(Self::pad_commit_hash(&self.hash, '0')).unwrap())
+    }
 }
 
 ///
@@ -121,6 +126,25 @@ pub fn get_commit_details(
 	scope_time!("get_commit_details");
 
 	let repo = repo(repo_path)?;
+    let head = repo.head()?;
+    let obj = head.resolve()?.peel(ObjectType::Commit)?;
+
+    //read top commit
+    let commit = obj.peel_to_commit()?;
+    let commit_id = commit.id().to_string();
+    //some info wrangling
+    //info!("commit_id:\n{}", commit_id);
+    let padded_commit_id = format!("{:0>64}", commit_id);
+
+    //// commit based keys
+    //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+    //info!("keys.secret_key():\n{:?}", keys.secret_key());
+    //info!("keys.public_key():\n{}", keys.public_key());
+
+    //parse keys from sha256 hash
+    let keys = Keys::parse(padded_commit_id).unwrap();
+
+
 
 	let commit = repo.find_commit(id.into())?;
 
@@ -140,6 +164,7 @@ pub fn get_commit_details(
 		committer,
 		message: Some(msg),
 		hash: id.to_string(),
+		keys: Some(keys),
 	};
 
 	Ok(details)
