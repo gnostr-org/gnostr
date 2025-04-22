@@ -78,7 +78,7 @@ pub fn tab_files(key_config: &SharedKeyConfig) -> String {
     format!("Files [{}]", key_config.get_hint(key_config.keys.tab_files))
 }
 pub fn tab_chat(key_config: &SharedKeyConfig) -> String {
-    format!("gnostr",)
+    format!("🅖",)
 }
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
     format!(
