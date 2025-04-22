@@ -71,7 +71,7 @@ pub struct InspectCommitPopup {
 impl DrawableComponent for InspectCommitPopup {
     fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
         if self.is_visible() {
-            //
+            //components/diff.rs
             let vertical_percentages = if self.diff.focused() {
                 //
                 (50, 50) //space for line-by-line commenting
@@ -118,9 +118,11 @@ impl DrawableComponent for InspectCommitPopup {
             //inspect_commit
             //diff layout
             //0 OR 100
-            self.details.draw(f, horizontal_chunks[0])?; //first in
-                                                         //50 OR 50
-            self.diff.draw(f, horizontal_chunks[1])?; //second in
+            //first in
+            self.details.draw(f, horizontal_chunks[0])?;
+            //50 OR 50
+            //second in
+            self.diff.draw(f, horizontal_chunks[1])?;
         }
 
         Ok(())
