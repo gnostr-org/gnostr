@@ -540,7 +540,7 @@ impl TopicList {
                 Cow::from(symbol::EMPTY_SPACE),
                 theme.log_marker(selected),
             ));
-			txt.push(splitter.clone());
+			//txt.push(splitter.clone());
         }
         //txt.push(splitter.clone());
 
