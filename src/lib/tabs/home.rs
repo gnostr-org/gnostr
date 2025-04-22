@@ -365,7 +365,7 @@ impl DrawableComponent for Chatlog {
                 [
                     //ChatLog Split with chat_detail/detail
                     Constraint::Min(64+2+2),
-                    Constraint::Percentage(44),
+                    Constraint::Percentage(66),
                 ]
                 .as_ref(),
             )
