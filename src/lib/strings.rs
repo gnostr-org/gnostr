@@ -46,6 +46,8 @@ pub mod symbol {
     pub const EMPTY_STR: &str = "";
     pub const DOT: &str = "•";
     pub const ELLIPSIS: char = '\u{2026}'; // …
+    pub const CIRCLED_G_STR: &str = "🅖";
+    pub const CIRCLED_G: char = '\u{1F156}';
 }
 
 pub fn title_branches() -> String {

@@ -468,7 +468,7 @@ impl TopicList {
         if let Some(marked) = marked {
             txt.push(Span::styled(
                 Cow::from(if marked {
-                    symbol::CHECKMARK //offset in home component
+                    symbol::CIRCLED_G_STR //offset in home component
                 } else {
                     symbol::EMPTY_SPACE
                 }),
@@ -481,7 +481,7 @@ impl TopicList {
                 theme.log_marker(selected),
             ));
         }
-        //txt.push(splitter.clone());
+        txt.push(splitter.clone());
 
         let style_hash = normal
             .then(|| theme.commit_hash(selected))
@@ -525,24 +525,24 @@ impl TopicList {
 
         //txt.push(Span::styled(" ||||||", style_time));
         // marker
-        if let Some(marked) = marked {
-            txt.push(Span::styled(
-                Cow::from(if marked {
-                    symbol::CHECKMARK //offset in home component
-                } else {
-                    symbol::EMPTY_SPACE
-                }),
-                theme.log_marker(selected),
-            ));
-            //txt.push(splitter.clone());
-        } else {
-            txt.push(Span::styled(
-                Cow::from(symbol::EMPTY_SPACE),
-                theme.log_marker(selected),
-            ));
-            //txt.push(splitter.clone());
-        }
-        //txt.push(splitter.clone());
+        //if let Some(marked) = marked {
+        //    txt.push(Span::styled(
+        //        Cow::from(if marked {
+        //            symbol::CIRCLED_G_STR //offset in home component
+        //        } else {
+        //            symbol::EMPTY_SPACE
+        //        }),
+        //        theme.log_marker(selected),
+        //    ));
+        //    //txt.push(splitter.clone());
+        //} else {
+        //    txt.push(Span::styled(
+        //        Cow::from(symbol::EMPTY_SPACE),
+        //        theme.log_marker(selected),
+        //    ));
+        //    //txt.push(splitter.clone());
+        //}
+        txt.push(splitter.clone());
 
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
         //replace with nostr metadata
