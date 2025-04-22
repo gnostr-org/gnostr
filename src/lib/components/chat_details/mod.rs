@@ -140,7 +140,12 @@ impl DrawableComponent for ChatDetailsComponent {
 
         let constraints = if self.is_compare() {
             //TODO interactive screen for nostr diff
-            [Constraint::Length(10), Constraint::Min(0), Constraint::Min(0)]
+            [
+                Constraint::Length(10),
+                Constraint::Min(0),
+                Constraint::Min(0),
+                Constraint::Min(0),
+            ]
         } else {
             let details_focused = self.details_focused();
 
@@ -154,20 +159,21 @@ impl DrawableComponent for ChatDetailsComponent {
                 //
                 //filetree
                 //
-                (30, 70, 0) //commit Info should remain visible
+                (10, 30, 60, 0) //commit Info should remain visible
             } else if details_focused {
                 //topiclist or revlog split
-                (90, 10, 0) //commit Info and Message visible
-                         //filetree obfuscated
+                (10, 80, 10, 0) //commit Info and Message visible
+                                //filetree obfuscated
             } else {
                 //topiclist split
-                (10, 0, 90)
+                (10, 10, 80, 0)
             };
 
             [
-                Constraint::Percentage(vertical_percentages.0),
+                Constraint::Percentage(vertical_percentages.0), //reserve for ngit header
                 Constraint::Percentage(vertical_percentages.1),
                 Constraint::Percentage(vertical_percentages.2),
+                Constraint::Percentage(vertical_percentages.0), //reserve for ngit header
             ]
         };
 
@@ -180,13 +186,13 @@ impl DrawableComponent for ChatDetailsComponent {
         //this renders the left side of the
         //commit inspection
         if self.is_compare() {
-            self.compare_details.draw(f, vertical_chunks[0])?;
+            self.compare_details.draw(f, vertical_chunks[1])?;
         } else {
-            self.single_details.draw(f, vertical_chunks[0])?; //only single detail here?
+            self.single_details.draw(f, vertical_chunks[1])?;
         }
-        self.file_tree.draw(f, vertical_chunks[1])?;
+        self.file_tree.draw(f, vertical_chunks[2])?;
 
-		//space for p2p widget vertical_chunks[2]
+        //space for p2p widget vertical_chunks[2]
         //render p2p chat
         Ok(())
     }
