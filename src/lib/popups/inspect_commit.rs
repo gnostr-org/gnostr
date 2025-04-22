@@ -72,7 +72,28 @@ impl DrawableComponent for InspectCommitPopup {
     fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
         if self.is_visible() {
             //
-            let percentages = if self.diff.focused() {
+            let vertical_percentages = if self.diff.focused() {
+                //
+                (50, 50) //space for line-by-line commenting
+                         //comment widget below diff
+            } else {
+                //
+                (50, 0) //space for commit-topic chat
+                        //on right side of screen
+            };
+
+            let vertical_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(
+                    [
+                        Constraint::Percentage(vertical_percentages.0),
+                        Constraint::Percentage(vertical_percentages.1),
+                    ]
+                    .as_ref(),
+                )
+                .split(rect);
+
+            let horizontal_percentages = if self.diff.focused() {
                 //
                 (0, 100) //
             } else {
@@ -80,23 +101,26 @@ impl DrawableComponent for InspectCommitPopup {
                 (50, 50) //
             };
 
-            let chunks = Layout::default()
+            let horizontal_chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints(
                     [
-                        Constraint::Percentage(percentages.0),
-                        Constraint::Percentage(percentages.1),
+                        Constraint::Percentage(horizontal_percentages.0),
+                        Constraint::Percentage(horizontal_percentages.1),
                     ]
                     .as_ref(),
                 )
                 .split(rect);
 
-            f.render_widget(Clear, rect);
+            //f.render_widget(Clear, rect);
+            f.render_widget(Clear, vertical_chunks[0]);
 
+            //inspect_commit
+            //diff layout
             //0 OR 100
-            self.details.draw(f, chunks[0])?;
-            //50 OR 50
-            self.diff.draw(f, chunks[1])?;
+            self.details.draw(f, horizontal_chunks[0])?; //first in
+                                                         //50 OR 50
+            self.diff.draw(f, horizontal_chunks[1])?; //second in
         }
 
         Ok(())
@@ -114,6 +138,7 @@ impl Component for InspectCommitPopup {
             );
 
             out.push(CommandInfo::new(
+                //strings::commands::diff_focus_right(&self.key_config),
                 strings::commands::diff_focus_right(&self.key_config),
                 self.can_focus_diff(),
                 !self.diff.focused() || force_all,
@@ -164,6 +189,7 @@ impl Component for InspectCommitPopup {
                         .as_ref()
                         .map(|open_commit| open_commit.commit_id)
                     {
+                        //self.hide_stacked(true);
                         self.hide_stacked(true);
                         self.queue
                             .push(InternalEvent::OpenPopup(StackablePopupOpen::FileTree(
@@ -199,6 +225,7 @@ impl Component for InspectCommitPopup {
 
 ///InspectCommitPopup
 impl InspectCommitPopup {
+    ///accessors!(self, [diff, details]);
     accessors!(self, [diff, details]);
 
     ///
@@ -286,6 +313,7 @@ impl InspectCommitPopup {
         self.details.files().selection_file().is_some()
     }
 
+    //hide_stacked
     fn hide_stacked(&mut self, stack: bool) {
         self.hide();
 
