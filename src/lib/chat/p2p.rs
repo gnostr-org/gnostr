@@ -69,11 +69,14 @@ pub async fn evt_loop(
             // and use it as an ID.
             // This is used to deduplicate messages.
             //
-            // let message_id_fn = |message: &gossipsub::Message| {
-            //     let mut s = DefaultHasher::new();
-            //     message.data.hash(&mut s);
-            //     gossipsub::MessageId::from(s.finish().to_string())
-            // };
+            let message_id_fn = |message: &gossipsub::Message| {
+                use std::hash::DefaultHasher;
+                use std::hash::Hash;
+                use std::hash::Hasher;
+                let mut s = DefaultHasher::new();
+                message.data.hash(&mut s);
+                gossipsub::MessageId::from(s.finish().to_string())
+            };
 
             // Set a custom gossipsub configuration
             let gossipsub_config = gossipsub::ConfigBuilder::default()
@@ -113,6 +116,7 @@ pub async fn evt_loop(
 
     debug!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
 
+    // Kick it off
     // Kick it off
     loop {
         select! {
