@@ -327,6 +327,14 @@ struct Cli {
         default_value = "false"
     )]
     debug: bool,
+    /// Enable info logging
+    #[clap(
+        long,
+        value_name = "INFO",
+        help = "gnostr --info",
+        default_value = "false"
+    )]
+    info: bool,
     /// Enable trace logging
     #[clap(
         long,
@@ -357,6 +365,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         Level::DEBUG
     } else if args.trace {
         Level::TRACE
+    } else if args.info {
+        Level::INFO
     } else {
         Level::WARN
     };
@@ -501,18 +511,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         info!("time:\n{}", time);
     }
 
-    // // Accessing array elements.
-    // if let Some(items) = value.get("items") {
-    //     if let Value::Array(arr) = items {
-    //         if let Some(first_item) = arr.get(0) {
-    //             info!("First item: {}", first_item);
-    //         }
-    //         if let Some(second_item) = arr.get(1){
-    //             info!("second item: {}", second_item.as_str().unwrap_or(""));
-    //         }
-    //     }
-    // }
-
     //initialize git repo
     let repo = Repository::discover(".").expect("");
 
@@ -531,17 +529,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     //some info wrangling
     info!("commit_id:\n{}", commit_id);
     let padded_commit_id = format!("{:0>64}", commit_id.clone());
-    global_rt().spawn(async move {
-        //// commit based keys
-        //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
-        //info!("keys.secret_key():\n{:?}", keys.secret_key());
-        //info!("keys.public_key():\n{}", keys.public_key());
+    //// commit based keys
+    //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+    //info!("keys.secret_key():\n{:?}", keys.secret_key());
+    //info!("keys.public_key():\n{}", keys.public_key());
 
-        //parse keys from sha256 hash
-        let padded_keys = Keys::parse(padded_commit_id).unwrap();
-        //create nostr client with commit based keys
-        //let client = Client::new(keys);
-        let client = Client::new(padded_keys.clone());
+    //parse keys from sha256 hash
+    let padded_keys = Keys::parse(padded_commit_id).unwrap();
+    //create nostr client with commit based keys
+    //let client = Client::new(keys);
+    let client = Client::new(padded_keys.clone());
+    global_rt().spawn(async move {
         client.add_relay("wss://relay.damus.io").await.expect("");
         client.add_relay("wss://e.nos.lol").await.expect("");
         client.connect().await;
