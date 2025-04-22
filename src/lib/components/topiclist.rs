@@ -788,8 +788,8 @@ impl DrawableComponent for TopicList {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
-			//first in                           //second in
-            .constraints([Constraint::Min(64+2+2), Constraint::Percentage(0)].as_ref())
+            //first in                                 //second in
+            .constraints([Constraint::Min(64 + 2 + 2), Constraint::Percentage(0)].as_ref())
             .split(area);
 
         let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
