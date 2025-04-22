@@ -108,6 +108,10 @@ pub fn msg_title_info(_key_config: &SharedKeyConfig) -> String {
     "Info".to_string()
 }
 
+pub fn pubkey_title() -> String {
+    "pubkey_title:pubkey".to_string()
+}
+
 pub fn commit_title() -> String {
     "Commit".to_string()
 }
@@ -246,6 +250,10 @@ pub fn confirm_title_force_push(_key_config: &SharedKeyConfig) -> String {
 }
 pub fn confirm_msg_force_push(_key_config: &SharedKeyConfig, branch_ref: &str) -> String {
     format!("Confirm force push to branch '{branch_ref}' ?  This may rewrite history.")
+}
+pub fn topiclist_title(_key_config: &SharedKeyConfig) -> String {
+    //" pubkey                                                  ".to_string()
+    " pubkey ".to_string()
 }
 pub fn log_title(_key_config: &SharedKeyConfig) -> String {
     "Commit".to_string()
