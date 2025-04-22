@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use std::{error::Error, time::Duration};
@@ -288,6 +288,37 @@ fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     }
 }
 
+/// Simple CLI application to interact with nostr
+#[derive(Debug, Parser)]
+#[command(name = "gnostr")]
+#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
+#[command(version = "0.0.1")]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    ///
+    #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
+		action = clap::ArgAction::Append,
+		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    nsec: Option<String>,
+    ///
+    #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
+    hash: Option<String>,
+    ///
+    #[arg(long, value_name = "TOPIC", help = "gnostr --topic '<string>'")]
+    topic: Option<String>,
+    ///
+    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays '<string>, <string>'",
+		action = clap::ArgAction::Append,
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
+    relays: Vec<String>,
+    /// Enable debug logging
+    #[clap(long, default_value = "false")]
+    debug: bool,
+    /// Enable trace logging
+    #[clap(long, default_value = "false")]
+    trace: bool,
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
@@ -315,11 +346,21 @@ fn global_rt() -> &'static tokio::runtime::Runtime {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let args: Cli = Cli::parse();
+    let level = if args.debug {
+        Level::DEBUG
+    } else if args.trace {
+        Level::TRACE
+    } else {
+        Level::WARN
+    };
+
     let filter = EnvFilter::default()
-        .add_directive(Level::INFO.into())
-        //.add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-        //.add_directive("nostr_relay_pool=off".parse().unwrap())
-        //.add_directive("libp2p_mdns=off".parse().unwrap())
+        .add_directive(level.into())
+        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
+        .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
+        .add_directive("libp2p_mdns=off".parse().unwrap())
         .add_directive("other_module=off".parse().unwrap()); // Turn off logging for other_module
 
     let subscriber = Registry::default()
@@ -533,8 +574,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         input_tx_clone.blocking_send(m).unwrap();
     });
 
-    let mut topic = String::from(commit_id.to_string());
-    app.topic = topic.clone();
+    let topic = if args.topic.is_some() {
+        args.topic
+    } else {
+        Some(String::from(commit_id.to_string()))
+    };
+
+    app.topic = topic.clone().unwrap();
 
     let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
 
@@ -561,7 +607,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .unwrap();
     });
 
-    //app.run()?;
+    app.run()?;
 
     // say goodbye
     input_tx.blocking_send(Msg::default().set_kind(MsgKind::Leave))?;
