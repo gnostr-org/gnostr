@@ -9,7 +9,7 @@ use crossterm::event::Event;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Alignment, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
@@ -540,14 +540,13 @@ impl TopicList {
                 Cow::from(symbol::EMPTY_SPACE),
                 theme.log_marker(selected),
             ));
-			//txt.push(splitter.clone());
+            //txt.push(splitter.clone());
         }
         //txt.push(splitter.clone());
 
-        let author_width =
-        	(width.saturating_sub(0) / 3).clamp(3, 20);
-		//replace with nostr metadata
-		let author = string_width_align(&e.author, author_width);
+        let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
+        //replace with nostr metadata
+        let author = string_width_align(&e.author, author_width);
 
         // commit author
         //txt.push(Span::styled(author, style_author));
@@ -786,15 +785,12 @@ impl TopicList {
 
 impl DrawableComponent for TopicList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
-
-
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
 			//first in                           //second in
             .constraints([Constraint::Min(64+2+2), Constraint::Percentage(100)].as_ref())
             .split(area);
-
 
         let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
         self.current_size.set(Some(current_size));
