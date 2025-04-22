@@ -248,7 +248,6 @@ impl DrawableComponent for DetailsComponent {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
             //first in                           //second in
             .constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
             .split(rect);

@@ -792,7 +792,7 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Horizontal)
             //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
 			//first in                           //second in
-            .constraints([Constraint::Min(64+2+2), Constraint::Min(0)].as_ref())
+            .constraints([Constraint::Min(64+2+2), Constraint::Percentage(100)].as_ref())
             .split(area);
 
 
@@ -818,7 +818,7 @@ impl DrawableComponent for TopicList {
         //render commit info in topiclist
         //
         f.render_widget(
-            Paragraph::new(self.get_text(height_in_lines, (current_size.0) as usize))
+            Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
