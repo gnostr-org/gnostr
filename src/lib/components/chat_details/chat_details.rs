@@ -107,6 +107,7 @@ impl DrawableComponent for CompareDetailsComponent {
                         &Keys::parse(&data.old.padded_hash())
                             .unwrap()
                             .public_key()
+                            //.to_bech32()?,
                             .to_string(),
                     ),
                     Text::from(format!(
@@ -126,6 +127,7 @@ impl DrawableComponent for CompareDetailsComponent {
                         &Keys::parse(&data.new.padded_hash())
                             .unwrap()
                             .public_key()
+                            //.to_bech32()?,
                             .to_string(),
                     ),
                     Text::from(format!(
