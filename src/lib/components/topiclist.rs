@@ -476,6 +476,10 @@ impl TopicList {
             ));
             //txt.push(splitter.clone());
         } else {
+            txt.push(Span::styled(
+                Cow::from(symbol::EMPTY_SPACE),
+                theme.log_marker(selected),
+            ));
         }
         //txt.push(splitter.clone());
 
@@ -532,6 +536,10 @@ impl TopicList {
             ));
             //txt.push(splitter.clone());
         } else {
+            txt.push(Span::styled(
+                Cow::from(symbol::EMPTY_SPACE),
+                theme.log_marker(selected),
+            ));
 			txt.push(splitter.clone());
         }
         //txt.push(splitter.clone());
