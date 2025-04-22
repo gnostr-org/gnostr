@@ -293,8 +293,11 @@ fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = "long_about")]
 struct Cli {
+    /// Name of the person to greet
+    #[arg(long, default_value = "user")]
+    name: Option<String>,
     ///
     #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
 		action = clap::ArgAction::Append,
@@ -317,27 +320,10 @@ struct Cli {
     /// Enable trace logging
     #[clap(long, default_value = "false")]
     trace: bool,
-}
-
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Args {
-    /// Name of the person to greet
-    #[arg(short, long, default_value = "user")]
-    name: String,
-
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
-    #[arg(short = 't', long)]
-    tui: bool,
     #[arg(long = "cfg", default_value = "")]
     config: String,
-    #[arg(long = "log_level", default_value = "")]
-    log_level: String,
-    #[arg(long = "topic", default_value = "")]
-    topic: String,
 }
+
 
 //async tasks
 fn global_rt() -> &'static tokio::runtime::Runtime {
@@ -347,7 +333,13 @@ fn global_rt() -> &'static tokio::runtime::Runtime {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Cli = Cli::parse();
-    let level = if args.debug {
+
+    if let Some(name) = args.name {
+		use std::env;
+		env::set_var("USER", &name);
+	};
+
+	let level = if args.debug {
         Level::DEBUG
     } else if args.trace {
         Level::TRACE
