@@ -364,8 +364,8 @@ impl DrawableComponent for Chatlog {
             .constraints(
                 [
                     //ChatLog Split with chat_detail/detail
-                    Constraint::Percentage(33),
-                    Constraint::Percentage(66),
+                    Constraint::Min(64+2+2),
+                    Constraint::Percentage(44),
                 ]
                 .as_ref(),
             )
@@ -373,8 +373,9 @@ impl DrawableComponent for Chatlog {
 
         //commit details
         if self.chat_details.is_visible() {
-            self.list.draw(f, chunks[0])?;
+            //self.list.draw(f, chunks[0])?;
             self.chat_details.draw(f, chunks[1])?;
+            self.list.draw(f, chunks[0])?;
         } else {
             self.list.draw(f, area[0])?;
         }
