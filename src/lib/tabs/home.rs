@@ -83,7 +83,7 @@ impl Chatlog {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
             chat_details: ChatDetailsComponent::new(env),
-            list: TopicList::new(env, &strings::log_title(&env.key_config)),
+            list: TopicList::new(env, &strings::topiclist_title(&env.key_config)),
             git_log: AsyncLog::new(env.repo.borrow().clone(), &env.sender_git, None),
             search: LogSearch::Off,
             git_tags: AsyncTags::new(env.repo.borrow().clone(), &env.sender_git),
