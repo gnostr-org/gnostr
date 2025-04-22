@@ -363,7 +363,7 @@ impl DrawableComponent for Chatlog {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-				//TopicList
+                    //TopicList
                     //ChatLog Split with chat_detail/detail
                     Constraint::Min(64 + 2 + 2 + 2),
                     Constraint::Percentage(100),
