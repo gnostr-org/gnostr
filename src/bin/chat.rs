@@ -296,7 +296,12 @@ fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
 #[command(author, version, about, long_about = "long_about")]
 struct Cli {
     /// Name of the person to greet
-    #[arg(long, default_value = "user")]
+    #[arg(
+        long,
+        value_name = "NAME",
+        help = "gnostr --name <string>",
+        /*default_value = ""*/ //decide whether to allow env var $USER as default
+    )]
     name: Option<String>,
     ///
     #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
@@ -304,26 +309,35 @@ struct Cli {
 		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     nsec: Option<String>,
     ///
-    #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
+    #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
     hash: Option<String>,
     ///
-    #[arg(long, value_name = "TOPIC", help = "gnostr --topic '<string>'")]
+    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
     topic: Option<String>,
     ///
-    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays '<string>, <string>'",
+    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
 		action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
     relays: Vec<String>,
     /// Enable debug logging
-    #[clap(long, default_value = "false")]
+    #[clap(
+        long,
+        value_name = "DEBUG",
+        help = "gnostr --debug",
+        default_value = "false"
+    )]
     debug: bool,
     /// Enable trace logging
-    #[clap(long, default_value = "false")]
+    #[clap(
+        long,
+        value_name = "TRACE",
+        help = "gnostr --trace",
+        default_value = "false"
+    )]
     trace: bool,
     #[arg(long = "cfg", default_value = "")]
     config: String,
 }
-
 
 //async tasks
 fn global_rt() -> &'static tokio::runtime::Runtime {
@@ -335,11 +349,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Cli = Cli::parse();
 
     if let Some(name) = args.name {
-		use std::env;
-		env::set_var("USER", &name);
-	};
+        use std::env;
+        env::set_var("USER", &name);
+    };
 
-	let level = if args.debug {
+    let level = if args.debug {
         Level::DEBUG
     } else if args.trace {
         Level::TRACE
