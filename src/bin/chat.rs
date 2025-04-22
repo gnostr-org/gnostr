@@ -383,7 +383,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .with(fmt::layer().with_writer(std::io::stdout))
         .with(filter);
 
-    subscriber.try_init();
+    let _ = subscriber.try_init();
 
     //parse keys from sha256 hash
     let empty_hash_keys =
