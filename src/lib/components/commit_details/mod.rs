@@ -152,14 +152,18 @@ impl DrawableComponent for CommitDetailsComponent {
                 //
                 //filetree
                 //
-                (30, 70)//commit Info should remain visible
+                (30, 70) //commit Info should remain visible
             } else if details_focused {
                 //topiclist or revlog split
-                (90, 10)//commit Info and Message visible
-						//filetree obfuscated
+                (90, 10) //commit Info and Message visible
+                         //filetree obfuscated
             } else {
-                //commit message and filetree with toggle height
-                (0, 0)
+                //topiclist or revlog toggle split
+                //Info AND
+                //Message 50%
+                //
+                //filetree 50%
+                (90, 10)
             };
 
             [
@@ -173,6 +177,9 @@ impl DrawableComponent for CommitDetailsComponent {
             .constraints(constraints.as_ref())
             .split(rect);
 
+        //notice the diff isnt rendered here
+        //this renders the left side of the
+        //commit inspection
         if self.is_compare() {
             self.compare_details.draw(f, chunks[0])?;
         } else {
