@@ -9,7 +9,7 @@ use crossterm::event::Event;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::{Constraint, Direction, Layout, Alignment, Rect},
     style::Style,
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
@@ -532,13 +532,14 @@ impl TopicList {
             ));
             //txt.push(splitter.clone());
         } else {
+			txt.push(splitter.clone());
         }
         //txt.push(splitter.clone());
 
-        //let author_width =
-        //	(width.saturating_sub(0) / 3).clamp(3, 20);//replace with
-        // nostr metadata let author = string_width_align(&e.author,
-        // author_width);
+        let author_width =
+        	(width.saturating_sub(0) / 3).clamp(3, 20);
+		//replace with nostr metadata
+		let author = string_width_align(&e.author, author_width);
 
         // commit author
         //txt.push(Span::styled(author, style_author));
@@ -551,45 +552,45 @@ impl TopicList {
 
         // commit tags
         if let Some(tags) = tags {
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
             txt.push(Span::styled(tags, style_tags));
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
         }
 
         if let Some(local_branches) = local_branches {
             //	txt.push(splitter.clone());
-            //txt.push(Span::styled(local_branches, style_branches));
+            txt.push(Span::styled(local_branches, style_branches));
         }
         //git-remote-nostr helper
         if let Some(remote_branches) = remote_branches {
             //txt.push(splitter.clone());
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
             txt.push(Span::styled(remote_branches, style_branches));
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
-            txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
+            //txt.push(splitter.clone());
         }
 
-        txt.push(splitter.clone());
-        txt.push(splitter.clone());
-        txt.push(splitter.clone());
-        txt.push(splitter.clone());
+        //txt.push(splitter.clone());
+        //txt.push(splitter.clone());
+        //txt.push(splitter.clone());
+        //txt.push(splitter.clone());
         txt.push(splitter.clone());
 
-        //let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
+        let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
-        //txt.push(Span::styled(
-        //    format!("{:message_width$}", &e.msg),
-        //    style_msg,
-        //));
+        txt.push(Span::styled(
+            format!("{:message_width$}", &e.msg),
+            style_msg,
+        ));
 
         Line::from(txt)
     }
@@ -777,6 +778,16 @@ impl TopicList {
 
 impl DrawableComponent for TopicList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
+
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
+			//first in                           //second in
+            .constraints([Constraint::Min(64+2+2), Constraint::Min(0)].as_ref())
+            .split(area);
+
+
         let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
         self.current_size.set(Some(current_size));
 
@@ -799,7 +810,7 @@ impl DrawableComponent for TopicList {
         //render commit info in topiclist
         //
         f.render_widget(
-            Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
+            Paragraph::new(self.get_text(height_in_lines, (current_size.0) as usize))
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
@@ -807,7 +818,7 @@ impl DrawableComponent for TopicList {
                         .border_style(self.theme.block(true)),
                 )
                 .alignment(Alignment::Left),
-            area, //constrain to half width
+            chunks[0], //constrain to half width
         );
 
         draw_scrollbar(
