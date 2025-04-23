@@ -82,7 +82,7 @@ impl Revlog {
         Self {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
-            commit_details: CommitDetailsComponent::new(env),
+            commit_details: CommitDetailsComponent::new(env, true),
             list: CommitList::new(env, &strings::log_title(&env.key_config)),
             git_log: AsyncLog::new(env.repo.borrow().clone(), &env.sender_git, None),
             search: LogSearch::Off,

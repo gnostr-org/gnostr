@@ -215,7 +215,7 @@ impl DrawableComponent for DetailsComponent {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(10), Constraint::Min(20)].as_ref())
+            .constraints([Constraint::Min(10), Constraint::Min(20), Constraint::Min(20)].as_ref())
             .split(rect);
 
         f.render_widget(
@@ -271,6 +271,24 @@ impl DrawableComponent for DetailsComponent {
             ),
             chunks[1],
         );
+        f.render_widget(
+            dialog_paragraph(
+                &format!(
+                    "replace with chat widget!!!!! {} {}",
+                    strings::commit::details_message_title(&self.key_config,),
+                    if !self.focused && can_scroll {
+                        CANSCROLL_STRING
+                    } else {
+                        EMPTY_STRING
+                    }
+                ),
+                Text::from(self.get_wrapped_text_message(width as usize, height as usize)),
+                &self.theme,
+                self.focused,
+            ),
+            chunks[2],
+        );
+
 
         //construct and render p2p chat
 
