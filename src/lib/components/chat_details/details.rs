@@ -159,7 +159,9 @@ impl DetailsComponent {
                 Line::from(vec![
                     Span::styled(
                         Cow::from(format!(
-                            "162:chat_details/details.rs {}",
+                            //"162:chat_details/details.rs {}",
+                            //"162:{}",
+                            "{}",
                             strings::commit::details_sha()
                         )),
                         self.theme.text(false, false),
@@ -171,7 +173,8 @@ impl DetailsComponent {
                     style_detail(&self.theme, &Detail::Author),
                     Span::styled(
                         Cow::from(format!(
-                            "176:chat_details/details.rs {} <{}>",
+                            //"174:chat_details/details.rs {} <{}>",
+                            "{} <{}>",
                             //author.name/email
                             data.author.name,
                             data.author.email
@@ -194,7 +197,9 @@ impl DetailsComponent {
                         style_detail(&self.theme, &Detail::Date),
                         Span::styled(
                             Cow::from(format!(
-                                "200:chat_details/details.rs {}",
+                                //"197:chat_details:details.rs:get_text_info {}",
+                                //"197:{}",
+                                "{}",
                                 time_to_string(committer.time, false)
                             )),
                             self.theme.text(true, false),
@@ -204,7 +209,9 @@ impl DetailsComponent {
                         style_detail(&self.theme, &Detail::Committer),
                         Span::styled(
                             Cow::from(format!(
-                                "210:chat_details/details.rs {} <{}>",
+                                //"207:chat_details/details.rs:get_text_info {} <{}>",
+                                //"207:{} <{}>",
+                                "{} <{}>",
                                 committer.name, committer.email
                             )),
                             self.theme.text(true, false),
@@ -242,16 +249,23 @@ impl DetailsComponent {
 }
 
 impl DrawableComponent for DetailsComponent {
+    //context notes
+    //a pubkey has been selected from the topiclist
+    //the detail popup has been presented
+    //and now we are scrolling through the topiclist
+    //viewing each detail while the topiclist is still visible
     fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
         const CANSCROLL_STRING: &str = "[\u{2026}]";
         const EMPTY_STRING: &str = "";
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            //first in                           //second in
-            .constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
+            //first in                            //second in
+            .constraints([Constraint::Length(10), Constraint::Min(0)].as_ref())
             .split(rect);
 
+        //TODO more nip-0034 git stuff
+        //first in
         f.render_widget(
             dialog_paragraph(
                 &strings::commit::details_info_title(&self.key_config),
@@ -286,8 +300,9 @@ impl DrawableComponent for DetailsComponent {
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    //"291:chat_details/details.rs:\ncommit::\ndetails_message_title:\n{} {}",
-                    "291:chat_details/details.rs:\ncommit::\ndetails_message_title:\n{} {}",
+                    //"289:chat_details/details.rs:strings:commit:details_message_title:{} {}",
+                    //"289:{} {}",
+                    "{} {}",
                     strings::commit::details_message_title(&self.key_config,),
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
@@ -304,7 +319,7 @@ impl DrawableComponent for DetailsComponent {
 
         //self.focused
         if self.focused {
-            self.scroll.draw(f, chunks[1], &self.theme);
+            //self.scroll.draw(f, chunks[1], &self.theme);
         }
 
         Ok(())

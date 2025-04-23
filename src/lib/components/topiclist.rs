@@ -543,6 +543,9 @@ impl TopicList {
         //    //txt.push(splitter.clone());
         //}
         txt.push(splitter.clone());
+        txt.push(splitter.clone());
+        txt.push(splitter.clone());
+        txt.push(splitter.clone());
 
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
         //replace with nostr metadata
@@ -788,8 +791,8 @@ impl DrawableComponent for TopicList {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
-            //first in                                 //second in
-            .constraints([Constraint::Min(64 + 2 + 2), Constraint::Percentage(0)].as_ref())
+            //first in                         //second in
+            .constraints([Constraint::Min(70), Constraint::Percentage(0)].as_ref())
             .split(area);
 
         let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
@@ -805,7 +808,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            " topiclist.rs {} {}/{} ",
+            " {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
