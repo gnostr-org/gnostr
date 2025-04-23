@@ -437,10 +437,7 @@ impl DiffComponent {
             )
         } else {
             // weird eof missing eol line
-            format!(
-                "  {} {content}",
-                keys.public_key().to_string()
-            )
+            format!("  {} {content}", keys.public_key().to_string())
         };
 
         Line::from(vec![
