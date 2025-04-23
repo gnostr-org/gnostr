@@ -24,12 +24,11 @@ use crate::{
     app::Environment,
     keys::{key_match, SharedKeyConfig},
     strings,
-	ui::style::SharedTheme,
+    ui::style::SharedTheme,
 };
 
 use crate::components::dialog_paragraph;
 use crate::components::Text;
-
 
 pub struct CommitDetailsComponent {
     commit: Option<CommitFilesParams>,
@@ -39,8 +38,8 @@ pub struct CommitDetailsComponent {
     git_commit_files: AsyncCommitFiles,
     visible: bool,
     key_config: SharedKeyConfig,
-	theme: SharedTheme,
-	focused: bool,
+    theme: SharedTheme,
+    focused: bool,
 }
 
 impl CommitDetailsComponent {
@@ -56,8 +55,8 @@ impl CommitDetailsComponent {
             visible: false,
             commit: None,
             key_config: env.key_config.clone(),
-			theme: env.theme.clone(),
-			focused,
+            theme: env.theme.clone(),
+            focused,
         }
     }
 
@@ -148,7 +147,11 @@ impl DrawableComponent for CommitDetailsComponent {
         }
 
         let vertical_constraints = if self.is_compare() {
-            [Constraint::Length(10), Constraint::Min(0), Constraint::Min(0)]
+            [
+                Constraint::Length(10),
+                Constraint::Min(0),
+                Constraint::Min(0),
+            ]
         } else {
             let details_focused = self.details_focused();
             let percentages = if self.file_tree.focused() {
@@ -165,7 +168,7 @@ impl DrawableComponent for CommitDetailsComponent {
             } else if details_focused {
                 //topiclist or revlog split
                 (80, 10, 10) //commit Info and Message visible
-                         //filetree obfuscated
+                             //filetree obfuscated
             } else {
                 //topiclist or revlog toggle split
                 //Info AND
@@ -216,8 +219,6 @@ impl DrawableComponent for CommitDetailsComponent {
             ),
             chunks[2],
         );
-
-
 
         //render p2p chat
         Ok(())

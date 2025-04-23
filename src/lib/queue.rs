@@ -9,7 +9,8 @@ use bitflags::bitflags;
 use crate::{
     components::FuzzyFinderTarget,
     popups::{
-        AppOption, BlameFileOpen, DisplayChatOpen, FileRevOpen, FileTreeOpen, InspectChatOpen, InspectCommitOpen,
+        AppOption, BlameFileOpen, DisplayChatOpen, FileRevOpen, FileTreeOpen, InspectChatOpen,
+        InspectCommitOpen,
     },
     tabs::StashingOptions,
 };
