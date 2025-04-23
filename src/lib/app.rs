@@ -36,9 +36,9 @@ use crate::{
     popups::{
         AppOption, BlameFilePopup, BranchListPopup, CommitPopup, CompareCommitsPopup, ConfirmPopup,
         CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup, FileRevlogPopup,
-        FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup, LogSearchPopupPopup, MsgPopup, OptionsPopup,
-        PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
-        StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
+        FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup, LogSearchPopupPopup,
+        MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup,
+        RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -486,10 +486,10 @@ impl App {
             commit_popup,
             stashmsg_popup,
             help_popup,
-			//
+            //
             display_chat_popup,
             inspect_chat_popup,
-			//
+            //
             inspect_commit_popup,
             compare_commits_popup,
             blame_file_popup,

@@ -215,7 +215,14 @@ impl DrawableComponent for DetailsComponent {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(10), Constraint::Min(20), Constraint::Min(20)].as_ref())
+            .constraints(
+                [
+                    Constraint::Min(10),
+                    Constraint::Min(20),
+                    Constraint::Min(20),
+                ]
+                .as_ref(),
+            )
             .split(rect);
 
         f.render_widget(
@@ -288,7 +295,6 @@ impl DrawableComponent for DetailsComponent {
             ),
             chunks[2],
         );
-
 
         //construct and render p2p chat
 
