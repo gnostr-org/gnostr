@@ -35,7 +35,7 @@ use crate::{
         CommitDetailsComponent, CommitList, Component, DrawableComponent, EventState, TopicList,
     },
     keys::{key_match, SharedKeyConfig},
-    popups::{DisplayChatOpen, FileTreeOpen, InspectCommitOpen},
+    popups::{DisplayChatOpen, FileTreeOpen, InspectChatOpen, InspectCommitOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order},
     try_or_popup,
@@ -192,7 +192,18 @@ impl Chatlog {
 
         Ok(())
     }
-
+    fn inspect_chat(&self) {
+        if let Some(commit_id) = self.selected_commit() {
+            let tags = self.selected_commit_tags(&Some(commit_id));
+            self.queue.push(InternalEvent::OpenPopup(
+                //
+                StackablePopupOpen::InspectChat(
+                    //
+                    InspectChatOpen::new_with_tags(commit_id, tags),
+                ),
+            ));
+        }
+    }
     fn inspect_commit(&self) {
         if let Some(commit_id) = self.selected_commit() {
             let tags = self.selected_commit_tags(&Some(commit_id));

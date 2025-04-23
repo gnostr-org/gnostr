@@ -56,7 +56,8 @@ impl ChatDetailsComponent {
         let files_count = self.file_tree.file_count();
 
         format!(
-            "chat_details/mod.rs:59:mod.rs get_files_title {} {}",
+            //"chat_details/mod.rs:59:mod.rs get_files_title {} {}",
+            "{} {}",
             strings::commit::chat_details_files_title(&self.key_config),
             files_count
         )
@@ -142,13 +143,14 @@ impl DrawableComponent for ChatDetailsComponent {
             //TODO interactive screen for nostr diff
             [
                 Constraint::Length(10),
-                Constraint::Min(0),
-                Constraint::Min(0),
-                Constraint::Min(0),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
             ]
         } else {
             let details_focused = self.details_focused();
 
+            //vertical column slices
             let vertical_percentages = if self.file_tree.focused() {
                 //file_tree refers to a File: widget that indicated
                 //which files are part of the commit
@@ -159,14 +161,14 @@ impl DrawableComponent for ChatDetailsComponent {
                 //
                 //filetree
                 //
-                (10, 30, 60, 0) //commit Info should remain visible
+                (1, 33, 66, 1) //commit Info should remain visible
             } else if details_focused {
                 //topiclist or revlog split
-                (10, 80, 10, 0) //commit Info and Message visible
-                                //filetree obfuscated
+                (1, 80, 20, 1) //commit Info and Message visible
+                               //filetree obfuscated
             } else {
                 //topiclist split
-                (10, 10, 80, 0)
+                (1, 20, 80, 1)
             };
 
             [
@@ -193,6 +195,11 @@ impl DrawableComponent for ChatDetailsComponent {
         self.file_tree.draw(f, vertical_chunks[2])?;
 
         //space for p2p widget vertical_chunks[2]
+        //render p2p chat
+        //render p2p chat
+        //render p2p chat
+        //render p2p chat
+        //render p2p chat
         //render p2p chat
         Ok(())
     }

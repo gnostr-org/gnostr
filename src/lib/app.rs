@@ -36,7 +36,7 @@ use crate::{
     popups::{
         AppOption, BlameFilePopup, BranchListPopup, CommitPopup, CompareCommitsPopup, ConfirmPopup,
         CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup, FileRevlogPopup,
-        FuzzyFindPopup, HelpPopup, InspectCommitPopup, LogSearchPopupPopup, MsgPopup, OptionsPopup,
+        FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup, LogSearchPopupPopup, MsgPopup, OptionsPopup,
         PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
         StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
@@ -67,7 +67,10 @@ pub struct App {
     blame_file_popup: BlameFilePopup,
     file_revlog_popup: FileRevlogPopup,
     stashmsg_popup: StashMsgPopup,
+
     display_chat_popup: DisplayChatPopup,
+    inspect_chat_popup: InspectChatPopup,
+
     inspect_commit_popup: InspectCommitPopup,
     compare_commits_popup: CompareCommitsPopup,
     external_editor_popup: ExternalEditorPopup,
@@ -173,6 +176,7 @@ impl App {
             stashmsg_popup: StashMsgPopup::new(&env),
             //display_chat_popup
             display_chat_popup: DisplayChatPopup::new(&env),
+            inspect_chat_popup: InspectChatPopup::new(&env),
             inspect_commit_popup: InspectCommitPopup::new(&env),
             compare_commits_popup: CompareCommitsPopup::new(&env),
             external_editor_popup: ExternalEditorPopup::new(&env),
@@ -243,6 +247,10 @@ impl App {
         //TODO: component property + a macro `fullscreen_popup_open!`
         // to make this scale better?
         let fullscreen_popup_open = self.revision_files_popup.is_visible()
+            //|| self.inspect_commit_popup.is_visible()
+            //|| self.inspect_commit_popup.is_visible()
+            //|| self.inspect_commit_popup.is_visible()
+            || self.inspect_chat_popup.is_visible()
             || self.inspect_commit_popup.is_visible()
             || self.compare_commits_popup.is_visible()
             || self.blame_file_popup.is_visible()
@@ -363,6 +371,7 @@ impl App {
             self.stashing_tab.update_git(ev)?;
             self.revlog.update_git(ev)?;
             self.file_revlog_popup.update_git(ev)?;
+            self.inspect_chat_popup.update_git(ev)?;
             self.inspect_commit_popup.update_git(ev)?;
             self.compare_commits_popup.update_git(ev)?;
             self.push_popup.update_git(ev)?;
@@ -405,6 +414,7 @@ impl App {
             || self.blame_file_popup.any_work_pending()
             || self.file_revlog_popup.any_work_pending()
             || self.display_chat_popup.any_work_pending()
+            || self.inspect_chat_popup.any_work_pending()
             || self.inspect_commit_popup.any_work_pending()
             || self.compare_commits_popup.any_work_pending()
             || self.input.is_state_changing()
@@ -476,8 +486,10 @@ impl App {
             commit_popup,
             stashmsg_popup,
             help_popup,
+			//
             display_chat_popup,
-            //inspect_commit_popup
+            inspect_chat_popup,
+			//
             inspect_commit_popup,
             compare_commits_popup,
             blame_file_popup,
@@ -617,6 +629,7 @@ impl App {
             self.status_tab.update_diff()?;
             //self.display_chat_popup.update_diff()?;
             self.display_chat_popup.update_diff()?;
+            self.inspect_chat_popup.update_diff()?;
             self.inspect_commit_popup.update_diff()?;
             self.compare_commits_popup.update_diff()?;
             self.file_revlog_popup.update_diff()?;
@@ -658,6 +671,9 @@ impl App {
             //
             StackablePopupOpen::FileTree(param) => {
                 self.revision_files_popup.open(param)?;
+            }
+            StackablePopupOpen::InspectChat(param) => {
+                self.inspect_chat_popup.open(param)?;
             }
             StackablePopupOpen::InspectCommit(param) => {
                 self.inspect_commit_popup.open(param)?;

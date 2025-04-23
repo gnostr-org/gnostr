@@ -138,7 +138,7 @@ impl DrawableComponent for CommitDetailsComponent {
             return Ok(());
         }
 
-        let constraints = if self.is_compare() {
+        let vertical_constraints = if self.is_compare() {
             [Constraint::Length(10), Constraint::Min(0)]
         } else {
             let details_focused = self.details_focused();
@@ -174,7 +174,7 @@ impl DrawableComponent for CommitDetailsComponent {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(constraints.as_ref())
+            .constraints(vertical_constraints.as_ref())
             .split(rect);
 
         //notice the diff isnt rendered here
