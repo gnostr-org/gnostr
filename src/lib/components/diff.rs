@@ -32,7 +32,11 @@ use crate::{
     string_utils::{tabs_to_spaces, trim_offset},
     strings, try_or_popup,
     ui::style::SharedTheme,
+    utils::parse_private_key,
 };
+
+use nostr_sdk_0_37_0::prelude::*;
+use sha2::{Digest, Sha256};
 
 #[derive(Default)]
 struct Current {
@@ -418,12 +422,25 @@ impl DiffComponent {
         };
         let content = trim_offset(&content, scrolled_right);
 
+        let mut hasher = Sha256::new();
+        hasher.update(content);
+        let result = hasher.finalize();
+
+        let keys = Keys::parse(format!("{:x}", result)).unwrap();
+
         let filled = if selected {
             // selected line
-            format!("423:components/diff.rs:\n{content:w$} insert pubkey here!", w = width as usize)
+            format!(
+                "  {} {content:w$}",
+                keys.public_key().to_string().clone(),
+                w = (width + 2) as usize
+            )
         } else {
             // weird eof missing eol line
-            format!("426:components/diff.rs:\n{content} insert pubkey here!")
+            format!(
+                "  {} {content}",
+                keys.public_key().to_string()
+            )
         };
 
         Line::from(vec![
