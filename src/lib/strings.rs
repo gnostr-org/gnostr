@@ -1103,6 +1103,16 @@ pub mod commands {
             CMD_GROUP_GENERAL,
         )
     }
+    pub fn chat_details_open(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!(
+                "Inspect [{}]",
+                key_config.get_hint(key_config.keys.move_right),
+            ),
+            "inspect selected commit in detail",
+            CMD_GROUP_GENERAL,
+        )
+    }
 
     pub fn blame_file(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(

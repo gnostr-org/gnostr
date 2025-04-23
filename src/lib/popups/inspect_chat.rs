@@ -235,7 +235,7 @@ impl InspectChatPopup {
         Self {
             queue: env.queue.clone(),
             //details: CommitDetailsComponent::new(env),
-            details: CommitDetailsComponent::new(env),
+            details: CommitDetailsComponent::new(env, true),
             diff: DiffComponent::new(env, true),
             open_request: None,
             git_diff: AsyncDiff::new(env.repo.borrow().clone(), &env.sender_git),

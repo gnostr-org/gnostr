@@ -24,7 +24,12 @@ use crate::{
     app::Environment,
     keys::{key_match, SharedKeyConfig},
     strings,
+	ui::style::SharedTheme,
 };
+
+use crate::components::dialog_paragraph;
+use crate::components::Text;
+
 
 pub struct CommitDetailsComponent {
     commit: Option<CommitFilesParams>,
@@ -34,13 +39,15 @@ pub struct CommitDetailsComponent {
     git_commit_files: AsyncCommitFiles,
     visible: bool,
     key_config: SharedKeyConfig,
+	theme: SharedTheme,
+	focused: bool,
 }
 
 impl CommitDetailsComponent {
     accessors!(self, [single_details, compare_details, file_tree]);
 
     ///
-    pub fn new(env: &Environment) -> Self {
+    pub fn new(env: &Environment, focused: bool) -> Self {
         Self {
             single_details: DetailsComponent::new(env, false),
             compare_details: CompareDetailsComponent::new(env, false),
@@ -49,6 +56,8 @@ impl CommitDetailsComponent {
             visible: false,
             commit: None,
             key_config: env.key_config.clone(),
+			theme: env.theme.clone(),
+			focused,
         }
     }
 
@@ -139,7 +148,7 @@ impl DrawableComponent for CommitDetailsComponent {
         }
 
         let vertical_constraints = if self.is_compare() {
-            [Constraint::Length(10), Constraint::Min(0)]
+            [Constraint::Length(10), Constraint::Min(0), Constraint::Min(0)]
         } else {
             let details_focused = self.details_focused();
             let percentages = if self.file_tree.focused() {
@@ -152,10 +161,10 @@ impl DrawableComponent for CommitDetailsComponent {
                 //
                 //filetree
                 //
-                (30, 70) //commit Info should remain visible
+                (30, 60, 20) //commit Info should remain visible
             } else if details_focused {
                 //topiclist or revlog split
-                (90, 10) //commit Info and Message visible
+                (80, 10, 10) //commit Info and Message visible
                          //filetree obfuscated
             } else {
                 //topiclist or revlog toggle split
@@ -163,12 +172,13 @@ impl DrawableComponent for CommitDetailsComponent {
                 //Message 50%
                 //
                 //filetree 50%
-                (90, 10)
+                (80, 10, 10)
             };
 
             [
                 Constraint::Percentage(percentages.0),
                 Constraint::Percentage(percentages.1),
+                Constraint::Percentage(percentages.2),
             ]
         };
 
@@ -186,6 +196,28 @@ impl DrawableComponent for CommitDetailsComponent {
             self.single_details.draw(f, chunks[0])?;
         }
         self.file_tree.draw(f, chunks[1])?;
+
+        f.render_widget(
+            dialog_paragraph(
+                &format!(
+                    "replace with chat widget!!!!! {} {}",
+                    strings::commit::details_message_title(&self.key_config,),
+                    strings::commit::details_message_title(&self.key_config,),
+                    //if !self.focused && can_scroll {
+                    //    CANSCROLL_STRING
+                    //} else {
+                    //    EMPTY_STRING
+                    //}
+                ),
+                //Text::from(self.get_wrapped_text_message(width as usize, height as usize)),
+                Text::from(""),
+                &self.theme,
+                self.focused,
+            ),
+            chunks[2],
+        );
+
+
 
         //render p2p chat
         Ok(())
