@@ -381,6 +381,7 @@ impl DiffComponent {
         ])]
     }
 
+    ///fn get_line_to_add<'a>
     fn get_line_to_add<'a>(
         width: u16,
         line: &'a DiffLine,
@@ -412,10 +413,10 @@ impl DiffComponent {
 
         let filled = if selected {
             // selected line
-            format!("{content:w$}\n", w = width as usize)
+            format!("423:components/diff.rs:\n{content:w$} insert pubkey here!", w = width as usize)
         } else {
             // weird eof missing eol line
-            format!("{content}\n")
+            format!("426:components/diff.rs:\n{content} insert pubkey here!")
         };
 
         Line::from(vec![

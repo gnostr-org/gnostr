@@ -35,6 +35,7 @@ pub struct CommitDetailsComponent {
     single_details: DetailsComponent,
     compare_details: CompareDetailsComponent,
     file_tree: StatusTreeComponent,
+    chat: StatusTreeComponent,
     git_commit_files: AsyncCommitFiles,
     visible: bool,
     key_config: SharedKeyConfig,
@@ -52,6 +53,7 @@ impl CommitDetailsComponent {
             compare_details: CompareDetailsComponent::new(env, false),
             git_commit_files: AsyncCommitFiles::new(env.repo.borrow().clone(), &env.sender_git),
             file_tree: StatusTreeComponent::new(env, "", false),
+            chat: StatusTreeComponent::new(env, "", false),
             visible: false,
             commit: None,
             key_config: env.key_config.clone(),
@@ -200,10 +202,11 @@ impl DrawableComponent for CommitDetailsComponent {
         }
         self.file_tree.draw(f, chunks[1])?;
 
+        //this is rendered below the file_tree
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "replace with chat widget!!!!! {} {}",
+                    "commit_details/mod.rs:replace with chat widget!!!!! {} {}",
                     strings::commit::details_message_title(&self.key_config,),
                     strings::commit::details_message_title(&self.key_config,),
                     //if !self.focused && can_scroll {

@@ -278,10 +278,11 @@ impl DrawableComponent for DetailsComponent {
             ),
             chunks[1],
         );
+        //this is rendered above the file_tree
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "replace with chat widget!!!!! {} {}",
+                    "commit_details/details.rs:replace with chat widget!!!!! {} {}",
                     strings::commit::details_message_title(&self.key_config,),
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
