@@ -28,6 +28,8 @@ pub enum DiffLineType {
 	/// just surrounding line, no change
 	None,
 	/// header of the hunk
+	/// header of the hunk
+	/// header of the hunk
 	Header,
 	/// line added
 	Add,
@@ -38,6 +40,7 @@ pub enum DiffLineType {
 impl From<git2::DiffLineType> for DiffLineType {
 	fn from(line_type: git2::DiffLineType) -> Self {
 		match line_type {
+			//git2::DiffLineType::HunkHeader => Self::Header,
 			git2::DiffLineType::HunkHeader => Self::Header,
 			git2::DiffLineType::DeleteEOFNL
 			| git2::DiffLineType::Deletion => Self::Delete,
@@ -54,7 +57,9 @@ impl Default for DiffLineType {
 	}
 }
 
-///
+///DiffLine
+///DiffLine
+///DiffLine
 #[derive(Default, Clone, Hash, Debug)]
 pub struct DiffLine {
 	///
@@ -113,6 +118,8 @@ impl From<DiffHunk<'_>> for HunkHeader {
 #[derive(Default, Clone, Hash, Debug)]
 pub struct Hunk {
 	/// hash of the hunk header
+	/// hash of the hunk header
+	/// hash of the hunk header
 	pub header_hash: u64,
 	/// list of `DiffLine`s
 	pub lines: Vec<DiffLine>,
@@ -121,6 +128,8 @@ pub struct Hunk {
 /// collection of hunks, sum of all diff lines
 #[derive(Default, Clone, Hash, Debug)]
 pub struct FileDiff {
+	/// list of hunks
+	/// list of hunks
 	/// list of hunks
 	pub hunks: Vec<Hunk>,
 	/// lines total summed up over hunks
@@ -156,9 +165,11 @@ impl Default for DiffOptions {
 	}
 }
 
+///get_diff_raw
+///make public for event rendering?
 pub(crate) fn get_diff_raw<'a>(
 	repo: &'a Repository,
-	p: &str,
+	p: &str,//path
 	stage: bool,
 	reverse: bool,
 	options: Option<DiffOptions>,
@@ -171,10 +182,13 @@ pub(crate) fn get_diff_raw<'a>(
 		opt.ignore_whitespace(options.ignore_whitespace);
 		opt.interhunk_lines(options.interhunk_lines);
 	}
+	//opt.pathspec(p);
 	opt.pathspec(p);
 	opt.reverse(reverse);
 
 	let diff = if stage {
+		// diff against head
+		// diff against head
 		// diff against head
 		if let Ok(id) = get_head_repo(repo) {
 			let parent = repo.find_commit(id.into())?;
@@ -202,9 +216,11 @@ pub(crate) fn get_diff_raw<'a>(
 }
 
 /// returns diff of a specific file either in `stage` or workdir
+/// returns diff of a specific file either in `stage` or workdir
+/// returns diff of a specific file either in `stage` or workdir
 pub fn get_diff(
 	repo_path: &RepoPath,
-	p: &str,
+	p: &str,//path
 	stage: bool,
 	options: Option<DiffOptions>,
 ) -> Result<FileDiff> {
@@ -212,11 +228,16 @@ pub fn get_diff(
 
 	let repo = repo(repo_path)?;
 	let work_dir = work_dir(&repo)?;
+	//get_diff_raw
+	//get_diff_raw
+	//get_diff_raw
 	let diff = get_diff_raw(&repo, p, stage, false, options)?;
 
 	raw_diff_to_file_diff(&diff, work_dir)
 }
 
+/// returns diff of a specific file inside a commit
+/// returns diff of a specific file inside a commit
 /// returns diff of a specific file inside a commit
 /// see `get_commit_diff`
 pub fn get_diff_commit(
@@ -229,6 +250,7 @@ pub fn get_diff_commit(
 
 	let repo = repo(repo_path)?;
 	let work_dir = work_dir(&repo)?;
+	//get_commit_diff
 	let diff = get_commit_diff(
 		&repo,
 		id,
@@ -240,6 +262,7 @@ pub fn get_diff_commit(
 	raw_diff_to_file_diff(&diff, work_dir)
 }
 
+///for compare
 /// get file changes of a diff between two commits
 pub fn get_diff_commits(
 	repo_path: &RepoPath,
@@ -261,6 +284,8 @@ pub fn get_diff_commits(
 //TODO: refactor into helper type with the inline closures as
 // dedicated functions
 #[allow(clippy::too_many_lines)]
+//fn raw_diff_to_file_diff(
+//fn raw_diff_to_file_diff(
 fn raw_diff_to_file_diff(
 	diff: &Diff,
 	work_dir: &Path,
@@ -367,6 +392,7 @@ fn raw_diff_to_file_diff(
 				false
 			}
 		} else {
+			//false
 			false
 		};
 
@@ -394,6 +420,7 @@ fn raw_diff_to_file_diff(
 			res.borrow_mut().untracked = true;
 		}
 	}
+	//
 	let res = Rc::try_unwrap(res)
 		.map_err(|_| Error::Generic("rc unwrap error".to_owned()))?;
 	Ok(res.into_inner())
