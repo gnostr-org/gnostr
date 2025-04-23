@@ -4,7 +4,10 @@ use anyhow::Result;
 use asyncgit::{
     hash,
     sync::{self, diff::DiffLinePosition, RepoPathRef},
-    DiffLine, DiffLineType, FileDiff,
+    //DiffLine, DiffLineType, FileDiff,
+    DiffLine,
+    DiffLineType,
+    FileDiff,
 };
 use bytesize::ByteSize;
 use crossterm::event::Event;
@@ -140,6 +143,8 @@ impl DiffComponent {
         }
     }
     ///
+    ///
+    ///
     fn can_scroll(&self) -> bool {
         self.diff.as_ref().is_some_and(|diff| diff.lines > 1)
     }
@@ -162,6 +167,7 @@ impl DiffComponent {
     pub fn update(&mut self, path: String, is_stage: bool, diff: FileDiff) {
         self.pending = false;
 
+        ///hash
         let hash = hash(&diff);
 
         if self.current.hash != hash {
@@ -296,6 +302,7 @@ impl DiffComponent {
         None
     }
 
+    ///fn get_text(&self, width: u16, height: u16) -> Vec<Line>
     fn get_text(&self, width: u16, height: u16) -> Vec<Line> {
         if let Some(diff) = &self.diff {
             return if diff.hunks.is_empty() {
@@ -621,7 +628,7 @@ impl DrawableComponent for DiffComponent {
             .set((r.width.saturating_sub(2), r.height.saturating_sub(2)));
 
         let current_width = self.current_size.get().0;
-        let current_height = self.current_size.get().1;
+        let current_height = self.current_size.get().1 / 2;
 
         self.vertical_scroll.update(
             self.selection.get_end(),
@@ -633,7 +640,8 @@ impl DrawableComponent for DiffComponent {
             .update_no_selection(self.longest_line, current_width.into());
 
         let title = format!(
-            "components/diff.rs {}{}",
+            "components/diff.rs title_diff:{} current.path:{}",
+            //strings::title_diff(&self.key_config),
             strings::title_diff(&self.key_config),
             self.current.path
         );
@@ -647,6 +655,7 @@ impl DrawableComponent for DiffComponent {
             self.get_text(r.width, current_height)
         };
 
+        //split r
         f.render_widget(
             Paragraph::new(txt).block(
                 Block::default()
