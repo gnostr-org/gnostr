@@ -1,8 +1,8 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser /*, Subcommand*/};
 use libp2p::gossipsub;
-use once_cell::sync::OnceCell;
+//use once_cell::sync::OnceCell;
 use std::{error::Error, time::Duration};
-use tokio::{io, io::AsyncBufReadExt};
+//use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
 //use tracing::debug;
 use tracing::{debug, info, Level};
@@ -10,7 +10,7 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt::Write;
+//use std::fmt::Write;
 
 use anyhow::{anyhow, Result};
 use git2::{Commit, ObjectType, Oid, Repository};
@@ -19,15 +19,15 @@ use nostr_sdk_0_37_0::EventBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
-use sha2::Digest;
+//use sha2::Digest;
 //use tokio::time::Duration;
 
-use gnostr::chat::msg;
+//use gnostr::chat::msg;
 use gnostr::chat::msg::*;
-use gnostr::chat::p2p;
+//use gnostr::chat::p2p;
 use gnostr::chat::p2p::evt_loop;
 use gnostr::chat::ui;
-
+use gnostr::global_rt::global_rt;
 //const TITLE: &str = include_str!("./title.txt");
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -43,13 +43,13 @@ struct SerializableCommit {
     time: i64,
 }
 
-fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
-    let mut hex_string = String::new();
-    for byte in byte_array {
-        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
-    }
-    hex_string
-}
+//fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
+//    let mut hex_string = String::new();
+//    for byte in byte_array {
+//        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
+//    }
+//    hex_string
+//}
 
 async fn create_event_with_custom_tags(
     keys: &Keys,
@@ -240,45 +240,45 @@ fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<
     Ok(commit)
 }
 
-fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
-    let padded_commit_id = format!("{:0>64}", commit_id);
-    info!("padded_commit_id:{:?}", padded_commit_id);
-    let keys = Keys::parse(&padded_commit_id);
-    Ok(keys.unwrap())
-}
+//fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
+//    let padded_commit_id = format!("{:0>64}", commit_id);
+//    info!("padded_commit_id:{:?}", padded_commit_id);
+//    let keys = Keys::parse(&padded_commit_id);
+//    Ok(keys.unwrap())
+//}
 
 fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
 }
 
-fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
-    if let Value::String(s) = json_value {
-        let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
-        Some(lines)
-    } else {
-        None // Return None if the Value is not a string
-    }
-}
+//fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
+//    if let Value::String(s) = json_value {
+//        let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
+//        Some(lines)
+//    } else {
+//        None // Return None if the Value is not a string
+//    }
+//}
 
-fn value_to_string(value: &Value) -> String {
-    match value {
-        Value::Null => "null".to_string(),
-        Value::Bool(b) => b.to_string(),
-        Value::Number(n) => n.to_string(),
-        Value::String(s) => s.clone(),
-        Value::Array(arr) => {
-            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
-            format!("[{}]", elements.join(", "))
-        }
-        Value::Object(obj) => {
-            let pairs: Vec<String> = obj
-                .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
-                .collect();
-            format!("{{{}}}", pairs.join(", "))
-        }
-    }
-}
+//fn value_to_string(value: &Value) -> String {
+//    match value {
+//        Value::Null => "null".to_string(),
+//        Value::Bool(b) => b.to_string(),
+//        Value::Number(n) => n.to_string(),
+//        Value::String(s) => s.clone(),
+//        Value::Array(arr) => {
+//            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
+//            format!("[{}]", elements.join(", "))
+//        }
+//        Value::Object(obj) => {
+//            let pairs: Vec<String> = obj
+//                .iter()
+//                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
+//                .collect();
+//            format!("{{{}}}", pairs.join(", "))
+//        }
+//    }
+//}
 
 fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     if let Value::String(s) = value {
@@ -347,11 +347,11 @@ struct Cli {
     config: String,
 }
 
-//async tasks
-fn global_rt() -> &'static tokio::runtime::Runtime {
-    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
-}
+////async tasks
+//fn global_rt() -> &'static tokio::runtime::Runtime {
+//    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
+//    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
+//}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Cli = Cli::parse();
@@ -385,6 +385,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let _ = subscriber.try_init();
 
+    //if args.nsec.is_some() {
+    //let keys = Keys::parse(&args.nsec.unwrap().clone()).unwrap();
+
+    //    print!("{{\"private_key\":\"{}\"}}", keys.secret_key().display_secret());
+    //    print!("{{\"public_key\":\"{}\"}}", keys.public_key());
+    //}
     //parse keys from sha256 hash
     let empty_hash_keys =
         Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
@@ -401,6 +407,25 @@ fn main() -> Result<(), Box<dyn Error>> {
         info!("signed_event:\n{:?}", signed_event);
     });
 
+    if args.nsec.is_some() {
+        let keys = Keys::parse(&args.nsec.unwrap().clone()).unwrap();
+
+        info!(
+            "{{\"private_key\":\"{}\"}}",
+            keys.secret_key().display_secret()
+        );
+        info!("{{\"public_key\":\"{}\"}}", keys.public_key());
+        let mut custom_tags = HashMap::new();
+        custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
+        custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
+
+        global_rt().spawn(async move {
+            //send to create_event function with &"custom content"
+            let signed_event = create_event(keys, custom_tags, &"gnostr-chat:event").await;
+            info!("signed_event:\n{:?}", signed_event);
+        });
+    }
+
     //initialize git repo
     let repo = Repository::discover(".")?;
 
@@ -413,8 +438,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let commit = obj.peel_to_commit()?;
     let commit_id = commit.id().to_string();
     //some info wrangling
-    info!("commit_id:\n{}", commit_id);
+    info!("416:commit_id:\n{}", commit_id);
     let padded_commit_id = format!("{:0>64}", commit_id);
+    info!("418:padded_commit_id:\n{}", padded_commit_id);
 
     //// commit based keys
     //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
@@ -434,26 +460,30 @@ fn main() -> Result<(), Box<dyn Error>> {
         vec!["GNOSTR".to_string()],
     );
 
+
+    let serialized_commit = serialize_commit(&commit)?;
+    info!("476:Serialized commit:\n{}", serialized_commit);
+
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
         let signed_event =
-            create_event(padded_keys.clone(), custom_tags, &"gnostr-chat:event").await;
-        info!("signed_event:\n{:?}", signed_event);
+            create_event(padded_keys.clone(), custom_tags, &serialized_commit).await;
+        info!("467:signed_event:\n{:?}", signed_event);
     });
 
     //TODO config metadata
 
     //access some git info
     let serialized_commit = serialize_commit(&commit)?;
-    debug!("Serialized commit:\n{}", serialized_commit);
+    info!("476:Serialized commit:\n{}", serialized_commit);
 
     let binding = serialized_commit.clone();
     let deserialized_commit = deserialize_commit(&repo, &binding)?;
-    info!("Deserialized commit:\n{:?}", deserialized_commit);
+    info!("480:Deserialized commit:\n{:?}", deserialized_commit);
 
     //access commit summary in the deserialized commit
-    info!("Original commit ID:\n{}", commit_id);
-    info!("Deserialized commit ID:\n{}", deserialized_commit.id());
+    info!("481:Original commit ID:\n{}", commit_id);
+    info!("482:Deserialized commit ID:\n{}", deserialized_commit.id());
 
     //additional checking
     if commit.id() != deserialized_commit.id() {
@@ -541,7 +571,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::new(padded_keys.clone());
     global_rt().spawn(async move {
         client.add_relay("wss://relay.damus.io").await.expect("");
-        client.add_relay("wss://e.nos.lol").await.expect("");
+        client.add_relay("wss://nos.lol").await.expect("");
         client.connect().await;
 
         //build git gnostr event
@@ -556,6 +586,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         info!("Sent to: {:?}", output.success);
         info!("Not sent to: {:?}", output.failed);
     });
+
+	std::process::exit(0);
 
     let mut app = ui::App::default();
 
@@ -620,13 +652,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn input_loop(self_input: tokio::sync::mpsc::Sender<Vec<u8>>) -> Result<(), Box<dyn Error>> {
-    let mut stdin = io::BufReader::new(io::stdin()).lines();
-    while let Some(line) = stdin.next_line().await? {
-        let msg = Msg::default().set_content(line);
-        if let Ok(b) = serde_json::to_vec(&msg) {
-            self_input.send(b).await?;
-        }
-    }
-    Ok(())
-}
+//async fn input_loop(self_input: tokio::sync::mpsc::Sender<Vec<u8>>) -> Result<(), Box<dyn Error>> {
+//    let mut stdin = io::BufReader::new(io::stdin()).lines();
+//    while let Some(line) = stdin.next_line().await? {
+//        let msg = Msg::default().set_content(line);
+//        if let Ok(b) = serde_json::to_vec(&msg) {
+//            self_input.send(b).await?;
+//        }
+//    }
+//    Ok(())
+//}
