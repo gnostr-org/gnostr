@@ -30,6 +30,10 @@ use gnostr::chat::ui;
 use gnostr::global_rt::global_rt;
 //const TITLE: &str = include_str!("./title.txt");
 
+
+use asyncgit::sync::commit::*;
+use asyncgit::sync::commit::{serialize_commit, deserialize_commit};
+
 #[derive(Serialize, Deserialize, Debug)]
 struct SerializableCommit {
     id: String,
@@ -86,6 +90,7 @@ async fn create_event(
 
     client.add_discovery_relay("wss://relay.damus.io").await?;
     client.add_discovery_relay("wss://purplepag.es").await?;
+    client.add_discovery_relay("wss://nostr.band").await?;
     //client.add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion").await?;
 
     // add some relays
@@ -93,6 +98,7 @@ async fn create_event(
     client.add_relay("wss://relay.damus.io").await?;
     client.add_relay("wss://e.nos.lol").await?;
     client.add_relay("wss://nos.lol").await?;
+    client.add_relay("wss://nostr.band").await?;
 
     // Connect to the relays.
     client.connect().await;
@@ -191,54 +197,54 @@ async fn create_event(
     Ok(())
 }
 
-fn serialize_commit(commit: &Commit) -> Result<String> {
-    let id = commit.id().to_string();
-    let tree = commit.tree_id().to_string();
-    let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
-    let author = commit.author();
-    let committer = commit.committer();
-    let message = commit
-        .message()
-        .ok_or(anyhow!("No commit message"))?
-        .to_string();
-    debug!("message:\n{:?}", message);
-    let time = commit.time().seconds();
-    debug!("time: {:?}", time);
-
-    let serializable_commit = SerializableCommit {
-        id,
-        tree,
-        parents,
-        author_name: author.name().unwrap_or_default().to_string(),
-        author_email: author.email().unwrap_or_default().to_string(),
-        committer_name: committer.name().unwrap_or_default().to_string(),
-        committer_email: committer.email().unwrap_or_default().to_string(),
-        message,
-        time,
-    };
-
-    let serialized = serde_json::to_string(&serializable_commit)?;
-    debug!("serialized_commit: {:?}", serialized);
-    Ok(serialized)
-}
-
-fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
-    //we serialize the commit data
-    //easier to grab the commit.id
-    let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
-    //grab the commit.id
-    let oid = Oid::from_str(&serializable_commit.id)?;
-    //oid used to search the repo
-    let commit_obj = repo.find_object(oid, Some(ObjectType::Commit))?;
-    //grab the commit
-    let commit = commit_obj.peel_to_commit()?;
-    //confirm we grabbed the correct commit
-    if commit.id().to_string() != serializable_commit.id {
-        return Err(anyhow!("Commit ID mismatch during deserialization"));
-    }
-    //return the commit
-    Ok(commit)
-}
+//fn serialize_commit(commit: &Commit) -> Result<String> {
+//    let id = commit.id().to_string();
+//    let tree = commit.tree_id().to_string();
+//    let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
+//    let author = commit.author();
+//    let committer = commit.committer();
+//    let message = commit
+//        .message()
+//        .ok_or(anyhow!("No commit message"))?
+//        .to_string();
+//    debug!("message:\n{:?}", message);
+//    let time = commit.time().seconds();
+//    debug!("time: {:?}", time);
+//
+//    let serializable_commit = SerializableCommit {
+//        id,
+//        tree,
+//        parents,
+//        author_name: author.name().unwrap_or_default().to_string(),
+//        author_email: author.email().unwrap_or_default().to_string(),
+//        committer_name: committer.name().unwrap_or_default().to_string(),
+//        committer_email: committer.email().unwrap_or_default().to_string(),
+//        message,
+//        time,
+//    };
+//
+//    let serialized = serde_json::to_string(&serializable_commit)?;
+//    debug!("serialized_commit: {:?}", serialized);
+//    Ok(serialized)
+//}
+//
+//fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
+//    //we serialize the commit data
+//    //easier to grab the commit.id
+//    let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
+//    //grab the commit.id
+//    let oid = Oid::from_str(&serializable_commit.id)?;
+//    //oid used to search the repo
+//    let commit_obj = repo.find_object(oid, Some(ObjectType::Commit))?;
+//    //grab the commit
+//    let commit = commit_obj.peel_to_commit()?;
+//    //confirm we grabbed the correct commit
+//    if commit.id().to_string() != serializable_commit.id {
+//        return Err(anyhow!("Commit ID mismatch during deserialization"));
+//    }
+//    //return the commit
+//    Ok(commit)
+//}
 
 //fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
 //    let padded_commit_id = format!("{:0>64}", commit_id);
@@ -317,7 +323,7 @@ struct Cli {
     ///
     #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
 		action = clap::ArgAction::Append,
-		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
     relays: Vec<String>,
     /// Enable debug logging
     #[clap(
@@ -460,14 +466,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         vec!["GNOSTR".to_string()],
     );
 
-
     let serialized_commit = serialize_commit(&commit)?;
     info!("476:Serialized commit:\n{}", serialized_commit);
 
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event =
-            create_event(padded_keys.clone(), custom_tags, &serialized_commit).await;
+        let signed_event = create_event(padded_keys.clone(), custom_tags, &serialized_commit).await;
         info!("467:signed_event:\n{:?}", signed_event);
     });
 
@@ -587,7 +591,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         info!("Not sent to: {:?}", output.failed);
     });
 
-	std::process::exit(0);
+    std::process::exit(0);
 
     let mut app = ui::App::default();
 
