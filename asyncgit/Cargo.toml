@@ -12,6 +12,7 @@ categories = ["concurrency", "asynchronous"]
 keywords = ["git"]
 
 [dependencies]
+#anyhow = "1.0"
 bitflags = "2"
 crossbeam-channel = "0.5"
 dirs = "5.0"
@@ -28,7 +29,8 @@ openssl-sys = { version = '0.9', features = ["vendored"], optional = true }
 rayon = "1.10"
 rayon-core = "1.12"
 scopetime = { path = "../scopetime", version = "0.1" }
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
 ssh-key = { version = "0.6.6", features = ["crypto", "encryption"] }
 thiserror = "1.0"
 unicode-truncate = "1.0"
