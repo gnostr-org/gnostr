@@ -102,7 +102,7 @@ impl AsyncDiff {
 	) -> Result<Option<FileDiff>> {
 		log::trace!("request {:?}", params);
 
-		///hash
+		//hash
 		let hash = hash(&params);
 
 		{
