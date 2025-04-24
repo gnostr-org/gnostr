@@ -520,6 +520,7 @@ dependencies = [
  "rayon-core",
  "scopetime",
  "serde",
+ "serde_json",
  "ssh-key",
  "thiserror 1.0.69",
  "unicode-truncate",
