@@ -1,7 +1,14 @@
 //! Git Api for Commits
+//use anyhow::anyhow;
 use git2::{
-	ErrorCode, ObjectType, Repository, Signature, message_prettify,
+	Commit, ErrorCode, ObjectType, Oid, Repository, Signature, message_prettify,
 };
+
+use serde::{Deserialize, Serialize};
+use serde_json;
+//?use nostr_sdk::serde_json;
+//use serde_json::{Result as SerdeJsonResult, Value};
+use log::debug;
 use scopetime::scope_time;
 
 use super::{CommitId, RepoPath};
@@ -82,6 +89,69 @@ pub(crate) fn signature_allow_undefined_name(
 
 	signature
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+struct SerializableCommit {
+    id: String,
+    tree: String,
+    parents: Vec<String>,
+    author_name: String,
+    author_email: String,
+    committer_name: String,
+    committer_email: String,
+    message: String,
+    time: i64,
+}
+///
+pub fn serialize_commit(commit: &Commit) -> Result<String> {
+    let id = commit.id().to_string();
+    let tree = commit.tree_id().to_string();
+    let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
+    let author = commit.author();
+    let committer = commit.committer();
+    let message = commit
+        .message()
+        .ok_or(log::debug!("No commit message")).expect("")
+        .to_string();
+    log::debug!("message:\n{:?}", message);
+    let time = commit.time().seconds();
+    debug!("time: {:?}", time);
+
+    let serializable_commit = SerializableCommit {
+        id,
+        tree,
+        parents,
+        author_name: author.name().unwrap_or_default().to_string(),
+        author_email: author.email().unwrap_or_default().to_string(),
+        committer_name: committer.name().unwrap_or_default().to_string(),
+        committer_email: committer.email().unwrap_or_default().to_string(),
+        message,
+        time,
+    };
+
+    let serialized = serde_json::to_string(&serializable_commit).expect("");
+    debug!("serialized_commit: {:?}", serialized);
+    Ok(serialized)
+}
+///
+pub fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
+    //we serialize the commit data
+    //easier to grab the commit.id
+    let serializable_commit: SerializableCommit = serde_json::from_str(data).expect("");
+    //grab the commit.id
+    let oid = Oid::from_str(&serializable_commit.id)?;
+    //oid used to search the repo
+    let commit_obj = repo.find_object(oid, Some(ObjectType::Commit))?;
+    //grab the commit
+    let commit = commit_obj.peel_to_commit()?;
+    //confirm we grabbed the correct commit
+    //if commit.id().to_string() != serializable_commit.id {
+    //    return Err(eprintln!("Commit ID mismatch during deserialization"));
+    //}
+    //return the commit
+    Ok(commit)
+}
+
 
 /// this does not run any git hooks, git-hooks have to be executed
 /// manually, checkout `hooks_commit_msg` for example
