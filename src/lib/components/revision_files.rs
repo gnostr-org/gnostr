@@ -76,7 +76,7 @@ impl RevisionFilesComponent {
     pub fn set_commit(&mut self, commit: CommitId) -> Result<()> {
         self.show()?;
 
-		let same_id = self.revision.as_ref().is_some_and(|c| c.id == commit);
+        let same_id = self.revision.as_ref().is_some_and(|c| c.id == commit);
 
         if !same_id {
             self.files = None;
@@ -168,7 +168,7 @@ impl RevisionFilesComponent {
     }
 
     fn blame(&self) -> bool {
-		self.selected_file_path().is_some_and(|path| {
+        self.selected_file_path().is_some_and(|path| {
             self.queue
                 .push(InternalEvent::OpenPopup(StackablePopupOpen::BlameFile(
                     BlameFileOpen {
@@ -183,7 +183,7 @@ impl RevisionFilesComponent {
     }
 
     fn file_history(&self) -> bool {
-		self.selected_file_path().is_some_and(|path| {
+        self.selected_file_path().is_some_and(|path| {
             self.queue
                 .push(InternalEvent::OpenPopup(StackablePopupOpen::FileRevlog(
                     FileRevOpen::new(path),

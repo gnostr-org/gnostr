@@ -60,7 +60,7 @@ impl AsyncProgressBuffer {
     pub fn update(&mut self, current: usize) -> bool {
         self.current = current;
         self.last_send
-			.is_none_or(|last_send| last_send.elapsed() > self.min_interval)
+            .is_none_or(|last_send| last_send.elapsed() > self.min_interval)
     }
 }
 

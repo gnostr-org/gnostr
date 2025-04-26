@@ -126,7 +126,7 @@ impl StatusTree {
 
     ///
     pub fn move_selection(&mut self, dir: MoveSelection) -> bool {
-		self.selection.is_some_and(|selection| {
+        self.selection.is_some_and(|selection| {
             let selection_change = match dir {
                 MoveSelection::Up => self.selection_updown(selection, true),
                 MoveSelection::Down => self.selection_updown(selection, false),
@@ -363,7 +363,7 @@ impl StatusTree {
                 inner_collapsed = Some(format!("{}/", &item_path));
             }
 
-			if prefix.is_none_or(|prefix| item_path.starts_with(prefix)) {
+            if prefix.is_none_or(|prefix| item_path.starts_with(prefix)) {
                 self.tree[i].info.visible = true;
             } else {
                 // if we do not set defaults we can early out

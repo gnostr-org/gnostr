@@ -662,11 +662,11 @@ impl TopicList {
             let filtered_branches: Vec<_> = remote_branches
                 .iter()
                 .filter(|remote_branch| {
-					self.local_branches.get(&e.id).is_none_or(|local_branch| {
+                    self.local_branches.get(&e.id).is_none_or(|local_branch| {
                         local_branch.iter().any(|local_branch| {
                             let has_corresponding_local_branch = match &local_branch.details {
                                 BranchDetails::Local(details) => {
-									details.upstream.as_ref().is_some_and(|upstream| {
+                                    details.upstream.as_ref().is_some_and(|upstream| {
                                         upstream.reference == remote_branch.reference
                                     })
                                 }
