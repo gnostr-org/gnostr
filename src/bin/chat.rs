@@ -8,6 +8,8 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
+use log::LevelFilter;
+
 use std::borrow::Cow;
 use std::collections::HashMap;
 //use std::fmt::Write;
@@ -372,11 +374,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let filter = EnvFilter::default()
         .add_directive(level.into())
+        .add_directive("nostr_sdk=off".parse().unwrap())
+        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
+        //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        .add_directive("libp2p_mdns=off".parse().unwrap())
-        .add_directive("other_module=off".parse().unwrap()); // Turn off logging for other_module
+        .add_directive("gnostr::message=off".parse().unwrap())
+        .add_directive("gnostr::nostr_proto=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(fmt::layer().with_writer(std::io::stdout))
@@ -567,19 +573,28 @@ fn main() -> Result<(), Box<dyn Error>> {
     //let client = Client::new(keys);
     let client = Client::new(padded_keys.clone());
     global_rt().spawn(async move {
-        client.add_relay("wss://relay.damus.io").await.expect("");
-        client.add_relay("wss://nos.lol").await.expect("");
-        client.connect().await;
-
-        //build git gnostr event
-        let builder = EventBuilder::text_note(serialized_commit);
-
-        //send git gnostr event
-        let output = client.send_event_builder(builder).await.expect("");
-
-        //some reporting
+        client
+            .add_relay("wss://relay.damus.io")
+            .await
+            .expect("failed to add damus relay");
+        client
+            .add_relay("wss://nos.lol")
+            .await
+            .expect("failed to add nos.lol relay");
+        client.connect().await; // connect() likely doesn't return a Result you can match on
+        let builder = EventBuilder::text_note(serialized_commit.clone());
+        let output = client
+            .send_event_builder(builder)
+            .await
+            .expect("589:failed to send event");
         info!("Event ID: {}", output.id());
-        info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+        info!(
+            "Event ID BECH32: {}",
+            output
+                .id()
+                .to_bech32()
+                .expect("failed to convert to bech32")
+        );
         info!("Sent to: {:?}", output.success);
         info!("Not sent to: {:?}", output.failed);
     });
