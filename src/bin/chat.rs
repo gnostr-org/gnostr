@@ -1,43 +1,32 @@
-use clap::{Parser /*, Subcommand*/};
-use libp2p::gossipsub;
-//use once_cell::sync::OnceCell;
-use std::{error::Error, time::Duration};
-//use tokio::{io, io::AsyncBufReadExt};
-use tracing_subscriber::util::SubscriberInitExt;
-//use tracing::debug;
-use tracing::{debug, info, Level};
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-use log::LevelFilter;
-
-use std::borrow::Cow;
-use std::collections::HashMap;
-//use std::fmt::Write;
-
 use anyhow::{anyhow, Result};
+use asyncgit::sync::commit::*;
+use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
+use clap::{Parser /*, Subcommand*/};
 use git2::{Commit, ObjectType, Oid, Repository};
+use gnostr::chat::create_event;
+use gnostr::chat::msg::*;
+use gnostr::chat::p2p::evt_loop;
+use gnostr::chat::parse_json;
+use gnostr::chat::split_json_string;
+use gnostr::chat::ui;
+use gnostr::chat::ChatCli;
+use gnostr::global_rt::global_rt;
+
+use libp2p::gossipsub;
+use log::LevelFilter;
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::EventBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
-//use sha2::Digest;
-//use tokio::time::Duration;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::{error::Error, time::Duration};
+use tracing::{debug, info, Level};
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-use gnostr::chat::create_event;
-use gnostr::chat::parse_json;
-use gnostr::chat::split_json_string;
-use gnostr::chat::ChatCli;
-//use gnostr::chat::msg;
-use gnostr::chat::msg::*;
-//use gnostr::chat::p2p;
-use gnostr::chat::p2p::evt_loop;
-use gnostr::chat::ui;
-use gnostr::global_rt::global_rt;
 //const TITLE: &str = include_str!("./title.txt");
-
-use asyncgit::sync::commit::*;
-use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: ChatCli = ChatCli::parse();
