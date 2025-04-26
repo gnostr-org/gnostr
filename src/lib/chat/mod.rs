@@ -356,6 +356,11 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 pub fn chat() -> Result<(), Box<dyn Error>> {
     let args: ChatCli = ChatCli::parse();
 
+    if let Some(hash) = args.hash {
+		println!("hash={}", hash);
+    };
+
+
     if let Some(name) = args.name {
         use std::env;
         env::set_var("USER", &name);
