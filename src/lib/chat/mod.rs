@@ -31,7 +31,7 @@ pub use msg::*;
 //const TITLE: &str = include_str!("./title.txt");
 
 #[derive(Serialize, Deserialize, Debug)]
-struct SerializableCommit {
+pub struct SerializableCommit {
     id: String,
     tree: String,
     parents: Vec<String>,
@@ -43,7 +43,7 @@ struct SerializableCommit {
     time: i64,
 }
 
-fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
+pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
     let mut hex_string = String::new();
     for byte in byte_array {
         write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
@@ -51,7 +51,7 @@ fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
     hex_string
 }
 
-async fn create_event_with_custom_tags(
+pub async fn create_event_with_custom_tags(
     keys: &Keys,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
@@ -71,7 +71,7 @@ async fn create_event_with_custom_tags(
     Ok(signed_event.await?)
 }
 
-async fn create_event(
+pub async fn create_event(
     keys: Keys,
     custom_tags: HashMap<String, Vec<String>>,
     content: &str,
@@ -191,7 +191,7 @@ async fn create_event(
     Ok(())
 }
 
-fn serialize_commit(commit: &Commit) -> Result<String> {
+pub fn serialize_commit(commit: &Commit) -> Result<String> {
     let id = commit.id().to_string();
     let tree = commit.tree_id().to_string();
     let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
@@ -222,7 +222,7 @@ fn serialize_commit(commit: &Commit) -> Result<String> {
     Ok(serialized)
 }
 
-fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
+pub fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
     //we serialize the commit data
     //easier to grab the commit.id
     let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
@@ -240,18 +240,18 @@ fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<
     Ok(commit)
 }
 
-fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
+pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
     let padded_commit_id = format!("{:0>64}", commit_id);
     info!("padded_commit_id:{:?}", padded_commit_id);
     let keys = Keys::parse(&padded_commit_id);
     Ok(keys.unwrap())
 }
 
-fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
+pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
 }
 
-fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
+pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
     if let Value::String(s) = json_value {
         let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
         Some(lines)
@@ -260,7 +260,7 @@ fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
     }
 }
 
-fn value_to_string(value: &Value) -> String {
+pub fn value_to_string(value: &Value) -> String {
     match value {
         Value::Null => "null".to_string(),
         Value::Bool(b) => b.to_string(),
@@ -280,7 +280,7 @@ fn value_to_string(value: &Value) -> String {
     }
 }
 
-fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
+pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     if let Value::String(s) = value {
         s.split(&separator).map(|s| s.to_string()).collect()
     } else {
@@ -288,45 +288,106 @@ fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     }
 }
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Args {
+/// Simple CLI application to interact with nostr
+#[derive(Debug, Parser)]
+#[command(name = "gnostr")]
+#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
+#[command(version = "0.0.1")]
+#[command(author, version, about, long_about = "long_about")]
+struct Cli {
     /// Name of the person to greet
-    #[arg(short, long, default_value = "user")]
-    name: String,
-
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
-    #[arg(short = 't', long)]
-    tui: bool,
+    #[arg(
+        long,
+        value_name = "NAME",
+        help = "gnostr --name <string>",
+        /*default_value = ""*/ //decide whether to allow env var $USER as default
+    )]
+    name: Option<String>,
+    ///
+    #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
+		action = clap::ArgAction::Append,
+		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    nsec: Option<String>,
+    ///
+    #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
+    hash: Option<String>,
+    ///
+    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
+    topic: Option<String>,
+    ///
+    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
+		action = clap::ArgAction::Append,
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
+    relays: Vec<String>,
+    /// Enable debug logging
+    #[clap(
+        long,
+        value_name = "DEBUG",
+        help = "gnostr --debug",
+        default_value = "false"
+    )]
+    debug: bool,
+    /// Enable info logging
+    #[clap(
+        long,
+        value_name = "INFO",
+        help = "gnostr --info",
+        default_value = "false"
+    )]
+    info: bool,
+    /// Enable trace logging
+    #[clap(
+        long,
+        value_name = "TRACE",
+        help = "gnostr --trace",
+        default_value = "false"
+    )]
+    trace: bool,
     #[arg(long = "cfg", default_value = "")]
     config: String,
-    #[arg(long = "log_level", default_value = "")]
-    log_level: String,
-    #[arg(long = "topic", default_value = "")]
-    topic: String,
 }
 
 //async tasks
-fn global_rt() -> &'static tokio::runtime::Runtime {
+pub fn global_rt() -> &'static tokio::runtime::Runtime {
     static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+pub fn chat() -> Result<(), Box<dyn Error>> {
+    let args: Cli = Cli::parse();
+
+    if let Some(name) = args.name {
+        use std::env;
+        env::set_var("USER", &name);
+    };
+
+    let level = if args.debug {
+        Level::DEBUG
+    } else if args.trace {
+        Level::TRACE
+    } else if args.info {
+        Level::INFO
+    } else {
+        Level::WARN
+    };
+
     let filter = EnvFilter::default()
-        .add_directive(Level::WARN.into())
-        //.add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-        //.add_directive("nostr_relay_pool=off".parse().unwrap())
-        //.add_directive("libp2p_mdns=off".parse().unwrap())
-        .add_directive("other_module=off".parse().unwrap()); // Turn off logging for other_module
+        .add_directive(level.into())
+        .add_directive("nostr_sdk=off".parse().unwrap())
+        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
+        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
+        .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
+        //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
+        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
+        .add_directive("gnostr::message=off".parse().unwrap())
+        .add_directive("gnostr::nostr_proto=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(fmt::layer().with_writer(std::io::stdout))
         .with(filter);
 
-    //subscriber.try_init();
+    let _ = subscriber.try_init();
 
     //parse keys from sha256 hash
     let empty_hash_keys =
@@ -570,7 +631,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn input_loop(self_input: tokio::sync::mpsc::Sender<Vec<u8>>) -> Result<(), Box<dyn Error>> {
+pub async fn input_loop(
+    self_input: tokio::sync::mpsc::Sender<Vec<u8>>,
+) -> Result<(), Box<dyn Error>> {
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     while let Some(line) = stdin.next_line().await? {
         let msg = Msg::default().set_content(line);
