@@ -294,7 +294,7 @@ pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
 #[command(author, version, about, long_about = "long_about")]
-struct Cli {
+pub struct ChatCli {
     /// Name of the person to greet
     #[arg(
         long,
@@ -302,23 +302,23 @@ struct Cli {
         help = "gnostr --name <string>",
         /*default_value = ""*/ //decide whether to allow env var $USER as default
     )]
-    name: Option<String>,
+    pub name: Option<String>,
     ///
     #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
 		action = clap::ArgAction::Append,
 		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
-    nsec: Option<String>,
+    pub nsec: Option<String>,
     ///
     #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
-    hash: Option<String>,
+    pub hash: Option<String>,
     ///
     #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
-    topic: Option<String>,
+    pub topic: Option<String>,
     ///
     #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
 		action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
-    relays: Vec<String>,
+    pub relays: Vec<String>,
     /// Enable debug logging
     #[clap(
         long,
@@ -326,7 +326,7 @@ struct Cli {
         help = "gnostr --debug",
         default_value = "false"
     )]
-    debug: bool,
+    pub debug: bool,
     /// Enable info logging
     #[clap(
         long,
@@ -334,7 +334,7 @@ struct Cli {
         help = "gnostr --info",
         default_value = "false"
     )]
-    info: bool,
+    pub info: bool,
     /// Enable trace logging
     #[clap(
         long,
@@ -342,9 +342,9 @@ struct Cli {
         help = "gnostr --trace",
         default_value = "false"
     )]
-    trace: bool,
+    pub trace: bool,
     #[arg(long = "cfg", default_value = "")]
-    config: String,
+    pub config: String,
 }
 
 //async tasks
@@ -354,7 +354,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 }
 
 pub fn chat() -> Result<(), Box<dyn Error>> {
-    let args: Cli = Cli::parse();
+    let args: ChatCli = ChatCli::parse();
 
     if let Some(name) = args.name {
         use std::env;
