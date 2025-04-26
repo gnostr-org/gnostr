@@ -20,7 +20,7 @@
     clippy::legacy_numeric_constants,
     clippy::too_long_first_doc_paragraph,
     clippy::set_contains_or_insert,
-    clippy::unknown_lints
+    //clippy::unknown_lints
 )]
 
 //TODO:
@@ -92,12 +92,16 @@ pub enum AsyncNotification {
     Git(AsyncGitNotification),
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum Updater {
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Updater {
     Ticker,
     NotifyWatcher,
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn tui() -> Result<()> {
     let app_start = Instant::now();
 
@@ -154,6 +158,10 @@ pub fn tui() -> Result<()> {
     Ok(())
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn run_app(
     app_start: Instant,
     repo: RepoPath,
@@ -254,12 +262,20 @@ pub fn run_app(
     Ok(app.quit_state())
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn setup_terminal() -> Result<()> {
     enable_raw_mode()?;
     io::stdout().execute(EnterAlternateScreen)?;
     Ok(())
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn shutdown_terminal() {
     let leave_screen = io::stdout().execute(LeaveAlternateScreen).map(|_f| ());
 
@@ -274,6 +290,10 @@ pub fn shutdown_terminal() {
     }
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
     if app.requires_redraw() {
         terminal.clear()?;
@@ -281,13 +301,14 @@ pub fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 
     terminal.draw(|f| {
         if let Err(e) = app.draw(f) {
-            log::error!("failed to draw: {:?}", e);
+			log::error!("failed to draw: {e:?}");
         }
     })?;
 
     Ok(())
 }
 
+#[must_use]
 pub fn valid_path(repo_path: &RepoPath) -> bool {
     let error = asyncgit::sync::repo_open_error(repo_path);
     if let Some(error) = &error {
@@ -296,6 +317,10 @@ pub fn valid_path(repo_path: &RepoPath) -> bool {
     error.is_none()
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn select_event(
     rx_input: &Receiver<InputEvent>,
     rx_git: &Receiver<AsyncGitNotification>,
@@ -333,6 +358,10 @@ pub fn select_event(
     Ok(ev)
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
     let backend = CrosstermBackend::new(buf);
     let mut terminal = Terminal::new(backend)?;
@@ -351,6 +380,10 @@ macro_rules! log_eprintln {
     };
 }
 
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn set_panic_handlers() -> Result<()> {
     // regular panic handler
     panic::set_hook(Box::new(|e| {

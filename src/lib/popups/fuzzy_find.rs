@@ -66,7 +66,7 @@ impl FuzzyFindPopup {
         } else if self
             .query
             .as_ref()
-            .map_or(true, |q| q != self.find_text.get_text())
+			.is_none_or(|q| q != self.find_text.get_text())
         {
             self.set_query(Some(self.find_text.get_text().to_string()));
         }
@@ -173,7 +173,7 @@ impl FuzzyFindPopup {
                     .skip(scroll_skip)
                     .take(height)
                     .map(|(idx, indices)| {
-                        let selected = self.selected_index.map_or(false, |index| index == *idx);
+						let selected = self.selected_index == Some(*idx);
                         let full_text = trim_length_left(&self.contents[*idx], width);
                         let trim_length = self.contents[*idx].graphemes(true).count()
                             - full_text.graphemes(true).count();

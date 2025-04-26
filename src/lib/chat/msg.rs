@@ -86,7 +86,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 // Color::White,
             ];
             let h = s.bytes().fold(0, |acc, b| acc ^ b as usize);
-            return LIGHT_COLORS[h % LIGHT_COLORS.len()];
+            LIGHT_COLORS[h % LIGHT_COLORS.len()]
         }
 
         match m.kind {

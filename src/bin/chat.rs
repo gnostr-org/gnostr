@@ -30,9 +30,8 @@ use gnostr::chat::ui;
 use gnostr::global_rt::global_rt;
 //const TITLE: &str = include_str!("./title.txt");
 
-
 use asyncgit::sync::commit::*;
-use asyncgit::sync::commit::{serialize_commit, deserialize_commit};
+use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct SerializableCommit {
@@ -353,12 +352,6 @@ struct Cli {
     config: String,
 }
 
-////async tasks
-//fn global_rt() -> &'static tokio::runtime::Runtime {
-//    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-//    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
-//}
-
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Cli = Cli::parse();
 
@@ -591,7 +584,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         info!("Not sent to: {:?}", output.failed);
     });
 
-    std::process::exit(0);
+    //std::process::exit(0);
 
     let mut app = ui::App::default();
 
