@@ -61,10 +61,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .add_directive(level.into())
         .add_directive("nostr_sdk=off".parse().unwrap())
         .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
+        .add_directive("nostr_sdk::client=off".parse().unwrap())
         .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         .add_directive("nostr_relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap());
