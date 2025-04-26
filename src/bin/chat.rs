@@ -60,12 +60,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let _ = subscriber.try_init();
 
-    //if args.nsec.is_some() {
-    //let keys = Keys::parse(&args.nsec.unwrap().clone()).unwrap();
-
-    //    print!("{{\"private_key\":\"{}\"}}", keys.secret_key().display_secret());
-    //    print!("{{\"public_key\":\"{}\"}}", keys.public_key());
-    //}
+    if args.debug || args.trace {
+        if args.nsec.clone().is_some() {
+            let keys = Keys::parse(&args.nsec.clone().unwrap().clone()).unwrap();
+            print!(
+                "{{\"private_key\":\"{}\"}}",
+                keys.secret_key().display_secret()
+            );
+            print!("{{\"public_key\":\"{}\"}}", keys.public_key());
+        }
+    }
     //parse keys from sha256 hash
     let empty_hash_keys =
         Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
@@ -90,6 +94,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             keys.secret_key().display_secret()
         );
         info!("{{\"public_key\":\"{}\"}}", keys.public_key());
+
         let mut custom_tags = HashMap::new();
         custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
         custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
