@@ -1,8 +1,7 @@
-use anyhow::{anyhow, Result};
-use asyncgit::sync::commit::*;
+use anyhow::Result;
 use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use clap::{Parser /*, Subcommand*/};
-use git2::{Commit, ObjectType, Oid, Repository};
+use git2::{ObjectType, Repository};
 use gnostr::chat::create_event;
 use gnostr::chat::msg::*;
 use gnostr::chat::p2p::evt_loop;
@@ -13,13 +12,10 @@ use gnostr::chat::ChatCli;
 use gnostr::global_rt::global_rt;
 
 use libp2p::gossipsub;
-use log::LevelFilter;
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::EventBuilder;
-use serde::{Deserialize, Serialize};
 use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
-use std::borrow::Cow;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::{error::Error, time::Duration};
 use tracing::{debug, info, Level};
