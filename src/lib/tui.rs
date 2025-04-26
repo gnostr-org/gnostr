@@ -98,7 +98,7 @@ enum Updater {
     NotifyWatcher,
 }
 
-fn main() -> Result<()> {
+pub fn tui() -> Result<()> {
     let app_start = Instant::now();
 
     let cliargs = process_cmdline()?;
@@ -154,7 +154,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn run_app(
+pub fn run_app(
     app_start: Instant,
     repo: RepoPath,
     theme: Theme,
@@ -254,13 +254,13 @@ fn run_app(
     Ok(app.quit_state())
 }
 
-fn setup_terminal() -> Result<()> {
+pub fn setup_terminal() -> Result<()> {
     enable_raw_mode()?;
     io::stdout().execute(EnterAlternateScreen)?;
     Ok(())
 }
 
-fn shutdown_terminal() {
+pub fn shutdown_terminal() {
     let leave_screen = io::stdout().execute(LeaveAlternateScreen).map(|_f| ());
 
     if let Err(e) = leave_screen {
@@ -274,7 +274,7 @@ fn shutdown_terminal() {
     }
 }
 
-fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
+pub fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
     if app.requires_redraw() {
         terminal.clear()?;
     }
@@ -288,7 +288,7 @@ fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
     Ok(())
 }
 
-fn valid_path(repo_path: &RepoPath) -> bool {
+pub fn valid_path(repo_path: &RepoPath) -> bool {
     let error = asyncgit::sync::repo_open_error(repo_path);
     if let Some(error) = &error {
         log::error!("repo open error: {error}");
@@ -296,7 +296,7 @@ fn valid_path(repo_path: &RepoPath) -> bool {
     error.is_none()
 }
 
-fn select_event(
+pub fn select_event(
     rx_input: &Receiver<InputEvent>,
     rx_git: &Receiver<AsyncGitNotification>,
     rx_app: &Receiver<AsyncAppNotification>,
@@ -333,7 +333,7 @@ fn select_event(
     Ok(ev)
 }
 
-fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
+pub fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
     let backend = CrosstermBackend::new(buf);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
@@ -351,7 +351,7 @@ macro_rules! log_eprintln {
     };
 }
 
-fn set_panic_handlers() -> Result<()> {
+pub fn set_panic_handlers() -> Result<()> {
     // regular panic handler
     panic::set_hook(Box::new(|e| {
         let backtrace = Backtrace::new();
