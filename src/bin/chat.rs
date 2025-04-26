@@ -24,10 +24,10 @@ use serde_json::{Result as SerdeJsonResult, Value};
 //use sha2::Digest;
 //use tokio::time::Duration;
 
-use gnostr::chat::split_json_string;
-
-use gnostr::chat::parse_json;
 use gnostr::chat::create_event;
+use gnostr::chat::parse_json;
+use gnostr::chat::split_json_string;
+use gnostr::chat::ChatCli;
 //use gnostr::chat::msg;
 use gnostr::chat::msg::*;
 //use gnostr::chat::p2p;
@@ -39,89 +39,8 @@ use gnostr::global_rt::global_rt;
 use asyncgit::sync::commit::*;
 use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 
-
-async fn create_event_with_custom_tags(
-    keys: &Keys,
-    content: &str,
-    custom_tags: HashMap<String, Vec<String>>,
-) -> Result<Event> {
-    let mut builder = EventBuilder::new(Kind::TextNote, content);
-
-    for (tag_name, tag_values) in custom_tags {
-        info!("tag_name={:?}", tag_name);
-        info!("tag_values={:?}", tag_values);
-        //pops &tag_values[0]
-        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
-        builder = builder.tag(tag);
-    }
-
-    let unsigned_event = builder.build(keys.public_key()); // Build the unsigned event
-    let signed_event = unsigned_event.sign(keys); // Sign the event
-    Ok(signed_event.await?)
-}
-
-
-/// Simple CLI application to interact with nostr
-#[derive(Debug, Parser)]
-#[command(name = "gnostr")]
-#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
-#[command(version = "0.0.1")]
-#[command(author, version, about, long_about = "long_about")]
-struct Cli {
-    /// Name of the person to greet
-    #[arg(
-        long,
-        value_name = "NAME",
-        help = "gnostr --name <string>",
-        /*default_value = ""*/ //decide whether to allow env var $USER as default
-    )]
-    name: Option<String>,
-    ///
-    #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
-		action = clap::ArgAction::Append,
-		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
-    nsec: Option<String>,
-    ///
-    #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
-    hash: Option<String>,
-    ///
-    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
-    topic: Option<String>,
-    ///
-    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
-		action = clap::ArgAction::Append,
-		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
-    relays: Vec<String>,
-    /// Enable debug logging
-    #[clap(
-        long,
-        value_name = "DEBUG",
-        help = "gnostr --debug",
-        default_value = "false"
-    )]
-    debug: bool,
-    /// Enable info logging
-    #[clap(
-        long,
-        value_name = "INFO",
-        help = "gnostr --info",
-        default_value = "false"
-    )]
-    info: bool,
-    /// Enable trace logging
-    #[clap(
-        long,
-        value_name = "TRACE",
-        help = "gnostr --trace",
-        default_value = "false"
-    )]
-    trace: bool,
-    #[arg(long = "cfg", default_value = "")]
-    config: String,
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
-    let args: Cli = Cli::parse();
+    let args: ChatCli = ChatCli::parse();
 
     if let Some(name) = args.name {
         use std::env;
@@ -429,14 +348,3 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
-//async fn input_loop(self_input: tokio::sync::mpsc::Sender<Vec<u8>>) -> Result<(), Box<dyn Error>> {
-//    let mut stdin = io::BufReader::new(io::stdin()).lines();
-//    while let Some(line) = stdin.next_line().await? {
-//        let msg = Msg::default().set_content(line);
-//        if let Ok(b) = serde_json::to_vec(&msg) {
-//            self_input.send(b).await?;
-//        }
-//    }
-//    Ok(())
-//}
