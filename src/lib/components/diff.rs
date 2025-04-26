@@ -322,7 +322,7 @@ impl DiffComponent {
 
                 for (i, hunk) in diff.hunks.iter().enumerate() {
                     let hunk_selected =
-                        self.focused() && self.selected_hunk.map_or(false, |s| s == i);
+						self.focused() && (self.selected_hunk == Some(i));
 
                     if lines_added >= height as usize {
                         break;
