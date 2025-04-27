@@ -67,6 +67,10 @@ pub async fn parse_key_or_id_to_hex_string(
     Ok(hex_key_or_id)
 }
 
+pub fn truncate_chars(s: &str, max_chars: usize) -> String {
+    s.chars().take(max_chars).collect()
+}
+
 #[derive(clap::ValueEnum, Clone, Debug)]
 pub enum Prefix {
     Npub,
