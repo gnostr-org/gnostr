@@ -171,7 +171,7 @@ impl DiffComponent {
     pub fn update(&mut self, path: String, is_stage: bool, diff: FileDiff) {
         self.pending = false;
 
-        ///hash
+        //hash
         let hash = hash(&diff);
 
         if self.current.hash != hash {
