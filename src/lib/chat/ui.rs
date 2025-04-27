@@ -1,7 +1,6 @@
 /// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
 //use crate::ui::event::Event;
 //use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-
 use ratatui::prelude::*;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
