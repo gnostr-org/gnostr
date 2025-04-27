@@ -502,22 +502,32 @@ impl TopicList {
             .unwrap_or_else(|| theme.commit_unhighlighted());
 
         // commit hash
-        //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
-        txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
+        //txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
+        //txt.push(splitter.clone());
+        txt.push(Span::styled(
+            format!("{} ", &e.keys),
+            style_hash,
+        ));
+        txt.push(splitter.clone());
+        txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+        txt.push(splitter.clone());
 
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
-        //let author = string_width_align(&e.author, author_width);
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
+        //// commit msg
+        //// commit msg
+        txt.push(splitter.clone());
         txt.push(Span::styled(
             format!("{:message_width$}", &e.msg),
-            style_msg,
+            style_author,
         ));
 
+        let author = string_width_align(&e.author, author_width);
         // commit author
-        //txt.push(Span::styled(author, style_author));
+        txt.push(Span::styled(author, style_author));
 
         // commit tags
         if let Some(tags) = tags {
