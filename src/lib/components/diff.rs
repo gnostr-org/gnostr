@@ -32,7 +32,7 @@ use crate::{
     string_utils::{tabs_to_spaces, trim_offset},
     strings, try_or_popup,
     ui::style::SharedTheme,
-    utils::parse_private_key,
+    //utils::parse_private_key,
 };
 
 use nostr_sdk_0_37_0::prelude::*;
