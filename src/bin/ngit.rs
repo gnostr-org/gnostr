@@ -5,9 +5,6 @@
 use anyhow::Result;
 use clap::Parser;
 use gnostr::cli::{Cli, Commands};
-
-use gnostr::{cli, cli_interactor, client, git, git_events, login, repo_ref};
-
 use gnostr::sub_commands;
 
 #[tokio::main]
