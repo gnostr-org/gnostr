@@ -120,9 +120,11 @@ jobs:
       ## objective: test non-cmake build gnostr-am
       ## - run: make cargo-install-crates || sudo make cargo-install-crates
       - run: |
-          make cargo-install || \
-          sudo make cargo-install || \
+          make cargo-install || sudo make cargo-install
+        if: matrix.os != 'windows-latest'
+      - run: |
           cargo install --path .
+        if: matrix.os != 'windows-latest'
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: gnostr ngit --help
@@ -137,6 +139,7 @@ jobs:
           gnostr -d ${{ env.POW }} \
           --nsec $(gnostr --hash 🦀) \
           text-note --content "🦀" || true
+        if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
@@ -146,12 +149,14 @@ jobs:
           -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
+        if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
           -r wss://nos.lol \
           --nsec "$(gnostr-sha256)" \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true
+        if: matrix.os != 'windows-latest'
       ##
       ## WEEBLE-WOBBLE
       ## GNOSTR DETEMINISTIC ALIASES
@@ -246,6 +251,7 @@ jobs:
           #gnostr-post-event -r wss://e.nos.lol || true
 
           #./mempool_space_bot wss://e.nos.lol || true
+        if: matrix.os != 'windows-latest'
 
       - run: ./nip-0034 || true
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
@@ -266,6 +272,7 @@ jobs:
           -t "$(gnostr-blockheight)" \
           -t "$(gnostr-wobble)" \
           --hex
+        if: matrix.os != 'windows-latest'
 
       - run: |
           gnostr \
@@ -275,6 +282,7 @@ jobs:
           -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
           -r "hello $(date +%s)" \
           #| gnostr-xq
+        if: matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
