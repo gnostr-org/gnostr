@@ -152,18 +152,31 @@ impl DrawableComponent for ChatDetailsComponent {
 
             //vertical column slices
             let vertical_percentages = if self.file_tree.focused() {
-                //file_tree refers to a File: widget that indicated
+                //file_tree refers to a File: widget that indicates
                 //which files are part of the commit
                 //once arrow right from topiclist or revlog
                 //
-                //Info
-                //Message (scrollable) TODO fix toggle
+                //1%
                 //
-                //filetree
+                //33% Info
+                //    Message (scrollable) TODO fix toggle
+                //
+                //66% filetree
+                //
+                //1%
                 //
                 (1, 33, 66, 1) //commit Info should remain visible
             } else if details_focused {
-                //topiclist or revlog split
+                //
+                //1%
+                //
+                //80% Info
+                //    Message (scrollable) TODO fix toggle
+                //
+                //20% filetree
+                //
+                //1%
+                //
                 (1, 80, 20, 1) //commit Info and Message visible
                                //filetree obfuscated
             } else {
