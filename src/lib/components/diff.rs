@@ -30,7 +30,8 @@ use crate::{
     options::SharedOptions,
     queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
     string_utils::{tabs_to_spaces, trim_offset},
-    strings, try_or_popup,
+    strings,
+    try_or_popup,
     ui::style::SharedTheme,
     //utils::parse_private_key,
 };
