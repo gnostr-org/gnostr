@@ -92,14 +92,14 @@ jobs:
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap nostorg/nostr || true
-        #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        #if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
@@ -119,7 +119,10 @@ jobs:
 
       ## objective: test non-cmake build gnostr-am
       ## - run: make cargo-install-crates || sudo make cargo-install-crates
-      - run: make cargo-install || sudo make cargo-install
+      - run: |
+          make cargo-install || \
+          sudo make cargo-install || \
+          cargo install --path .
       - run: gnostr --help
       - run: gnostr ngit >/dev/null || true
       - run: gnostr ngit --help
