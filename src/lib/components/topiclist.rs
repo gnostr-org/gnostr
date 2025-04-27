@@ -519,7 +519,7 @@ impl TopicList {
         // style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
-        txt.push(Span::styled(Cow::from(&*e.keys), style_msg));
+        txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
         //txt.push(splitter.clone());
 
@@ -813,6 +813,12 @@ impl DrawableComponent for TopicList {
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
         );
+        let more_text = format!(
+            " {} {}/{} ",
+            self.title,
+            self.commits.len().saturating_sub(self.selection),
+            self.commits.len(),
+        );
 
         //render commit info in topiclist
         //
@@ -821,7 +827,7 @@ impl DrawableComponent for TopicList {
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
-                        .title(Span::styled(title.as_str(), self.theme.title(true)))
+                        .title(Span::styled(format!("{} more_text--->{}<---", title.as_str().to_owned(), more_text.as_str()), self.theme.title(true)))
                         .border_style(self.theme.block(true)),
                 )
                 .alignment(Alignment::Left),
