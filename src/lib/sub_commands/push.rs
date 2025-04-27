@@ -6,7 +6,7 @@ use anyhow::{bail, Context, Result};
 use nostr_sdk::PublicKey;
 
 use crate::{
-    cli::Cli,
+    //cli::Cli,
     client::{
         fetching_with_report, get_all_proposal_patch_events_from_cache,
         get_proposals_and_revisions_from_cache, get_repo_ref_from_cache, Client, Connect,

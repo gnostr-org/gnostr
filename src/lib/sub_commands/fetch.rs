@@ -5,7 +5,7 @@ use clap;
 use nostr::nips::nip01::Coordinate;
 
 use crate::{
-    cli::Cli,
+    //cli::Cli,
     client::{fetching_with_report, Client, Connect},
     git::{Repo, RepoActions},
     repo_ref::get_repo_coordinates,
