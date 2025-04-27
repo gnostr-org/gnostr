@@ -227,7 +227,7 @@ impl Component for InspectChatPopup {
 
 ///InspectChatPopup
 impl InspectChatPopup {
-    ///accessors!(self, [diff, details]);
+    //accessors!(self, [diff, details]);
     accessors!(self, [diff, details]);
 
     ///
