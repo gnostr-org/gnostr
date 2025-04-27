@@ -16,6 +16,7 @@ use ratatui::{
     Frame,
 };
 
+use crate::utils::truncate_chars;
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::{
     app::Environment,
@@ -506,7 +507,7 @@ impl TopicList {
         //txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
         //txt.push(splitter.clone());
         txt.push(Span::styled(
-            format!("{} ", &e.keys),
+            format!("{} ", &truncate_chars(&e.keys, 64 as usize)),
             style_hash,
         ));
         txt.push(splitter.clone());
