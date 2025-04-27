@@ -5,7 +5,7 @@ use nostr::{nips::nip01::Coordinate, FromBech32, PublicKey, ToBech32};
 use nostr_sdk::Kind;
 
 use crate::{
-    cli::Cli,
+    //cli::Cli,
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
     client::{fetching_with_report, get_repo_ref_from_cache, send_events, Client, Connect},
     git::{nostr_url::convert_clone_url_to_https, Repo, RepoActions},
