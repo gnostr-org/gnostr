@@ -16,8 +16,8 @@ use ratatui::{
     Frame,
 };
 
-use crate::utils::truncate_chars;
 use super::utils::logitems::{ItemBatch, LogEntry};
+use crate::utils::truncate_chars;
 use crate::{
     app::Environment,
     components::{
@@ -511,8 +511,8 @@ impl TopicList {
             style_hash,
         ));
         txt.push(splitter.clone());
-        txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
-        txt.push(splitter.clone());
+        //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+        //txt.push(splitter.clone());
 
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
@@ -520,7 +520,7 @@ impl TopicList {
         //// commit msg
         //// commit msg
         //// commit msg
-        txt.push(splitter.clone());
+        //txt.push(splitter.clone());
         txt.push(Span::styled(
             format!("{:message_width$}", &e.msg),
             style_author,
