@@ -474,7 +474,6 @@ impl TopicList {
                 }),
                 theme.log_marker(selected),
             ));
-            //txt.push(splitter.clone());
         } else {
             txt.push(Span::styled(
                 Cow::from(symbol::EMPTY_SPACE),
@@ -502,98 +501,13 @@ impl TopicList {
             .then(|| theme.text(true, selected))
             .unwrap_or_else(|| theme.commit_unhighlighted());
 
-        //txt.push(Span::styled("|||||| ", style_time));
-
-        //weeble/blockheight/wobble
-        //// commit timestamp
-        //txt.push(Span::styled(
-        //	Cow::from(e.time_to_string(now)),//todo Created At nostr
-        //	//             //add a column in home
-        //	//Cow::from(String::from("
-        // weeble/blockheight/wobble")), 	style_time,
-        //));
-
-        //txt.push(splitter.clone());
-
         // commit hash
-        // style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
         txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
-        //txt.push(Span::styled(Cow::from(&*e.hash), style_hash));
-        //txt.push(splitter.clone());
-
-        //txt.push(Span::styled(" ||||||", style_time));
-        // marker
-        //if let Some(marked) = marked {
-        //    txt.push(Span::styled(
-        //        Cow::from(if marked {
-        //            symbol::CIRCLED_G_STR //offset in home component
-        //        } else {
-        //            symbol::EMPTY_SPACE
-        //        }),
-        //        theme.log_marker(selected),
-        //    ));
-        //    //txt.push(splitter.clone());
-        //} else {
-        //    txt.push(Span::styled(
-        //        Cow::from(symbol::EMPTY_SPACE),
-        //        theme.log_marker(selected),
-        //    ));
-        //    //txt.push(splitter.clone());
-        //}
-        txt.push(splitter.clone());
-        txt.push(splitter.clone());
-        txt.push(splitter.clone());
-        txt.push(splitter.clone());
 
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
-        //replace with nostr metadata
-        let author = string_width_align(&e.author, author_width);
-
-        // commit author
-        //txt.push(Span::styled(author, style_author));
-
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-
-        // commit tags
-        if let Some(tags) = tags {
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            txt.push(Span::styled(tags, style_tags));
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-        }
-
-        if let Some(local_branches) = local_branches {
-            //	txt.push(splitter.clone());
-            txt.push(Span::styled(local_branches, style_branches));
-        }
-        //git-remote-nostr helper
-        if let Some(remote_branches) = remote_branches {
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            txt.push(Span::styled(remote_branches, style_branches));
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-            //txt.push(splitter.clone());
-        }
-
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-        //txt.push(splitter.clone());
-        txt.push(splitter.clone());
-
+        //let author = string_width_align(&e.author, author_width);
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
@@ -602,18 +516,30 @@ impl TopicList {
             style_msg,
         ));
 
+        // commit author
+        //txt.push(Span::styled(author, style_author));
+
+        // commit tags
+        if let Some(tags) = tags {
+            txt.push(Span::styled(tags, style_tags));
+        }
+
+        if let Some(local_branches) = local_branches {
+            txt.push(Span::styled(local_branches, style_branches));
+        }
+        //git-remote-nostr helper
+        if let Some(remote_branches) = remote_branches {
+            txt.push(Span::styled(remote_branches, style_branches));
+        }
+
         Line::from(txt)
     }
 
     fn get_text(&self, height: usize, width: usize) -> Vec<Line> {
         let selection = self.relative_selection();
-
         let mut txt: Vec<Line> = Vec::with_capacity(height);
-
         let now = Local::now();
-
         let any_marked = !self.marked.is_empty();
-
         for (idx, e) in self
             .items
             .iter()
@@ -790,7 +716,6 @@ impl DrawableComponent for TopicList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            //.constraints([Constraint::Length(8), Constraint::Min(10)].as_ref())
             //first in                         //second in
             .constraints([Constraint::Min(70), Constraint::Percentage(0)].as_ref())
             .split(area);
@@ -813,12 +738,12 @@ impl DrawableComponent for TopicList {
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
         );
-        let more_text = format!(
-            " {} {}/{} ",
-            self.title,
-            self.commits.len().saturating_sub(self.selection),
-            self.commits.len(),
-        );
+        //let more_text = format!(
+        //    " {} {}/{} ",
+        //    self.title,
+        //    self.commits.len().saturating_sub(self.selection),
+        //    self.commits.len(),
+        //);
 
         //render commit info in topiclist
         //
@@ -827,7 +752,15 @@ impl DrawableComponent for TopicList {
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
-                        .title(Span::styled(format!("{} more_text--->{}<---", title.as_str().to_owned(), more_text.as_str()), self.theme.title(true)))
+                        .title(Span::styled(
+                            format!(
+                                //"{} more_text--->{:>}<---",
+                                "{}",
+                                title.as_str().to_owned(),
+                                //more_text.as_str()
+                            ),
+                            self.theme.title(true),
+                        ))
                         .border_style(self.theme.block(true)),
                 )
                 .alignment(Alignment::Left),
@@ -850,34 +783,105 @@ impl Component for TopicList {
     fn event(&mut self, ev: &Event) -> Result<EventState> {
         if let Event::Key(k) = ev {
             let selection_changed = if key_match(k, self.key_config.keys.move_up) {
+                //
+                //
+                //
+                //
                 self.move_selection(ScrollType::Up)?
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.move_down) {
+                //
+                //
+                //
+                //
                 self.move_selection(ScrollType::Down)?
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.shift_up)
                 || key_match(k, self.key_config.keys.home)
             {
+                //
+                //
+                //
+                //
                 self.move_selection(ScrollType::Home)?
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.shift_down)
                 || key_match(k, self.key_config.keys.end)
             {
+                //
+                //
+                //
+                //
                 self.move_selection(ScrollType::End)?
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.page_up) {
+                //
+                //
+                //
+                //
                 self.move_selection(ScrollType::PageUp)?
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.page_down) {
+                //
+                //
+                //
+                //
                 self.move_selection(ScrollType::PageDown)?
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.log_mark_commit) {
+                //
+                //
+                //
+                //
                 self.mark();
                 true
+                //
+                //
+                //
+                //
             } else if key_match(k, self.key_config.keys.log_checkout_commit) {
                 //
                 self.checkout();
                 true
             } else if key_match(k, self.key_config.keys.log_comment_commit) {
                 //
+                //
+                //
+                //
                 self.comment();
                 true
+                //
+                //
+                //
+                //
             } else {
+                //
+                //
+                //
+                //
                 false
+                //
+                //
+                //
+                //
             };
             return Ok(selection_changed.into());
         }
