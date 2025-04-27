@@ -32,7 +32,7 @@ use crate::{
     app::Environment,
     components::{
         visibility_blocking, ChatDetailsComponent, CommandBlocking, CommandInfo,
-        CommitDetailsComponent, CommitList, Component, DrawableComponent, EventState, TopicList,
+        /*CommitDetailsComponent, CommitList, */Component, DrawableComponent, EventState, TopicList,
     },
     keys::{key_match, SharedKeyConfig},
     popups::{DisplayChatOpen, FileTreeOpen, InspectChatOpen, InspectCommitOpen},
