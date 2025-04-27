@@ -224,15 +224,15 @@ impl TopicList {
 
     ///
     pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
-        /// methods
-        /// `copy_items`
-        ///
-        /// `clear_marked`
-        ///
-        /// `marked_commits`
-        ///
-        /// `set_commits`
-        /// are never used
+        // methods
+        // `copy_items`
+        //
+        // `clear_marked`
+        //
+        // `marked_commits`
+        //
+        // `set_commits`
+        // are never used
         if commits != self.commits {
             self.items.clear();
             self.commits = commits;
