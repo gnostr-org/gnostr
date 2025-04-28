@@ -182,13 +182,13 @@ impl DetailsComponent {
                         self.theme.text(true, false),
                     ),
                 ]),
-                //Line::from(vec![
-                //    style_detail(&self.theme, &Detail::Date),
-                //    Span::styled(
-                //        Cow::from(time_to_string(data.author.time, false)),
-                //        self.theme.text(true, false),
-                //    ),
-                //]),
+                Line::from(vec![
+                    style_detail(&self.theme, &Detail::Date),
+                    Span::styled(
+                        Cow::from(time_to_string(data.author.time, false)),
+                        self.theme.text(true, false),
+                    ),
+                ]),
             ];
 
             if let Some(ref committer) = data.committer {
@@ -238,6 +238,7 @@ impl DetailsComponent {
         })
     }
 
+    fn get_short_pubkey(&self) {}
     #[allow(clippy::needless_pass_by_ref_mut)]
     fn move_scroll_top(&mut self, move_type: ScrollType) -> bool {
         if self.data.is_some() {
@@ -319,7 +320,7 @@ impl DrawableComponent for DetailsComponent {
 
         //self.focused
         if self.focused {
-            //self.scroll.draw(f, chunks[1], &self.theme);
+            self.scroll.draw(f, chunks[1], &self.theme);
         }
 
         Ok(())
