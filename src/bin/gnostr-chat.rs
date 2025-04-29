@@ -240,6 +240,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     info!("commit_id:\n{}", commit_id);
     let padded_commit_id = format!("{:0>64}", commit_id.clone());
     //// commit based keys
+    //use gnostr::chat::generate_nostr_keys_from_commit_hash;
     //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
     //info!("keys.secret_key():\n{:?}", keys.secret_key());
     //info!("keys.public_key():\n{}", keys.public_key());
@@ -278,6 +279,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     //std::process::exit(0);
 
+
+	//P2P CHAT
     let mut app = ui::App::default();
 
     //TODO
@@ -289,6 +292,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     //    );
     //}
 
+    use gnostr::chat::generate_nostr_keys_from_commit_hash;
+    let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+    //info!("keys.secret_key():\n{:?}", keys.secret_key());
+    info!("keys.public_key():\n{}", keys.public_key());
+    app.add_message(
+        Msg::default()
+            .set_content(keys.public_key().to_string())
+            .set_kind(MsgKind::Raw),
+    );
     let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<Msg>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<Msg>(100);
 
