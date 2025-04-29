@@ -53,6 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
+        .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
         //
         .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
 
@@ -279,8 +280,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     //std::process::exit(0);
 
-
-	//P2P CHAT
+    //P2P CHAT
     let mut app = ui::App::default();
 
     //TODO
@@ -301,6 +301,22 @@ fn main() -> Result<(), Box<dyn Error>> {
             .set_content(keys.public_key().to_string())
             .set_kind(MsgKind::Raw),
     );
+    app.add_message(
+        Msg::default()
+            .set_content(String::from("second message"))
+            .set_kind(MsgKind::Raw),
+    );
+    app.add_message(
+        Msg::default()
+            .set_content(String::from("third message"))
+            .set_kind(MsgKind::Raw),
+    );
+    app.add_message(
+        Msg::default()
+            .set_content(String::from("fourth message"))
+            .set_kind(MsgKind::Raw),
+    );
+
     let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<Msg>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<Msg>(100);
 
