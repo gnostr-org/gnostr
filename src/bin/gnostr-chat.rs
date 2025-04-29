@@ -53,8 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
-
-		//
+        //
         .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
 
     let subscriber = Registry::default()
