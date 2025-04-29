@@ -86,7 +86,9 @@ pub async fn create_event(
 
     client.add_discovery_relay("wss://relay.damus.io").await?;
     client.add_discovery_relay("wss://purplepag.es").await?;
-    //client.add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion").await?;
+    client
+        .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
+        .await?;
 
     // add some relays
     // TODO get_relay_list here
