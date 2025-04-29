@@ -5,6 +5,8 @@ use clap::{Parser, Subcommand};
 //use gnostr::global_rt;
 //use gnostr::input::InputEvent;
 use gnostr::sub_commands;
+//use gnostr::chat::*;
+//use gnostr::chat::chat;
 //use gnostr::tui::*;
 //use gnostr::utils;
 use nostr_sdk::Result;
@@ -60,6 +62,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Chat sub commands
+    Chat(sub_commands::chat::ChatSubCommand),
     /// Ngit sub commands
     Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.
@@ -225,6 +229,7 @@ async fn main() -> Result<()> {
 
     // Post event
     match &args.command {
+        Some(Commands::Chat(sub_command_args)) => sub_commands::chat::chat(sub_command_args).await,
         Some(Commands::Ngit(sub_command_args)) => sub_commands::ngit::ngit(sub_command_args).await,
         Some(Commands::SetMetadata(sub_command_args)) => {
             {
@@ -393,6 +398,6 @@ async fn main() -> Result<()> {
             };
             //println!("gnostr -h");
             Ok(())
-        } //_ => {Ok(())}
+        }
     }
 }
