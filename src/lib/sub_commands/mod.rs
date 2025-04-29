@@ -28,3 +28,6 @@ pub mod login;
 pub mod pull;
 pub mod push;
 pub mod send;
+
+//p2p chat
+pub mod chat;
