@@ -29,7 +29,7 @@ use tui_input::Input;
 use crate::chat::msg;
 
 #[derive(Default)]
-enum InputMode {
+pub enum InputMode {
     Normal,
     #[default]
     Editing,
@@ -38,13 +38,13 @@ enum InputMode {
 /// App holds the state of the application
 pub struct App {
     /// Current value of the input box
-    input: Input,
+    pub input: Input,
     /// Current input mode
-    input_mode: InputMode,
+    pub input_mode: InputMode,
     /// History of recorded messages
-    messages: Arc<Mutex<Vec<msg::Msg>>>,
-    _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
-    msgs_scroll: usize,
+    pub messages: Arc<Mutex<Vec<msg::Msg>>>,
+    pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
+    pub msgs_scroll: usize,
     pub topic: String,
 }
 
@@ -173,6 +173,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
     }
 }
 
+//as popup widget is constructed in chat_details/mos.rs
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -191,6 +192,7 @@ fn ui(f: &mut Frame, app: &App) {
         .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
     f.render_widget(input, chunks[1]);
+
     match app.input_mode {
         InputMode::Normal =>
             // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
