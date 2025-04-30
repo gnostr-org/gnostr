@@ -54,6 +54,7 @@ pub struct KeysList {
     pub exit_popup: GituiKeyEvent,
     pub open_commit: GituiKeyEvent,
     pub open_commit_editor: GituiKeyEvent,
+    pub open_external_chat: GituiKeyEvent,
     pub open_help: GituiKeyEvent,
     pub open_options: GituiKeyEvent,
     pub move_left: GituiKeyEvent,
@@ -155,6 +156,7 @@ impl Default for KeysList {
 			//open_commit
 			open_commit: GituiKeyEvent::new(KeyCode::Char('c'),  KeyModifiers::empty()),
 			open_commit_editor: GituiKeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL),
+			open_external_chat: GituiKeyEvent::new(KeyCode::Char('c'), KeyModifiers::SHIFT),
 			open_help: GituiKeyEvent::new(KeyCode::Char('h'),  KeyModifiers::empty()),
 			open_options: GituiKeyEvent::new(KeyCode::Char('o'),  KeyModifiers::empty()),
 			move_left: GituiKeyEvent::new(KeyCode::Left,  KeyModifiers::empty()),
