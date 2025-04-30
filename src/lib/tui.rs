@@ -227,6 +227,8 @@ pub fn run_app(
 
             match event {
                 QueueEvent::InputEvent(ev) => {
+
+                    //detect external chat
                     if matches!(ev, InputEvent::State(InputState::Polling)) {
                         //Note: external ed closed, we need to
                         // re-hide cursor
@@ -234,6 +236,9 @@ pub fn run_app(
                     }
                     app.event(ev)?;
                 }
+                //tick rate for nostr network time (weeble/wobble)
+                //needs a friendly async request/ureq
+                //relay crawler also needs to be friendly and async
                 QueueEvent::Tick | QueueEvent::Notify => {
                     app.update()?;
                 }
@@ -248,6 +253,11 @@ pub fn run_app(
                 QueueEvent::SpinnerUpdate => unreachable!(),
             }
 
+            //the chat swarm needs to be invoked in the main app
+            //loop/lifecycle
+            //default topic gnostr
+            //the actual topic will be passed when scrolling/displaying commit topics
+            //in the topiclist
             draw(terminal, &app)?;
 
             spinner.set_state(app.any_work_pending());
