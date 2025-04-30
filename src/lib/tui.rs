@@ -227,7 +227,6 @@ pub fn run_app(
 
             match event {
                 QueueEvent::InputEvent(ev) => {
-
                     //detect external chat
                     if matches!(ev, InputEvent::State(InputState::Polling)) {
                         //Note: external ed closed, we need to
