@@ -302,8 +302,8 @@ impl DrawableComponent for DetailsComponent {
             dialog_paragraph(
                 &format!(
                     //"289:chat_details/details.rs:strings:commit:details_message_title:{} {}",
-                    //"289:{} {}",
-                    "{} {}",
+                    "305:{} {}",
+                    //"{} {}",
                     strings::commit::details_message_title(&self.key_config,),
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
