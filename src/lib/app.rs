@@ -771,6 +771,12 @@ impl App {
                 self.file_to_open = path;
                 flags.insert(NeedsUpdate::COMMANDS);
             }
+            InternalEvent::OpenExternalChat(path) => {
+                self.input.set_polling(false);
+                self.external_editor_popup.show()?;
+                self.file_to_open = path;
+                flags.insert(NeedsUpdate::COMMANDS);
+            }
             InternalEvent::Push(branch, push_type, force, delete) => {
                 self.push_popup.push(branch, push_type, force, delete)?;
                 flags.insert(NeedsUpdate::ALL);
