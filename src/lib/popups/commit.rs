@@ -23,6 +23,7 @@ use ratatui::{
 };
 
 use super::ExternalEditorPopup;
+use crate::popups::ExternalChatPopup;
 use crate::{
     app::Environment,
     components::{
@@ -161,6 +162,39 @@ impl CommitPopup {
         }
 
         ExternalEditorPopup::open_file_in_editor(&self.repo.borrow(), &file_path)?;
+
+        let mut message = String::new();
+
+        let mut file = File::open(&file_path)?;
+        file.read_to_string(&mut message)?;
+        drop(file);
+        std::fs::remove_file(&file_path)?;
+
+        message = commit_message_prettify(&self.repo.borrow(), message)?;
+        self.input.set_text(message);
+        self.input.show()?;
+
+        Ok(())
+    }
+
+    pub fn show_chat(&mut self, changes: Vec<StatusItem>) -> Result<()> {
+        let file_path = sync::repo_dir(&self.repo.borrow())?.join("COMMIT_EDITMSG");
+
+        {
+            let mut file = File::create(&file_path)?;
+            file.write_fmt(format_args!("{}\n", self.input.get_text()))?;
+            file.write_all(strings::commit_editor_msg(&self.key_config).as_bytes())?;
+
+            file.write_all(b"\n#\n# Changes to be committed:")?;
+
+            for change in changes {
+                let status_char = Self::item_status_char(change.status);
+                let message = format!("\n#\t{status_char}: {}", change.path);
+                file.write_all(message.as_bytes())?;
+            }
+        }
+
+        ExternalChatPopup::open_file_in_chat(&self.repo.borrow(), &file_path)?;
 
         let mut message = String::new();
 
@@ -485,6 +519,10 @@ impl Component for CommitPopup {
                     true
                 } else if key_match(e, self.key_config.keys.open_commit_editor) {
                     self.queue.push(InternalEvent::OpenExternalEditor(None));
+                    self.hide();
+                    true
+                } else if key_match(e, self.key_config.keys.open_external_chat) {
+                    self.queue.push(InternalEvent::OpenExternalChat(None));
                     self.hide();
                     true
                 } else if key_match(e, self.key_config.keys.commit_history_next) {
