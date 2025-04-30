@@ -133,12 +133,22 @@ impl DetailsComponent {
     #[allow(unstable_name_collisions, clippy::too_many_lines)]
     fn get_text_info(&self) -> Vec<Line> {
         self.data.as_ref().map_or_else(Vec::new, |data| {
-            let mut res = vec![
+            let mut res = vec![];
+
+            res.push(Line::from(vec![
+                Span::styled(
+                    Cow::from(strings::commit::details_sha()),
+                    self.theme.text(false, false),
+                ),
+                Span::styled(Cow::from(data.hash.clone()), self.theme.text(true, false)),
+            ]));
+
+            res.extend(vec![
                 Line::from(vec![
                     style_detail(&self.theme, &Detail::Author),
                     Span::styled(
                         Cow::from(format!(
-                            "commit_details/details.rs:     {} <{}>",
+                            "151:commit_details/details.rs:     {} <{}>",
                             data.author.name, data.author.email
                         )),
                         self.theme.text(true, false),
@@ -151,14 +161,14 @@ impl DetailsComponent {
                         self.theme.text(true, false),
                     ),
                 ]),
-            ];
+            ]);
 
             if let Some(ref committer) = data.committer {
                 res.extend(vec![
                     Line::from(vec![
                         style_detail(&self.theme, &Detail::Committer),
                         Span::styled(
-                            Cow::from(format!("{} <{}>", committer.name, committer.email)),
+                            Cow::from(format!("171:{} <{}>", committer.name, committer.email)),
                             self.theme.text(true, false),
                         ),
                     ]),
@@ -215,20 +225,14 @@ impl DrawableComponent for DetailsComponent {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(
-                [
-                    Constraint::Min(10),
-                    Constraint::Min(20),
-                    Constraint::Min(20),
-                ]
-                .as_ref(),
-            )
+            .constraints([Constraint::Max(5), Constraint::Min(5), Constraint::Min(5)].as_ref())
             .split(rect);
 
+        //first in
         f.render_widget(
             dialog_paragraph(
-                //
                 &strings::commit::details_info_title(&self.key_config),
+                //&format!("{}", String::from("238:")),
                 Text::from(self.get_text_info()),
                 &self.theme,
                 false,
@@ -257,6 +261,7 @@ impl DrawableComponent for DetailsComponent {
 
         let can_scroll = usize::from(height) < number_of_lines;
 
+        //second in
         //this is deceptively rendered here
         //but appears in the inspect_commit
         //once right arrow from topiclist or revlist
@@ -264,8 +269,10 @@ impl DrawableComponent for DetailsComponent {
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "commit_details/details.rs dialog_paragraph {} {}",
+                    "275:commit_details/details.rs:{} (w:{},h:{}) {}",
                     strings::commit::details_message_title(&self.key_config,),
+                    chunks[1].width,
+                    chunks[1].height,
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
                     } else {
@@ -278,12 +285,15 @@ impl DrawableComponent for DetailsComponent {
             ),
             chunks[1],
         );
+        //third in
         //this is rendered above the file_tree
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "commit_details/details.rs:replace with chat widget!!!!! {} {}",
+                    "296:commit_details/details.rs:{} (w:{},h:{}) {}",
                     strings::commit::details_message_title(&self.key_config,),
+                    chunks[2].width,
+                    chunks[2].height,
                     if !self.focused && can_scroll {
                         CANSCROLL_STRING
                     } else {
@@ -300,7 +310,9 @@ impl DrawableComponent for DetailsComponent {
         //construct and render p2p chat
 
         if self.focused {
+            //self.scroll.draw(f, chunks[0], &self.theme);
             self.scroll.draw(f, chunks[1], &self.theme);
+            self.scroll.draw(f, chunks[2], &self.theme);
         }
 
         Ok(())
