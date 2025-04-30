@@ -311,9 +311,9 @@ impl Chatlog {
     fn draw_search(&self, f: &mut Frame, area: Rect) {
         let (text, title) = match &self.search {
             LogSearch::Searching(_, options, progress, _) => (
-                format!("'{}'", options.search_pattern.clone()),
+                format!("home.rs:314:'{}'", options.search_pattern.clone()),
                 format!(
-                    "({}%)",
+                    "home.rs:316:({}%)",
                     progress
                         .map(|progress| progress.progress)
                         .unwrap_or_default()
@@ -324,11 +324,11 @@ impl Chatlog {
 
                 (
                     format!(
-                        "'{}' (duration: {:?})",
+                        "home.rs:327:'{}' (duration: {:?})",
                         results.options.search_pattern.clone(),
                         results.duration,
                     ),
-                    format!("({}/{})", (info.0 + 1).min(info.1), info.1),
+                    format!("home.rs:331:({}/{})", (info.0 + 1).min(info.1), info.1),
                 )
             }
             LogSearch::Off => (String::new(), String::new()),
@@ -339,7 +339,7 @@ impl Chatlog {
                 .block(
                     Block::default()
                         .title(Span::styled(
-                            format!("{} {}", strings::POPUP_TITLE_LOG_SEARCH, title),
+                            format!("home.rs:342:{} {}", strings::POPUP_TITLE_LOG_SEARCH, title),
                             self.theme.title(true),
                         ))
                         .borders(Borders::ALL)
