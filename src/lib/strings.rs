@@ -910,6 +910,13 @@ pub mod commands {
             CMD_GROUP_CHANGES,
         )
     }
+    pub fn open_chat(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("Chat [{}]", key_config.get_hint(key_config.keys.edit_file),),
+            "edit the currently selected file in an external editor",
+            CMD_GROUP_CHANGES,
+        )
+    }
     pub fn stage_item(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!(
