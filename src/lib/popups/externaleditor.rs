@@ -57,6 +57,7 @@ impl ExternalEditorPopup {
         }
 
         io::stdout().execute(LeaveAlternateScreen)?;
+        //
         defer! {
             io::stdout().execute(EnterAlternateScreen).expect("reset terminal");
         }
