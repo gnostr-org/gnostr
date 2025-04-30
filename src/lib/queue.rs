@@ -119,6 +119,8 @@ pub enum InternalEvent {
     ///
     OpenExternalEditor(Option<String>),
     ///
+    OpenExternalChat(Option<String>),
+    ///
     Push(String, PushType, bool, bool),
     ///
     Pull(String),
