@@ -57,8 +57,8 @@ impl ExternalChatPopup {
         }
 
         io::stdout().execute(LeaveAlternateScreen)?;
-		//
-		defer! {
+        //
+        defer! {
             io::stdout().execute(EnterAlternateScreen).expect("reset terminal");
         }
 
