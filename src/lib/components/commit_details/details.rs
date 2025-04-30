@@ -148,7 +148,7 @@ impl DetailsComponent {
                     style_detail(&self.theme, &Detail::Author),
                     Span::styled(
                         Cow::from(format!(
-                            "151:commit_details/details.rs:     {} <{}>",
+                            "151:{} <{}>",
                             data.author.name, data.author.email
                         )),
                         self.theme.text(true, false),
