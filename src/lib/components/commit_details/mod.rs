@@ -66,7 +66,7 @@ impl CommitDetailsComponent {
         let files_count = self.file_tree.file_count();
 
         format!(
-            "59:commit_details/mod.rs CommitDetailsComponent {} {}",
+            "69:commit_details/mod.rs CommitDetailsComponent {} {}",
             strings::commit::details_files_title(&self.key_config),
             files_count
         )
@@ -206,9 +206,11 @@ impl DrawableComponent for CommitDetailsComponent {
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "commit_details/mod.rs:replace with chat widget!!!!! {} {}",
+                    "209:commit_details/mod.rs:chat widget!!!!! {} {} w:{},h:{}",
                     strings::commit::details_message_title(&self.key_config,),
                     strings::commit::details_message_title(&self.key_config,),
+                    chunks[2].width,
+                    chunks[2].height,
                     //if !self.focused && can_scroll {
                     //    CANSCROLL_STRING
                     //} else {

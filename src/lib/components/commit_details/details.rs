@@ -147,10 +147,7 @@ impl DetailsComponent {
                 Line::from(vec![
                     style_detail(&self.theme, &Detail::Author),
                     Span::styled(
-                        Cow::from(format!(
-                            "151:{} <{}>",
-                            data.author.name, data.author.email
-                        )),
+                        Cow::from(format!("151:{} <{}>", data.author.name, data.author.email)),
                         self.theme.text(true, false),
                     ),
                 ]),

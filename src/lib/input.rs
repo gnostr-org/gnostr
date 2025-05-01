@@ -99,6 +99,9 @@ impl Input {
         }
     }
 
+    //fn input_loop(
+    //fn input_loop(
+    //fn input_loop(
     fn input_loop(
         arc_desired: &Arc<NotifyableMutex<bool>>,
         arc_current: &Arc<AtomicBool>,
@@ -123,6 +126,10 @@ impl Input {
                         }
                     }
 
+                    //
+                    //
+                    //
+                    //
                     tx.send(InputEvent::Input(e))?;
                     //Note: right after an input event we might have
                     // a reason to stop polling (external editor

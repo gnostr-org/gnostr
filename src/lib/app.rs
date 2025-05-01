@@ -34,11 +34,12 @@ use crate::{
     options::{Options, SharedOptions},
     popup_stack::PopupStack,
     popups::{
-        AppOption, BlameFilePopup, BranchListPopup, CommitPopup, CompareCommitsPopup, ConfirmPopup,
-        CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup, FileRevlogPopup,
-        FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup, LogSearchPopupPopup,
-        MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup,
-        RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
+        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
+        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
+        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,
+        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,
+        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,
+        TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -64,6 +65,8 @@ pub struct App {
     msg_popup: MsgPopup,
     confirm_popup: ConfirmPopup,
     commit_popup: CommitPopup,
+    //
+    chat_popup: ChatPopup,
     blame_file_popup: BlameFilePopup,
     file_revlog_popup: FileRevlogPopup,
     stashmsg_popup: StashMsgPopup,
@@ -170,15 +173,22 @@ impl App {
             input,
             confirm_popup: ConfirmPopup::new(&env),
             commit_popup: CommitPopup::new(&env),
+            //
+            chat_popup: ChatPopup::new(&env),
             blame_file_popup: BlameFilePopup::new(&env, &strings::blame_title(&env.key_config)),
             file_revlog_popup: FileRevlogPopup::new(&env),
             revision_files_popup: RevisionFilesPopup::new(&env),
             stashmsg_popup: StashMsgPopup::new(&env),
+
             //display_chat_popup
             display_chat_popup: DisplayChatPopup::new(&env),
+
             inspect_chat_popup: InspectChatPopup::new(&env),
+
             inspect_commit_popup: InspectCommitPopup::new(&env),
+
             compare_commits_popup: CompareCommitsPopup::new(&env),
+
             external_editor_popup: ExternalEditorPopup::new(&env),
             push_popup: PushPopup::new(&env),
             push_tags_popup: PushTagsPopup::new(&env),
@@ -304,9 +314,11 @@ impl App {
                     self.switch_tab(k)?;
                     NeedsUpdate::COMMANDS
                 } else if key_match(k, self.key_config.keys.cmd_bar_toggle) {
+                    //
                     self.cmdbar.borrow_mut().toggle_more();
                     NeedsUpdate::empty()
                 } else if key_match(k, self.key_config.keys.open_options) {
+                    //
                     self.options_popup.show()?;
                     NeedsUpdate::ALL
                 } else {
@@ -318,6 +330,7 @@ impl App {
 
             self.process_queue(flags)?;
         } else if let InputEvent::State(polling_state) = ev {
+            //
             self.external_editor_popup.hide();
             if matches!(polling_state, InputState::Paused) {
                 let result = if let Some(path) = self.file_to_open.take() {
@@ -346,8 +359,11 @@ impl App {
     pub fn update(&mut self) -> Result<()> {
         log::trace!("update");
 
+        //
         self.commit_popup.update();
+        //
         self.chat_tab.update()?;
+        //
         self.status_tab.update()?;
         self.revlog.update()?;
         self.files_tab.update()?;
@@ -367,11 +383,13 @@ impl App {
         if let AsyncNotification::Git(ev) = ev {
             //chat_tab.update_git
             self.chat_tab.update_git(ev)?;
+            //
             self.status_tab.update_git(ev)?;
             self.stashing_tab.update_git(ev)?;
             self.revlog.update_git(ev)?;
             self.file_revlog_popup.update_git(ev)?;
             self.inspect_chat_popup.update_git(ev)?;
+            //
             self.inspect_commit_popup.update_git(ev)?;
             self.compare_commits_popup.update_git(ev)?;
             self.push_popup.update_git(ev)?;
@@ -448,13 +466,19 @@ impl App {
             confirm_popup,
             //commit_popup
             commit_popup,
+            //
+            chat_popup,
             blame_file_popup,
             file_revlog_popup,
             stashmsg_popup,
             //display_chat_popup
             display_chat_popup,
+            //
+            inspect_chat_popup,
+            //
             inspect_commit_popup,
             compare_commits_popup,
+            //
             external_editor_popup,
             push_popup,
             push_tags_popup,
@@ -482,8 +506,9 @@ impl App {
     setup_popups!(
         self,
         [
-            //commit_popup
             commit_popup,
+            //
+            chat_popup,
             stashmsg_popup,
             help_popup,
             //
@@ -494,6 +519,7 @@ impl App {
             compare_commits_popup,
             blame_file_popup,
             file_revlog_popup,
+            //
             external_editor_popup,
             tag_commit_popup,
             select_branch_popup,
@@ -540,7 +566,7 @@ impl App {
 
     fn get_tabs(&mut self) -> Vec<&mut dyn Component> {
         vec![
-            &mut self.chat_tab,
+            &mut self.chat_tab, //home
             &mut self.status_tab,
             &mut self.revlog,
             &mut self.files_tab,
@@ -567,6 +593,7 @@ impl App {
             self.switch_to_tab(&AppTabs::Log)?;
         } else if key_match(k, self.key_config.keys.tab_files) {
             self.switch_to_tab(&AppTabs::Files)?;
+        //
         } else if key_match(k, self.key_config.keys.tab_chat) {
             //self.switch_to_tab(&AppTabs::Chat)?;
             self.switch_to_tab(&AppTabs::Chat)?;
@@ -598,6 +625,7 @@ impl App {
     fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {
         match tab {
             //AppTabs::Chat => self.set_tab(0)?,
+            //
             AppTabs::Chat => self.set_tab(0)?,
             AppTabs::Status => self.set_tab(1)?,
             AppTabs::Log => self.set_tab(2)?,
@@ -628,6 +656,7 @@ impl App {
         if flags.contains(NeedsUpdate::DIFF) {
             self.status_tab.update_diff()?;
             //self.display_chat_popup.update_diff()?;
+            //
             self.display_chat_popup.update_diff()?;
             self.inspect_chat_popup.update_diff()?;
             self.inspect_commit_popup.update_diff()?;
@@ -672,9 +701,15 @@ impl App {
             StackablePopupOpen::FileTree(param) => {
                 self.revision_files_popup.open(param)?;
             }
+            //
+            //
+            //
             StackablePopupOpen::InspectChat(param) => {
                 self.inspect_chat_popup.open(param)?;
             }
+            //
+            //
+            //
             StackablePopupOpen::InspectCommit(param) => {
                 self.inspect_commit_popup.open(param)?;
             }
@@ -724,6 +759,8 @@ impl App {
             InternalEvent::Update(u) => flags.insert(u),
             //
             InternalEvent::OpenCommit => self.commit_popup.show()?,
+            //
+            InternalEvent::OpenChat => self.chat_popup.show()?,
             InternalEvent::RewordCommit(id) => {
                 self.commit_popup.open(Some(id))?;
             }
@@ -818,6 +855,7 @@ impl App {
                     AppOption::DiffContextLines
                     | AppOption::DiffIgnoreWhitespaces
                     | AppOption::DiffInterhunkLines => {
+                        //
                         self.status_tab.update_diff()?;
                     }
                 }
@@ -839,6 +877,7 @@ impl App {
 
                 flags.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
             }
+            //
             InternalEvent::OpenPopup(popup) => {
                 self.open_popup(popup)?;
                 flags.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
@@ -1038,7 +1077,9 @@ impl App {
         });
 
         let tab_labels = [
+            //
             Span::raw(strings::tab_chat(&self.key_config)),
+            //
             Span::raw(strings::tab_status(&self.key_config)),
             Span::raw(strings::tab_log(&self.key_config)),
             Span::raw(strings::tab_files(&self.key_config)),
@@ -1081,6 +1122,8 @@ impl App {
             table_area,
         );
 
+        //TODO weeble/wobble
+        //TODO nostr identity/pubkey etc
         f.render_widget(
             Paragraph::new(Line::from(vec![Span::styled(
                 ellipsis_trim_start(&self.repo_path_text, text_area.width as usize),
