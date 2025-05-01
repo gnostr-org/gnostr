@@ -11,7 +11,7 @@ use crate::{
     repo_ref::get_repo_coordinates,
 };
 
-#[derive(clap::Args)]
+#[derive(clap::Args, Debug)]
 pub struct SubCommandArgs {
     /// address pointer to repo announcement
     #[arg(long, action)]

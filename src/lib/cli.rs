@@ -44,12 +44,12 @@ pub enum Commands {
     Login(sub_commands::login::SubCommandArgs),
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct ChatCli {
-    #[command(subcommand)]
-    pub command: ChatCommands,
+    //    #[command(subcommand)]
+    //    pub command: ChatCommands,
     /// remote signer address
     //#[arg(long, global = true)]
     //pub bunker_uri: Option<String>,
@@ -67,22 +67,22 @@ pub struct ChatCli {
     //pub disable_cli_spinners: bool,
 }
 
-#[derive(Subcommand)]
-pub enum ChatCommands {
-    /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::SubCommandArgs),
-    /// signal you are this repo's maintainer accepting proposals via
-    /// nostr
-    Init(sub_commands::init::SubCommandArgs),
-    /// issue commits as a proposal
-    Send(sub_commands::send::SubCommandArgs),
-    /// list proposals; checkout, apply or download selected
-    List,
-    /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
-    /// fetch and apply new proposal commits / revisions linked to
-    /// branch
-    Pull,
-    /// run with --nsec flag to change npub
-    Login(sub_commands::login::SubCommandArgs),
-}
+//#[derive(Subcommand, Debug)]
+//pub enum ChatCommands {
+//    /// update cache with latest updates from nostr
+//    Fetch(sub_commands::fetch::SubCommandArgs),
+//    /// signal you are this repo's maintainer accepting proposals via
+//    /// nostr
+//    Init(sub_commands::init::SubCommandArgs),
+//    /// issue commits as a proposal
+//    Send(sub_commands::send::SubCommandArgs),
+//    /// list proposals; checkout, apply or download selected
+//    List,
+//    /// send proposal revision
+//    Push(sub_commands::push::SubCommandArgs),
+//    /// fetch and apply new proposal commits / revisions linked to
+//    /// branch
+//    Pull,
+//    /// run with --nsec flag to change npub
+//    Login(sub_commands::login::SubCommandArgs),
+//}
