@@ -31,7 +31,7 @@ pub struct NgitSubCommand {
 }
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
-	match &sub_command_args.command {
+    match &sub_command_args.command {
         NgitCommands::Login(args) => login::launch(&args).await?,
         NgitCommands::Init(args) => init::launch(&args).await?,
         NgitCommands::Send(args) => send::launch(&args, true).await?,
