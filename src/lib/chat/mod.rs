@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Args, Parser};
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use std::{error::Error, time::Duration};
@@ -314,6 +314,9 @@ pub struct ChatCli {
     #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
     pub hash: Option<String>,
     ///
+    #[arg(long, value_name = "CHAT", help = "gnostr chat")]
+    pub chat: Option<String>,
+    ///
     #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
     pub topic: Option<String>,
     ///
@@ -349,14 +352,50 @@ pub struct ChatCli {
     pub config: String,
 }
 
+
+#[derive(Args, Debug, Clone)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+pub struct ChatSubCommands {
+    //#[command(subcommand)]
+    //command: ChatCommands,
+    ///// nsec or hex private key
+    #[arg(short, long, global = true)]
+    nsec: Option<String>,
+    ///// password to decrypt nsec
+    #[arg(short, long, global = true)]
+    password: Option<String>,
+    #[arg(long, global = true)]
+    name: Option<String>,
+    ///// chat topic
+    #[arg(long, global = true)]
+    topic: Option<String>,
+    ///// chat topic
+    #[arg(long, global = true)]
+    hash: Option<String>,
+    ///// disable spinner animations
+    #[arg(long, action)]
+    disable_cli_spinners: bool,
+    #[arg(long, action)]
+    info: bool,
+    #[arg(long, action)]
+    debug: bool,
+    #[arg(long, action)]
+    trace: bool,
+}
+
+
+
 //async tasks
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
     static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub fn chat() -> Result<(), Box<dyn Error>> {
-    let args: ChatCli = ChatCli::parse();
+pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
+    //let args: ChatCli = ChatCli::parse();
+
+	let args = sub_command_args.clone();
 
     if let Some(hash) = args.hash {
         println!("hash={}", hash);
@@ -595,10 +634,16 @@ pub fn chat() -> Result<(), Box<dyn Error>> {
 
     // let input_loop_fut = input_loop(input_tx);
     let input_tx_clone = input_tx.clone();
-    app.on_submit(move |m| {
-        debug!("sent: {:?}", m);
-        input_tx_clone.blocking_send(m).unwrap();
-    });
+    
+let value = input_tx_clone.clone();
+	app.on_submit(move |m| {
+		
+let value = value.clone();
+		global_rt().spawn(async move {
+			debug!("sent: {:?}", m);
+			value.send(m).await.unwrap();
+		});
+	});
 
     let mut topic = String::from(commit_id.to_string());
     app.topic = topic.clone();

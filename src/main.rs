@@ -67,7 +67,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Chat sub commands
-    Chat(sub_commands::chat::ChatSubCommand),
+	Chat(gnostr::chat::ChatSubCommands),
     /// Ngit sub commands
     Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.

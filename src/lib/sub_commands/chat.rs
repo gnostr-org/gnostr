@@ -1,13 +1,13 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 //use crate::cli::ChatCommands;
-use crate::sub_commands::fetch;
-use crate::sub_commands::init;
-use crate::sub_commands::list;
-use crate::sub_commands::login;
-use crate::sub_commands::pull;
-use crate::sub_commands::push;
-use crate::sub_commands::send;
+//use crate::sub_commands::fetch;
+//use crate::sub_commands::init;
+//use crate::sub_commands::list;
+//use crate::sub_commands::login;
+//use crate::sub_commands::pull;
+//use crate::sub_commands::push;
+//use crate::sub_commands::send;
 use clap::Args;
 //use nostr_sdk::prelude::*;
 //use nostr_sdk::Keys;
@@ -19,6 +19,8 @@ use anyhow::Result;
 use serde::ser::StdError;
 
 //use anyhow::Result;
+use crate::chat::*;
+//use crate::chat::chat;
 use crate::chat::create_event;
 use crate::chat::msg::*;
 use crate::chat::p2p::evt_loop;
@@ -72,7 +74,7 @@ pub struct ChatSubCommand {
     trace: bool,
 }
 
-pub async fn chat(sub_command_args: &ChatSubCommand) -> Result<(), Box<dyn StdError>> {
+pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
     //match &sub_command_args.command {
     ////    ChatCommands::Login(args) => login::launch(&args).await?,
     ////    ChatCommands::Init(args) => init::launch(&args).await?,
@@ -83,14 +85,15 @@ pub async fn chat(sub_command_args: &ChatSubCommand) -> Result<(), Box<dyn StdEr
     ////    ChatCommands::Fetch(args) => fetch::launch(&args).await?,
     //	_ => { run(sub_command_args).await? }
     //}
+    println!("{:?}", &sub_command_args);
     run(sub_command_args).await?;
 
     Ok(())
 }
 
-pub async fn run(sub_command_args: &ChatSubCommand) -> Result<(), Box<dyn StdError>> {
+pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
     println!("{:?}", &sub_command_args);
-    let chat = chat;
+    let chat = crate::chat::chat(sub_command_args);
 
     //    let args = sub_command_args;
     //
