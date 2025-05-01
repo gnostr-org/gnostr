@@ -8,7 +8,7 @@ use crate::{
     login,
 };
 
-#[derive(clap::Args)]
+#[derive(clap::Args, Debug)]
 pub struct SubCommandArgs {
     /// don't fetch user metadata and relay list from relays
     #[arg(long, action)]
