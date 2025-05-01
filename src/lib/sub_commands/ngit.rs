@@ -11,6 +11,8 @@ use crate::sub_commands::send;
 use clap::Args;
 use nostr_sdk::prelude::*;
 
+use serde::ser::StdError;
+
 #[derive(Args)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -28,8 +30,8 @@ pub struct NgitSubCommand {
     disable_cli_spinners: bool,
 }
 
-pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<()> {
-    match &sub_command_args.command {
+pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
+	match &sub_command_args.command {
         NgitCommands::Login(args) => login::launch(&args).await?,
         NgitCommands::Init(args) => init::launch(&args).await?,
         NgitCommands::Send(args) => send::launch(&args, true).await?,

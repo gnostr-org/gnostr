@@ -1,3 +1,4 @@
+use anyhow::Result;
 //use crate::sub_commands::custom_event::CustomEventCommand;
 //use crate::Commands::CustomEvent;
 //use gnostr::global_rt::global_rt;
@@ -9,11 +10,14 @@ use gnostr::sub_commands;
 //use gnostr::chat::chat;
 //use gnostr::tui::*;
 //use gnostr::utils;
-use nostr_sdk::Result;
+use nostr_sdk::Result as NostrResult;
 use sha2::{Digest, Sha256};
 use std::env;
+use std::{error::Error, time::Duration};
 use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
 use tracing_subscriber::FmtSubscriber;
+
+use serde::ser::StdError;
 
 //use std::{io::stdout, time::Duration};
 
@@ -160,8 +164,8 @@ enum Commands {
 //}
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let args: Cli = Cli::parse();
+async fn main() -> Result<(), Box<dyn StdError>> {
+	let args: Cli = Cli::parse();
     let level = if args.debug {
         Level::DEBUG
     } else if args.trace {
