@@ -15,7 +15,7 @@ use std::fmt::Write;
 use anyhow::{anyhow, Result};
 use git2::{Commit, ObjectType, Oid, Repository};
 use nostr_sdk_0_37_0::prelude::*;
-use nostr_sdk_0_37_0::EventBuilder;
+//use nostr_sdk_0_37_0::EventBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
