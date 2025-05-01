@@ -44,28 +44,28 @@ pub enum Commands {
     Login(sub_commands::login::SubCommandArgs),
 }
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct ChatCli {
-    //    #[command(subcommand)]
-    //    pub command: ChatCommands,
-    /// remote signer address
-    //#[arg(long, global = true)]
-    //pub bunker_uri: Option<String>,
-    ///// remote signer app secret key
-    //#[arg(long, global = true)]
-    //pub bunker_app_key: Option<String>,
-    /// nsec or hex private key
-    #[arg(short, long, global = true)]
-    pub nsec: Option<String>,
-    /// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    pub password: Option<String>,
-    ///// disable spinner animations
-    //#[arg(long, action)]
-    //pub disable_cli_spinners: bool,
-}
+//#[derive(Parser, Debug)]
+//#[command(author, version, about, long_about = None)]
+//#[command(propagate_version = true)]
+//pub struct ChatCli {
+//    //    #[command(subcommand)]
+//    //    pub command: ChatCommands,
+//    /// remote signer address
+//    //#[arg(long, global = true)]
+//    //pub bunker_uri: Option<String>,
+//    ///// remote signer app secret key
+//    //#[arg(long, global = true)]
+//    //pub bunker_app_key: Option<String>,
+//    /// nsec or hex private key
+//    #[arg(short, long, global = true)]
+//    pub nsec: Option<String>,
+//    /// password to decrypt nsec
+//    #[arg(short, long, global = true)]
+//    pub password: Option<String>,
+//    ///// disable spinner animations
+//    //#[arg(long, action)]
+//    //pub disable_cli_spinners: bool,
+//}
 
 //#[derive(Subcommand, Debug)]
 //pub enum ChatCommands {
