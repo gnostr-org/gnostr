@@ -165,7 +165,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
-	let args: Cli = Cli::parse();
+    let args: Cli = Cli::parse();
     let level = if args.debug {
         Level::DEBUG
     } else if args.trace {
