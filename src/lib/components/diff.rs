@@ -642,7 +642,7 @@ impl DrawableComponent for DiffComponent {
             .set((r.width.saturating_sub(2), r.height.saturating_sub(2)));
 
         let current_width = self.current_size.get().0;
-        let current_height = self.current_size.get().1 / 2;
+        let current_height = self.current_size.get().1; // / 2;
 
         self.vertical_scroll.update(
             self.selection.get_end(),

@@ -98,6 +98,8 @@ pub enum InternalEvent {
     /// open commit msg input
     //OpenCommit,
     OpenCommit,
+    //
+    OpenChat,
     ///
     PopupStashing(StashingOptions),
     ///
@@ -145,7 +147,9 @@ pub enum InternalEvent {
     ///
     ViewSubmodules,
     ///
-    OpenRepo { path: PathBuf },
+    OpenRepo {
+        path: PathBuf,
+    },
     ///
     OpenResetPopup(CommitId),
     ///

@@ -448,7 +448,8 @@ impl Component for Chatlog {
                 {
                     //
                     //self.display_chat();
-                    self.inspect_commit();
+                    //self.inspect_commit();
+                    self.inspect_chat();
                     return Ok(EventState::Consumed);
                 } else if key_match(k, self.key_config.keys.select_branch)
                     && !self.is_search_pending()

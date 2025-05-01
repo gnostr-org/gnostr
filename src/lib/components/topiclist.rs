@@ -744,7 +744,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            " {} {}/{} ",
+            "topiclist.rs:747: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -765,8 +765,8 @@ impl DrawableComponent for TopicList {
                         .borders(Borders::ALL)
                         .title(Span::styled(
                             format!(
-                                //"{} more_text--->{:>}<---",
-                                "{}",
+                                "more_text--->{:>}<---",
+                                //"{}",
                                 title.as_str().to_owned(),
                                 //more_text.as_str()
                             ),
@@ -786,6 +786,7 @@ impl DrawableComponent for TopicList {
             self.selection,
             Orientation::Vertical,
         );
+        //
         Ok(())
     }
 }
