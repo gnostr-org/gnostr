@@ -5,9 +5,9 @@ use std::{error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
 //use tracing::debug;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -85,16 +85,16 @@ pub async fn create_event(
     let opts = Options::new().gossip(true);
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
 
-    //client.add_discovery_relay("wss://relay.damus.io").await?;
-    //client.add_discovery_relay("wss://purplepag.es").await?;
-    //client
-    //    .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
-    //    .await?;
+    client.add_discovery_relay("wss://relay.damus.io").await?;
+    client.add_discovery_relay("wss://purplepag.es").await?;
+    client
+        .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
+        .await?;
 
     // add some relays
     // TODO get_relay_list here
     client.add_relay("wss://relay.damus.io").await?;
-    //client.add_relay("wss://e.nos.lol").await?;
+    client.add_relay("wss://e.nos.lol").await?;
     client.add_relay("wss://nos.lol").await?;
 
     // Connect to the relays.
@@ -353,7 +353,6 @@ pub struct ChatCli {
     pub config: String,
 }
 
-
 #[derive(Args, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -375,7 +374,7 @@ pub struct ChatSubCommands {
     #[arg(long, global = true)]
     hash: Option<String>,
     ///// disable spinner animations
-    #[arg(long, action)]
+    #[arg(long, action, default_value = "false")]
     disable_cli_spinners: bool,
     #[arg(long, action)]
     info: bool,
@@ -384,8 +383,6 @@ pub struct ChatSubCommands {
     #[arg(long, action)]
     trace: bool,
 }
-
-
 
 //async tasks
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
@@ -396,7 +393,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     //let args: ChatCli = ChatCli::parse();
 
-	let args = sub_command_args.clone();
+    let args = sub_command_args.clone();
 
     if let Some(hash) = args.hash {
         println!("hash={}", hash);
@@ -637,16 +634,15 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     // let input_loop_fut = input_loop(input_tx);
     let input_tx_clone = input_tx.clone();
-    
-let value = input_tx_clone.clone();
-	app.on_submit(move |m| {
-		
-let value = value.clone();
-		global_rt().spawn(async move {
-			debug!("sent: {:?}", m);
-			value.send(m).await.unwrap();
-		});
-	});
+
+    let value = input_tx_clone.clone();
+    app.on_submit(move |m| {
+        let value = value.clone();
+        global_rt().spawn(async move {
+            debug!("sent: {:?}", m);
+            value.send(m).await.unwrap();
+        });
+    });
 
     let mut topic = String::from(commit_id.to_string());
     app.topic = topic.clone();
