@@ -42,10 +42,20 @@ pub struct SubCommandArgs {
     #[clap(short, long)]
     /// shortname with no spaces or special characters
     identifier: Option<String>,
+    #[clap(long)]
+    /// shortname with no spaces or special characters
     disable_cli_spinners: bool,
+    #[clap(long)]
+    /// shortname with no spaces or special characters
     password: Option<String>,
+    #[clap(long)]
+    /// shortname with no spaces or special characters
     nsec: Option<String>,
+    #[clap(long)]
+    /// shortname with no spaces or special characters
     bunker_app_key: Option<String>,
+    #[clap(long)]
+    /// shortname with no spaces or special characters
     bunker_uri: Option<String>,
 }
 
