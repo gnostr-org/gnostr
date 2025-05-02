@@ -20,8 +20,8 @@ pub struct Cli {
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     /// disable spinner animations
-    #[arg(long, action)]
-    pub disable_cli_spinners: bool,
+    #[arg(long, action, default_value = "false")]
+    pub disable_cli_spinners: Option<bool>,
 }
 
 #[derive(Subcommand)]
