@@ -17,6 +17,10 @@ use std::{error::Error, time::Duration};
 use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
 use tracing_subscriber::FmtSubscriber;
 
+use tracing::{debug, info};
+use tracing_core::metadata::LevelFilter;
+
+
 use serde::ser::StdError;
 
 //use std::{io::stdout, time::Duration};
@@ -167,11 +171,11 @@ enum Commands {
 async fn main() -> Result<(), Box<dyn StdError>> {
     let args: Cli = Cli::parse();
     let level = if args.debug {
-        Level::DEBUG
+        LevelFilter::DEBUG
     } else if args.trace {
-        Level::TRACE
+        LevelFilter::TRACE
     } else {
-        Level::WARN
+        LevelFilter::OFF
     };
     let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");

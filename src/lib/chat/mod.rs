@@ -5,8 +5,9 @@ use std::{error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
 //use tracing::debug;
-use tracing::{debug, info, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use tracing::{debug, info};
+use tracing_core::metadata::LevelFilter;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -84,16 +85,16 @@ pub async fn create_event(
     let opts = Options::new().gossip(true);
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
 
-    client.add_discovery_relay("wss://relay.damus.io").await?;
-    client.add_discovery_relay("wss://purplepag.es").await?;
-    client
-        .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
-        .await?;
+    //client.add_discovery_relay("wss://relay.damus.io").await?;
+    //client.add_discovery_relay("wss://purplepag.es").await?;
+    //client
+    //    .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
+    //    .await?;
 
     // add some relays
     // TODO get_relay_list here
     client.add_relay("wss://relay.damus.io").await?;
-    client.add_relay("wss://e.nos.lol").await?;
+    //client.add_relay("wss://e.nos.lol").await?;
     client.add_relay("wss://nos.lol").await?;
 
     // Connect to the relays.
@@ -407,13 +408,13 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     };
 
     let level = if args.debug {
-        Level::DEBUG
+        LevelFilter::DEBUG
     } else if args.trace {
-        Level::TRACE
+        LevelFilter::TRACE
     } else if args.info {
-        Level::INFO
+        LevelFilter::INFO
     } else {
-        Level::WARN
+        LevelFilter::OFF
     };
 
     let filter = EnvFilter::default()
@@ -422,6 +423,8 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
+        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
         .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
         //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
