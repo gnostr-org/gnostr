@@ -592,7 +592,7 @@ fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -
         .max_by_key(|e| e.created_at);
 
     if let Some(e) = event {
-        println!("{:?}", e);
+        dbg!("{:?}", e);
     }
 
     UserRelays {
