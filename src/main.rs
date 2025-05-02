@@ -20,7 +20,6 @@ use tracing_subscriber::FmtSubscriber;
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 
-
 use serde::ser::StdError;
 
 //use std::{io::stdout, time::Duration};
@@ -71,7 +70,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Chat sub commands
-	Chat(gnostr::chat::ChatSubCommands),
+    Chat(gnostr::chat::ChatSubCommands),
     /// Ngit sub commands
     Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.
