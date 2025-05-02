@@ -591,6 +591,10 @@ fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -
         .filter(|e| e.kind.eq(&nostr::Kind::RelayList) && e.pubkey.eq(public_key))
         .max_by_key(|e| e.created_at);
 
+    if let Some(e) = event {
+        println!("{:?}", e);
+    }
+
     UserRelays {
         relays: if let Some(event) = event {
             event
@@ -603,9 +607,22 @@ fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -
                         )))
                 })
                 .map(|t| UserRelayRef {
-                    url: t.as_vec()[1].clone(),
-                    read: t.as_vec().len() == 2 || t.as_vec()[2].eq("read"),
-                    write: t.as_vec().len() == 2 || t.as_vec()[2].eq("write"),
+                    //url: (t.as_vec().len() == 2 || t.as_vec()[1].clone()).to_string(),
+                    url: if t.as_vec().len() >= 2 {
+                        t.as_vec()[1].clone()
+                    } else {
+                        "wss://relay.damus.io".to_string()
+                    },
+                    read: if t.as_vec().len() >= 3 {
+                        t.as_vec()[2].eq("read")
+                    } else {
+                        false
+                    },
+                    write: if t.as_vec().len() >= 3 {
+                        t.as_vec()[2].eq("write")
+                    } else {
+                        false
+                    },
                 })
                 .collect()
         } else {
