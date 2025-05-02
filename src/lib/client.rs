@@ -134,7 +134,7 @@ impl Connect for Client {
         let blaster_relays: Vec<String> = if std::env::var("NGITTEST").is_ok() {
             vec!["ws://localhost:8057".to_string()]
         } else {
-            vec!["wss://nostr.mutinywallet.com".to_string()]
+            vec!["wss://relay.damus.io".to_string()]
         };
         Client {
             client: nostr_sdk::ClientBuilder::new()
