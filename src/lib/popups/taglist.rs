@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     remote_tags::AsyncRemoteTagsJob,
@@ -9,7 +10,6 @@ use gnostr_asyncgit::{
     },
     AsyncGitNotification,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::{Constraint, Margin, Rect},
     text::Span,
