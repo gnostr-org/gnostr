@@ -610,13 +610,13 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         let builder = EventBuilder::text_note(serialized_commit.clone());
 
         //send git gnostr event
-        let output = client.send_event_builder(builder).await.expect("");
+        //let output = client.send_event_builder(builder).await.expect("");
 
         //some reporting
-        info!("Event ID: {}", output.id());
-        info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
-        info!("Sent to: {:?}", output.success);
-        info!("Not sent to: {:?}", output.failed);
+        //info!("Event ID: {}", output.id());
+        //info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+        //info!("Sent to: {:?}", output.success);
+        //info!("Not sent to: {:?}", output.failed);
     });
 
     let mut app = ui::App::default();
