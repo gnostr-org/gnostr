@@ -1,6 +1,6 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::{self, CommitId, RepoPath, RepoPathRef};
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::{self, CommitId, RepoPath, RepoPathRef};
 
 use crate::{
     app::Environment,
