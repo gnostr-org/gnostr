@@ -1,6 +1,8 @@
 use std::{borrow::Cow, cell::Cell, cmp, path::Path};
 
 use anyhow::Result;
+use bytesize::ByteSize;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     hash,
     sync::{self, diff::DiffLinePosition, RepoPathRef},
@@ -9,8 +11,6 @@ use gnostr_asyncgit::{
     DiffLineType,
     FileDiff,
 };
-use bytesize::ByteSize;
-use crossterm::event::Event;
 use ratatui::{
     layout::Rect,
     symbols,

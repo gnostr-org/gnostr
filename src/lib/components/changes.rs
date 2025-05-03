@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{self, RepoPathRef},
     StatusItem, StatusItemType,
 };
-use crossterm::event::Event;
 use ratatui::{layout::Rect, Frame};
 
 use super::{

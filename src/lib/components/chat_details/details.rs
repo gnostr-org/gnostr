@@ -1,8 +1,8 @@
 use std::{borrow::Cow, cell::Cell};
 
 use anyhow::Result;
-use gnostr_asyncgit::sync::{self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag};
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::{self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
