@@ -5,6 +5,8 @@ use std::{
 };
 
 use anyhow::{bail, Result};
+use crossbeam_channel::Sender;
+use crossterm::event::{Event, KeyEvent};
 use gnostr_asyncgit::{
     sync::{
         self,
@@ -13,8 +15,6 @@ use gnostr_asyncgit::{
     },
     AsyncGitNotification, PushType,
 };
-use crossbeam_channel::Sender;
-use crossterm::event::{Event, KeyEvent};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span},
