@@ -1,6 +1,6 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::{self, RepoPathRef};
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::{self, RepoPathRef};
 use ratatui::{layout::Rect, Frame};
 
 use crate::{

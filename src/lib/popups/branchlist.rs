@@ -1,6 +1,7 @@
 use std::cell::Cell;
 
 use anyhow::Result;
+use crossterm::event::{Event, KeyEvent};
 use gnostr_asyncgit::{
     sync::{
         self,
@@ -10,7 +11,6 @@ use gnostr_asyncgit::{
     },
     AsyncGitNotification,
 };
-use crossterm::event::{Event, KeyEvent};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span, Text},

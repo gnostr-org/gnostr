@@ -1,7 +1,7 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::{self, RepoPathRef};
 use crossterm::event::Event;
 use easy_cast::Cast;
+use gnostr_asyncgit::sync::{self, RepoPathRef};
 use ratatui::{layout::Rect, widgets::Paragraph, Frame};
 
 use crate::{

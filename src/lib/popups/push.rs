@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{
         cred::{
@@ -11,7 +12,6 @@ use gnostr_asyncgit::{
     },
     AsyncGitNotification, AsyncPush, PushRequest, PushType, RemoteProgress, RemoteProgressState,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::Rect,
     text::Span,

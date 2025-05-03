@@ -1,11 +1,11 @@
 use anyhow::Result;
+use chrono::{DateTime, Local};
+use crossbeam_channel::Sender;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{diff_contains_file, get_commits_info, CommitId, RepoPathRef},
     AsyncDiff, AsyncGitNotification, AsyncLog, DiffParams, DiffType,
 };
-use chrono::{DateTime, Local};
-use crossbeam_channel::Sender;
-use crossterm::event::Event;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span, Text},

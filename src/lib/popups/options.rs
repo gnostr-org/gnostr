@@ -1,6 +1,6 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::ShowUntrackedFilesConfig;
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::ShowUntrackedFilesConfig;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Modifier, Style},
