@@ -8,6 +8,8 @@ use std::{
 };
 
 use anyhow::Result;
+use crossbeam_channel::Sender;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{
@@ -17,8 +19,6 @@ use gnostr_asyncgit::{
     AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification, AsyncLog, AsyncTags,
     CommitFilesParams, FetchStatus, ProgressPercent,
 };
-use crossbeam_channel::Sender;
-use crossterm::event::Event;
 use indexmap::IndexSet;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
