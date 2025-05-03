@@ -1,10 +1,10 @@
 use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
 
+use bitflags::bitflags;
 use gnostr_asyncgit::{
     sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
 };
-use bitflags::bitflags;
 
 use crate::{
     components::FuzzyFinderTarget,
