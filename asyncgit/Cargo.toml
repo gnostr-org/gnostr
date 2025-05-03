@@ -1,7 +1,7 @@
 [package]
-name = "asyncgit"
-version = "0.26.3"
-authors = ["extrawurst <mail@rusticorn.com>"]
+name = "gnostr-asyncgit"
+version = "0.0.1"
+authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "allow using git2 in a asynchronous context"
 homepage = "https://github.com/extrawurst/gitui"
