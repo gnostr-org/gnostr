@@ -737,26 +737,26 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
     //info!("keys.secret_key():\n{:?}", keys.secret_key());
     info!("keys.public_key():\n{}", keys.public_key());
-    app.add_message(
-        Msg::default()
-            .set_content(keys.public_key().to_string())
-            .set_kind(MsgKind::GitCommitHeader),
-    );
     //app.add_message(
     //    Msg::default()
-    //        .set_content(String::from(serialize_commit))
+    //        .set_content(keys.public_key().to_string())
     //        .set_kind(MsgKind::GitCommitHeader),
     //);
-    app.add_message(
-        Msg::default()
-            .set_content(String::from("third message"))
-            .set_kind(MsgKind::GitCommitHeader),
-    );
-    app.add_message(
-        Msg::default()
-            .set_content(String::from("fourth message"))
-            .set_kind(MsgKind::GitCommitHeader),
-    );
+    ////app.add_message(
+    ////    Msg::default()
+    ////        .set_content(String::from(serialize_commit))
+    ////        .set_kind(MsgKind::GitCommitHeader),
+    ////);
+    //app.add_message(
+    //    Msg::default()
+    //        .set_content(String::from("third message"))
+    //        .set_kind(MsgKind::GitCommitHeader),
+    //);
+    //app.add_message(
+    //    Msg::default()
+    //        .set_content(String::from("fourth message"))
+    //        .set_kind(MsgKind::GitCommitHeader),
+    //);
 
     let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<Msg>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<Msg>(100);
@@ -773,7 +773,13 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         });
     });
 
+    //
     let mut topic = String::from(commit_id.to_string());
+    if !args.topic.is_none() {
+        topic = args.topic.expect("");
+    } else {
+    }
+
     app.topic = topic.clone();
 
     let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
