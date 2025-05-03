@@ -77,5 +77,8 @@ cargo-dist-build: 	### 	cargo-dist-build
 cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 	cargo dist manifest --artifacts=all
 
+make-dist:
+	dist host --steps=create --tag=v0.0.62-changme --allow-dirty --output-format=json > plan-dist-manifest.json
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
