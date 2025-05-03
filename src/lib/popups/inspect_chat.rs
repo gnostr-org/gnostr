@@ -1,9 +1,9 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{CommitId, CommitTags},
     AsyncDiff, AsyncGitNotification, DiffParams, DiffType,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     widgets::Clear,

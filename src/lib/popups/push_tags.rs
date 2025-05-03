@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{
         cred::{extract_username_password, need_username_password, BasicAuthCredential},
@@ -6,7 +7,6 @@ use gnostr_asyncgit::{
     },
     AsyncGitNotification, AsyncPushTags, PushTagsRequest,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::Rect,
     text::Span,

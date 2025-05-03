@@ -1,9 +1,9 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     cached,
     sync::{CommitId, RepoPath, ResetType},
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::{Alignment, Rect},
     text::{Line, Span},

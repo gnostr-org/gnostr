@@ -6,6 +6,8 @@ use std::{
 };
 
 use anyhow::{bail, Ok, Result};
+use crossterm::event::Event;
+use easy_cast::Cast;
 use gnostr_asyncgit::{
     cached,
     sync::{
@@ -14,8 +16,6 @@ use gnostr_asyncgit::{
     },
     StatusItem, StatusItemType,
 };
-use crossterm::event::Event;
-use easy_cast::Cast;
 use ratatui::{
     layout::{Alignment, Rect},
     widgets::Paragraph,

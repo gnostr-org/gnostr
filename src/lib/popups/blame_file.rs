@@ -1,13 +1,13 @@
 use std::path::Path;
 
 use anyhow::Result;
+use crossbeam_channel::Sender;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{BlameHunk, CommitId, FileBlame, RepoPathRef},
     AsyncBlame, AsyncGitNotification, BlameParams,
 };
-use crossbeam_channel::Sender;
-use crossterm::event::Event;
 use ratatui::{
     layout::{Constraint, Rect},
     symbols::line::VERTICAL,

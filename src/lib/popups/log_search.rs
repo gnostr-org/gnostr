@@ -1,7 +1,9 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::{CommitId, LogFilterSearchOptions, RepoPathRef, SearchFields, SearchOptions};
 use crossterm::event::Event;
 use easy_cast::Cast;
+use gnostr_asyncgit::sync::{
+    CommitId, LogFilterSearchOptions, RepoPathRef, SearchFields, SearchOptions,
+};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span},

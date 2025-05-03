@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use anyhow::Result;
-use gnostr_asyncgit::sync::CommitId;
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::CommitId;
 use ratatui::{layout::Rect, widgets::Clear, Frame};
 
 use crate::{

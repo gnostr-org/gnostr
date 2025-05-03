@@ -1,8 +1,8 @@
 use std::{borrow::Cow, cmp};
 
 use anyhow::Result;
-use gnostr_asyncgit::hash;
 use crossterm::event::Event;
+use gnostr_asyncgit::hash;
 use itertools::Itertools;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},

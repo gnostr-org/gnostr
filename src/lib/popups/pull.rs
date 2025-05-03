@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{
         self,
@@ -11,7 +12,6 @@ use gnostr_asyncgit::{
     },
     AsyncGitNotification, AsyncPull, FetchRequest, RemoteProgress,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::Rect,
     text::Span,
