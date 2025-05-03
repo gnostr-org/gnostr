@@ -1,11 +1,11 @@
 use std::cell::Cell;
 
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::sync::{
     get_submodules, repo_dir, submodule_parent_info, update_submodule, RepoPathRef, SubmoduleInfo,
     SubmoduleParentInfo,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span, Text},
