@@ -1,11 +1,11 @@
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     cached,
     sync::{self, status::StatusType, BranchCompare, CommitId, RepoPath, RepoPathRef, RepoState},
     AsyncDiff, AsyncGitNotification, AsyncStatus, DiffParams, DiffType, PushType, StatusItem,
     StatusParams,
 };
-use crossterm::event::Event;
 use itertools::Itertools;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
