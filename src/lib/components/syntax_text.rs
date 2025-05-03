@@ -1,13 +1,13 @@
 use std::{cell::Cell, path::Path};
 
 use anyhow::Result;
+use crossterm::event::Event;
+use filetreelist::MoveSelection;
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{self, RepoPathRef, TreeFile},
     ProgressPercent,
 };
-use crossterm::event::Event;
-use filetreelist::MoveSelection;
 use itertools::Either;
 use ratatui::{
     layout::Rect,

@@ -1,13 +1,13 @@
 use std::{borrow::Cow, collections::BTreeSet, fmt::Write, path::Path};
 
 use anyhow::Result;
+use crossterm::event::Event;
+use filetreelist::{FileTree, FileTreeItem};
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{get_commit_info, CommitId, CommitInfo, RepoPathRef, TreeFile},
     AsyncGitNotification, AsyncTreeFilesJob,
 };
-use crossterm::event::Event;
-use filetreelist::{FileTree, FileTreeItem};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     text::Span,

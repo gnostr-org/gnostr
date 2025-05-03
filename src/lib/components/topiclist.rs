@@ -1,11 +1,11 @@
 use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
 
 use anyhow::Result;
+use chrono::{DateTime, Local};
+use crossterm::event::Event;
 use gnostr_asyncgit::sync::{
     self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 };
-use chrono::{DateTime, Local};
-use crossterm::event::Event;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{

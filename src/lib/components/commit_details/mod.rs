@@ -3,13 +3,13 @@ mod details;
 mod style;
 
 use anyhow::Result;
+use compare_details::CompareDetailsComponent;
+use crossterm::event::Event;
+use details::DetailsComponent;
 use gnostr_asyncgit::{
     sync::{commit_files::OldNew, CommitTags},
     AsyncCommitFiles, CommitFilesParams,
 };
-use compare_details::CompareDetailsComponent;
-use crossterm::event::Event;
-use details::DetailsComponent;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     Frame,

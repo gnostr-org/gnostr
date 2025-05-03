@@ -1,6 +1,6 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::cred::BasicAuthCredential;
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::cred::BasicAuthCredential;
 use ratatui::{layout::Rect, Frame};
 
 use crate::{

@@ -1,8 +1,8 @@
 use nostr_sdk::prelude::*;
 use std::{rc::Rc, slice::Iter};
 
-use gnostr_asyncgit::sync::{CommitId, CommitInfo};
 use chrono::{DateTime, Duration, Local, Utc};
+use gnostr_asyncgit::sync::{CommitId, CommitInfo};
 use indexmap::IndexSet;
 
 #[cfg(feature = "ghemoji")]

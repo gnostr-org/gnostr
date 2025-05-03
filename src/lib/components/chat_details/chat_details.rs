@@ -1,6 +1,6 @@
 use anyhow::Result;
-use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
 use crossterm::event::Event;
+use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
 use nostr_sdk::prelude::*;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
