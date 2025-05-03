@@ -5,8 +5,8 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use gnostr_asyncgit::sync::RepoPath;
 use clap::{crate_authors, crate_description, crate_name, Arg, Command as ClapApp};
+use gnostr_asyncgit::sync::RepoPath;
 use simplelog::{Config, LevelFilter, WriteLogger};
 
 use crate::bug_report;
