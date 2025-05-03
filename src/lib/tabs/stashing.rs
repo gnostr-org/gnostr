@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
+use crossterm::event::Event;
 use gnostr_asyncgit::{
     sync::{self, status::StatusType, RepoPathRef},
     AsyncGitNotification, AsyncStatus, StatusParams,
 };
-use crossterm::event::Event;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     text::{Line, Span},
