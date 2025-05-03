@@ -19,6 +19,13 @@ pub enum MsgKind {
     System,
     Raw,
     Command,
+    GitCommitId,
+    GitCommitParent,
+    GitCommitTree,
+    GitCommitAuthor,
+    GitCommitName,
+    GitCommitEmail,
+    GitCommitMessagePart,
     GitCommitHeader,
     GitCommitBody,
     GitCommitTime,
@@ -125,7 +132,33 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 ),
                 m.content[0].clone().into(),
             ]),
-            Git => Line::default().spans(
+            //Git => Line::default().spans(
+            //    vec![
+            //        Span::styled(
+            //            format!("{}", m.content[0].clone()),
+            //            Style::default()
+            //                .fg(gen_color_by_hash(&m.from))
+            //                .add_modifier(Modifier::ITALIC),
+            //        ),
+            //        //m.content[1].clone().into(),
+            //    ]
+            //    .iter()
+            //    .map(|i| format!("{}", i)),
+            //),
+            GitCommitId => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("id: {}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("id: {}", i)),
+            ),
+            GitCommitTree => Line::default().spans(
                 vec![
                     Span::styled(
                         format!("{}", m.content[0].clone()),
@@ -133,15 +166,93 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
-                    //m.content[1].clone().into(),
+                    m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("{}", i)),
+                .map(|i| format!("tree {}", i)),
+            ),
+            GitCommitAuthor => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("Author: {}", i)),
+            ),
+            GitCommitParent => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("parent:{}", i)),
+            ),
+            GitCommitMessagePart => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("message part:{}", i)),
+            ),
+            GitCommitName => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("name:{}", i)),
+            ),
+            GitCommitEmail => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("email:{}", i)),
+            ),
+            GitCommitTime => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("time:{}", i)),
             ),
             GitCommitHeader => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("{}", m.content[0].clone()),
+                        format!("header:{}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -190,10 +301,31 @@ impl Display for Msg {
             MsgKind::System => write!(f, "[System] {}", self.content[0]),
             MsgKind::Raw => write!(f, "{}", self.content[0]),
             MsgKind::Command => write!(f, "[Command] {}:{}", self.from, self.content[0]),
+            MsgKind::GitCommitId => {
+                write!(f, "[GitCommitId] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::GitCommitTree => {
+                write!(f, "[GitCommitTree] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::GitCommitParent => {
+                write!(f, "[GitCommitParent] {}:{}", self.from, self.content[0])
+            }
             MsgKind::GitCommitHeader => {
                 write!(f, "[GitCommitHeader] {}:{}", self.from, self.content[0])
             }
+            MsgKind::GitCommitAuthor => {
+                write!(f, "[GitCommitAuthor] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::GitCommitEmail => {
+                write!(f, "[GitCommitEmail] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::GitCommitName => {
+                write!(f, "[GitCommitName] {}:{}", self.from, self.content[0])
+            }
             MsgKind::GitCommitBody => {
+                write!(f, "[GitCommitBody] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::GitCommitMessagePart => {
                 write!(f, "[GitCommitBody] {}:{}", self.from, self.content[0])
             }
             MsgKind::GitCommitTime => {
