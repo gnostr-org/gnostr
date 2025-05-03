@@ -40,15 +40,15 @@ use crate::spinner::Spinner;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
 use anyhow::{bail, Result};
-use gnostr_asyncgit::{
-    sync::{utils::repo_work_dir, RepoPath},
-    AsyncGitNotification,
-};
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
+};
+use gnostr_asyncgit::{
+    sync::{utils::repo_work_dir, RepoPath},
+    AsyncGitNotification,
 };
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
