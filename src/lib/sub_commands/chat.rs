@@ -29,9 +29,9 @@ use crate::chat::split_json_string;
 use crate::chat::ui;
 use crate::chat::ChatCli;
 use crate::global_rt::global_rt;
-use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
+use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 
 use libp2p::gossipsub;
 use nostr_sdk_0_37_0::prelude::*;
