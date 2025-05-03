@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{CommitId, LogFilterSearchOptions, RepoPathRef, SearchFields, SearchOptions};
+use gnostr_asyncgit::sync::{CommitId, LogFilterSearchOptions, RepoPathRef, SearchFields, SearchOptions};
 use crossterm::event::Event;
 use easy_cast::Cast;
 use ratatui::{

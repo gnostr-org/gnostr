@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::{bail, Result};
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{
         self,
         utils::{repo_work_dir, undo_last_commit},

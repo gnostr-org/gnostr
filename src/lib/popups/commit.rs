@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{bail, Ok, Result};
-use asyncgit::{
+use gnostr_asyncgit::{
     cached,
     sync::{
         self, commit::commit_message_prettify, get_config_string, CommitId, HookResult,

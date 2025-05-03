@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{self, commit_files::OldNew, CommitId, RepoPathRef},
     AsyncDiff, AsyncGitNotification, CommitFilesParams, DiffParams, DiffType,
 };

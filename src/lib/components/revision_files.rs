@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::BTreeSet, fmt::Write, path::Path};
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{get_commit_info, CommitId, CommitInfo, RepoPathRef, TreeFile},
     AsyncGitNotification, AsyncTreeFilesJob,

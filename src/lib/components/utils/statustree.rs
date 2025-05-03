@@ -1,7 +1,7 @@
 use std::{cmp, collections::BTreeSet};
 
 use anyhow::Result;
-use asyncgit::StatusItem;
+use gnostr_asyncgit::StatusItem;
 
 use super::filetree::{FileTreeItem, FileTreeItemKind, FileTreeItems, PathCollapsed};
 

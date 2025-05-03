@@ -3,7 +3,7 @@ mod details;
 mod style;
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{commit_files::OldNew, CommitTags},
     AsyncCommitFiles, CommitFilesParams,
 };

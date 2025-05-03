@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
+use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
 use crossterm::event::Event;
 use nostr_sdk::prelude::*;
 use ratatui::{

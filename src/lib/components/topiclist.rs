@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
 
 use anyhow::Result;
-use asyncgit::sync::{
+use gnostr_asyncgit::sync::{
     self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 };
 use chrono::{DateTime, Local};

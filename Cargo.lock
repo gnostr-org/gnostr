@@ -504,31 +504,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "asyncgit"
-version = "0.26.3"
-dependencies = [
- "bitflags 2.9.0",
- "crossbeam-channel",
- "dirs 5.0.1",
- "easy-cast",
- "fuzzy-matcher",
- "git2",
- "git2-hooks",
- "log",
- "nostr-sdk 0.37.0",
- "openssl-sys",
- "rayon",
- "rayon-core",
- "scopetime",
- "serde",
- "serde_json",
- "ssh-key",
- "thiserror 1.0.69",
- "unicode-truncate",
- "url",
-]
-
-[[package]]
 name = "asynchronous-codec"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2126,7 +2101,6 @@ dependencies = [
  "anyhow",
  "async-std",
  "async-trait",
- "asyncgit",
  "auth-git2",
  "backtrace",
  "bitflags 2.9.0",
@@ -2152,6 +2126,7 @@ dependencies = [
  "fuzzy-matcher",
  "gh-emoji",
  "git2",
+ "gnostr-asyncgit",
  "hostname",
  "indexmap",
  "indicatif",
@@ -2207,6 +2182,31 @@ dependencies = [
  "urlencoding",
  "which",
  "zeroize",
+]
+
+[[package]]
+name = "gnostr-asyncgit"
+version = "0.0.1"
+dependencies = [
+ "bitflags 2.9.0",
+ "crossbeam-channel",
+ "dirs 5.0.1",
+ "easy-cast",
+ "fuzzy-matcher",
+ "git2",
+ "git2-hooks",
+ "log",
+ "nostr-sdk 0.37.0",
+ "openssl-sys",
+ "rayon",
+ "rayon-core",
+ "scopetime",
+ "serde",
+ "serde_json",
+ "ssh-key",
+ "thiserror 1.0.69",
+ "unicode-truncate",
+ "url",
 ]
 
 [[package]]

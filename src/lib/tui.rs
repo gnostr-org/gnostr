@@ -40,7 +40,7 @@ use crate::spinner::Spinner;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
 use anyhow::{bail, Result};
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
 };
@@ -107,7 +107,7 @@ pub fn tui() -> Result<()> {
 
     let cliargs = process_cmdline()?;
 
-    asyncgit::register_tracing_logging();
+    gnostr_asyncgit::register_tracing_logging();
 
     if !valid_path(&cliargs.repo_path) {
         eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
@@ -319,7 +319,7 @@ pub fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 
 #[must_use]
 pub fn valid_path(repo_path: &RepoPath) -> bool {
-    let error = asyncgit::sync::repo_open_error(repo_path);
+    let error = gnostr_asyncgit::sync::repo_open_error(repo_path);
     if let Some(error) = &error {
         log::error!("repo open error: {error}");
     }

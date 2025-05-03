@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{
         cred::{extract_username_password, need_username_password, BasicAuthCredential},

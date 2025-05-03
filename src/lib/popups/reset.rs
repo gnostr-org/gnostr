@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     cached,
     sync::{CommitId, RepoPath, ResetType},
 };
@@ -112,7 +112,7 @@ impl ResetPopup {
             try_or_popup!(
                 self,
                 "reset:",
-                asyncgit::sync::reset_repo(&self.repo, id, self.kind)
+                gnostr_asyncgit::sync::reset_repo(&self.repo, id, self.kind)
             );
         }
 

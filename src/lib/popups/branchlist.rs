@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{
         self,
         branch::{checkout_remote_branch, BranchDetails, LocalBranch, RemoteBranch},

@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cell::Cell, cmp, path::Path};
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     hash,
     sync::{self, diff::DiffLinePosition, RepoPathRef},
     //DiffLine, DiffLineType, FileDiff,

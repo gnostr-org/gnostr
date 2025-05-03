@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{
         self, filter_commit_by_search, CommitId, LogFilterSearch, LogFilterSearchOptions,
