@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
+use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
 use gnostr::chat::create_event;

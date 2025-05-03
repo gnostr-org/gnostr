@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{BlameHunk, CommitId, FileBlame, RepoPathRef},
     AsyncBlame, AsyncGitNotification, BlameParams,

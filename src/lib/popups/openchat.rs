@@ -1,7 +1,7 @@
 use std::{env, ffi::OsStr, io, path::Path, process::Command};
 
 use anyhow::{anyhow, bail, Result};
-use asyncgit::sync::{get_config_string, utils::repo_work_dir, RepoPath};
+use gnostr_asyncgit::sync::{get_config_string, utils::repo_work_dir, RepoPath};
 use crossterm::{
     event::Event,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},

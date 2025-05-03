@@ -6,7 +6,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::{AsyncJob, RunParams},
     ProgressPercent,
 };
@@ -69,7 +69,7 @@ impl SyntaxText {
         text: String,
         file_path: &Path,
         params: &RunParams<AsyncAppNotification, ProgressPercent>,
-    ) -> asyncgit::Result<Self> {
+    ) -> gnostr_asyncgit::Result<Self> {
         scope_time!("syntax_highlighting");
 
         let mut state = {
@@ -100,7 +100,7 @@ impl SyntaxText {
             for (number, line) in text.lines().enumerate() {
                 let ops = state.parse_line(line, &SYNTAX_SET).map_err(|e| {
                     log::error!("syntax error: {:?}", e);
-                    asyncgit::Error::Generic("syntax error".to_string())
+                    gnostr_asyncgit::Error::Generic("syntax error".to_string())
                 })?;
                 let iter = RangedHighlightIterator::new(
                     &mut highlight_state,
@@ -217,7 +217,7 @@ impl AsyncJob for AsyncSyntaxJob {
     fn run(
         &mut self,
         params: RunParams<Self::Notification, Self::Progress>,
-    ) -> asyncgit::Result<Self::Notification> {
+    ) -> gnostr_asyncgit::Result<Self::Notification> {
         let mut state_mutex = self.state.lock()?;
 
         if let Some(state) = state_mutex.take() {

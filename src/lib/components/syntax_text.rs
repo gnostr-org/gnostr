@@ -1,7 +1,7 @@
 use std::{cell::Cell, path::Path};
 
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     sync::{self, RepoPathRef, TreeFile},
     ProgressPercent,

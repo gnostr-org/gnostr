@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
     remote_tags::AsyncRemoteTagsJob,
     sync::{

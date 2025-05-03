@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::cred::BasicAuthCredential;
+use gnostr_asyncgit::sync::cred::BasicAuthCredential;
 use crossterm::event::Event;
 use ratatui::{layout::Rect, Frame};
 

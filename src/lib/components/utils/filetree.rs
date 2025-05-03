@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::{bail, Result};
-use asyncgit::StatusItem;
+use gnostr_asyncgit::StatusItem;
 
 /// holds the information shared among all `FileTreeItem` in a
 /// `FileTree`

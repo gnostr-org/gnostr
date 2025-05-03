@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::sync::{self, get_config_string, CommitId, RepoPathRef};
+use gnostr_asyncgit::sync::{self, get_config_string, CommitId, RepoPathRef};
 use crossterm::event::Event;
 use ratatui::{layout::Rect, Frame};
 

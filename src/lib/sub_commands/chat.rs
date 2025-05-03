@@ -29,7 +29,7 @@ use crate::chat::split_json_string;
 use crate::chat::ui;
 use crate::chat::ChatCli;
 use crate::global_rt::global_rt;
-use asyncgit::sync::commit::{deserialize_commit, serialize_commit};
+use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
 

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{
         cred::{
             extract_username_password_for_push, need_username_password_for_push,

@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
 
-use asyncgit::{
+use gnostr_asyncgit::{
     sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
 };

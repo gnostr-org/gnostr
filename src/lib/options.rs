@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::Result;
-use asyncgit::sync::{diff::DiffOptions, repo_dir, RepoPathRef, ShowUntrackedFilesConfig};
+use gnostr_asyncgit::sync::{diff::DiffOptions, repo_dir, RepoPathRef, ShowUntrackedFilesConfig};
 use ron::{
     de::from_bytes,
     ser::{to_string_pretty, PrettyConfig},
@@ -33,7 +33,7 @@ pub struct Options {
 #[cfg(test)]
 impl Options {
     pub fn test_env() -> Self {
-        use asyncgit::sync::RepoPath;
+        use gnostr_asyncgit::sync::RepoPath;
         Self {
             repo: RefCell::new(RepoPath::Path(Default::default())),
             data: Default::default(),

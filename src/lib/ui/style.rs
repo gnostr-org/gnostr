@@ -1,7 +1,7 @@
 use std::{fs::File, io::Write, path::PathBuf, rc::Rc};
 
 use anyhow::Result;
-use asyncgit::{DiffLineType, StatusItemType};
+use gnostr_asyncgit::{DiffLineType, StatusItemType};
 use ratatui::style::{Color, Modifier, Style};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};

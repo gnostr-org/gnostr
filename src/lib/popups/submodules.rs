@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use anyhow::Result;
-use asyncgit::sync::{
+use gnostr_asyncgit::sync::{
     get_submodules, repo_dir, submodule_parent_info, update_submodule, RepoPathRef, SubmoduleInfo,
     SubmoduleParentInfo,
 };
