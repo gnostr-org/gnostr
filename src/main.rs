@@ -10,14 +10,14 @@ use gnostr::sub_commands;
 //use gnostr::chat::chat;
 //use gnostr::tui::*;
 //use gnostr::utils;
-use nostr_sdk::Result as NostrResult;
+//use nostr_sdk::Result as NostrResult;
 use sha2::{Digest, Sha256};
 use std::env;
-use std::{error::Error, time::Duration};
-use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
+//use std::{error::Error, time::Duration};
+//use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
 use tracing_subscriber::FmtSubscriber;
 
-use tracing::{debug, info};
+//use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 
 use serde::ser::StdError;
