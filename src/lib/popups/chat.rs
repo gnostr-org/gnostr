@@ -91,7 +91,8 @@ impl ChatPopup {
 
     fn draw_branch_name(&self, f: &mut Frame) {
         if let Some(name) = self.git_branch_name.last() {
-            let w = Paragraph::new(format!("{{{name}}}")).alignment(Alignment::Right);
+            let w = Paragraph::new(format!("chat.rs:draw_branch_name: {{{name}}}"))
+                .alignment(Alignment::Right);
 
             let rect = {
                 let mut rect = self.input.get_area();
@@ -149,14 +150,17 @@ impl ChatPopup {
 
         {
             let mut file = File::create(&file_path)?;
-            file.write_fmt(format_args!("{}\n", self.input.get_text()))?;
+            file.write_fmt(format_args!(
+                "chat.rs:show_editor:{}\n",
+                self.input.get_text()
+            ))?;
             file.write_all(strings::commit_editor_msg(&self.key_config).as_bytes())?;
 
             file.write_all(b"\n#\n# Changes to be committed:")?;
 
             for change in changes {
                 let status_char = Self::item_status_char(change.status);
-                let message = format!("\n#\t{status_char}: {}", change.path);
+                let message = format!("chat.rs:show_editor:\n#\t{status_char}: {}", change.path);
                 file.write_all(message.as_bytes())?;
             }
         }
@@ -182,14 +186,17 @@ impl ChatPopup {
 
         {
             let mut file = File::create(&file_path)?;
-            file.write_fmt(format_args!("{}\n", self.input.get_text()))?;
+            file.write_fmt(format_args!(
+                "chat.rs:show_chat:{}\n",
+                self.input.get_text()
+            ))?;
             file.write_all(strings::commit_editor_msg(&self.key_config).as_bytes())?;
 
             file.write_all(b"\n#\n# Changes to be committed:")?;
 
             for change in changes {
                 let status_char = Self::item_status_char(change.status);
-                let message = format!("\n#\t{status_char}: {}", change.path);
+                let message = format!("chat.rs:show_chat:\n#\t{status_char}: {}", change.path);
                 file.write_all(message.as_bytes())?;
             }
         }
