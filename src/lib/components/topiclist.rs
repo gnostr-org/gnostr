@@ -25,10 +25,10 @@ use crate::{
         EventState, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
+    login::get_user_details,
     queue::{InternalEvent, Queue},
     strings::{self, symbol},
     try_or_popup,
-	login::get_user_details,
     ui::{
         calc_scroll_top, draw_scrollbar,
         style::{SharedTheme, Theme},
