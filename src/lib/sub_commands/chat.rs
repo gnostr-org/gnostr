@@ -85,14 +85,14 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdE
     ////    ChatCommands::Fetch(args) => fetch::launch(&args).await?,
     //	_ => { run(sub_command_args).await? }
     //}
-    println!("{:?}", &sub_command_args);
+    debug!("{:?}", &sub_command_args);
     run(sub_command_args).await?;
 
     Ok(())
 }
 
 pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
-    println!("{:?}", &sub_command_args);
+    debug!("{:?}", &sub_command_args);
     let chat = crate::chat::chat(sub_command_args);
 
     //    let args = sub_command_args;
