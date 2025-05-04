@@ -150,6 +150,7 @@ impl Connect for Client {
             client: nostr_sdk::ClientBuilder::new()
                 .opts(Options::new().relay_limits(RelayLimits::disable()))
                 .signer(opts.keys.unwrap_or(nostr::Keys::generate()))
+                //
                 // .database(
                 //     SQLiteDatabase::open(get_dirs()?.cache_dir().
                 // join("nostr-cache.sqlite")). await?, )
@@ -722,6 +723,7 @@ fn pb_after_style(succeed: bool) -> indicatif::ProgressStyle {
 }
 
 async fn get_local_cache_database(git_repo_path: &Path) -> Result<SQLiteDatabase> {
+    //
     SQLiteDatabase::open(git_repo_path.join(".git/nostr-cache.sqlite"))
         .await
         .context("cannot open or create nostr cache database at .git/nostr-cache.sqlite")
@@ -1408,7 +1410,7 @@ impl Display for FetchReport {
         }
         if !self.commits.is_empty() {
             display_items.push(format!(
-                "{} commit{}",
+                "client.rs:1411:{} commit{}",
                 self.commits.len(),
                 if self.commits.len() > 1 { "s" } else { "" },
             ));
@@ -1442,7 +1444,7 @@ impl Display for FetchReport {
                 },
             ));
         }
-        write!(f, "{}", display_items.join(", "))
+        write!(f, "client.rs:1445:{}", display_items.join(", "))
     }
 }
 
