@@ -107,11 +107,13 @@ impl Connect for Client {
                 "ws://localhost:8052".to_string(),
             ]
         } else {
+            //TODO relay crawler
             vec![
                 "wss://relay.damus.io".to_string(), /* free, good reliability, have been known
                                                      * to delete all messages */
                 "wss://nos.lol".to_string(),
-                "wss://relay.nostr.band".to_string(),
+                "wss://cfrelay.haorendashu.workers.dev".to_string(),
+                "wss://sendit.nosflare.com".to_string(),
             ]
         };
 
@@ -203,6 +205,7 @@ impl Connect for Client {
         &self.blaster_relays
     }
 
+    //
     async fn send_event_to(
         &self,
         git_repo_path: &Path,
@@ -1444,7 +1447,7 @@ impl Display for FetchReport {
                 },
             ));
         }
-        write!(f, "client.rs:1445:{}", display_items.join(", "))
+        write!(f, "client.rs:1450:{}", display_items.join(", "))
     }
 }
 
