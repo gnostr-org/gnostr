@@ -14,6 +14,7 @@ use sync::CommitTags;
 use super::style::Detail;
 use crate::{
     app::Environment,
+    chat,
     components::{
         chat_details::style::style_detail,
         dialog_paragraph,
@@ -238,7 +239,7 @@ impl DetailsComponent {
         })
     }
 
-    fn get_short_pubkey(&self) {}
+    //fn get_short_pubkey(&self) {}
     #[allow(clippy::needless_pass_by_ref_mut)]
     fn move_scroll_top(&mut self, move_type: ScrollType) -> bool {
         if self.data.is_some() {
