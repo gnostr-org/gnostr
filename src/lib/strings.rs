@@ -105,20 +105,17 @@ pub fn msg_title_error(_key_config: &SharedKeyConfig) -> String {
     "Error".to_string()
 }
 pub fn msg_title_info(_key_config: &SharedKeyConfig) -> String {
-    "Info".to_string()
+    "108:Info".to_string()
 }
-
 pub fn pubkey_title() -> String {
     "pubkey_title:pubkey".to_string()
 }
-
 pub fn commit_title() -> String {
     "Commit".to_string()
 }
 pub fn commit_reword_title() -> String {
     "Reword Commit".to_string()
 }
-
 pub fn commit_title_merge() -> String {
     "Commit (Merge)".to_string()
 }
@@ -175,7 +172,6 @@ pub fn confirm_msg_merge(_key_config: &SharedKeyConfig, incoming: usize, rebase:
         format!("Merge of {incoming} incoming commits?")
     }
 }
-
 pub fn confirm_title_abortmerge() -> String {
     "Abort merge?".to_string()
 }
@@ -309,18 +305,15 @@ pub fn password_popup_title(_key_config: &SharedKeyConfig) -> String {
 pub fn password_popup_msg(_key_config: &SharedKeyConfig) -> String {
     "type password".to_string()
 }
-
 pub fn rename_branch_popup_title(_key_config: &SharedKeyConfig) -> String {
     "Rename Branch".to_string()
 }
 pub fn rename_branch_popup_msg(_key_config: &SharedKeyConfig) -> String {
     "new branch name".to_string()
 }
-
 pub fn copy_success(s: &str) -> String {
     format!("{POPUP_SUCCESS_COPY} \"{s}\"")
 }
-
 pub fn ellipsis_trim_start(s: &str, width: usize) -> Cow<str> {
     if s.width() <= width {
         Cow::Borrowed(s)
@@ -333,7 +326,6 @@ pub fn ellipsis_trim_start(s: &str, width: usize) -> Cow<str> {
         ))
     }
 }
-
 pub mod commit {
     use crate::keys::SharedKeyConfig;
 
@@ -344,7 +336,7 @@ pub mod commit {
         "Committer: ".to_string()
     }
     pub fn details_sha() -> String {
-        "commit ".to_string()
+        "339:commit ".to_string()
     }
     pub fn details_date() -> String {
         "Date: ".to_string()
@@ -356,7 +348,7 @@ pub mod commit {
         "Subject: ".to_string()
     }
     pub fn details_info_title(_key_config: &SharedKeyConfig) -> String {
-        "Info".to_string()
+        "351:Info".to_string()
     }
     pub fn compare_details_info_title(old: bool, hash: &str) -> String {
         format!("{}: {hash}", if old { "Old" } else { "New" })
@@ -367,36 +359,36 @@ pub mod commit {
     pub fn details_files_title(_key_config: &SharedKeyConfig) -> String {
         "Files:".to_string()
     }
-
+    //
     pub fn chat_details_author() -> String {
-        "Author: ".to_string()
+        "chat Author: ".to_string()
     }
     pub fn chat_details_committer() -> String {
-        "Committer: ".to_string()
+        "chat Committer: ".to_string()
     }
     pub fn chat_details_sha() -> String {
-        "commit ".to_string()
+        "370:chat commit ".to_string()
     }
     pub fn chat_details_date() -> String {
-        "Date: ".to_string()
+        "chat Date: ".to_string()
     }
     pub fn chat_details_tags() -> String {
-        "Tags: ".to_string()
+        "chat Tags: ".to_string()
     }
     pub fn chat_details_message() -> String {
-        "Subject: ".to_string()
+        "chat Subject: ".to_string()
     }
     pub fn chat_details_info_title(_key_config: &SharedKeyConfig) -> String {
-        "Info".to_string()
+        "382:chat Info".to_string()
     }
     pub fn chat_compare_details_info_title(old: bool, hash: &str) -> String {
-        format!("{}: {hash}", if old { "Old" } else { "New" })
+        format!("chat {}: {hash}", if old { "Old" } else { "New" })
     }
     pub fn chat_details_message_title(_key_config: &SharedKeyConfig) -> String {
-        "Message".to_string()
+        "chat Message".to_string()
     }
     pub fn chat_details_files_title(_key_config: &SharedKeyConfig) -> String {
-        "Files:".to_string()
+        "chat Files:".to_string()
     }
 }
 
