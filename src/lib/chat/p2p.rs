@@ -10,7 +10,7 @@ use ureq::Agent;
 use crate::chat::msg::{Msg, MsgKind};
 //use tokio::task;
 
-const TOPIC: &str = "chat-bar";
+//const TOPIC: &str = "gnostr";
 /// MyBehaviour
 // We create a custom network behaviour that combines Gossipsub and Mdns.
 #[derive(NetworkBehaviour)]
