@@ -205,31 +205,31 @@ impl Chatlog {
             ));
         }
     }
-    fn inspect_commit(&self) {
-        if let Some(commit_id) = self.selected_commit() {
-            let tags = self.selected_commit_tags(&Some(commit_id));
-            self.queue.push(InternalEvent::OpenPopup(
-                //
-                StackablePopupOpen::InspectCommit(
-                    //
-                    InspectCommitOpen::new_with_tags(commit_id, tags),
-                ),
-            ));
-        }
-    }
-    fn display_chat(&self) {
-        if let Some(commit_id) = self.selected_commit() {
-            let tags = self.selected_commit_tags(&Some(commit_id));
-            self.queue.push(InternalEvent::OpenPopup(
-                //
-                StackablePopupOpen::DisplayChat(
-                    //
-                    DisplayChatOpen::new_with_tags(commit_id, tags),
-                    //InspectCommitOpen::new_with_tags(commit_id, tags),
-                ),
-            ));
-        }
-    }
+    //fn inspect_commit(&self) {
+    //    if let Some(commit_id) = self.selected_commit() {
+    //        let tags = self.selected_commit_tags(&Some(commit_id));
+    //        self.queue.push(InternalEvent::OpenPopup(
+    //            //
+    //            StackablePopupOpen::InspectCommit(
+    //                //
+    //                InspectCommitOpen::new_with_tags(commit_id, tags),
+    //            ),
+    //        ));
+    //    }
+    //}
+    //fn display_chat(&self) {
+    //    if let Some(commit_id) = self.selected_commit() {
+    //        let tags = self.selected_commit_tags(&Some(commit_id));
+    //        self.queue.push(InternalEvent::OpenPopup(
+    //            //
+    //            StackablePopupOpen::DisplayChat(
+    //                //
+    //                DisplayChatOpen::new_with_tags(commit_id, tags),
+    //                //InspectCommitOpen::new_with_tags(commit_id, tags),
+    //            ),
+    //        ));
+    //    }
+    //}
 
     pub fn search(&mut self, options: LogFilterSearchOptions) {
         if !self.can_start_search() {
