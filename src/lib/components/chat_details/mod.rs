@@ -22,6 +22,7 @@ use super::{
 use crate::{
     accessors,
     app::Environment,
+    chat,
     keys::{key_match, SharedKeyConfig},
     strings,
 };
@@ -57,7 +58,7 @@ impl ChatDetailsComponent {
 
         format!(
             //"chat_details/mod.rs:59:mod.rs get_files_title {} {}",
-            "{} {}",
+            "get_files_title:{} {}",
             strings::commit::chat_details_files_title(&self.key_config),
             files_count
         )
