@@ -56,7 +56,7 @@ impl Default for App {
             messages: Default::default(),
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
-            topic: String::from(""),
+            topic: String::from("gnostr"),
         }
     }
 }
