@@ -91,7 +91,7 @@ impl CommitPopup {
 
     fn draw_branch_name(&self, f: &mut Frame) {
         if let Some(name) = self.git_branch_name.last() {
-            let w = Paragraph::new(format!("{{{name}}}")).alignment(Alignment::Right);
+            let w = Paragraph::new(format!("commit.rs:{{{name}}}")).alignment(Alignment::Right);
 
             let rect = {
                 let mut rect = self.input.get_area();
@@ -149,14 +149,17 @@ impl CommitPopup {
 
         {
             let mut file = File::create(&file_path)?;
-            file.write_fmt(format_args!("{}\n", self.input.get_text()))?;
+            file.write_fmt(format_args!(
+                "152:show_editor.rs:{}\n",
+                self.input.get_text()
+            ))?;
             file.write_all(strings::commit_editor_msg(&self.key_config).as_bytes())?;
 
             file.write_all(b"\n#\n# Changes to be committed:")?;
 
             for change in changes {
                 let status_char = Self::item_status_char(change.status);
-                let message = format!("\n#\t{status_char}: {}", change.path);
+                let message = format!("159:show_editor.rs:\n#\t{status_char}: {}", change.path);
                 file.write_all(message.as_bytes())?;
             }
         }
@@ -182,14 +185,14 @@ impl CommitPopup {
 
         {
             let mut file = File::create(&file_path)?;
-            file.write_fmt(format_args!("{}\n", self.input.get_text()))?;
+            file.write_fmt(format_args!("185:commit.rs:{}\n", self.input.get_text()))?;
             file.write_all(strings::commit_editor_msg(&self.key_config).as_bytes())?;
 
             file.write_all(b"\n#\n# Changes to be committed:")?;
 
             for change in changes {
                 let status_char = Self::item_status_char(change.status);
-                let message = format!("\n#\t{status_char}: {}", change.path);
+                let message = format!("192:commit.rs:\n#\t{status_char}: {}", change.path);
                 file.write_all(message.as_bytes())?;
             }
         }
