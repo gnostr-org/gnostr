@@ -9,6 +9,7 @@ use nostr_sdk::{
     Alphabet, FromBech32, JsonUtil, Keys, Kind, NostrSigner, SingleLetterTag, Timestamp, ToBech32,
 };
 use nostr_signer::Nip46Signer;
+use tracing::debug;
 
 #[cfg(not(test))]
 use crate::client::Client;
@@ -593,7 +594,7 @@ fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -
         .max_by_key(|e| e.created_at);
 
     if let Some(e) = event {
-        dbg!("{:?}", e);
+        debug!("{:?}", e);
     }
 
     UserRelays {
