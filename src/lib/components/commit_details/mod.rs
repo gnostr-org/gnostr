@@ -44,7 +44,7 @@ pub struct CommitDetailsComponent {
 }
 
 impl CommitDetailsComponent {
-    accessors!(self, [single_details, compare_details, file_tree]);
+    accessors!(self, [single_details, compare_details, file_tree, chat]);
 
     ///
     pub fn new(env: &Environment, focused: bool) -> Self {
@@ -63,7 +63,7 @@ impl CommitDetailsComponent {
     }
 
     fn get_files_title(&self) -> String {
-        let files_count = self.file_tree.file_count();
+        let files_count = self.chat.file_count();
 
         format!(
             "69:commit_details/mod.rs CommitDetailsComponent {} {}",
@@ -86,7 +86,7 @@ impl CommitDetailsComponent {
         self.commit = params;
 
         if let Some(id) = params {
-            self.file_tree.set_commit(Some(id.id));
+            self.chat.set_commit(Some(id.id));
 
             if let Some(other) = id.other {
                 self.compare_details.set_commits(Some(OldNew {
@@ -99,18 +99,18 @@ impl CommitDetailsComponent {
 
             if let Some((fetched_id, res)) = self.git_commit_files.current()? {
                 if fetched_id == id {
-                    self.file_tree.update(res.as_slice())?;
-                    self.file_tree.set_title(self.get_files_title());
+                    self.chat.update(res.as_slice())?;
+                    self.chat.set_title(self.get_files_title());
 
                     return Ok(());
                 }
             }
 
-            self.file_tree.clear()?;
+            self.chat.clear()?;
             self.git_commit_files.fetch(id)?;
         }
 
-        self.file_tree.set_title(self.get_files_title());
+        self.chat.set_title(self.get_files_title());
 
         Ok(())
     }
@@ -122,7 +122,7 @@ impl CommitDetailsComponent {
 
     ///
     pub const fn files(&self) -> &StatusTreeComponent {
-        &self.file_tree
+        &self.chat
     }
 
     fn details_focused(&self) -> bool {
@@ -156,7 +156,7 @@ impl DrawableComponent for CommitDetailsComponent {
             ]
         } else {
             let details_focused = self.details_focused();
-            let percentages = if self.file_tree.focused() {
+            let percentages = if self.chat.focused() {
                 //file_tree refers to a File: widget that indicated
                 //which files are part of the commit
                 //once arrow right from topiclist or revlog
@@ -200,7 +200,7 @@ impl DrawableComponent for CommitDetailsComponent {
         } else {
             self.single_details.draw(f, chunks[0])?;
         }
-        self.file_tree.draw(f, chunks[1])?;
+        self.chat.draw(f, chunks[1])?;
 
         //this is rendered below the file_tree
         f.render_widget(
@@ -241,7 +241,7 @@ impl Component for CommitDetailsComponent {
 
     fn event(&mut self, ev: &Event) -> Result<EventState> {
         if event_pump(ev, self.components_mut().as_mut_slice())?.is_consumed() {
-            if !self.file_tree.is_visible() {
+            if !self.chat.is_visible() {
                 self.hide();
             }
 
@@ -252,13 +252,13 @@ impl Component for CommitDetailsComponent {
             if let Event::Key(e) = ev {
                 return if key_match(e, self.key_config.keys.move_down) && self.details_focused() {
                     self.set_details_focus(false);
-                    self.file_tree.focus(true);
+                    self.chat.focus(true);
                     Ok(EventState::Consumed)
                 } else if key_match(e, self.key_config.keys.move_up)
-                    && self.file_tree.focused()
+                    && self.chat.focused()
                     && !self.is_compare()
                 {
-                    self.file_tree.focus(false);
+                    self.chat.focus(false);
                     self.set_details_focus(true);
                     Ok(EventState::Consumed)
                 } else {
@@ -278,18 +278,18 @@ impl Component for CommitDetailsComponent {
     }
     fn show(&mut self) -> Result<()> {
         self.visible = true;
-        self.file_tree.show()?;
+        self.chat.show()?;
         Ok(())
     }
 
     fn focused(&self) -> bool {
-        self.details_focused() || self.file_tree.focused()
+        self.details_focused() || self.chat.focused()
     }
 
     fn focus(&mut self, focus: bool) {
         self.single_details.focus(false);
         self.compare_details.focus(false);
-        self.file_tree.focus(focus);
-        self.file_tree.show_selection(true);
+        self.chat.focus(focus);
+        self.chat.show_selection(true);
     }
 }
