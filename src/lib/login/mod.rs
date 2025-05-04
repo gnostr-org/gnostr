@@ -540,6 +540,7 @@ fn get_config_item(git_repo: &Repo, name: &str) -> Result<String> {
         .context(format!("git config item {name} doesn't exist"))
 }
 
+//
 fn extract_user_metadata(
     public_key: &nostr::PublicKey,
     events: &[nostr::Event],
@@ -636,7 +637,9 @@ fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -
     }
 }
 
-async fn get_user_details(
+//
+//use with topiclist
+pub async fn get_user_details(
     public_key: &PublicKey,
     #[cfg(test)] client: Option<&crate::client::MockConnect>,
     #[cfg(not(test))] client: Option<&Client>,
