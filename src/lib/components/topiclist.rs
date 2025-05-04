@@ -28,6 +28,7 @@ use crate::{
     queue::{InternalEvent, Queue},
     strings::{self, symbol},
     try_or_popup,
+	login::get_user_details,
     ui::{
         calc_scroll_top, draw_scrollbar,
         style::{SharedTheme, Theme},
