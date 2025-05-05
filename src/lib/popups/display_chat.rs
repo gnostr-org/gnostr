@@ -202,10 +202,10 @@ impl DisplayChatPopup {
     accessors!(self, [diff, details]);
 
     ///
-    pub fn new(env: &Environment) -> Self {
+    pub async fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
-            details: ChatDetailsComponent::new(env),
+            details: ChatDetailsComponent::new(env).await,
             diff: DiffComponent::new(env, true),
             open_request: None,
             git_diff: AsyncDiff::new(env.repo.borrow().clone(), &env.sender_git),

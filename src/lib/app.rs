@@ -145,7 +145,7 @@ impl Environment {
 impl App {
     ///
     #[allow(clippy::too_many_lines)]
-    pub fn new(
+    pub async fn new(
         repo: RepoPathRef,
         sender_git: Sender<AsyncGitNotification>,
         sender_app: Sender<AsyncAppNotification>,
@@ -181,7 +181,7 @@ impl App {
             stashmsg_popup: StashMsgPopup::new(&env),
 
             //display_chat_popup
-            display_chat_popup: DisplayChatPopup::new(&env),
+            display_chat_popup: DisplayChatPopup::new(&env).await,
 
             inspect_chat_popup: InspectChatPopup::new(&env),
 
@@ -214,7 +214,7 @@ impl App {
             stashlist_tab: StashList::new(&env),
             files_tab: FilesTab::new(&env),
             //chat_tab
-            chat_tab: Chatlog::new(&env),
+            chat_tab: Chatlog::new(&env).await,
             tab: 0,
             queue: env.queue,
             theme: env.theme,

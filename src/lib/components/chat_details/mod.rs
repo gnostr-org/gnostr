@@ -52,10 +52,10 @@ impl ChatDetailsComponent {
     accessors!(self, [single_details, compare_details, file_tree]);
 
     ///
-    pub fn new(env: &Environment) -> Self {
+    pub async fn new(env: &Environment) -> Self {
         Self {
             single_details: DetailsComponent::new(env, false),
-            compare_details: CompareDetailsComponent::new(env, false),
+            compare_details: CompareDetailsComponent::new(env, false).await,
             git_commit_files: AsyncCommitFiles::new(env.repo.borrow().clone(), &env.sender_git),
             file_tree: StatusTreeComponent::new(env, "", false),
             visible: false,

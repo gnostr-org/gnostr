@@ -79,11 +79,11 @@ pub struct Chatlog {
 
 impl Chatlog {
     ///
-    pub fn new(env: &Environment) -> Self {
+    pub async fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
-            chat_details: ChatDetailsComponent::new(env),
+            chat_details: ChatDetailsComponent::new(env).await,
             list: TopicList::new(env, &strings::topiclist_title(&env.key_config)),
             git_log: AsyncLog::new(env.repo.borrow().clone(), &env.sender_git, None),
             search: LogSearch::Off,
