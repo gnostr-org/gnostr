@@ -67,11 +67,23 @@ impl CompareDetailsComponent {
                 // Handle the error.  We're interested in the "already exists" case.
                 if error.kind() == ErrorKind::AlreadyExists {
                     println!("Directory already exists: {}", full_path.display());
-                    Ok(()) // Treat "already exists" as success.
+                    Ok(())
                 } else {
-                    // For other errors, return the error.
-                    //Ok(()) // Treat "already exists" as success.
-                    Err(Box::new(error)) // Box the error for easier handling
+                    use git2::{Repository, RepositoryInitOptions};
+                    let _ = match Repository::discover(&".") {
+                        Ok(repo) => {
+                            println!("Found existing git repository in {:?}", base_path);
+                            repo
+                        }
+                        Err(_) => {
+                            let mut opts = RepositoryInitOptions::new();
+                            opts.initial_head("gnostr"); // Set the initial branch name
+                            let repo = Repository::init_opts(&base_path, &opts)?;
+                            println!("Initialized new git repository in {:?}", base_path);
+                            repo
+                        }
+                    };
+                    Ok(())
                 }
             }
         }
@@ -84,6 +96,7 @@ impl CompareDetailsComponent {
             debug!("The directory '{}' exists.", directory_to_check);
         } else {
             debug!("The directory '{}' does not exist.", directory_to_check);
+            let _ = Self::create_directory_if_not_exists().await;
         }
         let base_path = async_std::path::Path::new(".git");
         let filename = async_std::path::Path::new("nostr-cache.sqlite");
