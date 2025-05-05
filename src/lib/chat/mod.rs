@@ -687,7 +687,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         app.add_message(
             Msg::default()
                 .set_content(String::from(author_email.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitAuthor),
+                .set_kind(MsgKind::GitCommitEmail),
         );
     }
     if let Some(committer_name) = value.get("committer_name") {
@@ -711,19 +711,19 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     }
 
     //split the commit message into a Vec<String>
-    if let Some(message) = value.get("message") {
-        let parts = split_json_string(&message, "\n");
-        for part in parts {
-            debug!("\n{}", part);
+    //if let Some(message) = value.get("message") {
+    //    let parts = split_json_string(&message, "\n");
+    //    for part in parts {
+    //        debug!("\n{}", part);
 
-            app.add_message(
-                Msg::default()
-                    .set_content(String::from(part))
-                    .set_kind(MsgKind::GitCommitMessagePart),
-            );
-        }
-        debug!("message:\n{}", message.as_str().unwrap_or(""));
-    }
+    //        app.add_message(
+    //            Msg::default()
+    //                .set_content(String::from(part))
+    //                .set_kind(MsgKind::GitCommitMessagePart),
+    //        );
+    //    }
+    //    debug!("message:\n{}", message.as_str().unwrap_or(""));
+    //}
     if let Value::Number(time) = &value["time"] {
         debug!("time:\n{}", time);
 
