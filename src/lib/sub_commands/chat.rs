@@ -1,26 +1,8 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-//use crate::cli::ChatCommands;
-//use crate::sub_commands::fetch;
-//use crate::sub_commands::init;
-//use crate::sub_commands::list;
-//use crate::sub_commands::login;
-//use crate::sub_commands::pull;
-//use crate::sub_commands::push;
-//use crate::sub_commands::send;
-use clap::Args;
-//use nostr_sdk::prelude::*;
-//use nostr_sdk::Keys;
-//use nostr_sdk::Client;
-//use nostr_sdk::EventBuilder;
 
-use anyhow::Result;
+//use crate::sub_commands::chat::Utc;
 
-use serde::ser::StdError;
-
-//use anyhow::Result;
-use crate::chat::*;
-//use crate::chat::chat;
 use crate::chat::create_event;
 use crate::chat::msg::*;
 use crate::chat::p2p::evt_loop;
@@ -28,12 +10,18 @@ use crate::chat::parse_json;
 use crate::chat::split_json_string;
 use crate::chat::ui;
 use crate::chat::ChatCli;
+use crate::chat::*;
 use crate::global_rt::global_rt;
+use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
+use serde::ser::StdError;
+
+use chrono::Utc;
 
 use libp2p::gossipsub;
+use log;
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::Client;
 use nostr_sdk_0_37_0::EventBuilder;
@@ -43,106 +31,77 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::{error::Error, time::Duration};
 use tracing::{debug, info, Level};
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-#[derive(Args, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct ChatSubCommand {
-    //#[command(subcommand)]
-    //command: ChatCommands,
-    ///// nsec or hex private key
-    #[arg(short, long, global = true)]
-    nsec: Option<String>,
-    ///// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    password: Option<String>,
-    #[arg(long, global = true)]
-    name: Option<String>,
-    ///// chat topic
-    #[arg(long, global = true)]
-    topic: Option<String>,
-    ///// disable spinner animations
-    #[arg(long, action)]
-    disable_cli_spinners: bool,
-    #[arg(long, action)]
-    info: bool,
-    #[arg(long, action)]
-    debug: bool,
-    #[arg(long, action)]
-    trace: bool,
-}
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
-    //match &sub_command_args.command {
-    ////    ChatCommands::Login(args) => login::launch(&args).await?,
-    ////    ChatCommands::Init(args) => init::launch(&args).await?,
-    ////    ChatCommands::Send(args) => send::launch(&args, true).await?,
-    ////    ChatCommands::List => list::launch().await?,
-    ////    ChatCommands::Pull => pull::launch().await?,
-    ////    ChatCommands::Push(args) => push::launch(&args).await?,
-    ////    ChatCommands::Fetch(args) => fetch::launch(&args).await?,
-    //	_ => { run(sub_command_args).await? }
-    //}
-    debug!("{:?}", &sub_command_args);
     run(sub_command_args).await?;
-
     Ok(())
 }
 
 pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
-    debug!("{:?}", &sub_command_args);
-    let chat = crate::chat::chat(sub_command_args);
+    let sub_command_args = sub_command_args;
+    if let Some(name) = sub_command_args.name.clone() {
+        use std::env;
+        env::set_var("USER", &name);
+    };
 
-    //    let args = sub_command_args;
-    //
-    //    if let Some(name) = args.name.clone() {
-    //        use std::env;
-    //        env::set_var("USER", &name);
-    //    };
-    //
-    //    let level = if args.debug {
-    //        Level::DEBUG
-    //    } else if args.trace {
-    //        Level::TRACE
-    //    } else if args.info {
-    //        Level::INFO
-    //    } else {
-    //        Level::WARN
-    //    };
-    //
-    //    let filter = EnvFilter::default()
-    //        .add_directive(level.into())
-    //        .add_directive("nostr_sdk=off".parse().unwrap())
-    //        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-    //        .add_directive("nostr_sdk::client=off".parse().unwrap())
-    //        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-    //        .add_directive("nostr_relay_pool=off".parse().unwrap())
-    //        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-    //        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-    //        .add_directive("gnostr::message=off".parse().unwrap())
-    //        .add_directive("gnostr::nostr_proto=off".parse().unwrap())
-    //        .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
-    //        //
-    //        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
-    //
+    let level = if sub_command_args.debug {
+        Level::DEBUG
+    } else if sub_command_args.trace {
+        Level::TRACE
+    } else if sub_command_args.info {
+        Level::INFO
+    } else {
+        Level::WARN
+    };
+    //TODO chat specific filters
+    let filter = EnvFilter::default()
+        .add_directive(level.into())
+        .add_directive("nostr_sdk=off".parse().unwrap())
+        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
+        .add_directive("nostr_sdk::client=off".parse().unwrap())
+        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
+        .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
+        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
+        .add_directive("gnostr::message=off".parse().unwrap())
+        .add_directive("gnostr::nostr_proto=off".parse().unwrap())
+        .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
+        //
+        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
+
     //    let subscriber = Registry::default()
     //        .with(fmt::layer().with_writer(std::io::stdout))
     //        .with(filter);
-    //
-    //    let _ = subscriber.try_init();
-    //
-    //    if args.debug || args.trace {
-    //        if args.nsec.clone().is_some() {
-    //            let keys = Keys::parse(&args.nsec.clone().unwrap().clone()).unwrap();
-    //            debug!(
-    //                "{{\"private_key\":\"{}\"}}",
-    //                keys.secret_key().display_secret()
-    //            );
-    //            debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
-    //        }
-    //    }
+
+    let subscriber = Registry::default()
+        .with(
+            fmt::layer()
+                .with_writer(std::io::stdout)
+                //.with_timer(fmt::time::Utc::rfc_3339()) // Corrected line
+                .with_thread_ids(true),
+        )
+        .with(filter);
+
+    let _ = subscriber.try_init();
+    tracing::trace!("\n{:?}\n", &sub_command_args);
+    tracing::debug!("\n{:?}\n", &sub_command_args);
+    tracing::info!("\n{:?}\n", &sub_command_args);
+    //print!("{:?}", &sub_command_args);
+
+    if sub_command_args.debug || sub_command_args.trace {
+        if sub_command_args.nsec.clone().is_some() {
+            let keys = Keys::parse(&sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+            debug!(
+                "{{\"private_key\":\"{}\"}}",
+                keys.secret_key().display_secret()
+            );
+            debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
+        }
+    }
+
+    let chat = crate::chat::chat(sub_command_args);
+
     //    //parse keys from sha256 hash
     //    let empty_hash_keys =
     //        Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
