@@ -1,15 +1,3 @@
-use anyhow::Result;
-use crossterm::event::Event;
-use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
-use nostr_sdk::prelude::*;
-use nostr_sqlite::SQLiteDatabase;
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    text::{Line, Span, Text},
-    Frame,
-};
-use std::borrow::Cow;
-
 use crate::{
     app::Environment,
     components::{
@@ -21,6 +9,18 @@ use crate::{
     strings::{self},
     ui::style::SharedTheme,
 };
+use anyhow::Result;
+use crossterm::event::Event;
+use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
+use nostr_sdk::prelude::*;
+use nostr_sqlite::SQLiteDatabase;
+use ratatui::{
+    layout::{Constraint, Direction, Layout, Rect},
+    text::{Line, Span, Text},
+    Frame,
+};
+use std::borrow::Cow;
+use tracing::debug;
 
 pub struct CompareDetailsComponent {
     repo: RepoPathRef,
@@ -44,29 +44,33 @@ impl CompareDetailsComponent {
         }
     }
 
-    pub async fn create_directory_if_not_exists(
-        dir_path_str: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        // Convert the directory path string to a Path.  Crucial for cross-platform compatibility
-        use async_std::path::Path;
-        let dir_path = Path::new(dir_path_str);
-
-        // Attempt to create the directory.
-        use async_std::fs;
+    pub async fn create_directory_if_not_exists() -> Result<(), Box<dyn std::error::Error>> {
+        //use async_std::fs;
+        //use async_std::fs::File;
         use async_std::io::ErrorKind;
-        match fs::create_dir_all(dir_path).await {
+        use async_std::path::{Path, PathBuf};
+        let base_path = async_std::path::Path::new(".git");
+        let filename = async_std::path::Path::new("nostr-cache.sqlite");
+        let full_path: PathBuf = base_path.join(filename);
+        println!("The full path is: {}", full_path.display());
+        if Path::new(&full_path).is_file().await {
+            println!("The directory '{}' exists.", full_path.display());
+        } else {
+            println!("The directory '{}' does not exist.", full_path.display());
+        }
+        match async_std::fs::File::create(full_path.clone()).await {
             Ok(_) => {
-                println!("Successfully created directory: {}", dir_path.display());
+                println!("Successfully created directory: {}", full_path.display());
                 Ok(()) // Return Ok(()) to indicate success
             }
             Err(error) => {
                 // Handle the error.  We're interested in the "already exists" case.
-                use tokio::fs;
                 if error.kind() == ErrorKind::AlreadyExists {
-                    println!("Directory already exists: {}", dir_path.display());
+                    println!("Directory already exists: {}", full_path.display());
                     Ok(()) // Treat "already exists" as success.
                 } else {
                     // For other errors, return the error.
+                    //Ok(()) // Treat "already exists" as success.
                     Err(Box::new(error)) // Box the error for easier handling
                 }
             }
@@ -74,33 +78,25 @@ impl CompareDetailsComponent {
     }
 
     pub async fn connect() -> Result<SQLiteDatabase, Error> {
-        let directory_to_create = ".git/nostr-cache.sqlite";
-
-        // Call the function to create the directory
-        if let Err(e) = Self::create_directory_if_not_exists(directory_to_create).await {
-            eprintln!(
-                "Failed to create directory: {} - {}",
-                directory_to_create, e
-            );
-            //  IMPORTANT:  Consider how your application should handle this error.
-            //  Should it panic?  Should it try a different directory?
-            //  For this example, we just print an error and exit.  You might
-            //  choose to continue, depending on your application's logic.
-            std::process::exit(1); // Exit with a non-zero exit code to signal failure
-        }
-
-        println!("Directory creation process completed.");
-        //The directory now exists
+        use async_std::path::{Path, PathBuf};
         let directory_to_check = ".git";
-        use async_std::path::Path;
         if Path::new(directory_to_check).is_dir().await {
-            println!("The directory '{}' exists.", directory_to_check);
+            debug!("The directory '{}' exists.", directory_to_check);
         } else {
-            println!("The directory '{}' does not exist.", directory_to_check);
+            debug!("The directory '{}' does not exist.", directory_to_check);
         }
-
-        let db_future = SQLiteDatabase::open(".git/nostr-cache.sqlite");
-        let db: SQLiteDatabase = db_future.await.expect("");
+        let base_path = async_std::path::Path::new(".git");
+        let filename = async_std::path::Path::new("nostr-cache.sqlite");
+        let full_path: PathBuf = base_path.join(filename);
+        if Path::new(&full_path).is_file().await {
+            debug!("The file '{}' exists.", full_path.display());
+        } else {
+            debug!("The file '{}' does not exist.", full_path.display());
+        }
+        debug!("The full path is: {}", full_path.display());
+        let db = SQLiteDatabase::open(".git/nostr-cache.sqlite")
+            .await
+            .expect("");
         Ok(db)
     }
 
