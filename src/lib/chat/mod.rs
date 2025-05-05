@@ -361,27 +361,27 @@ pub struct ChatSubCommands {
     //command: ChatCommands,
     ///// nsec or hex private key
     #[arg(short, long, global = true)]
-    nsec: Option<String>,
+    pub nsec: Option<String>,
     ///// password to decrypt nsec
     #[arg(short, long, global = true)]
-    password: Option<String>,
+    pub password: Option<String>,
     #[arg(long, global = true)]
-    name: Option<String>,
+    pub name: Option<String>,
     ///// chat topic
     #[arg(long, global = true)]
-    topic: Option<String>,
+    pub topic: Option<String>,
     ///// chat hash
     #[arg(long, global = true)]
-    hash: Option<String>,
+    pub hash: Option<String>,
     ///// disable spinner animations
     #[arg(long, action, default_value = "false")]
-    disable_cli_spinners: bool,
+    pub disable_cli_spinners: bool,
     #[arg(long, action)]
-    info: bool,
+    pub info: bool,
     #[arg(long, action)]
-    debug: bool,
+    pub debug: bool,
     #[arg(long, action)]
-    trace: bool,
+    pub trace: bool,
 }
 
 //async tasks
