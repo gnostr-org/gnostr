@@ -2,9 +2,20 @@ mod chat_details;
 mod details;
 mod style;
 
+use std::time::Duration;
+
+//use nostr_sdk_0_32_0::{EventBuilder, EventId, FromBech32, Keys, Kind, Metadata, SecretKey, Tag, Url};
+use nostr::prelude::Tag;
+use nostr::prelude::*;
+use nostr_database::{nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order};
+use nostr_sqlite::SQLiteDatabase;
+use tracing_subscriber::fmt::format::FmtSpan;
+
 use anyhow::Result;
 use chat_details::CompareDetailsComponent;
-use crossterm::event::Event;
+use crossterm::event::Event as CrossTermEvent;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
 use details::DetailsComponent;
 use gnostr_asyncgit::{
     sync::{commit_files::OldNew, CommitTags},
@@ -228,7 +239,7 @@ impl Component for ChatDetailsComponent {
         CommandBlocking::PassingOn
     }
 
-    fn event(&mut self, ev: &Event) -> Result<EventState> {
+    fn event(&mut self, ev: &crossterm::event::Event) -> Result<EventState> {
         if event_pump(ev, self.components_mut().as_mut_slice())?.is_consumed() {
             if !self.file_tree.is_visible() {
                 self.hide();
@@ -238,7 +249,7 @@ impl Component for ChatDetailsComponent {
         }
 
         if self.focused() {
-            if let Event::Key(e) = ev {
+            if let crossterm::event::Event::Key(e) = ev {
                 return if key_match(e, self.key_config.keys.move_down) && self.details_focused() {
                     self.set_details_focus(false);
                     self.file_tree.focus(true);
