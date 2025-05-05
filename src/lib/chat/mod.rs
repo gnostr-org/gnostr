@@ -396,7 +396,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     let args = sub_command_args.clone();
 
     if let Some(hash) = args.hash {
-        println!("hash={}", hash);
+        debug!("hash={}", hash);
     };
 
     if let Some(name) = args.name {
@@ -447,7 +447,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
         let signed_event = create_event(empty_hash_keys, custom_tags, &"gnostr-chat:event").await;
-        info!("signed_event:\n{:?}", signed_event);
+        debug!("signed_event:\n{:?}", signed_event);
     });
 
     //initialize git repo
@@ -462,7 +462,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     let commit = obj.peel_to_commit()?;
     let commit_id = commit.id().to_string();
     //some info wrangling
-    info!("commit_id:\n{}", commit_id);
+    debug!("commit_id:\n{}", commit_id);
     let padded_commit_id = format!("{:0>64}", commit_id);
 
     //// commit based keys
@@ -487,7 +487,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         //send to create_event function with &"custom content"
         let signed_event =
             create_event(padded_keys.clone(), custom_tags, &"gnostr-chat:event").await;
-        info!("signed_event:\n{:?}", signed_event);
+        debug!("signed_event:\n{:?}", signed_event);
     });
 
     //TODO config metadata
@@ -517,33 +517,33 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     // Accessing object elements.
     if let Some(id) = value.get("id") {
-        info!("id:\n{}", id.as_str().unwrap_or(""));
+        debug!("id:\n{}", id.as_str().unwrap_or(""));
     }
     if let Some(tree) = value.get("tree") {
-        info!("tree:\n{}", tree.as_str().unwrap_or(""));
+        debug!("tree:\n{}", tree.as_str().unwrap_or(""));
     }
     // Accessing parent commits (merge may be array)
     if let Some(parent) = value.get("parents") {
         if let Value::Array(arr) = parent {
             if let Some(parent) = arr.get(0) {
-                info!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
+                debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
             }
             if let Some(parent) = arr.get(1) {
-                info!("parent:\n{}", parent.as_str().unwrap_or(""));
+                debug!("parent:\n{}", parent.as_str().unwrap_or(""));
             }
         }
     }
     if let Some(author_name) = value.get("author_name") {
-        info!("author_name:\n{}", author_name.as_str().unwrap_or(""));
+        debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
     }
     if let Some(author_email) = value.get("author_email") {
-        info!("author_email:\n{}", author_email.as_str().unwrap_or(""));
+        debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
     }
     if let Some(committer_name) = value.get("committer_name") {
-        info!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
+        debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
     }
     if let Some(committer_email) = value.get("committer_email") {
-        info!(
+        debug!(
             "committer_email:\n{}",
             committer_email.as_str().unwrap_or("")
         );
@@ -553,12 +553,12 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     if let Some(message) = value.get("message") {
         let parts = split_json_string(&message, "\n");
         for part in parts {
-            info!("\n{}", part);
+            debug!("\n{}", part);
         }
         debug!("message:\n{}", message.as_str().unwrap_or(""));
     }
     if let Value::Number(time) = &value["time"] {
-        info!("time:\n{}", time);
+        debug!("time:\n{}", time);
     }
 
     // // Accessing array elements.
@@ -589,7 +589,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     let commit = obj.peel_to_commit().expect("");
     let commit_id = commit.id().to_string();
     //some info wrangling
-    info!("commit_id:\n{}", commit_id);
+    debug!("commit_id:\n{}", commit_id);
     let padded_commit_id = format!("{:0>64}", commit_id.clone());
     global_rt().spawn(async move {
         //// commit based keys
@@ -638,7 +638,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     // Accessing object elements.
     if let Some(id) = value.get("id") {
-        info!("id:\n{}", id.as_str().unwrap_or(""));
+        debug!("id:\n{}", id.as_str().unwrap_or(""));
         app.add_message(
             Msg::default()
                 .set_content(String::from(id.as_str().unwrap_or("")))
@@ -646,7 +646,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         );
     }
     if let Some(tree) = value.get("tree") {
-        info!("tree:\n{}", tree.as_str().unwrap_or(""));
+        debug!("tree:\n{}", tree.as_str().unwrap_or(""));
         app.add_message(
             Msg::default()
                 .set_content(String::from(tree.as_str().unwrap_or("")))
@@ -657,7 +657,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     if let Some(parent) = value.get("parents") {
         if let Value::Array(arr) = parent {
             if let Some(parent) = arr.get(0) {
-                info!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
+                debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
                 app.add_message(
                     Msg::default()
                         .set_content(String::from(parent.as_str().unwrap_or("")))
@@ -665,7 +665,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
                 );
             }
             if let Some(parent) = arr.get(1) {
-                info!("parent:\n{}", parent.as_str().unwrap_or(""));
+                debug!("parent:\n{}", parent.as_str().unwrap_or(""));
                 app.add_message(
                     Msg::default()
                         .set_content(String::from(parent.as_str().unwrap_or("")))
@@ -675,7 +675,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         }
     }
     if let Some(author_name) = value.get("author_name") {
-        info!("author_name:\n{}", author_name.as_str().unwrap_or(""));
+        debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
         app.add_message(
             Msg::default()
                 .set_content(String::from(author_name.as_str().unwrap_or("")))
@@ -683,7 +683,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         );
     }
     if let Some(author_email) = value.get("author_email") {
-        info!("author_email:\n{}", author_email.as_str().unwrap_or(""));
+        debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
         app.add_message(
             Msg::default()
                 .set_content(String::from(author_email.as_str().unwrap_or("")))
@@ -691,7 +691,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         );
     }
     if let Some(committer_name) = value.get("committer_name") {
-        info!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
+        debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
         app.add_message(
             Msg::default()
                 .set_content(String::from(committer_name.as_str().unwrap_or("")))
@@ -699,7 +699,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         );
     }
     if let Some(committer_email) = value.get("committer_email") {
-        info!(
+        debug!(
             "committer_email:\n{}",
             committer_email.as_str().unwrap_or("")
         );
@@ -714,7 +714,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     if let Some(message) = value.get("message") {
         let parts = split_json_string(&message, "\n");
         for part in parts {
-            info!("\n{}", part);
+            debug!("\n{}", part);
 
             app.add_message(
                 Msg::default()
@@ -725,7 +725,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         debug!("message:\n{}", message.as_str().unwrap_or(""));
     }
     if let Value::Number(time) = &value["time"] {
-        info!("time:\n{}", time);
+        debug!("time:\n{}", time);
 
         app.add_message(
             Msg::default()
