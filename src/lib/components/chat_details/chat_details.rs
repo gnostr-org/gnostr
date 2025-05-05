@@ -2,6 +2,7 @@ use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
 use nostr_sdk::prelude::*;
+use nostr_sqlite::SQLiteDatabase;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span, Text},
@@ -24,19 +25,29 @@ use crate::{
 pub struct CompareDetailsComponent {
     repo: RepoPathRef,
     data: Option<OldNew<CommitDetails>>,
+    db: SQLiteDatabase,
     theme: SharedTheme,
     focused: bool,
 }
 
 impl CompareDetailsComponent {
     ///
-    pub fn new(env: &Environment, focused: bool) -> Self {
+    pub async fn new(env: &Environment, focused: bool) -> Self {
         Self {
             data: None,
+            db: Self::connect()
+                .await
+                .expect("Failed to connect to database"),
             theme: env.theme.clone(),
             focused,
             repo: env.repo.clone(),
         }
+    }
+
+    pub async fn connect() -> Result<SQLiteDatabase, Error> {
+        let db_future = SQLiteDatabase::open(".git/nostr-cache.sqlite");
+        let db: SQLiteDatabase = db_future.await.expect("");
+        Ok(db)
     }
 
     pub fn set_commits(&mut self, ids: Option<OldNew<CommitId>>) {

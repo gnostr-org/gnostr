@@ -102,7 +102,7 @@ pub enum Updater {
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
 /// permission to read it.
-pub fn tui() -> Result<()> {
+pub async fn tui() -> Result<()> {
     let app_start = Instant::now();
 
     let cliargs = process_cmdline()?;
@@ -126,7 +126,7 @@ pub fn tui() -> Result<()> {
 
     set_panic_handlers()?;
 
-    let mut terminal = start_terminal(io::stdout())?;
+    let mut terminal = start_terminal(io::stdout()).await.expect("");
     let mut repo_path = cliargs.repo_path;
     let input = Input::new();
 
@@ -145,7 +145,9 @@ pub fn tui() -> Result<()> {
             &input,
             updater,
             &mut terminal,
-        )?;
+        )
+        .await
+        .expect("");
 
         match quit_state {
             QuitState::OpenSubmodule(p) => {
@@ -162,7 +164,7 @@ pub fn tui() -> Result<()> {
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
 /// permission to read it.
-pub fn run_app(
+pub async fn run_app(
     app_start: Instant,
     repo: RepoPath,
     theme: Theme,
@@ -194,7 +196,9 @@ pub fn run_app(
         input.clone(),
         theme,
         key_config,
-    )?;
+    )
+    .await
+    .expect("");
 
     let mut spinner = Spinner::default();
     let mut first_update = true;
@@ -371,7 +375,7 @@ pub fn select_event(
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
 /// permission to read it.
-pub fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
+pub async fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
     let backend = CrosstermBackend::new(buf);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
