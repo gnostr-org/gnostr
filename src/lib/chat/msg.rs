@@ -148,7 +148,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             GitCommitId => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("id:\n{}", m.content[0].clone()),
+                        format!("{{\"commit\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -156,12 +156,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("id:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitTree => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("tree:\n{}", m.content[0].clone()),
+                        format!("{{\"tree\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -169,12 +169,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("tree \n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitAuthor => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("Author:\n{}", m.content[0].clone()),
+                        format!("{{\"Author\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -182,12 +182,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("Author:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitParent => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("parent:\n{}", m.content[0].clone()),
+                        format!("{{\"parent\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -195,12 +195,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("parent:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitMessagePart => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("message_part:\n{}", m.content[0].clone()),
+                        format!("{{\"msg\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -208,12 +208,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("message part:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitName => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("name:\n{}", m.content[0].clone()),
+                        format!("{{\"name\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -221,12 +221,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("name:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitEmail => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("email:\n{}", m.content[0].clone()),
+                        format!("{{\"email\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -234,12 +234,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("email:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitTime => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("time:\n{}", m.content[0].clone()),
+                        format!("{{\"time\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -247,12 +247,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     m.content[1].clone().into(),
                 ]
                 .iter()
-                .map(|i| format!("time:\n{}", i)),
+                .map(|i| format!("{}", i)),
             ),
             GitCommitHeader => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("header:\n{}", m.content[0].clone()),
+                        format!("{{\"header\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
@@ -265,20 +265,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             GitCommitBody => Line::default().spans(
                 vec![
                     Span::styled(
-                        format!("{}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
-                    ),
-                    m.content[1].clone().into(),
-                ]
-                .iter()
-                .map(|i| format!("{}", i)),
-            ),
-            GitCommitTime => Line::default().spans(
-                vec![
-                    Span::styled(
-                        format!("{}", m.content[0].clone()),
+                        format!("{{\"body\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
