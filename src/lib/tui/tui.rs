@@ -47,9 +47,10 @@ use crossterm::{
     ExecutableCommand,
 };
 use gnostr_asyncgit::{
-    sync::{utils::repo_work_dir, RepoPath},
+    sync::{utils::repo_work_dir, RepoPath, RepoPathRef},
     AsyncGitNotification,
 };
+
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime;
@@ -105,19 +106,19 @@ pub enum Updater {
 pub async fn tui() -> Result<()> {
     let app_start = Instant::now();
 
-    let cliargs = process_cmdline()?;
+    //let cliargs = process_cmdline()?;
 
     gnostr_asyncgit::register_tracing_logging();
 
-    if !valid_path(&cliargs.repo_path) {
-        eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
-        return Ok(());
-    }
+    //if !valid_path(&cliargs.repo_path) {
+    //    eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
+    //    return Ok(());
+    //}
 
     let key_config = KeyConfig::init()
         .map_err(|e| eprintln!("KeyConfig loading error: {e}"))
         .unwrap_or_default();
-    let theme = Theme::init(&cliargs.theme);
+    //let theme = Theme::init(&cliargs.theme);
 
     setup_terminal()?;
     defer! {
@@ -127,14 +128,27 @@ pub async fn tui() -> Result<()> {
     set_panic_handlers()?;
 
     let mut terminal = start_terminal(io::stdout()).await.expect("");
-    let mut repo_path = cliargs.repo_path;
-    let input = Input::new();
+    //let mut repo_path = cliargs.repo_path;
+    
+use std::env;
+use std::path::PathBuf;
 
-    let updater = if cliargs.notify_watcher {
-        Updater::NotifyWatcher
-    } else {
-        Updater::Ticker
-    };
+    match env::current_dir() {
+        Ok(path) => {
+            println!("Current directory: {}", path.display());
+            // You can also convert it to a PathBuf if needed:
+            let repo_path: PathBuf = path;
+            println!("Current directory as PathBuf: {}", repo_path.display());
+    
+
+
+	let input = Input::new();
+
+    //let updater = if cliargs.notify_watcher {
+        Updater::NotifyWatcher;
+    //} else {
+    //    Updater::Ticker
+    //};
 
     loop {
         let quit_state = run_app(
@@ -156,6 +170,17 @@ pub async fn tui() -> Result<()> {
             _ => break,
         }
     }
+
+
+
+
+
+		}
+        Err(e) => {
+            eprintln!("Failed to get current directory: {}", e);
+        }
+    }
+
 
     Ok(())
 }
