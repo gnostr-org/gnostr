@@ -1,12 +1,11 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use gnostr::sub_commands;
+use serde::ser::StdError;
 use sha2::{Digest, Sha256};
 use std::env;
-use tracing_subscriber::FmtSubscriber;
-
 use tracing_core::metadata::LevelFilter;
-use serde::ser::StdError;
+use tracing_subscriber::FmtSubscriber;
 
 /// Simple CLI application to interact with nostr
 #[derive(Parser)]
