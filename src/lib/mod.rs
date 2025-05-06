@@ -46,6 +46,9 @@ pub mod tabs;
 pub mod tui;
 pub mod ui;
 
+//simple-websockets
+pub mod ws;
+
 use anyhow::{anyhow, Result};
 use directories::ProjectDirs;
 
