@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.68"
+version = "0.0.69"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>"]
@@ -11,6 +11,17 @@ license = "MIT"
 keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 build = "build.rs"
+
+exclude = [
+    "target/",
+    ".git/",
+    "docs/",
+    "examples/",
+    "tests/",
+    "benches/",
+    "ci/",
+    "*.md",
+]
 
 [lib]
 name = "gnostr"

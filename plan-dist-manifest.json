@@ -1,14 +1,14 @@
 {
   "dist_version": "0.28.0",
-  "announcement_tag": "v0.0.68",
+  "announcement_tag": "v0.0.69",
   "announcement_tag_is_implicit": false,
   "announcement_is_prerelease": false,
-  "announcement_title": "v0.0.68",
-  "announcement_github_body": "## Install gnostr 0.0.68\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install gnostr-org/gnostr-org/gnostr\n```\n\n## Download gnostr 0.0.68\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [gnostr-aarch64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-aarch64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-x86_64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-pc-windows-msvc.zip](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-x86_64-pc-windows-msvc.zip.sha256) |\n| [gnostr-x86_64-unknown-linux-gnu.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
+  "announcement_title": "v0.0.69",
+  "announcement_github_body": "## Install gnostr 0.0.69\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install gnostr-org/gnostr-org/gnostr\n```\n\n## Download gnostr 0.0.69\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [gnostr-aarch64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-aarch64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-x86_64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-pc-windows-msvc.zip](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-x86_64-pc-windows-msvc.zip.sha256) |\n| [gnostr-x86_64-unknown-linux-gnu.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "gnostr",
-      "app_version": "0.0.68",
+      "app_version": "0.0.69",
       "env": {
         "install_dir_env_var": "GNOSTR_INSTALL_DIR",
         "unmanaged_dir_env_var": "GNOSTR_UNMANAGED_INSTALL",
@@ -42,7 +42,7 @@
       "hosting": {
         "github": {
           "artifact_base_url": "https://github.com",
-          "artifact_download_path": "/gnostr-org/gnostr/releases/download/v0.0.68",
+          "artifact_download_path": "/gnostr-org/gnostr/releases/download/v0.0.69",
           "owner": "gnostr-org",
           "repo": "gnostr"
         }
@@ -90,24 +90,6 @@
           "name": "gnostr",
           "path": "gnostr",
           "kind": "executable"
-        },
-        {
-          "id": "gnostr-aarch64-apple-darwin-exe-gnostr-chat",
-          "name": "gnostr-chat",
-          "path": "gnostr-chat",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-aarch64-apple-darwin-exe-gnostr-tui",
-          "name": "gnostr-tui",
-          "path": "gnostr-tui",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-aarch64-apple-darwin-exe-ngit",
-          "name": "ngit",
-          "path": "ngit",
-          "kind": "executable"
         }
       ],
       "checksum": "gnostr-aarch64-apple-darwin.tar.xz.sha256"
@@ -127,7 +109,7 @@
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-installer.ps1 | iex\"",
+      "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "gnostr-installer.sh": {
@@ -139,7 +121,7 @@
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.68/gnostr-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.69/gnostr-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "gnostr-x86_64-apple-darwin-update": {
@@ -181,24 +163,6 @@
           "id": "gnostr-x86_64-apple-darwin-exe-gnostr",
           "name": "gnostr",
           "path": "gnostr",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-apple-darwin-exe-gnostr-chat",
-          "name": "gnostr-chat",
-          "path": "gnostr-chat",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-apple-darwin-exe-gnostr-tui",
-          "name": "gnostr-tui",
-          "path": "gnostr-tui",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-apple-darwin-exe-ngit",
-          "name": "ngit",
-          "path": "ngit",
           "kind": "executable"
         }
       ],
@@ -251,24 +215,6 @@
           "name": "gnostr",
           "path": "gnostr.exe",
           "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-chat",
-          "name": "gnostr-chat",
-          "path": "gnostr-chat.exe",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-tui",
-          "name": "gnostr-tui",
-          "path": "gnostr-tui.exe",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-pc-windows-msvc-exe-ngit",
-          "name": "ngit",
-          "path": "ngit.exe",
-          "kind": "executable"
         }
       ],
       "checksum": "gnostr-x86_64-pc-windows-msvc.zip.sha256"
@@ -319,24 +265,6 @@
           "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr",
           "name": "gnostr",
           "path": "gnostr",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-chat",
-          "name": "gnostr-chat",
-          "path": "gnostr-chat",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-tui",
-          "name": "gnostr-tui",
-          "path": "gnostr-tui",
-          "kind": "executable"
-        },
-        {
-          "id": "gnostr-x86_64-unknown-linux-gnu-exe-ngit",
-          "name": "ngit",
-          "path": "ngit",
           "kind": "executable"
         }
       ],
