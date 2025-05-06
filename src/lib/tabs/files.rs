@@ -9,7 +9,7 @@ use crate::{
         visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
         EventState, RevisionFilesComponent,
     },
-    tui::AsyncNotification,
+    tui::tui::AsyncNotification,
 };
 
 pub struct FilesTab {

@@ -28,7 +28,7 @@ use crate::{
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order, symbol},
     try_or_popup,
-    tui::AsyncNotification,
+    tui::tui::AsyncNotification,
     ui::{self, common_nav, style::SharedTheme},
 };
 

@@ -1,39 +1,12 @@
 use anyhow::Result;
-//use crate::sub_commands::custom_event::CustomEventCommand;
-//use crate::Commands::CustomEvent;
-//use gnostr::global_rt::global_rt;
 use clap::{Parser, Subcommand};
-//use gnostr::global_rt;
-//use gnostr::input::InputEvent;
 use gnostr::sub_commands;
-//use gnostr::chat::*;
-//use gnostr::chat::chat;
-//use gnostr::tui::*;
-//use gnostr::utils;
-//use nostr_sdk::Result as NostrResult;
 use sha2::{Digest, Sha256};
 use std::env;
-//use std::{error::Error, time::Duration};
-//use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
 use tracing_subscriber::FmtSubscriber;
 
-//use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
-
 use serde::ser::StdError;
-
-//use std::{io::stdout, time::Duration};
-
-//use futures::{/*future::FutureExt,*/ select/*, StreamExt*/};
-//use futures_timer::Delay;
-
-//use crossterm::{
-//    //cursor::position,
-//    //event::{DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode},
-//    //execute,
-//    //terminal::{disable_raw_mode, enable_raw_mode},
-//};
-//use ratatui::prelude::CrosstermBackend;
 
 /// Simple CLI application to interact with nostr
 #[derive(Parser)]
@@ -71,6 +44,8 @@ struct Cli {
 enum Commands {
     /// Chat sub commands
     Chat(gnostr::chat::ChatSubCommands),
+    /// Tui sub commands
+    Tui(gnostr::tui::TuiSubCommands),
     /// Ngit sub commands
     Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.
@@ -237,6 +212,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     // Post event
     match &args.command {
         Some(Commands::Chat(sub_command_args)) => sub_commands::chat::chat(sub_command_args).await,
+        Some(Commands::Tui(sub_command_args)) => sub_commands::tui::tui(sub_command_args).await,
         Some(Commands::Ngit(sub_command_args)) => sub_commands::ngit::ngit(sub_command_args).await,
         Some(Commands::SetMetadata(sub_command_args)) => {
             {
