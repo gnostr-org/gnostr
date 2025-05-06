@@ -401,9 +401,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         None => {
             {
-                //println!("gnostr -h");
+                let _ = gnostr::tui::tui().await;
             };
-            //println!("gnostr -h");
             Ok(())
         }
     }
