@@ -11,9 +11,12 @@ use crate::tui::split_json_string;
 use crate::tui::ui;
 use crate::tui::TuiCli;
 use crate::tui::*;
+use crate::tui::tui;
 use crate::tui::tui_chat;
+//use crate::tui::tui;
+//use crate::tui::tui::tui;
 use crate::global_rt::global_rt;
-use crate::sub_commands::tui;
+//use crate::sub_commands::tui;
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
@@ -103,9 +106,10 @@ pub async fn run(sub_command_args: &TuiSubCommands) -> Result<(), Box<dyn StdErr
     }
 
     //let chat = crate::chat::chat(sub_command_args);
-    //let tui = crate::tui::tui::tui_chat(sub_command_args).await;
-    let tui = tui_chat(sub_command_args).await;
-    //let tui = crate::tui::tui::tui().await;
+    let chat = tui(sub_command_args);
+    //let tui = run(sub_command_args).await;
+    //let tui = tui_chat(sub_command_args).await;
+    //let tui = run(sub_command_args).await;
 
 
     //    //parse keys from sha256 hash

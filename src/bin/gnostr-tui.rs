@@ -1,5 +1,6 @@
+use gnostr::tui::tui::tui;
 #[tokio::main]
 async fn main() -> Result<(), ()> {
-    //let _ = gnostr::tui::tui().await;
+    let _ = tui().await;
     Ok(())
 }
