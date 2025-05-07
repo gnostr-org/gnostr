@@ -80,7 +80,7 @@ pub struct CliArgs {
 
 pub fn run(args: &CliArgs) -> Result<()> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
-    let repo = Repository::open(path)?;
+    let repo = Repository::discover(path)?;
     let mut revwalk = repo.revwalk()?;
 
     let _run_async = async {

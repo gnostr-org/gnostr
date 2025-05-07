@@ -76,7 +76,7 @@ impl RelayManager {
         let args = CliArgs::parse();
 
         let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
-        let repo = Repository::open(path)?;
+        let repo = Repository::discover(path)?;
         let revwalk = repo.revwalk()?;
         for commit in revwalk {
             println!("\n\n\n\n\n{:?}\n\n\n\n", commit);
