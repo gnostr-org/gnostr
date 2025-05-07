@@ -1,10 +1,10 @@
-use nostr_relays::processor::Processor;
-use nostr_relays::processor::APP_SECRET_KEY;
-use nostr_relays::processor::BOOTSTRAP_RELAY1;
-use nostr_relays::processor::BOOTSTRAP_RELAY2;
-use nostr_relays::processor::BOOTSTRAP_RELAY3;
-use nostr_relays::relay_manager::RelayManager;
-use nostr_relays::CliArgs;
+use gnostr_crawler::processor::Processor;
+use gnostr_crawler::processor::APP_SECRET_KEY;
+use gnostr_crawler::processor::BOOTSTRAP_RELAY1;
+use gnostr_crawler::processor::BOOTSTRAP_RELAY2;
+use gnostr_crawler::processor::BOOTSTRAP_RELAY3;
+use gnostr_crawler::relay_manager::RelayManager;
+use gnostr_crawler::CliArgs;
 
 use nostr_sdk::prelude::{FromBech32, Keys, SecretKey};
 
@@ -18,7 +18,7 @@ async fn main() {
     env_logger::init();
     let args = CliArgs::parse();
 
-    match nostr_relays::run(&args) {
+    match gnostr_crawler::run(&args) {
         Ok(()) => {
             let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY);
             let app_keys = Keys::new(app_secret_key.expect("REASON"));
