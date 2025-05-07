@@ -15,7 +15,7 @@ use clap::Parser;
 
 #[tokio::main]
 async fn main() {
-    //env_logger::init();
+    env_logger::init();
     let args = CliArgs::parse();
 
     match nostr_relays::run(&args) {
