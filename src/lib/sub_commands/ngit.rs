@@ -1,6 +1,6 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::cli::Commands as NgitCommands;
+use crate::cli::NgitCommands;
 use crate::sub_commands::fetch;
 use crate::sub_commands::init;
 use crate::sub_commands::list;
