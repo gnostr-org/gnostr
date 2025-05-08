@@ -83,9 +83,18 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'true'
 
+      - run: rustup default ${{ matrix.rustup }}
+      - run: cargo search gnostr --limit 100
+      - run: cargo install --locked cargo-binstall@1.9.0
+      - run: cargo-binstall --no-confirm mempool_space
+      - run: cargo-binstall --no-confirm gnostr-xq
+      - run: cargo-binstall --no-confirm gnostr-bins
+      - run: mkdir -p ~/bin
+
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew install openssl@3 || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew link openssl@3 || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
@@ -97,20 +106,10 @@ jobs:
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap nostorg/nostr || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
-
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
-      - run: rustup default ${{ matrix.rustup }}
-      - run: cargo search gnostr --limit 100
-      - run: cargo install --locked cargo-binstall@1.9.0
-      #- run: cargo-binstall --no-confirm gnostr-bins
-      - run: cargo-binstall --no-confirm mempool_space
-      - run: cargo-binstall --no-confirm gnostr-xq
-      - run: cargo-binstall --no-confirm gnostr-bins
-      - run: mkdir -p ~/bin
-
-      #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      - run: for t in **Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
       ## - run: brew install help2man scdoc || sudo apt-get install help2man scdoc

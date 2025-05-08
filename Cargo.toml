@@ -44,6 +44,7 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 [dev-dependencies]
 ##nostr
 env_logger = "0.11"
+gnostr-bins = "0.0.71"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
 rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
