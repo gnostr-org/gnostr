@@ -109,7 +109,7 @@ jobs:
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
 
-      - run: for t in **Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      ## - run: for t in **Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
       ## - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
