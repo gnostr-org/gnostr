@@ -1,11 +1,10 @@
+use clap::Args;
+use crate::utils::{create_client, parse_private_key};
+use nostr_sdk_0_32_0::prelude::*;
 use std::ops::Add;
 use std::str::FromStr;
 use std::time::Duration;
-
-use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
-
-use crate::utils::{create_client, parse_private_key};
+use tracing::trace;
 
 #[derive(Args)]
 pub struct TextNoteSubCommand {
@@ -72,7 +71,7 @@ pub async fn broadcast_textnote(
     }
 
     for tag in &tags {
-        println!("{:?}", tag);
+        trace!("{:?}", tag);
     }
 
     // Set expiration tag
