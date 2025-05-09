@@ -1,5 +1,5 @@
-use clap::Args;
 use crate::utils::{create_client, parse_private_key};
+use clap::Args;
 use nostr_sdk_0_32_0::prelude::*;
 use std::ops::Add;
 use std::str::FromStr;
