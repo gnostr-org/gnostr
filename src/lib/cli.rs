@@ -76,7 +76,7 @@ pub enum NgitCommands {
 #[command(author, version, about, long_about = None)]
 pub struct GnostrCli {
     //
-	#[command(subcommand)]
+    #[command(subcommand)]
     pub command: Option<GnostrCommands>,
     ///
     #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
