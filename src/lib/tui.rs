@@ -55,7 +55,7 @@ use scopeguard::defer;
 use scopetime;
 use scopetime::scope_time;
 
-use crate::{app::App, args::process_cmdline};
+use crate::{app::App, cli::process_cmdline};
 
 type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
 

@@ -138,7 +138,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
             if env_args.len().clone() == 3 {
-                print!("142:{:x}", result);
+                print!("{:x}", result);
             }
             //if args.nsec.is_some() {//if --hash flag in multi flag context
             //we assume they want this as their private key

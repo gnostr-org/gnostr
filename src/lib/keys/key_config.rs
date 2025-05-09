@@ -7,7 +7,7 @@ use super::{
     key_list::{GituiKeyEvent, KeysList},
     symbols::KeySymbols,
 };
-use crate::{args::get_app_config_path, strings::symbol};
+use crate::{cli::get_app_config_path, strings::symbol};
 
 pub type SharedKeyConfig = Rc<KeyConfig>;
 const KEY_LIST_FILENAME: &str = "key_bindings.ron";
