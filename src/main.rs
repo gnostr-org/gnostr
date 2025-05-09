@@ -58,6 +58,9 @@ async fn main() -> Result<(), Box<dyn StdError>> {
 
     // Post event
     match &args.command {
+        Some(GnostrCommands::Tui(sub_command_args)) => {
+            sub_commands::tui::tui(sub_command_args).await
+        }
         Some(GnostrCommands::Chat(sub_command_args)) => {
             sub_commands::chat::chat(sub_command_args).await
         }

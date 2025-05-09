@@ -31,3 +31,4 @@ pub mod send;
 
 //p2p chat
 pub mod chat;
+pub mod tui;
