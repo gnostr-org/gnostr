@@ -23,66 +23,6 @@ use tracing_core::metadata::LevelFilter;
 
 use serde::ser::StdError;
 
-//use std::{io::stdout, time::Duration};
-
-//use futures::{/*future::FutureExt,*/ select/*, StreamExt*/};
-//use futures_timer::Delay;
-
-//use crossterm::{
-//    //cursor::position,
-//    //event::{DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode},
-//    //execute,
-//    //terminal::{disable_raw_mode, enable_raw_mode},
-//};
-//use ratatui::prelude::CrosstermBackend;
-
-//const HELP: &str = r#"EventStream based on futures_util::Stream with tokio
-// - Keyboard, mouse and terminal resize events enabled
-// - Prints "." every second if there's no event
-// - Hit "c" to print current cursor position
-// - Use Esc to quit
-//"#;
-
-//async fn print_events() {
-//    let mut reader = EventStream::new();
-//
-//    loop {
-//        let mut delay = Delay::new(Duration::from_millis(1_000)).fuse();
-//        let mut event = reader.next().fuse();
-//
-//        select! {
-//            _ = delay => { println!(".\r"); },
-//            maybe_event = event => {
-//                match maybe_event {
-//                    Some(Ok(event)) => {
-//                        println!("Event::{:?}\r", event);
-//
-//                        if event == Event::Key(KeyCode::Char('c').into()) {
-//                            println!("Cursor position: {:?}\r", position());
-//                        }
-//
-//                        if event == Event::Key(KeyCode::Esc.into()) {
-//                            break;
-//                        }
-//                    }
-//                    Some(Err(e)) => println!("Error: {:?}\r", e),
-//                    None => break,
-//                }
-//            }
-//        };
-//    }
-//}
-
-//async fn interactive() -> Result<()> {
-//    println!("{}", HELP);
-//    enable_raw_mode()?;
-//    let mut stdout = stdout();
-//    execute!(stdout, EnableMouseCapture)?;
-//    print_events().await;
-//    execute!(stdout, DisableMouseCapture)?;
-//    Ok(disable_raw_mode()?)
-//}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
     let mut args: GnostrCli = GnostrCli::parse();
@@ -95,36 +35,6 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     };
     let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
-    //let env_args: Vec<String> = env::args().collect();
-
-    //let global_rt_result = global_rt().spawn(async move {
-    //    if env_args
-    //        .clone()
-    //        .iter()
-    //        .any(|arg| arg == "--debug" || arg == "-d")
-    //    {
-    //        debug!("Debug mode enabled.");
-    //        if let Err(e) = interactive().await {
-    //            eprintln!("Error processing stdin: {}", e);
-    //            std::process::exit(1);
-    //        }
-    //    } else {
-    //        trace!("Debug mode disabled.");
-    //    }
-    //    String::from("global_rt async task!")
-    //});
-    //trace!("global_rt_result={:?}", global_rt_result.await);
-    //let global_rt_result = global_rt().spawn(async move { String::from("global_rt async task!") });
-    //trace!("global_rt_result={:?}", global_rt_result.await);
-
-    //let mut args: GnostrCli = GnostrCli::parse();
-
-    //if args.nsec.is_some() {}
-    //let nsec = args.nsec.clone();
-    //if args.sec.is_some() && args.nsec.is_none() {
-    //		args.nsec = Some(args.sec.clone().expect("REASON"));
-    //}
 
     let env_args: Vec<String> = env::args().collect();
 
@@ -140,19 +50,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             if env_args.len().clone() == 3 {
                 print!("{:x}", result);
             }
-            //if args.nsec.is_some() {//if --hash flag in multi flag context
-            //we assume they want this as their private key
-            //for this session
-            //override the --nsec flag
             args.nsec = format!("148:{:x}", result).into();
-            //}
         } else {
-            //drop into sha256-from-input
         }
     } else {
-        //if args.hash.is_none() {
-        //drop into sha256-from-input
-        //}
     }
 
     // Post event
@@ -324,7 +225,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             )
             .await
         }
-        None => {
+        _ => {
             {
                 //let _ = gnostr::tui::tui().await;
             };
