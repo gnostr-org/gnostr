@@ -10,12 +10,7 @@ use gnostr_asyncgit::sync::RepoPath;
 use simplelog::{Config, LevelFilter, WriteLogger};
 
 use crate::bug_report;
-
-pub struct CliArgs {
-    pub theme: PathBuf,
-    pub repo_path: RepoPath,
-    pub notify_watcher: bool,
-}
+use crate::cli::CliArgs;
 
 pub fn process_cmdline() -> Result<CliArgs> {
     let app = app();
@@ -117,6 +112,8 @@ fn app() -> ClapApp {
 				.env("GIT_WORK_TREE")
 				.num_args(1),
 		)
+
+    //TODO add GnostrCli/SubCommands etc...
 }
 
 fn setup_logging() -> Result<()> {
