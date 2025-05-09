@@ -2,9 +2,10 @@ use anyhow::Result;
 //use crate::sub_commands::custom_event::CustomEventCommand;
 //use crate::Commands::CustomEvent;
 //use gnostr::global_rt::global_rt;
-use clap::{Parser, Subcommand};
+use clap::{Parser /*, Subcommand*/};
 //use gnostr::global_rt;
 //use gnostr::input::InputEvent;
+use gnostr::cli::{GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 //use gnostr::chat::*;
 //use gnostr::chat::chat;
@@ -17,7 +18,7 @@ use std::env;
 //use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
 use tracing_subscriber::FmtSubscriber;
 
-//use tracing::{debug, info};
+use tracing::{debug /*, info*/};
 use tracing_core::metadata::LevelFilter;
 
 use serde::ser::StdError;
@@ -34,90 +35,6 @@ use serde::ser::StdError;
 //    //terminal::{disable_raw_mode, enable_raw_mode},
 //};
 //use ratatui::prelude::CrosstermBackend;
-
-/// Simple CLI application to interact with nostr
-#[derive(Parser)]
-#[command(name = "gnostr")]
-#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
-#[command(version = "0.0.1")]
-#[command(author, version, about, long_about = None)]
-struct GnostrCli {
-    #[command(subcommand)]
-    command: Option<GnostrCommands>,
-    ///
-    #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
-    nsec: Option<String>,
-    ///
-    #[arg(long, value_name = "STRING", help = "gnostr --hash '<string>'")]
-    hash: Option<String>,
-    ///
-    #[arg(short, long, action = clap::ArgAction::Append,
-		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
-    relays: Vec<String>,
-    /// Proof of work difficulty target
-    #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
-    difficulty_target: u8,
-
-    /// Enable debug logging
-    #[clap(long, default_value = "false")]
-    debug: bool,
-
-    /// Enable trace logging
-    #[clap(long, default_value = "false")]
-    trace: bool,
-}
-
-#[derive(Subcommand)]
-enum GnostrCommands {
-    /// Chat sub commands
-    Chat(gnostr::chat::ChatSubCommands),
-    /// Ngit sub commands
-    Ngit(sub_commands::ngit::NgitSubCommand),
-    /// Set metadata. Be aware that this will simply replace your current kind 0 event.
-    SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
-    /// Send text note
-    TextNote(sub_commands::text_note::TextNoteSubCommand),
-    /// Publish contacts from a CSV file
-    PublishContactListCsv(sub_commands::publish_contactlist_csv::PublishContactListCsvSubCommand),
-    /// Delete an event
-    DeleteEvent(sub_commands::delete_event::DeleteEventSubCommand),
-    /// Delete a profile
-    DeleteProfile(sub_commands::delete_profile::DeleteProfileSubCommand),
-    /// React to an event
-    React(sub_commands::react::ReactionSubCommand),
-    /// Get all events
-    ListEvents(sub_commands::list_events::ListEventsSubCommand),
-    /// Generate a new keypair
-    GenerateKeypair(sub_commands::generate_keypair::GenerateKeypairSubCommand),
-    /// Convert key from bech32 to hex or hex to bech32
-    ConvertKey(sub_commands::convert_key::ConvertKeySubCommand),
-    /// Vanity public key mining
-    Vanity(sub_commands::vanity::VanitySubCommand),
-    /// Create a new public channel
-    CreatePublicChannel(sub_commands::create_public_channel::CreatePublicChannelSubCommand),
-    /// Update channel metadata
-    SetChannelMetadata(sub_commands::set_channel_metadata::SetChannelMetadataSubCommand),
-    /// Send a message to a public channel
-    SendChannelMessage(sub_commands::send_channel_message::SendChannelMessageSubCommand),
-    /// Hide a message in a public chat room
-    HidePublicChannelMessage(
-        sub_commands::hide_public_channel_message::HidePublicChannelMessageSubCommand,
-    ),
-    /// Mute a public key
-    MutePublicKey(sub_commands::mute_publickey::MutePublickeySubCommand),
-    /// Broadcast events from file
-    BroadcastEvents(sub_commands::broadcast_events::BroadcastEventsSubCommand),
-    /// Create a new badge
-    CreateBadge(sub_commands::create_badge::CreateBadgeSubCommand),
-    /// Publish award badge event
-    AwardBadge(sub_commands::award_badge::AwardBadgeSubCommand),
-    /// Set profile badges
-    ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
-    /// Create custom event
-    CustomEvent(sub_commands::custom_event::CustomEventCommand),
-    /// Create a user status event
-    SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
-}
 
 //const HELP: &str = r#"EventStream based on futures_util::Stream with tokio
 // - Keyboard, mouse and terminal resize events enabled
@@ -210,6 +127,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     //}
 
     let env_args: Vec<String> = env::args().collect();
+
+    for arg in &env_args {
+        debug!("{:?}", arg);
+    }
     if !args.hash.is_none() {
         //not none
         if let Some(input_string) = args.hash {
@@ -217,21 +138,21 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
             if env_args.len().clone() == 3 {
-                print!("{:x}", result);
+                print!("142:{:x}", result);
             }
             //if args.nsec.is_some() {//if --hash flag in multi flag context
             //we assume they want this as their private key
             //for this session
             //override the --nsec flag
-            args.nsec = format!("{:x}", result).into();
+            args.nsec = format!("148:{:x}", result).into();
             //}
         } else {
             //drop into sha256-from-input
         }
     } else {
-        if args.hash.is_none() {
-            //drop into sha256-from-input
-        }
+        //if args.hash.is_none() {
+        //drop into sha256-from-input
+        //}
     }
 
     // Post event
@@ -405,7 +326,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         None => {
             {
-                let _ = gnostr::tui::tui().await;
+                //let _ = gnostr::tui::tui().await;
             };
             Ok(())
         }
