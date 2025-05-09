@@ -227,7 +227,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         _ => {
             {
-                //let _ = gnostr::tui::tui().await;
+                let _ = gnostr::tui::tui().await;
             };
             Ok(())
         }
