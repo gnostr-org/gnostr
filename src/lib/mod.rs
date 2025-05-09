@@ -14,6 +14,7 @@ pub mod global_rt;
 pub mod login;
 
 pub mod chat;
+pub mod gnostr;
 
 /// ngit::repo_ref
 pub mod repo_ref;
