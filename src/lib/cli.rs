@@ -79,11 +79,28 @@ pub struct GnostrCli {
     #[command(subcommand)]
     pub command: Option<GnostrCommands>,
     ///
-    #[arg(short, long, action = clap::ArgAction::Append, default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    #[arg(short, long,
+        action = clap::ArgAction::Append,
+        default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     pub nsec: Option<String>,
     ///
-    #[arg(long, value_name = "STRING", help = "gnostr --hash '<string>'")]
+    #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
     pub hash: Option<String>,
+    ///
+    #[arg(long, value_name = "WORKDIR", help = "gnostr --workdir '<string>'")]
+    pub workdir: Option<String>,
+    ///
+    #[arg(long, value_name = "GITDIR", help = "gnostr --gitdir '<string>'")]
+    pub gitdir: Option<String>,
+    ///
+    #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
+    pub directory: Option<String>,
+    ///
+    #[arg(long, value_name = "THEME", help = "gnostr --theme '<string>'")]
+    pub theme: Option<String>,
+    ///
+    #[arg(long, value_name = "WATCHER", help = "gnostr --watcher '<string>'")]
+    pub watcher: Option<String>,
     ///
     #[arg(short, long, action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
@@ -99,6 +116,14 @@ pub struct GnostrCli {
     /// Enable trace logging
     #[clap(long, default_value = "false")]
     pub trace: bool,
+
+    /// Generate bugreport
+    #[clap(long, default_value = "false")]
+    pub bugreport: bool,
+
+    /// Enable logging
+    #[clap(long, default_value = "false")]
+    pub logging: bool,
 }
 
 #[derive(Subcommand)]
@@ -155,109 +180,120 @@ pub enum GnostrCommands {
     SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
 }
 
-pub fn process_cmdline() -> Result<CliArgs> {
-    let app = app();
+//pub fn process_cmdline() -> Result<CliArgs> {
+//    let app = app();
+//
+//    let arg_matches = app.get_matches();
+//
+//    println!("{:?}", arg_matches);
+//
+//    if arg_matches.get_flag("bugreport") {
+//        bug_report::generate_bugreport();
+//        bug_report::generate_bugreport();
+//        bug_report::generate_bugreport();
+//        bug_report::generate_bugreport();
+//        std::process::exit(0);
+//    }
+//    if arg_matches.get_flag("logging") {
+//        setup_logging()?;
+//        setup_logging()?;
+//        setup_logging()?;
+//        setup_logging()?;
+//    }
+//
+//    let workdir = arg_matches.get_one::<String>("workdir").map(PathBuf::from);
+//    let gitdir = arg_matches
+//        .get_one::<String>("directory")
+//        .map_or_else(|| PathBuf::from("."), PathBuf::from);
+//
+//    #[allow(clippy::option_if_let_else)]
+//    let repo_path = if let Some(w) = workdir {
+//        RepoPath::Workdir { gitdir, workdir: w }
+//    } else {
+//        RepoPath::Path(gitdir)
+//    };
+//
+//    let arg_theme = arg_matches
+//        .get_one::<String>("theme")
+//        .map_or_else(|| PathBuf::from("theme.ron"), PathBuf::from);
+//
+//    let theme = get_app_config_path()?.join(arg_theme);
+//    let theme = get_app_config_path()?.join(arg_theme);
+//    let theme = get_app_config_path()?.join(arg_theme);
+//    let theme = get_app_config_path()?.join(arg_theme);
+//
+//    let notify_watcher: bool = *arg_matches.get_one("watcher").unwrap_or(&false);
+//
+//    Ok(CliArgs {
+//        theme,
+//        repo_path,
+//        notify_watcher,
+//    })
+//}
 
-    let arg_matches = app.get_matches();
-
-    if arg_matches.get_flag("bugreport") {
-        bug_report::generate_bugreport();
-        std::process::exit(0);
-    }
-    if arg_matches.get_flag("logging") {
-        setup_logging()?;
-    }
-
-    let workdir = arg_matches.get_one::<String>("workdir").map(PathBuf::from);
-    let gitdir = arg_matches
-        .get_one::<String>("directory")
-        .map_or_else(|| PathBuf::from("."), PathBuf::from);
-
-    #[allow(clippy::option_if_let_else)]
-    let repo_path = if let Some(w) = workdir {
-        RepoPath::Workdir { gitdir, workdir: w }
-    } else {
-        RepoPath::Path(gitdir)
-    };
-
-    let arg_theme = arg_matches
-        .get_one::<String>("theme")
-        .map_or_else(|| PathBuf::from("theme.ron"), PathBuf::from);
-
-    let theme = get_app_config_path()?.join(arg_theme);
-
-    let notify_watcher: bool = *arg_matches.get_one("watcher").unwrap_or(&false);
-
-    Ok(CliArgs {
-        theme,
-        repo_path,
-        notify_watcher,
-    })
-}
-
-fn app() -> ClapApp {
-    ClapApp::new(crate_name!())
-		.author(crate_authors!())
-		.version(env!("GITUI_BUILD_NAME"))
-		.about(crate_description!())
-		.help_template(
-			"\
-{before-help}gitui {version}
-{author}
-{about}
-
-{usage-heading} {usage}
-
-{all-args}{after-help}
-		",
-		)
-		.arg(
-			Arg::new("theme")
-				.help("Set color theme filename loaded from config directory")
-				.short('t')
-				.long("theme")
-				.value_name("THEME_FILE")
-				.default_value("theme.ron")
-				.num_args(1),
-		)
-		.arg(
-			Arg::new("logging")
-				.help("Stores logging output into a cache directory")
-				.short('l')
-				.long("logging")
-				.num_args(0),
-		)
-		.arg(
-			Arg::new("watcher")
-				.help("Use notify-based file system watcher instead of tick-based update. This is more performant, but can cause issues on some platforms. See https://github.com/extrawurst/gitui/blob/master/FAQ.md#watcher for details.")
-				.long("watcher")
-				.action(clap::ArgAction::SetTrue),
-		)
-		.arg(
-			Arg::new("bugreport")
-				.help("Generate a bug report")
-				.long("bugreport")
-				.action(clap::ArgAction::SetTrue),
-		)
-		.arg(
-			Arg::new("directory")
-				.help("Set the git directory")
-				.short('d')
-				.long("directory")
-				.env("GIT_DIR")
-				.num_args(1),
-		)
-		.arg(
-			Arg::new("workdir")
-				.help("Set the working directory")
-				.short('w')
-				.long("workdir")
-				.env("GIT_WORK_TREE")
-				.num_args(1),
-		)
-
-    //TODO add GnostrCli/SubCommands etc...
-}
+//fn app() -> ClapApp {
+//    ClapApp::new(crate_name!())
+//		.author(crate_authors!())
+//		.version(env!("GITUI_BUILD_NAME"))
+//		.about(crate_description!())
+//		.help_template(
+//			"\
+//{before-help}gitui {version}
+//{author}
+//{about}
+//
+//{usage-heading} {usage}
+//
+//{all-args}{after-help}
+//		",
+//		)
+//		.arg(
+//			Arg::new("theme")
+//				.help("Set color theme filename loaded from config directory")
+//				.short('t')
+//				.long("theme")
+//				.value_name("THEME_FILE")
+//				.default_value("theme.ron")
+//				.num_args(1),
+//		)
+//		.arg(
+//			Arg::new("logging")
+//				.help("Stores logging output into a cache directory")
+//				.short('l')
+//				.long("logging")
+//				.num_args(0),
+//		)
+//		.arg(
+//			Arg::new("watcher")
+//				.help("Use notify-based file system watcher instead of tick-based update. This is more performant, but can cause issues on some platforms. See https://github.com/extrawurst/gitui/blob/master/FAQ.md#watcher for details.")
+//				.long("watcher")
+//				.action(clap::ArgAction::SetTrue),
+//		)
+//		.arg(
+//			Arg::new("bugreport")
+//				.help("Generate a bug report")
+//				.long("bugreport")
+//				.action(clap::ArgAction::SetTrue),
+//		)
+//		.arg(
+//			Arg::new("directory")
+//				.help("Set the git directory")
+//				.short('d')
+//				.long("directory")
+//				.env("GIT_DIR")
+//				.num_args(1),
+//		)
+//		.arg(
+//			Arg::new("workdir")
+//				.help("Set the working directory")
+//				.short('w')
+//				.long("workdir")
+//				.env("GIT_WORK_TREE")
+//				.num_args(1),
+//		)
+//
+//    //TODO add GnostrCli/SubCommands etc...
+//}
 
 fn setup_logging() -> Result<()> {
     let mut path = get_app_cache_path()?;
@@ -286,7 +322,7 @@ pub fn get_app_config_path() -> Result<PathBuf> {
     }
     .ok_or_else(|| anyhow!("failed to find os config dir."))?;
 
-    path.push("gitui");
+    path.push("gnostr");
     fs::create_dir_all(&path)?;
     Ok(path)
 }

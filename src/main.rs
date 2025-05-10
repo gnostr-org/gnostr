@@ -39,7 +39,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let env_args: Vec<String> = env::args().collect();
 
     for arg in &env_args {
-        debug!("{:?}", arg);
+        println!("arg={:?}", arg);
     }
     if !args.hash.is_none() {
         //not none
@@ -230,7 +230,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         _ => {
             {
-                let _ = gnostr::tui::tui().await;
+                //let _ = gnostr::tui::tui().await;
             };
             Ok(())
         }

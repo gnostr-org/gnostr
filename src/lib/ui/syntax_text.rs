@@ -20,7 +20,7 @@ use syntect::{
     parsing::{ParseState, ScopeStack, SyntaxSet},
 };
 
-use crate::tui::{AsyncAppNotification, SyntaxHighlightProgress};
+use crate::sub_commands::tui::{AsyncAppNotification, SyntaxHighlightProgress};
 
 struct SyntaxLine {
     items: Vec<(Style, usize, Range<usize>)>,

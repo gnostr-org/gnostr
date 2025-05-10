@@ -27,7 +27,7 @@ use crate::{
     keys::{key_match, SharedKeyConfig},
     queue::{Action, InternalEvent, Queue},
     strings,
-    tui::AsyncNotification,
+    sub_commands::tui::AsyncNotification,
     ui::{self, Size},
 };
 

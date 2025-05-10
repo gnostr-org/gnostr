@@ -46,9 +46,12 @@ use crate::{
     strings::{self, ellipsis_trim_start, order},
     tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
     try_or_popup,
-    tui::{AsyncAppNotification, AsyncNotification},
+    sub_commands::tui::{AsyncAppNotification, AsyncNotification},
     ui::style::{SharedTheme, Theme},
 };
+
+//use gnostr::subcommands::tui::{AsyncAppNotification, AsyncNotification};
+
 
 #[derive(Clone)]
 pub enum QuitState {
