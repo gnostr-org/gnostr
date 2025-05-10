@@ -86,7 +86,7 @@ pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     tracing::trace!("\n{:?}\n", &sub_command_args);
     tracing::debug!("\n{:?}\n", &sub_command_args);
     tracing::info!("\n{:?}\n", &sub_command_args);
-    //print!("{:?}", &sub_command_args);
+    print!("{:?}", &sub_command_args);
 
     if sub_command_args.debug || sub_command_args.trace {
         if sub_command_args.nsec.clone().is_some() {
@@ -99,7 +99,7 @@ pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
         }
     }
 
-    let tui = crate::gnostr::gnostr(sub_command_args);
+    let tui = crate::tui::tui().await;
 
     Ok(())
 }
