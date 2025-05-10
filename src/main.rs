@@ -16,6 +16,7 @@ use sha2::{Digest, Sha256};
 use std::env;
 //use std::{error::Error, time::Duration};
 //use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
+use tracing::trace;
 use tracing_subscriber::FmtSubscriber;
 
 use tracing::{debug /*, info*/};
@@ -39,7 +40,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let env_args: Vec<String> = env::args().collect();
 
     for arg in &env_args {
-        println!("arg={:?}", arg);
+        trace!("arg={:?}", arg);
     }
     if !args.hash.is_none() {
         //not none
