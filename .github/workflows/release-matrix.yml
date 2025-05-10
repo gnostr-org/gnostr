@@ -93,31 +93,22 @@ jobs:
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew install openssl@3 || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew link openssl@3 || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap nostorg/nostr || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest'
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest'
 
-      ## - run: for t in **Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
-      ## objective: ensure make detect installs all needed depends/libs/etc
-      ## make detect is first for brew install sequence OR sudo make detect for apt install
-      ## - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
-      ##- run: make detect || sudo make detect
-      ## - run: pipx install virtualenv || true
-
-      ## objective: test non-cmake build gnostr-am
-      ## - run: make cargo-install-crates || sudo make cargo-install-crates
       - run: |
           make cargo-install || sudo make cargo-install
         if: matrix.os != 'windows-latest'
