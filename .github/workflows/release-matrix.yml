@@ -83,35 +83,33 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'true'
 
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew install openssl@3 || true
-        if: matrix.os == 'macos-latest'
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew link openssl@3 || true
-        if: matrix.os == 'macos-latest'
-
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: matrix.os == 'macos-latest'
-
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew tap nostorg/nostr || true
-        if: matrix.os == 'macos-latest'
-
-      - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os == 'macos-latest'
-
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install --locked cargo-binstall@1.9.0
-      #- run: cargo-binstall --no-confirm gnostr-bins
       - run: cargo-binstall --no-confirm mempool_space
       - run: cargo-binstall --no-confirm gnostr-xq
-      - run: |
-          cargo install gnostr-bins --force
+      - run: cargo-binstall --no-confirm gnostr-bins
       - run: mkdir -p ~/bin
 
-      #- run: for t in */Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew install openssl@3 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew link openssl@3 || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## objective: streamline gnostr installation on macos/brewlinux
+      - run: brew tap nostorg/nostr || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+      - run: brew tap randymcmillan/homebrew-randymcmillan || true
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-latest'
+
+      ## - run: for t in **Cargo.toml;do echo $t;cargo b -r -vv --manifest-path $t ;done
       ## objective: ensure make detect installs all needed depends/libs/etc
       ## make detect is first for brew install sequence OR sudo make detect for apt install
       ## - run: brew install help2man scdoc || sudo apt-get install help2man scdoc
@@ -163,95 +161,21 @@ jobs:
       ## GNOSTR DETEMINISTIC ALIASES
       ##
       - run: |
-          PRIVATE_KEY=$(gnostr --hash "")
-          echo PRIVATE_KEY=$PRIVATE_KEY
-
-          WEEBLE=$(gnostr-weeble)
-          echo WEEBLE=$WEEBLE
-          WEEBLE_SHA256=$(gnostr --hash $(gnostr-weeble))
-          echo WEEBLE_SHA256=$WEEBLE_SHA256
-
-          BLOCKS_TIP_HASH=$(mempool-space_blocks_tip_hash)
-          echo BLOCKS_TIP_HASH=$BLOCKS_TIP_HASH
-
-          BLOCKHEIGHT=$(gnostr-blockheight)
-          echo BLOCKHEIGHT=$BLOCKHEIGHT
-
-          BLOCKHEIGHT_SHA256=$(gnostr-sha256 $(gnostr-blockheight))
-          echo BLOCKHEIGHT_SHA256=$BLOCKHEIGHT_SHA256
-
-          WEEBLE_ALIAS=$(gnostr-sha256 $PRIVATE_KEY$(gnostr-sha256 $(gnostr-weeble)))
-          echo WEEBLE_ALIAS=$WEEBLE_ALIAS
-
-          #gnostr -d ${{ env.POW }} \
-          #--nsec $PRIVATE_KEY \
-          #-r wss://nos.lol \
-          #text-note \
-          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
-          #-t gnostr-$BLOCKS_TIP_HASH \
-          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          #--tag weeble $(gnostr-weeble) \
-          #--tag blockheight $(gnostr-blockheight) \
-          #--tag wobble $(gnostr-wobble) | \
-          #gnostr-post-event -r wss://e.nos.lol || true
-
-          gnostr -d ${{ env.POW }} \
-          --nsec $BLOCKS_TIP_HASH \
+          EVENT=$(gnostr note -c "gnostr note" -t gnostr -t nostr -t sub_command --hex | gnostr-xq .id | sed "s/\"//g") && \
+          echo $EVENT && \
+          gnostr-fetch-by-id wss://relay.damus.io $EVENT;
+          gnostr \
+          -d ${{ env.POW }} \
           -r wss://nos.lol \
-          text-note \
-          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true 
-          #-t gnostr-$BLOCKS_TIP_HASH \
-          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          #--tag weeble $(gnostr-weeble) \
-          #--tag blockheight $(gnostr-blockheight) \
-          #--tag wobble $(gnostr-wobble) | \
-          #gnostr-post-event -r wss://e.nos.lol || true
-
-          ## gnostr -d ${{ env.POW }} \
-          ## --nsec $BLOCKHEIGHT_SHA256 \
-          ## -r wss://nos.lol \
-          ## text-note \
-          ## --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
-          ## #-t gnostr-$BLOCKS_TIP_HASH \
-          ## #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          ## #--tag weeble $(gnostr-weeble) \
-          ## #--tag blockheight $(gnostr-blockheight) \
-          ## #--tag wobble $(gnostr-wobble) | \
-          ## #gnostr-post-event -r wss://e.nos.lol || true
-
-          ## gnostr -d ${{ env.POW }} \
-          ## --nsec $WEEBLE_SHA256 \
-          ## -r wss://nos.lol \
-          ## text-note \
-          ## --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
-          ## #-t gnostr-$BLOCKS_TIP_HASH \
-          ## #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          ## #--tag weeble $(gnostr-weeble) \
-          ## #--tag blockheight $(gnostr-blockheight) \
-          ## #--tag wobble $(gnostr-wobble) | \
-          ## #gnostr-post-event -r wss://e.nos.lol || true
-
-          #gnostr -d ${{ env.POW }} \
-          #--nsec $WEEBLE_ALIAS \
-          #-r wss://nos.lol \
-          #text-note \
-          #--content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true #\
-          #-t gnostr-$BLOCKS_TIP_HASH \
-          #--tag blocks_tip_hash $BLOCKS_TIP_HASH \
-          #--tag weeble $(gnostr-weeble) \
-          #--tag blockheight $(gnostr-blockheight) \
-          #--tag wobble $(gnostr-wobble) | \
-          #gnostr-post-event -r wss://e.nos.lol || true
-
+          react \
+          -e $EVENT \
+          -r "$(date +%s)" || true;
           gnostr -d ${{ env.POW }} \
           --nsec $(mempool-space --blocks_tip_hash) \
           -r wss://nos.lol \
           text-note \
-          --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \ 
+          --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
           --tag blocks_tip_height $(mempool-space --blocks_tip_height) || true
-          #gnostr-post-event -r wss://e.nos.lol || true
-
-          #./mempool_space_bot wss://e.nos.lol || true
         if: matrix.os != 'windows-latest'
 
       - run: ./nip-0034 || true
@@ -261,7 +185,7 @@ jobs:
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
 
       - run: |
-          EVENT=$(gnostr \
+          gnostr \
           -d ${{ env.POW }} \
           -r wss://relay.damus.io \
           custom-event \
@@ -272,13 +196,17 @@ jobs:
           -t "$(gnostr-weeble)" \
           -t "$(gnostr-blockheight)" \
           -t "$(gnostr-wobble)" \
-          --hex); echo $EVENT;
+          --hex
+        if: matrix.os != 'windows-latest'
+
+      - run: |
           gnostr \
           -d ${{ env.POW }} \
-          -r wss://relay.damus.io \
+          -r wss://nos.lol \
           react \
-          -e $EVENT \
-          -r "hello $(date +%s)" 
+          -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
+          -r "hello $(date +%s)" \
+          #| gnostr-xq
         if: matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
