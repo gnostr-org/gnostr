@@ -258,27 +258,6 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
         Updater::Ticker
     };
 
-    //loop {
-    //    let quit_state = run_app(
-    //        app_start,
-    //        repo_path.clone(),
-    //        theme.clone(),
-    //        key_config.clone(),
-    //        &input,
-    //        updater,
-    //        &mut terminal,
-    //    )
-    //    .await
-    //    .expect("");
-
-    //    match quit_state {
-    //        QuitState::OpenSubmodule(p) => {
-    //            repo_path = p;
-    //        }
-    //        _ => break,
-    //    }
-    //}
-
     let sub_command_args = sub_command_args;
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
@@ -336,6 +315,26 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
         }
     }
 
+    loop {
+        let quit_state = run_app(
+            app_start,
+            repo_path.clone(),
+            theme.clone(),
+            key_config.clone(),
+            &input,
+            updater,
+            &mut terminal,
+        )
+        .await
+        .expect("");
+
+        match quit_state {
+            QuitState::OpenSubmodule(p) => {
+                repo_path = p;
+            }
+            _ => break,
+        }
+    }
     //run(sub_command_args).await?;
     Ok(())
 }
