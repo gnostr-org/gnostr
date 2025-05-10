@@ -2,7 +2,14 @@
 name = "gnostr-crawler"
 version = "0.0.1"
 edition = "2021"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "gnostr:a git+nostr workflow utility"
+authors = ["gnostr <admin@gnostr.org>", "optout21"]
+readme = "README.md"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
+license = "MIT"
+keywords = ["gnostr", "tool", "nostr"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.4.13", features = ["derive"] }
