@@ -137,7 +137,7 @@ pub enum GnostrCommands {
     /// Set metadata. Be aware that this will simply replace your current kind 0 event.
     SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
     /// Send text note
-    TextNote(sub_commands::text_note::TextNoteSubCommand),
+    Note(sub_commands::note::NoteSubCommand),
     /// Publish contacts from a CSV file
     PublishContactListCsv(sub_commands::publish_contactlist_csv::PublishContactListCsvSubCommand),
     /// Delete an event
