@@ -1,16 +1,16 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
-use anyhow::{bail, Result};
-use backtrace::Backtrace;
-use crate::gnostr::*;
 use crate::app::App;
 use crate::app::QuitState;
+use crate::gnostr::*;
 use crate::input::{Input, InputEvent, InputState};
 use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
+use anyhow::{bail, Result};
+use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -225,15 +225,13 @@ pub fn set_panic_handlers() -> Result<()> {
     Ok(())
 }
 
-
 pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
     print!("{:?}", sub_command_args);
-
 
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
-    if !valid_path(&cliargs.repo_path) {
+    if !valid_path(&sub_command_args.repo_path.clone().unwrap()) {
         eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
         return Ok(());
     }
@@ -241,7 +239,7 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     let key_config = KeyConfig::init()
         .map_err(|e| eprintln!("KeyConfig loading error: {e}"))
         .unwrap_or_default();
-    let theme = Theme::init(&cliargs.theme);
+    let theme = Theme::init(&sub_command_args.theme.clone().unwrap());
 
     setup_terminal()?;
     defer! {
@@ -251,10 +249,10 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     set_panic_handlers()?;
 
     let mut terminal = start_terminal(io::stdout()).await.expect("");
-    let mut repo_path = cliargs.repo_path;
+    let mut repo_path = sub_command_args.repo_path.clone().unwrap();
     let input = Input::new();
 
-    let updater = if cliargs.notify_watcher {
+    let updater = if sub_command_args.notify_watcher {
         Updater::NotifyWatcher
     } else {
         Updater::Ticker
@@ -346,7 +344,6 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
 //    let _ = crate::tui::tui().await;
 //    Ok(())
 //}
-
 
 /// # Errors
 ///

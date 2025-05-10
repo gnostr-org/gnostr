@@ -57,7 +57,6 @@ use scopeguard::defer;
 use scopetime;
 use scopetime::scope_time;
 
-
 /// # Errors
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
@@ -234,4 +233,3 @@ pub async fn run_app(
 
     Ok(app.quit_state())
 }
-
