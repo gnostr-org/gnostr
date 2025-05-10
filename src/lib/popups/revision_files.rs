@@ -14,7 +14,7 @@ use crate::{
     keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self},
-    tui::AsyncNotification,
+    sub_commands::tui::AsyncNotification,
 };
 
 #[derive(Clone, Debug)]

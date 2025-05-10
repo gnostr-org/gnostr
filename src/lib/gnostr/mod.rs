@@ -58,7 +58,7 @@ pub struct GnostrSubCommands {
 }
 
 pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Error>> {
-	let _ = crate::tui::tui().await;
+    let _ = crate::tui::tui().await;
     //let args: ChatCli = ChatCli::parse();
 
     let args = sub_command_args.clone();
@@ -121,7 +121,7 @@ pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn 
     println!("commit_id:\n{}", commit_id);
 
     println!("{:?}", &sub_command_args.clone());
-	let _ = crate::tui::tui().await;
+    let _ = crate::tui::tui().await;
 
     Ok(())
 }

@@ -23,7 +23,7 @@ use crate::{
     keys::SharedKeyConfig,
     string_utils::tabs_to_spaces,
     strings,
-    tui::{AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress},
+    sub_commands::tui::{AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress},
     ui::{
         self, common_nav, style::SharedTheme, AsyncSyntaxJob, ParagraphState, ScrollPos,
         StatefulParagraph,
