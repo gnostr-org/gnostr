@@ -226,8 +226,6 @@ pub fn set_panic_handlers() -> Result<()> {
 }
 
 pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
-    print!("{:?}", sub_command_args);
-
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
