@@ -7,7 +7,7 @@ use std::time::Duration;
 use tracing::trace;
 
 #[derive(Args)]
-pub struct TextNoteSubCommand {
+pub struct NoteSubCommand {
     /// Text note content
     #[arg(short, long)]
     content: String,
@@ -34,7 +34,7 @@ pub async fn broadcast_textnote(
     private_key: Option<String>,
     relays: Vec<String>,
     difficulty_target: u8,
-    sub_command_args: &TextNoteSubCommand,
+    sub_command_args: &NoteSubCommand,
 ) -> Result<()> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
