@@ -171,7 +171,7 @@ jobs:
           -r ${{ env.NOS }} \
           note \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
-          --tag blocks_tip_height $(mempool-space --blocks_tip_height) || true
+          --tag blocks_tip_height --tag $(mempool-space --blocks_tip_height) || true
         if: matrix.os != 'windows-latest'
 
       - run: ./nip-0034 || true
