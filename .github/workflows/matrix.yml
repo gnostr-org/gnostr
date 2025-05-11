@@ -133,7 +133,7 @@ jobs:
       - run: |
           gnostr -d ${{ env.POW }} \
           --nsec $(gnostr --hash 🦀) \
-          text-note --content "🦀" || true
+          note --content "🦀" || true
         if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
@@ -149,7 +149,7 @@ jobs:
           gnostr -d ${{ env.POW }} \
           -r ${{ env.NOS }} \
           --nsec "$(gnostr-sha256)" \
-          text-note \
+          note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true
         if: matrix.os != 'windows-latest'
       ##
@@ -169,7 +169,7 @@ jobs:
           gnostr -d ${{ env.POW }} \
           --nsec $(mempool-space --blocks_tip_hash) \
           -r ${{ env.NOS }} \
-          text-note \
+          note \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
           --tag blocks_tip_height $(mempool-space --blocks_tip_height) || true
         if: matrix.os != 'windows-latest'
