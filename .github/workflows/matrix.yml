@@ -147,7 +147,7 @@ jobs:
         if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
-          -r wss://nos.lol \
+          -r ${{ env.NOS }} \
           --nsec "$(gnostr-sha256)" \
           text-note \
           --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true
@@ -157,18 +157,18 @@ jobs:
       ## GNOSTR DETEMINISTIC ALIASES
       ##
       - run: |
-          EVENT=$(gnostr note -c "gnostr note" -t gnostr -t nostr -t sub_command --hex | gnostr-xq .id | sed "s/\"//g") && \
+          EVENT=$(gnostr -r ${{ env.NOS }} note -c "gnostr note" -t gnostr -t nostr -t sub_command --hex | gnostr-xq .id | sed "s/\"//g") && \
           echo $EVENT && \
-          gnostr-fetch-by-id wss://relay.damus.io $EVENT;
+          gnostr-fetch-by-id ${{ env.NOS }} $EVENT;
           gnostr \
           -d ${{ env.POW }} \
-          -r wss://nos.lol \
+          -r ${{ env.NOS }} \
           react \
           -e $EVENT \
           -r "$(date +%s)" || true;
           gnostr -d ${{ env.POW }} \
           --nsec $(mempool-space --blocks_tip_hash) \
-          -r wss://nos.lol \
+          -r ${{ env.NOS }} \
           text-note \
           --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
           --tag blocks_tip_height $(mempool-space --blocks_tip_height) || true
@@ -183,7 +183,7 @@ jobs:
       - run: |
           gnostr \
           -d ${{ env.POW }} \
-          -r wss://relay.damus.io \
+          -r ${{ env.DAMUS }} \
           custom-event \
           -k 1 \
           -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
@@ -198,7 +198,7 @@ jobs:
       - run: |
           gnostr \
           -d ${{ env.POW }} \
-          -r wss://nos.lol \
+          -r ${{ env.NOS }} \
           react \
           -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
           -r "hello $(date +%s)" \
