@@ -79,8 +79,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             }
             .await
         }
-        Some(GnostrCommands::TextNote(sub_command_args)) => {
-            sub_commands::text_note::broadcast_textnote(
+        Some(GnostrCommands::Note(sub_command_args)) => {
+            sub_commands::note::broadcast_textnote(
                 args.nsec,
                 args.relays,
                 args.difficulty_target,
