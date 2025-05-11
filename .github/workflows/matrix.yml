@@ -88,26 +88,31 @@ jobs:
       - run: cargo install --locked cargo-binstall@1.9.0
       - run: cargo-binstall --no-confirm mempool_space
       - run: cargo-binstall --no-confirm gnostr-xq
-      - run: cargo-binstall --no-confirm gnostr-bins
+      #- run: cargo-binstall --no-confirm gnostr-bins
+      - run: cargo install gnostr-bins
       - run: mkdir -p ~/bin
 
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew install openssl@3 || true
-        if: matrix.os == 'macos-latest'
+      ### objective: streamline gnostr installation on macos/brewlinux
+      #- run: brew install openssl@3 || true
+      #  if: matrix.os != 'windows-latest'
 
-      ## objective: streamline gnostr installation on macos/brewlinux
-      - run: brew link openssl@3 || true
-        if: matrix.os == 'macos-latest'
+      ### objective: streamline gnostr installation on macos/brewlinux
+      #- run: brew link openssl@3 || true
+      #  if: matrix.os != 'windows-latest'
+      #  #if: matrix.os == 'macos-latest'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: matrix.os == 'macos-latest'
+        if: matrix.os != 'windows-latest'
+        #if: matrix.os == 'macos-latest'
 
       ## objective: streamline gnostr installation on macos/brewlinux
       - run: brew tap nostorg/nostr || true
-        if: matrix.os == 'macos-latest'
+        if: matrix.os != 'windows-latest'
+        #if: matrix.os == 'macos-latest'
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os == 'macos-latest'
+        if: matrix.os != 'windows-latest'
+        #if: matrix.os == 'macos-latest'
 
       - run: |
           make cargo-install || sudo make cargo-install
