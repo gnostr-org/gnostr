@@ -125,16 +125,20 @@ async fn main() -> Result<(), reqwest::Error> {
                     let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json);
                     if let Ok(json) = data {
                         print!("{{\"nips\":\"");
-						print!("len:{} ", json.supported_nips.len());
-						let mut nip_count = json.supported_nips.len();
+                        print!("len:{} ", json.supported_nips.len());
+                        let mut nip_count = json.supported_nips.len();
                         for n in &json.supported_nips {
-							print!("nip_count:{}", nip_count);
-                            print!("{:<4}",format!("{:0>2}", n));
+                            print!("nip_count:{}", nip_count);
+                            if nip_count > 1 {
+                                print!("{:<3}", format!("{:0>2}", n));
+                            } else {
+                                print!("{:<2}", format!("{:0>2}", n));
+                            }
                             if n == &nip {
                                 println!("{} Supports nip{nip}", url);
                             }
-                        nip_count = nip_count-1;
-						}
+                            nip_count = nip_count - 1;
+                        }
                         print!("\"}}");
                         println!();
                     }
