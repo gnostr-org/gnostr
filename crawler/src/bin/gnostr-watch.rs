@@ -80,6 +80,7 @@ async fn main() -> Result<(), reqwest::Error> {
             && !modified_line.contains("snort.social")
             && !modified_line.contains("mguy")
             && !modified_line.contains("stoner.com")
+            && !modified_line.contains("nostr.info")
             && !modified_line.contains(".local")
         //we want a view of the network
         {
@@ -125,10 +126,10 @@ async fn main() -> Result<(), reqwest::Error> {
                     let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json);
                     if let Ok(json) = data {
                         print!("{{\"nips\":\"");
-                        print!("len:{} ", json.supported_nips.len());
+                        debug!("len:{} ", json.supported_nips.len());
                         let mut nip_count = json.supported_nips.len();
                         for n in &json.supported_nips {
-                            print!("nip_count:{}", nip_count);
+                            debug!("nip_count:{}", nip_count);
                             if nip_count > 1 {
                                 print!("{:<3}", format!("{:0>2}", n));
                             } else {
