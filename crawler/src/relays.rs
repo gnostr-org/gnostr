@@ -1,5 +1,5 @@
 use log::info;
-use log::trace;
+use log::{debug, trace};
 use nostr_sdk::prelude::Url;
 use std::collections::HashSet;
 
@@ -36,6 +36,11 @@ impl Relays {
         self.r.len()
     }
 
+    pub fn de_dup(&self, list: &Vec<Url>) -> Vec<Url> {
+        let list:Vec<Url> = list.clone().into_iter().collect();
+		list
+    }
+
     pub fn get_some(&self, max_count: usize) -> Vec<Url> {
         let mut res = Vec::new();
         for u in &self.r {
@@ -44,14 +49,19 @@ impl Relays {
                 return res;
             }
         }
-        res
+        res = self.de_dup(&res);
+		res
     }
 
     pub fn print(&self) {
-        trace!("50:Relays: {}", self.r.len());
-        trace!("    ");
         for u in &self.r {
-            trace!("{} ", u.to_string());
+            let mut relay = format!("{}", u.to_string());
+            if relay.ends_with('/') {
+                relay.pop();
+                println!("{}", relay);
+            } else {
+                println!("{}", relay);
+            }
         }
     }
 
@@ -69,7 +79,7 @@ impl Relays {
     pub fn dump_list(&self) {
         let mut count = 0;
         for u in &self.r {
-            print!("{{\"{}\":\"{}\"}}", count, u);
+            print!("78:{{\"{}\":\"{}\"}}", count, u);
             count += 1;
         }
         print!("{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
