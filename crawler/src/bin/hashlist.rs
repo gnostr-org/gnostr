@@ -83,7 +83,7 @@ struct Args {
 
 fn run(args: &Args) -> Result<(), Error> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
-    let repo = Repository::open(path)?;
+    let repo = Repository::discover(path)?;
     let mut revwalk = repo.revwalk()?;
 
     // Prepare the revwalk based on CLI parameters
@@ -194,12 +194,12 @@ fn run(args: &Args) -> Result<(), Error> {
     for commit in revwalk {
         let commit = commit?;
 
-        if args.flag_hashlist_padded {
-            print_hashlist_padded(&commit);
-            continue;
-        }
         if args.flag_hashlist {
             print_hashlist(&commit);
+            continue;
+        }
+        if args.flag_hashlist_padded {
+            print_hashlist_padded(&commit);
             continue;
         }
 
@@ -281,7 +281,7 @@ fn log_message_matches(msg: Option<&str>, grep: &Option<String>) -> bool {
     }
 }
 
-fn padded_commit_id(commit: &Commit) -> String {
+fn _padded_commit_id(commit: &Commit) -> String {
     format!("{:0>64}", commit.id())
 }
 
@@ -289,33 +289,33 @@ fn print_hashlist(commit: &Commit) {
     println!("{}", commit.id());
 
     if commit.parents().len() > 1 {
-        print!("Merge:");
+        tracing::debug!("Merge:");
         for id in commit.parent_ids() {
-            print!(" {:.8}", id);
+            println!("{:.8}", id);
         }
-        println!();
+        //println!();
     }
 }
 fn print_hashlist_padded(commit: &Commit) {
     println!("{:0>64}", commit.id());
 
     if commit.parents().len() > 1 {
-        print!("Merge:");
+        tracing::debug!("Merge:");
         for id in commit.parent_ids() {
-            print!(" {:0>64}", id);
+            println!("{:0>64}", id);
         }
-        println!();
+        //println!();
     }
 }
 fn print_commit(commit: &Commit) {
     println!("{}", commit.id());
 
     if commit.parents().len() > 1 {
-        print!("Merge:");
+        tracing::debug!("Merge:");
         for id in commit.parent_ids() {
-            print!(" {:.8}", id);
+            println!("{:.8}", id);
         }
-        println!();
+        //println!();
     }
 
     let author = commit.author();
