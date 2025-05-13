@@ -4,7 +4,7 @@
 #![allow(clippy::single_match_else)]
 use anyhow::Result;
 use clap::Parser;
-use gnostr::cli::{Cli, Commands};
+use gnostr::cli::{NgitCli as Cli, NgitCommands as Commands};
 use gnostr::sub_commands;
 
 #[tokio::main]
