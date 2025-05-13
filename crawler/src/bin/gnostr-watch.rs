@@ -2,18 +2,15 @@ use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{File, OpenOptions},
+    fs::File,
     io::{self, BufRead, BufReader, Write},
     path::Path,
-	process::{Command, Stdio},
+    process::{Command, Stdio},
 };
 
-
-use tracing::{debug, trace};
-use tracing_subscriber::FmtSubscriber;
-
-//use tracing::{debug /*, info*/};
-use tracing_core::metadata::LevelFilter;
+use tracing::debug;
+//use tracing_subscriber::FmtSubscriber;
+//use tracing_core::metadata::LevelFilter;
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -54,35 +51,25 @@ fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
     BufReader::new(File::open(filename)?).lines().collect()
 }
 
-fn append_to_file(filename: &str, data_to_append: &str) -> std::io::Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .create(true) // Creates the file if it doesn't exist
-        .open(filename)?;
-
-    file.write_all(data_to_append.as_bytes())?;
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
     let file_path = "./relays.yaml".to_string();
 
-	//TODO:gnostr-sniper --refresh
-	let _gnostr_crawler = gnostr_crawler();
+    //TODO:gnostr-sniper --refresh
+    let _gnostr_crawler = gnostr_crawler();
     let file = File::open(file_path.clone()).expect("");
 
     let reader = io::BufReader::new(&file);
     for line_result in reader.lines() {
-    //append_to_file(&filename, line_result.expect(""));
+        //append_to_file(&filename, line_result.expect(""));
         let modified_line = line_result
             .expect("use http/https:// when querying supported nips")
             .replace("wss://", "https://")
             .replace("ws://", "http://");
 
         debug!("{}", modified_line);
-        let mut file = File::create(file_path.clone() + ".txt").expect("create relays.yaml.txt and modify protocol (ws/wss to http/https)");
+        let mut file = File::create(file_path.clone() + ".txt")
+            .expect("create relays.yaml.txt and modify protocol (ws/wss to http/https)");
         if !modified_line.contains("monad.jb55.com")
             && !modified_line.contains("onlynotes")
             && !modified_line.contains("archives")
@@ -92,8 +79,9 @@ async fn main() -> Result<(), reqwest::Error> {
             && !modified_line.contains("relay.0xchat.com")
             && !modified_line.contains("snort.social")
             && !modified_line.contains("mguy")
-            //
-            && !modified_line.contains(".local") //we want a view of the network
+            && !modified_line.contains("stoner.com")
+            && !modified_line.contains(".local")
+        //we want a view of the network
         {
             file.write(modified_line.as_bytes()).expect("");
             //file.write(b"\n").expect("");
@@ -121,8 +109,11 @@ async fn main() -> Result<(), reqwest::Error> {
                         .await?;
                     let text = resp.text().await?;
 
-                    let r: Result<(String, String), reqwest::Error> = Ok((url, text));
-                    println!("{:?}", r);
+                    let r: Result<(String, String), reqwest::Error> =
+                        Ok((url.clone(), text.clone()));
+                    //tracing::info!("{:?}", r);
+                    println!("{{\"relay\":\"{}\"}}", url);
+                    println!("{}", text);
                     r
                 }
             })
@@ -133,12 +124,19 @@ async fn main() -> Result<(), reqwest::Error> {
                 if let Ok((url, json)) = b {
                     let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json);
                     if let Ok(json) = data {
+                        print!("{{\"nips\":\"");
+						print!("len:{} ", json.supported_nips.len());
+						let mut nip_count = json.supported_nips.len();
                         for n in &json.supported_nips {
-                            println!("{:?}", n);
+							print!("nip_count:{}", nip_count);
+                            print!("{:<4}",format!("{:0>2}", n));
                             if n == &nip {
                                 println!("{} Supports nip{nip}", url);
                             }
-                        }
+                        nip_count = nip_count-1;
+						}
+                        print!("\"}}");
+                        println!();
                     }
                 }
             })
