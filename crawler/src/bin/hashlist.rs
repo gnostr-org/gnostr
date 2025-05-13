@@ -194,70 +194,70 @@ fn run(args: &Args) -> Result<(), Error> {
     for commit in revwalk {
         let commit = commit?;
 
-        if args.flag_hashlist {
+        if args.flag_hashlist && !args.flag_hashlist_padded {
             print_hashlist(&commit);
             continue;
         }
-        if args.flag_hashlist_padded {
+        if args.flag_hashlist_padded && args.flag_hashlist {
             print_hashlist_padded(&commit);
             continue;
-        }
+        } else if args.flag_hashlist && !args.flag_hashlist_padded {
+            print_commit(&commit); // header and message
+            if !args.flag_patch || commit.parents().len() > 1 {
+                continue;
+            }
+            let a = if commit.parents().len() == 1 {
+                let parent = commit.parent(0)?;
+                Some(parent.tree()?)
+            } else {
+                None
+            };
 
-        print_commit(&commit); // header and message
-        if !args.flag_patch || commit.parents().len() > 1 {
-            continue;
-        }
-        let a = if commit.parents().len() == 1 {
-            let parent = commit.parent(0)?;
-            Some(parent.tree()?)
-        } else {
-            None
-        };
+            let b = commit.tree()?;
+            let diff = repo.diff_tree_to_tree(a.as_ref(), Some(&b), Some(&mut diffopts2))?;
+            if cfg!(debug_assertions) {
+                // Sigil showing the origin of this DiffLine.
+                //
+                //   - Line context
+                // + - Line addition
+                // - - Line deletion
+                // = - Context (End of file)
+                // > - Add (End of file)
+                // < - Remove (End of file)
+                // F - File header
+                // H - Hunk header
+                // B - Line binary
 
-        let b = commit.tree()?;
-        let diff = repo.diff_tree_to_tree(a.as_ref(), Some(&b), Some(&mut diffopts2))?;
-        if cfg!(debug_assertions) {
-            // Sigil showing the origin of this DiffLine.
-            //
-            //   - Line context
-            // + - Line addition
-            // - - Line deletion
-            // = - Context (End of file)
-            // > - Add (End of file)
-            // < - Remove (End of file)
-            // F - File header
-            // H - Hunk header
-            // B - Line binary
-
-            diff.print(DiffFormat::Patch, |_delta, _hunk, line| {
-                match line.origin() {
-                    ' ' | '+' | '-' => println!("216:{}", line.origin()),
-                    '=' | '>' | '<' => println!("217:{}", line.origin()),
-                    'F' | 'H' => println!("218:{}", line.origin()),
-                    'B' => println!("219:{}", line.origin()),
-                    _ => {
-                        println!("221:_={}", line.origin())
+                diff.print(DiffFormat::Patch, |_delta, _hunk, line| {
+                    match line.origin() {
+                        ' ' | '+' | '-' => println!("216:{}", line.origin()),
+                        '=' | '>' | '<' => println!("217:{}", line.origin()),
+                        'F' | 'H' => println!("218:{}", line.origin()),
+                        'B' => println!("219:{}", line.origin()),
+                        _ => {
+                            println!("221:_={}", line.origin())
+                        }
                     }
-                }
-                print!("212:{}", str::from_utf8(line.content()).unwrap());
-                true
-            })?;
-        } else {
-            diff.print(DiffFormat::Patch, |_delta, _hunk, line| {
-                match line.origin() {
-                    ' ' | '+' | '-' => print!("{}", line.origin()),
-                    //'=' | '>' | '<' => print!("{}", line.origin()),
-                    //'F' | 'H' => print!("{}", line.origin()),
-                    //'B' => print!("{}", line.origin()),
-                    _ => {
-                        //print!("{}", line.origin())
+                    print!("212:{}", str::from_utf8(line.content()).unwrap());
+                    true
+                })?;
+            } else {
+                diff.print(DiffFormat::Patch, |_delta, _hunk, line| {
+                    match line.origin() {
+                        ' ' | '+' | '-' => print!("{}", line.origin()),
+                        //'=' | '>' | '<' => print!("{}", line.origin()),
+                        //'F' | 'H' => print!("{}", line.origin()),
+                        //'B' => print!("{}", line.origin()),
+                        _ => {
+                            //print!("{}", line.origin())
+                        }
                     }
-                }
-                print!("{}", str::from_utf8(line.content()).unwrap());
-                true
-            })?;
+                    print!("{}", str::from_utf8(line.content()).unwrap());
+                    true
+                })?;
+            }
+            println!("");
         }
-        println!("");
     }
 
     Ok(())
@@ -281,7 +281,7 @@ fn log_message_matches(msg: Option<&str>, grep: &Option<String>) -> bool {
     }
 }
 
-fn _padded_commit_id(commit: &Commit) -> String {
+fn padded_commit_id(commit: &Commit) -> String {
     format!("{:0>64}", commit.id())
 }
 
@@ -291,7 +291,7 @@ fn print_hashlist(commit: &Commit) {
     if commit.parents().len() > 1 {
         tracing::debug!("Merge:");
         for id in commit.parent_ids() {
-            println!("{:.8}", id);
+            println!("{}", id);
         }
         //println!();
     }
@@ -308,12 +308,12 @@ fn print_hashlist_padded(commit: &Commit) {
     }
 }
 fn print_commit(commit: &Commit) {
-    println!("{}", commit.id());
+    println!("312:{}", commit.id());
 
     if commit.parents().len() > 1 {
         tracing::debug!("Merge:");
         for id in commit.parent_ids() {
-            println!("{:.8}", id);
+            println!("317:{:.8}", id);
         }
         //println!();
     }
