@@ -6,8 +6,8 @@ use gnostr_crawler::processor::BOOTSTRAP_RELAY3;
 use gnostr_crawler::relay_manager::RelayManager;
 use gnostr_crawler::CliArgs;
 
-use nostr_sdk::prelude::{FromBech32, Keys, SecretKey};
 use clap::Parser;
+use nostr_sdk::prelude::{FromBech32, Keys, SecretKey};
 
 #[tokio::main]
 async fn main() {
