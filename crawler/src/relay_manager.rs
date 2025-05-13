@@ -132,14 +132,9 @@ impl RelayManager {
             self.relay_client.add_relay(url.to_string(), None).await?;
         }
         self.connect().await?;
-
         self.wait_and_handle_messages().await?;
-
-        debug!("STOPPED");
-        debug!("======================================================");
-        debug!("\n");
-        self.relays.dump_list();
-
+        ////self.relays.dump_list();
+        self.relays.print();
         Ok(())
     }
 

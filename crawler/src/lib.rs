@@ -227,7 +227,7 @@ pub fn run(args: &CliArgs) -> Result<()> {
                 ' ' | '+' | '-' => print!("{}", line.origin()),
                 _ => {}
             }
-            print!("{}", str::from_utf8(line.content()).unwrap());
+            print!("230:{}", str::from_utf8(line.content()).unwrap());
             true
         })?;
     }
