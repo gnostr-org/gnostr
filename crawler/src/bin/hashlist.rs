@@ -308,12 +308,12 @@ fn print_hashlist_padded(commit: &Commit) {
     }
 }
 fn print_commit(commit: &Commit) {
-    println!("312:{}", commit.id());
+    println!("{}", commit.id());
 
     if commit.parents().len() > 1 {
         tracing::debug!("Merge:");
         for id in commit.parent_ids() {
-            println!("317:{:.8}", id);
+            println!("{}", id);
         }
         //println!();
     }
