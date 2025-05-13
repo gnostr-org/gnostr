@@ -7,15 +7,11 @@ use gnostr_crawler::relay_manager::RelayManager;
 use gnostr_crawler::CliArgs;
 
 use nostr_sdk::prelude::{FromBech32, Keys, SecretKey};
-
 use clap::Parser;
-//use git2::{Commit, DiffOptions, ObjectType, Repository, Signature, Time};
-//use git2::{DiffFormat, Error, Pathspec};
-//use std::str;
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    //env_logger::init();
     let args = CliArgs::parse();
 
     match gnostr_crawler::run(&args) {
