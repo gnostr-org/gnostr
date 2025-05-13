@@ -72,6 +72,8 @@ let filename = file_path.clone()+".txt";
 			!modified_line.contains("onlynotes") &&
 			!modified_line.contains("archives") &&
 			!modified_line.contains("relay.siamstr.com") &&
+			!modified_line.contains("no.str") &&
+			!modified_line.contains("multiplexer.huszonegy.world") &&
 			!modified_line.contains("mguy"){
         file.write(modified_line.as_bytes()).expect("");
         //file.write(b"\n").expect("");
