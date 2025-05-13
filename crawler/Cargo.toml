@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-crawler"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
