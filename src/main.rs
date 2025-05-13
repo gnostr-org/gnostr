@@ -19,7 +19,7 @@ use std::env;
 use tracing::trace;
 use tracing_subscriber::FmtSubscriber;
 
-use tracing::{debug /*, info*/};
+//use tracing::{debug /*, info*/};
 use tracing_core::metadata::LevelFilter;
 
 use serde::ser::StdError;
