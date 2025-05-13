@@ -5,8 +5,9 @@ use std::{
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader, Write},
     path::Path,
-    process::{Command, Stdio},
+	process::{Command, Stdio},
 };
+
 
 use tracing::{debug, trace};
 use tracing_subscriber::FmtSubscriber;
@@ -68,21 +69,20 @@ fn append_to_file(filename: &str, data_to_append: &str) -> std::io::Result<()> {
 async fn main() -> Result<(), reqwest::Error> {
     let file_path = "./relays.yaml".to_string();
 
-    //TODO:gnostr-sniper --refresh
-    let _gnostr_crawler = gnostr_crawler();
+	//TODO:gnostr-sniper --refresh
+	let _gnostr_crawler = gnostr_crawler();
     let file = File::open(file_path.clone()).expect("");
 
     let reader = io::BufReader::new(&file);
     for line_result in reader.lines() {
-        //append_to_file(&filename, line_result.expect(""));
+    //append_to_file(&filename, line_result.expect(""));
         let modified_line = line_result
             .expect("use http/https:// when querying supported nips")
             .replace("wss://", "https://")
             .replace("ws://", "http://");
 
         debug!("{}", modified_line);
-        let mut file = File::create(file_path.clone() + ".txt")
-            .expect("create relays.yaml.txt and modify protocol (ws/wss to http/https)");
+        let mut file = File::create(file_path.clone() + ".txt").expect("create relays.yaml.txt and modify protocol (ws/wss to http/https)");
         if !modified_line.contains("monad.jb55.com")
             && !modified_line.contains("onlynotes")
             && !modified_line.contains("archives")
@@ -92,8 +92,8 @@ async fn main() -> Result<(), reqwest::Error> {
             && !modified_line.contains("relay.0xchat.com")
             && !modified_line.contains("snort.social")
             && !modified_line.contains("mguy")
-            && !modified_line.contains(".local")
-        //we want a view of the network
+            //
+            && !modified_line.contains(".local") //we want a view of the network
         {
             file.write(modified_line.as_bytes()).expect("");
             //file.write(b"\n").expect("");
