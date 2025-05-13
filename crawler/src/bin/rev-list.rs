@@ -38,7 +38,7 @@ struct Args {
 }
 
 fn run(args: &Args) -> Result<(), git2::Error> {
-    let repo = Repository::open(".")?;
+    let repo = Repository::discover(".")?;
     let mut revwalk = repo.revwalk()?;
 
     let base = if args.flag_reverse {
