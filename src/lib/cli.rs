@@ -1,20 +1,17 @@
+use crate::sub_commands;
+use crate::sub_commands::*;
+use anyhow::{anyhow, Result};
+use clap::{
+    /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
+    Subcommand,
+};
+use gnostr_asyncgit::sync::RepoPath;
+use simplelog::{Config, LevelFilter, WriteLogger};
 use std::{
-    env,
+    //env,
     fs::{self, File},
     path::PathBuf,
 };
-
-use anyhow::{anyhow, Result};
-use clap::{crate_authors, crate_description, crate_name, Arg, Command as ClapApp};
-use gnostr_asyncgit::sync::RepoPath;
-use simplelog::{Config, LevelFilter, WriteLogger};
-
-use crate::bug_report;
-use crate::cli;
-use crate::sub_commands;
-use crate::sub_commands::*;
-
-use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -295,9 +292,9 @@ pub enum GnostrCommands {
 //    //TODO add GnostrCli/SubCommands etc...
 //}
 
-fn setup_logging() -> Result<()> {
+pub fn setup_logging() -> Result<()> {
     let mut path = get_app_cache_path()?;
-    path.push("gnostr-tui.log");
+    path.push("gnostr.log");
 
     println!("Logging enabled. log written to: {path:?}");
 
@@ -306,10 +303,10 @@ fn setup_logging() -> Result<()> {
     Ok(())
 }
 
-fn get_app_cache_path() -> Result<PathBuf> {
+pub fn get_app_cache_path() -> Result<PathBuf> {
     let mut path = dirs::cache_dir().ok_or_else(|| anyhow!("failed to find os cache dir."))?;
 
-    path.push("gnostr-tui");
+    path.push("gnostr");
     fs::create_dir_all(&path)?;
     Ok(path)
 }
