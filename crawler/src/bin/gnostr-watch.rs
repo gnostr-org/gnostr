@@ -24,7 +24,7 @@ struct Relay {
     version: String,
 }
 
-fn gnostr_crawler() -> Result<(), Box<dyn std::error::Error>> {
+async fn gnostr_crawler() -> Result<(), Box<dyn std::error::Error>> {
     let mut command = Command::new("gnostr-crawler");
 
     // Configure the command to capture standard output
@@ -56,7 +56,7 @@ async fn main() -> Result<(), reqwest::Error> {
     let file_path = "./relays.yaml".to_string();
 
     //TODO:gnostr-sniper --refresh
-    let _gnostr_crawler = gnostr_crawler();
+    let _gnostr_crawler = gnostr_crawler().await;
     let file = File::open(file_path.clone()).expect("");
 
     let reader = io::BufReader::new(&file);
