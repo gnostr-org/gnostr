@@ -78,7 +78,7 @@ pub struct CliArgs {
     arg_spec: Vec<String>,
 }
 
-pub async fn run(args: &CliArgs) -> Result<()> {
+pub fn run(args: &CliArgs) -> Result<()> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
     let mut revwalk = repo.revwalk()?;
