@@ -87,7 +87,7 @@ cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 
 .PHONY:crawler
 crawler:
-	@cargo install --path ./crawler
+	@cargo install --path ./crawler -f
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
