@@ -1,13 +1,16 @@
 use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::{
-    env,
+    fs::File,
     io::{self, BufRead, BufReader, Write},
     path::Path,
+    process::{Command, Stdio},
 };
-use tracing::{debug, error};
+
+use tracing::debug;
+//use tracing_subscriber::FmtSubscriber;
+//use tracing_core::metadata::LevelFilter;
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -21,8 +24,31 @@ struct Relay {
     version: String,
 }
 
+fn gnostr_crawler() -> Result<(), Box<dyn std::error::Error>> {
+    let mut command = Command::new("gnostr-crawler");
+
+    // Configure the command to capture standard output
+    command.stdout(Stdio::piped());
+
+    let mut child = command.spawn()?;
+
+    // Open the file to write to
+    let mut outfile = File::create("relays.yaml")?;
+
+    if let Some(mut stdout) = child.stdout.take() {
+        let mut buffer = Vec::new();
+        std::io::copy(&mut stdout, &mut buffer)?;
+        outfile.write_all(&buffer)?;
+    }
+
+    // Wait for the child process to finish
+    child.wait()?;
+
+    Ok(())
+}
+
 fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-    BufReader::new(fs::File::open(filename)?).lines().collect()
+    BufReader::new(File::open(filename)?).lines().collect()
 }
 
 #[tokio::main]
