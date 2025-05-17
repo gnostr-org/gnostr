@@ -36,6 +36,22 @@ async fn main() -> Result<(), reqwest::Error> {
         match first_argument.parse::<i32>() {
             Ok(number) => {
                 nip_lower = number;
+
+                use std::fs::DirBuilder;
+                use std::io;
+
+                #[cfg(unix)]
+                use std::os::unix::fs::DirBuilderExt;
+
+                let mut builder = DirBuilder::new();
+                builder.recursive(true); // Create parent directories if they don't exist
+
+                #[cfg(unix)]
+                builder.mode(0o755); // Set permissions (read, write, execute for owner; read and execute for group and others)
+
+                builder
+                    .create(format!("{}", first_argument))
+                    .expect("failed to create relays sub directory.");
             }
             Err(e) => {
                 eprintln!("Error converting first argument to i32: {}", e);
@@ -48,6 +64,21 @@ async fn main() -> Result<(), reqwest::Error> {
         match second_argument.parse::<i32>() {
             Ok(number) => {
                 nip_upper = number;
+                use std::fs::DirBuilder;
+                use std::io;
+
+                #[cfg(unix)]
+                use std::os::unix::fs::DirBuilderExt;
+
+                let mut builder = DirBuilder::new();
+                builder.recursive(true); // Create parent directories if they don't exist
+
+                #[cfg(unix)]
+                builder.mode(0o755); // Set permissions (read, write, execute for owner; read and execute for group and others)
+
+                builder
+                    .create(format!("{}", second_argument))
+                    .expect("failed to create relays sub directory.");
             }
             Err(e) => {
                 eprintln!("Error converting first argument to i32: {}", e);
@@ -56,7 +87,6 @@ async fn main() -> Result<(), reqwest::Error> {
     }
 
     let file = "relays.yaml";
-
     use std::fs::File;
     let _file = File::create(file).expect("failed to create relays.yaml");
 
