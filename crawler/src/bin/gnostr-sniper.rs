@@ -56,7 +56,11 @@ async fn main() -> Result<(), reqwest::Error> {
     }
 
     let file = "relays.yaml";
-    let relays = load_file(file).unwrap();
+    use std::fs::File;
+    let _file = File::create("relays.yaml").expect("failed to create relays.yaml");
+
+
+	let relays = load_file(file).unwrap();
     let client = reqwest::Client::new();
     let bodies = stream::iter(relays)
         .map(|url| {
