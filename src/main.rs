@@ -5,7 +5,7 @@ use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 //use gnostr::global_rt;
 //use gnostr::input::InputEvent;
-use gnostr::cli::{GnostrCli, GnostrCommands};
+use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 //use gnostr::chat::*;
 //use gnostr::chat::chat;
@@ -19,7 +19,7 @@ use std::env;
 use tracing::trace;
 use tracing_subscriber::FmtSubscriber;
 
-use tracing::{debug /*, info*/};
+//use tracing::{debug /*, info*/};
 use tracing_core::metadata::LevelFilter;
 
 use serde::ser::StdError;
@@ -27,6 +27,11 @@ use serde::ser::StdError;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
     let mut args: GnostrCli = GnostrCli::parse();
+    let app_cache = get_app_cache_path();
+    let _logging = if args.logging {
+        let logging = setup_logging();
+        trace!("{:?}", logging);
+    };
     let level = if args.debug {
         LevelFilter::DEBUG
     } else if args.trace {
@@ -36,6 +41,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     };
     let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    trace!("{:?}", app_cache);
 
     let env_args: Vec<String> = env::args().collect();
 

@@ -143,7 +143,7 @@ async fn main() -> Result<(), reqwest::Error> {
                                 debug!("{dir_name} already exists...");
                             }
 
-                            let file_name = url.replace("https://", "").replace("http://", "").replace("wss://","").replace("ws://","") + ".json";
+                            let file_name = url.replace("https://", "").replace("/", "_") + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
                             debug!("{}", file_path_str);

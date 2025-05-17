@@ -2310,7 +2310,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.73"
+version = "0.0.76"
 dependencies = [
  "anyhow",
  "async-std",
@@ -2476,15 +2476,22 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "0.0.1"
+version = "0.0.4"
 dependencies = [
  "clap 4.5.37",
  "env_logger 0.10.2",
+ "futures",
  "git2",
  "log",
  "nostr-sdk 0.19.1",
+ "reqwest 0.11.27",
+ "serde",
+ "serde_json",
  "time 0.1.45",
  "tokio",
+ "tracing",
+ "tracing-core",
+ "tracing-subscriber",
 ]
 
 [[package]]
