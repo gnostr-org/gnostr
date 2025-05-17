@@ -56,6 +56,10 @@ async fn main() -> Result<(), reqwest::Error> {
     }
 
     let file = "relays.yaml";
+
+    use std::fs::File;
+    let _file = File::create(file).expect("failed to create relays.yaml");
+
     let relays = load_file(file).unwrap();
     let client = reqwest::Client::new();
     let bodies = stream::iter(relays)
@@ -63,7 +67,7 @@ async fn main() -> Result<(), reqwest::Error> {
             let client = &client;
             async move {
                 let resp = client
-                    .get(&url.replace("wss://","https://"))
+                    .get(&url.replace("wss://", "https://"))
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
@@ -143,7 +147,12 @@ async fn main() -> Result<(), reqwest::Error> {
                                 debug!("{dir_name} already exists...");
                             }
 
-                            let file_name = url.replace("https://", "").replace("http://", "").replace("wss://","").replace("ws://","") + ".json";
+                            let file_name = url
+                                .replace("https://", "")
+                                .replace("http://", "")
+                                .replace("wss://", "")
+                                .replace("ws://", "")
+                                + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
                             debug!("{}", file_path_str);
@@ -161,7 +170,13 @@ async fn main() -> Result<(), reqwest::Error> {
                                 Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
                             }
 
-                            println!("{}/{}", nip_lower, url.replace("https://", "").replace("wss://","").replace("ws://",""));
+                            println!(
+                                "{}/{}",
+                                nip_lower,
+                                url.replace("https://", "")
+                                    .replace("wss://", "")
+                                    .replace("ws://", "")
+                            );
                         }
                     }
                 }
