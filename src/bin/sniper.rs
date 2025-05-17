@@ -57,8 +57,8 @@ async fn main() -> Result<(), reqwest::Error> {
     let args: Vec<String> = env::args().collect();
     let mut nip_lower: i32 = 1;
     let mut nip_upper: i32 = 1;
-    let mut first_argument = "";
-    let mut second_argument = "";
+    let mut first_argument = "1";
+    let mut second_argument = "1";
     if args.len() > 1 {
         first_argument = &args[1];
 
@@ -115,11 +115,27 @@ async fn main() -> Result<(), reqwest::Error> {
         }
     }
 
-    let file_path = "./relays.yaml".to_string();
+    let file_path = "relays.yaml".to_string();
 
     //TODO:gnostr-sniper --refresh
     let _gnostr_crawler = gnostr_crawler();
-    let file = File::open(file_path.clone()).expect("");
+
+    use std::fs::OpenOptions;
+
+    std::fs::create_dir_all(first_argument).expect("");
+
+    let mut file = OpenOptions::new()
+        .create(true) // Create the file if it doesn't exist
+        .append(true) // Open in append mode
+        .open(first_argument.to_owned() + "/" + &file_path.clone())
+        //.open(&file_path.clone())
+        //.open(first_argument.to_owned())
+        .expect("failed to create/open first_argument + file_path");
+
+    writeln!(file, "New log entry at {}", chrono::Local::now()).expect("");
+    println!("Log entry added to 'log.txt'.");
+
+    //let file = File::open(first_argument.to_owned() + "/" + &file_path.clone()).expect("");
 
     let reader = io::BufReader::new(&file);
     for line_result in reader.lines() {
