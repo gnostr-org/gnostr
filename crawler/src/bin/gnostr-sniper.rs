@@ -109,9 +109,11 @@ async fn main() -> Result<(), reqwest::Error> {
                     && !url.contains("nostr.datamagik.com")
                     && !url.contains("nostrid")
                     && !url.contains("damus.io")
+                    && !url.contains("nos.lol")
                     && !url.contains(".local")
                 {
                     //we want a view of the network
+                    ()
                 }
                 r
             }
