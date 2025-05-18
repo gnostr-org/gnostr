@@ -2387,6 +2387,7 @@ dependencies = [
  "syntect",
  "temp-env",
  "tempfile",
+ "time 0.1.45",
  "tokio",
  "tokio-tungstenite 0.20.1",
  "tracing",
