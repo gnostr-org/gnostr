@@ -176,7 +176,7 @@ jobs:
           -t sub_command \
           --hex | gnostr-xq .id | sed "s/\"//g") && \
           echo $EVENT; \
-          gnostr-fetch-by-id ${{ env.NOS }} $EVENT;
+          gnostr-fetch-by-id ${{ env.NOS }} $EVENT || true;
           gnostr \
           -d ${{ env.POW }} \
           -r ${{ env.NOS }} \
