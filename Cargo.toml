@@ -132,6 +132,7 @@ log = "0.4"
 nostr = "0.34.1"
 nostr-database = "0.34.0"
 nostr-sdk = "0.34.0"
+nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
 nostr-signer = "0.34.0"
