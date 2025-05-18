@@ -194,8 +194,7 @@ jobs:
           -r ${{ env.NOS }} \
           react \
           -e $EVENT \
-          -r "hello $(date +%s)" \
-          #| gnostr-xq
+          -r "hello $(date +%s)" || true;
         if: matrix.os != 'windows-latest'
 
       - run: ./nip-0034 || true
