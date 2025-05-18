@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.76"
+version = "0.0.77"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>"]
@@ -132,6 +132,7 @@ log = "0.4"
 nostr = "0.34.1"
 nostr-database = "0.34.0"
 nostr-sdk = "0.34.0"
+nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
 nostr-signer = "0.34.0"
@@ -179,6 +180,7 @@ syntect = { version = "5.2", default-features = false, features = [
     "html",
 ] }
 temp-env = "0.3.6"
+time = "0.1.39"
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = "0.20"
 ##tracing = { version = "0.1.37", features = ["std", "attributes"] }

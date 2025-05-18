@@ -47,7 +47,7 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
-cargo-install: 	### 	cargo install --path . $(FORCE)
+cargo-install:crawler 	### 	cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install --path . $(FORCE)
 ## 	cargo-br q=true
@@ -87,7 +87,7 @@ cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 
 .PHONY:crawler
 crawler:
-	@cargo install --path ./crawler -f
+	@cargo install --path ./crawler $(FORCE)
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

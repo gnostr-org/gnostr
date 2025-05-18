@@ -109,9 +109,11 @@ async fn main() -> Result<(), reqwest::Error> {
                     && !url.contains("nostr.datamagik.com")
                     && !url.contains("nostrid")
                     && !url.contains("damus.io")
+                    && !url.contains("nos.lol")
                     && !url.contains(".local")
                 {
                     //we want a view of the network
+                    ()
                 }
                 r
             }
@@ -143,10 +145,10 @@ async fn main() -> Result<(), reqwest::Error> {
                                 debug!("{dir_name} already exists...");
                             }
 
-                            let file_name = url.replace("https://", "").replace("http://", "").replace("wss://","").replace("ws://","") + ".json";
+                            let file_name = url.replace("https://", "").replace("http://", "").replace("ws://","").replace("wss://","") + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!("{}", file_path_str);
+                            debug!("\n\n{}\n\n", file_path_str);
 
                             match fs::File::create(&file_path) {
                                 Ok(mut file) => {

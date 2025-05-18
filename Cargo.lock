@@ -2310,7 +2310,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.76"
+version = "0.0.77"
 dependencies = [
  "anyhow",
  "async-std",
@@ -2356,6 +2356,7 @@ dependencies = [
  "nostr 0.32.1",
  "nostr 0.34.1",
  "nostr-database 0.34.0",
+ "nostr-sdk 0.19.1",
  "nostr-sdk 0.32.0",
  "nostr-sdk 0.34.0",
  "nostr-sdk 0.37.0",
@@ -2387,6 +2388,7 @@ dependencies = [
  "syntect",
  "temp-env",
  "tempfile",
+ "time 0.1.45",
  "tokio",
  "tokio-tungstenite 0.20.1",
  "tracing",
