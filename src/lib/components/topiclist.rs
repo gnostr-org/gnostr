@@ -1,8 +1,5 @@
-use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
-
 use anyhow::Result;
 use chrono::{DateTime, Local};
-use crossterm::event::Event as CrossTermEvent;
 use gnostr_asyncgit::sync::{
     self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 };
@@ -15,6 +12,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::utils::truncate_chars;
@@ -25,7 +23,6 @@ use crate::{
         EventState, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
-    login::get_user_details,
     queue::{InternalEvent, Queue},
     strings::{self, symbol},
     try_or_popup,
@@ -35,15 +32,6 @@ use crate::{
         Orientation,
     },
 };
-
-use std::time::Duration;
-
-//use nostr_sdk_0_32_0::{EventBuilder, EventId, FromBech32, Keys, Kind, Metadata, SecretKey, Tag, Url};
-use nostr::prelude::Tag;
-use nostr::prelude::*;
-use nostr_database::{nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order};
-use nostr_sqlite::SQLiteDatabase;
-use tracing_subscriber::fmt::format::FmtSpan;
 
 const ELEMENTS_PER_LINE: usize = 9;
 const SLICE_SIZE: usize = 1200;
