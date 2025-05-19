@@ -1,9 +1,13 @@
+export HOMEBREW_NO_INSTALL_CLEANUP=1
 ifeq ($(TAG),)
 TAG := v$(shell cat Cargo.toml | grep 'version = "' | head -n 1 | sed 's/version = "\(.*\)".*/\1/')
 endif
 export TAG
 
-
+ifeq ($(FORCE),)
+	FORCE :=-f
+endif
+export FORCE
 
 help:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -89,5 +93,7 @@ cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 crawler:
 	@cargo install --path ./crawler $(FORCE)
 
+dep-graph:
+	cargo depgraph --depth 1 | dot -Tpng > graph.png
 # vim: set noexpandtab:
 # vim: set setfiletype make
