@@ -1,6 +1,6 @@
 use crate::pubkeys::PubKeys;
 use crate::stats::Stats;
-use log::{debug, info};
+//use log::{debug, info};
 use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
 
 pub const BOOTSTRAP_RELAY1: &str = "wss://nos.lol";
