@@ -13,7 +13,7 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.4.13", features = ["derive"] }
-env_logger = "0.10"
+env_logger = "0.11"
 #tokio = { version = "1.26.0", features = ["full"] }
 futures = "0.3.25"
 git2 = "^0.18"

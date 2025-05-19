@@ -349,6 +349,7 @@ impl RelayManager {
                     //debug!("    {ss}");
                     //let _ = self.relays.add(ss);
                     //}
+                    debug!("    {cnt}");
                     cnt += 1;
                     //}
                 }
