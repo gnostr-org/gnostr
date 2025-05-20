@@ -52,6 +52,25 @@ pub struct GnostrSubCommands {
     pub trace: bool,
 }
 
+impl Default for GnostrSubCommands {
+    fn default() -> Self {
+        GnostrSubCommands {
+            theme: Some(PathBuf::from("theme.rom")),
+            repo_path: Some(RepoPath::from(".")),
+            notify_watcher: false,
+            nsec: None,
+            password: None,
+            name: None,
+            topic: None,
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+        }
+    }
+}
+
 pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Error>> {
     let _ = crate::tui::tui().await;
     //let args: ChatCli = ChatCli::parse();
