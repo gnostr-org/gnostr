@@ -1,0 +1,52 @@
+[package]
+name = "gnostr_qr"
+authors = ["gnostr admin@gnostr.org"]
+description = "gnostr_qr: part of the git+nostr workflow utility"
+homepage = "https://github.com/gnostr-org/gnostr_qr"
+repository = "https://github.com/gnostr-org/gnostr_qr.git"
+version = "0.0.7"
+edition = "2021"
+license = "MIT"
+
+[[bin]]
+name = "gnostr-qr"
+source = "src/bin/gnostr-qr.rs"
+doc = true
+
+[package.metadata.wix]
+upgrade-guid = "6B5B281A-A1CD-403C-9722-22776599DF63"
+path-guid = "112568BC-3A65-41EB-84F4-210F26CBAAEB"
+license = false
+eula = false
+
+[dependencies]
+hex = "0.4.3"
+image = "0.25.2"
+qrcode = "0.14.1"
+sha2 = "0.10.8"
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.21.1"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell", "homebrew", "msi"]
+# A GitHub repo to push Homebrew formulas to
+tap = "gnostr-org/homebrew-gnostr-org"
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# Publish jobs to run in CI
+publish-jobs = ["homebrew"]
+# Which actions to run on pull requests
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = true
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
