@@ -1,8 +1,10 @@
 mod chat_details;
 mod details;
 mod style;
-use anyhow::Result;
-use chat_details::CompareDetailsComponent;
+use super::{
+    command_pump, event_pump, CommandBlocking, CommandInfo, Component, DrawableComponent,
+    EventState, StatusTreeComponent,
+};
 use crate::{
     accessors,
     app::Environment,
@@ -10,6 +12,8 @@ use crate::{
     keys::{key_match, SharedKeyConfig},
     strings,
 };
+use anyhow::Result;
+use chat_details::CompareDetailsComponent;
 use crossterm::event::Event as CrossTermEvent;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use details::DetailsComponent;
@@ -25,10 +29,6 @@ use ratatui::{
     Frame,
 };
 use std::time::Duration;
-use super::{
-    command_pump, event_pump, CommandBlocking, CommandInfo, Component, DrawableComponent,
-    EventState, StatusTreeComponent,
-};
 use tracing_subscriber::fmt::format::FmtSpan;
 
 pub struct ChatDetailsComponent {
