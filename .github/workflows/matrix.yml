@@ -26,7 +26,7 @@ jobs:
       FORCE: "--force"
       GNOSTR: "gnostr"
       NOSTRIL: "nostril"
-      POW: "16"
+      POW: "28"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
     strategy:
@@ -168,7 +168,7 @@ jobs:
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true;
           EVENT=$(gnostr -d ${{ env.POW }} \
           --nsec $(mempool-space --blocks_tip_hash) \
-          -r ${{ env.NOS }} \
+          -r ${{ env.DAMUS }} \
           note \
           -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
           -t gnostr \
