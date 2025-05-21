@@ -1,31 +1,6 @@
 mod chat_details;
 mod details;
 mod style;
-
-use std::time::Duration;
-
-//use nostr_sdk_0_32_0::{EventBuilder, EventId, FromBech32, Keys, Kind, Metadata, SecretKey, Tag, Url};
-use nostr::prelude::Tag;
-use nostr::prelude::*;
-use nostr_database::{nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order};
-use nostr_sqlite::SQLiteDatabase;
-use tracing_subscriber::fmt::format::FmtSpan;
-
-use anyhow::Result;
-use chat_details::CompareDetailsComponent;
-use crossterm::event::Event as CrossTermEvent;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-
-use details::DetailsComponent;
-use gnostr_asyncgit::{
-    sync::{commit_files::OldNew, CommitTags},
-    AsyncCommitFiles, CommitFilesParams,
-};
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    Frame,
-};
-
 use super::{
     command_pump, event_pump, CommandBlocking, CommandInfo, Component, DrawableComponent,
     EventState, StatusTreeComponent,
@@ -37,6 +12,24 @@ use crate::{
     keys::{key_match, SharedKeyConfig},
     strings,
 };
+use anyhow::Result;
+use chat_details::CompareDetailsComponent;
+use crossterm::event::Event as CrossTermEvent;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use details::DetailsComponent;
+use gnostr_asyncgit::{
+    sync::{commit_files::OldNew, CommitTags},
+    AsyncCommitFiles, CommitFilesParams,
+};
+use nostr::prelude::Tag;
+use nostr_database::{nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order};
+use nostr_sqlite::SQLiteDatabase;
+use ratatui::{
+    layout::{Constraint, Direction, Layout, Rect},
+    Frame,
+};
+use std::time::Duration;
+use tracing_subscriber::fmt::format::FmtSpan;
 
 pub struct ChatDetailsComponent {
     commit: Option<CommitFilesParams>,

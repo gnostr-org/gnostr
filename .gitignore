@@ -1,4 +1,5 @@
-relays.yaml.txt
+*.png
+relays.yaml**
 **DS_Store
 **/target
 .idea

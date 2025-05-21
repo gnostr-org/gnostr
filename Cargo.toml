@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.77"
+version = "0.0.79"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>"]
@@ -43,18 +43,19 @@ vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [dev-dependencies]
+cargo-depgraph = "1.6.0"
 ##nostr
 env_logger = "0.11"
 gnostr-bins = "0.0.71"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
+##examples/sniper
+reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 serial_test = "2.0.0"
 tempfile = "3"
 tungstenite = { version = "0.20.0", features = ["native-tls"] }
 url = "2.2.2"
-##examples/sniper
-reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 ##serde_json = "1.0"
 ##serde = { version = "1.0.152", features = ["derive"] }
 ##tokio = { version = "1", features = ["full"] }
@@ -107,7 +108,8 @@ git2 = "^0.18" ## asyncgit ^0.19
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.1", default-features = false }
-gnostr-crawler = { version = "0.0.4", path = "crawler" }
+gnostr-crawler = { version = "0.0.5", path = "crawler" }
+gnostr_qr = { version = "0.0.7", path = "qr" }
 hostname = "0.3.1"
 indexmap = "2"
 indicatif = "0.17.7"
@@ -188,7 +190,7 @@ tracing = { version = "0.1.38", default-features = false }
 tracing-core = "0.1.33"
 
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tui-input = "0.11.1"
+tui-input = "0.10.1"
 tui-textarea = "0.6"
 two-face = { version = "0.4.0", default-features = false }
 unicode-segmentation = "1.12"

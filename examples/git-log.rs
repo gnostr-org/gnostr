@@ -3,7 +3,6 @@ use gnostr_crawler::processor::APP_SECRET_KEY;
 use gnostr_crawler::processor::BOOTSTRAP_RELAY1;
 use gnostr_crawler::processor::BOOTSTRAP_RELAY2;
 use gnostr_crawler::processor::BOOTSTRAP_RELAY3;
-use gnostr_crawler::relay_manager::RelayManager;
 use gnostr_crawler::CliArgs;
 
 use nostr_sdk_0_19_1::prelude::{FromBech32, Keys, SecretKey};
@@ -23,7 +22,8 @@ async fn main() {
             let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY);
             let app_keys = Keys::new(app_secret_key.expect("REASON"));
             let processor = Processor::new();
-            let mut relay_manager = gnostr_crawler::relay_manager::RelayManager::new(app_keys, processor);
+            let mut relay_manager =
+                gnostr_crawler::relay_manager::RelayManager::new(app_keys, processor);
             let _ = relay_manager
                 .run(vec![BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3])
                 .await;

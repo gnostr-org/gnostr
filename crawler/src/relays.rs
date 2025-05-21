@@ -1,5 +1,5 @@
-use log::info;
-use log::{debug, trace};
+//use log::info;
+//use log::{debug, trace};
 use nostr_sdk::prelude::Url;
 use std::collections::HashSet;
 
@@ -37,8 +37,8 @@ impl Relays {
     }
 
     pub fn de_dup(&self, list: &Vec<Url>) -> Vec<Url> {
-        let list:Vec<Url> = list.clone().into_iter().collect();
-		list
+        let list: Vec<Url> = list.clone().into_iter().collect();
+        list
     }
 
     pub fn get_some(&self, max_count: usize) -> Vec<Url> {
@@ -50,7 +50,7 @@ impl Relays {
             }
         }
         res = self.de_dup(&res);
-		res
+        res
     }
 
     pub fn print(&self) {

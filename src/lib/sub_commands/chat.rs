@@ -1,19 +1,9 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
-//use crate::sub_commands::chat::Utc;
-
-use crate::chat::create_event;
-use crate::chat::msg::*;
-use crate::chat::p2p::evt_loop;
-use crate::chat::parse_json;
-use crate::chat::split_json_string;
-use crate::chat::ui;
-use crate::chat::ChatCli;
 use crate::chat::*;
 use crate::global_rt::global_rt;
 use anyhow::Result;
-use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use serde::ser::StdError;

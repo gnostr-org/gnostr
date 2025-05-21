@@ -1,18 +1,13 @@
-use clap::{Args, Parser};
-use libp2p::gossipsub;
-use std::{error::Error, time::Duration};
-use tokio::{io, io::AsyncBufReadExt};
+use clap::Args;
+use git2::{ObjectType, Repository};
+use gnostr_asyncgit::sync::RepoPath;
+use nostr_sdk_0_37_0::prelude::*;
+use std::error::Error;
+use std::path::PathBuf;
 use tracing::debug;
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-use git2::{ObjectType, Repository};
-use nostr_sdk_0_37_0::prelude::*;
-
-use gnostr_asyncgit::sync::RepoPath;
-
-use std::path::PathBuf;
 
 #[derive(Args, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -55,6 +50,25 @@ pub struct GnostrSubCommands {
     pub debug: bool,
     #[arg(long, action)]
     pub trace: bool,
+}
+
+impl Default for GnostrSubCommands {
+    fn default() -> Self {
+        GnostrSubCommands {
+            theme: Some(PathBuf::from("theme.rom")),
+            repo_path: Some(RepoPath::from(".")),
+            notify_watcher: false,
+            nsec: None,
+            password: None,
+            name: None,
+            topic: None,
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+        }
+    }
 }
 
 pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Error>> {
