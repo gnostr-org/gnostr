@@ -1,9 +1,9 @@
 use super::Screen;
 use crate::{
     gitui::config::Config,
-    gitui::gitui_error::Error,
     gitui::git::{self, diff::Diff},
     gitui::git2_opts,
+    gitui::gitui_error::Error,
     gitui::items::{self, Item, TargetData},
     gitui::Res,
 };

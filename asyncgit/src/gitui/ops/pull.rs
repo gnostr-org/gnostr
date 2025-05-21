@@ -1,10 +1,10 @@
 use super::{Action, OpTrait};
 use crate::{
-    gitui::gitui_error::Error,
     gitui::git::{
         self,
         remote::{self, get_push_remote, get_upstream_components, get_upstream_shortname},
     },
+    gitui::gitui_error::Error,
     gitui::items::TargetData,
     gitui::menu::arg::Arg,
     gitui::state::{PromptParams, State},

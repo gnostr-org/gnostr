@@ -1,5 +1,8 @@
 use super::OpTrait;
-use crate::{gitui::gitui_error::Error, gitui::items::TargetData, gitui::screen, gitui::state::State, gitui::ops::Action};
+use crate::{
+    gitui::gitui_error::Error, gitui::items::TargetData, gitui::ops::Action, gitui::screen,
+    gitui::state::State,
+};
 use core::str;
 use std::{path::Path, process::Command, rc::Rc};
 

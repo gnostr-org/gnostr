@@ -1,7 +1,9 @@
 use gitu_diff::Status;
 
 use super::{confirm, Action, OpTrait};
-use crate::{gitui::git::diff::Diff, gitui::gitu_diff, gitui::items::TargetData, gitui::state::State};
+use crate::{
+    gitui::git::diff::Diff, gitui::gitu_diff, gitui::items::TargetData, gitui::state::State,
+};
 use std::{path::PathBuf, process::Command, rc::Rc};
 
 pub(crate) struct Discard;
