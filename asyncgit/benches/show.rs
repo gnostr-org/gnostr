@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use gitu::{cli::Commands, term::TermBackend};
+use gnostr_asyncgit::gitui::{cli::Commands, term::TermBackend};
 use ratatui::{backend::TestBackend, Terminal};
 
 fn show(c: &mut Criterion) {
@@ -10,8 +10,8 @@ fn show(c: &mut Criterion) {
         })
         .unwrap();
         b.iter(|| {
-            gitu::run(
-                &gitu::cli::Args {
+            gnostr_asyncgit::gitui::run(
+                &gnostr_asyncgit::gitui::cli::Args {
                     command: Some(Commands::Show {
                         reference: "f4de01c0a12794d7b42a77b2138aa64119b90ea5".into(),
                     }),

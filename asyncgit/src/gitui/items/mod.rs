@@ -1,7 +1,7 @@
 use crate::gitui::config::Config;
-use crate::gitui::gitui_error::Error;
 use crate::gitui::git::diff::Diff;
 use crate::gitui::gitu_diff;
+use crate::gitui::gitui_error::Error;
 use crate::gitui::highlight;
 use crate::gitui::Res;
 use core::str;

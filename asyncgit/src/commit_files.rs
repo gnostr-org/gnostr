@@ -1,14 +1,14 @@
 use std::sync::{
-	Arc, Mutex,
-	atomic::{AtomicUsize, Ordering},
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex,
 };
 
 use crossbeam_channel::Sender;
 
 use crate::{
-	AsyncGitNotification, StatusItem,
-	error::Result,
-	sync::{self, CommitId, RepoPath, commit_files::OldNew},
+    error::Result,
+    sync::{self, commit_files::OldNew, CommitId, RepoPath},
+    AsyncGitNotification, StatusItem,
 };
 
 type ResultType = Vec<StatusItem>;
@@ -17,132 +17,119 @@ struct Request<R, A>(R, A);
 ///
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct CommitFilesParams {
-	///
-	pub id: CommitId,
-	///
-	pub other: Option<CommitId>,
+    ///
+    pub id: CommitId,
+    ///
+    pub other: Option<CommitId>,
 }
 
 impl From<CommitId> for CommitFilesParams {
-	fn from(id: CommitId) -> Self {
-		Self { id, other: None }
-	}
+    fn from(id: CommitId) -> Self {
+        Self { id, other: None }
+    }
 }
 
 impl From<(CommitId, CommitId)> for CommitFilesParams {
-	fn from((id, other): (CommitId, CommitId)) -> Self {
-		Self {
-			id,
-			other: Some(other),
-		}
-	}
+    fn from((id, other): (CommitId, CommitId)) -> Self {
+        Self {
+            id,
+            other: Some(other),
+        }
+    }
 }
 
 impl From<OldNew<CommitId>> for CommitFilesParams {
-	fn from(old_new: OldNew<CommitId>) -> Self {
-		Self {
-			id: old_new.new,
-			other: Some(old_new.old),
-		}
-	}
+    fn from(old_new: OldNew<CommitId>) -> Self {
+        Self {
+            id: old_new.new,
+            other: Some(old_new.old),
+        }
+    }
 }
 
 ///
 pub struct AsyncCommitFiles {
-	current:
-		Arc<Mutex<Option<Request<CommitFilesParams, ResultType>>>>,
-	sender: Sender<AsyncGitNotification>,
-	pending: Arc<AtomicUsize>,
-	repo: RepoPath,
+    current: Arc<Mutex<Option<Request<CommitFilesParams, ResultType>>>>,
+    sender: Sender<AsyncGitNotification>,
+    pending: Arc<AtomicUsize>,
+    repo: RepoPath,
 }
 
 impl AsyncCommitFiles {
-	///
-	pub fn new(
-		repo: RepoPath,
-		sender: &Sender<AsyncGitNotification>,
-	) -> Self {
-		Self {
-			repo,
-			current: Arc::new(Mutex::new(None)),
-			sender: sender.clone(),
-			pending: Arc::new(AtomicUsize::new(0)),
-		}
-	}
+    ///
+    pub fn new(repo: RepoPath, sender: &Sender<AsyncGitNotification>) -> Self {
+        Self {
+            repo,
+            current: Arc::new(Mutex::new(None)),
+            sender: sender.clone(),
+            pending: Arc::new(AtomicUsize::new(0)),
+        }
+    }
 
-	///
-	pub fn current(
-		&mut self,
-	) -> Result<Option<(CommitFilesParams, ResultType)>> {
-		let c = self.current.lock()?;
+    ///
+    pub fn current(&mut self) -> Result<Option<(CommitFilesParams, ResultType)>> {
+        let c = self.current.lock()?;
 
-		c.as_ref()
-			.map_or(Ok(None), |c| Ok(Some((c.0, c.1.clone()))))
-	}
+        c.as_ref()
+            .map_or(Ok(None), |c| Ok(Some((c.0, c.1.clone()))))
+    }
 
-	///
-	pub fn is_pending(&self) -> bool {
-		self.pending.load(Ordering::Relaxed) > 0
-	}
+    ///
+    pub fn is_pending(&self) -> bool {
+        self.pending.load(Ordering::Relaxed) > 0
+    }
 
-	///
-	pub fn fetch(&mut self, params: CommitFilesParams) -> Result<()> {
-		if self.is_pending() {
-			return Ok(());
-		}
+    ///
+    pub fn fetch(&mut self, params: CommitFilesParams) -> Result<()> {
+        if self.is_pending() {
+            return Ok(());
+        }
 
-		log::trace!("request: {:?}", params);
+        log::trace!("request: {:?}", params);
 
-		{
-			let current = self.current.lock()?;
-			if let Some(c) = &*current {
-				if c.0 == params {
-					return Ok(());
-				}
-			}
-		}
+        {
+            let current = self.current.lock()?;
+            if let Some(c) = &*current {
+                if c.0 == params {
+                    return Ok(());
+                }
+            }
+        }
 
-		let arc_current = Arc::clone(&self.current);
-		let sender = self.sender.clone();
-		let arc_pending = Arc::clone(&self.pending);
-		let repo = self.repo.clone();
+        let arc_current = Arc::clone(&self.current);
+        let sender = self.sender.clone();
+        let arc_pending = Arc::clone(&self.pending);
+        let repo = self.repo.clone();
 
-		self.pending.fetch_add(1, Ordering::Relaxed);
+        self.pending.fetch_add(1, Ordering::Relaxed);
 
-		rayon_core::spawn(move || {
-			Self::fetch_helper(&repo, params, &arc_current)
-				.expect("failed to fetch");
+        rayon_core::spawn(move || {
+            Self::fetch_helper(&repo, params, &arc_current).expect("failed to fetch");
 
-			arc_pending.fetch_sub(1, Ordering::Relaxed);
+            arc_pending.fetch_sub(1, Ordering::Relaxed);
 
-			sender
-				.send(AsyncGitNotification::CommitFiles)
-				.expect("error sending");
-		});
+            sender
+                .send(AsyncGitNotification::CommitFiles)
+                .expect("error sending");
+        });
 
-		Ok(())
-	}
+        Ok(())
+    }
 
-	fn fetch_helper(
-		repo_path: &RepoPath,
-		params: CommitFilesParams,
-		arc_current: &Arc<
-			Mutex<Option<Request<CommitFilesParams, ResultType>>>,
-		>,
-	) -> Result<()> {
-		let res = sync::get_commit_files(
-			repo_path,
-			params.id,
-			params.other,
-		)?;
+    fn fetch_helper(
+        repo_path: &RepoPath,
+        params: CommitFilesParams,
+        arc_current: &Arc<Mutex<Option<Request<CommitFilesParams, ResultType>>>>,
+    ) -> Result<()> {
+        let res = sync::get_commit_files(repo_path, params.id, params.other)?;
 
-		log::trace!("get_commit_files: {:?} ({})", params, res.len());
+        log::trace!("get_commit_files: {:?} ({})", params, res.len());
 
-		{
-			let mut current = arc_current.lock()?;
-			*current = Some(Request(params, res));
-		}
+        {
+            let mut current = arc_current.lock()?;
+            *current = Some(Request(params, res));
+        }
 
-		Ok(())
-	}
+        Ok(())
+    }
 }

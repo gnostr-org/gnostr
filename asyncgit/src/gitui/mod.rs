@@ -2,11 +2,11 @@ mod bindings;
 pub mod cli;
 mod cmd_log;
 pub mod config;
-pub mod gitui_error;
 mod file_watcher;
 mod git;
 mod git2_opts;
 pub mod gitu_diff;
+pub mod gitui_error;
 mod highlight;
 mod items;
 mod key_parser;
@@ -22,8 +22,8 @@ mod tests;
 mod ui;
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState, KeyModifiers};
-use gitui_error::Error;
 use git2::Repository;
+use gitui_error::Error;
 use items::Item;
 //use ops::Action;
 use std::{

@@ -1,5 +1,8 @@
 use super::OpTrait;
-use crate::{gitui::git::diff::PatchMode, gitui::items::TargetData, gitui::state::State, gitui::term::Term, gitui::ops::Action};
+use crate::{
+    gitui::git::diff::PatchMode, gitui::items::TargetData, gitui::ops::Action, gitui::state::State,
+    gitui::term::Term,
+};
 use std::{ffi::OsString, process::Command, rc::Rc};
 
 pub(crate) struct Unstage;

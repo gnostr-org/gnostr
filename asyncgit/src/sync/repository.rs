@@ -1,6 +1,6 @@
 use std::{
-	cell::RefCell,
-	path::{Path, PathBuf},
+    cell::RefCell,
+    path::{Path, PathBuf},
 };
 
 use git2::{Repository, RepositoryOpenFlags};
@@ -13,51 +13,51 @@ pub type RepoPathRef = RefCell<RepoPath>;
 ///
 #[derive(Clone, Debug)]
 pub enum RepoPath {
-	///
-	Path(PathBuf),
-	///
-	Workdir {
-		///
-		gitdir: PathBuf,
-		///
-		workdir: PathBuf,
-	},
+    ///
+    Path(PathBuf),
+    ///
+    Workdir {
+        ///
+        gitdir: PathBuf,
+        ///
+        workdir: PathBuf,
+    },
 }
 
 impl RepoPath {
-	///
-	pub fn gitpath(&self) -> &Path {
-		match self {
-			Self::Path(p) => p.as_path(),
-			Self::Workdir { gitdir, .. } => gitdir.as_path(),
-		}
-	}
+    ///
+    pub fn gitpath(&self) -> &Path {
+        match self {
+            Self::Path(p) => p.as_path(),
+            Self::Workdir { gitdir, .. } => gitdir.as_path(),
+        }
+    }
 
-	///
-	pub fn workdir(&self) -> Option<&Path> {
-		match self {
-			Self::Path(_) => None,
-			Self::Workdir { workdir, .. } => Some(workdir.as_path()),
-		}
-	}
+    ///
+    pub fn workdir(&self) -> Option<&Path> {
+        match self {
+            Self::Path(_) => None,
+            Self::Workdir { workdir, .. } => Some(workdir.as_path()),
+        }
+    }
 }
 
 impl From<&str> for RepoPath {
-	fn from(p: &str) -> Self {
-		Self::Path(PathBuf::from(p))
-	}
+    fn from(p: &str) -> Self {
+        Self::Path(PathBuf::from(p))
+    }
 }
 
 pub fn repo(repo_path: &RepoPath) -> Result<Repository> {
-	let repo = Repository::open_ext(
-		repo_path.gitpath(),
-		RepositoryOpenFlags::empty(),
-		Vec::<&Path>::new(),
-	)?;
+    let repo = Repository::open_ext(
+        repo_path.gitpath(),
+        RepositoryOpenFlags::empty(),
+        Vec::<&Path>::new(),
+    )?;
 
-	if let Some(workdir) = repo_path.workdir() {
-		repo.set_workdir(workdir, false)?;
-	}
+    if let Some(workdir) = repo_path.workdir() {
+        repo.set_workdir(workdir, false)?;
+    }
 
-	Ok(repo)
+    Ok(repo)
 }

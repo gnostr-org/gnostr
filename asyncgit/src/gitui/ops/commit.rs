@@ -1,5 +1,7 @@
 use super::{Action, OpTrait};
-use crate::{gitui::items::TargetData, gitui::menu::arg::Arg, gitui::state::State, gitui::term::Term};
+use crate::{
+    gitui::items::TargetData, gitui::menu::arg::Arg, gitui::state::State, gitui::term::Term,
+};
 use std::{
     ffi::{OsStr, OsString},
     process::Command,

@@ -2,9 +2,10 @@ use super::{selected_rev, OpTrait};
 use crate::{
     gitui::items::TargetData,
     gitui::menu::arg::Arg,
+    gitui::ops::Action,
+    gitui::ops::Res,
     gitui::state::{PromptParams, State},
     gitui::term::Term,
-    gitui::ops::Action, gitui::ops::Res,
 };
 use std::{process::Command, rc::Rc};
 

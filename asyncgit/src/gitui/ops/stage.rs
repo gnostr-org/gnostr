@@ -2,9 +2,9 @@ use super::OpTrait;
 use crate::{
     gitui::git::diff::{Diff, PatchMode},
     gitui::items::TargetData,
+    gitui::ops::Action,
     gitui::state::State,
     gitui::term::Term,
-    gitui::ops::Action,
 };
 use std::{ffi::OsString, process::Command, rc::Rc};
 

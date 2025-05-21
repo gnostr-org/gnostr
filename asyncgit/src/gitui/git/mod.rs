@@ -5,8 +5,9 @@ use remote::get_branch_upstream;
 
 use self::{commit::Commit, merge_status::MergeStatus, rebase_status::RebaseStatus};
 use crate::{
+    gitui::gitu_diff,
     gitui::gitui_error::{Error, Utf8Error},
-    gitui::gitu_diff, gitui::Res,
+    gitui::Res,
 };
 use std::{
     fs,

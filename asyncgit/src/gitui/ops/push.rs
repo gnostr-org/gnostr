@@ -1,11 +1,14 @@
 use super::{Action, OpTrait};
-use crate::gitui::gitui_error::Error;
 use crate::gitui::git;
 use crate::gitui::git::remote::{
     get_push_remote, get_upstream_components, get_upstream_shortname, set_push_remote,
 };
+use crate::gitui::gitui_error::Error;
 use crate::gitui::state::PromptParams;
-use crate::{gitui::items::TargetData, gitui::menu::arg::Arg, gitui::state::State, gitui::term::Term, gitui::Res};
+use crate::{
+    gitui::items::TargetData, gitui::menu::arg::Arg, gitui::state::State, gitui::term::Term,
+    gitui::Res,
+};
 use std::{process::Command, rc::Rc};
 
 pub(crate) fn init_args() -> Vec<Arg> {
