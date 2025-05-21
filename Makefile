@@ -51,7 +51,7 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
-cargo-install:crawler 	### 	cargo install --path . $(FORCE)
+cargo-install:crawler asyncgit 	### 	cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install --path . $(FORCE)
 ## 	cargo-br q=true
@@ -89,9 +89,11 @@ cargo-dist-build: 	### 	cargo-dist-build
 cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 	cargo dist manifest --artifacts=all
 
-.PHONY:crawler
+.PHONY:crawler asyncgit
 crawler:
 	@cargo install --path ./crawler $(FORCE)
+asyncgit:
+	@cargo install --path ./asyncgit $(FORCE)
 
 dep-graph:
 	cargo depgraph --depth 1 | dot -Tpng > graph.png

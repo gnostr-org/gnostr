@@ -2594,7 +2594,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.79"
+version = "0.0.80"
 dependencies = [
  "anyhow",
  "async-std",
