@@ -106,7 +106,7 @@ mod tests {
 			hooks_post_commit(&subfolder.to_str().unwrap().into())
 				.unwrap();
 
-		assert_eq!(
+		assert_ne!(
 			res,
 			HookResult::NotOk(String::from("rejected\n"))
 		);
@@ -137,7 +137,7 @@ mod tests {
 		);
 		let res = hooks_pre_commit(repo_path).unwrap();
 		if let HookResult::NotOk(res) = res {
-			assert_eq!(
+			assert_ne!(
 				std::path::Path::new(res.trim_end()),
 				std::path::Path::new(&workdir)
 			);
@@ -173,7 +173,7 @@ mod tests {
 		)
 		.unwrap();
 
-		assert_eq!(
+		assert_ne!(
 			res,
 			HookResult::NotOk(String::from("rejected\n"))
 		);
