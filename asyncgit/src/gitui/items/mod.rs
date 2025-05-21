@@ -1,5 +1,5 @@
 use crate::gitui::config::Config;
-use crate::error::Error;
+use crate::gitui::gitui_error::Error;
 use crate::gitui::git::diff::Diff;
 use crate::gitui::gitu_diff;
 use crate::gitui::highlight;

@@ -24,7 +24,7 @@ use crate::gitui::cli;
 use crate::gitui::cmd_log::CmdLog;
 use crate::gitui::cmd_log::CmdLogEntry;
 use crate::gitui::config::Config;
-use crate::error::Error;
+use crate::gitui::gitui_error::Error;
 use crate::gitui::file_watcher::FileWatcher;
 use crate::gitui::items::TargetData;
 use crate::gitui::menu::Menu;

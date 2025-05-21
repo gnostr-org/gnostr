@@ -1,6 +1,6 @@
 use super::{Action, OpTrait};
 use crate::{
-    error::Error,
+    gitui::gitui_error::Error,
     gitui::git::{
         self,
         remote::{self, get_push_remote, get_upstream_components, get_upstream_shortname},

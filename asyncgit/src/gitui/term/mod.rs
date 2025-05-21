@@ -1,4 +1,4 @@
-use crate::{error::Error, gitui::Res};
+use crate::{gitui::gitui_error::Error, gitui::Res};
 use crossterm::{
     event::Event,
     terminal::{

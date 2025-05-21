@@ -1,5 +1,5 @@
 use super::{Action, OpTrait};
-use crate::{error::Error, gitui::items::TargetData, gitui::state::State};
+use crate::{gitui::gitui_error::Error, gitui::items::TargetData, gitui::state::State};
 use std::rc::Rc;
 
 pub(crate) struct CopyHash;

@@ -1,6 +1,6 @@
 use super::{selected_rev, Action, OpTrait};
 use crate::{
-    error::Error,
+    gitui::gitui_error::Error,
     gitui::git::{get_current_branch_name, is_branch_merged},
     gitui::items::TargetData,
     gitui::menu::arg::Arg,

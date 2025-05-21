@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, path::PathBuf};
 
-use crate::{error::Error, gitui::menu::Menu, gitui::ops::Op, gitui::Res};
+use crate::{gitui::gitui_error::Error, gitui::menu::Menu, gitui::ops::Op, gitui::Res};
 use etcetera::{choose_base_strategy, BaseStrategy};
 use figment::{
     providers::{Format, Toml},
