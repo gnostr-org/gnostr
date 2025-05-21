@@ -1,7 +1,7 @@
 [package]
 name = "gnostr-asyncgit"
-version = "0.0.1"
-authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
+version = "0.0.2"
+authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>", "altsem <altem@unknown.com>"]
 edition = "2021"
 description = "gnostr:fork of asyncgit"
 homepage = "https://github.com/gnostr-org/gnostr"
