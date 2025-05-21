@@ -1,4 +1,4 @@
-use crate::menu::arg::{self, Arg};
+use crate::gitui::menu::arg::{self, Arg};
 
 #[test]
 fn flag_operations() {
