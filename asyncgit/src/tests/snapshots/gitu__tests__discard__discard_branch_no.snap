@@ -1,0 +1,25 @@
+---
+source: src/tests/discard.rs
+expression: ctx.redact_buffer()
+---
+ Branches                                                                       |
+▌  asd                                                                          |
+ * main                                                                         |
+                                                                                |
+ Remote origin                                                                  |
+   origin/HEAD                                                                  |
+   origin/main                                                                  |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 8aeb733dddf67818

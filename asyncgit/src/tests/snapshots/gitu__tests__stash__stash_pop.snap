@@ -1,0 +1,25 @@
+---
+source: src/tests/stash.rs
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+▌Your branch is up to date with 'origin/main'.                                  |
+                                                                                |
+ Staged changes (1)                                                             |
+ added      file-one                                                            |
+ @@ -0,0 +1 @@                                                                  |
+ +blahonga                                                                      |
+                                                                                |
+ Stashes                                                                        |
+ stash@0 On main: file-two                                                      |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git stash pop -q 1                                                            |
+styles_hash: fd87490bbbf7d065

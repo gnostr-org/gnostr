@@ -1,0 +1,25 @@
+---
+source: src/tests/branch.rs
+expression: ctx.redact_buffer()
+---
+▌On branch new                                                                  |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf main merged new origin/main add initial-file                           |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git checkout -b new                                                           |
+Switched to a new branch 'new'                                                  |
+styles_hash: c7925dfc1f0f00cd
