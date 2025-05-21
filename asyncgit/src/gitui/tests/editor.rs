@@ -1,6 +1,6 @@
 use super::*;
 
-fn setup_scroll() -> (TestContext, crate::state::State) {
+fn setup_scroll() -> (TestContext, crate::gitui::state::State) {
     let mut ctx = TestContext::setup_init();
     for file in ["file-1", "file-2", "file-3"] {
         commit(ctx.dir.path(), file, "");

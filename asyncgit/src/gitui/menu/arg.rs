@@ -178,7 +178,7 @@ pub fn any_regex(s: &str) -> Res<Regex> {
 
 #[cfg(test)]
 mod tests {
-    use crate::menu::arg::{self, Arg};
+    use crate::gitui::menu::arg::{self, Arg};
 
     #[test]
     fn flag_operations() {

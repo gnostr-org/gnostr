@@ -1,7 +1,7 @@
 use git2::{Buf, Error, Repository};
 
-use crate::git::remote::*;
-use crate::tests::helpers::{run, RepoTestContext};
+use crate::gitui::git::remote::*;
+use crate::gitui::tests::helpers::{run, RepoTestContext};
 
 fn get_head_name(repo: &Repository) -> String {
     repo.head().unwrap().name().unwrap().into()

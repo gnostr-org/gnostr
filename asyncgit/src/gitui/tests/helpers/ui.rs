@@ -1,11 +1,11 @@
 use crate::{
-    cli::Args,
-    config::{self, Config},
-    error::Error,
-    key_parser::parse_keys,
-    state::State,
-    term::{Term, TermBackend},
-    tests::helpers::RepoTestContext,
+    gitui::cli::Args,
+    gitui::config::{self, Config},
+    gitui::gitui_error::Error,
+    gitui::key_parser::parse_keys,
+    gitui::state::State,
+    gitui::term::{Term, TermBackend},
+    gitui::tests::helpers::RepoTestContext,
 };
 use crossterm::event::{Event, KeyEvent};
 use git2::Repository;
