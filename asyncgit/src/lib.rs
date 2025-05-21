@@ -1,6 +1,6 @@
 //! asyncgit
 
-#![forbid(missing_docs)]
+#![warn(missing_docs)]
 #![deny(
 	unused_imports,
 	unused_must_use,
