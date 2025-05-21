@@ -131,7 +131,9 @@ pub enum GnostrCommands {
     Chat(crate::chat::ChatSubCommands),
     /// Ngit sub commands
     Ngit(ngit::NgitSubCommand),
-    /// Set metadata. Be aware that this will simply replace your current kind 0 event.
+    /// Set metadata.
+    /// CAUTION!
+    /// This will replace your current kind 0 event.
     SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
     /// Send text note
     Note(sub_commands::note::NoteSubCommand),
