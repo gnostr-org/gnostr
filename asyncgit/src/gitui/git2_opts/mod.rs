@@ -1,4 +1,4 @@
-use crate::{error::Error, gitui::Res};
+use crate::{gitui::gitui_error::Error, gitui::Res};
 use git2::{Repository, StatusOptions};
 
 pub(crate) fn status(repo: &Repository) -> Res<StatusOptions> {

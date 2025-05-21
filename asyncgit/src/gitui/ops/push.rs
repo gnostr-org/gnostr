@@ -1,5 +1,5 @@
 use super::{Action, OpTrait};
-use crate::error::Error;
+use crate::gitui::gitui_error::Error;
 use crate::gitui::git;
 use crate::gitui::git::remote::{
     get_push_remote, get_upstream_components, get_upstream_shortname, set_push_remote,

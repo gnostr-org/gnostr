@@ -1,4 +1,4 @@
-use crate::{error::Error, gitui::open_repo, gitui::Res};
+use crate::{gitui::gitui_error::Error, gitui::open_repo, gitui::Res};
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::{
     path::Path,

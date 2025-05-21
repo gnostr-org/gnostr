@@ -1,6 +1,6 @@
 use super::{Action, OpTrait};
 use crate::{
-    error::Error,
+    gitui::gitui_error::Error,
     gitui::items::TargetData,
     gitui::menu::arg::Arg,
     gitui::state::{PromptParams, State},

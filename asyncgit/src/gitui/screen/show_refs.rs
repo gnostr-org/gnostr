@@ -7,7 +7,7 @@ use std::{
 use super::Screen;
 use crate::{
     gitui::config::{Config, StyleConfigEntry},
-    error::Error,
+    gitui::gitui_error::Error,
     gitui::items::{self, Item, TargetData},
     gitui::Res,
 };
