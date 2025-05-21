@@ -1,0 +1,25 @@
+---
+source: src/tests/stash.rs
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+▌Your branch is up to date with 'origin/main'.                                  |
+                                                                                |
+ Stashes                                                                        |
+ stash@0 On main: file-two                                                      |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git stash drop 1                                                              |
+Dropped refs/stash@{1} (6e4ee08a012b0675b1f27465f158930aa1088b7a)               |
+styles_hash: dfd2a495b8602e3f

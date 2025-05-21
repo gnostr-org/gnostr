@@ -35,6 +35,8 @@
 	clippy::empty_docs
 )]
 
+pub mod gitui;
+
 pub mod asyncjob;
 mod blame;
 mod branches;
@@ -44,6 +46,7 @@ mod diff;
 mod error;
 mod fetch_job;
 mod filter_commits;
+//mod gitui;
 mod progress;
 mod pull;
 mod push;

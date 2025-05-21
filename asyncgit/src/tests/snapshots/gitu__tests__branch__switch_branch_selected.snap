@@ -1,0 +1,25 @@
+---
+source: src/tests/branch.rs
+expression: ctx.redact_buffer()
+---
+ Branches                                                                       |
+   main                                                                         |
+▌* merged                                                                       |
+   unmerged                                                                     |
+                                                                                |
+ Remote origin                                                                  |
+   origin/HEAD                                                                  |
+   origin/main                                                                  |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git checkout merged                                                           |
+Switched to branch 'merged'                                                     |
+styles_hash: 3e20cbd7891bb3eb
