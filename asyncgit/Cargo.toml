@@ -100,6 +100,7 @@ temp-dir = "0.1.13"
 criterion = "0.5.1"
 insta = "1.42.2"
 unicode-width = "0.2.0"
+cargo-insta = "1.43.1"
 
 [profile.release]
 strip = true
