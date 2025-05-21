@@ -162,7 +162,7 @@ impl<'a> Parser<'a> {
     /// -foo\n\
     /// +bar\n";
     ///
-    /// let diff = gitu::gitu_diff::Parser::new(input).parse_diff().unwrap();
+    /// let diff = gnostr_asyncgit::gitui::gitu_diff::Parser::new(input).parse_diff().unwrap();
     /// assert_eq!(diff[0].header.new_file, 25..34); // "file2.txt"
     /// ```
     pub fn parse_diff(&mut self) -> Result<Vec<FileDiff>> {

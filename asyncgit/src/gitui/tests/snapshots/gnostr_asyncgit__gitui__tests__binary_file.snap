@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/mod.rs
+expression: ctx.redact_buffer()
+---
+ No branch                                                                      |
+                                                                                |
+ Staged changes (1)                                                             |
+▌added      binary-file                                                         |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 6e625671b93843f3
