@@ -11,6 +11,11 @@ license = "MIT"
 categories = ["concurrency", "asynchronous"]
 keywords = ["git"]
 
+[features]
+default = ["trace-libgit"]
+trace-libgit = []
+vendor-openssl = ["openssl-sys"]
+
 [dependencies]
 #anyhow = "1.0"
 bitflags = "2"
@@ -80,9 +85,9 @@ regex = "1.11.1"
 strip-ansi-escapes = "0.2.1"
 unicode-segmentation = "1.12.0"
 
-[[bench]]
-name = "show"
-harness = false
+## [[bench]]
+## name = "show"
+## harness = false
 
 [dev-dependencies]
 env_logger = "0.11"
