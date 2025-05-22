@@ -1,60 +1,112 @@
 use std::{fmt::Display, io, string};
 
+///
 #[derive(Debug)]
 pub enum Error {
+    /// StashList(git2::Error),
     StashList(git2::Error),
+    /// ReadLog(git2::Error),
     ReadLog(git2::Error),
+    /// OpenRepo(git2::Error),
     OpenRepo(git2::Error),
+    /// FindGitDir(io::Error),
     FindGitDir(io::Error),
+    /// Term(io::Error),
     Term(io::Error),
+    /// GitDirUtf8(string::FromUtf8Error),
     GitDirUtf8(string::FromUtf8Error),
+    /// Config(figment::Error),
     Config(figment::Error),
+    /// FileWatcher(notify::Error),
     FileWatcher(notify::Error),
+    /// ReadRebaseStatusFile(io::Error),
     ReadRebaseStatusFile(io::Error),
+    /// ReadBranchName(io::Error),
     ReadBranchName(io::Error),
+    /// BranchNameUtf8(Utf8Error),
     BranchNameUtf8(Utf8Error),
+    /// GitDiff(io::Error),
     GitDiff(io::Error),
+    /// GitDiffUtf8(string::FromUtf8Error),
     GitDiffUtf8(string::FromUtf8Error),
+    /// GitShow(io::Error),
     GitShow(io::Error),
+    /// GitShowUtf8(string::FromUtf8Error),
     GitShowUtf8(string::FromUtf8Error),
+    /// GitShowMeta(git2::Error),
     GitShowMeta(git2::Error),
+    /// NotOnBranch,
     NotOnBranch,
+    /// GetHead(git2::Error),
     GetHead(git2::Error),
+    /// CurrentBranchName(git2::Error),
     CurrentBranchName(git2::Error),
+    /// GetCurrentBranchUpstream(git2::Error),
     GetCurrentBranchUpstream(git2::Error),
+    /// GetCurrentBranchUpstreamUtf8(Utf8Error),
     GetCurrentBranchUpstreamUtf8(Utf8Error),
+    /// RemoteNameUtf8(Utf8Error),
     RemoteNameUtf8(Utf8Error),
+    /// CannotDeleteCurrentBranch,
     CannotDeleteCurrentBranch,
+    /// BranchNameRequired,
     BranchNameRequired,
+    /// IsBranchMerged(git2::Error),
     IsBranchMerged(git2::Error),
+    /// GetRemote(git2::Error),
     GetRemote(git2::Error),
+    /// ReadGitConfig(git2::Error),
     ReadGitConfig(git2::Error),
+    /// ReadGitConfigUtf8(Utf8Error),
     ReadGitConfigUtf8(Utf8Error),
+    /// DeleteGitConfig(git2::Error),
     DeleteGitConfig(git2::Error),
+    /// SetGitConfig(git2::Error),
     SetGitConfig(git2::Error),
+    /// RemoteHasNoName,
     RemoteHasNoName,
+    /// ReadOid(git2::Error),
     ReadOid(git2::Error),
+    /// ArgMustBePositiveNumber,
     ArgMustBePositiveNumber,
+    /// ArgInvalidRegex(regex::Error),
     ArgInvalidRegex(regex::Error),
+    /// Clipboard(arboard::Error),
     Clipboard(arboard::Error),
+    /// FindGitRev(git2::Error),
     FindGitRev(git2::Error),
+    /// NoEditorSet,
     NoEditorSet,
+    /// GitStatus(git2::Error),
     GitStatus(git2::Error),
+    /// CmdAlreadyRunning,
     CmdAlreadyRunning,
+    /// StashWorkTreeEmpty,
     StashWorkTreeEmpty,
+    /// CouldntAwaitCmd(io::Error),
     CouldntAwaitCmd(io::Error),
+    /// NoRepoWorkdir,
     NoRepoWorkdir,
+    /// SpawnCmd(io::Error),
     SpawnCmd(io::Error),
+    /// CmdBadExit(String, Option<i32>),
     CmdBadExit(String, Option<i32>),
+    /// CouldntReadCmdOutput(io::Error),
     CouldntReadCmdOutput(io::Error),
+    /// ListGitReferences(git2::Error),
     ListGitReferences(git2::Error),
+    /// OpenLogFile(io::Error),
     OpenLogFile(io::Error),
+    /// PromptAborted,
     PromptAborted,
+    /// NoMoreEvents,
     NoMoreEvents,
 }
 
+///
 impl std::error::Error for Error {}
 
+///
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -144,14 +196,19 @@ impl Display for Error {
     }
 }
 
+///
 #[derive(Debug)]
 pub enum Utf8Error {
+    ///
     Str(std::str::Utf8Error),
-    String(string::FromUtf8Error),
+    ///
+	String(string::FromUtf8Error),
 }
 
+///
 impl std::error::Error for Utf8Error {}
 
+///
 impl Display for Utf8Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("not valid UTF-8")

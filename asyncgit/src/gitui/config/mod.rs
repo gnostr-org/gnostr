@@ -9,146 +9,217 @@ use figment::{
 use ratatui::style::{Color, Modifier, Style};
 use serde::Deserialize;
 
+///
 const DEFAULT_CONFIG: &str = include_str!("../../default_config.toml");
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub(crate) struct Config {
+    ///
     pub general: GeneralConfig,
+    ///
     pub style: StyleConfig,
+    ///
     pub bindings: BTreeMap<Menu, BTreeMap<Op, Vec<String>>>,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct GeneralConfig {
+    ///
     pub always_show_help: BoolConfigEntry,
+    ///
     pub confirm_quit: BoolConfigEntry,
+    ///
     pub refresh_on_file_change: BoolConfigEntry,
+    ///
     pub collapsed_sections: Vec<String>,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct BoolConfigEntry {
+    ///
     #[serde(default)]
     pub enabled: bool,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct StyleConfig {
+    ///
     pub section_header: StyleConfigEntry,
+    ///
     pub file_header: StyleConfigEntry,
+    ///
     pub hunk_header: StyleConfigEntry,
 
+    ///
     #[serde(default)]
     pub diff_highlight: DiffHighlightConfig,
 
+    ///
     #[serde(default)]
     pub syntax_highlight: SyntaxHighlightConfig,
 
+    ///
     pub cursor: SymbolStyleConfigEntry,
+    ///
     pub selection_line: StyleConfigEntry,
+    ///
     pub selection_bar: SymbolStyleConfigEntry,
+    ///
     pub selection_area: StyleConfigEntry,
 
+    ///
     pub hash: StyleConfigEntry,
+    ///
     pub branch: StyleConfigEntry,
+    ///
     pub remote: StyleConfigEntry,
+    ///
     pub tag: StyleConfigEntry,
 
+    ///
     pub command: StyleConfigEntry,
+    ///
     pub active_arg: StyleConfigEntry,
+    ///
     pub hotkey: StyleConfigEntry,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct DiffHighlightConfig {
+    ///
     #[serde(default)]
     pub tag_old: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub tag_new: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub unchanged_old: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub unchanged_new: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub changed_old: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub changed_new: StyleConfigEntry,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct SyntaxHighlightConfig {
+    ///
     #[serde(default)]
     pub enabled: bool,
+    ///
     #[serde(default)]
     pub attribute: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub comment: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub constant_builtin: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub constant: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub constructor: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub embedded: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub function_builtin: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub function: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub keyword: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub number: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub module: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub property: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub operator: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub punctuation_bracket: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub punctuation_delimiter: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub string_special: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub string: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub tag: StyleConfigEntry,
+    ///
     #[serde(default)]
     #[serde(rename = "type")]
     pub type_regular: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub type_builtin: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub variable_builtin: StyleConfigEntry,
+    ///
     #[serde(default)]
     pub variable_parameter: StyleConfigEntry,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct StyleConfigEntry {
+    ///
     #[serde(default)]
     fg: Option<Color>,
+    ///
     #[serde(default)]
     bg: Option<Color>,
+    ///
     #[serde(default)]
     mods: Option<Modifier>,
 }
 
+///
 #[derive(Default, Debug, Deserialize)]
 pub struct SymbolStyleConfigEntry {
+    ///
     #[serde(default)]
     pub symbol: char,
+    ///
     #[serde(default)]
     fg: Option<Color>,
+    ///
     #[serde(default)]
     bg: Option<Color>,
+    ///
     #[serde(default)]
     mods: Option<Modifier>,
 }
 
+///
 impl From<&StyleConfigEntry> for Style {
+    ///
     fn from(val: &StyleConfigEntry) -> Self {
         Style {
             fg: val.fg,
@@ -160,7 +231,9 @@ impl From<&StyleConfigEntry> for Style {
     }
 }
 
+///
 impl From<&SymbolStyleConfigEntry> for Style {
+    ///
     fn from(val: &SymbolStyleConfigEntry) -> Self {
         Style {
             fg: val.fg,
@@ -172,6 +245,7 @@ impl From<&SymbolStyleConfigEntry> for Style {
     }
 }
 
+///
 pub(crate) fn init_config() -> Res<Config> {
     let config_path = config_path();
 
@@ -190,6 +264,7 @@ pub(crate) fn init_config() -> Res<Config> {
     Ok(config)
 }
 
+///
 pub fn config_path() -> PathBuf {
     choose_base_strategy()
         .expect("Unable to find the config directory!")

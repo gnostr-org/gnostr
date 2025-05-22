@@ -8,105 +8,158 @@
 use core::ops::Range;
 use std::fmt::{self, Debug};
 
+///
 trait ParsedRange {
+    ///
     fn range(&self) -> &Range<usize>;
 }
 
+///
 impl ParsedRange for Range<usize> {
+    ///
     fn range(&self) -> &Range<usize> {
         self
     }
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Commit {
+    ///
     pub header: CommitHeader,
+    ///
     pub diff: Vec<FileDiff>,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CommitHeader {
+    ///
     pub range: Range<usize>,
+    ///
     pub hash: Range<usize>,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FileDiff {
+    ///
     pub range: Range<usize>,
+    ///
     pub header: DiffHeader,
+    ///
     pub hunks: Vec<Hunk>,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Status {
+    ///
     Added,
+    ///
     Deleted,
+    ///
     Modified,
+    ///
     Renamed,
+    ///
     Copied,
+    ///
     Unmerged,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct DiffHeader {
+    ///
     pub range: Range<usize>,
+    ///
     pub old_file: Range<usize>,
+    ///
     pub new_file: Range<usize>,
+    ///
     pub status: Status,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Hunk {
+    ///
     pub range: Range<usize>,
+    ///
     pub header: HunkHeader,
+    ///
     pub content: HunkContent,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct HunkContent {
+    ///
     pub range: Range<usize>,
+    ///
     pub changes: Vec<Change>,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct HunkHeader {
+    ///
     pub range: Range<usize>,
+    ///
     pub old_line_start: u32,
+    ///
     pub old_line_count: u32,
+    ///
     pub new_line_start: u32,
+    ///
     pub new_line_count: u32,
+    ///
     pub fn_ctx: Range<usize>,
 }
 
+///
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Change {
+    ///
     pub old: Range<usize>,
+    ///
     pub new: Range<usize>,
 }
 
+///
 pub type Result<T> = std::result::Result<T, ParseError>;
 
+///
 pub enum ParseError {
+    ///
     Expected {
+        ///
         cursor: usize,
+        ///
         expected: &'static str,
     },
+    ///
     NotFound {
+        ///
         cursor: usize,
+        ///
         expected: &'static str,
     },
 }
 
+///
 impl fmt::Display for ParseError {
+    ///
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ParseError::Expected { cursor, expected } => {
@@ -119,27 +172,35 @@ impl fmt::Display for ParseError {
     }
 }
 
+///
 impl fmt::Debug for ParseError {
+    ///
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("{self}"))
     }
 }
 
+///
 impl std::error::Error for ParseError {}
 
+///
 #[derive(Clone, Debug)]
 pub struct Parser<'a> {
     input: &'a str,
     cursor: usize,
 }
 
+///
 type ParseFn<'a, T> = fn(&mut Parser<'a>) -> Result<T>;
 
+///
 impl<'a> Parser<'a> {
+    ///
     pub fn new(input: &'a str) -> Self {
         Self { input, cursor: 0 }
     }
 
+    ///
     pub fn parse_commit(&mut self) -> Result<Commit> {
         let header = self.commit_header()?;
         let diff = self.parse_diff()?;
@@ -165,6 +226,7 @@ impl<'a> Parser<'a> {
     /// let diff = gnostr_asyncgit::gitui::gitu_diff::Parser::new(input).parse_diff().unwrap();
     /// assert_eq!(diff[0].header.new_file, 25..34); // "file2.txt"
     /// ```
+    ///
     pub fn parse_diff(&mut self) -> Result<Vec<FileDiff>> {
         let mut diffs = vec![];
 
@@ -185,6 +247,7 @@ impl<'a> Parser<'a> {
         Ok(diffs)
     }
 
+    ///
     fn commit_header(&mut self) -> Result<CommitHeader> {
         let start = self.cursor;
 
@@ -198,6 +261,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn skip_until_diff_header(&mut self) -> Result<()> {
         while self.cursor < self.input.len() && !self.is_at_diff_header() {
             self.consume_until(Self::newline_or_eof)?;
@@ -206,10 +270,12 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    ///
     fn is_at_diff_header(&mut self) -> bool {
         self.peek("diff") || self.peek("*")
     }
 
+    ///
     fn file_diff(&mut self) -> Result<FileDiff> {
         let diff_start = self.cursor;
         let header = self.diff_header()?;
@@ -231,6 +297,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn diff_header(&mut self) -> Result<DiffHeader> {
         let diff_header_start = self.cursor;
         let mut diff_type = Status::Modified;
@@ -307,6 +374,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn unmerged_file(&mut self) -> Result<DiffHeader> {
         let unmerged_path_prefix = self.consume("* Unmerged path ")?;
         let (file, _) = self.consume_until(Self::newline_or_eof)?;
@@ -319,6 +387,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn old_new_file_header(&mut self) -> Result<(Range<usize>, Range<usize>, bool)> {
         self.consume("diff --git")?;
         self.diff_header_path_prefix()?;
@@ -328,6 +397,7 @@ impl<'a> Parser<'a> {
         Ok((old_path, new_path, false))
     }
 
+    ///
     fn diff_header_path_prefix(&mut self) -> Result<Range<usize>> {
         let start = self.cursor;
         self.consume(" ")
@@ -341,6 +411,7 @@ impl<'a> Parser<'a> {
         Ok(start..self.cursor)
     }
 
+    ///
     fn ascii_lowercase(&mut self) -> Result<Range<usize>> {
         let start = self.cursor;
         let is_ascii_lowercase = self
@@ -360,12 +431,14 @@ impl<'a> Parser<'a> {
         }
     }
 
+    ///
     fn conflicted_file(&mut self) -> Result<(Range<usize>, Range<usize>, bool)> {
         self.consume("diff --cc ")?;
         let (file, _) = self.consume_until(Self::newline_or_eof)?;
         Ok((file.clone(), file, true))
     }
 
+    ///
     fn hunk(&mut self) -> Result<Hunk> {
         let hunk_start = self.cursor;
         let header = self.hunk_header()?;
@@ -378,6 +451,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn hunk_content(&mut self) -> Result<HunkContent> {
         let hunk_content_start = self.cursor;
         let mut changes = vec![];
@@ -398,6 +472,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn hunk_header(&mut self) -> Result<HunkHeader> {
         let hunk_header_start = self.cursor;
 
@@ -430,6 +505,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn change(&mut self) -> Result<Change> {
         let removed = self.consume_lines_while_prefixed(|parser| parser.peek("-"))?;
         let removed_meta = self.consume_lines_while_prefixed(|parser| parser.peek("\\"))?;
@@ -442,6 +518,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    ///
     fn consume_lines_while_prefixed(&mut self, pred: fn(&Parser) -> bool) -> Result<Range<usize>> {
         let start = self.cursor;
         while self.cursor < self.input.len() && pred(self) {
@@ -451,6 +528,7 @@ impl<'a> Parser<'a> {
         Ok(start..self.cursor)
     }
 
+    ///
     fn number(&mut self) -> Result<u32> {
         let digit_count = &self
             .input
@@ -477,6 +555,7 @@ impl<'a> Parser<'a> {
             .unwrap())
     }
 
+    ///
     fn newline_or_eof(&mut self) -> Result<Range<usize>> {
         self.newline()
             .or_else(|_| self.eof())
@@ -486,6 +565,7 @@ impl<'a> Parser<'a> {
             })
     }
 
+    ///
     fn newline(&mut self) -> Result<Range<usize>> {
         self.consume("\r\n")
             .or_else(|_| self.consume("\n"))
@@ -495,6 +575,7 @@ impl<'a> Parser<'a> {
             })
     }
 
+    ///
     fn eof(&mut self) -> Result<Range<usize>> {
         if self.cursor == self.input.len() {
             Ok(self.cursor..self.cursor)

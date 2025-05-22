@@ -1,6 +1,5 @@
 use clap::Parser;
 use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
-use gnostr_asyncgit::gitui::run;
 use log::LevelFilter;
 use ratatui::Terminal;
 use std::{backtrace::Backtrace, panic};
@@ -11,7 +10,10 @@ pub fn main() -> Res<()> {
     if args.version {
         // Setting cargo_suffix enables falling back to Cargo.toml for version
         // `cargo install --locked gnostr-asyncgit` would fail otherwise, as there's no git repo
-        println!("gnostr-asyncgit {}", git_version::git_version!(cargo_suffix = ""));
+        println!(
+            "gnostr-asyncgit {}",
+            git_version::git_version!(cargo_suffix = "")
+        );
         return Ok(());
     }
 
@@ -24,7 +26,7 @@ pub fn main() -> Res<()> {
         term::cleanup_alternate_screen();
         term::cleanup_raw_mode();
 
-        eprintln!("{}", panic_info);
+        eprintln!("{panic_info}");
         eprintln!("trace: \n{}", Backtrace::force_capture());
     }));
 
