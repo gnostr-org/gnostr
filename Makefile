@@ -5,7 +5,7 @@ endif
 export TAG
 
 ifeq ($(FORCE),)
-	FORCE :=-f
+       FORCE :=-f
 endif
 export FORCE
 
@@ -51,7 +51,7 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b $(QUIET)
-cargo-install:crawler asyncgit 	### 	cargo install --path . $(FORCE)
+cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install --path . $(FORCE)
 ## 	cargo-br q=true
@@ -96,6 +96,7 @@ asyncgit:
 	@cargo install --path ./asyncgit $(FORCE)
 
 dep-graph:
-	cargo depgraph --depth 1 | dot -Tpng > graph.png
+	@cargo depgraph --depth 1 | dot -Tpng > graph.png
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
