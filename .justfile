@@ -61,3 +61,12 @@ cargo-dist-build:
 cargo-dist-manifest:
   @make cargo-dist-manifest
 
+crawler:
+  @make crawler
+
+asyncgit:
+  @make asyncgit
+
+dep-graph:
+  @make dep-graph
+
