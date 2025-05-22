@@ -1,24 +1,44 @@
 mod bindings;
+/// pub mod cli;
 pub mod cli;
+/// mod cmd_log;
 mod cmd_log;
+/// pub mod config;
 pub mod config;
+/// mod file_watcher;
 mod file_watcher;
+/// mod git;
 mod git;
+/// mod git2_opts;
 mod git2_opts;
+/// pub mod gitu_diff;
 pub mod gitu_diff;
+/// pub mod gitui_error;
 pub mod gitui_error;
+/// mod highlight;
 mod highlight;
+/// mod items;
 mod items;
+/// mod key_parser;
 mod key_parser;
+/// mod menu;
 mod menu;
+/// mod ops;
 mod ops;
+/// mod prompt;
 mod prompt;
+/// mod screen;
 mod screen;
+/// pub mod state;
 pub mod state;
+/// mod syntax_parser;
 mod syntax_parser;
+/// pub mod term;
 pub mod term;
 #[cfg(test)]
+/// mod tests;
 mod tests;
+/// mod ui;
 mod ui;
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState, KeyModifiers};
@@ -34,9 +54,10 @@ use std::{
 };
 use term::Term;
 
-pub const LOG_FILE_NAME: &str = "gitu.log";
+///
+pub const LOG_FILE_NAME: &str = "gnostr-asyncgit.log";
 
-//                                An overview of Gitu's ui and terminology:
+//                                An overview of gnostr-asyncgit's ui and terminology:
 //
 //                Screen (src/screen/*)
 //                  │
@@ -73,8 +94,10 @@ pub const LOG_FILE_NAME: &str = "gitu.log";
 //                 │                            z Stash                               │
 //                 └──────────────────────────────────────────────────────────────────┘
 
+///
 pub type Res<T> = Result<T, Error>;
 
+///
 pub fn run(args: &cli::Args, term: &mut Term) -> Res<()> {
     let dir = find_git_dir()?;
     let repo = open_repo(&dir)?;
@@ -109,6 +132,7 @@ pub fn run(args: &cli::Args, term: &mut Term) -> Res<()> {
     Ok(())
 }
 
+///
 fn open_repo(dir: &Path) -> Res<Repository> {
     log::debug!("Opening repo");
     let repo = open_repo_from_env()?;
@@ -116,6 +140,7 @@ fn open_repo(dir: &Path) -> Res<Repository> {
     Ok(repo)
 }
 
+///
 fn find_git_dir() -> Res<PathBuf> {
     log::debug!("Finding git dir");
     let dir = PathBuf::from(
@@ -132,6 +157,7 @@ fn find_git_dir() -> Res<PathBuf> {
     Ok(dir)
 }
 
+///
 fn open_repo_from_env() -> Res<Repository> {
     match Repository::open_from_env() {
         Ok(repo) => Ok(repo),
@@ -139,6 +165,7 @@ fn open_repo_from_env() -> Res<Repository> {
     }
 }
 
+///
 fn keys_to_events(keys: &[(KeyModifiers, KeyCode)]) -> Vec<Event> {
     keys.iter()
         .map(|(mods, key)| {
