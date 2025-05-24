@@ -1079,14 +1079,20 @@ pub mod commands {
     }
     pub fn log_details_toggle(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
-            format!("Details [{}]", key_config.get_hint(key_config.keys.enter),),
+            format!(
+                "1082:Details [{}]",
+                key_config.get_hint(key_config.keys.enter),
+            ),
             "open details of selected commit",
             CMD_GROUP_LOG,
         )
     }
     pub fn chat_details_toggle(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
-            format!("Details [{}]", key_config.get_hint(key_config.keys.enter),),
+            format!(
+                "1089:Details [{}]",
+                key_config.get_hint(key_config.keys.enter),
+            ),
             "open details of selected commit",
             CMD_GROUP_LOG,
         )
@@ -1095,20 +1101,20 @@ pub mod commands {
     pub fn commit_details_open(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!(
-                "Inspect [{}]",
+                "1098:Inspect [{}]",
                 key_config.get_hint(key_config.keys.move_right),
             ),
-            "inspect selected commit in detail",
+            "1101:inspect selected commit in detail",
             CMD_GROUP_GENERAL,
         )
     }
     pub fn chat_details_open(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!(
-                "Inspect [{}]",
+                "1108:Inspect [{}]",
                 key_config.get_hint(key_config.keys.move_right),
             ),
-            "inspect selected commit in detail",
+            "1111:inspect selected commit in detail",
             CMD_GROUP_GENERAL,
         )
     }
