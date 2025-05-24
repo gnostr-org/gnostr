@@ -132,9 +132,9 @@ jobs:
       - run: gnostr ngit pull --help
       - run: gnostr ngit login --help
       - run: |
-          gnostr -d ${{ env.POW }} \
-          --nsec $(gnostr --hash 🦀) \
-          note --content "🦀" || true
+          #gnostr -d ${{ env.POW }} \
+          #--nsec $(gnostr --hash 🦀) \
+          #note --content "🦀" || true
         if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
