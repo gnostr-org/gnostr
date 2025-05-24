@@ -543,8 +543,165 @@ impl TopicList {
 
         Line::from(txt)
     }
+    #[allow(clippy::too_many_arguments)]
+    fn get_detail_to_add<'a>(
+        &self,
+        e: &'a LogEntry,
+        selected: bool,
+        tags: Option<String>,
+        local_branches: Option<String>,
+        remote_branches: Option<String>,
+        theme: &Theme,
+        width: usize, //width
+        now: DateTime<Local>,
+        marked: Option<bool>,
+    ) -> Line<'a> {
+        //
+        let mut txt: Vec<Span> =
+            Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 });
 
-    fn get_text(&self, height: usize, width: usize) -> Vec<Line> {
+        let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
+
+        let splitter_txt = Cow::from(symbol::EMPTY_SPACE);
+        let splitter = Span::styled(
+            splitter_txt,
+            if normal {
+                theme.text(true, selected)
+            } else {
+                Style::default()
+            },
+        );
+
+        // marker
+        if let Some(marked) = marked {
+            //txt.push(Span::styled(
+            //    Cow::from(if marked {
+            //        symbol::CIRCLED_G_STR //offset in home component
+            //    } else {
+            //        symbol::EMPTY_SPACE
+            //    }),
+            //    theme.log_marker(selected),
+            //));
+        } else {
+            txt.push(Span::styled(
+                Cow::from(symbol::EMPTY_SPACE),
+                theme.log_marker(selected),
+            ));
+        }
+        txt.push(splitter.clone());
+
+        let style_hash = normal
+            .then(|| theme.commit_hash(selected))
+            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_time = normal
+            .then(|| theme.commit_time(selected))
+            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_author = normal
+            .then(|| theme.commit_author(selected))
+            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_tags = normal
+            .then(|| theme.tags(selected))
+            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_branches = normal
+            .then(|| theme.branch(selected, true))
+            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_msg = normal
+            .then(|| theme.text(true, selected))
+            .unwrap_or_else(|| theme.commit_unhighlighted());
+
+        // commit hash
+        txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
+        //txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
+        //txt.push(splitter.clone());
+        //txt.push(Span::styled(
+        //    format!("{} ", &truncate_chars(&e.keys, 64 as usize)),
+        //    style_hash,
+        //));
+        txt.push(splitter.clone());
+        //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
+        //txt.push(splitter.clone());
+
+        let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
+        let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
+
+        //// commit msg
+        //// commit msg
+        //// commit msg
+        //txt.push(splitter.clone());
+        
+		//txt.push(Span::styled(
+        //    format!("{:message_width$}", &e.msg),
+        //    style_author,
+        //));
+
+        //let author = string_width_align(&e.author, author_width);
+        // commit author
+        //txt.push(Span::styled(author, style_author));
+
+        // commit tags
+        if let Some(tags) = tags {
+            txt.push(Span::styled(tags, style_tags));
+        }
+
+        if let Some(local_branches) = local_branches {
+            //txt.push(Span::styled(local_branches, style_branches));
+        }
+        //git-remote-nostr helper
+        if let Some(remote_branches) = remote_branches {
+            txt.push(Span::styled(remote_branches, style_branches));
+        }
+
+        Line::from(txt)
+    }
+
+    fn get_detail_text(&self, height: usize, width: usize) -> Vec<Line> {
+        let selection = self.relative_selection();
+        let mut txt: Vec<Line> = Vec::with_capacity(height);
+        let now = Local::now();
+        let any_marked = !self.marked.is_empty();
+        for (idx, e) in self
+            .items
+            .iter()
+            .skip(self.scroll_top.get())
+            .take(height)
+            .enumerate()
+        {
+            let tags = self
+                .tags
+                .as_ref()
+                .and_then(|t| t.get(&e.id))
+                .map(|tags| tags.iter().map(|t| format!("<{}>", t.name)).join(" "));
+
+            let local_branches = self.local_branches.get(&e.id).map(|local_branch| {
+                local_branch
+                    .iter()
+                    .map(|local_branch| format!("{{{0}}}", local_branch.name))
+                    .join(" ")
+            });
+
+            let marked = if any_marked {
+                self.is_marked(&e.id)
+            } else {
+                None
+            };
+
+            //get_detail_to_add
+            txt.push(self.get_detail_to_add(
+                e,
+                idx + self.scroll_top.get() == selection,
+                tags,
+                local_branches,
+                self.remote_branches_string(e),
+                &self.theme,
+                width - 6 as usize,
+                now,
+                marked,
+            ));
+        }
+
+        txt
+    }
+    fn get_topic_text(&self, height: usize, width: usize) -> Vec<Line> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
         let now = Local::now();
@@ -583,7 +740,7 @@ impl TopicList {
                 local_branches,
                 self.remote_branches_string(e),
                 &self.theme,
-                width,
+                width - 6 as usize,
                 now,
                 marked,
             ));
@@ -766,17 +923,17 @@ impl DrawableComponent for TopicList {
         );
         self.current_size.set(Some(current_size));
 
-        let height_in_lines = current_size.1 as usize;
+        let topic_height_in_lines = 1 as usize; //current_size.1 as usize;
         let selection = self.relative_selection();
 
         self.scroll_top.set(calc_scroll_top(
             self.scroll_top.get(),
-            height_in_lines,
+            topic_height_in_lines,
             selection,
         ));
 
         let title = format!(
-            "topiclist.rs:747: {} {}/{} ",
+            "topiclist.rs:779: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -791,33 +948,79 @@ impl DrawableComponent for TopicList {
         //render commit info in topiclist
         //
         f.render_widget(
-            Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title(Span::styled(
-                            format!(
-                                "more_text--->{:>}<---",
-                                //"{}",
-                                title.as_str().to_owned(),
-                                //more_text.as_str()
-                            ),
-                            self.theme.title(true),
-                        ))
-                        .border_style(self.theme.block(true)),
-                )
-                .alignment(Alignment::Left),
+            Paragraph::new(
+                self.get_topic_text(topic_height_in_lines, (current_size.0 + 10) as usize),
+            )
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(Span::styled(
+                        format!(
+                            "pubkey--->{:>}<---",
+                            //"{}",
+                            title.as_str().to_owned(),
+                            //more_text.as_str()
+                        ),
+                        self.theme.title(true),
+                    ))
+                    .border_style(self.theme.block(true)),
+            )
+            .alignment(Alignment::Left),
+            right_chunks[0],
+        );
+        f.render_widget(
+            Paragraph::new(self.get_detail_text(
+                10 as usize * topic_height_in_lines,
+                (current_size.0 - 6) as usize,
+            ))
+            .block(
+                Block::default()
+                    //.borders(Borders::ALL)
+                    //.title(Span::styled(
+                    //    format!(
+                    //        "more_detail--->{:>}<---",
+                    //        //"{}",
+                    //        title.as_str().to_owned(),
+                    //        //more_text.as_str()
+                    //    ),
+                    //    self.theme.title(true),
+                    //))
+                    .border_style(self.theme.block(true)),
+            )
+            .alignment(Alignment::Left),
+            right_chunks[1],
+        );
+        f.render_widget(
+            Paragraph::new(self.get_topic_text(
+                10 as usize * topic_height_in_lines,
+                (current_size.0 + 10) as usize,
+            ))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(Span::styled(
+                        format!(
+                            "chat widget--->{:>}<---",
+                            //"{}",
+                            title.as_str().to_owned(),
+                            //more_text.as_str()
+                        ),
+                        self.theme.title(true),
+                    ))
+                    .border_style(self.theme.block(true)),
+            )
+            .alignment(Alignment::Left),
             right_chunks[2], //constrain to half width
         );
 
-        draw_scrollbar(
-            f,
-            area,
-            &self.theme,
-            self.commits.len(),
-            self.selection,
-            Orientation::Vertical,
-        );
+        //draw_scrollbar(
+        //    f,
+        //    area,
+        //    &self.theme,
+        //    self.commits.len(),
+        //    self.selection,
+        //    Orientation::Vertical,
+        //);
         //
         Ok(())
     }
