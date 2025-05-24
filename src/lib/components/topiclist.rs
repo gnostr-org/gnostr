@@ -740,9 +740,9 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(3),//help and tools height
-                    Constraint::Length(3),//timer
-                    Constraint::Percentage(100),//table
+                    Constraint::Length(3),       //help and tools height
+                    Constraint::Length(3),       //timer
+                    Constraint::Percentage(100), //table
                 ]
                 .as_ref(),
             )
@@ -752,79 +752,75 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(3),//topic
-                    Constraint::Length(10),//squares
-                    Constraint::Percentage(100),//tools view
+                    Constraint::Length(3),       //topic
+                    Constraint::Length(10),      //squares
+                    Constraint::Percentage(100), //tools view
                 ]
                 .as_ref(),
             )
             .split(chunks[0]);
 
+        let current_size = (
+            area.width.saturating_sub(2),
+            area.height.saturating_sub(2) - right_chunks.get(1).unwrap().height - 3,
+        );
+        self.current_size.set(Some(current_size));
 
-            let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2) - right_chunks.get(1).unwrap().height - 3);
-            self.current_size.set(Some(current_size));
+        let height_in_lines = current_size.1 as usize;
+        let selection = self.relative_selection();
 
-            let height_in_lines = current_size.1 as usize;
-            let selection = self.relative_selection();
+        self.scroll_top.set(calc_scroll_top(
+            self.scroll_top.get(),
+            height_in_lines,
+            selection,
+        ));
 
-            self.scroll_top.set(calc_scroll_top(
-                self.scroll_top.get(),
-                height_in_lines,
-                selection,
-            ));
+        let title = format!(
+            "topiclist.rs:747: {} {}/{} ",
+            self.title,
+            self.commits.len().saturating_sub(self.selection),
+            self.commits.len(),
+        );
+        //let more_text = format!(
+        //    " {} {}/{} ",
+        //    self.title,
+        //    self.commits.len().saturating_sub(self.selection),
+        //    self.commits.len(),
+        //);
 
-            let title = format!(
-                "topiclist.rs:747: {} {}/{} ",
-                self.title,
-                self.commits.len().saturating_sub(self.selection),
-                self.commits.len(),
-            );
-            //let more_text = format!(
-            //    " {} {}/{} ",
-            //    self.title,
-            //    self.commits.len().saturating_sub(self.selection),
-            //    self.commits.len(),
-            //);
+        //render commit info in topiclist
+        //
+        f.render_widget(
+            Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(Span::styled(
+                            format!(
+                                "more_text--->{:>}<---",
+                                //"{}",
+                                title.as_str().to_owned(),
+                                //more_text.as_str()
+                            ),
+                            self.theme.title(true),
+                        ))
+                        .border_style(self.theme.block(true)),
+                )
+                .alignment(Alignment::Left),
+            right_chunks[2], //constrain to half width
+        );
 
-
-
-
-
-
-
-            //render commit info in topiclist
-            //
-            f.render_widget(
-                Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title(Span::styled(
-                                format!(
-                                    "more_text--->{:>}<---",
-                                    //"{}",
-                                    title.as_str().to_owned(),
-                                    //more_text.as_str()
-                                ),
-                                self.theme.title(true),
-                            ))
-                            .border_style(self.theme.block(true)),
-                    )
-                    .alignment(Alignment::Left),
-                right_chunks[2], //constrain to half width
-            );
-
-            draw_scrollbar(
-                f,
-                area,
-                &self.theme,
-                self.commits.len(),
-                self.selection,
-                Orientation::Vertical,
-            );
-            //
-            Ok(())
-        }
+        draw_scrollbar(
+            f,
+            area,
+            &self.theme,
+            self.commits.len(),
+            self.selection,
+            Orientation::Vertical,
+        );
+        //
+        Ok(())
+    }
 }
 
 impl Component for TopicList {
