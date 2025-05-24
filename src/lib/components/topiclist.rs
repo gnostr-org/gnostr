@@ -723,70 +723,108 @@ impl TopicList {
 
 impl DrawableComponent for TopicList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
+        //let chunks = Layout::default()
+        //    .direction(Direction::Horizontal)
+        //    //first in                         //second in
+        //    .constraints([Constraint::Min(70), Constraint::Percentage(0)].as_ref())
+        //    .split(area);
+
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            //first in                         //second in
+            //.constraints([Constraint::Percentage(33), Constraint::Min(100)].as_ref())
             .constraints([Constraint::Min(70), Constraint::Percentage(0)].as_ref())
+            //.split(f.size());
             .split(area);
 
-        let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
-        self.current_size.set(Some(current_size));
+        let left_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                    Constraint::Length(3),//help and tools height
+                    Constraint::Length(3),//timer
+                    Constraint::Percentage(100),//table
+                ]
+                .as_ref(),
+            )
+            .split(chunks[0]);
 
-        let height_in_lines = current_size.1 as usize;
-        let selection = self.relative_selection();
+        let right_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                    Constraint::Length(3),//topic
+                    Constraint::Length(10),//squares
+                    Constraint::Percentage(100),//tools view
+                ]
+                .as_ref(),
+            )
+            .split(chunks[0]);
 
-        self.scroll_top.set(calc_scroll_top(
-            self.scroll_top.get(),
-            height_in_lines,
-            selection,
-        ));
 
-        let title = format!(
-            "topiclist.rs:747: {} {}/{} ",
-            self.title,
-            self.commits.len().saturating_sub(self.selection),
-            self.commits.len(),
-        );
-        //let more_text = format!(
-        //    " {} {}/{} ",
-        //    self.title,
-        //    self.commits.len().saturating_sub(self.selection),
-        //    self.commits.len(),
-        //);
+            let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2) - right_chunks.get(1).unwrap().height - 3);
+            self.current_size.set(Some(current_size));
 
-        //render commit info in topiclist
-        //
-        f.render_widget(
-            Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title(Span::styled(
-                            format!(
-                                "more_text--->{:>}<---",
-                                //"{}",
-                                title.as_str().to_owned(),
-                                //more_text.as_str()
-                            ),
-                            self.theme.title(true),
-                        ))
-                        .border_style(self.theme.block(true)),
-                )
-                .alignment(Alignment::Left),
-            chunks[0], //constrain to half width
-        );
+            let height_in_lines = current_size.1 as usize;
+            let selection = self.relative_selection();
 
-        draw_scrollbar(
-            f,
-            area,
-            &self.theme,
-            self.commits.len(),
-            self.selection,
-            Orientation::Vertical,
-        );
-        //
-        Ok(())
-    }
+            self.scroll_top.set(calc_scroll_top(
+                self.scroll_top.get(),
+                height_in_lines,
+                selection,
+            ));
+
+            let title = format!(
+                "topiclist.rs:747: {} {}/{} ",
+                self.title,
+                self.commits.len().saturating_sub(self.selection),
+                self.commits.len(),
+            );
+            //let more_text = format!(
+            //    " {} {}/{} ",
+            //    self.title,
+            //    self.commits.len().saturating_sub(self.selection),
+            //    self.commits.len(),
+            //);
+
+
+
+
+
+
+
+            //render commit info in topiclist
+            //
+            f.render_widget(
+                Paragraph::new(self.get_text(height_in_lines, (current_size.0 + 10) as usize))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title(Span::styled(
+                                format!(
+                                    "more_text--->{:>}<---",
+                                    //"{}",
+                                    title.as_str().to_owned(),
+                                    //more_text.as_str()
+                                ),
+                                self.theme.title(true),
+                            ))
+                            .border_style(self.theme.block(true)),
+                    )
+                    .alignment(Alignment::Left),
+                right_chunks[2], //constrain to half width
+            );
+
+            draw_scrollbar(
+                f,
+                area,
+                &self.theme,
+                self.commits.len(),
+                self.selection,
+                Orientation::Vertical,
+            );
+            //
+            Ok(())
+        }
 }
 
 impl Component for TopicList {
