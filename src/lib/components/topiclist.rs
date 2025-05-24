@@ -136,7 +136,6 @@ impl TopicList {
     ///
     pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
-
         commits
     }
 
@@ -526,15 +525,15 @@ impl TopicList {
 
         let author = string_width_align(&e.author, author_width);
         // commit author
-        txt.push(Span::styled(author, style_author));
+        //txt.push(Span::styled(author, style_author));
 
         // commit tags
         if let Some(tags) = tags {
-            txt.push(Span::styled(tags, style_tags));
+            //txt.push(Span::styled(tags, style_tags));
         }
 
         if let Some(local_branches) = local_branches {
-            txt.push(Span::styled(local_branches, style_branches));
+            //txt.push(Span::styled(local_branches, style_branches));
         }
         //git-remote-nostr helper
         if let Some(remote_branches) = remote_branches {
@@ -566,9 +565,11 @@ impl TopicList {
         let splitter = Span::styled(
             splitter_txt,
             if normal {
-                theme.text(true, selected)
+                theme.text(true, false)
+                //Style::default()
             } else {
-                Style::default()
+                theme.text(true, false)
+                //Style::default()
             },
         );
 
@@ -576,17 +577,18 @@ impl TopicList {
         if let Some(marked) = marked {
             //txt.push(Span::styled(
             //    Cow::from(if marked {
-            //        symbol::CIRCLED_G_STR //offset in home component
+            //        //symbol::CIRCLED_G_STR //offset in home component
+            //        symbol::EMPTY_SPACE
             //    } else {
             //        symbol::EMPTY_SPACE
             //    }),
             //    theme.log_marker(selected),
             //));
         } else {
-            txt.push(Span::styled(
-                Cow::from(symbol::EMPTY_SPACE),
-                theme.log_marker(selected),
-            ));
+            //txt.push(Span::styled(
+            //    Cow::from(symbol::EMPTY_SPACE),
+            //    theme.log_marker(selected),
+            //));
         }
         txt.push(splitter.clone());
 
@@ -610,7 +612,9 @@ impl TopicList {
             .unwrap_or_else(|| theme.commit_unhighlighted());
 
         // commit hash
-        txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
+        //txt.push(Span::styled(Cow::from(&*""), style_hash));
+
+        //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
         //txt.push(splitter.clone());
         //txt.push(Span::styled(
@@ -628,8 +632,8 @@ impl TopicList {
         //// commit msg
         //// commit msg
         //txt.push(splitter.clone());
-        
-		//txt.push(Span::styled(
+
+        //txt.push(Span::styled(
         //    format!("{:message_width$}", &e.msg),
         //    style_author,
         //));
@@ -640,15 +644,18 @@ impl TopicList {
 
         // commit tags
         if let Some(tags) = tags {
-            txt.push(Span::styled(tags, style_tags));
+            txt.push(Span::styled(tags, Style::default()));
+            txt.push(splitter.clone());
         }
 
         if let Some(local_branches) = local_branches {
             //txt.push(Span::styled(local_branches, style_branches));
+            txt.push(splitter.clone());
         }
         //git-remote-nostr helper
         if let Some(remote_branches) = remote_branches {
             txt.push(Span::styled(remote_branches, style_branches));
+            txt.push(splitter.clone());
         }
 
         Line::from(txt)
@@ -909,8 +916,8 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(3),       //topic
-                    Constraint::Length(10),      //squares
+                    Constraint::Length(2),       //topic
+                    Constraint::Length(2),       //squares
                     Constraint::Percentage(100), //tools view
                 ]
                 .as_ref(),
@@ -953,7 +960,7 @@ impl DrawableComponent for TopicList {
             )
             .block(
                 Block::default()
-                    .borders(Borders::ALL)
+                    .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
                     .title(Span::styled(
                         format!(
                             "pubkey--->{:>}<---",
@@ -963,7 +970,7 @@ impl DrawableComponent for TopicList {
                         ),
                         self.theme.title(true),
                     ))
-                    .border_style(self.theme.block(true)),
+                    .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
             right_chunks[0],
@@ -975,6 +982,7 @@ impl DrawableComponent for TopicList {
             ))
             .block(
                 Block::default()
+                    .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
                     //.borders(Borders::ALL)
                     //.title(Span::styled(
                     //    format!(
@@ -985,7 +993,7 @@ impl DrawableComponent for TopicList {
                     //    ),
                     //    self.theme.title(true),
                     //))
-                    .border_style(self.theme.block(true)),
+                    .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
             right_chunks[1],
