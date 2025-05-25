@@ -177,7 +177,7 @@ jobs:
           -t "$(gnostr-weeble)" \
           -t "$(gnostr-blockheight)" \
           -t "$(gnostr-wobble)" \
-          --hex | gnostr-xq .id) && \
+          --hex) && \
           echo EVENT=$EVENT && \
           gnostr-fetch-by-id ${{ env.NOS }} $EVENT || true;
         if: matrix.os != 'windows-latest'
