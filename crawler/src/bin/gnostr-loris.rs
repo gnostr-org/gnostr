@@ -73,7 +73,7 @@ fn _get_my_ip() -> Result<String, Box<dyn std::error::Error>> {
     //use std::io;
     use std::process::Command;
 
-    let output = Command::new("dig")
+    let mut output = Command::new("dig")
         .arg("+short")
         .arg("myip.opendns.com")
         .arg("@resolver1.opendns.com")
@@ -84,17 +84,7 @@ fn _get_my_ip() -> Result<String, Box<dyn std::error::Error>> {
         Ok(ip_address.trim().to_string())
     } else {
         // Convert stderr to a String
-        match str::from_utf8(&output.stderr) {
-            Ok(error_string) => {
-                //eprintln!("Error executing dig command: {}", error_string.trim());
-                Ok(format!("Raw stderr: {:?}", error_string.trim()))
-            }
-            Err(e) => {
-                eprintln!("Error converting stderr to String: {:?}", e);
-                //eprintln!("Raw stderr: {:?}", output.stderr);
-                Ok(format!("Raw stderr: {:?}", e))
-            }
-        }
+        Ok(format!("Raw stderr: {:?}", output.stderr))
     }
 }
 
