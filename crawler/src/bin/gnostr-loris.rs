@@ -1,5 +1,5 @@
 use chrono::Local;
-use clap::Parser;
+use clap::{Arg, ArgAction, Command, Parser};
 use console::Term;
 //use dns_lookup::lookup_addr;
 //use dns_lookup::lookup_host;
@@ -8,7 +8,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::io::Write;
-use std::net::SocketAddr;
+//use std::net::SocketAddr;
 use std::net::{IpAddr, Ipv4Addr, /*Ipv6Addr,*/ TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
@@ -223,79 +223,61 @@ fn parse_args() -> Args {
     }
 
     let _ = Args::new(); //just a test
-                         //let matches = App::new("Slow Loris")
-                         //    .about("A slow loris attack implementation in Rust")
-                         //    //.author(clap::crate_authors!())
-                         //    //.version(clap::crate_version!())
-                         //    .arg(
-                         //        Arg::with_name("address")
-                         //            .help("The ip address of the server.")
-                         //            .takes_value(true)
-                         //            .default_value("127.0.0.1")
-                         //            .required(true),
-                         //    )
-                         //    .arg(
-                         //        Arg::with_name("domain")
-                         //            .help("The domain of the server")
-                         //            .takes_value(true)
-                         //            .default_value("www.google.com")
-                         //            .required(false),
-                         //    )
-                         //    .arg(
-                         //        Arg::with_name("connections")
-                         //            .help("The amount of connections established")
-                         //            .short("c")
-                         //            .long("connections")
-                         //            .takes_value(true)
-                         //            .default_value("2000")
-                         //            .validator(|connections| {
-                         //                if connections.parse::<u64>().is_ok() {
-                         //                    Ok(())
-                         //                } else {
-                         //                    Err("must be an unsigned integer".to_string())
-                         //                }
-                         //            }),
-                         //    )
-                         //    .arg(
-                         //        Arg::with_name("timeout")
-                         //            .help(
-                         //                "specifies the timeout between each send byte in seconds\n\
-                         //        takes values in the form of: <time> | <start>..<end> | <start>..=<end>\n",
-                         //            )
-                         //            .short("t")
-                         //            .long("timeout")
-                         //            .takes_value(true)
-                         //            .default_value("5..10")
-                         //            .validator(|timeout| validate_range(&timeout)),
-                         //    )
-                         //    .arg(
-                         //        Arg::with_name("body_length")
-                         //            .help(
-                         //                "specifies the body length of the request each connection sends\n\
-                         //        takes values in the form of: <length> | <start>..<end> | <start>..=<end>\n",
-                         //            )
-                         //            .short("b")
-                         //            .long("body_length")
-                         //            .takes_value(true)
-                         //            .default_value("11000")
-                         //            .validator(|length| validate_range(&length)),
-                         //    )
-                         //    .arg(
-                         //        Arg::with_name("port")
-                         //            .help("specifies the port to connect to")
-                         //            .short("p")
-                         //            .long("port")
-                         //            .takes_value(true)
-                         //            .default_value("443")
-                         //            .validator(|port| {
-                         //                if port.parse::<u16>().is_ok() {
-                         //                    Ok(())
-                         //                } else {
-                         //                    Err("must be an unsigned integer".to_string())
-                         //                }
-                         //            }),
-                         //    )
-                         //    .get_matches();
+
+    let matches = Command::new("Slow Loris")
+                             .about("A slow loris attack implementation in Rust")
+                             //.author(clap::crate_authors!())
+                             //.version(clap::crate_version!())
+                             .arg(
+                                 Arg::new("address")
+                                     .help("The ip address of the server.")
+                                     //.takes_value(true)
+                                     .default_value("127.0.0.1")
+                                     .required(true),
+                             )
+                             .arg(
+                                 Arg::new("domain")
+                                     .help("The domain of the server")
+                                     //.takes_value(true)
+                                     .default_value("www.google.com")
+                                     .required(false),
+                             )
+                             .arg(
+                                 Arg::new("connections")
+                                     .help("The amount of connections established")
+                                     .short('c')
+                                     .long("connections")
+                                     .default_value("2000"),
+                             )
+                             .arg(
+                                 Arg::new("timeout")
+                                     .help(
+                                         "specifies the timeout between each send byte in seconds\n\
+                                 takes values in the form of: <time> | <start>..<end> | <start>..=<end>\n",
+                                     )
+                                     .short('t')
+                                     .long("timeout")
+                                     //.takes_value(true)
+                                     .default_value("5..10"),
+                             )
+                             .arg(
+                                 Arg::new("body_length")
+                                     .help(
+                                         "specifies the body length of the request each connection sends\n\
+                                 takes values in the form of: <length> | <start>..<end> | <start>..=<end>\n",
+                                     )
+                                     .short('b')
+                                     .long("body_length")
+                                     .default_value("11000"),
+                             )
+                             .arg(
+                                 Arg::new("port")
+                                     .help("specifies the port to connect to")
+                                     .short('p')
+                                     .long("port")
+                                     .default_value("443")
+                             )
+                             .get_matches();
 
     //let port = matches.value_of("port").unwrap().parse().unwrap();
     let max_connections = 2000u64; //matches.value_of("connections").unwrap().parse().unwrap();
