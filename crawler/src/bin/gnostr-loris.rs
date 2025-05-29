@@ -86,13 +86,13 @@ fn _get_my_ip() -> Result<String, Box<dyn std::error::Error>> {
         // Convert stderr to a String
         match str::from_utf8(&output.stderr) {
             Ok(error_string) => {
-                eprintln!("Error executing dig command: {}", error_string.trim());
+                //eprintln!("Error executing dig command: {}", error_string.trim());
                 Ok(format!("Raw stderr: {:?}", error_string.trim()))
             }
             Err(e) => {
                 eprintln!("Error converting stderr to String: {:?}", e);
-                eprintln!("Raw stderr: {:?}", output.stderr);
-                Ok(format!("Raw stderr: {:?}", output.stderr))
+                //eprintln!("Raw stderr: {:?}", output.stderr);
+                Ok(format!("Raw stderr: {:?}", e))
             }
         }
     }
