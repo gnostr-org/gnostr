@@ -3,10 +3,12 @@ use clap::Parser;
 use console::Term;
 //use dns_lookup::lookup_addr;
 //use dns_lookup::lookup_host;
+use dns_lookup::getnameinfo;
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::io::Write;
+use std::net::SocketAddr;
 use std::net::{IpAddr, Ipv4Addr, /*Ipv6Addr,*/ TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
@@ -206,7 +208,7 @@ fn main() {
 
 /// parses the arguments given to the application
 fn parse_args() -> Args {
-    use clap::{Arg};
+    use clap::{Arg, Parser};
     use dns_lookup::lookup_host;
 
     fn validate_range(string: &str) -> Result<(), String> {
@@ -221,137 +223,137 @@ fn parse_args() -> Args {
     }
 
     let _ = Args::new(); //just a test
-    //let matches = App::new("Slow Loris")
-    //    .about("A slow loris attack implementation in Rust")
-    //    //.author(clap::crate_authors!())
-    //    //.version(clap::crate_version!())
-    //    .arg(
-    //        Arg::with_name("address")
-    //            .help("The ip address of the server.")
-    //            .takes_value(true)
-    //            .default_value("127.0.0.1")
-    //            .required(true),
-    //    )
-    //    .arg(
-    //        Arg::with_name("domain")
-    //            .help("The domain of the server")
-    //            .takes_value(true)
-    //            .default_value("www.google.com")
-    //            .required(false),
-    //    )
-    //    .arg(
-    //        Arg::with_name("connections")
-    //            .help("The amount of connections established")
-    //            .short("c")
-    //            .long("connections")
-    //            .takes_value(true)
-    //            .default_value("2000")
-    //            .validator(|connections| {
-    //                if connections.parse::<u64>().is_ok() {
-    //                    Ok(())
-    //                } else {
-    //                    Err("must be an unsigned integer".to_string())
-    //                }
-    //            }),
-    //    )
-    //    .arg(
-    //        Arg::with_name("timeout")
-    //            .help(
-    //                "specifies the timeout between each send byte in seconds\n\
-    //        takes values in the form of: <time> | <start>..<end> | <start>..=<end>\n",
-    //            )
-    //            .short("t")
-    //            .long("timeout")
-    //            .takes_value(true)
-    //            .default_value("5..10")
-    //            .validator(|timeout| validate_range(&timeout)),
-    //    )
-    //    .arg(
-    //        Arg::with_name("body_length")
-    //            .help(
-    //                "specifies the body length of the request each connection sends\n\
-    //        takes values in the form of: <length> | <start>..<end> | <start>..=<end>\n",
-    //            )
-    //            .short("b")
-    //            .long("body_length")
-    //            .takes_value(true)
-    //            .default_value("11000")
-    //            .validator(|length| validate_range(&length)),
-    //    )
-    //    .arg(
-    //        Arg::with_name("port")
-    //            .help("specifies the port to connect to")
-    //            .short("p")
-    //            .long("port")
-    //            .takes_value(true)
-    //            .default_value("443")
-    //            .validator(|port| {
-    //                if port.parse::<u16>().is_ok() {
-    //                    Ok(())
-    //                } else {
-    //                    Err("must be an unsigned integer".to_string())
-    //                }
-    //            }),
-    //    )
-    //    .get_matches();
+                         //let matches = App::new("Slow Loris")
+                         //    .about("A slow loris attack implementation in Rust")
+                         //    //.author(clap::crate_authors!())
+                         //    //.version(clap::crate_version!())
+                         //    .arg(
+                         //        Arg::with_name("address")
+                         //            .help("The ip address of the server.")
+                         //            .takes_value(true)
+                         //            .default_value("127.0.0.1")
+                         //            .required(true),
+                         //    )
+                         //    .arg(
+                         //        Arg::with_name("domain")
+                         //            .help("The domain of the server")
+                         //            .takes_value(true)
+                         //            .default_value("www.google.com")
+                         //            .required(false),
+                         //    )
+                         //    .arg(
+                         //        Arg::with_name("connections")
+                         //            .help("The amount of connections established")
+                         //            .short("c")
+                         //            .long("connections")
+                         //            .takes_value(true)
+                         //            .default_value("2000")
+                         //            .validator(|connections| {
+                         //                if connections.parse::<u64>().is_ok() {
+                         //                    Ok(())
+                         //                } else {
+                         //                    Err("must be an unsigned integer".to_string())
+                         //                }
+                         //            }),
+                         //    )
+                         //    .arg(
+                         //        Arg::with_name("timeout")
+                         //            .help(
+                         //                "specifies the timeout between each send byte in seconds\n\
+                         //        takes values in the form of: <time> | <start>..<end> | <start>..=<end>\n",
+                         //            )
+                         //            .short("t")
+                         //            .long("timeout")
+                         //            .takes_value(true)
+                         //            .default_value("5..10")
+                         //            .validator(|timeout| validate_range(&timeout)),
+                         //    )
+                         //    .arg(
+                         //        Arg::with_name("body_length")
+                         //            .help(
+                         //                "specifies the body length of the request each connection sends\n\
+                         //        takes values in the form of: <length> | <start>..<end> | <start>..=<end>\n",
+                         //            )
+                         //            .short("b")
+                         //            .long("body_length")
+                         //            .takes_value(true)
+                         //            .default_value("11000")
+                         //            .validator(|length| validate_range(&length)),
+                         //    )
+                         //    .arg(
+                         //        Arg::with_name("port")
+                         //            .help("specifies the port to connect to")
+                         //            .short("p")
+                         //            .long("port")
+                         //            .takes_value(true)
+                         //            .default_value("443")
+                         //            .validator(|port| {
+                         //                if port.parse::<u16>().is_ok() {
+                         //                    Ok(())
+                         //                } else {
+                         //                    Err("must be an unsigned integer".to_string())
+                         //                }
+                         //            }),
+                         //    )
+                         //    .get_matches();
 
     //let port = matches.value_of("port").unwrap().parse().unwrap();
-    //let max_connections = matches.value_of("connections").unwrap().parse().unwrap();
-    //let (timeout_min, timeout_max) = parse_range(matches.value_of("timeout").unwrap()).unwrap();
-    //let body_length = parse_range(matches.value_of("body_length").unwrap()).unwrap();
+    let max_connections = 2000u64; //matches.value_of("connections").unwrap().parse().unwrap();
+    let (timeout_min, timeout_max) = parse_range(&"5..10".to_string()).unwrap();
+    let body_length = parse_range(&"11000".to_string()).unwrap();
     let (body_length_min, body_length_max) = (body_length.0 as usize, body_length.1 as usize);
 
-    use dns_lookup::getnameinfo;
+    //use dns_lookup::getnameinfo;
     use std::net::{IpAddr, SocketAddr};
     let host;
     //let ip;
     let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
-    //let port = args.port;
-    //let address = matches.value_of("address").unwrap();
+    let port = 443u16; //args.port;
+    let address = "www.google.com"; //matches.value_of("address").unwrap();
     println!("address:{}", address);
-    //match address.parse::<IpAddr>() {
-    //    Ok(parsed) => {
-    //        host = dns_lookup::lookup_addr(&parsed).expect("Could not find hostname for given ip");
-    //        ip = parsed;
-    //        tracing::info!("{}:{}", host, ip);
-    //    }
-    //    Err(_) => {
-    //        host = address.to_string();
-    //        println!("host={}", host);
-    //        tracing::debug!("{}", host);
+    match address.parse::<IpAddr>() {
+        Ok(parsed) => {
+            host = dns_lookup::lookup_addr(&parsed).expect("Could not find hostname for given ip");
+            ip = parsed;
+            tracing::info!("{}:{}", host, ip);
+        }
+        Err(_) => {
+            host = address.to_string();
+            println!("host={}", host);
+            tracing::debug!("{}", host);
 
-    //        //let hostname = "localhost";
-    //        //let ips: Vec<std::net::IpAddr> = lookup_host(hostname).unwrap();
-    //        //            let socket: SocketAddr = (host, 0).into();
+            //let hostname = "localhost";
+            //let ips: Vec<std::net::IpAddr> = lookup_host(hostname).unwrap();
+            //            let socket: SocketAddr = (host, 0).into();
 
-    //        //let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
-    //        let socket: SocketAddr = (ip, port).into();
-    //        tracing::info!("{}", socket);
+            //let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
+            let socket: SocketAddr = (ip, port).into();
+            tracing::info!("{}", socket);
 
-    //        //host = getnameinfo(&socket, 0).unwrap();
+            //host = getnameinfo(&socket, 0).unwrap();
 
-    //        let (name, service) = match getnameinfo(&socket, 0) {
-    //            Ok((n, s)) => (n, s),
-    //            Err(e) => panic!("Failed to lookup socket {:?}", e),
-    //        };
+            let (name, service) = match getnameinfo(&socket, 0) {
+                Ok((n, s)) => (n, s),
+                Err(e) => panic!("Failed to lookup socket {:?}", e),
+            };
 
-    //        println!("name={}", name);
-    //        println!("service={}", service);
+            println!("name={}", name);
+            println!("service={}", service);
 
-    //        let ips: Vec<std::net::IpAddr> =
-    //            lookup_host(&host).unwrap_or(vec!["192.168.1.1".parse().unwrap()]);
-    //        //assert!(ips.contains(&"127.0.0.1".parse().unwrap()));
-    //        //assert!(ips.contains(&"127.0.0.1".parse().unwrap()));
+            let ips: Vec<std::net::IpAddr> =
+                lookup_host(&host).unwrap_or(vec!["192.168.1.1".parse().unwrap()]);
+            //assert!(ips.contains(&"127.0.0.1".parse().unwrap()));
+            //assert!(ips.contains(&"127.0.0.1".parse().unwrap()));
 
-    //        //ip = match lookup_host(address) {
-    //        //ip = match lookup_host(hostname) {
-    //        ip = match lookup_host(&host) {
-    //            Ok(ips) if ips.len() == 1 => ips[0],
-    //            Ok(ips) if ips.len() == 2 => ips[1],
-    //            _ => ips[0], //panic!("Could not find ip for given domain"),
-    //        }
-    //    }
-    //}
+            //ip = match lookup_host(address) {
+            //ip = match lookup_host(hostname) {
+            ip = match lookup_host(&host) {
+                Ok(ips) if ips.len() == 1 => ips[0],
+                Ok(ips) if ips.len() == 2 => ips[1],
+                _ => ips[0], //panic!("Could not find ip for given domain"),
+            }
+        }
+    }
 
     Args {
         host,
