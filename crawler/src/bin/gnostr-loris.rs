@@ -233,7 +233,7 @@ fn parse_args() -> Args {
                                      .help("The ip address of the server.")
                                      //.takes_value(true)
                                      .default_value("127.0.0.1")
-                                     .required(true),
+                                     .required(false),
                              )
                              .arg(
                                  Arg::new("domain")
