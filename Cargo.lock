@@ -2650,7 +2650,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.80"
+version = "0.0.81"
 dependencies = [
  "anyhow",
  "async-std",
@@ -2859,7 +2859,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "chrono",
  "clap 4.5.37",
