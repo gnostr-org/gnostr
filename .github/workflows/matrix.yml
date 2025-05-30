@@ -86,12 +86,15 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
-      - run: cargo install --locked cargo-binstall@1.9.0
+      - run: cargo install --locked cargo-binstall@1.9.0 || true
+        #if: matrix.os != 'windows-latest'
       - run: cargo-binstall --no-confirm mempool_space
       - run: cargo-binstall --no-confirm gnostr-xq
-      #- run: cargo-binstall --no-confirm gnostr-bins
-      - run: cargo install gnostr-bins
+      - run: cargo-binstall --no-confirm gnostr-bins
+      #- run: cargo install gnostr-bins
+        if: matrix.os != 'windows-latest'
       - run: mkdir -p ~/bin
+        if: matrix.os != 'windows-latest'
 
       ### objective: streamline gnostr installation on macos/brewlinux
       #- run: brew install openssl@3 || true
@@ -219,15 +222,15 @@ jobs:
           --hex
         if: matrix.os != 'windows-latest'
 
-      #- run: |
-      #    gnostr \
-      #    -d ${{ env.POW }} \
-      #    -r ${{ env.NOS }} \
-      #    react \
-      #    -e 3979823506207a6e018db0c8a3ea121ba8521c1dca392f437ede8d3c7406830f \
-      #    -r "hello $(date +%s)" \
-      #    #| gnostr-xq
-      #  if: matrix.os != 'windows-latest'
+      - run: |
+          gnostr \
+          -d ${{ env.POW }} \
+          -r ${{ env.NOS }} \
+          react \
+          -e fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c \
+          -r "first git commit over #nostr!" \
+          | gnostr-xq
+        if: matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
