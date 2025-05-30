@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.83"
+version = "0.0.84"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>", "TODO <add_more@gnostr.org>"]
@@ -82,6 +82,9 @@ bytesize = { version = "1.3", default-features = false }
 chacha20poly1305 = "0.10.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4.3.19", features = ["derive", "env", "cargo"] }
+clean-path = "0.2.1"
+colored = "2.0.0"
+comrak = "0.18.0"
 console = "0.15.7"
 ##clap = { version = "4.5", features = ["env", "cargo"] }
 crossbeam-channel = "0.5"
@@ -164,9 +167,12 @@ ratatui = { version = "0.28", default-features = false, features = [
 rayon-core = "1.12"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 ron = "0.8"
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = "0.37.1"
 scopeguard = "1.2"
 scopetime = { path = "./scopetime", version = "0.1" }
 scrypt = "0.11.0"
+sd-notify = "0.4.1"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 
@@ -178,6 +184,7 @@ serial_test = "2.0.0"
 sha2 = "0.10.8"
 #serde = "1.0"
 shellexpand = "3.1"
+shellwords = "1.1.0"
 simplelog = { version = "0.12", default-features = false }
 struct-patch = "0.4"
 syntect = { version = "5.2", default-features = false, features = [
@@ -187,9 +194,13 @@ syntect = { version = "5.2", default-features = false, features = [
     "html",
 ] }
 temp-env = "0.3.6"
+tempfile = "3.5.0"
+tera = "1.18.1"
+textwrap = "0.16.0"
 time = "0.1.39"
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = "0.20"
+toml = "0.7.3"
 ##tracing = { version = "0.1.37", features = ["std", "attributes"] }
 tracing = { version = "0.1.38", default-features = false }
 tracing-core = "0.1.33"

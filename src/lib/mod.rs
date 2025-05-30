@@ -17,11 +17,13 @@ pub mod login;
 pub mod chat;
 ///
 pub mod gnostr;
-/// ngit::repo_ref
+///
 pub mod repo_ref;
-/// ngit::repo_state
+///
 pub mod repo_state;
-/// ngit::sub_commands
+///
+pub mod ssh;
+///
 pub mod sub_commands;
 ///
 pub mod utils;
