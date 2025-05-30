@@ -17,6 +17,7 @@ pub async fn start() -> anyhow::Result<()> {
     let state = Arc::new(Mutex::new(state));
 
     info!("Starting server...");
+    #[cfg(not(target_os = "windows"))]
     let _ = sd_notify::notify(true, &[sd_notify::NotifyState::Ready]);
     ssh::start_server(state).await?;
     Ok(())
