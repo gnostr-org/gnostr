@@ -1,3 +1,5 @@
+gnostr.git
+gnostr/*
 *.png
 relays.yaml**
 **DS_Store
