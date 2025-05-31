@@ -26,7 +26,7 @@ jobs:
       FORCE: "--force"
       GNOSTR: "gnostr"
       NOSTRIL: "nostril"
-      POW: "28"
+      POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
     strategy:
