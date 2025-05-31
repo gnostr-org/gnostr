@@ -122,7 +122,7 @@ jobs:
           make cargo-install || sudo make cargo-install
         if: matrix.os != 'windows-latest'
       - run: |
-          cargo install --path .
+          cargo install --path . --force
         if: matrix.os == 'windows-latest'
       - run: gnostr --help
       #- run: gnostr ngit >/dev/null || true
