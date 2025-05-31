@@ -1,0 +1,55 @@
+[package]
+name = "gnostr-types"
+version = "0.7.5"
+edition = "2021"
+homepage = "https://github.com/gnostr-org/gnostr"
+authors = ["gnostr <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>"]
+description = "gnostr: a git+nostr workflow utility"
+repository = "https://github.com/gnostr-org/gnostr"
+documentation = "https://docs.rs/gnostr-bins"
+readme = "README.md"
+keywords = [ "git", "nostr", "gnostr" ]
+license = "MIT"
+
+[features]
+default = []
+
+[dependencies]
+aes = "0.8"
+base64 = "0.22"
+bech32 = "0.11"
+cbc = { version = "0.1", features = [ "std" ] }
+chacha20poly1305 = "0.10"
+chacha20 = "0.9"
+core-net = "0.1"
+derive_more = "0.99"
+hex = "0.4"
+hmac = "0.12"
+lazy_static = "1.4"
+#lightning-invoice = { path = "../lightning/lightning-invoice", version = "0.31.0-beta" }
+#lightning = { version = "0.0.123-beta", path = "../lightning/lightning" }
+linkify = "0.10"
+nip44 = { path = "../gnip44", package = "gnip44", version = "0.0.72" }
+num_cpus = "1"
+pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
+rand_core = "0.6"
+rand = "0.8"
+regex = "1.10"
+scrypt = "0.11"
+secp256k1 = { version = "0.29", features = [ "hashes", "global-context", "rand-std", "serde" ] }
+serde = { version = "1.0", features = [ "derive" ] }
+serde_json = "1.0"
+sha2 = "0.10"
+speedy = { version = "0.8.7", optional = true }
+thiserror = "1.0"
+thread-priority = "1.0"
+unicode-normalization = "0.1"
+url = "2.5"
+zeroize = "1.7"
+lightning-invoice = "0.33.2"
+
+## # Force scrypt to build with release-like speed even in dev mode
+## [profile.dev.package.scrypt]
+## opt-level = 3
+## debug-assertions = false
+## overflow-checks = false
