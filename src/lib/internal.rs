@@ -1,0 +1,230 @@
+use base64::Engine;
+use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, SubscriptionId};
+use http::Uri;
+use std::process::Command;
+use tungstenite::protocol::Message;
+
+pub(crate) fn pwd() -> Result<String, &'static str> {
+    let get_pwd = if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", "echo %cd%"])
+            .output()
+            .expect("failed to execute process")
+    } else if cfg!(target_os = "macos") {
+        Command::new("sh")
+            .arg("-c")
+            .arg("echo ${PWD##*/}")
+            .output()
+            .expect("failed to execute process")
+    } else if cfg!(target_os = "linux") {
+        Command::new("sh")
+            .arg("-c")
+            .arg("echo ${PWD##*/}")
+            .output()
+            .expect("failed to execute process")
+    } else {
+        Command::new("sh")
+            .arg("-c")
+            .arg("echo ${PWD##*/}")
+            .output()
+            .expect("failed to execute process")
+    };
+
+    let mut _pwd = String::from_utf8(get_pwd.stdout)
+        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+        .unwrap();
+
+    let _mutable_string = String::new();
+    let mutable_string = _pwd.clone();
+    Ok(format!("{}", mutable_string))
+} //end pwd()
+
+pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
+    let message = ClientMessage::Req(SubscriptionId("111".to_owned()), filters);
+    serde_json::to_string(&message).expect("Could not serialize message")
+}
+
+pub(crate) fn event_to_wire(event: Event) -> String {
+    let message = ClientMessage::Event(Box::new(event));
+    serde_json::to_string(&message).expect("Could not serialize message")
+}
+//use nostr_types::EventV2;
+//pub(crate) fn event_to_wire_v2(event: EventV2) -> String {
+//    let message = ClientMessage::Event_V2(Box::new(event));
+//    serde_json::to_string(&message).expect("Could not serialize message")
+//}
+//pub(crate) fn event_to_wire(event: EventV3) -> String {
+//    let message = ClientMessage::Event(Box::new(event));
+//    serde_json::to_string(&message).expect("Could not serialize message")
+//}
+
+pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
+    let mut events: Vec<Event> = Vec::new();
+
+    let key: [u8; 16] = rand::random();
+    let request = http::request::Request::builder()
+        .method("GET")
+        .header("Host", host)
+        .header("Connection", "Upgrade")
+        .header("Upgrade", "websocket")
+        .header("Sec-WebSocket-Version", "13")
+        .header(
+            "Sec-WebSocket-Key",
+            base64::engine::general_purpose::STANDARD.encode(key),
+        )
+        .uri(uri)
+        .body(())
+        .expect("Could not build request");
+
+    let (mut websocket, _response) =
+        tungstenite::connect(request).expect("Could not connect to relay");
+
+    websocket
+        .send(Message::Text(wire))
+        .expect("Could not send message to relay");
+
+    loop {
+        let message = match websocket.read() {
+            Ok(m) => m,
+            Err(e) => {
+                //handle differently
+                println!("Problem reading from websocket: {}", e);
+                return events;
+            }
+        };
+
+        match message {
+            Message::Text(s) => {
+                let relay_message: RelayMessage = serde_json::from_str(&s).expect(&s);
+                match relay_message {
+                    RelayMessage::Closed(_, _) => todo!(),
+                    RelayMessage::Event(_, e) => events.push(*e),
+                    RelayMessage::Notice(s) => println!("NOTICE: {}", s),
+                    RelayMessage::Eose(_) => {
+                        let message = ClientMessage::Close(SubscriptionId("111".to_owned()));
+                        let wire = match serde_json::to_string(&message) {
+                            Ok(w) => w,
+                            Err(e) => {
+                                println!("Could not serialize message: {}", e);
+                                return events;
+                            }
+                        };
+                        if let Err(e) = websocket.send(Message::Text(wire)) {
+                            println!("Could not write close subscription message: {}", e);
+                            return events;
+                        }
+                        if let Err(e) = websocket.send(Message::Close(None)) {
+                            println!("Could not write websocket close message: {}", e);
+                            return events;
+                        }
+                    }
+                    RelayMessage::Ok(_id, ok, reason) => {
+                        println!("OK: ok={} reason={}", ok, reason)
+                    }
+                    RelayMessage::Auth(challenge) => {
+                        // NIP-0042 [\"AUTH\", \"<challenge-string>\"]
+                        print!("[\"AUTH\":\"{}\"]", challenge)
+                    }
+                    RelayMessage::Notify(_) => todo!(),
+                }
+            }
+            Message::Binary(_) => {
+                println!("IGNORING BINARY MESSAGE")
+            }
+            Message::Ping(vec) => {
+                if let Err(e) = websocket.send(Message::Pong(vec)) {
+                    println!("Unable to pong: {}", e);
+                }
+            }
+            Message::Pong(_) => {
+                println!("IGNORING PONG")
+            }
+            Message::Close(_) => {
+                //println!("Closing");
+                break;
+            }
+            Message::Frame(_) => {
+                println!("UNEXPECTED RAW WEBSOCKET FRAME")
+            }
+        }
+    }
+
+    events
+}
+
+pub(crate) fn post(host: String, uri: Uri, wire: String) {
+    //gnostr key here
+    let key: [u8; 16] = rand::random();
+    let request = http::request::Request::builder()
+        .method("GET")
+        .header("Host", host.clone())
+        .header("Connection", "Upgrade")
+        .header("Upgrade", "websocket")
+        .header("Sec-WebSocket-Version", "13")
+        .header(
+            "Sec-WebSocket-Key",
+            base64::engine::general_purpose::STANDARD.encode(key),
+        )
+        .uri(uri)
+        .body(())
+        .expect("Could not build request");
+
+    let (mut websocket, _response) =
+        tungstenite::connect(request).expect("Could not connect to relay");
+
+    //print!("{}\n", wire);
+    websocket
+        .send(Message::Text(wire))
+        .expect("Could not send message to relay");
+
+    // Get and print one response message
+
+    let message = match websocket.read() {
+        Ok(m) => m,
+        Err(e) => {
+            //handle differently
+            println!("Problem reading from websocket: {}", e);
+            return;
+        }
+    };
+
+    match message {
+        Message::Text(s) => {
+            let relay_message: RelayMessage = serde_json::from_str(&s).expect(&s);
+            match relay_message {
+                RelayMessage::Event(_, e) => {
+                    println!("EVENT: {}", serde_json::to_string(&e).unwrap())
+                }
+                RelayMessage::Notice(s) => println!("NOTICE: {}", s),
+                RelayMessage::Eose(_) => println!("EOSE"),
+                //nostr uses json extensively
+                //yet relays dont return json formatted messages?
+                RelayMessage::Ok(_id, ok, reason) => println!(
+                    "[\"{}\",{{\"ok\":\"{}\",\"reason\":\"{}\"}}]",
+                    host, ok, reason
+                ),
+                RelayMessage::Auth(challenge) => print!("[\"AUTH\":\"{}\"]", challenge),
+                RelayMessage::Notify(_) => todo!(),
+                RelayMessage::Closed(_, _) => todo!(),
+            }
+        }
+        Message::Binary(_) => {
+            println!("IGNORING BINARY MESSAGE")
+        }
+        Message::Ping(vec) => {
+            if let Err(e) = websocket.send(Message::Pong(vec)) {
+                println!("Unable to pong: {}", e);
+            }
+        }
+        Message::Pong(_) => {
+            println!("IGNORING PONG")
+        }
+        Message::Close(_) => {
+            //println!("Closing");
+            return;
+        }
+        Message::Frame(_) => {
+            println!("UNEXPECTED RAW WEBSOCKET FRAME")
+        }
+    }
+}
