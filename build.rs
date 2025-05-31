@@ -22,10 +22,7 @@ fn install_openssl_brew() {
             // The exact paths might vary slightly based on Brew's configuration.
             // It's generally safer to rely on the `openssl` crate to handle linking.
             // However, if you need explicit linking:
-            // println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib"); // For Apple Silicon
-            // println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");   // For Intel
-            // println!("cargo:rustc-link-lib=dylib=ssl@3");
-            // println!("cargo:rustc-link-lib=dylib=crypto@3");
+            // The corrected paths are used conditionally in the main function.
         }
         Ok(status) => {
             println!(
@@ -44,7 +41,6 @@ fn install_openssl_brew() {
     }
 }
 fn install_pkg_config() {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     println!("cargo:warning=Attempting to install pkg-config using Homebrew...");
     let install_result = Command::new("brew")
         .args(&["install", "pkg-config"])
@@ -52,29 +48,16 @@ fn install_pkg_config() {
 
     match install_result {
         Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed openssl@3 via Homebrew.");
-            // Instruct rustc to link against the OpenSSL libraries installed by Brew.
-            // The exact paths might vary slightly based on Brew's configuration.
-            // It's generally safer to rely on the `openssl` crate to handle linking.
-            // However, if you need explicit linking:
-            if target_os == "aarch64-apple-darwin" {
-                println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
-                // For Apple Silicon
-            };
-            if target_os == "x86_64-apple-darwin" {
-                println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
-                // For Intel
-            };
-            println!("cargo:rustc-link-lib=dylib=ssl@3");
-            println!("cargo:rustc-link-lib=dylib=crypto@3");
+            println!("cargo:warning=Successfully installed pkg-config via Homebrew.");
+            // Linking will be handled by the `openssl` crate or via pkg-config.
         }
         Ok(status) => {
             println!(
-                "cargo:warning=Failed to install openssl@3 via Homebrew (exit code: {}).",
+                "cargo:warning=Failed to install pkg-config via Homebrew (exit code: {}).",
                 status
             );
             println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
-            println!("cargo:warning=  brew install openssl@3");
+            println!("cargo:warning=  brew install pkg-config");
         }
         Err(e) => {
             println!(
@@ -203,20 +186,28 @@ fn main() {
                 println!("cargo:warning=Homebrew detected.");
                 install_pkg_config();
                 install_openssl_brew();
+
+                // Instruct rustc to link against the OpenSSL libraries.
+                // The `openssl` crate generally handles finding these libraries.
+                // If you need explicit linking (less recommended):
+                if target_os == "aarch64-apple-darwin" {
+                    println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
+                    println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                } else if target_os == "x86_64-apple-darwin" {
+                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
+                    println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                }
             } else {
                 println!("cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:");
                 println!("cargo:warning=  brew install openssl@3");
                 println!("cargo:warning=Or using MacPorts:");
                 println!("cargo:warning=  sudo port install openssl@3");
+                println!("cargo:warning=And ensure your system can find the libraries.");
             }
-
-            // Instruct rustc to link against the OpenSSL libraries.
-            // The `openssl` crate generally handles finding these libraries.
-            // Ensure you have the `openssl` crate as a dependency in your Cargo.toml.
-            println!("cargo:rustc-link-lib=dylib=ssl");
-            println!("cargo:rustc-link-lib=dylib=crypto");
         } else {
-            // For other operating systems, you might have different dependencies or approaches
+            // For other operating systems, the `openssl` crate should handle linking.
             println!("cargo:rustc-link-lib=dylib=ssl");
             println!("cargo:rustc-link-lib=dylib=crypto");
         }
