@@ -10,14 +10,14 @@ use toml::Table;
 
 use crate::{ssh::git::Repo, ssh::vars::*};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerUser {
     pub public_key: String,
     pub is_admin: Option<bool>,
     pub can_create_repos: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerConfig {
     pub name: String,
     pub hostname: String,
