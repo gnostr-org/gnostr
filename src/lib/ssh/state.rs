@@ -1,5 +1,6 @@
 use crate::ssh::config::server::{load_server_config, ServerConfig};
 
+#[derive(Debug)]
 pub struct State {
     pub server_config: ServerConfig,
 }
