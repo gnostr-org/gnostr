@@ -1,5 +1,5 @@
 #FROM emscripten\/emsdk\:latest as base
-FROM rust:latest as base
+FROM rust:latest AS base
 LABEL org.opencontainers.image.source="https://github.com/randymcmillan/gnostr"
 LABEL org.opencontainers.image.description="gnostr-docker"
 RUN touch updated
@@ -13,10 +13,10 @@ RUN git clone --recurse-submodules -j2 --branch master --depth 1 https://github.
 WORKDIR /tmp/gnostr
 #RUN cargo test
 RUN cargo install --path . --bins
-RUN install ./serve /usr/local/bin || true
+#RUN install ./serve /usr/local/bin || true
 ENV PATH=$PATH:/usr/bin/systemctl
 RUN ps -p 1 -o comm=
-EXPOSE 80 6102 8080 ${PORT}
+EXPOSE 80 6102 8080 22 2222 ${PORT}
 VOLUME /src
-FROM base as gnostr
+FROM base AS gnostr
 

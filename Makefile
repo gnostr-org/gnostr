@@ -53,7 +53,7 @@ cargo-build: 	## 	cargo build
 	@RUST_BACKTRACE=all cargo b $(QUIET)
 cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
-	@cargo install --path . $(FORCE)
+	@cargo install --bins --path . $(FORCE)
 ## 	cargo-br q=true
 cargo-build-release: 	### 	cargo-build-release
 ## 	cargo-build-release q=true
