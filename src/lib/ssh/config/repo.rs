@@ -36,37 +36,24 @@ fn get_config_file_path() {
     } else {
         eprintln!("Error: Could not determine home directory.");
     }
-
-    //// Get the user's documents directory
-    //if let Some(docs_dir) = dirs::document_dir() {
-    //    println!("Documents directory: {:?}", docs_dir);
-    //} else {
-    //    println!("Could not determine documents directory.");
-    //}
-
-    //// Get the user's downloads directory
-    //if let Some(downloads_dir) = dirs::download_dir() {
-    //    println!("Downloads directory: {:?}", downloads_dir);
-    //} else {
-    //    println!("Could not determine downloads directory.");
-    //}
-
-    //// Get the user's config directory (typically ~/.config on Linux, AppData/Roaming on Windows, etc.)
-    //if let Some(config_dir) = dirs::config_dir() {
-    //    println!("Config directory: {:?}", config_dir);
-    //} else {
-    //    println!("Could not determine config directory.");
-    //}
 }
 
 pub async fn load_repo_config(repo_path: &Path) -> anyhow::Result<RepoConfig> {
-    let config_name = PathBuf::from(REPO_CONFIG_FILE);
+    let config_file_path = home_dir().expect("REASON").join(&REPO_CONFIG_FILE);
+    println!("Full path to config file: {:?}", config_file_path);
+
+    if config_file_path.exists() {
+        println!("Config file exists!");
+    } else {
+        println!("Config file does not exist.");
+    }
 
     let temp_dir = tempdir()?;
     let clone_dir = temp_dir.path().join(repo_path);
     Repo::clone(repo_path, &clone_dir).await?;
 
-    let text = read_to_string(clone_dir.join(&config_name)).context("Couldn't read repo.toml")?;
+    let text =
+        read_to_string(clone_dir.join(&config_file_path)).context("Couldn't read repo.toml")?;
     Ok(toml::from_str(&text)?)
 }
 
