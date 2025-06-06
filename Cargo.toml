@@ -18,6 +18,7 @@ exclude = [
     "*target/",
     ".git/",
     ".github/",
+    ".gnostr",
     "git2-testing",
     "*docs/",
     "*examples/",
