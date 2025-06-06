@@ -5,9 +5,20 @@ use log::error;
 async fn main() {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     if let Err(e) = start().await {
-        println!("EXAMPLE:server.toml\n\n{}\n\n", SERVER_TOML);
+        println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
+        println!("check the port in your server.toml is available!");
+        println!("check the port in your server.toml is available!");
+        println!("check the port in your server.toml is available!\n");
+        println!("EXAMPLE:repo.toml{}", REPO_TOML);
     }
 }
+
+static REPO_TOML: &str = "\
+name = \"gnostr-gnit-server\"
+public = true
+members = [\"gnostr-gnit-server\"]
+failed_push_message = \"Issues and patches can be emailed to admin@gnostr.org\"
+";
 
 static SERVER_TOML: &str = "\
 name = \"gnostr.org\"
