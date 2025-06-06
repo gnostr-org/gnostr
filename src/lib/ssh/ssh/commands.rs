@@ -37,6 +37,7 @@ impl Handler {
         let command = from_utf8(command).context("Failed to parse command bytes into a string")?;
         let command = split(command).context("Could not split command into words.")?;
 
+        println!("{:?}", command);
         // Politely decline non-git commands.
         if !GIT_COMMANDS.contains(&command[0].as_str()) {
             knob.close().await?;
