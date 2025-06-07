@@ -8,7 +8,7 @@ pub use lazy_static::lazy_static;
 // pub //use nostr_types::RelayMessageV5;
 pub use gnostr_types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
-    RelayMessage, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
+    RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
 pub use nostr_sdk_0_19_1::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
