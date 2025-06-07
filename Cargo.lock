@@ -2844,7 +2844,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.89"
+version = "0.0.90"
 dependencies = [
  "anyhow",
  "ascii",
@@ -2888,7 +2888,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-bins",
  "gnostr-crawler",
- "gnostr-types 0.7.5",
+ "gnostr-types 0.7.6",
  "gnostr_qr",
  "hex",
  "hostname",
@@ -3146,7 +3146,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-types"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "aes",
  "base64 0.22.1",
