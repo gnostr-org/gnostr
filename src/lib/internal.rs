@@ -1,5 +1,5 @@
 use base64::Engine;
-use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, SubscriptionId};
+use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
 use std::process::Command;
 use tungstenite::protocol::Message;
@@ -95,12 +95,12 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
 
         match message {
             Message::Text(s) => {
-                let relay_message: RelayMessage = serde_json::from_str(&s).expect(&s);
+                let relay_message: RelayMessageV5 = serde_json::from_str(&s).expect(&s);
                 match relay_message {
-                    RelayMessage::Closed(_, _) => todo!(),
-                    RelayMessage::Event(_, e) => events.push(*e),
-                    RelayMessage::Notice(s) => println!("NOTICE: {}", s),
-                    RelayMessage::Eose(_) => {
+                    RelayMessageV5::Closed(_, _) => todo!(),
+                    RelayMessageV5::Event(_, e) => events.push(*e),
+                    RelayMessageV5::Notice(s) => println!("NOTICE: {}", s),
+                    RelayMessageV5::Eose(_) => {
                         let message = ClientMessage::Close(SubscriptionId("111".to_owned()));
                         let wire = match serde_json::to_string(&message) {
                             Ok(w) => w,
@@ -118,14 +118,14 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
                             return events;
                         }
                     }
-                    RelayMessage::Ok(_id, ok, reason) => {
+                    RelayMessageV5::Ok(_id, ok, reason) => {
                         println!("OK: ok={} reason={}", ok, reason)
                     }
-                    RelayMessage::Auth(challenge) => {
+                    RelayMessageV5::Auth(challenge) => {
                         // NIP-0042 [\"AUTH\", \"<challenge-string>\"]
                         print!("[\"AUTH\":\"{}\"]", challenge)
                     }
-                    RelayMessage::Notify(_) => todo!(),
+                    RelayMessageV5::Notify(_) => todo!(),
                 }
             }
             Message::Binary(_) => {
