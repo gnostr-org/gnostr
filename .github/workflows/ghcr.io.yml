@@ -41,5 +41,5 @@ jobs:
 
           - name: 'Build gnostr image'
             run: |
-              docker build . --tag ghcr.io/randymcmillan/gnostr:latest
-              docker push ghcr.io/randymcmillan/gnostr:latest
+              docker build . --tag ghcr.io/gnostr-org/gnostr:latest
+              docker push ghcr.io/gnostr-org/gnostr:latest
