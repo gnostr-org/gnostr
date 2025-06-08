@@ -1,27 +1,65 @@
+use gnostr::{Command, Probe};
+use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use std::env;
 
-use gnostr_types::IdHex;
-
-fn main() {
-    //gnostr-fetch-by-id wss://relay.damus.io
-    // fc7aeb54b43215bff5b561bf59fb72128e36d67ef1092ba9c8ca7cdcfc68a439
-
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args();
     let _ = args.next(); // program name
+    let id: IdHex = match args.next() {
+        Some(id) => IdHex::try_from_str(&id)?,
+        None => "fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c"
+            .to_string()
+            .into(),
+    };
     let relay_url = match args.next() {
         Some(u) => u,
-        None => panic!("Usage:\ngnostr-fetch-by-id <RelayURL> <EventID>"),
-    };
-    let id = match args.next() {
-        Some(id) => id,
-        None => panic!("Usage: fetch_by_id <RelayURL> <EventID>"),
+        None => "wss://relay.damus.io".to_string(),
     };
 
-    let idhex = IdHex::try_from_str(&id).unwrap();
+    let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
+    let (to_main, mut from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
+    let join_handle = tokio::spawn(async move {
+        let mut probe = Probe::new(from_main, to_main);
+        if let Err(e) = probe.connect_and_listen(&relay_url).await {
+            eprintln!("{}", e);
+        }
+    });
 
-    if let Some(event) = gnostr::fetch_by_id(&relay_url, idhex) {
-        gnostr::print_event(&event);
-    } else {
-        println!("Not found");
+    let mut filter = Filter::new();
+    filter.add_id(&id);
+
+    let our_sub_id = SubscriptionId("fetch_by_id".to_string());
+    to_probe
+        .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
+        .await?;
+
+    loop {
+        match from_probe.recv().await.unwrap() {
+            RelayMessage::Eose(sub) => {
+                if sub == our_sub_id {
+                    to_probe.send(Command::Exit).await?;
+                    break;
+                }
+            }
+            RelayMessage::Event(sub, e) => {
+                if sub == our_sub_id {
+                    //println!("{}", serde_json::to_string(&e)?);
+                }
+            }
+            RelayMessage::Closed(sub, _) => {
+                if sub == our_sub_id {
+                    to_probe.send(Command::Exit).await?;
+                    break;
+                }
+            }
+            RelayMessage::Notice(_) => {
+                to_probe.send(Command::Exit).await?;
+                break;
+            }
+            _ => {}
+        }
     }
+
+    Ok(join_handle.await?)
 }
