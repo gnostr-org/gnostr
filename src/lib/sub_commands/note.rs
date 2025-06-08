@@ -28,6 +28,8 @@ pub struct NoteSubCommand {
     // Print event id as hex
     #[arg(long, default_value = "false")]
     hex: bool,
+    #[arg(long, default_value = "false")]
+    verbose: bool,
 }
 
 pub async fn broadcast_textnote(
@@ -80,6 +82,9 @@ pub async fn broadcast_textnote(
         tags.push(Tag::expiration(timestamp));
     }
 
+    if sub_command_args.verbose {
+        println!("{}", sub_command_args.content.clone());
+    }
     // Publish event
     let event_id = client
         .publish_text_note(sub_command_args.content.clone(), tags)
