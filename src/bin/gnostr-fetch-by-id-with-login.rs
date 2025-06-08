@@ -1,5 +1,5 @@
 use gnostr::{Command, Probe};
-use gnostr_types::{Filter, IdHex, RelayMessage};
+use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use std::env;
 
 #[tokio::main]
@@ -12,6 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .to_string()
             .into(),
     };
+    let relay_url2 = args.next().clone();
     let relay_url = match args.next() {
         Some(u) => u,
         None => "wss://relay.damus.io".to_string(),
@@ -20,11 +21,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signer = gnostr::load_signer()?;
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
-    let (to_main, from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
-    let inner_relay_url = relay_url.clone();
+    let (to_main, mut from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
     let join_handle = tokio::spawn(async move {
         let mut probe = Probe::new(from_main, to_main);
-        if let Err(e) = probe.connect_and_listen(&inner_relay_url).await {
+        if let Err(e) = probe.connect_and_listen(&relay_url.clone()).await {
             eprintln!("{}", e);
         }
     });
@@ -32,7 +32,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    gnostr::req(&relay_url, signer, filter, to_probe, from_probe).await?;
+    let req = gnostr::req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
 
+    println!("{:?}", req);
     Ok(join_handle.await?)
 }
