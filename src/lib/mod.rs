@@ -450,7 +450,9 @@ impl Probe {
                             let relay_message: RelayMessage = serde_json::from_str(&s)?;
                             self.to_main.send(relay_message).await?;
                         },
-                        Message::Binary(_) => { },
+                        Message::Binary(_) => {
+                            //TODO gnostr will handle binary messages
+                        },
                         Message::Ping(_) => { },
                         Message::Pong(_) => { },
                         Message::Close(_) => break,
@@ -478,9 +480,11 @@ impl Probe {
                     RelayMessage::Event(sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
                         eprintln!(
-                            "{}: EVENT({}, {})",
-                            PREFIXES.from_relay,
-                            sub.as_str(),
+                            //"483:{}: EVENT({}, {})",
+                            //PREFIXES.from_relay,
+                            //sub.as_str(),
+                            //event_json
+                            "{}",
                             event_json
                         );
                     }
@@ -491,12 +495,17 @@ impl Probe {
                         eprintln!("{}: NOTICE({})", PREFIXES.from_relay, s);
                     }
                     RelayMessage::Eose(sub) => {
-                        eprintln!("{}: EOSE({})", PREFIXES.from_relay, sub.as_str());
+                        //eprintln!("493:{}: EOSE({})", PREFIXES.from_relay, sub.as_str());
+                        eprintln!("{{\"EOSE\":\"{}\"}}", sub.as_str());
                     }
                     RelayMessage::Ok(id, ok, reason) => {
                         eprintln!(
-                            "{}: OK({}, {}, {})",
-                            PREFIXES.from_relay,
+                            //"497:{}: OK({}, {}, {})",
+                            //PREFIXES.from_relay,
+                            //id.as_hex_string(),
+                            //ok,
+                            //reason
+                            "OK({}, {}, {})",
                             id.as_hex_string(),
                             ok,
                             reason
@@ -507,16 +516,19 @@ impl Probe {
                 }
             }
             Message::Binary(_) => {
-                eprintln!("{}: Binary message received!!!", PREFIXES.from_relay);
+                eprintln!(
+                    "TODO:\ngnostr will handle git blobs\n{}: Binary message received!!!",
+                    PREFIXES.from_relay
+                );
             }
             Message::Ping(_) => {
-                eprintln!("{}: Ping", PREFIXES.from_relay);
+                //eprintln!("{}: Ping", PREFIXES.from_relay);
             }
             Message::Pong(_) => {
-                eprintln!("{}: Pong", PREFIXES.from_relay);
+                //eprintln!("{}: Pong", PREFIXES.from_relay);
             }
             Message::Close(_) => {
-                eprintln!("{}", "Remote closed nicely.".color(Color::Green));
+                //eprintln!("{}", "Remote closed nicely.".color(Color::Green));
             }
             Message::Frame(_) => {
                 unreachable!()
@@ -532,12 +544,35 @@ impl Probe {
         message: Message,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match message {
-            Message::Text(ref s) => eprintln!("{}: Text({})", PREFIXES.sending, s),
-            Message::Binary(_) => eprintln!("{}: Binary(_)", PREFIXES.sending),
-            Message::Ping(_) => eprintln!("{}: Ping(_)", PREFIXES.sending),
-            Message::Pong(_) => eprintln!("{}: Pong(_)", PREFIXES.sending),
-            Message::Close(_) => eprintln!("{}: Close(_)", PREFIXES.sending),
-            Message::Frame(_) => eprintln!("{}: Frame(_)", PREFIXES.sending),
+            Message::Text(ref s) =>
+            //eprintln!("{}: Text({})", PREFIXES.sending, s),
+            {
+                eprintln!("{}", s)
+            }
+            Message::Binary(_) =>
+            //eprintln!("{}: Binary(_)", PREFIXES.sending),
+            {
+                eprintln!("TODO:{}: Binary(_)", PREFIXES.sending)
+            }
+            Message::Ping(_) =>
+            //eprintln!("{}: Ping(_)", PREFIXES.sending),
+            {
+                eprint!("560:Ping")
+            }
+            Message::Pong(_) =>
+            //eprintln!("{}: Pong(_)", PREFIXES.sending),
+            {
+                eprint!("565:Ping")
+            }
+            Message::Close(_) => {
+                //eprintln!("{}: Close(_)", PREFIXES.sending)
+            }
+            //eprint!(""),
+            Message::Frame(_) =>
+            //eprintln!("{}: Frame(_)", PREFIXES.sending),
+            {
+                eprint!("572:Frame")
+            }
         }
         Ok(websocket.send(message).await?)
     }

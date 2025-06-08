@@ -6,13 +6,15 @@ use std::env;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args();
     let _ = args.next(); // program name
-    let relay_url = match args.next() {
-        Some(u) => u,
-        None => panic!("Usage: fetch_by_id <RelayURL> <IdHex>"),
-    };
     let id: IdHex = match args.next() {
         Some(id) => IdHex::try_from_str(&id)?,
-        None => panic!("Usage: fetch_by_id <RelayURL> <IdHex>"),
+        None => "fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c"
+            .to_string()
+            .into(),
+    };
+    let relay_url = match args.next() {
+        Some(u) => u,
+        None => "wss://relay.damus.io".to_string(),
     };
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
@@ -42,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             RelayMessage::Event(sub, e) => {
                 if sub == our_sub_id {
-                    println!("{}", serde_json::to_string(&e)?);
+                    //println!("{}", serde_json::to_string(&e)?);
                 }
             }
             RelayMessage::Closed(sub, _) => {
