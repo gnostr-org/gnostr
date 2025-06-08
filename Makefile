@@ -98,5 +98,10 @@ asyncgit:
 dep-graph:
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
 
+fetch-by-id:
+	cargo install --bin fetch_by_id --path .
+	cargo install --bin gnostr-fetch-by-id --path .
+	event_id=$(shell gnostr note -c test --hex | jq .id | sed "s/\"//g") && gnostr-fetch-by-id $;
+
 # vim: set noexpandtab:
 # vim: set setfiletype make

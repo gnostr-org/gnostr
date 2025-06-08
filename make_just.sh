@@ -5,10 +5,11 @@ curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-
 
 # Example: Install a configuration file.
 INSTALL_DIR="$HOME/.my_app"
-CONFIG_FILE="my_config.conf"
+CONFIG_FILE=${1:-default_config.conf}
 
 mkdir -p "$INSTALL_DIR"
-cp "$1" "$INSTALL_DIR/$CONFIG_FILE" # $1 is the first argument passed to the script, likely the config file itself.
+echo $CONFIG_FILE
+cp $CONFIG_FILE $INSTALL_DIR/config.conf || true # $1 is the first argument passed to the script, likely the config file itself.
 
 echo "Installed configuration to $INSTALL_DIR/$CONFIG_FILE"
 
@@ -125,6 +126,11 @@ asyncgit:
 
 dep-graph:
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
+
+fetch-by-id:
+	cargo install --bin fetch_by_id --path .
+	cargo install --bin gnostr-fetch-by-id --path .
+	event_id=\$(shell gnostr note -c test --hex | jq .id | sed "s/\\"//g") && gnostr-fetch-by-id \$$event_id;
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

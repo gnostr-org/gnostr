@@ -70,3 +70,6 @@ asyncgit:
 dep-graph:
   @make dep-graph
 
+fetch-by-id:
+  @make fetch-by-id
+
