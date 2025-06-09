@@ -20,6 +20,8 @@ use crate::relay_manager::RelayManager;
 use crate::processor::BOOTSTRAP_RELAY1;
 use crate::processor::BOOTSTRAP_RELAY2;
 use crate::processor::BOOTSTRAP_RELAY3;
+use crate::processor::BOOTSTRAP_RELAY4;
+use crate::processor::BOOTSTRAP_RELAYS;
 
 #[allow(clippy::manual_strip)]
 #[derive(Parser)]
