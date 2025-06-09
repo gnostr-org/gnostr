@@ -3,6 +3,10 @@ use gnostr_crawler::processor::APP_SECRET_KEY;
 use gnostr_crawler::processor::BOOTSTRAP_RELAY1;
 use gnostr_crawler::processor::BOOTSTRAP_RELAY2;
 use gnostr_crawler::processor::BOOTSTRAP_RELAY3;
+//use gnostr_crawler::processor::BOOTSTRAP_RELAY4;
+
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+
 use gnostr_crawler::relay_manager::RelayManager;
 use gnostr_crawler::CliArgs;
 
@@ -20,9 +24,16 @@ async fn main() {
             let app_keys = Keys::new(app_secret_key.expect("REASON"));
             let processor = Processor::new();
             let mut relay_manager = RelayManager::new(app_keys, processor);
+
             let _ = relay_manager
-                .run(vec![BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3])
+                .run(vec![
+                    BOOTSTRAP_RELAY1,
+                    BOOTSTRAP_RELAY2,
+                    BOOTSTRAP_RELAY3,
+                    BOOTSTRAP_RELAYS.get(3).expect("BOOTSTRAP_RELAYS should have at least 4 elements").as_str()
+                ])
                 .await;
+
             relay_manager.processor.dump();
         }
         Err(e) => println!("error: {}", e),
