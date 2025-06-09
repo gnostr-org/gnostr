@@ -123,7 +123,7 @@ git2 = "^0.18" ## asyncgit ^0.19
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.2", default-features = false }
-gnostr-crawler = { version = "0.0.6", path = "crawler" }
+gnostr-crawler = { version = "0.0.7", path = "crawler" }
 gnostr-types = { version = "0.7.6", path = "types" }
 #gnostr-types = "0.7.6"
 gnostr_qr = { version = "0.0.7", path = "qr" }
