@@ -1,11 +1,26 @@
 use crate::pubkeys::PubKeys;
 use crate::stats::Stats;
 //use log::{debug, info};
+
 use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
+use std::sync::LazyLock;
 
 pub const BOOTSTRAP_RELAY1: &str = "wss://nos.lol";
 pub const BOOTSTRAP_RELAY2: &str = "wss://relay.damus.io";
 pub const BOOTSTRAP_RELAY3: &str = "wss://e.nos.lol";
+pub const BOOTSTRAP_RELAY4: &str = "wss://relay.nostr.band";
+
+pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
+    // The vec! macro and String::from calls are now inside a closure,
+    // which is executed at runtime when the static variable is first needed.
+    vec![
+        String::from(BOOTSTRAP_RELAY1),
+        String::from(BOOTSTRAP_RELAY2),
+        String::from(BOOTSTRAP_RELAY3),
+        String::from(BOOTSTRAP_RELAY4),
+    ]
+});
+
 //pub const APP_SECRET_KEY: &str = "nsec1ufnus6pju578ste3v90xd5m2decpuzpql2295m3sknqcjzyys9ls0qlc85";
 pub const APP_SECRET_KEY: &str = "nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36";
 pub struct Processor {
