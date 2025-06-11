@@ -129,7 +129,14 @@ impl RelayManager {
         self.add_some_relays().await?;
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
         for url in &some_relays {
-            self.relay_client.add_relay(url.to_string(), None).await?;
+            //if url NOT contain
+            if !url.as_str().contains("") ||
+               !url.as_str().contains("") ||
+               //
+               !url.as_str().contains("")
+            {
+                self.relay_client.add_relay(url.to_string(), None).await?;
+            }
         }
         self.connect().await?;
         self.wait_and_handle_messages().await?;
