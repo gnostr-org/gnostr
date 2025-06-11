@@ -130,10 +130,9 @@ impl RelayManager {
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
         for url in &some_relays {
             //if url NOT contain
-            if !url.as_str().contains("") ||
-               !url.as_str().contains("") ||
-               //
-               !url.as_str().contains("")
+            if !url.as_str().contains("")
+                || !url.as_str().contains("")
+                || !url.as_str().contains("")
             {
                 self.relay_client.add_relay(url.to_string(), None).await?;
             }
