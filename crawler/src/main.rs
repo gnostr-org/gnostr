@@ -30,7 +30,10 @@ async fn main() {
                     BOOTSTRAP_RELAY1,
                     BOOTSTRAP_RELAY2,
                     BOOTSTRAP_RELAY3,
-                    BOOTSTRAP_RELAYS.get(3).expect("BOOTSTRAP_RELAYS should have at least 4 elements").as_str()
+                    BOOTSTRAP_RELAYS
+                        .get(3)
+                        .expect("BOOTSTRAP_RELAYS should have at least 4 elements")
+                        .as_str(),
                 ])
                 .await;
 
