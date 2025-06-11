@@ -27,6 +27,7 @@ struct Relay {
 async fn gnostr_crawler() -> Result<(), Box<dyn std::error::Error>> {
     let mut command = Command::new("gnostr-crawler");
 
+    command.arg("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     // Configure the command to capture standard output
     command.stdout(Stdio::piped());
 
