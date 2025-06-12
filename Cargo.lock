@@ -3081,7 +3081,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "chrono",
  "clap 4.5.37",
