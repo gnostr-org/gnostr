@@ -3,13 +3,21 @@ use std::{env, process};
 
 use num_bigint::BigInt;
 
-fn help() {
-    println!("\ngnostr_pi\n");
-    println!("     .");
-    println!("     .");
-    println!("     .");
-    process::exit(0);
+// Helper function to get the help message string.
+// This function returns a String, making it testable without relying on stdout capture.
+fn get_help_message() -> String {
+    format!(
+        "gnostr_pi <depth> <offset>\nNote:<depth> is NOT the returned number of digits!\nUsage:\nENTROPY=$(gnostr-pi 100 0); gnostr-sha256 $ENTROPY\n806b4aba301c1702df94bdb398f579da7b8419455274cb2235d45cc244de749f"
+    )
 }
+
+// Helper function to get the version message string.
+// This function returns a String, making it testable.
+fn get_version_message() -> String {
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    format!("v{}", VERSION)
+}
+
 fn main() {
     //
     //
@@ -18,32 +26,23 @@ fn main() {
     //
     //
     //
-    //println!("Number of arguments: {}", args.len() - 1);
     if (args.len() - 1) >= 1 {
         if &args[1] == "-h" || &args[1] == "--help" {
-            help();
+            println!("{}", get_help_message());
             process::exit(0);
         }
     }
     if (args.len() - 1) >= 1 {
         if &args[1] == "-v" || &args[1] == "-V" || &args[1] == "--version" {
-            const VERSION: &str = env!("CARGO_PKG_VERSION");
-            println!("v{}", VERSION);
+            println!("{}", get_version_message());
             process::exit(0);
         }
     }
     if (args.len() - 1) == 1 {
         let depth = u64::from_str(&args[1]).unwrap() * 5 + 1;
-        //println!("depth={}\n", depth);
-        calc_pi(depth as u64);
+        calculate_pi_digits_impl(depth as u64);
         process::exit(0);
     }
-    //let limit = u64::from_str(&args[1]).unwrap();
-    //if limit <= 5 {
-    //    //println!("limit={}", limit);
-    //    //TODO print usage
-    //    help();
-    //}
     if (args.len() - 1) == 2 {
         let depth = u64::from_str(&args[1]).unwrap() * 5 + 1;
         //println!("depth={}\n", depth);
@@ -52,16 +51,16 @@ fn main() {
 
         if offset <= 1 {
             //TODO handle negative offset simular to gnostr-pi.c
-            calc_pi(depth as u64);
+            calculate_pi_digits_impl(depth as u64);
             process::exit(0);
         } else {
-            calc_pi_with_offset(depth as u64, offset as u64);
+            calculate_pi_digits_with_offset_impl(depth as u64, offset as u64);
         }
 
         process::exit(0);
     }
 }
-fn calc_pi_with_offset(depth: u64, offset: u64) {
+fn calculate_pi_digits_with_offset_impl(depth: u64, offset: u64) -> String {
     //println!("depth={}", depth);
     //println!("offset={}", offset);
     let mut q = BigInt::from(1);
@@ -117,7 +116,7 @@ fn calc_pi_with_offset(depth: u64, offset: u64) {
     }
 }
 
-fn calc_pi(limit: u64) {
+fn calculate_pi_digits_impl(limit: u64) -> String {
     //println!("limit={}", limit);
     let mut q = BigInt::from(1);
     let mut r = BigInt::from(0);
@@ -130,8 +129,6 @@ fn calc_pi(limit: u64) {
     //println!("count={}", count);
     loop {
         if count == limit {
-            //println!("limit={}", limit);
-            //println!("count={}", count);
             process::exit(0);
         }
         if &q * 4 + &r - &t < &n * &t {
@@ -157,5 +154,59 @@ fn calc_pi(limit: u64) {
             r = nr;
         }
         count = count + 1u64;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_help_message() {
+        let expected_message = "gnostr_pi <depth> <offset>\nNote:<depth> is NOT the returned number of digits!\nUsage:\nENTROPY=$(gnostr-pi 100 0); gnostr-sha256 $ENTROPY\n806b4aba301c1702df94bdb398f579da7b8419455274cb2235d45cc244de749f";
+        assert_eq!(get_help_message(), expected_message);
+    }
+
+    #[test]
+    fn test_get_version_message() {
+        let version_message = get_version_message();
+        assert!(version_message.starts_with("v"));
+        assert!(version_message.len() > 1); // "v" + at least one digit
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_impl_small_length() {
+        assert_eq!(calculate_pi_digits_impl(6), "14159");
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_impl_more_digits() {
+        assert_eq!(calculate_pi_digits_impl(11), "1415926535");
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_impl_no_digits() {
+        assert_eq!(calculate_pi_digits_impl(0), "");
+        assert_eq!(calculate_pi_digits_impl(1), "");
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_with_offset_impl_basic() {
+        assert_eq!(calculate_pi_digits_with_offset_impl(12, 6), "26535");
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_with_offset_impl_higher_offset() {
+        assert_eq!(calculate_pi_digits_with_offset_impl(22, 11), "8979323846");
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_with_offset_impl_offset_condition() {
+        assert_eq!(calculate_pi_digits_with_offset_impl(10, 2), ""); // Should be empty due to offset < 5 condition
+    }
+
+    #[test]
+    fn test_calculate_pi_digits_with_offset_impl_empty_range() {
+        assert_eq!(calculate_pi_digits_with_offset_impl(5, 6), "");
     }
 }
