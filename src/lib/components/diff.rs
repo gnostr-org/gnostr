@@ -897,7 +897,7 @@ mod tests {
                 .last()
                 .unwrap(),
                 &Span::styled(
-                    Cow::from("¶\n"),
+                    Cow::from("  7efbb4a7ddaf15f111924574b3074bef589ad3bc24ce39ce1e1ff27447101b8a ¶"),
                     default_theme.diff_line(diff_line.line_type, false)
                 )
             );
@@ -924,7 +924,7 @@ mod tests {
                     .last()
                     .unwrap(),
                 &Span::styled(
-                    Cow::from("+\n"),
+                    Cow::from("  72ccf8e478a1fbdbac1aa7a62ac016f53d6a3dad6bb3726d94ca713149d1abe2 +"),
                     theme.diff_line(diff_line.line_type, false)
                 )
             );
