@@ -379,7 +379,7 @@ impl StatusTree {
 
 #[cfg(test)]
 mod tests {
-    use asyncgit::StatusItemType;
+    use gnostr_asyncgit::StatusItemType;
 
     use super::*;
 

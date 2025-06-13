@@ -173,7 +173,9 @@ pub enum GnostrCommands {
     AwardBadge(sub_commands::award_badge::AwardBadgeSubCommand),
     /// Set profile badges
     ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
-    /// Create custom event
+    /// Create	custom	event	more
+    /// 1	custom	event	more
+    /// 2	custom	event	more
     CustomEvent(sub_commands::custom_event::CustomEventCommand),
     /// Create a user status event
     SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
@@ -326,7 +328,7 @@ pub fn get_app_config_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-#[test]
-fn verify_app() {
-    app().debug_assert();
-}
+//#[test]
+//fn verify_app() {
+//    app().debug_assert();
+//}

@@ -1,5 +1,5 @@
 use std::path::Path;
-
+//use crate::client::Client;
 use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use anyhow::{bail, Context, Result};
 use console::Style;
@@ -61,7 +61,10 @@ pub async fn launch(
     let (main_branch_name, main_tip) = git_repo
         .get_main_or_master_branch()
         .context("the default branches (main or master) do not exist")?;
-
+    #[cfg(test)]
+    let mut client: &mut crate::client::MockConnect = &mut Default::default();
+	//let mut client: &mut Client::MockConnect = &mut Default::default();
+    #[cfg(not(test))]
     let mut client = Client::default();
 
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;

@@ -1468,7 +1468,7 @@ pub struct FetchRequest {
 
 pub async fn fetching_with_report(
     git_repo_path: &Path,
-    #[cfg(test)] client: &crate::client::MockConnect,
+    #[cfg(test)] client: &MockConnect,
     #[cfg(not(test))] client: &Client,
     repo_coordinates: &HashSet<Coordinate>,
 ) -> Result<FetchReport> {
@@ -1588,7 +1588,7 @@ pub async fn get_event_from_cache_by_id(git_repo: &Repo, event_id: &EventId) -> 
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::too_many_lines)]
 pub async fn send_events(
-    #[cfg(test)] client: &crate::client::MockConnect,
+    #[cfg(test)] client: &MockConnect,
     #[cfg(not(test))] client: &Client,
     git_repo_path: &Path,
     events: Vec<nostr::Event>,

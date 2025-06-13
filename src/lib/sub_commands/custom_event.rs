@@ -8,6 +8,7 @@ use crate::utils::{create_client, parse_private_key};
 #[derive(Args)]
 pub struct CustomEventCommand {
     /// Event kind
+    ///
     #[arg(short, long)]
     kind: u16,
 
@@ -15,10 +16,11 @@ pub struct CustomEventCommand {
     #[arg(short, long)]
     content: Option<String>,
 
-    /// Arbitrary tags. Specify first the tag key, then separate each string you want in the array with the character '|'.
-    /// Example for adding an a-tag: "a|30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark|wss://nostr.oxtr.dev"
+    /// Example a-tag:
+    /// "a|30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark|wss://nostr.oxtr.dev"
     ///
-    /// This will result in an array that looks like this: ["a", "30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark", "wss://nostr.oxtr.dev"]
+    /// Result:
+    /// ["a", "30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark", "wss://nostr.oxtr.dev"]
     #[arg(short, long, action = clap::ArgAction::Append)]
     tags: Vec<String>,
 

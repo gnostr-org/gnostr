@@ -74,7 +74,11 @@ pub async fn launch(
     // TODO: check for empty repo
     // TODO: check for existing maintaiers file
 
+    #[cfg(test)]
+    let mut client: &mut crate::client::MockConnect = &mut Default::default();
+    #[cfg(not(test))]
     let mut client = Client::default();
+
 
     let repo_coordinates = if let Ok(repo_coordinates) =
         try_and_get_repo_coordinates(&git_repo, &client, false).await

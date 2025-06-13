@@ -55,6 +55,10 @@ pub async fn launch(
     if branch_name == main_or_master_branch_name {
         bail!("checkout a branch associated with a proposal first")
     }
+
+    #[cfg(test)]
+    let mut client: &mut crate::client::MockConnect = &mut Default::default();
+    #[cfg(not(test))]
     let mut client = Client::default();
 
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
