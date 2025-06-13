@@ -31,7 +31,10 @@ pub async fn launch() -> Result<()> {
     // TODO: check for existing maintaiers file
     // TODO: check for other claims
 
-    let client = Client::default();
+    #[cfg(test)]
+    let mut client: &crate::client::MockConnect = &mut Default::default();
+    #[cfg(not(test))]
+    let mut client = Client::default();
 
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
 

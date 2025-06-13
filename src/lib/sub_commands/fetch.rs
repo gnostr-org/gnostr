@@ -25,7 +25,14 @@ pub async fn launch(
     let _ = args;
     let git_repo = Repo::discover().context("cannot find a git repository")?;
     let client = Client::default();
-    let repo_coordinates = if args.repo.is_empty() {
+    
+    #[cfg(test)]
+    let mut client: &crate::client::MockConnect = &mut Default::default();
+    #[cfg(not(test))]
+    let mut client = Client::default();
+ 
+
+	let repo_coordinates = if args.repo.is_empty() {
         get_repo_coordinates(&git_repo, &client).await?
     } else {
         let mut repo_coordinates = HashSet::new();
