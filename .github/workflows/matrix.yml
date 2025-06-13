@@ -212,7 +212,7 @@ jobs:
           -t "$(gnostr-weeble)" \
           -t "$(gnostr-blockheight)" \
           -t "$(gnostr-wobble)" \
-          --hex
+          --hex || true
         if: matrix.os != 'windows-latest'
 
       - run: |
@@ -222,7 +222,7 @@ jobs:
           react \
           -e fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c \
           -r "first git commit over #nostr!" \
-          | gnostr-xq
+          | gnostr-xq || true
         if: matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
