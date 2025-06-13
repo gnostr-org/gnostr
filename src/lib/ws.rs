@@ -8,12 +8,12 @@
 //! A WebSocket echo server:
 //!
 //! ```no_run
-//! use simple_websockets::{Event, Responder};
+//! use gnostr::ws::{Event, Responder};
 //! use std::collections::HashMap;
 //!
 //! fn main() {
 //!     // listen for WebSockets on port 8080:
-//!     let event_hub = simple_websockets::launch(8080)
+//!     let event_hub = gnostr::ws::launch(8080)
 //!         .expect("failed to listen on port 8080");
 //!     // map between client ids and the client's `Responder`:
 //!     let mut clients: HashMap<u64, Responder> = HashMap::new();
@@ -219,7 +219,7 @@ pub fn launch(port: u16) -> Result<EventHub, Error> {
 /// fn main() {
 ///     // Example of using a pre-bound listener instead of providing a port.
 ///     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
-///     let event_hub = simple_websockets::launch_from_listener(listener).expect("failed to listen on port 8080");
+///     let event_hub = gnostr::ws::launch_from_listener(listener).expect("failed to listen on port 8080");
 ///     // ...
 /// }
 /// ```

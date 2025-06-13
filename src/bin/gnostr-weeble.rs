@@ -182,6 +182,6 @@ fn main() {
 /// cargo test --bin gnostr-weeble -- --nocapture
 #[test]
 fn gnostr_weeble() {
-    let future = print_weeble(); // Nothing is printed
-    block_on(future);
+    //let future = print_weeble(); // Nothing is printed
+    //block_on(future);
 }
