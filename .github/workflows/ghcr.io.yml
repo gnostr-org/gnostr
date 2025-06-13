@@ -6,10 +6,10 @@ env:
 
 on:
   push:
-    branches:
-      - master
-      - main
-      - v**
+    #branches:
+    #  - master
+    #  - main
+    #  - v**
     tags:
       - v0.**
       - v1.**
