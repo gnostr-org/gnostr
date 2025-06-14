@@ -38,9 +38,19 @@ impl Default for ServerUser {
     }
 }
 
+pub fn get_server_config_repo_path() -> PathBuf {
+    let home_dir = dirs::home_dir().expect("Could not determine home directory");
+    home_dir.join(".gnostr/.git")
+}
+pub fn get_server_config_file_path() -> PathBuf {
+    let home_dir = dirs::home_dir().expect("Could not determine home directory");
+    home_dir.join("server.toml")
+}
+
 pub async fn load_server_config() -> anyhow::Result<ServerConfig> {
-    let repo_name = PathBuf::from(SERVER_CONFIG_REPO);
-    let config_name = PathBuf::from(SERVER_CONFIG_FILE);
+
+    let repo_name = get_server_config_repo_path();
+    let config_name = get_server_config_file_path();
 
     let mut new = false;
     if !repo_name.exists() {
