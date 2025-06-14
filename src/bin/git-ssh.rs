@@ -9,7 +9,7 @@ async fn main() {
         println!("check the port in your server.toml is available!");
         println!("check the port in your server.toml is available!");
         println!("check the port in your server.toml is available!\n");
-        println!("EXAMPLE:repo.toml{}", REPO_TOML);
+        println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
     }
 }
 
