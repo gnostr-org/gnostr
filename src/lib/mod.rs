@@ -96,7 +96,7 @@ use directories::ProjectDirs;
 
 ///
 pub fn get_dirs() -> Result<ProjectDirs> {
-	//maintain compat with ngit
+    //maintain compat with ngit
     ProjectDirs::from("ngit", "gnostr", ".gnostr").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
