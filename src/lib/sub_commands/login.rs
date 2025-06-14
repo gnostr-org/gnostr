@@ -39,7 +39,6 @@ pub async fn launch(
         .await?;
         Ok(())
     } else {
-
         #[cfg(test)]
         let mut client: &crate::client::MockConnect = &mut Default::default();
         #[cfg(not(test))]
