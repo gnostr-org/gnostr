@@ -130,7 +130,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = usize::MAX;
                     }
                     KeyCode::Char('q') => {
-                        return Ok(());
+                        //Char q is inappropriate for "Quit"
+                        //in nested shell contexts (tui-term like widgets)
+                        //for example gnostr edit mode - vim :q
+                        //and we want gnostr (tui)
+                        //to be compatable as a library
+                        app.input_mode = InputMode::Normal;
+                        app.msgs_scroll = app.messages.lock().unwrap().len();
+                        //return Ok(());
                     }
                     KeyCode::Up => {
                         let l = app.messages.lock().unwrap().len();
