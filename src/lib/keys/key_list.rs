@@ -50,7 +50,7 @@ pub struct KeysList {
     pub tab_toggle_reverse: GituiKeyEvent,
     pub toggle_workarea: GituiKeyEvent,
     pub exit: GituiKeyEvent,
-    pub quit: GituiKeyEvent,
+    //pub quit: GituiKeyEvent,
     pub exit_popup: GituiKeyEvent,
     pub open_commit: GituiKeyEvent,
     pub open_commit_editor: GituiKeyEvent,
@@ -150,7 +150,7 @@ impl Default for KeysList {
 			tab_toggle_reverse: GituiKeyEvent::new(KeyCode::BackTab,  KeyModifiers::SHIFT),
 			toggle_workarea: GituiKeyEvent::new(KeyCode::Char('w'),  KeyModifiers::empty()),
 			exit: GituiKeyEvent::new(KeyCode::Char('c'),  KeyModifiers::CONTROL),
-			quit: GituiKeyEvent::new(KeyCode::Char('q'),  KeyModifiers::empty()),
+			//quit: GituiKeyEvent::new(KeyCode::Char('q'),  KeyModifiers::empty()),
 			//exit_popup
 			exit_popup: GituiKeyEvent::new(KeyCode::Esc,  KeyModifiers::empty()),
 			//open_commit
