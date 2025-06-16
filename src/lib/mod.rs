@@ -39,6 +39,8 @@ pub mod cmdbar;
 ///
 pub mod components;
 ///
+pub mod dns_resolver;
+///
 pub mod git;
 ///
 pub mod git_events;
