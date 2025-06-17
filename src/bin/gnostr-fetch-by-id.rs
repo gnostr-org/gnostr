@@ -1,4 +1,6 @@
+use gnostr::get_weeble;
 use gnostr::{Command, Probe};
+use gnostr_crawler::processor::DEFAULT_BOOTSTRAP_RELAYS;
 use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use std::env;
 
@@ -29,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    let our_sub_id = SubscriptionId("fetch_by_id".to_string());
+    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
     to_probe
         .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
         .await?;
