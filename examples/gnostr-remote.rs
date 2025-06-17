@@ -1,13 +1,13 @@
+use clap::Parser;
 use gnostr::remote::host;
 use gnostr::remote::message_stream;
 use gnostr::remote::messages;
 use gnostr::remote::options;
 use gnostr::remote::remote_runner;
 use gnostr::remote::tests;
-use clap::Parser;
 
-use gnostr::remote::options::Opt;
 use anyhow::Result;
+use gnostr::remote::options::Opt;
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 
