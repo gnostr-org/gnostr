@@ -14,12 +14,15 @@ echo "" # Blank line for separation
 echo "--- Script Information ---"
 echo "Script PID: $$"
 echo "hello, gnostr-remote-test!"
-export EVENT=$(gnostr custom-event -k 30617 -c "#gnostr #ci" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://remay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" -t "weeble|$(gnostr-weeble)" -t "blockheight|$(gnostr-blockheight)" -t "wobble|$(gnostr-wobble)")
-export EVENT_ID=$(gnostr-bech32-to-any $EVENT | sed 's/Id: //g')
-gnostr-fetch-by-id $EVENT_ID
+export EVENT1=$(gnostr --nsec $(gnostr-sha256) custom-event -k 30617 -c "" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" -t "weeble|$(gnostr-weeble)" -t "blockheight|$(gnostr-blockheight)" -t "wobble|$(gnostr-wobble)")
+export EVENT1_ID=$(gnostr-bech32-to-any $EVENT1 | sed 's/Id: //g')
+gnostr-fetch-by-id $EVENT1_ID
 
-##https://nostr.band/?q=11593ace82155c38f75cbd4f4106ba62415842a8b24717ef672fb3f9314aa340
-export EVENT=$(gnostr custom-event -k 1 -c "#gnostr distributed/decentralized CI EVENT! REF:https://nostr.band/?q=$EVENT_ID" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://remay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service")
-export EVENT_ID=$(gnostr-bech32-to-any $EVENT | sed 's/Id: //g')
-gnostr-fetch-by-id $EVENT_ID
+export EVENT2=$(gnostr --nsec $(gnostr-sha256) custom-event -k 1 -c "#gnostr distributed/decentralized CI EVENT! REF:https://nostr.band/?q=$EVENT1_ID" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" -t "weeble|$(gnostr-weeble)" -t "blockheight|$(gnostr-blockheight)" -t "wobble|$(gnostr-wobble)")
+export EVENT2_ID=$(gnostr-bech32-to-any $EVENT2 | sed 's/Id: //g')
+gnostr-fetch-by-id $EVENT2_ID
+gnostr --nsec $(gnostr-sha256) -r wss://relay.nostr.band react -e EVENT1_ID -r EVENT2_ID
+gnostr --nsec $(gnostr-sha256) -r wss://relay.nostr.band react -e EVENT2_ID -r EVENT1_ID
+gnostr --nsec $(gnostr-sha256) -r wss://relay.damus.io react -e EVENT1_ID -r EVENT2_ID
+gnostr --nsec $(gnostr-sha256) -r wss://relay.damus.io react -e EVENT2_ID -r EVENT1_ID
 ## END:contents of $0"
