@@ -1,4 +1,5 @@
 use base64::Engine;
+use gnostr::get_weeble;
 use gnostr::{Command, Probe};
 use gnostr_types::{
     ContentEncryptionAlgorithm, Event, EventKind, Filter, KeySigner, PreEvent, PrivateKey,
@@ -93,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Subscribe to nostr-connect events from our peer on this relay
-    let our_sub_id = SubscriptionId("test_nip46".to_string());
+    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
     let mut filter = Filter::new();
     filter.add_author(&remote_pubkey.into());
     filter.add_event_kind(EventKind::NostrConnect);
