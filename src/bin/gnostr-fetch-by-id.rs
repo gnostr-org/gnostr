@@ -1,6 +1,6 @@
 use gnostr::get_weeble;
 use gnostr::{Command, Probe};
-use gnostr_crawler::processor::DEFAULT_BOOTSTRAP_RELAYS;
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use std::env;
 
