@@ -1,3 +1,4 @@
+use gnostr::get_weeble;
 use gnostr::{Command, Probe};
 use gnostr_types::{EventKind, Filter, PublicKeyHex, RelayMessage, SubscriptionId};
 use std::env;
@@ -24,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let our_sub_id = SubscriptionId("fetch_metadata".to_string());
+    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
     let mut filter = Filter::new();
     filter.add_author(&pubkeyhex);
     filter.add_event_kind(EventKind::Metadata);
