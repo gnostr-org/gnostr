@@ -6,14 +6,14 @@ use anyhow::*;
 //https://crates.io/crates/bincode/1.3.1
 //bincode
 use core::result::Result::Ok;
-use log::{trace, error, info};
+use log::{error, info, trace};
 use std::{
     fs::File,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     os::unix::fs::PermissionsExt,
     process::{Child, Command, Stdio},
-    sync::mpsc::{Receiver, Sender, channel},
+    sync::mpsc::{channel, Receiver, Sender},
     thread,
 };
 
@@ -176,8 +176,8 @@ impl Context {
         Self::child_stream_to_vec(p.stdout.take().expect("!stdout"), stdout_tx);
         Self::child_stream_to_vec(p.stderr.take().expect("!stderr"), stderr_tx);
 
-        self.stdout = Some(stdout_rx); 
-        self.stderr = Some(stderr_rx); 
+        self.stdout = Some(stdout_rx);
+        self.stderr = Some(stderr_rx);
         self.proc = Some(p);
     }
 }
