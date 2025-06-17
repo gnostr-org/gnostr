@@ -456,13 +456,18 @@ impl Probe {
                                     Message::Text(s) => {
                                         // Send back to main
                                         let relay_message: RelayMessage = serde_json::from_str(&s)?;
+                                        println!("459:message.clone()\n{:?}", relay_message.clone());
                                         self.to_main.send(relay_message).await?;
                                     },
                                     Message::Binary(_) => {
-                                        //TODO gnostr will handle binary messages
+                                        println!("TODO gnostr will handle binary messages")
                                     },
-                                    Message::Ping(_) => { },
-                                    Message::Pong(_) => { },
+                                    Message::Ping(_) => {
+                                        println!("Message::Ping(_)")
+                                    },
+                                    Message::Pong(_) => {
+                                        println!("Message::Pong(_)")
+                                    },
                                     Message::Close(_) => break,
                                     Message::Frame(_) => unreachable!(),
                                 }
@@ -562,25 +567,22 @@ impl Probe {
             {
                 eprintln!("TODO:{}: Binary(_)", PREFIXES.sending)
             }
-            Message::Ping(_) =>
-            //eprintln!("{}: Ping(_)", PREFIXES.sending),
-            {
-                eprint!("560:Ping")
-            }
-            Message::Pong(_) =>
-            //eprintln!("{}: Pong(_)", PREFIXES.sending),
-            {
-                eprint!("565:Ping")
-            }
+            Message::Ping(_) => eprintln!("{}: Ping(_)", PREFIXES.sending),
+            //{
+            //    eprint!("560:Ping")
+            //}
+            Message::Pong(_) => eprintln!("{}: Pong(_)", PREFIXES.sending),
+            //{
+            //    eprint!("565:Ping")
+            //}
             Message::Close(_) => {
-                //eprintln!("{}: Close(_)", PREFIXES.sending)
+                eprintln!("{}: Close(_)", PREFIXES.sending)
             }
             //eprint!(""),
-            Message::Frame(_) =>
-            //eprintln!("{}: Frame(_)", PREFIXES.sending),
-            {
-                eprint!("572:Frame")
-            }
+            Message::Frame(_) => eprintln!("{}: Frame(_)", PREFIXES.sending),
+            //{
+            //    eprint!("572:Frame")
+            //}
         }
         Ok(websocket.send(message).await?)
     }
