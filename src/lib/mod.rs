@@ -163,26 +163,26 @@ pub fn get_relays_offline() -> Result<String, &'static str> {
 
 /// pub fn get_weeble() -> Result<String, &'static str>
 pub fn get_weeble() -> Result<String, &'static str> {
-    let _weeble_no_nl = weeble().unwrap().to_string();
-
-    Ok(format!("{}", weeble().unwrap().to_string()))
+    Ok(format!("{}", weeble().unwrap_or(0_f64).to_string()))
+}
+/// pub fn get_weeble_millis() -> Result<String, &'static str>
+pub fn get_weeble_millis() -> Result<String, &'static str> {
+    Ok(format!("{}", weeble_millis().unwrap_or(0_f64).to_string()))
 }
 /// pub fn get_wobble() -> Result<String, &'static str>
 pub fn get_wobble() -> Result<String, &'static str> {
-    let _wobble_no_nl = wobble().unwrap().to_string();
-
-    Ok(format!("{}", wobble().unwrap().to_string()))
+    Ok(format!("{}", wobble().unwrap_or(0_f64).to_string()))
+}
+/// pub fn get_wobble_millis() -> Result<String, &'static str>
+pub fn get_wobble_millis() -> Result<String, &'static str> {
+    Ok(format!("{}", wobble_millis().unwrap_or(0_f64).to_string()))
 }
 /// pub fn get_blockheight() -> Result<String, &'static str>
 pub fn get_blockheight() -> Result<String, &'static str> {
-    let _blockheight_no_nl = blockheight().unwrap().to_string();
-
-    Ok(format!("{}", blockheight().unwrap().to_string()))
+    Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    let _blockhash_no_nl = blockhash().unwrap().to_string();
-
     Ok(format!("{}", blockhash().unwrap().to_string()))
 }
 
@@ -280,9 +280,11 @@ use internal::*;
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/weeble/index.html>
 pub mod weeble;
 pub use weeble::weeble;
+pub use weeble::weeble_millis;
 
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/wobble/index.html>
 pub mod wobble;
+pub use crate::wobble::wobble_millis;
 pub use wobble::wobble;
 
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/blockhash/index.html>
