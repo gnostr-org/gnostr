@@ -103,5 +103,18 @@ fetch-by-id:
 	cargo install --bin gnostr-fetch-by-id --path .
 	event_id=$(shell gnostr note -c test --hex | jq .id | sed "s/\"//g") && gnostr-fetch-by-id $;
 
+fetch-by-kind-and-author:
+	cargo install --bin fetch_by_kind-and-author --path .
+	cargo install --bin fetch_by_kind_and_author --path .
+	fetch_by_kind_and_author wss://relay.damus.io 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
+
+crawler-test-relays:
+	for relay in $(shell echo $(shell gnostr-crawler));do echo $$relay;done
+	for relay in $(shell echo $(shell gnostr-crawler));do test_relay $$relay;done
+
+
+
+
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
