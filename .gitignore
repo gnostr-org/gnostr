@@ -1,3 +1,5 @@
+executable
+test
 gnostr.git
 gnostr/*
 .gnostr/*

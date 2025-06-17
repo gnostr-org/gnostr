@@ -65,6 +65,8 @@ pub mod popups;
 ///
 pub mod queue;
 ///
+pub mod remote;
+///
 pub mod repo_ref;
 ///
 pub mod repo_state;
