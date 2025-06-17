@@ -73,3 +73,9 @@ dep-graph:
 fetch-by-id:
   @make fetch-by-id
 
+fetch-by-kind-and-author:
+  @make fetch-by-kind-and-author
+
+crawler-test-relays:
+  @make crawler-test-relays
+
