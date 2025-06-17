@@ -1,17 +1,16 @@
-use std::env;
-
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_types::{EventKind, Filter, PublicKeyHex};
-
+use std::env;
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name
-    let relay_url = match args.next() {
-        Some(u) => u,
-        None => panic!("Usage: fetch_metadata <RelayURL> <PubKeyHex>"),
-    };
     let pubkeyhex = match args.next() {
         Some(id) => id,
-        None => panic!("Usage: fetch_metadata <RelayURL> <PubKeyHex>"),
+        None => panic!("Usage: fetch_metadata <PubKeyHex> <RelayURL>"),
+    };
+    let relay_url = match args.next() {
+        Some(u) => u,
+        None => BOOTSTRAP_RELAYS[0].clone(),
     };
 
     let pkh = PublicKeyHex::try_from_str(&pubkeyhex).unwrap();
