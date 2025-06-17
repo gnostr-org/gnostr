@@ -1,0 +1,20 @@
+## BEGIN:contents of $0"
+!/usr/bin/env bash
+set -x
+echo "gnostr-remote-test file name: $0"
+cat $0 || true
+echo "--- System Information ---"
+echo "Hostname: $(hostname)"
+echo "OS/Kernel: $(uname -a)"
+echo "CPU Model: $(grep -m 1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^[ \t]*//')"
+echo "Total Memory: $(free -h | awk '/^Mem:/ {print $2}')"
+echo "Current User: $(whoami)"
+echo "Current Directory: $(pwd)"
+echo "" # Blank line for separation
+echo "--- Script Information ---"
+echo "Script PID: $$"
+echo "hello, gnostr-remote-test!"
+export EVENT=$(gnostr custom-event -k 30617 -c "" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://remay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service")
+export EVENT_ID=$(gnostr-bech32-to-any $EVENT | sed 's/Id: //g')
+gnostr-fetch-by-id $EVENT_ID
+## END:contents of $0"

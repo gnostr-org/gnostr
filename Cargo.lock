@@ -2875,6 +2875,7 @@ dependencies = [
  "auth-git2",
  "backtrace",
  "base64 0.21.7",
+ "bincode",
  "bitcoin_hashes 0.14.0",
  "bitflags 2.9.0",
  "bugreport",
@@ -2892,6 +2893,7 @@ dependencies = [
  "crossbeam-channel",
  "crossterm",
  "csv",
+ "ctrlc",
  "dialoguer",
  "directories",
  "dirs 5.0.1",
@@ -2964,6 +2966,7 @@ dependencies = [
  "sha256",
  "shellexpand",
  "shellwords",
+ "simple_logger",
  "simplelog",
  "struct-patch",
  "structopt",
@@ -5731,6 +5734,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "num_threads"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "number_prefix"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8158,6 +8170,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "simple_logger"
+version = "4.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e7e46c8c90251d47d08b28b8a419ffb4aede0f87c2eea95e17d1d5bacbf3ef1"
+dependencies = [
+ "colored",
+ "log",
+ "time 0.3.41",
+ "windows-sys 0.48.0",
+]
+
+[[package]]
 name = "simplelog"
 version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8814,7 +8838,9 @@ checksum = "8a7619e19bc266e0f9c5e6686659d394bc57973859340060a69221e57dbc0c40"
 dependencies = [
  "deranged",
  "itoa",
+ "libc",
  "num-conv",
+ "num_threads",
  "powerfmt",
  "serde",
  "time-core",
