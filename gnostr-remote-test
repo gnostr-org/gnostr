@@ -1,5 +1,5 @@
 ## BEGIN:contents of $0"
-!/usr/bin/env bash
+#!/usr/bin/env bash
 set -x
 echo "gnostr-remote-test file name: $0"
 cat $0 || true

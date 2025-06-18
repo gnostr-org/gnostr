@@ -9,6 +9,7 @@ pub struct Opt {
     pub log_level: String,
     #[arg(short, long)]
     /// Run as remote runner. This is the machine where the executable(s) will be run.
+    #[arg(short, long, default_value = "true")]
     pub remote_runner: bool,
     #[arg(short, long, default_value = "8888")]
     /// Select a TCP port to talk over. Has to be same on both sides.

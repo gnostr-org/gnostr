@@ -1,14 +1,14 @@
 use clap::Parser;
 use gnostr::remote::host;
-use gnostr::remote::message_stream;
-use gnostr::remote::messages;
-use gnostr::remote::options;
+//use gnostr::remote::message_stream;
+//use gnostr::remote::messages;
+//use gnostr::remote::options;
 use gnostr::remote::remote_runner;
-use gnostr::remote::tests;
+//use gnostr::remote::tests;
 
 use anyhow::Result;
 use gnostr::remote::options::Opt;
-use log::LevelFilter;
+use log::{info, LevelFilter};
 use simple_logger::SimpleLogger;
 
 fn main() -> Result<()> {
@@ -29,11 +29,12 @@ fn main() -> Result<()> {
         .init()?;
 
     if opt.remote_runner {
-        println!("Starting remote-runner");
+        info!("Starting remote-runner");
         remote_runner::update(&opt);
     } else {
-        println!("Starting host");
-        host::host_loop(&opt, opt.target.as_ref().unwrap())?;
+        info!("Starting host");
+        host::host_loop(&opt, opt.target.as_ref().map_or("127.0.0.1", |v| v))?;
+        //host::host_loop(&opt, opt.target.as_ref().unwrap())?;
     }
 
     Ok(())
