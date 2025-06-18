@@ -407,74 +407,73 @@ impl Probe {
 
         loop {
             tokio::select! {
-                            _ = ping_timer.tick() => {
-                                let msg = Message::Ping(vec![0x1]);
-                                self.send(&mut websocket, msg).await?;
-                            },
-                            local_message = self.from_main.recv() => {
-                                match local_message {
-                                    Some(Command::PostEvent(event)) => {
-                                        let client_message = ClientMessage::Event(Box::new(event));
-                                        let wire = serde_json::to_string(&client_message)?;
-                                        let msg = Message::Text(wire);
-                                        self.send(&mut websocket, msg).await?;
-                                    },
-                                    Some(Command::Auth(event)) => {
-                                        let client_message = ClientMessage::Auth(Box::new(event));
-                                        let wire = serde_json::to_string(&client_message)?;
-                                        let msg = Message::Text(wire);
-                                        self.send(&mut websocket, msg).await?;
-                                    },
-                                    Some(Command::FetchEvents(subid, filters)) => {
-                                        let client_message = ClientMessage::Req(subid, filters);
-                                        let wire = serde_json::to_string(&client_message)?;
-                                        let msg = Message::Text(wire);
-                                        self.send(&mut websocket, msg).await?;
-                                    },
-                                    Some(Command::Exit) => {
-                                        break;
-                                    },
-                                    None => { }
-                                }
-                            },
-                            message = websocket.next() => {
-                                let message = match message {
-                                    Some(m) => m,
-                                    None => {
-                                        if websocket.is_terminated() {
-                                            eprintln!("{}", "Connection terminated".color(Color::Orange1));
-                                        }
-                                        break;
-                                    }
-                                }?;
-
-                                // Display it
-                                //Self::display(message.clone())?;
-
-            // echo '["REQ","fetch_by_id",{"ids":["5e131f602e8f6edf4fa81e8f234c805e4da9297c56d5ad1ab89f9f240a5a9b53"]}]' | websocat -1 wss://relay.damus.io
-                                println!("448:message.clone()\n{}", message.clone());
-                                // Take action
-                                match message {
-                                    Message::Text(s) => {
-                                        // Send back to main
-                                        let relay_message: RelayMessage = serde_json::from_str(&s)?;
-                                        println!("459:message.clone()\n{:?}", relay_message.clone());
-                                        self.to_main.send(relay_message).await?;
-                                    },
-                                    Message::Binary(_) => {
-                                        println!("TODO gnostr will handle binary messages")
-                                    },
-                                    Message::Ping(_) => {
-                                        println!("Message::Ping(_)")
-                                    },
-                                    Message::Pong(_) => {
-                                        println!("Message::Pong(_)")
-                                    },
-                                    Message::Close(_) => break,
-                                    Message::Frame(_) => unreachable!(),
-                                }
-                            },
+                _ = ping_timer.tick() => {
+                    let msg = Message::Ping(vec![0x1]);
+                    self.send(&mut websocket, msg).await?;
+                },
+                local_message = self.from_main.recv() => {
+                    match local_message {
+                        Some(Command::PostEvent(event)) => {
+                            let client_message = ClientMessage::Event(Box::new(event));
+                            let wire = serde_json::to_string(&client_message)?;
+                            let msg = Message::Text(wire);
+                            self.send(&mut websocket, msg).await?;
+                        },
+                        Some(Command::Auth(event)) => {
+                            let client_message = ClientMessage::Auth(Box::new(event));
+                            let wire = serde_json::to_string(&client_message)?;
+                            let msg = Message::Text(wire);
+                            self.send(&mut websocket, msg).await?;
+                        },
+                        Some(Command::FetchEvents(subid, filters)) => {
+                            let client_message = ClientMessage::Req(subid, filters);
+                            let wire = serde_json::to_string(&client_message)?;
+                            let msg = Message::Text(wire);
+                            self.send(&mut websocket, msg).await?;
+                        },
+                        Some(Command::Exit) => {
+                            break;
+                        },
+                        None => { }
+                    }
+                },
+                message = websocket.next() => {
+                    let message = match message {
+                        Some(m) => m,
+                        None => {
+                            if websocket.is_terminated() {
+                                eprintln!("{}", "Connection terminated".color(Color::Orange1));
+                            }
+                            break;
                         }
+                    }?;
+
+                    // Display it
+                    Self::display(message.clone())?;
+                    //println!("448:message.clone()\n{}", message.clone());
+                    // Take action
+                    match message {
+                        Message::Text(s) => {
+                            // Send back to main
+                            let relay_message: RelayMessage = serde_json::from_str(&s)?;
+                            //Self::display(relay_message.clone())?;
+                            //println!("459:relay_message.clone()\n{:?}", relay_message.clone());
+                            self.to_main.send(relay_message).await?;
+                        },
+                        Message::Binary(_) => {
+                            println!("TODO gnostr will handle binary messages")
+                        },
+                        Message::Ping(_) => {
+                            println!("Message::Ping(_)")
+                        },
+                        Message::Pong(_) => {
+                            println!("Message::Pong(_)")
+                        },
+                        Message::Close(_) => break,
+                        Message::Frame(_) => unreachable!(),
+                    }
+                },
+            }
         }
 
         // Send close message before disconnecting
@@ -495,12 +494,11 @@ impl Probe {
                     RelayMessage::Event(sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
                         eprintln!(
-                            //"483:{}: EVENT({}, {})",
-                            //PREFIXES.from_relay,
-                            //sub.as_str(),
-                            //event_json
-                            "{}",
-                            event_json
+                            "483:{}: EVENT({}, {})",
+                            PREFIXES.from_relay,
+                            sub.as_str(),
+                            event_json //"{}",
+                                       //event_json
                         );
                     }
                     RelayMessage::Closed(sub, msg) => {
