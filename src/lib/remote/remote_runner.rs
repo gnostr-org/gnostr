@@ -6,16 +6,19 @@ use anyhow::*;
 //https://crates.io/crates/bincode/1.3.1
 //bincode
 use core::result::Result::Ok;
-use log::{error, info, trace};
+use log::{debug, error, info, trace, LevelFilter};
+use simple_logger::SimpleLogger;
 use std::{
     fs::File,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
-    os::unix::fs::PermissionsExt,
     process::{Child, Command, Stdio},
     sync::mpsc::{channel, Receiver, Sender},
     thread,
 };
+
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::fs::PermissionsExt;
 
 type IoOut = Receiver<Vec<u8>>;
 
@@ -51,7 +54,7 @@ impl Context {
                 }
 
                 if msg.version_minor != messages::REMOTELINK_MINOR_VERSION {
-                    println!("Minor version miss-matching, but continuing");
+                    debug!("Minor version miss-matching, but continuing");
                 }
 
                 let handshake_reply = HandshakeReply {
@@ -153,6 +156,28 @@ impl Context {
             .expect("!thread");
     }
 
+    #[cfg(unix)]
+    fn set_executable_permissions(path: &str) {
+        use std::fs;
+        use std::os::unix::fs::PermissionsExt; // Import the Unix-specific extension trait
+
+        debug!("Setting Unix-like permissions for '{}'", path);
+        if let Err(e) = fs::set_permissions(path, fs::Permissions::from_mode(0o700)) {
+            eprintln!("Error setting Unix permissions: {}", e);
+        }
+    }
+
+    #[cfg(windows)]
+    fn set_executable_permissions(path: &str) {
+        debug!(
+            "Skipping explicit permission setting on Windows for '{}'.",
+            path
+        );
+        // On Windows, you typically rely on the file extension (.exe) for executability
+        // and that the user running it has default "Execute" ACL permissions.
+        // If you need fine-grained ACL control, you'd need external crates or FFI to Windows API.
+    }
+
     fn start_executable(&mut self, f: &messages::LaunchExecutableRequest) {
         trace!("Want to launch {} size {}", f.path, f.data.len());
 
@@ -162,7 +187,7 @@ impl Context {
         }
 
         // make exe executable
-        std::fs::set_permissions("executable", std::fs::Permissions::from_mode(0o700)).unwrap();
+        Self::set_executable_permissions("executable");
 
         let mut p = Command::new("./executable")
             .stderr(Stdio::piped())
@@ -226,7 +251,7 @@ fn handle_client(stream: &mut TcpStream) -> Result<()> {
 
 pub fn update(_opts: &Opt) {
     let listener = TcpListener::bind("0.0.0.0:8888").expect("Could not bind");
-    info!("Wating incoming host");
+    info!("Waiting on incoming host");
     for stream in listener.incoming() {
         match stream {
             Err(e) => error!("failed: {}", e),
