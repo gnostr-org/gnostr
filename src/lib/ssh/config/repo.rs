@@ -21,7 +21,7 @@ pub struct RepoConfig {
     pub extra: Option<Table>,
 }
 
-fn get_config_file_path() {
+fn _get_config_file_path() {
     if let Some(config_file) = dirs::home_dir() {
         let config_file_path = home_dir().expect("REASON").join(&REPO_CONFIG_FILE);
         println!("Full path to config file: {:?}", config_file_path);
