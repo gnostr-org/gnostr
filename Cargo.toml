@@ -27,6 +27,9 @@ exclude = [
     "*ci/",
     "**.md",
     "**.gif",
+    "xq",
+    "org",
+    "proxy",
     #"test_utils",
 ]
 
