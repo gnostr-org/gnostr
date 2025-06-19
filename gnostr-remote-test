@@ -3,6 +3,7 @@
 set -x
 echo "gnostr-remote-test file name: $0"
 cat $0 || true
+#EVENT=$(gnostr --nsec $(gnostr-blockhash) note -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "weeble|$(gnostr-weeble)"  -t "wobble|$(gnostr-wobble)"  -t "blockheight|$(gnostr-blockheight)" --hex | gnostr-xq .id | sed 's/\"//g') && echo $EVENT && sleep 3 && gnostr-fetch-by-id $EVENT
 echo "--- System Information ---"
 echo "Hostname: $(hostname)"
 echo "OS/Kernel: $(uname -a)"
@@ -30,4 +31,5 @@ gnostr --nsec $(gnostr-sha256) -r wss://relay.nostr.band react -e 8bd85322d47f89
 gnostr --nsec $(gnostr-sha256) -r wss://relay.nostr.band react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r $EVENT2_ID
 ##gnostr --nsec $(gnostr-sha256) -r wss://relay.damus.io react -e $EVENT1_ID -r $EVENT2_ID
 ##gnostr --nsec $(gnostr-sha256) -r wss://relay.damus.io react -e $EVENT2_ID -r $EVENT1_ID
+EVENT=$(gnostr --nsec $(gnostr-blockhash) note -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" -t "weeble|$(gnostr-weeble)"  -t "wobble|$(gnostr-wobble)"  -t "blockheight|$(gnostr-blockheight)" --hex | gnostr-xq .id | sed 's/\"//g') && echo $EVENT && sleep 3 && gnostr-fetch-by-id $EVENT
 ## END:contents of $0"
