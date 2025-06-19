@@ -106,6 +106,10 @@ pub struct GnostrCli {
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     pub difficulty_target: u8,
 
+    /// Enable info logging
+    #[clap(long, default_value = "false")]
+    pub info: bool,
+
     /// Enable debug logging
     #[clap(long, default_value = "false")]
     pub debug: bool,
@@ -113,6 +117,10 @@ pub struct GnostrCli {
     /// Enable trace logging
     #[clap(long, default_value = "false")]
     pub trace: bool,
+
+    /// Enable warn logging
+    #[clap(long, default_value = "false")]
+    pub warn: bool,
 
     /// Generate bugreport
     #[clap(long, default_value = "false")]
