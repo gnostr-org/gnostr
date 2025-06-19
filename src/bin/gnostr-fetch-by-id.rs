@@ -2,6 +2,7 @@ use gnostr::get_weeble;
 use gnostr::{Command, Probe};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
+use log::debug;
 use std::env;
 
 #[tokio::main]
@@ -16,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let relay_url = match args.next() {
         Some(u) => u,
-        None => "wss://relay.damus.io".to_string(),
+        None => BOOTSTRAP_RELAYS[0].to_string(),
     };
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
@@ -46,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             RelayMessage::Event(sub, e) => {
                 if sub == our_sub_id {
-                    //println!("{}", serde_json::to_string(&e)?);
+                    debug!("{}", serde_json::to_string(&e)?);
                 }
             }
             RelayMessage::Closed(sub, _) => {
