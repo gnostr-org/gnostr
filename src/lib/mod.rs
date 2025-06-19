@@ -5,6 +5,7 @@ pub use futures_util::stream::FusedStream;
 pub use futures_util::{SinkExt, StreamExt};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
+use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 pub use gnostr_types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
@@ -493,12 +494,17 @@ impl Probe {
                     }
                     RelayMessage::Event(sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
+                        #[cfg(debug_assertions)]
                         eprintln!(
-                            "483:{}: EVENT({}, {})",
+                            "mod.rs:498:{}: EVENT({}, {})",
                             PREFIXES.from_relay,
                             sub.as_str(),
-                            event_json //"{}",
-                                       //event_json
+                            event_json
+                        );
+                        #[cfg(not(debug_assertions))]
+                        eprintln!(
+                            "{}",
+                            event_json
                         );
                     }
                     RelayMessage::Closed(sub, msg) => {
@@ -509,7 +515,7 @@ impl Probe {
                     }
                     RelayMessage::Eose(sub) => {
                         //eprintln!("493:{}: EOSE({})", PREFIXES.from_relay, sub.as_str());
-                        eprintln!("{{\"EOSE\":\"{}\"}}", sub.as_str());
+                        debug!("{{\"EOSE\":\"{}\"}}", sub.as_str());
                     }
                     RelayMessage::Ok(id, ok, reason) => {
                         eprintln!(
@@ -558,28 +564,28 @@ impl Probe {
     ) -> Result<(), Box<dyn std::error::Error>> {
         match message {
             Message::Text(ref s) =>
-            //eprintln!("{}: Text({})", PREFIXES.sending, s),
-            {
-                eprintln!("{}", s)
-            }
+            debug!("{}: Text({})", PREFIXES.sending, s),
+            //{
+                //eprintln!("{}", s)
+            //}
             Message::Binary(_) =>
             //eprintln!("{}: Binary(_)", PREFIXES.sending),
             {
-                eprintln!("TODO:{}: Binary(_)", PREFIXES.sending)
+                debug!("TODO:{}: Binary(_)", PREFIXES.sending)
             }
-            Message::Ping(_) => eprintln!("{}: Ping(_)", PREFIXES.sending),
+            Message::Ping(_) => debug!("{}: Ping(_)", PREFIXES.sending),
             //{
             //    eprint!("560:Ping")
             //}
-            Message::Pong(_) => eprintln!("{}: Pong(_)", PREFIXES.sending),
+            Message::Pong(_) => debug!("{}: Pong(_)", PREFIXES.sending),
             //{
             //    eprint!("565:Ping")
             //}
             Message::Close(_) => {
-                eprintln!("{}: Close(_)", PREFIXES.sending)
+                debug!("{}: Close(_)", PREFIXES.sending)
             }
             //eprint!(""),
-            Message::Frame(_) => eprintln!("{}: Frame(_)", PREFIXES.sending),
+            Message::Frame(_) => debug!("{}: Frame(_)", PREFIXES.sending),
             //{
             //    eprint!("572:Frame")
             //}
