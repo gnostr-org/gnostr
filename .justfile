@@ -79,3 +79,9 @@ fetch-by-kind-and-author:
 crawler-test-relays:
   @make crawler-test-relays
 
+gnostr-note-debug:
+  @make gnostr-note-debug
+
+gnostr-note-trace:
+  @make gnostr-note-trace
+

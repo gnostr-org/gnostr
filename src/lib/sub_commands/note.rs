@@ -6,7 +6,7 @@ use std::str::FromStr;
 use std::time::Duration;
 use tracing::trace;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct NoteSubCommand {
     /// Text note content
     #[arg(short, long)]

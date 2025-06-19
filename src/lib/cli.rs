@@ -13,7 +13,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct CliArgs {
@@ -22,7 +22,7 @@ pub struct CliArgs {
     pub notify_watcher: bool,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitCli {
@@ -45,7 +45,7 @@ pub struct NgitCli {
     pub disable_cli_spinners: Option<bool>,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 pub enum NgitCommands {
     /// update cache with latest updates from nostr
     Fetch(sub_commands::fetch::SubCommandArgs),
