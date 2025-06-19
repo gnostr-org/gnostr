@@ -245,7 +245,7 @@ pub fn run(args: &CliArgs) -> Result<()> {
     let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor);
-    let _run_async = relay_manager.run(vec![BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3]);
+    let _run_async = relay_manager.run(vec![BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3, BOOTSTRAP_RELAY4]);
     //.await;
     //relay_manager.processor.dump();
 
