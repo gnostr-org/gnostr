@@ -119,30 +119,33 @@ cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 	cargo dist manifest --artifacts=all
 
 .PHONY:crawler asyncgit
-crawler:
+crawler: 	### 	crawler
 	@cargo install --path ./crawler \$(FORCE)
-asyncgit:
+asyncgit: 	### 	asyncgit
 	@cargo install --path ./asyncgit \$(FORCE)
 
-dep-graph:
+dep-graph: 	### 	dep-graph
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
 
-fetch-by-id:
+fetch-by-id: 	### 	fetch-by-id
 	cargo install --bin fetch_by_id --path .
 	cargo install --bin gnostr-fetch-by-id --path .
 	event_id=\$(shell gnostr note -c test --hex | jq .id | sed "s/\\"//g") && gnostr-fetch-by-id \$$event_id;
 
-fetch-by-kind-and-author:
+fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
 	cargo install --bin fetch_by_kind-and-author --path .
 	cargo install --bin fetch_by_kind_and_author --path .
 	fetch_by_kind_and_author wss://relay.damus.io 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
 
-crawler-test-relays:
+crawler-test-relays: 	### crawler-test-relays
 	for relay in \$(shell echo \$(shell gnostr-crawler));do echo $\$relay;done
 	for relay in \$(shell echo \$(shell gnostr-crawler));do test_relay $\$relay;done
 
+gnostr-note-debug: 	### 	gnostr-note-debug
+	@gnostr --debug --hash "" note -c "gnostr --debug" --hex -s "gnostr --debug subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--debug|tag" --verbose --expiration 144000
 
-
+gnostr-note-trace: 	### 	gnostr-note-debug
+	@gnostr --trace --hash "" note -c "gnostr --trace" --hex -s "gnostr --trace subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--trace|tag" --verbose --expiration 144000
 
 
 # vim: set noexpandtab:

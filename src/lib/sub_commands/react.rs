@@ -7,7 +7,9 @@ use nostr_sdk_0_32_0::prelude::*;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use crate::utils::{create_client, parse_private_key};
 
-#[derive(Args)]
+use tracing::{debug, info, error, trace, warn};
+
+#[derive(Args, Debug)]
 pub struct ReactionSubCommand {
     /// Event id to react to
     #[arg(short, long)]
@@ -50,7 +52,7 @@ pub async fn react_to_event(
         subscription = Filter::new().event(event_id);
     }
 
-    println!("{:?}", subscription);
+    debug!("{:?}", subscription);
     let events = client
         .get_events_of_with_opts(
             vec![subscription],
