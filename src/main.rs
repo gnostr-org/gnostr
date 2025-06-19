@@ -16,10 +16,8 @@ use sha2::{Digest, Sha256};
 use std::env;
 //use std::{error::Error, time::Duration};
 //use tracing::{/*debug, /*error, info, span,*/ trace, /* warn,*/*/ Level};
-use tracing::trace;
+use tracing::{debug, info, error, trace, warn};
 use tracing_subscriber::FmtSubscriber;
-
-//use tracing::{debug /*, info*/};
 use tracing_core::metadata::LevelFilter;
 
 use serde::ser::StdError;
@@ -36,6 +34,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         LevelFilter::DEBUG
     } else if args.trace {
         LevelFilter::TRACE
+    } else if args.info {
+        LevelFilter::INFO
+    } else if args.warn {
+        LevelFilter::WARN
     } else {
         LevelFilter::OFF
     };
