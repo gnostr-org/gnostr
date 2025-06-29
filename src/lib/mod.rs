@@ -502,10 +502,7 @@ impl Probe {
                             event_json
                         );
                         #[cfg(not(debug_assertions))]
-                        eprintln!(
-                            "{}",
-                            event_json
-                        );
+                        eprintln!("{}", event_json);
                     }
                     RelayMessage::Closed(sub, msg) => {
                         eprintln!("{}: CLOSED({}, {})", PREFIXES.from_relay, sub.as_str(), msg);
@@ -563,10 +560,9 @@ impl Probe {
         message: Message,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match message {
-            Message::Text(ref s) =>
-            debug!("{}: Text({})", PREFIXES.sending, s),
+            Message::Text(ref s) => debug!("{}: Text({})", PREFIXES.sending, s),
             //{
-                //eprintln!("{}", s)
+            //eprintln!("{}", s)
             //}
             Message::Binary(_) =>
             //eprintln!("{}: Binary(_)", PREFIXES.sending),
