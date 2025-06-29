@@ -1,4 +1,3 @@
-use gnostr::get_weeble;
 use gnostr::{Command, Probe};
 use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use std::env;
