@@ -1,5 +1,5 @@
 use chrono::Local;
-use clap::{Arg, ArgAction, Command, Parser};
+use clap::{Command, Parser};
 use console::Term;
 //use dns_lookup::lookup_addr;
 //use dns_lookup::lookup_host;
@@ -73,7 +73,7 @@ fn _get_my_ip() -> Result<String, Box<dyn std::error::Error>> {
     //use std::io;
     use std::process::Command;
 
-    let mut output = Command::new("dig")
+    let output = Command::new("dig")
         .arg("+short")
         .arg("myip.opendns.com")
         .arg("@resolver1.opendns.com")
