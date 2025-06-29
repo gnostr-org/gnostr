@@ -4,10 +4,10 @@ use std::time::Duration;
 use clap::Args;
 use nostr_sdk_0_32_0::prelude::*;
 
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use crate::utils::{create_client, parse_private_key};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 
-use tracing::{debug, info, error, trace, warn};
+use tracing::{debug, error, info, trace, warn};
 
 #[derive(Args, Debug)]
 pub struct ReactionSubCommand {
