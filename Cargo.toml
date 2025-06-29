@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.97"
+version = "0.0.98"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "0xtr <oxtrr@protonmail.com>", "TODO <add_more@gnostr.org>"]
@@ -146,7 +146,7 @@ git2 = "^0.18" ## asyncgit ^0.19
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.2", default-features = false }
-gnostr-crawler = { version = "0.0.7", path = "crawler" }
+gnostr-crawler = { version = "0.0.8", path = "crawler" }
 gnostr-types = { version = "0.7.6", path = "types" }
 #gnostr-types = "0.7.6"
 gnostr_qr = { version = "0.0.7", path = "qr" }
