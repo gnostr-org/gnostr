@@ -4,9 +4,9 @@ use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use sha2::{Digest, Sha256};
 use std::env;
-use tracing::{debug, info, error, trace, warn};
-use tracing_subscriber::FmtSubscriber;
+use tracing::{debug, error, info, trace, warn};
 use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::FmtSubscriber;
 
 use serde::ser::StdError;
 
@@ -56,19 +56,19 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     // Post event
     match &args.command {
         Some(GnostrCommands::Tui(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::tui::tui(sub_command_args).await
         }
         Some(GnostrCommands::Chat(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(sub_command_args).await
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::ngit::ngit(sub_command_args).await
         }
         Some(GnostrCommands::SetMetadata(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             {
                 sub_commands::set_metadata::set_metadata(
                     args.nsec,
@@ -80,7 +80,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::Note(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::note::broadcast_textnote(
                 args.nsec,
                 args.relays,
@@ -90,7 +90,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::PublishContactListCsv(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::publish_contactlist_csv::publish_contact_list_from_csv_file(
                 args.nsec,
                 args.relays,
@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::DeleteEvent(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::delete_event::delete(
                 args.nsec,
                 args.relays,
@@ -110,7 +110,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::DeleteProfile(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::delete_profile::delete(
                 args.nsec,
                 args.relays,
@@ -120,7 +120,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::React(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::react::react_to_event(
                 args.nsec,
                 args.relays,
@@ -130,23 +130,23 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::ListEvents(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::list_events::list_events(args.relays, sub_command_args).await
         }
         Some(GnostrCommands::GenerateKeypair(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::generate_keypair::get_new_keypair(sub_command_args).await
         }
         Some(GnostrCommands::ConvertKey(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::convert_key::convert_key(sub_command_args).await
         }
         Some(GnostrCommands::Vanity(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::vanity::vanity(sub_command_args).await
         }
         Some(GnostrCommands::CreatePublicChannel(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::create_public_channel::create_public_channel(
                 args.nsec,
                 args.relays,
@@ -156,7 +156,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::SetChannelMetadata(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::set_channel_metadata::set_channel_metadata(
                 args.nsec,
                 args.relays,
@@ -166,7 +166,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::SendChannelMessage(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::send_channel_message::send_channel_message(
                 args.nsec,
                 args.relays,
@@ -176,7 +176,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::HidePublicChannelMessage(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::hide_public_channel_message::hide_public_channel_message(
                 args.nsec,
                 args.relays,
@@ -186,7 +186,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::MutePublicKey(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::mute_publickey::mute_publickey(
                 args.nsec,
                 args.relays,
@@ -196,11 +196,11 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::BroadcastEvents(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::broadcast_events::broadcast_events(args.relays, sub_command_args).await
         }
         Some(GnostrCommands::CreateBadge(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::create_badge::create_badge(
                 args.nsec,
                 args.relays,
@@ -210,7 +210,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::AwardBadge(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::award_badge::award_badge(
                 args.nsec,
                 args.relays,
@@ -220,7 +220,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::ProfileBadges(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::profile_badges::set_profile_badges(
                 args.nsec,
                 args.relays,
@@ -230,7 +230,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::CustomEvent(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::custom_event::create_custom_event(
                 args.nsec,
                 args.relays,
@@ -240,7 +240,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             .await
         }
         Some(GnostrCommands::SetUserStatus(sub_command_args)) => {
-			debug!("sub_command_args:{:?}", sub_command_args);
+            debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::user_status::set_user_status(
                 args.nsec,
                 args.relays,
