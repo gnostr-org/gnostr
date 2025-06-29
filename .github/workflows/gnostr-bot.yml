@@ -1,0 +1,166 @@
+name: gnostr-bot.yml
+
+# Controls when the action will run.
+on:
+  schedule:
+    - cron: '*/30 * * * *' # run 30th minute
+  push:
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - 'ma**'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    env:
+      FORCE: "--force"
+      GNOSTR: "gnostr"
+      POW: "16"
+      DAMUS: "wss://relay.damus.io"
+      NOS: "wss://nos.lol"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rustup: [stable, nightly]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: echo test
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo MEMPOOL=${{ env.MEMPOOL }}
+          echo POW=${{ env.POW }}
+          echo DAMUS=${{ env.DAMUS }}
+          echo NOS=${{ env.NOS }}
+        env:
+          MEMPOOL: "mempool"
+          MEMPOOL_SPACE: "mempool-space"
+
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'true'
+
+      - run: rustup default ${{ matrix.rustup }}
+      - run: cargo search gnostr --limit 100
+      - run: cargo install cargo-binstall@1.9.0 || true
+        #if: matrix.os != 'windows-latest'
+      - run: cargo-binstall --no-confirm mempool_space
+      - run: cargo-binstall --no-confirm gnostr-xq
+      - run: cargo-binstall --no-confirm gnostr
+      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+        if: matrix.os != 'windows-latest'
+      - run: brew tap nostorg/nostr || true
+        if: matrix.os != 'windows-latest'
+      - run: brew tap randymcmillan/homebrew-randymcmillan || true
+        if: matrix.os != 'windows-latest'
+      - run: gnostr --help
+      - run: |
+          gnostr -d ${{ env.POW }} \
+          -r ${{ env.DAMUS }} \
+          --nsec "$(gnostr-sha256)" \
+          set-metadata \
+          -n gnostr \
+          -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
+          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
+        if: matrix.os != 'windows-latest'
+      - run: |
+          gnostr -d ${{ env.POW }} \
+          -r ${{ env.NOS }} \
+          --nsec "$(gnostr-sha256)" \
+          note \
+          --content "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" || true
+        if: matrix.os != 'windows-latest'
+      - run: |
+          gnostr -d ${{ env.POW }} \
+          -r ${{ env.DAMUS }} \
+          --nsec "$(mempool-space --blocks_tip_hash)" \
+          set-metadata \
+          -n gnostr \
+          -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+          -p "https://mempool.space/resources/favicons/apple-touch-icon.png" \
+          -b "https://mempool.space/resources/favicons/apple-touch-icon.png" || true;
+          gnostr -d ${{ env.POW }} \
+          --nsec $(mempool-space --blocks_tip_hash) \
+          -r ${{ env.NOS }} \
+          note \
+          --content "BLOCKS_TIP_HEIGHT=$(mempool-space --blocks_tip_height)" \
+          --tag blocks_tip_height --tag $(mempool-space --blocks_tip_height) || true;
+        if: matrix.os != 'windows-latest'
+      - run: |
+          gnostr \
+          -d ${{ env.POW }} \
+          -r ${{ env.DAMUS }} \
+          custom-event \
+          -k 1 \
+          -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+          -t "a|blah" \
+          -t "a|$(date +%s)" \
+          -t "$(gnostr-weeble)" \
+          -t "$(gnostr-blockheight)" \
+          -t "$(gnostr-wobble)" \
+          --hex || true
+        if: matrix.os != 'windows-latest'
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
