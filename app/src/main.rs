@@ -1,10 +1,17 @@
+use gnostr::get_blockheight;
+use gnostr::gnostr::*;
 use gpui::*;
- 
-struct HelloWorld {
+
+struct GnostrApp {
     text: SharedString,
 }
- 
-impl Render for HelloWorld {
+
+impl GnostrApp {
+    fn get_blockheight(&self) -> String {
+        gnostr::get_blockheight().expect("REASON")
+    }
+}
+impl Render for GnostrApp {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .flex()
@@ -14,15 +21,19 @@ impl Render for HelloWorld {
             .items_center()
             .text_xl()
             .text_color(rgb(0xffffff))
-            .child(format!("Hello, {}!", &self.text))
+            .child(format!(
+                "{}:{}!",
+                &self.text,
+                GnostrApp::get_blockheight(&self)
+            ))
     }
 }
 
 fn main() {
     Application::new().run(|cx: &mut App| {
         cx.open_window(WindowOptions::default(), |_, cx| {
-            cx.new(|_cx| HelloWorld {
-                text: "World".into(),
+            cx.new(|_cx| GnostrApp {
+                text: "blockheight".into(),
             })
         })
         .unwrap();
