@@ -33,10 +33,18 @@ pub enum Error {
 
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
+/// gui options
+#[derive(Debug, Clone, Parser)]
+pub struct GuiOpts {
+    /// GnostrApp events data directory path. The "gnostr.toml" default setting is "data/events"
+    #[arg(value_name = "PATH", default_value = ".")]
+    pub path: PathBuf,
+}
+
 /// import options
 #[derive(Debug, Clone, Parser)]
 pub struct ImportOpts {
-    /// Nostr events data directory path. The "rnostr.example.toml" default setting is "data/events"
+    /// Nostr events data directory path. The "gnostr.toml" default setting is "data/events"
     #[arg(value_name = "PATH")]
     pub path: PathBuf,
 
