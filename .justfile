@@ -85,3 +85,9 @@ gnostr-note-debug:
 gnostr-note-trace:
   @make gnostr-note-trace
 
+post_event:
+  @make post_event
+
+post_from_files:
+  @make post_from_files
+
