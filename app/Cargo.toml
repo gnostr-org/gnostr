@@ -1,13 +1,10 @@
 [package]
-name = "gpui-app"
-version = "0.1.0"
+name = "gnostr-app"
+version = "0.0.1"
 edition = "2021"
 
 [dependencies]
 gnostr = { version = "0.0.98", path = ".." }
 gpui = { git = "https://github.com/zed-industries/zed" }
 unicode-segmentation = "1.12.0"
-# smallvec is included here for convenience, it is used by gpui when creating
-# components that can have children. uncomment this line or
-# use `cargo add smallvec` to add it to your project
 #smallvec = "1.13.2"
