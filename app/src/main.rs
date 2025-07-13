@@ -1,5 +1,5 @@
-use gnostr::get_blockheight;
-use gnostr::gnostr::*;
+//use gnostr::get_blockheight;
+//use gnostr::gnostr::*;
 use gpui::*;
 
 struct GnostrApp {
