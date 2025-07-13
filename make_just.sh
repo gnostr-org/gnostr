@@ -135,7 +135,7 @@ fetch-by-id: 	### 	fetch-by-id
 fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
 	cargo install --bin fetch_by_kind-and-author --path .
 	cargo install --bin fetch_by_kind_and_author --path .
-	fetch_by_kind_and_author wss://relay.damus.io 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
+	fetch_by_kind_and_author wss://relay.nostr.band 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
 
 crawler-test-relays: 	### crawler-test-relays
 	for relay in \$(shell echo \$(shell gnostr-crawler));do echo $\$relay;done
@@ -147,6 +147,11 @@ gnostr-note-debug: 	### 	gnostr-note-debug
 gnostr-note-trace: 	### 	gnostr-note-debug
 	@gnostr --trace --hash "" note -c "gnostr --trace" --hex -s "gnostr --trace subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--trace|tag" --verbose --expiration 144000
 
+post_event: 	### 	post_event
+	cat tests/events/json/first-gnostr-commit.json | post_event wss://relay.nostr.band
+
+post_from_files: 	### 	post_from_files
+	post_from_files ./tests/events/json wss://relay.nostr.band
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
