@@ -83,13 +83,6 @@ url = "2.2.2"
 ##futures = "0.3.25"
 
 [dependencies]
-#clap = { version = "4.2", features = ["derive"] }
-#serde = { version = "1.0", features = ["derive"] }
-ctrlc = { version = "3.2", features = ["termination"] }
-#log = "0.4"
-bincode = "1.3.1"
-#anyhow = "1.0"
-simple_logger = "4.1"
 #notify-debouncer-mini = "0.2.0"
 
 anyhow = "1.0.75"
@@ -102,6 +95,8 @@ async-trait = "0.1.73"
 auth-git2 = "0.5.5"
 backtrace = "0.3"
 base64 = "0.21"
+#log = "0.4"
+bincode = "1.3.1"
 bitcoin_hashes = "0.14.0"
 bitflags = "2.6"
 bugreport = "0.5"
@@ -122,6 +117,9 @@ crossbeam-channel = "0.5"
 crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
 #clap = { version = "4.5.6", features = ["derive"] }
 csv = "1.3.0"
+#clap = { version = "4.2", features = ["derive"] }
+#serde = { version = "1.0", features = ["derive"] }
+ctrlc = { version = "3.2", features = ["termination"] }
 dialoguer = "0.10.4"
 directories = "5.0.1"
 #crossterm = { version = "0.28", features = ["serde"] }
@@ -150,6 +148,8 @@ gnostr-crawler = { version = "0.0.8", path = "crawler" }
 gnostr-types = { version = "0.7.6", path = "types" }
 #gnostr-types = "0.7.6"
 gnostr_qr = { version = "0.0.7", path = "qr" }
+#gpui = "0.1.0"
+#gpui-component = "0.1.0"
 
 hex = "0.4"
 hostname = "0.3.1"
@@ -226,6 +226,8 @@ sha256 = "1.5.0"
 #serde = "1.0"
 shellexpand = "3.1"
 shellwords = "1.1.0"
+#anyhow = "1.0"
+simple_logger = "4.1"
 simplelog = { version = "0.12", default-features = false }
 struct-patch = "0.4"
 structopt = "0.3.26"
