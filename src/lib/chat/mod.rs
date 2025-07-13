@@ -23,11 +23,12 @@ use serde_json::{Result as SerdeJsonResult, Value};
 use sha2::Digest;
 //use tokio::time::Duration;
 
+use crate::global_rt::global_rt;
 pub mod p2p;
-pub mod ui;
 pub use p2p::evt_loop;
 pub mod msg;
 pub use msg::*;
+pub mod ui;
 
 //const TITLE: &str = include_str!("./title.txt");
 
@@ -382,12 +383,6 @@ pub struct ChatSubCommands {
     pub debug: bool,
     #[arg(long, action)]
     pub trace: bool,
-}
-
-//async tasks
-pub fn global_rt() -> &'static tokio::runtime::Runtime {
-    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
 pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
