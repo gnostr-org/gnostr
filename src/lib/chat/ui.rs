@@ -177,7 +177,14 @@ fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         // .margin(2)
-        .constraints([Constraint::Length(10)/*fit a git commit*/, Constraint::Fill(5), Constraint::Length(3)].as_ref())
+        .constraints(
+            [
+                Constraint::Length(10), /*fit a git commit*/
+                Constraint::Fill(5),
+                Constraint::Length(3),
+            ]
+            .as_ref(),
+        )
         .split(f.size());
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
