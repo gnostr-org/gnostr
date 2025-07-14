@@ -124,5 +124,7 @@ post_event: 	### 	post_event
 post_from_files: 	### 	post_from_files
 	post_from_files ./tests/events/json wss://relay.nostr.band
 
+plan-dist-manifest: 	###plan-dist-manifest
+	dist host --allow-dirty --steps=create --tag=v0.0.99 --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
 # vim: set noexpandtab:
 # vim: set setfiletype make
