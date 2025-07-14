@@ -125,7 +125,7 @@ pub async fn evt_loop(
                     .behaviour_mut().gossipsub
                     .publish(topic.clone(), serde_json::to_vec(&m)?) {
                     debug!("Publish error: {e:?}");
-                    let m = Msg::default().set_content(format!("publish error: {e:?}")).set_kind(MsgKind::System);
+                    let m = Msg::default().set_content(format!("publish error: {e:?}"), 0 as usize).set_kind(MsgKind::System);
                     recv.send(m).await?;
                 }
             }
@@ -161,7 +161,7 @@ pub async fn evt_loop(
                         },
                         Err(e) => {
                             warn!("Error deserializing message: {e:?}");
-                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}")).set_kind(MsgKind::System);
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0 as usize).set_kind(MsgKind::System);
                             recv.send(m).await?;
                         }
                     }
