@@ -99,13 +99,11 @@ fn fast_forward(
     println!("{}", msg);
     lb.set_target(rc.id(), &msg)?;
     repo.set_head(&name)?;
-    repo.checkout_head(Some(
-        git2::build::CheckoutBuilder::default()
+    repo.checkout_head(Some(git2::build::CheckoutBuilder::default()
             // For some reason the force is required to make the working directory actually get
             // updated I suspect we should be adding some logic to handle dirty working
             // directory states but this is just an example so maybe not.
-            .force(),
-    ))?;
+            .force()))?;
     Ok(())
 }
 
