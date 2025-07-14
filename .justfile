@@ -91,3 +91,6 @@ post_event:
 post_from_files:
   @make post_from_files
 
+plan-dist-manifest:
+  @make plan-dist-manifest
+
