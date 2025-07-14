@@ -2875,7 +2875,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.100"
+version = "0.0.101"
 dependencies = [
  "anyhow",
  "ascii",
