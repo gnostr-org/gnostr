@@ -153,7 +153,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
                             }
-                        }
+						} else {
+							//TODO refresh and query topic nostr DMs
+						}
                         app.input.reset();
                     }
                     KeyCode::Esc => {
@@ -169,12 +171,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
     }
 }
 
-//as popup widget is constructed in chat_details/mos.rs
+//as popup widget is constructed in chat_details/mod.rs
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         // .margin(2)
-        .constraints([Constraint::Fill(5), Constraint::Length(3)].as_ref())
+        .constraints([Constraint::Length(10)/*fit a git commit*/, Constraint::Fill(5), Constraint::Length(3)].as_ref())
         .split(f.size());
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
@@ -187,7 +189,7 @@ fn ui(f: &mut Frame, app: &App) {
         })
         .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
-    f.render_widget(input, chunks[1]);
+    f.render_widget(input, chunks[2]);
 
     match app.input_mode {
         InputMode::Normal =>
@@ -198,14 +200,14 @@ fn ui(f: &mut Frame, app: &App) {
             // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
             f.set_cursor(
                 // Put cursor past the end of the input text
-                chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                 // Move one line down, from the border to the input line
-                chunks[1].y + 1,
+                chunks[2].y + 1,
             )
         }
     }
 
-    let height = chunks[0].height;
+    let height = chunks[1].height;
     let msgs = app.messages.lock().unwrap();
     let messages: Vec<ListItem> = msgs[0..app.msgs_scroll.min(msgs.len())]
         .iter()
@@ -216,5 +218,14 @@ fn ui(f: &mut Frame, app: &App) {
     let messages = List::new(messages)
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
-    f.render_widget(messages, chunks[0]);
+    f.render_widget(messages, chunks[1]);
+    
+	let input = Paragraph::new(app.input.value())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Cyan),
+        })
+        .scroll((0, scroll as u16))
+        .block(Block::default().borders(Borders::ALL).title("TOPIC"));
+    f.render_widget(input, chunks[0]);
 }
