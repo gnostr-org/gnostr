@@ -98,6 +98,11 @@ asyncgit: 	### 	asyncgit
 dep-graph: 	### 	dep-graph
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
 
+gnostr-chat: 	## 	gnostr-chat
+	cargo install --path . --bin gnostr
+	cargo install --path . --example gnostr-chat
+	gnostr chat --topic gnostr --name "$(gnostr-weeble)/905542/291833:$(USER)"
+
 fetch-by-id: 	### 	fetch-by-id
 	cargo install --bin fetch_by_id --path .
 	cargo install --bin gnostr-fetch-by-id --path .
