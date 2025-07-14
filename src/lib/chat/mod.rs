@@ -291,14 +291,14 @@ pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     }
 }
 
-/// Simple CLI application to interact with nostr
+/// gnostr chat - p2p chat
 #[derive(Debug, Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
 #[command(author, version, about, long_about = "long_about")]
 pub struct ChatCli {
-    /// Name of the person to greet
+    /// gnostr chat --name <alias_string>
     #[arg(
         long,
         value_name = "NAME",
@@ -451,147 +451,22 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     });
 
     //initialize git repo
-    let repo = Repository::discover(".")?;
+    if let Some(repo) = Some(Repository::discover(".")?) {
+        debug!("repo path:\n{}", repo.path().display());
 
-    //gather some repo info
-    //find HEAD
-    let head = repo.head()?;
-    let obj = head.resolve()?.peel(ObjectType::Commit)?;
+        // 3. Gather some repo info
+        // find HEAD
+        // repo.head() returns Result<Reference, Error>
+        let head = repo.head()?; // Unwraps the Reference or returns early on Err
+        let obj = head.resolve()?.peel(ObjectType::Commit)?;
 
-    //read top commit
-    let commit = obj.peel_to_commit()?;
-    let commit_id = commit.id().to_string();
-    //some info wrangling
-    debug!("commit_id:\n{}", commit_id);
-    let padded_commit_id = format!("{:0>64}", commit_id);
+        //read top commit
+        let commit = obj.peel_to_commit()?;
+        let commit_id = commit.id().to_string();
+        //some info wrangling
+        debug!("commit_id:\n{}", commit_id);
+        let padded_commit_id = format!("{:0>64}", commit_id);
 
-    //// commit based keys
-    //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
-    //info!("keys.secret_key():\n{:?}", keys.secret_key());
-    //info!("keys.public_key():\n{}", keys.public_key());
-
-    //parse keys from sha256 hash
-    let padded_keys = Keys::parse(padded_commit_id).unwrap();
-
-    //create a HashMap of custom_tags
-    //used to insert commit tags
-    let mut custom_tags = HashMap::new();
-    custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
-    custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
-    custom_tags.insert(
-        padded_keys.clone().public_key().to_string(),
-        vec!["GNOSTR".to_string()],
-    );
-
-    global_rt().spawn(async move {
-        //send to create_event function with &"custom content"
-        let signed_event =
-            create_event(padded_keys.clone(), custom_tags, &"gnostr-chat:event").await;
-        debug!("signed_event:\n{:?}", signed_event);
-    });
-
-    //TODO config metadata
-
-    //access some git info
-    let serialized_commit = serialize_commit(&commit)?;
-    debug!("Serialized commit:\n{}", serialized_commit.clone());
-
-    let binding = serialized_commit.clone();
-    let deserialized_commit = deserialize_commit(&repo, &binding)?;
-    debug!("Deserialized commit:\n{:?}", deserialized_commit);
-
-    //access commit summary in the deserialized commit
-    debug!("Original commit ID:\n{}", commit_id);
-    debug!("Deserialized commit ID:\n{}", deserialized_commit.id());
-
-    //additional checking
-    if commit.id() != deserialized_commit.id() {
-        debug!("Commit IDs do not match!");
-    } else {
-        debug!("Commit IDs match!");
-    }
-
-    let serialized_commit = serialize_commit(&commit)?;
-    let value: Value = parse_json(&serialized_commit.clone())?;
-    //info!("value:\n{}", value);
-
-    // Accessing object elements.
-    if let Some(id) = value.get("id") {
-        debug!("id:\n{}", id.as_str().unwrap_or(""));
-    }
-    if let Some(tree) = value.get("tree") {
-        debug!("tree:\n{}", tree.as_str().unwrap_or(""));
-    }
-    // Accessing parent commits (merge may be array)
-    if let Some(parent) = value.get("parents") {
-        if let Value::Array(arr) = parent {
-            if let Some(parent) = arr.get(0) {
-                debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
-            }
-            if let Some(parent) = arr.get(1) {
-                debug!("parent:\n{}", parent.as_str().unwrap_or(""));
-            }
-        }
-    }
-    if let Some(author_name) = value.get("author_name") {
-        debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
-    }
-    if let Some(author_email) = value.get("author_email") {
-        debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
-    }
-    if let Some(committer_name) = value.get("committer_name") {
-        debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
-    }
-    if let Some(committer_email) = value.get("committer_email") {
-        debug!(
-            "committer_email:\n{}",
-            committer_email.as_str().unwrap_or("")
-        );
-    }
-
-    //split the commit message into a Vec<String>
-    if let Some(message) = value.get("message") {
-        let parts = split_json_string(&message, "\n");
-        for part in parts {
-            debug!("\n{}", part);
-        }
-        debug!("message:\n{}", message.as_str().unwrap_or(""));
-    }
-    if let Value::Number(time) = &value["time"] {
-        debug!("time:\n{}", time);
-    }
-
-    // // Accessing array elements.
-    // if let Some(items) = value.get("items") {
-    //     if let Value::Array(arr) = items {
-    //         if let Some(first_item) = arr.get(0) {
-    //             info!("First item: {}", first_item);
-    //         }
-    //         if let Some(second_item) = arr.get(1){
-    //             info!("second item: {}", second_item.as_str().unwrap_or(""));
-    //         }
-    //     }
-    // }
-
-    //initialize git repo
-    let repo = Repository::discover(".").expect("");
-
-    //gather some repo info
-    //find HEAD
-    let head = repo.head().expect("");
-    let obj = head
-        .resolve()
-        .expect("")
-        .peel(ObjectType::Commit)
-        .expect("");
-
-    //read top commit
-    let commit = obj.peel_to_commit().expect("");
-    let commit_id = commit.id().to_string();
-    //some info wrangling
-    debug!("commit_id:\n{}", commit_id);
-    let padded_commit_id = format!("{:0>64}", commit_id.clone());
-    global_rt().spawn(async move {
         //// commit based keys
         //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
         //info!("keys.secret_key():\n{:?}", keys.secret_key());
@@ -599,221 +474,350 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
         //parse keys from sha256 hash
         let padded_keys = Keys::parse(padded_commit_id).unwrap();
-        //create nostr client with commit based keys
-        //let client = Client::new(keys);
-        let client = Client::new(padded_keys.clone());
-        client.add_relay("wss://relay.damus.io").await.expect("");
-        client.add_relay("wss://e.nos.lol").await.expect("");
-        client.connect().await;
 
-        //build git gnostr event
-        let builder = EventBuilder::text_note(serialized_commit.clone());
-
-        //send git gnostr event
-        //let output = client.send_event_builder(builder).await.expect("");
-
-        //some reporting
-        //info!("Event ID: {}", output.id());
-        //info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
-        //info!("Sent to: {:?}", output.success);
-        //info!("Not sent to: {:?}", output.failed);
-    });
-
-    let mut app = ui::App::default();
-
-    //TODO
-    //for line in TITLE.lines() {
-    //    app.add_message(
-    //        Msg::default()
-    //            .set_content(line.to_string())
-    //            .set_kind(MsgKind::Raw),
-    //    );
-    //}
-
-    //TODO construct git commit message header
-
-    let serialized_commit = serialize_commit(&commit)?;
-    let value: Value = parse_json(&serialized_commit.clone())?;
-    //info!("value:\n{}", value);
-
-    // Accessing object elements.
-    if let Some(id) = value.get("id") {
-        debug!("id:\n{}", id.as_str().unwrap_or(""));
-        app.add_message(
-            Msg::default()
-                .set_content(String::from(id.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitId),
+        //create a HashMap of custom_tags
+        //used to insert commit tags
+        let mut custom_tags = HashMap::new();
+        custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
+        custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
+        custom_tags.insert(
+            padded_keys.clone().public_key().to_string(),
+            vec!["GNOSTR".to_string()],
         );
-    }
-    if let Some(tree) = value.get("tree") {
-        debug!("tree:\n{}", tree.as_str().unwrap_or(""));
-        app.add_message(
-            Msg::default()
-                .set_content(String::from(tree.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitTree),
-        );
-    }
-    // Accessing parent commits (merge may be array)
-    if let Some(parent) = value.get("parents") {
-        if let Value::Array(arr) = parent {
-            if let Some(parent) = arr.get(0) {
-                debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
-                app.add_message(
-                    Msg::default()
-                        .set_content(String::from(parent.as_str().unwrap_or("")))
-                        .set_kind(MsgKind::GitCommitParent),
-                );
-            }
-            if let Some(parent) = arr.get(1) {
-                debug!("parent:\n{}", parent.as_str().unwrap_or(""));
-                app.add_message(
-                    Msg::default()
-                        .set_content(String::from(parent.as_str().unwrap_or("")))
-                        .set_kind(MsgKind::GitCommitParent),
-                );
-            }
-        }
-    }
-    if let Some(author_name) = value.get("author_name") {
-        debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
-        app.add_message(
-            Msg::default()
-                .set_content(String::from(author_name.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitAuthor),
-        );
-    }
-    if let Some(author_email) = value.get("author_email") {
-        debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
-        app.add_message(
-            Msg::default()
-                .set_content(String::from(author_email.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitEmail),
-        );
-    }
-    if let Some(committer_name) = value.get("committer_name") {
-        debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
-        app.add_message(
-            Msg::default()
-                .set_content(String::from(committer_name.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitName),
-        );
-    }
-    if let Some(committer_email) = value.get("committer_email") {
-        debug!(
-            "committer_email:\n{}",
-            committer_email.as_str().unwrap_or("")
-        );
-        app.add_message(
-            Msg::default()
-                .set_content(String::from(committer_email.as_str().unwrap_or("")))
-                .set_kind(MsgKind::GitCommitEmail),
-        );
-    }
 
-    //split the commit message into a Vec<String>
-    //if let Some(message) = value.get("message") {
-    //    let parts = split_json_string(&message, "\n");
-    //    for part in parts {
-    //        debug!("\n{}", part);
-
-    //        app.add_message(
-    //            Msg::default()
-    //                .set_content(String::from(part))
-    //                .set_kind(MsgKind::GitCommitMessagePart),
-    //        );
-    //    }
-    //    debug!("message:\n{}", message.as_str().unwrap_or(""));
-    //}
-    if let Value::Number(time) = &value["time"] {
-        debug!("time:\n{}", time);
-
-        app.add_message(
-            Msg::default()
-                .set_content(time.to_string())
-                .set_kind(MsgKind::GitCommitTime),
-        );
-    }
-
-    let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
-    //info!("keys.secret_key():\n{:?}", keys.secret_key());
-    info!("keys.public_key():\n{}", keys.public_key());
-    //app.add_message(
-    //    Msg::default()
-    //        .set_content(keys.public_key().to_string())
-    //        .set_kind(MsgKind::GitCommitHeader),
-    //);
-    ////app.add_message(
-    ////    Msg::default()
-    ////        .set_content(String::from(serialize_commit))
-    ////        .set_kind(MsgKind::GitCommitHeader),
-    ////);
-    //app.add_message(
-    //    Msg::default()
-    //        .set_content(String::from("third message"))
-    //        .set_kind(MsgKind::GitCommitHeader),
-    //);
-    //app.add_message(
-    //    Msg::default()
-    //        .set_content(String::from("fourth message"))
-    //        .set_kind(MsgKind::GitCommitHeader),
-    //);
-
-    let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<Msg>(100);
-    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<Msg>(100);
-
-    // let input_loop_fut = input_loop(input_tx);
-    let input_tx_clone = input_tx.clone();
-
-    let value = input_tx_clone.clone();
-    app.on_submit(move |m| {
-        let value = value.clone();
         global_rt().spawn(async move {
-            debug!("sent: {:?}", m);
-            value.send(m).await.unwrap();
+            //send to create_event function with &"custom content"
+            let signed_event =
+                create_event(padded_keys.clone(), custom_tags, &"gnostr-chat:event").await;
+            debug!("signed_event:\n{:?}", signed_event);
         });
-    });
 
-    //
-    let mut topic = String::from(commit_id.to_string());
-    if !args.topic.is_none() {
-        topic = args.topic.expect("");
-    } else {
-    }
+        //TODO config metadata
 
-    app.topic = topic.clone();
+        //access some git info
+        let serialized_commit = serialize_commit(&commit)?;
+        debug!("Serialized commit:\n{}", serialized_commit.clone());
 
-    let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
+        let binding = serialized_commit.clone();
+        let deserialized_commit = deserialize_commit(&repo, &binding)?;
+        debug!("Deserialized commit:\n{:?}", deserialized_commit);
 
-    global_rt().spawn(async move {
-        evt_loop(input_rx, peer_tx, topic).await.unwrap();
-    });
+        //access commit summary in the deserialized commit
+        debug!("Original commit ID:\n{}", commit_id);
+        debug!("Deserialized commit ID:\n{}", deserialized_commit.id());
 
-    // recv from peer
-    let mut tui_msg_adder = app.add_msg_fn();
-    global_rt().spawn(async move {
-        while let Some(m) = peer_rx.recv().await {
-            debug!("recv: {:?}", m);
-            tui_msg_adder(m);
+        //additional checking
+        if commit.id() != deserialized_commit.id() {
+            debug!("Commit IDs do not match!");
+        } else {
+            debug!("Commit IDs match!");
         }
-    });
 
-    // say hi
-    let input_tx_clone = input_tx.clone();
-    global_rt().spawn(async move {
-        tokio::time::sleep(Duration::from_millis(1000)).await;
-        input_tx_clone
-            .send(Msg::default().set_kind(MsgKind::Join))
-            .await
-            .unwrap();
-    });
+        let serialized_commit = serialize_commit(&commit)?;
+        let value: Value = parse_json(&serialized_commit.clone())?;
+        //info!("value:\n{}", value);
 
-    app.run()?;
+        // Accessing object elements.
+        if let Some(id) = value.get("id") {
+            debug!("id:\n{}", id.as_str().unwrap_or(""));
+        }
+        if let Some(tree) = value.get("tree") {
+            debug!("tree:\n{}", tree.as_str().unwrap_or(""));
+        }
+        // Accessing parent commits (merge may be array)
+        if let Some(parent) = value.get("parents") {
+            if let Value::Array(arr) = parent {
+                if let Some(parent) = arr.get(0) {
+                    debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
+                }
+                if let Some(parent) = arr.get(1) {
+                    debug!("parent:\n{}", parent.as_str().unwrap_or(""));
+                }
+            }
+        }
+        if let Some(author_name) = value.get("author_name") {
+            debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
+        }
+        if let Some(author_email) = value.get("author_email") {
+            debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
+        }
+        if let Some(committer_name) = value.get("committer_name") {
+            debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
+        }
+        if let Some(committer_email) = value.get("committer_email") {
+            debug!(
+                "committer_email:\n{}",
+                committer_email.as_str().unwrap_or("")
+            );
+        }
 
-    // say goodbye
-    // input_tx.blocking_send(Msg::default().set_kind(MsgKind::Leave))?;
-    let _ = input_tx.send(Msg::default().set_kind(MsgKind::Leave));
-    std::thread::sleep(Duration::from_millis(500));
+        //split the commit message into a Vec<String>
+        if let Some(message) = value.get("message") {
+            let parts = split_json_string(&message, "\n");
+            for part in parts {
+                debug!("\n{}", part);
+            }
+            debug!("message:\n{}", message.as_str().unwrap_or(""));
+        }
+        if let Value::Number(time) = &value["time"] {
+            debug!("time:\n{}", time);
+        }
 
+        // // Accessing array elements.
+        // if let Some(items) = value.get("items") {
+        //     if let Value::Array(arr) = items {
+        //         if let Some(first_item) = arr.get(0) {
+        //             info!("First item: {}", first_item);
+        //         }
+        //         if let Some(second_item) = arr.get(1){
+        //             info!("second item: {}", second_item.as_str().unwrap_or(""));
+        //         }
+        //     }
+        // }
+
+        //initialize git repo
+        let repo = Repository::discover(".").expect("");
+
+        //gather some repo info
+        //find HEAD
+        let head = repo.head().expect("");
+        let obj = head
+            .resolve()
+            .expect("")
+            .peel(ObjectType::Commit)
+            .expect("");
+
+        //read top commit
+        let commit = obj.peel_to_commit().expect("");
+        let commit_id = commit.id().to_string();
+        //some info wrangling
+        debug!("commit_id:\n{}", commit_id);
+        let padded_commit_id = format!("{:0>64}", commit_id.clone());
+        global_rt().spawn(async move {
+            //// commit based keys
+            //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+            //info!("keys.secret_key():\n{:?}", keys.secret_key());
+            //info!("keys.public_key():\n{}", keys.public_key());
+
+            //parse keys from sha256 hash
+            let padded_keys = Keys::parse(padded_commit_id).unwrap();
+            //create nostr client with commit based keys
+            //let client = Client::new(keys);
+            let client = Client::new(padded_keys.clone());
+            client.add_relay("wss://relay.damus.io").await.expect("");
+            client.add_relay("wss://e.nos.lol").await.expect("");
+            client.connect().await;
+
+            //build git gnostr event
+            let builder = EventBuilder::text_note(serialized_commit.clone());
+
+            //send git gnostr event
+            //let output = client.send_event_builder(builder).await.expect("");
+
+            //some reporting
+            //info!("Event ID: {}", output.id());
+            //info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+            //info!("Sent to: {:?}", output.success);
+            //info!("Not sent to: {:?}", output.failed);
+        });
+
+        let mut app = ui::App::default();
+
+        //TODO
+        //for line in TITLE.lines() {
+        //    app.add_message(
+        //        Msg::default()
+        //            .set_content(line.to_string())
+        //            .set_kind(MsgKind::Raw),
+        //    );
+        //}
+
+        //TODO construct git commit message header
+
+        let serialized_commit = serialize_commit(&commit)?;
+        let value: Value = parse_json(&serialized_commit.clone())?;
+        //info!("value:\n{}", value);
+
+        // Accessing object elements.
+        if let Some(id) = value.get("id") {
+            debug!("id:\n{}", id.as_str().unwrap_or(""));
+            app.add_message(
+                Msg::default()
+                    .set_content(String::from(id.as_str().unwrap_or("")))
+                    .set_kind(MsgKind::GitCommitId),
+            );
+        }
+        if let Some(tree) = value.get("tree") {
+            debug!("tree:\n{}", tree.as_str().unwrap_or(""));
+            app.add_message(
+                Msg::default()
+                    .set_content(String::from(tree.as_str().unwrap_or("")))
+                    .set_kind(MsgKind::GitCommitTree),
+            );
+        }
+        // Accessing parent commits (merge may be array)
+        if let Some(parent) = value.get("parents") {
+            if let Value::Array(arr) = parent {
+                if let Some(parent) = arr.get(0) {
+                    debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
+                    app.add_message(
+                        Msg::default()
+                            .set_content(String::from(parent.as_str().unwrap_or("")))
+                            .set_kind(MsgKind::GitCommitParent),
+                    );
+                }
+                if let Some(parent) = arr.get(1) {
+                    debug!("parent:\n{}", parent.as_str().unwrap_or(""));
+                    app.add_message(
+                        Msg::default()
+                            .set_content(String::from(parent.as_str().unwrap_or("")))
+                            .set_kind(MsgKind::GitCommitParent),
+                    );
+                }
+            }
+        }
+        if let Some(author_name) = value.get("author_name") {
+            debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
+            app.add_message(
+                Msg::default()
+                    .set_content(String::from(author_name.as_str().unwrap_or("")))
+                    .set_kind(MsgKind::GitCommitAuthor),
+            );
+        }
+        if let Some(author_email) = value.get("author_email") {
+            debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
+            app.add_message(
+                Msg::default()
+                    .set_content(String::from(author_email.as_str().unwrap_or("")))
+                    .set_kind(MsgKind::GitCommitEmail),
+            );
+        }
+        if let Some(committer_name) = value.get("committer_name") {
+            debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
+            app.add_message(
+                Msg::default()
+                    .set_content(String::from(committer_name.as_str().unwrap_or("")))
+                    .set_kind(MsgKind::GitCommitName),
+            );
+        }
+        if let Some(committer_email) = value.get("committer_email") {
+            debug!(
+                "committer_email:\n{}",
+                committer_email.as_str().unwrap_or("")
+            );
+            app.add_message(
+                Msg::default()
+                    .set_content(String::from(committer_email.as_str().unwrap_or("")))
+                    .set_kind(MsgKind::GitCommitEmail),
+            );
+        }
+
+        //split the commit message into a Vec<String>
+        //if let Some(message) = value.get("message") {
+        //    let parts = split_json_string(&message, "\n");
+        //    for part in parts {
+        //        debug!("\n{}", part);
+
+        //        app.add_message(
+        //            Msg::default()
+        //                .set_content(String::from(part))
+        //                .set_kind(MsgKind::GitCommitMessagePart),
+        //        );
+        //    }
+        //    debug!("message:\n{}", message.as_str().unwrap_or(""));
+        //}
+        if let Value::Number(time) = &value["time"] {
+            debug!("time:\n{}", time);
+
+            app.add_message(
+                Msg::default()
+                    .set_content(time.to_string())
+                    .set_kind(MsgKind::GitCommitTime),
+            );
+        }
+
+        let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+        //info!("keys.secret_key():\n{:?}", keys.secret_key());
+        info!("keys.public_key():\n{}", keys.public_key());
+        //app.add_message(
+        //    Msg::default()
+        //        .set_content(keys.public_key().to_string())
+        //        .set_kind(MsgKind::GitCommitHeader),
+        //);
+        ////app.add_message(
+        ////    Msg::default()
+        ////        .set_content(String::from(serialize_commit))
+        ////        .set_kind(MsgKind::GitCommitHeader),
+        ////);
+        //app.add_message(
+        //    Msg::default()
+        //        .set_content(String::from("third message"))
+        //        .set_kind(MsgKind::GitCommitHeader),
+        //);
+        //app.add_message(
+        //    Msg::default()
+        //        .set_content(String::from("fourth message"))
+        //        .set_kind(MsgKind::GitCommitHeader),
+        //);
+
+        let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<Msg>(100);
+        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<Msg>(100);
+
+        // let input_loop_fut = input_loop(input_tx);
+        let input_tx_clone = input_tx.clone();
+
+        let value = input_tx_clone.clone();
+        app.on_submit(move |m| {
+            let value = value.clone();
+            global_rt().spawn(async move {
+                debug!("sent: {:?}", m);
+                value.send(m).await.unwrap();
+            });
+        });
+
+        //
+        let mut topic = String::from(commit_id.to_string());
+        if !args.topic.is_none() {
+            topic = args.topic.expect("");
+        } else {
+        }
+
+        app.topic = topic.clone();
+
+        let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
+
+        global_rt().spawn(async move {
+            evt_loop(input_rx, peer_tx, topic).await.unwrap();
+        });
+
+        // recv from peer
+        let mut tui_msg_adder = app.add_msg_fn();
+        global_rt().spawn(async move {
+            while let Some(m) = peer_rx.recv().await {
+                debug!("recv: {:?}", m);
+                tui_msg_adder(m);
+            }
+        });
+
+        // say hi
+        let input_tx_clone = input_tx.clone();
+        global_rt().spawn(async move {
+            tokio::time::sleep(Duration::from_millis(1000)).await;
+            input_tx_clone
+                .send(Msg::default().set_kind(MsgKind::Join))
+                .await
+                .unwrap();
+        });
+
+        app.run()?;
+
+        // say goodbye
+        // input_tx.blocking_send(Msg::default().set_kind(MsgKind::Leave))?;
+        let _ = input_tx.send(Msg::default().set_kind(MsgKind::Leave));
+        std::thread::sleep(Duration::from_millis(500));
+    } else {
+        debug!("not a git repo:\n");
+    };
     Ok(())
 }
 
