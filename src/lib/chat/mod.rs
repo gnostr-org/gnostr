@@ -627,7 +627,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         //for line in TITLE.lines() {
         //    app.add_message(
         //        Msg::default()
-        //            .set_content(line.to_string())
+        //            .set_content(line.to_string(), 0 as usize)
         //            .set_kind(MsgKind::Raw),
         //    );
         //}
@@ -643,7 +643,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             debug!("id:\n{}", id.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(id.as_str().unwrap_or("")))
+                    .set_content(String::from(id.as_str().unwrap_or("")), 0 as usize)
                     .set_kind(MsgKind::GitCommitId),
             );
         }
@@ -651,7 +651,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             debug!("tree:\n{}", tree.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(tree.as_str().unwrap_or("")))
+                    .set_content(String::from(tree.as_str().unwrap_or("")), 0 as usize)
                     .set_kind(MsgKind::GitCommitTree),
             );
         }
@@ -662,7 +662,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
                     debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
                     app.add_message(
                         Msg::default()
-                            .set_content(String::from(parent.as_str().unwrap_or("")))
+                            .set_content(String::from(parent.as_str().unwrap_or("")), 0 as usize)
                             .set_kind(MsgKind::GitCommitParent),
                     );
                 }
@@ -670,7 +670,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
                     debug!("parent:\n{}", parent.as_str().unwrap_or(""));
                     app.add_message(
                         Msg::default()
-                            .set_content(String::from(parent.as_str().unwrap_or("")))
+                            .set_content(String::from(parent.as_str().unwrap_or("")), 0 as usize)
                             .set_kind(MsgKind::GitCommitParent),
                     );
                 }
@@ -680,7 +680,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(author_name.as_str().unwrap_or("")))
+                    .set_content(String::from(author_name.as_str().unwrap_or("")), 0 as usize)
                     .set_kind(MsgKind::GitCommitAuthor),
             );
         }
@@ -688,7 +688,10 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(author_email.as_str().unwrap_or("")))
+                    .set_content(
+                        String::from(author_email.as_str().unwrap_or("")),
+                        0 as usize,
+                    )
                     .set_kind(MsgKind::GitCommitEmail),
             );
         }
@@ -696,7 +699,10 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(committer_name.as_str().unwrap_or("")))
+                    .set_content(
+                        String::from(committer_name.as_str().unwrap_or("")),
+                        0 as usize,
+                    )
                     .set_kind(MsgKind::GitCommitName),
             );
         }
@@ -707,7 +713,10 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             );
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(committer_email.as_str().unwrap_or("")))
+                    .set_content(
+                        String::from(committer_email.as_str().unwrap_or("")),
+                        0 as usize,
+                    )
                     .set_kind(MsgKind::GitCommitEmail),
             );
         }
@@ -720,7 +729,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
         //        app.add_message(
         //            Msg::default()
-        //                .set_content(String::from(part))
+        //                .set_content(String::from(part), 0 as usize)
         //                .set_kind(MsgKind::GitCommitMessagePart),
         //        );
         //    }
@@ -731,7 +740,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
             app.add_message(
                 Msg::default()
-                    .set_content(time.to_string())
+                    .set_content(time.to_string(), 0 as usize)
                     .set_kind(MsgKind::GitCommitTime),
             );
         }
@@ -741,22 +750,22 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         info!("keys.public_key():\n{}", keys.public_key());
         //app.add_message(
         //    Msg::default()
-        //        .set_content(keys.public_key().to_string())
+        //        .set_content(keys.public_key().to_string(), 0 as usize)
         //        .set_kind(MsgKind::GitCommitHeader),
         //);
         ////app.add_message(
         ////    Msg::default()
-        ////        .set_content(String::from(serialize_commit))
+        ////        .set_content(String::from(serialize_commit), 0 as usize)
         ////        .set_kind(MsgKind::GitCommitHeader),
         ////);
         //app.add_message(
         //    Msg::default()
-        //        .set_content(String::from("third message"))
+        //        .set_content(String::from("third message"), 0 as usize)
         //        .set_kind(MsgKind::GitCommitHeader),
         //);
         //app.add_message(
         //    Msg::default()
-        //        .set_content(String::from("fourth message"))
+        //        .set_content(String::from("fourth message"), 0 as usize)
         //        .set_kind(MsgKind::GitCommitHeader),
         //);
 
@@ -826,7 +835,7 @@ pub async fn input_loop(
 ) -> Result<(), Box<dyn Error>> {
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     while let Some(line) = stdin.next_line().await? {
-        let msg = Msg::default().set_content(line);
+        let msg = Msg::default().set_content(line, 0 as usize);
         if let Ok(b) = serde_json::to_vec(&msg) {
             self_input.send(b).await?;
         }
