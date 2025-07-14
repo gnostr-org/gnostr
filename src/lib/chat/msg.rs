@@ -54,8 +54,8 @@ impl Msg {
         self
     }
 
-    pub fn set_content(mut self, content: String) -> Self {
-        self.content[0] = content;
+    pub fn set_content(mut self, content: String, index: usize) -> Self {
+        self.content[index] = content;
         self
     }
     pub fn wrap_text(mut self, text: Msg, max_width: usize) -> Self {
