@@ -101,7 +101,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	cargo install --path . --bin gnostr
 	cargo install --path . --example gnostr-chat
-	gnostr chat --topic gnostr --name "$(gnostr-weeble)/905542/291833:$(USER)"
+	gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
 	cargo install --bin fetch_by_id --path .
