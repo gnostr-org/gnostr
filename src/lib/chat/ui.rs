@@ -227,8 +227,8 @@ fn ui(f: &mut Frame, app: &App) {
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(messages, chunks[1]);
-    
-	let input = Paragraph::new(app.input.value())
+
+    let input = Paragraph::new(app.topic.clone())
         .style(match app.input_mode {
             InputMode::Normal => Style::default(),
             InputMode::Editing => Style::default().fg(Color::Cyan),
