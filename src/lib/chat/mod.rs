@@ -793,7 +793,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
         app.topic = topic.clone();
 
-        let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
+        let topic = gossipsub::IdentTopic::new(format!("{:?}", app.topic.clone()));
 
         global_rt().spawn(async move {
             evt_loop(input_rx, peer_tx, topic).await.unwrap();
