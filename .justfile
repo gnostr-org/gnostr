@@ -70,6 +70,9 @@ asyncgit:
 dep-graph:
   @make dep-graph
 
+gnostr-chat:
+  @make gnostr-chat
+
 fetch-by-id:
   @make fetch-by-id
 
