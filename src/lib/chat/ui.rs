@@ -140,6 +140,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = usize::MAX;
                         app.msgs_scroll = usize::MAX;
                         app.input.reset();
+                        let m = msg::Msg::default()
+                            .set_content("test message <ESC>".to_string(), 0 as usize);
+                        app.add_message(m.clone());
+                        if let Some(ref mut hook) = app._on_input_enter {
+                            hook(m);
+                        }
                     }
                     _ => {
                         app.msgs_scroll = usize::MAX;
