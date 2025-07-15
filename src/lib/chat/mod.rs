@@ -80,7 +80,10 @@ pub async fn create_event(
     //let content = "Hello, Nostr with custom tags!";
 
     let signed_event = create_event_with_custom_tags(&keys, content, custom_tags).await?;
-    info!("{}", serde_json::to_string_pretty(&signed_event)?);
+    info!(
+        "create_event:signed_event:{}",
+        serde_json::to_string_pretty(&signed_event)?
+    );
 
     let opts = Options::new().gossip(true);
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
@@ -103,7 +106,10 @@ pub async fn create_event(
     // client.send_event - signed_event
     client.send_event(signed_event.clone()).await?;
 
-    info!("{}", serde_json::to_string_pretty(&signed_event)?);
+    info!(
+        "create_event:signed_event:{}",
+        serde_json::to_string_pretty(&signed_event)?
+    );
     info!("signed_event sent:\n{:?}", signed_event);
 
     // Publish a text note
