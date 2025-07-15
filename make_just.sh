@@ -129,7 +129,6 @@ dep-graph: 	### 	dep-graph
 
 gnostr-chat: 	## 	gnostr-chat
 	cargo install --path . --bin gnostr
-	cargo install --path . --example gnostr-chat
 	gnostr chat --topic gnostr --name "\$(shell gnostr-weeble)/\$(shell gnostr-blockheight)/\$(shell gnostr-wobble):\$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
