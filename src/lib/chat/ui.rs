@@ -160,9 +160,15 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
                             }
-						} else {
-							//TODO refresh and query topic nostr DMs
-						}
+                        } else {
+                            //TODO refresh and query topic nostr DMs
+                            let m = msg::Msg::default()
+                                .set_content("test message <ENTER>".to_string(), 0 as usize);
+                            app.add_message(m.clone());
+                            if let Some(ref mut hook) = app._on_input_enter {
+                                hook(m);
+                            }
+                        }
                         app.input.reset();
                     }
                     KeyCode::Esc => {
