@@ -5,7 +5,7 @@ use std::{path::PathBuf, process::Stdio};
 
 use anyhow::Context;
 use clean_path::Clean;
-use log::{debug, info};
+use log::{debug, info, trace};
 use russh::{server::Handle, ChannelId, CryptoVec};
 use shellwords::split;
 use tokio::{io::AsyncReadExt, process::Command};
@@ -32,14 +32,17 @@ impl Handler {
         command: &[u8],
     ) -> anyhow::Result<()> {
         debug!("handle_command:{:?}", command);
-        info!("{:?}", channel);
+        debug!("{:?}", channel);
         let server_config = self.state.lock().await.server_config.clone();
+
+        trace!("server_config:\n{:?}", server_config);
+
         let knob = Knob { handle, channel };
 
         let command = from_utf8(command).context("Failed to parse command bytes into a string")?;
         let command = split(command).context("Could not split command into words.")?;
 
-        info!("{:?}", command);
+        debug!("{:?}", command);
         // Politely decline non-git commands.
         if !GIT_COMMANDS.contains(&command[0].as_str()) {
             info!("rejected command[0]:{:?}", command[0]);
@@ -76,9 +79,17 @@ impl Handler {
         let is_admin = user.is_admin.unwrap_or(false);
         let can_create_repos = user.can_create_repos.unwrap_or(false);
 
-        if let Some(welcome_message) = server_config.welcome_message {
-            knob.info(&welcome_message.replace('%', &username)).await?;
-        }
+        //let welcome_message = self.welcome_message.clone().unwrap_or(GUEST_USERNAME.to_string());
+        //info!("welcome_message={}", welcome_message);
+        //if let Some(welcome_message) = server_config.welcome_message {
+        //    info!("welcome_message={}", welcome_message);
+        //    knob.info(&welcome_message.replace('%', &username)).await?;
+        //}
+        //if let Some(extra) = server_config.extra {
+        //let extra = self.extra.clone().unwrap_or(GUEST_USERNAME.to_string());
+        //info!("extra={}", extra);
+        //knob.info(&extra.replace('%', &username)).await?;
+        //}
 
         // Deny non-admins access to the config repo.
         if !is_admin && repo_path == PathBuf::from(SERVER_CONFIG_REPO) {
