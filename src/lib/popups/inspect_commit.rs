@@ -227,7 +227,7 @@ impl Component for InspectCommitPopup {
 
 ///InspectCommitPopup
 impl InspectCommitPopup {
-    ///accessors!(self, [diff, details]);
+    //accessors!(self, [diff, details]);
     accessors!(self, [diff, details]);
 
     ///

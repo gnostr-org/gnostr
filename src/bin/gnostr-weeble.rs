@@ -126,6 +126,7 @@
 //!
 //! async reqwest to <https://mempool.space/api/blocks/tip/height>
 use futures::executor::block_on;
+use std::env;
 ///
 /// weeble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
 ///
@@ -137,7 +138,7 @@ use futures::executor::block_on;
 /// let weeble = gnostr::get_weeble();
 ///
 /// print!("{}",weeble.unwrap());
-pub async fn print_weeble() {
+pub async fn print_weeble(millis: bool) {
     #[cfg(debug_assertions)]
     let start = std::time::SystemTime::now()
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
@@ -151,8 +152,13 @@ pub async fn print_weeble() {
     #[cfg(debug_assertions)]
     println!("start_millis: {}", start_millis);
 
-    let weeble = gnostr::get_weeble();
-    print!("{}", weeble.unwrap());
+    if millis {
+        let weeble = gnostr::get_weeble_millis();
+        print!("{}", weeble.unwrap());
+    } else {
+        let weeble = gnostr::get_weeble();
+        print!("{}", weeble.unwrap());
+    }
 
     #[cfg(debug_assertions)]
     let stop = std::time::SystemTime::now()
@@ -176,8 +182,19 @@ pub async fn print_weeble() {
 ///
 /// futures::executor::block_on(future);
 fn main() {
-    let future = print_weeble();
-    block_on(future);
+    let mut args = env::args();
+    let _ = args.next(); // program name
+    let millis = match args.next() {
+        Some(s) => s,
+        None => "false".to_string(), // Default value if no argument is provided
+    };
+    if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
+        let future = print_weeble(true);
+        block_on(future);
+    } else {
+        let future = print_weeble(false);
+        block_on(future);
+    }
 }
 /// cargo test --bin gnostr-weeble -- --nocapture
 #[test]

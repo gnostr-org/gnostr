@@ -5,7 +5,7 @@ use std::{path::PathBuf, process::Stdio};
 
 use anyhow::Context;
 use clean_path::Clean;
-use log::info;
+use log::{debug, info};
 use russh::{server::Handle, ChannelId, CryptoVec};
 use shellwords::split;
 use tokio::{io::AsyncReadExt, process::Command};
@@ -31,26 +31,31 @@ impl Handler {
         channel: ChannelId,
         command: &[u8],
     ) -> anyhow::Result<()> {
+        debug!("handle_command:{:?}", command);
+        info!("{:?}", channel);
         let server_config = self.state.lock().await.server_config.clone();
         let knob = Knob { handle, channel };
 
         let command = from_utf8(command).context("Failed to parse command bytes into a string")?;
         let command = split(command).context("Could not split command into words.")?;
 
-        println!("{:?}", command);
+        info!("{:?}", command);
         // Politely decline non-git commands.
         if !GIT_COMMANDS.contains(&command[0].as_str()) {
+            info!("rejected command[0]:{:?}", command[0]);
             knob.close().await?;
             return Ok(());
         }
 
         // The git plumbing commands give the repo like this: '/repo.git'.
+        debug!("PathBuf::from(command[1]):{:?}", command[1]);
         let mut repo_path = PathBuf::from(&command[1]);
         repo_path = repo_path.strip_prefix("/")?.into();
         repo_path = repo_path.clean();
 
-        // Reject repo paths outside eejit's dir.
+        // Reject repo paths outside gnostr-ssh dir.
         if repo_path.components().next() == Some(Component::ParentDir) {
+            info!("rejected repo_path:{:?}", command[1]);
             knob.close().await?;
             return Ok(());
         }

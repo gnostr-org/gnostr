@@ -1,3 +1,4 @@
+use gnostr::get_weeble;
 use gnostr::{Command, Probe};
 use gnostr_types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage, SubscriptionId};
 use std::env;
@@ -42,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let our_sub_id = SubscriptionId("fetch_by_kind_and_author".to_string());
+    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
     to_probe
         .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
         .await?;

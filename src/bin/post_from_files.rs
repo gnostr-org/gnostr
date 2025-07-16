@@ -8,13 +8,13 @@ use std::io::Read;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args();
     let _ = args.next(); // program name
-    let relay_url = match args.next() {
-        Some(u) => u,
-        None => panic!("Usage: post_from_files <RelayURL> <Directory>"),
-    };
     let directory = match args.next() {
         Some(d) => d,
-        None => panic!("Usage: post_from_files <RelayURL> <Directory>"),
+        None => panic!("Usage: post_from_files <json directory> <relay_url>"),
+    };
+    let relay_url = match args.next() {
+        Some(u) => u,
+        None => "wss://relay.nostr.band".to_string(),
     };
 
     let mut events: Vec<Event> = Vec::new();
@@ -26,8 +26,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap();
         let mut contents: String = String::new();
         file.read_to_string(&mut contents).unwrap();
+        //println!("{}", contents);
         let event: Event = serde_json::from_str(&contents).unwrap();
-        event.verify(None).unwrap();
+        //event.verify(None);//.unwrap();
         events.push(event);
     }
 

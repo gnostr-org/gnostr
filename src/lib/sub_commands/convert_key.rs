@@ -5,7 +5,7 @@ use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct ConvertKeySubCommand {
     /// Pubkey in bech32 or hex format
     #[arg(short, long)]

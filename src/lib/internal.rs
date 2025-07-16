@@ -1,9 +1,9 @@
+use crate::get_weeble;
 use base64::Engine;
 use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
 use std::process::Command;
 use tungstenite::protocol::Message;
-
 pub(crate) fn pwd() -> Result<String, &'static str> {
     let get_pwd = if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -40,7 +40,7 @@ pub(crate) fn pwd() -> Result<String, &'static str> {
 } //end pwd()
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
-    let message = ClientMessage::Req(SubscriptionId("111".to_owned()), filters);
+    let message = ClientMessage::Req(SubscriptionId(get_weeble().expect("").to_owned()), filters);
     serde_json::to_string(&message).expect("Could not serialize message")
 }
 
@@ -101,7 +101,9 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
                     RelayMessageV5::Event(_, e) => events.push(*e),
                     RelayMessageV5::Notice(s) => println!("NOTICE: {}", s),
                     RelayMessageV5::Eose(_) => {
-                        let message = ClientMessage::Close(SubscriptionId("111".to_owned()));
+                        let message = ClientMessage::Close(SubscriptionId(
+                            get_weeble().expect("").to_owned(),
+                        ));
                         let wire = match serde_json::to_string(&message) {
                             Ok(w) => w,
                             Err(e) => {

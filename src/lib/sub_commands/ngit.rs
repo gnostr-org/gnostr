@@ -13,7 +13,7 @@ use nostr_sdk::prelude::*;
 
 use serde::ser::StdError;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitSubCommand {

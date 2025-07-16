@@ -1,4 +1,6 @@
+use gnostr::get_weeble;
 use gnostr::{Command, Probe};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_types::{
     EventKind, Filter, IdHex, KeySigner, PreEvent, PrivateKey, RelayMessage, Signer,
     SubscriptionId, Unixtime,
@@ -11,23 +13,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = args.next(); // program name
     let relay_url = match args.next() {
         Some(u) => u,
-        None => panic!("Usage: test_relay <RelayURL>"),
+        None => BOOTSTRAP_RELAYS[0].clone(),
     };
 
+    println!("{}", relay_url);
+    //if !relay_url.contains("damus") {
     // Create a new identity
     eprintln!("Generating keypair...");
     let private_key = PrivateKey::generate();
     let public_key = private_key.public_key();
     let signer = KeySigner::from_private_key(private_key, "pass", 16).unwrap();
 
+    let content = format!(
+        "{}/{}/{}/{}",
+        relay_url,
+        gnostr::get_weeble().unwrap_or("0".to_string()),
+        gnostr::get_blockheight().unwrap_or("0".to_string()),
+        gnostr::get_wobble().unwrap_or("0".to_string())
+    );
     // Create an event for testing the relay
     let pre_event = PreEvent {
         pubkey: public_key,
         created_at: Unixtime::now(),
         kind: EventKind::TextNote,
-        content: "Hello. This is a test to see if this relay accepts notes from new people. \
-                  This is from an ephemeral keypair, and this note can be ignored or deleted."
-            .to_owned(),
+        content: content.to_owned(),
         tags: vec![],
     };
     let event = signer.sign_event(pre_event).unwrap();
@@ -48,6 +57,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     to_probe.send(Command::PostEvent(event.clone())).await?;
 
     loop {
+        let message = Some(from_probe.recv().await.unwrap());
+        println!("message:{:?}", message);
         match from_probe.recv().await.unwrap() {
             RelayMessage::Ok(id, _, _) => {
                 if id == event.id {
@@ -62,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let our_sub_id = SubscriptionId("fetch_by_id".to_string());
+    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
     let mut filter = Filter::new();
     filter.add_id(&id);
     to_probe
@@ -98,4 +109,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(join_handle.await?)
+    //} else {Ok(())}
 }

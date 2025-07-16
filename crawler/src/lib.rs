@@ -5,8 +5,8 @@ pub mod relays;
 pub mod stats;
 
 use clap::Parser;
-use git2::{Commit, DiffOptions, ObjectType, Repository, Signature, Time};
-use git2::{DiffFormat, Error, Pathspec};
+use git2::Error;
+use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use std::str;
 
 use ::time::at;
@@ -21,7 +21,6 @@ use crate::processor::BOOTSTRAP_RELAY1;
 use crate::processor::BOOTSTRAP_RELAY2;
 use crate::processor::BOOTSTRAP_RELAY3;
 use crate::processor::BOOTSTRAP_RELAY4;
-use crate::processor::BOOTSTRAP_RELAYS;
 
 #[allow(clippy::manual_strip)]
 #[derive(Parser)]
@@ -88,7 +87,7 @@ pub struct CliArgs {
 pub fn run(args: &CliArgs) -> Result<()> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
-    let mut revwalk = repo.revwalk()?;
+    let revwalk = repo.revwalk()?;
 
     //println!("{:?}", args.arg_nsec.clone());
     let _run_async = async {
@@ -240,12 +239,16 @@ pub fn run(args: &CliArgs) -> Result<()> {
     //    })?;
     //}
 
-    use std::str::FromStr;
     //println!("{:?}", args.arg_nsec.clone());
     let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor);
-    let _run_async = relay_manager.run(vec![BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3]);
+    let _run_async = relay_manager.run(vec![
+        BOOTSTRAP_RELAY1,
+        BOOTSTRAP_RELAY2,
+        BOOTSTRAP_RELAY3,
+        BOOTSTRAP_RELAY4,
+    ]);
     //.await;
     //relay_manager.processor.dump();
 

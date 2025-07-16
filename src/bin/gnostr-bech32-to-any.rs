@@ -46,7 +46,7 @@ fn main() {
                 }
             }
             NostrBech32::Id(id) => {
-                println!("Id: {}", id.as_hex_string());
+                println!("{}", id.as_hex_string());
             }
             NostrBech32::Profile(profile) => {
                 println!("Profile:");
