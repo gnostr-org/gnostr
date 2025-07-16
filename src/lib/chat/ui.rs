@@ -42,6 +42,7 @@ pub struct App {
     pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
     pub msgs_scroll: usize,
     pub topic: String,
+    pub diffs: Arc<Mutex<Vec<msg::Msg>>>,
 }
 
 impl Default for App {
@@ -53,6 +54,7 @@ impl Default for App {
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
             topic: String::from("gnostr"),
+            diffs: Default::default(),
         }
     }
 }
@@ -76,6 +78,23 @@ impl App {
         Box::new(move |msg| {
             let mut msgs = m.lock().unwrap();
             Self::add_msg(&mut msgs, msg);
+        })
+    }
+    //GitCommitDiff type
+    pub fn add_diff_message(&self, msg: msg::Msg) {
+        let mut diffs = self.diffs.lock().unwrap();
+        Self::add_msg(&mut diffs, msg);
+    }
+
+    fn add_diff(diffs: &mut Vec<msg::Msg>, msg: msg::Msg) {
+        diffs.push(msg);
+    }
+
+    pub fn add_diff_fn(&self) -> Box<dyn FnMut(msg::Msg) + 'static + Send> {
+        let m = self.diffs.clone();
+        Box::new(move |msg| {
+            let mut diffs = m.lock().unwrap();
+            Self::add_diff(&mut diffs, msg);
         })
     }
 
