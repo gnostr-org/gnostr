@@ -8,11 +8,11 @@ use russh_keys::*;
 use tokio::io::AsyncWriteExt;
 use tokio::process::ChildStdin;
 
-use log::{debug, error, info};
-use tokio::sync::Mutex;
-
 use crate::ssh::config::server::ServerUser;
 use crate::ssh::State;
+use log::{debug, error, info};
+use tokio::sync::Mutex;
+use toml::Table;
 
 mod keys;
 use self::keys::server_keys;
@@ -61,6 +61,8 @@ impl server::Server for Server {
             state: self.state.clone(),
             user: None,
             username: None,
+            welcome_message: None,
+            extra: None,
         }
     }
 }
@@ -70,6 +72,8 @@ struct Handler {
     state: Arc<Mutex<State>>,
     user: Option<ServerUser>,
     username: Option<String>,
+    welcome_message: Option<Table>,
+    extra: Option<Table>,
 }
 
 impl Handler {
