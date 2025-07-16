@@ -21,23 +21,6 @@ pub struct RepoConfig {
     pub extra: Option<Table>,
 }
 
-fn _get_config_file_path() {
-    if let Some(config_file) = dirs::home_dir() {
-        let config_file_path = home_dir().expect("REASON").join(&REPO_CONFIG_FILE);
-        println!("Full path to config file: {:?}", config_file_path);
-
-        // You can then use `config_file_path` to read or write to the file.
-        // For example, to check if it exists:
-        if config_file_path.exists() {
-            println!("Config file exists!");
-        } else {
-            println!("Config file does not exist.");
-        }
-    } else {
-        eprintln!("Error: Could not determine home directory.");
-    }
-}
-
 pub async fn load_repo_config(repo_path: &Path) -> anyhow::Result<RepoConfig> {
     let config_file_path = home_dir().expect("REASON").join(&REPO_CONFIG_FILE);
     println!("Full path to config file: {:?}", config_file_path);
