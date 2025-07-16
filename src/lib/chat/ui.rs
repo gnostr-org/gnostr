@@ -139,6 +139,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             }
 
             match app.input_mode {
+                //Modal Commands
                 InputMode::Normal => match key.code {
                     KeyCode::Char('\\') => {
                         if !app.input.value().trim().is_empty() {
@@ -159,6 +160,25 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         }
                         app.input.reset();
                     }
+                    KeyCode::Char(':') => {
+                        if !app.input.value().trim().is_empty() {
+                            let m = msg::Msg::default()
+                                .set_content(app.input.value().to_owned(), 0 as usize);
+                            app.add_message(m.clone());
+                            if let Some(ref mut hook) = app._on_input_enter {
+                                hook(m);
+                            }
+                        } else {
+                            //TODO refresh and query topic nostr DMs
+                            let m = msg::Msg::default()
+                                .set_content("test message <:>".to_string(), 0 as usize);
+                            app.add_message(m.clone());
+                            if let Some(ref mut hook) = app._on_input_enter {
+                                hook(m);
+                            }
+                        }
+                        app.input.reset();
+                    }
                     KeyCode::Char('e') | KeyCode::Char('i') => {
                         app.input_mode = InputMode::Editing;
                         app.msgs_scroll = usize::MAX;
@@ -166,6 +186,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
+                    //TODO Navigate to Topic
+                    //Edit Topic Mode
                     KeyCode::Up => {
                         let l = app.messages.lock().unwrap().len();
                         app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
@@ -231,6 +253,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Esc => {
                         app.input_mode = InputMode::Normal;
                         app.msgs_scroll = app.messages.lock().unwrap().len();
+                    }
+                    KeyCode::Up => {
+                        let l = app.messages.lock().unwrap().len();
+                        app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
+                    }
+                    KeyCode::Down => {
+                        let l = app.messages.lock().unwrap().len();
+                        app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
                     }
                     _ => {
                         app.input.handle_event(&Event::Key(key));
