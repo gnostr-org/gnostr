@@ -1,4 +1,6 @@
+use crate::{ssh::git::Repo, ssh::vars::*};
 use anyhow::{anyhow, Context};
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -8,23 +10,11 @@ use std::{
 use tempfile::tempdir;
 use toml::Table;
 
-use crate::{ssh::git::Repo, ssh::vars::*};
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerUser {
     pub public_key: String,
     pub is_admin: Option<bool>,
     pub can_create_repos: Option<bool>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ServerConfig {
-    pub name: String,
-    pub hostname: String,
-    pub port: u16,
-    pub users: HashMap<String, ServerUser>,
-    pub welcome_message: Option<String>,
-    pub exta: Option<Table>,
 }
 
 // The default for ServerUser is used for guest access.
@@ -36,6 +26,16 @@ impl Default for ServerUser {
             can_create_repos: Some(false),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ServerConfig {
+    pub name: String,
+    pub hostname: String,
+    pub port: u16,
+    pub users: HashMap<String, ServerUser>,
+    pub welcome_message: Option<Table>,
+    pub extra: Option<Table>,
 }
 
 pub async fn load_server_config() -> anyhow::Result<ServerConfig> {
@@ -59,11 +59,13 @@ pub async fn load_server_config() -> anyhow::Result<ServerConfig> {
 
     if new {
         copy(&config_name, clone_dir.join(&config_name))?;
+        //TODO if not debug cfg
         remove_file(&config_name)?;
         repo.push_changes("chore: move in initial config").await?;
     }
 
     let text = read_to_string(clone_dir.join(&config_name)).context("Couldn't read server.toml")?;
+    info!("server.toml:\n{}", text);
     Ok(toml::from_str(&text)?)
 }
 

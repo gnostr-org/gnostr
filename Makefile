@@ -90,18 +90,45 @@ cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 	cargo dist manifest --artifacts=all
 
 .PHONY:crawler asyncgit
-crawler:
+crawler: 	### 	crawler
 	@cargo install --path ./crawler $(FORCE)
-asyncgit:
+asyncgit: 	### 	asyncgit
 	@cargo install --path ./asyncgit $(FORCE)
 
-dep-graph:
+dep-graph: 	### 	dep-graph
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
 
-fetch-by-id:
+gnostr-chat: 	## 	gnostr-chat
+	cargo install --path . --bin gnostr
+	gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
+
+fetch-by-id: 	### 	fetch-by-id
 	cargo install --bin fetch_by_id --path .
 	cargo install --bin gnostr-fetch-by-id --path .
 	event_id=$(shell gnostr note -c test --hex | jq .id | sed "s/\"//g") && gnostr-fetch-by-id $;
 
+fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
+	cargo install --bin fetch_by_kind-and-author --path .
+	cargo install --bin fetch_by_kind_and_author --path .
+	fetch_by_kind_and_author wss://relay.nostr.band 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
+
+crawler-test-relays: 	### crawler-test-relays
+	for relay in $(shell echo $(shell gnostr-crawler));do echo $$relay;done
+	for relay in $(shell echo $(shell gnostr-crawler));do test_relay $$relay;done
+
+gnostr-note-debug: 	### 	gnostr-note-debug
+	@gnostr --debug --hash "" note -c "gnostr --debug" --hex -s "gnostr --debug subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--debug|tag" --verbose --expiration 144000
+
+gnostr-note-trace: 	### 	gnostr-note-debug
+	@gnostr --trace --hash "" note -c "gnostr --trace" --hex -s "gnostr --trace subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--trace|tag" --verbose --expiration 144000
+
+post_event: 	### 	post_event
+	cat tests/events/json/first-gnostr-commit.json | post_event wss://relay.nostr.band
+
+post_from_files: 	### 	post_from_files
+	post_from_files ./tests/events/json wss://relay.nostr.band
+
+plan-dist-manifest: 	###plan-dist-manifest
+	dist host --allow-dirty --steps=create --tag=v0.0.99 --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
 # vim: set noexpandtab:
 # vim: set setfiletype make

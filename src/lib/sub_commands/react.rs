@@ -5,8 +5,11 @@ use clap::Args;
 use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::{create_client, parse_private_key};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 
-#[derive(Args)]
+use tracing::{debug, error, info, trace, warn};
+
+#[derive(Args, Debug)]
 pub struct ReactionSubCommand {
     /// Event id to react to
     #[arg(short, long)]
@@ -24,12 +27,12 @@ pub struct ReactionSubCommand {
 
 pub async fn react_to_event(
     private_key: Option<String>,
-    relays: Vec<String>,
+    mut relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &ReactionSubCommand,
 ) -> Result<()> {
     if relays.is_empty() {
-        panic!("No relays specified, at least one relay is required!")
+        relays = BOOTSTRAP_RELAYS.to_vec();
     }
 
     let keys = parse_private_key(private_key, false).await?;
@@ -49,7 +52,7 @@ pub async fn react_to_event(
         subscription = Filter::new().event(event_id);
     }
 
-    //println!("{:?}", subscription);
+    debug!("{:?}", subscription);
     let events = client
         .get_events_of_with_opts(
             vec![subscription],

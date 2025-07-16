@@ -9,14 +9,14 @@ async fn main() {
         println!("check the port in your server.toml is available!");
         println!("check the port in your server.toml is available!");
         println!("check the port in your server.toml is available!\n");
-        println!("EXAMPLE:repo.toml{}", REPO_TOML);
+        println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
     }
 }
 
 static REPO_TOML: &str = "\
 name = \"gnostr-gnit-server\"
 public = true
-members = [\"gnostr-gnit-server\"]
+members = [\"gnostr\", \"gnostr-user\"]
 failed_push_message = \"Issues and patches can be emailed to admin@gnostr.org\"
 ";
 

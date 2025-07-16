@@ -284,7 +284,6 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
         .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
-        //
         .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
 
     let subscriber = Registry::default()

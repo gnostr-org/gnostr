@@ -2,7 +2,7 @@ name: publish to ghcr.io
 ##REF:https://github.com/docker/login-action
 
 env:
-  GNOSTR_COMMAND: 'gnostr-tui'
+  GNOSTR_COMMAND: 'gnostr tui'
 
 on:
   push:

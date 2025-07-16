@@ -883,21 +883,61 @@ impl TopicList {
             }
         }
     }
+    fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line> {
+        let selection = self.relative_selection();
+        let mut txt: Vec<Line> = Vec::with_capacity(height);
+        let now = Local::now();
+        let any_marked = !self.marked.is_empty();
+        for (idx, e) in self
+            .items
+            .iter()
+            .skip(self.scroll_top.get())
+            .take(height)
+            .enumerate()
+        {
+            let tags = self
+                .tags
+                .as_ref()
+                .and_then(|t| t.get(&e.id))
+                .map(|tags| tags.iter().map(|t| format!("<{}>", t.name)).join(" "));
+
+            let local_branches = self.local_branches.get(&e.id).map(|local_branch| {
+                local_branch
+                    .iter()
+                    .map(|local_branch| format!("{{{0}}}", local_branch.name))
+                    .join(" ")
+            });
+
+            let marked = if any_marked {
+                self.is_marked(&e.id)
+            } else {
+                None
+            };
+
+            //get_entry_to_add
+            txt.push(self.get_entry_to_add(
+                e,
+                idx + self.scroll_top.get() == selection,
+                tags,
+                local_branches,
+                self.remote_branches_string(e),
+                &self.theme,
+                width - 6 as usize,
+                now,
+                marked,
+            ));
+        }
+
+        txt
+    }
 }
 
 impl DrawableComponent for TopicList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
-        //let chunks = Layout::default()
-        //    .direction(Direction::Horizontal)
-        //    //first in                         //second in
-        //    .constraints([Constraint::Min(70), Constraint::Percentage(0)].as_ref())
-        //    .split(area);
-
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            //.constraints([Constraint::Percentage(33), Constraint::Min(100)].as_ref())
+            //0                                //1 initial width of commit detail
             .constraints([Constraint::Min(70), Constraint::Percentage(0)].as_ref())
-            //.split(f.size());
             .split(area);
 
         let left_chunks = Layout::default()
@@ -916,17 +956,17 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(2),       //topic
-                    Constraint::Length(2),       //squares
-                    Constraint::Percentage(100), //tools view
+                    Constraint::Length(2),       //0 topic
+                    Constraint::Length(2),       //1 squares
+                    Constraint::Percentage(100), //2 tools view
                 ]
                 .as_ref(),
             )
-            .split(chunks[0]);
+            .split(chunks[1]);
 
         let current_size = (
             area.width.saturating_sub(2),
-            area.height.saturating_sub(2) - right_chunks.get(1).unwrap().height - 3,
+            area.height.saturating_sub(1) - right_chunks.get(1).unwrap().height - 2,
         );
         self.current_size.set(Some(current_size));
 
@@ -940,7 +980,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            "topiclist.rs:779: {} {}/{} ",
+            "topiclist.rs:937: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -963,7 +1003,7 @@ impl DrawableComponent for TopicList {
                     .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
                     .title(Span::styled(
                         format!(
-                            "pubkey--->{:>}<---",
+                            "self.get_topic_text:pubkey--->{:>}<---",
                             //"{}",
                             title.as_str().to_owned(),
                             //more_text.as_str()
@@ -973,8 +1013,9 @@ impl DrawableComponent for TopicList {
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
-            right_chunks[0],
+            left_chunks[0],
         );
+        //TODO nip-0034 git stuff display
         f.render_widget(
             Paragraph::new(self.get_detail_text(
                 10 as usize * topic_height_in_lines,
@@ -984,32 +1025,31 @@ impl DrawableComponent for TopicList {
                 Block::default()
                     .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
                     //.borders(Borders::ALL)
-                    //.title(Span::styled(
-                    //    format!(
-                    //        "more_detail--->{:>}<---",
-                    //        //"{}",
-                    //        title.as_str().to_owned(),
-                    //        //more_text.as_str()
-                    //    ),
-                    //    self.theme.title(true),
-                    //))
+                    .title(Span::styled(
+                        format!(
+                            "more_detail--->{:>}<---",
+                            //"{}",
+                            title.as_str().to_owned(),
+                            //more_text.as_str()
+                        ),
+                        self.theme.title(true),
+                    ))
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
-            right_chunks[1],
+            left_chunks[1],
         );
+        //TODO p2p/nostr chat box
         f.render_widget(
-            Paragraph::new(self.get_topic_text(
-                10 as usize * topic_height_in_lines,
-                (current_size.0 + 10) as usize,
-            ))
+            Paragraph::new(
+                self.get_chat_text(current_size.0 as usize, (current_size.0 + 10) as usize),
+            )
             .block(
                 Block::default()
                     .borders(Borders::ALL)
                     .title(Span::styled(
                         format!(
-                            "chat widget--->{:>}<---",
-                            //"{}",
+                            "1052:self.get_chat_text:chat widget--->{:>}",
                             title.as_str().to_owned(),
                             //more_text.as_str()
                         ),
@@ -1018,7 +1058,7 @@ impl DrawableComponent for TopicList {
                     .border_style(self.theme.block(true)),
             )
             .alignment(Alignment::Left),
-            right_chunks[2], //constrain to half width
+            left_chunks[2], //constrain to half width
         );
 
         //draw_scrollbar(

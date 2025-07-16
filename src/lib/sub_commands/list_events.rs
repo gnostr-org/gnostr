@@ -5,7 +5,7 @@ use nostr_sdk_0_32_0::prelude::*;
 
 use crate::utils::create_client;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct ListEventsSubCommand {
     /// Ids
     #[arg(short, long, action = clap::ArgAction::Append)]
