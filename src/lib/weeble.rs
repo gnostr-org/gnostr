@@ -1,7 +1,10 @@
 use std::io::Read;
 use std::time::SystemTime;
 
+use log::debug;
 use reqwest::Url;
+use std::io::Read;
+use std::time::SystemTime;
 /// pub fn weeble() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn weeble() -> Result<f64, ascii::AsciiChar> {
