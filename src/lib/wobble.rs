@@ -1,7 +1,7 @@
+use log::debug;
+use reqwest::Url;
 use std::io::Read;
 use std::time::SystemTime;
-
-use reqwest::Url;
 /// pub fn wobble() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn wobble() -> Result<f64, ascii::AsciiChar> {
@@ -12,8 +12,7 @@ pub fn wobble() -> Result<f64, ascii::AsciiChar> {
     let seconds = since_the_epoch.as_secs();
     let subsec_millis = since_the_epoch.subsec_millis() as u64;
     let _now_millis = seconds * 1000 + subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("now millis: {}", seconds * 1000 + subsec_millis);
+    debug!("now millis: {}", seconds * 1000 + subsec_millis);
 
     let url = Url::parse("https://mempool.space/api/blocks/tip/height").unwrap();
     let mut res = reqwest::blocking::get(url).unwrap();
@@ -38,8 +37,7 @@ pub fn wobble_millis() -> Result<f64, ascii::AsciiChar> {
     let seconds = since_the_epoch.as_secs();
     let subsec_millis = since_the_epoch.subsec_millis() as u64;
     let now_millis = seconds * 1000 + subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("now millis: {}", seconds * 1000 + subsec_millis);
+    debug!("now millis: {}", seconds * 1000 + subsec_millis);
 
     let url = Url::parse("https://mempool.space/api/blocks/tip/height").unwrap();
     let mut res = reqwest::blocking::get(url).unwrap();
