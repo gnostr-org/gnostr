@@ -29,6 +29,7 @@ pub enum MsgKind {
     GitCommitHeader,
     GitCommitBody,
     GitCommitTime,
+    GitCommitDiff,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -275,6 +276,19 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .iter()
                 .map(|i| format!("{}", i)),
             ),
+            GitCommitDiff => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{{\"diff\": \"{}\"}}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("{}", i)),
+            ),
         }
     }
 }
@@ -317,6 +331,9 @@ impl Display for Msg {
             }
             MsgKind::GitCommitTime => {
                 write!(f, "[GitCommitTime] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::GitCommitDiff => {
+                write!(f, "[GitCommitDiff] {}:{}", self.from, self.content[0])
             }
         }
     }
