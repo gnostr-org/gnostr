@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-
+use log::{debug, info};
 pub struct Repo {
     dir: PathBuf,
 }
@@ -25,6 +25,7 @@ impl ExitOK for ExitStatus {
 
 impl Repo {
     pub async fn create_bare(path: &Path) -> anyhow::Result<Self> {
+        debug!("create_bare:{}", path.display());
         tokio::process::Command::new("git")
             .arg("init")
             .arg("--bare")
@@ -66,7 +67,7 @@ impl Repo {
             .arg("config")
             .arg("--local")
             .arg("user.name")
-            .arg("gnostr-gnit-server")
+            .arg("gnostr")
             .output()
             .await?
             .status

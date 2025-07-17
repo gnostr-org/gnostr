@@ -126,8 +126,9 @@
 //!
 //! async reqwest to <https://mempool.space/api/blocks/tip/height>
 use futures::executor::block_on;
+use std::env;
 ///
-/// wobble = (std::time::SystemTime::UNIX_EPOCH (seconds) % bitcoin-blockheight)
+/// weeble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
 ///
 /// Weebles wobble, but they don't fall down
 /// <https://en.wikipedia.org/wiki/Weeble>
@@ -137,7 +138,7 @@ use futures::executor::block_on;
 /// let wobble = gnostr::get_wobble();
 ///
 /// print!("{}",wobble.unwrap());
-async fn print_wobble() {
+pub async fn print_wobble(millis: bool) {
     #[cfg(debug_assertions)]
     let start = std::time::SystemTime::now()
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
@@ -150,13 +151,14 @@ async fn print_wobble() {
     let start_millis = seconds * 1000 + start_subsec_millis;
     #[cfg(debug_assertions)]
     println!("start_millis: {}", start_millis);
-    #[cfg(debug_assertions)]
-    println!("get_weeble(): {}", gnostr::get_weeble().unwrap());
-    #[cfg(debug_assertions)]
-    println!("get_blockheight(): {}", gnostr::get_blockheight().unwrap());
 
-    let wobble = gnostr::get_wobble();
-    print!("{}", wobble.unwrap());
+    if millis {
+        let wobble = gnostr::get_wobble_millis();
+        print!("{}", wobble.unwrap());
+    } else {
+        let wobble = gnostr::get_wobble();
+        print!("{}", wobble.unwrap());
+    }
 
     #[cfg(debug_assertions)]
     let stop = std::time::SystemTime::now()
@@ -171,11 +173,6 @@ async fn print_wobble() {
     #[cfg(debug_assertions)]
     println!("\nstop_millis: {}", stop_millis);
     #[cfg(debug_assertions)]
-    println!("get_weeble(): {}", gnostr::get_weeble().unwrap());
-    #[cfg(debug_assertions)]
-    #[cfg(debug_assertions)]
-    println!("get_blockheight(): {}", gnostr::get_blockheight().unwrap());
-    #[cfg(debug_assertions)]
     println!("\ndelta_millis: {}", stop_millis - start_millis);
 }
 
@@ -185,8 +182,19 @@ async fn print_wobble() {
 ///
 /// futures::executor::block_on(future);
 fn main() {
-    let future = print_wobble();
-    block_on(future);
+    let mut args = env::args();
+    let _ = args.next(); // program name
+    let millis = match args.next() {
+        Some(s) => s,
+        None => "false".to_string(), // Default value if no argument is provided
+    };
+    if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
+        let future = print_wobble(true);
+        block_on(future);
+    } else {
+        let future = print_wobble(false);
+        block_on(future);
+    }
 }
 /// cargo test --bin gnostr-wobble -- --nocapture
 #[test]

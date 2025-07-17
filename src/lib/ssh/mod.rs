@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 use state::State;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -14,9 +14,9 @@ mod vars;
 pub async fn start() -> anyhow::Result<()> {
     info!("Loading state...");
     let state = State::new().await?;
+    info!("{:?}", state);
     let state = Arc::new(Mutex::new(state));
-
-    println!("{:?}", state);
+    debug!("{:?}", state);
 
     info!("Starting server...");
     #[cfg(not(target_os = "windows"))]
