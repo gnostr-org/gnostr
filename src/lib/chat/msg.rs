@@ -1,3 +1,4 @@
+use crate::{get_blockheight, get_weeble, get_wobble};
 use std::fmt::Display;
 
 use once_cell::sync::Lazy;
@@ -37,6 +38,9 @@ pub struct Msg {
     pub from: String,
     pub content: Vec<String>,
     pub kind: MsgKind,
+    pub weeble: String,
+    pub blockheight: String,
+    pub wobble: String,
 }
 
 impl Default for Msg {
@@ -45,6 +49,9 @@ impl Default for Msg {
             from: USER_NAME.clone(),
             content: vec!["".to_string(), "".to_string()],
             kind: MsgKind::Chat,
+            weeble: "0".to_string(),
+            blockheight: "0".to_string(),
+            wobble: "0".to_string(),
         }
     }
 }
@@ -98,12 +105,23 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
         }
 
         match m.kind {
-            Join | Leave | System => Line::from(Span::styled(
-                m.to_string(),
-                Style::default()
-                    .fg(Color::DarkGray)
-                    .add_modifier(Modifier::ITALIC),
-            )),
+            Join | Leave | System => Line::default().right_aligned().spans(
+                vec![
+                    Span::styled(
+                        format!("{{\"commit\": \"{}\"}}", m.from.clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[1].clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("{}", i)),
+            ),
+            //m.to_string(),
+            //Style::default()
+            //    .fg(Color::DarkGray)
+            //    .add_modifier(Modifier::ITALIC),
             Chat => {
                 if m.from == *USER_NAME {
                     Line::default().left_aligned().spans(vec![
@@ -296,7 +314,14 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
 impl Display for Msg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.kind {
-            MsgKind::Join => write!(f, "{} join", self.from),
+            MsgKind::Join => write!(
+                f,
+                "{} joined:{:?}/{:?}/{:?}",
+                self.from,
+                get_weeble(),
+                get_blockheight(),
+                get_wobble()
+            ),
             MsgKind::Leave => write!(f, "{} left", self.from),
             MsgKind::Chat => write!(f, "{}: {}", self.from, self.content[0]),
             MsgKind::System => write!(f, "[System] {}", self.content[0]),
