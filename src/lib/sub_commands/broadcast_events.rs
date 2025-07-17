@@ -18,10 +18,16 @@ pub async fn broadcast_events(
 ) -> Result<()> {
     let keys: Keys;
     if relays.is_empty() {
-        debug!("relays:{:?}", relays);
+        for relay in relays {
+            debug!("relay:{:?}", relay);
+        }
         relays = BOOTSTRAP_RELAYS.clone()
     } else {
         debug!("relays:{:?}", relays);
+
+        for relay in relays.clone() {
+            debug!("relay:{:?}", relay);
+        }
     }
     if nsec.is_none() {
         keys = parse_private_key(None, false).await?;
