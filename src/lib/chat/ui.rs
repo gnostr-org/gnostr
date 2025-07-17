@@ -141,6 +141,25 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             match app.input_mode {
                 //Modal Commands
                 InputMode::Normal => match key.code {
+                    KeyCode::Char('?') => {
+                        if !app.input.value().trim().is_empty() {
+                            let m = msg::Msg::default()
+                                .set_content(app.input.value().to_owned(), 0 as usize);
+                            app.add_message(m.clone());
+                            if let Some(ref mut hook) = app._on_input_enter {
+                                hook(m);
+                            }
+                        } else {
+                            //TODO refresh and query topic nostr DMs
+                            let m = msg::Msg::default()
+                                .set_content("test message <?>".to_string(), 0 as usize);
+                            app.add_message(m.clone());
+                            if let Some(ref mut hook) = app._on_input_enter {
+                                hook(m);
+                            }
+                        }
+                        app.input.reset();
+                    }
                     KeyCode::Char('\\') => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()
