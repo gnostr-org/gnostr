@@ -15,7 +15,7 @@ fn main() {
     };
     let relay_url = match args.next() {
         Some(u) => u,
-        None => BOOTSTRAP_RELAYS[2].clone(),//panic!("Usage: fetch_by_kind_and_author <FilterJSON> <RelayURL>"),
+        None => BOOTSTRAP_RELAYS[2].clone(), //panic!("Usage: fetch_by_kind_and_author <FilterJSON> <RelayURL>"),
     };
     for event in gnostr::fetch_by_filter(&relay_url, filter) {
         gnostr::print_event(&event);
