@@ -1,7 +1,7 @@
 use clap::Args;
 use nostr_sdk_0_32_0::prelude::*;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct VanitySubCommand {
     /// Prefixes
     #[arg(short, long, required = true, action = clap::ArgAction::Append)]

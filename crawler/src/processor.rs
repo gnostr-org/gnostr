@@ -5,10 +5,10 @@ use crate::stats::Stats;
 use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
 use std::sync::LazyLock;
 
-pub const BOOTSTRAP_RELAY1: &str = "wss://nos.lol";
-pub const BOOTSTRAP_RELAY2: &str = "wss://relay.damus.io";
-pub const BOOTSTRAP_RELAY3: &str = "wss://e.nos.lol";
-pub const BOOTSTRAP_RELAY4: &str = "wss://relay.nostr.band";
+pub const BOOTSTRAP_RELAY1: &str = "wss://relay.nostr.band";
+pub const BOOTSTRAP_RELAY2: &str = "wss://nos.lol";
+pub const BOOTSTRAP_RELAY3: &str = "wss://relay.damus.io";
+pub const BOOTSTRAP_RELAY4: &str = "wss://sendit.nosflare.com";
 
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     // The vec! macro and String::from calls are now inside a closure,

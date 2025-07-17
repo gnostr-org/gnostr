@@ -8,11 +8,11 @@ use russh_keys::*;
 use tokio::io::AsyncWriteExt;
 use tokio::process::ChildStdin;
 
-use log::error;
-use tokio::sync::Mutex;
-
 use crate::ssh::config::server::ServerUser;
 use crate::ssh::State;
+use log::{debug, error, info};
+use tokio::sync::Mutex;
+use toml::Table;
 
 mod keys;
 use self::keys::server_keys;
@@ -21,6 +21,8 @@ mod commands;
 mod messages;
 
 pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
+    debug!("start_server");
+    debug!("russh::server::Config");
     let config = russh::server::Config {
         connection_timeout: Some(std::time::Duration::from_secs(3600)),
         auth_rejection_time: std::time::Duration::from_secs(3),
@@ -30,12 +32,17 @@ pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
     };
 
     let config = Arc::new(config);
+    debug!("russh::server::Config:{:?}", config);
 
     let sh = Server {
         state: state.clone(),
     };
 
     let port = state.lock().await.server_config.port;
+    debug!(
+        "russh::server::run({:?}, (\"0.0.0.0\", {}), sh)",
+        config, port
+    );
 
     russh::server::run(config, ("0.0.0.0", port), sh).await?;
 
@@ -54,6 +61,8 @@ impl server::Server for Server {
             state: self.state.clone(),
             user: None,
             username: None,
+            welcome_message: None,
+            extra: None,
         }
     }
 }
@@ -63,6 +72,8 @@ struct Handler {
     state: Arc<Mutex<State>>,
     user: Option<ServerUser>,
     username: Option<String>,
+    welcome_message: Option<Table>,
+    extra: Option<Table>,
 }
 
 impl Handler {

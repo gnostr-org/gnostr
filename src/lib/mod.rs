@@ -5,6 +5,7 @@ pub use futures_util::stream::FusedStream;
 pub use futures_util::{SinkExt, StreamExt};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
+use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 pub use gnostr_types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
@@ -39,6 +40,8 @@ pub mod cmdbar;
 ///
 pub mod components;
 ///
+pub mod dns_resolver;
+///
 pub mod git;
 ///
 pub mod git_events;
@@ -62,6 +65,8 @@ pub mod popup_stack;
 pub mod popups;
 ///
 pub mod queue;
+///
+pub mod remote;
 ///
 pub mod repo_ref;
 ///
@@ -161,26 +166,26 @@ pub fn get_relays_offline() -> Result<String, &'static str> {
 
 /// pub fn get_weeble() -> Result<String, &'static str>
 pub fn get_weeble() -> Result<String, &'static str> {
-    let _weeble_no_nl = weeble().unwrap().to_string();
-
-    Ok(format!("{}", weeble().unwrap().to_string()))
+    Ok(format!("{}", weeble().unwrap_or(0_f64).to_string()))
+}
+/// pub fn get_weeble_millis() -> Result<String, &'static str>
+pub fn get_weeble_millis() -> Result<String, &'static str> {
+    Ok(format!("{}", weeble_millis().unwrap_or(0_f64).to_string()))
 }
 /// pub fn get_wobble() -> Result<String, &'static str>
 pub fn get_wobble() -> Result<String, &'static str> {
-    let _wobble_no_nl = wobble().unwrap().to_string();
-
-    Ok(format!("{}", wobble().unwrap().to_string()))
+    Ok(format!("{}", wobble().unwrap_or(0_f64).to_string()))
+}
+/// pub fn get_wobble_millis() -> Result<String, &'static str>
+pub fn get_wobble_millis() -> Result<String, &'static str> {
+    Ok(format!("{}", wobble_millis().unwrap_or(0_f64).to_string()))
 }
 /// pub fn get_blockheight() -> Result<String, &'static str>
 pub fn get_blockheight() -> Result<String, &'static str> {
-    let _blockheight_no_nl = blockheight().unwrap().to_string();
-
-    Ok(format!("{}", blockheight().unwrap().to_string()))
+    Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    let _blockhash_no_nl = blockhash().unwrap().to_string();
-
     Ok(format!("{}", blockhash().unwrap().to_string()))
 }
 
@@ -278,9 +283,11 @@ use internal::*;
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/weeble/index.html>
 pub mod weeble;
 pub use weeble::weeble;
+pub use weeble::weeble_millis;
 
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/wobble/index.html>
 pub mod wobble;
+pub use crate::wobble::wobble_millis;
 pub use wobble::wobble;
 
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/blockhash/index.html>
@@ -401,69 +408,73 @@ impl Probe {
 
         loop {
             tokio::select! {
-                            _ = ping_timer.tick() => {
-                                let msg = Message::Ping(vec![0x1]);
-                                self.send(&mut websocket, msg).await?;
-                            },
-                            local_message = self.from_main.recv() => {
-                                match local_message {
-                                    Some(Command::PostEvent(event)) => {
-                                        let client_message = ClientMessage::Event(Box::new(event));
-                                        let wire = serde_json::to_string(&client_message)?;
-                                        let msg = Message::Text(wire);
-                                        self.send(&mut websocket, msg).await?;
-                                    },
-                                    Some(Command::Auth(event)) => {
-                                        let client_message = ClientMessage::Auth(Box::new(event));
-                                        let wire = serde_json::to_string(&client_message)?;
-                                        let msg = Message::Text(wire);
-                                        self.send(&mut websocket, msg).await?;
-                                    },
-                                    Some(Command::FetchEvents(subid, filters)) => {
-                                        let client_message = ClientMessage::Req(subid, filters);
-                                        let wire = serde_json::to_string(&client_message)?;
-                                        let msg = Message::Text(wire);
-                                        self.send(&mut websocket, msg).await?;
-                                    },
-                                    Some(Command::Exit) => {
-                                        break;
-                                    },
-                                    None => { }
-                                }
-                            },
-                            message = websocket.next() => {
-                                let message = match message {
-                                    Some(m) => m,
-                                    None => {
-                                        if websocket.is_terminated() {
-                                            eprintln!("{}", "Connection terminated".color(Color::Orange1));
-                                        }
-                                        break;
-                                    }
-                                }?;
-
-                                // Display it
-                                //Self::display(message.clone())?;
-
-            // echo '["REQ","fetch_by_id",{"ids":["5e131f602e8f6edf4fa81e8f234c805e4da9297c56d5ad1ab89f9f240a5a9b53"]}]' | websocat -1 wss://relay.damus.io
-                                println!("448:message.clone()\n{}", message.clone());
-                                // Take action
-                                match message {
-                                    Message::Text(s) => {
-                                        // Send back to main
-                                        let relay_message: RelayMessage = serde_json::from_str(&s)?;
-                                        self.to_main.send(relay_message).await?;
-                                    },
-                                    Message::Binary(_) => {
-                                        //TODO gnostr will handle binary messages
-                                    },
-                                    Message::Ping(_) => { },
-                                    Message::Pong(_) => { },
-                                    Message::Close(_) => break,
-                                    Message::Frame(_) => unreachable!(),
-                                }
-                            },
+                _ = ping_timer.tick() => {
+                    let msg = Message::Ping(vec![0x1]);
+                    self.send(&mut websocket, msg).await?;
+                },
+                local_message = self.from_main.recv() => {
+                    match local_message {
+                        Some(Command::PostEvent(event)) => {
+                            let client_message = ClientMessage::Event(Box::new(event));
+                            let wire = serde_json::to_string(&client_message)?;
+                            let msg = Message::Text(wire);
+                            self.send(&mut websocket, msg).await?;
+                        },
+                        Some(Command::Auth(event)) => {
+                            let client_message = ClientMessage::Auth(Box::new(event));
+                            let wire = serde_json::to_string(&client_message)?;
+                            let msg = Message::Text(wire);
+                            self.send(&mut websocket, msg).await?;
+                        },
+                        Some(Command::FetchEvents(subid, filters)) => {
+                            let client_message = ClientMessage::Req(subid, filters);
+                            let wire = serde_json::to_string(&client_message)?;
+                            let msg = Message::Text(wire);
+                            self.send(&mut websocket, msg).await?;
+                        },
+                        Some(Command::Exit) => {
+                            break;
+                        },
+                        None => { }
+                    }
+                },
+                message = websocket.next() => {
+                    let message = match message {
+                        Some(m) => m,
+                        None => {
+                            if websocket.is_terminated() {
+                                eprintln!("{}", "Connection terminated".color(Color::Orange1));
+                            }
+                            break;
                         }
+                    }?;
+
+                    // Display it
+                    Self::display(message.clone())?;
+                    //println!("448:message.clone()\n{}", message.clone());
+                    // Take action
+                    match message {
+                        Message::Text(s) => {
+                            // Send back to main
+                            let relay_message: RelayMessage = serde_json::from_str(&s)?;
+                            //Self::display(relay_message.clone())?;
+                            //println!("459:relay_message.clone()\n{:?}", relay_message.clone());
+                            self.to_main.send(relay_message).await?;
+                        },
+                        Message::Binary(_) => {
+                            println!("TODO gnostr will handle binary messages")
+                        },
+                        Message::Ping(_) => {
+                            println!("Message::Ping(_)")
+                        },
+                        Message::Pong(_) => {
+                            println!("Message::Pong(_)")
+                        },
+                        Message::Close(_) => break,
+                        Message::Frame(_) => unreachable!(),
+                    }
+                },
+            }
         }
 
         // Send close message before disconnecting
@@ -483,14 +494,15 @@ impl Probe {
                     }
                     RelayMessage::Event(sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
+                        #[cfg(debug_assertions)]
                         eprintln!(
-                            //"483:{}: EVENT({}, {})",
-                            //PREFIXES.from_relay,
-                            //sub.as_str(),
-                            //event_json
-                            "{}",
+                            "mod.rs:498:{}: EVENT({}, {})",
+                            PREFIXES.from_relay,
+                            sub.as_str(),
                             event_json
                         );
+                        #[cfg(not(debug_assertions))]
+                        eprintln!("{}", event_json);
                     }
                     RelayMessage::Closed(sub, msg) => {
                         eprintln!("{}: CLOSED({}, {})", PREFIXES.from_relay, sub.as_str(), msg);
@@ -500,7 +512,7 @@ impl Probe {
                     }
                     RelayMessage::Eose(sub) => {
                         //eprintln!("493:{}: EOSE({})", PREFIXES.from_relay, sub.as_str());
-                        eprintln!("{{\"EOSE\":\"{}\"}}", sub.as_str());
+                        debug!("{{\"EOSE\":\"{}\"}}", sub.as_str());
                     }
                     RelayMessage::Ok(id, ok, reason) => {
                         eprintln!(
@@ -548,35 +560,31 @@ impl Probe {
         message: Message,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match message {
-            Message::Text(ref s) =>
-            //eprintln!("{}: Text({})", PREFIXES.sending, s),
-            {
-                eprintln!("{}", s)
-            }
+            Message::Text(ref s) => debug!("{}: Text({})", PREFIXES.sending, s),
+            //{
+            //eprintln!("{}", s)
+            //}
             Message::Binary(_) =>
             //eprintln!("{}: Binary(_)", PREFIXES.sending),
             {
-                eprintln!("TODO:{}: Binary(_)", PREFIXES.sending)
+                debug!("TODO:{}: Binary(_)", PREFIXES.sending)
             }
-            Message::Ping(_) =>
-            //eprintln!("{}: Ping(_)", PREFIXES.sending),
-            {
-                eprint!("560:Ping")
-            }
-            Message::Pong(_) =>
-            //eprintln!("{}: Pong(_)", PREFIXES.sending),
-            {
-                eprint!("565:Ping")
-            }
+            Message::Ping(_) => debug!("{}: Ping(_)", PREFIXES.sending),
+            //{
+            //    eprint!("560:Ping")
+            //}
+            Message::Pong(_) => debug!("{}: Pong(_)", PREFIXES.sending),
+            //{
+            //    eprint!("565:Ping")
+            //}
             Message::Close(_) => {
-                //eprintln!("{}: Close(_)", PREFIXES.sending)
+                debug!("{}: Close(_)", PREFIXES.sending)
             }
             //eprint!(""),
-            Message::Frame(_) =>
-            //eprintln!("{}: Frame(_)", PREFIXES.sending),
-            {
-                eprint!("572:Frame")
-            }
+            Message::Frame(_) => debug!("{}: Frame(_)", PREFIXES.sending),
+            //{
+            //    eprint!("572:Frame")
+            //}
         }
         Ok(websocket.send(message).await?)
     }

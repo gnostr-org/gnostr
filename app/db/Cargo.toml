@@ -1,0 +1,35 @@
+[package]
+name = "nostr-db"
+version = "0.4.5"
+description = "Nostr event database"
+keywords = ["nostr", "db", "lmdb"]
+exclude = [".gitignore"]
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+nostr-kv = { version = "0.3.2", path = "../kv" }
+thiserror = "1.0.63"
+hex = { version = "0.4.3", features = ["serde"] }
+serde = { version = "1.0.209", features = ["derive"] }
+serde_json = "1.0.127"
+rkyv = { version = "0.7.45", features = ["validation"] }
+charabia = { version = "0.9.3", optional = true }
+zstd = { version = "0.13.2", optional = true }
+secp256k1 = { version = "0.29.0", features = ["global-context", "rand-std"] }
+sha2 = "0.10.8"
+
+[features]
+zstd = ["dep:zstd"]
+search = ["charabia"]
+
+[dev-dependencies]
+anyhow = "1.0.86"
+tempfile = "3.12.0"
+
+[[test]]
+name = "db"
+required-features = ["search"]

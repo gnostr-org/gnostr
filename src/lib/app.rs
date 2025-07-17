@@ -546,10 +546,10 @@ impl App {
             return false;
         }
         if let Event::Key(e) = ev {
-            if key_match(e, self.key_config.keys.quit) {
-                self.do_quit = QuitState::Close;
-                return true;
-            }
+            //if key_match(e, self.key_config.keys.quit) {
+            //self.do_quit = QuitState::Close;
+            //    return true;
+            //}
         }
         false
     }
