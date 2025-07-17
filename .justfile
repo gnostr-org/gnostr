@@ -94,6 +94,12 @@ post_event:
 post_from_files:
   @make post_from_files
 
+broadcast_event_list:
+  @make broadcast_event_list
+
+nip_thirty_four_requests:
+  @make nip_thirty_four_requests
+
 plan-dist-manifest:
   @make plan-dist-manifest
 

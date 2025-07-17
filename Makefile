@@ -128,7 +128,15 @@ post_event: 	### 	post_event
 post_from_files: 	### 	post_from_files
 	post_from_files ./tests/events/json wss://relay.nostr.band
 
-plan-dist-manifest: 	###plan-dist-manifest
+broadcast_event_list: 	### 	nip-0034-events syndication example
+	@RUST_LOG=debug gnostr --debug list-events -k 30617 -k 30618 -k 1617 -k 1621 -k 1630 -k 1631 -k 1632 -k 1633 -o nip-0034.json && gnostr --debug  --nsec $(shell gnostr-sha256) broadcast-events  -f ./nip-0034.json
+
+nip_thirty_four_requests: 	### 	nip_thirty_four_requests
+	@echo '["REQ","nip-0034",{"kinds":[1630,1632,1621,30618,1633,1631,1617,30617]}]' | gnostr-cat -k -t -n -B 210000 wss://relay.nostr.band | jq
+
+
+plan-dist-manifest: 	### 	plan-dist-manifest
 	dist host --allow-dirty --steps=create --tag=v0.0.99 --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
