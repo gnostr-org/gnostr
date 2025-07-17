@@ -197,7 +197,12 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         Some(GnostrCommands::BroadcastEvents(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::broadcast_events::broadcast_events(args.relays, sub_command_args).await
+            sub_commands::broadcast_events::broadcast_events(
+                Some(args.nsec.expect("")),
+                args.relays,
+                sub_command_args,
+            )
+            .await
         }
         Some(GnostrCommands::CreateBadge(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
