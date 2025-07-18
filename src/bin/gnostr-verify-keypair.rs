@@ -1,5 +1,5 @@
-use std::{env, process};
 use gnostr::verify_keypair::is_valid;
+use std::{env, process};
 
 fn main() {
     let mut args = env::args();
@@ -15,7 +15,7 @@ fn main() {
 
     let signing_key_string = args.next().unwrap();
 
-	if is_valid(verifying_key_string, signing_key_string) {
-		println!("valid");
-	}
+    if is_valid(verifying_key_string, signing_key_string) {
+        println!("valid");
+    }
 }
