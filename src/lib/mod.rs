@@ -168,6 +168,13 @@ pub fn get_relays_offline() -> Result<String, &'static str> {
 pub fn get_weeble() -> Result<String, &'static str> {
     Ok(format!("{}", weeble().unwrap_or(0_f64).to_string()))
 }
+/// pub async fn get_weeble_async_async() -> Result<String, &'static str>
+pub async fn get_weeble_async() -> Result<String, &'static str> {
+    Ok(format!(
+        "{}",
+        weeble_async().await.unwrap_or(0_f64).to_string()
+    ))
+}
 /// pub fn get_weeble_millis() -> Result<String, &'static str>
 pub fn get_weeble_millis() -> Result<String, &'static str> {
     Ok(format!("{}", weeble_millis().unwrap_or(0_f64).to_string()))
@@ -175,6 +182,13 @@ pub fn get_weeble_millis() -> Result<String, &'static str> {
 /// pub fn get_wobble() -> Result<String, &'static str>
 pub fn get_wobble() -> Result<String, &'static str> {
     Ok(format!("{}", wobble().unwrap_or(0_f64).to_string()))
+}
+/// pub async fn get_wobble_async() -> Result<String, &'static str>
+pub async fn get_wobble_async() -> Result<String, &'static str> {
+    Ok(format!(
+        "{}",
+        wobble_async().await.unwrap_or(0_f64).to_string()
+    ))
 }
 /// pub fn get_wobble_millis() -> Result<String, &'static str>
 pub fn get_wobble_millis() -> Result<String, &'static str> {
@@ -283,12 +297,14 @@ use internal::*;
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/weeble/index.html>
 pub mod weeble;
 pub use weeble::weeble;
+pub use weeble::weeble_async;
 pub use weeble::weeble_millis;
 
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/wobble/index.html>
 pub mod wobble;
 pub use crate::wobble::wobble_millis;
 pub use wobble::wobble;
+pub use wobble::wobble_async;
 
 /// <https://docs.rs/gnostr-bins/latest/gnostr_bins/blockhash/index.html>
 pub mod blockhash;
