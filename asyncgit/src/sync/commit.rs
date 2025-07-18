@@ -201,7 +201,10 @@ pub fn commit(repo_path: &RepoPath, msg: &str) -> Result<CommitId> {
 
     Ok(commit_id.into())
 }
-
+/// Pad a CommitId.to_string() to sha256 length and return a String
+pub fn padded_commit_id(commit_id: String) -> String {
+    format!("{:0>64}", commit_id)
+}
 /// Tag a commit.
 ///
 /// This function will return an `Err(…)` variant if the tag’s name is
