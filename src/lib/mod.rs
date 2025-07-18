@@ -92,6 +92,8 @@ pub mod utils;
 ///
 pub mod watcher;
 ///
+pub mod verify_keypair;
+///
 
 /// simple-websockets
 pub mod ws;
