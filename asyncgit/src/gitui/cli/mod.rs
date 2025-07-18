@@ -39,6 +39,6 @@ pub enum Commands {
     ///
     Show {
         ///
-        reference: String
+        reference: String,
     },
 }
