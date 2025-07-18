@@ -1,4 +1,7 @@
 use clap::{Args, Parser};
+use gnostr_asyncgit::sync::commit::serialize_commit;
+use gnostr_asyncgit::sync::commit::deserialize_commit;
+use gnostr_asyncgit::sync::commit::SerializableCommit;
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use std::{error::Error, time::Duration};
@@ -30,19 +33,6 @@ pub mod msg;
 pub use msg::*;
 
 //const TITLE: &str = include_str!("./title.txt");
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SerializableCommit {
-    id: String,
-    tree: String,
-    parents: Vec<String>,
-    author_name: String,
-    author_email: String,
-    committer_name: String,
-    committer_email: String,
-    message: String,
-    time: i64,
-}
 
 pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
     let mut hex_string = String::new();
@@ -198,55 +188,6 @@ pub async fn create_event(
     }
 
     Ok(())
-}
-
-pub fn serialize_commit(commit: &Commit) -> Result<String> {
-    let id = commit.id().to_string();
-    let tree = commit.tree_id().to_string();
-    let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
-    let author = commit.author();
-    let committer = commit.committer();
-    let message = commit
-        .message()
-        .ok_or(anyhow!("No commit message"))?
-        .to_string();
-    debug!("message:\n{:?}", message);
-    let time = commit.time().seconds();
-    debug!("time: {:?}", time);
-
-    let serializable_commit = SerializableCommit {
-        id,
-        tree,
-        parents,
-        author_name: author.name().unwrap_or_default().to_string(),
-        author_email: author.email().unwrap_or_default().to_string(),
-        committer_name: committer.name().unwrap_or_default().to_string(),
-        committer_email: committer.email().unwrap_or_default().to_string(),
-        message,
-        time,
-    };
-
-    let serialized = serde_json::to_string(&serializable_commit)?;
-    debug!("serialized_commit: {:?}", serialized);
-    Ok(serialized)
-}
-
-pub fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
-    //we serialize the commit data
-    //easier to grab the commit.id
-    let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
-    //grab the commit.id
-    let oid = Oid::from_str(&serializable_commit.id)?;
-    //oid used to search the repo
-    let commit_obj = repo.find_object(oid, Some(ObjectType::Commit))?;
-    //grab the commit
-    let commit = commit_obj.peel_to_commit()?;
-    //confirm we grabbed the correct commit
-    if commit.id().to_string() != serializable_commit.id {
-        return Err(anyhow!("Commit ID mismatch during deserialization"));
-    }
-    //return the commit
-    Ok(commit)
 }
 
 pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
