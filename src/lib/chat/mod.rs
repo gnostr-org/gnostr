@@ -2,6 +2,7 @@ use clap::{Args, Parser};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
 use gnostr_asyncgit::sync::commit::serialize_commit;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
+use gnostr_asyncgit::sync::commit::padded_commit_id;
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use std::{error::Error, time::Duration};
@@ -191,8 +192,8 @@ pub async fn create_event(
 }
 
 pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
-    let padded_commit_id = format!("{:0>64}", commit_id);
-    info!("padded_commit_id:{:?}", padded_commit_id);
+    let padded_commit_id = padded_commit_id(format!("{:0>64}", commit_id));
+    info!("padded_commit_id:\n{:?}", padded_commit_id);
     let keys = Keys::parse(&padded_commit_id);
     Ok(keys.unwrap())
 }
@@ -342,7 +343,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     let args = sub_command_args.clone();
 
-    if let Some(hash) = args.hash {
+    if let Some(hash) = args.hash.clone() {
         debug!("hash={}", hash);
     };
 
@@ -381,38 +382,45 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     let _ = subscriber.try_init();
 
-    //parse keys from sha256 hash
-    let empty_hash_keys =
-        Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
-
     //create a HashMap of custom_tags
     //used to insert commit tags
     let mut custom_tags = HashMap::new();
     custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
+    if !args.topic.is_none() {
+        custom_tags.insert(
+            "topic".to_string(),
+            vec![args.topic.clone().expect("REASON")],
+        );
+    }
 
+    let mut keys =
+        Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
+
+    if !args.nsec.is_none() {
+        keys = Keys::parse(&args.nsec.unwrap())?;
+    }
+    if !args.hash.clone().is_none() {
+        //parse keys from sha256 hash
+        debug!("--nsec arg overridden by --hash arg");
+        keys = Keys::parse(&args.hash.unwrap())?;
+    }
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event = create_event(empty_hash_keys, custom_tags, &"gnostr-chat:event").await;
+        let signed_event = create_event(keys, custom_tags, &"gnostr-chat:event").await;
         debug!("signed_event:\n{:?}", signed_event);
     });
 
     //initialize git repo
     if let Some(repo) = Some(Repository::discover(".")?) {
         debug!("repo path:\n{}", repo.path().display());
-
-        // 3. Gather some repo info
-        // find HEAD
-        // repo.head() returns Result<Reference, Error>
         let head = repo.head()?; // Unwraps the Reference or returns early on Err
         let obj = head.resolve()?.peel(ObjectType::Commit)?;
-
         //read top commit
         let commit = obj.peel_to_commit()?;
         let commit_id = commit.id().to_string();
-        //some info wrangling
         debug!("commit_id:\n{}", commit_id);
-        let padded_commit_id = format!("{:0>64}", commit_id);
+        let padded_commitid = padded_commit_id(format!("{:0>64}", commit_id));
 
         //// commit based keys
         //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
@@ -420,7 +428,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         //info!("keys.public_key():\n{}", keys.public_key());
 
         //parse keys from sha256 hash
-        let padded_keys = Keys::parse(padded_commit_id).unwrap();
+        let padded_keys = Keys::parse(padded_commitid).unwrap();
 
         //create a HashMap of custom_tags
         //used to insert commit tags
@@ -539,7 +547,8 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         let commit_id = commit.id().to_string();
         //some info wrangling
         debug!("commit_id:\n{}", commit_id);
-        let padded_commit_id = format!("{:0>64}", commit_id.clone());
+        let padded_commitid = padded_commit_id(format!("{:0>64}", commit_id.clone()));
+        debug!("padded_commitid:\n{}", padded_commitid.clone());
         global_rt().spawn(async move {
             //// commit based keys
             //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
@@ -547,7 +556,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
             //info!("keys.public_key():\n{}", keys.public_key());
 
             //parse keys from sha256 hash
-            let padded_keys = Keys::parse(padded_commit_id).unwrap();
+            let padded_keys = Keys::parse(padded_commitid).unwrap();
             //create nostr client with commit based keys
             //let client = Client::new(keys);
             let client = Client::new(padded_keys.clone());
