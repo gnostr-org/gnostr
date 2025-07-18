@@ -101,6 +101,8 @@ pub mod ws;
 use anyhow::{anyhow, Result};
 use directories::ProjectDirs;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 ///
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
