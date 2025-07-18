@@ -1,31 +1,27 @@
+use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
+use git2::{Commit, ObjectType, Oid, Repository};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
 use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
 use libp2p::gossipsub;
-use once_cell::sync::OnceCell;
-use std::{error::Error, time::Duration};
-use tokio::{io, io::AsyncBufReadExt};
-use tracing_subscriber::util::SubscriberInitExt;
-//use tracing::debug;
-use tracing::{debug, info};
-use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::fmt::Write;
-
-use anyhow::{anyhow, Result};
-use git2::{Commit, ObjectType, Oid, Repository};
 use nostr_sdk_0_37_0::prelude::*;
-//use nostr_sdk_0_37_0::EventBuilder;
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 use sha2::Digest;
-//use tokio::time::Duration;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::fmt::Write;
+use std::{error::Error, time::Duration};
+use tokio::{io, io::AsyncBufReadExt};
+use tracing::{debug, info};
+use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use tui_input::Input;
 
 pub mod p2p;
 pub mod ui;
@@ -747,9 +743,9 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         } else {
         }
 
-        app.topic = topic.clone();
+        app.topic = Input::new(topic.clone().to_string());
 
-        let topic = gossipsub::IdentTopic::new(format!("{:?}", app.topic.clone()));
+        let topic = gossipsub::IdentTopic::new(format!("{:?}", topic.clone()));
 
         global_rt().spawn(async move {
             evt_loop(input_rx, peer_tx, topic).await.unwrap();
