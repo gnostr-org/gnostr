@@ -1,8 +1,8 @@
 use clap::{Args, Parser};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
+use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
-use gnostr_asyncgit::sync::commit::padded_commit_id;
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use std::{error::Error, time::Duration};
