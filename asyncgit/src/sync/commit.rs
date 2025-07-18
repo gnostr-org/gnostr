@@ -78,7 +78,7 @@ pub(crate) fn signature_allow_undefined_name(
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct SerializableCommit {
+pub struct SerializableCommit {
     id: String,
     tree: String,
     parents: Vec<String>,
