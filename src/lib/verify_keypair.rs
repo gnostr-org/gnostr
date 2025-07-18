@@ -1,5 +1,5 @@
-use std::process;
 use k256::schnorr::{SigningKey, VerifyingKey};
+use std::process;
 
 pub fn is_valid(verifying_key_string: String, signing_key_string: String) -> bool {
     let verifying_key_bytes: Vec<u8> = match hex::decode(verifying_key_string) {
@@ -36,8 +36,8 @@ pub fn is_valid(verifying_key_string: String, signing_key_string: String) -> boo
 
     if verifying_key != *matching_key {
         println!("FAILURE: Keys are NOT a valid pair");
-        false//process::exit(1);
+        false //process::exit(1);
     } else {
-        true//println!("SUCCESS: Keys match.");
+        true //println!("SUCCESS: Keys match.");
     }
 }
