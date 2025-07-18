@@ -90,9 +90,9 @@ pub mod ui;
 ///
 pub mod utils;
 ///
-pub mod watcher;
-///
 pub mod verify_keypair;
+///
+pub mod watcher;
 ///
 
 /// simple-websockets
