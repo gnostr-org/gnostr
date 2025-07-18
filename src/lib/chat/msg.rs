@@ -1,4 +1,4 @@
-use crate::{get_blockheight, get_weeble, get_wobble};
+use crate::{get_blockheight, get_weeble, get_wobble, VERSION};
 use std::fmt::Display;
 
 use once_cell::sync::Lazy;
@@ -31,6 +31,7 @@ pub enum MsgKind {
     GitCommitBody,
     GitCommitTime,
     GitCommitDiff,
+    Topic,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -41,17 +42,27 @@ pub struct Msg {
     pub weeble: String,
     pub blockheight: String,
     pub wobble: String,
+    pub chat_version: String,
 }
 
 impl Default for Msg {
     fn default() -> Self {
         Self {
             from: USER_NAME.clone(),
-            content: vec!["".to_string(), "".to_string()],
+            content: vec![
+                "0".to_string(), // 0
+                "1".to_string(), // 1
+                "2".to_string(), // 2
+                "3".to_string(), // 3
+                "4".to_string(), // 4
+                "5".to_string(), // 5
+                "6".to_string(), // 6
+            ],
             kind: MsgKind::Chat,
             weeble: "0".to_string(),
             blockheight: "0".to_string(),
             wobble: "0".to_string(),
+            chat_version: VERSION.to_string(),
         }
     }
 }
@@ -105,18 +116,42 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
         }
 
         match m.kind {
+            //          Join | Leave | System => Line::from(Span::styled(
+            //              m.to_string(),
+            //              Style::default()
+            //                  .fg(Color::DarkGray)
+            //                  .add_modifier(Modifier::ITALIC),
+            //          )),
             Join | Leave | System => Line::default().right_aligned().spans(
                 vec![
                     Span::styled(
-                        format!("{{\"commit\": \"{}\"}}", m.from.clone()),
+                        format!(
+                            "{{\"commit\": \"v{}:{} joined!/\"}}",
+                            m.chat_version.clone(),
+                            m.from.clone(),
+                        ),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
+                            .fg(Color::Magenta)
                             .add_modifier(Modifier::ITALIC),
                     ),
+                    m.content[0].clone().into(),
                     m.content[1].clone().into(),
+                    //m.content[2].clone().into(),
+                    //m.content[3].clone().into(),
+                    //m.content[4].clone().into(),
+                    //m.content[5].clone().into(),
+                    //m.content[6].clone().into(),
+                    Span::styled(
+                        format!("{{\"version\": \"{}/\"}}", m.chat_version.clone(),),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.chat_version))
+                            .fg(Color::Magenta)
+                            .add_modifier(Modifier::ITALIC),
+                    ),
                 ]
                 .iter()
-                .map(|i| format!("{}", i)),
+                .map(|i| format!("---{}---", i)),
             ),
             //m.to_string(),
             //Style::default()
@@ -307,6 +342,26 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .iter()
                 .map(|i| format!("{}", i)),
             ),
+            Topic => Line::default().spans(
+                vec![
+                    Span::styled(
+                        format!("{{\"topic\": \"{}\"}}", m.content[0].clone()),
+                        Style::default()
+                            .fg(gen_color_by_hash(&m.from))
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                    m.content[0].clone().into(),
+                    m.content[1].clone().into(),
+                    m.content[2].clone().into(),
+                    m.content[3].clone().into(),
+                    m.content[4].clone().into(),
+                    m.content[5].clone().into(),
+                    m.content[6].clone().into(),
+                    m.chat_version.clone().into(),
+                ]
+                .iter()
+                .map(|i| format!("topic:{}", i)),
+            ),
         }
     }
 }
@@ -359,6 +414,21 @@ impl Display for Msg {
             }
             MsgKind::GitCommitDiff => {
                 write!(f, "[GitCommitDiff] {}:{}", self.from, self.content[0])
+            }
+            MsgKind::Topic => {
+                write!(
+                    f,
+                    //           0   1   2   3   4   5   6
+                    "[Topic] {}:{}\n{}\n{}\n{}\n{}\n{}\n{}",
+                    self.from,
+                    self.content[0],
+                    self.content[1],
+                    self.content[2],
+                    self.content[3],
+                    self.content[4],
+                    self.content[5],
+                    self.content[6],
+                )
             }
         }
     }
