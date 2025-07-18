@@ -769,7 +769,12 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         global_rt().spawn(async move {
             tokio::time::sleep(Duration::from_millis(1000)).await;
             input_tx_clone
-                .send(Msg::default().set_kind(MsgKind::Join))
+                .send(
+                    Msg::default()
+                        .set_kind(MsgKind::Join)
+                        .set_content("0".to_string(), 0)
+                        .set_content("1".to_string(), 1),
+                )
                 .await
                 .unwrap();
         });
