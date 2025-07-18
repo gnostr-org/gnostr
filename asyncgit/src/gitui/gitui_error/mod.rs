@@ -202,7 +202,7 @@ pub enum Utf8Error {
     ///
     Str(std::str::Utf8Error),
     ///
-	String(string::FromUtf8Error),
+    String(string::FromUtf8Error),
 }
 
 ///
