@@ -77,6 +77,7 @@ pub(crate) fn signature_allow_undefined_name(
     signature
 }
 
+/// pub struct SerializableCommit
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SerializableCommit {
     id: String,
