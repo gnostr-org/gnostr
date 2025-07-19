@@ -17,6 +17,34 @@ pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
     }
 }
 
+pub fn value_to_string(value: &Value) -> String {
+    match value {
+        Value::Null => "null".to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => s.clone(),
+        Value::Array(arr) => {
+            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
+            format!("[{}]", elements.join(", "))
+        }
+        Value::Object(obj) => {
+            let pairs: Vec<String> = obj
+                .iter()
+                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
+                .collect();
+            format!("{{{}}}", pairs.join(", "))
+        }
+    }
+}
+
+pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
+    if let Value::String(s) = value {
+        s.split(&separator).map(|s| s.to_string()).collect()
+    } else {
+        vec![String::from("")]
+    }
+}
+
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key
     let keys = match private_key {
