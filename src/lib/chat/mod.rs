@@ -186,15 +186,6 @@ pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
     Ok(keys.unwrap())
 }
 
-pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
-    if let Value::String(s) = json_value {
-        let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
-        Some(lines)
-    } else {
-        None // Return None if the Value is not a string
-    }
-}
-
 pub fn value_to_string(value: &Value) -> String {
     match value {
         Value::Null => "null".to_string(),
