@@ -1,6 +1,12 @@
 use nostr_sdk_0_32_0::prelude::*;
+use serde_json;
+use serde_json::{Result as SerdeJsonResult, Value};
 use std::fmt::Write;
 use std::time::Duration;
+
+pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
+    serde_json::from_str(json_string)
+}
 
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key
