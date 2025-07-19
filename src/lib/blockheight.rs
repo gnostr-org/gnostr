@@ -1,3 +1,4 @@
+use crate::utils::ureq_async;
 use std::io::Read;
 use std::time::SystemTime;
 
@@ -32,4 +33,8 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
     let blockheight = tmp_u64 as f64;
     //return Ok(blockheight.floor());
     Ok(blockheight)
+}
+
+pub async fn blockheight_async() -> String {
+    ureq_async("https://mempool.space/api/blocks/tip/height".to_string()).await.to_string()
 }
