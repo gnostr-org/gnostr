@@ -3,7 +3,7 @@ use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent,
 use std::error::Error;
 use std::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, warn};
+use tracing::{debug, info, trace, warn};
 
 use ureq::Agent;
 
@@ -119,6 +119,7 @@ pub async fn evt_loop(
     // Kick it off
     // Kick it off
     loop {
+        debug!("p2p.rs:begin loop");
         select! {
             Some(m) = send.recv() => {
                 if let Err(e) = swarm
@@ -172,5 +173,6 @@ pub async fn evt_loop(
                 _ => {}
             }
         }
+        debug!("p2p.rs:end loop");
     }
 }
