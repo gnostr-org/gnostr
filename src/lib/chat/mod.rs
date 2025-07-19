@@ -22,14 +22,13 @@ use tui_input::Input;
 
 // src/lib/utils.rs
 use crate::utils::parse_json;
+use crate::utils::split_json_string;
 
 pub mod p2p;
 pub mod ui;
 pub use p2p::evt_loop;
 pub mod msg;
 pub use msg::*;
-
-//const TITLE: &str = include_str!("./title.txt");
 
 pub async fn create_event_with_custom_tags(
     keys: &Keys,
@@ -184,34 +183,6 @@ pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
     info!("padded_commit_id:\n{:?}", padded_commit_id);
     let keys = Keys::parse(&padded_commit_id);
     Ok(keys.unwrap())
-}
-
-pub fn value_to_string(value: &Value) -> String {
-    match value {
-        Value::Null => "null".to_string(),
-        Value::Bool(b) => b.to_string(),
-        Value::Number(n) => n.to_string(),
-        Value::String(s) => s.clone(),
-        Value::Array(arr) => {
-            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
-            format!("[{}]", elements.join(", "))
-        }
-        Value::Object(obj) => {
-            let pairs: Vec<String> = obj
-                .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
-                .collect();
-            format!("{{{}}}", pairs.join(", "))
-        }
-    }
-}
-
-pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
-    if let Value::String(s) = value {
-        s.split(&separator).map(|s| s.to_string()).collect()
-    } else {
-        vec![String::from("")]
-    }
 }
 
 /// gnostr chat - p2p chat
