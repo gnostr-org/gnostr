@@ -6,7 +6,9 @@ use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
 use libp2p::gossipsub;
+//
 use nostr_sdk_0_37_0::prelude::*;
+//
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -23,6 +25,9 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use tui_input::Input;
 
+// src/lib/utils.rs
+use crate::utils::byte_array_to_hex_string;
+
 pub mod p2p;
 pub mod ui;
 pub use p2p::evt_loop;
@@ -30,14 +35,6 @@ pub mod msg;
 pub use msg::*;
 
 //const TITLE: &str = include_str!("./title.txt");
-
-pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
-    let mut hex_string = String::new();
-    for byte in byte_array {
-        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
-    }
-    hex_string
-}
 
 pub async fn create_event_with_custom_tags(
     keys: &Keys,
