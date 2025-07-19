@@ -19,26 +19,6 @@ pub struct MyBehaviour {
     pub mdns: mdns::tokio::Behaviour,
 }
 
-/// async_prompt
-pub async fn async_prompt(mempool_url: String) -> String {
-    let s = tokio::spawn(async move {
-        let agent: Agent = ureq::AgentBuilder::new()
-            .timeout_read(Duration::from_secs(10))
-            .timeout_write(Duration::from_secs(10))
-            .build();
-        let body: String = agent
-            .get(&mempool_url)
-            .call()
-            .expect("")
-            .into_string()
-            .expect("mempool_url:body:into_string:fail!");
-
-        body
-    });
-
-    s.await.unwrap()
-}
-
 ///// fetch_data_async
 //async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>, ureq::Error> {
 //    task::spawn_blocking(move || {
