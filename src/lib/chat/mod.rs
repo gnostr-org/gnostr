@@ -1,22 +1,17 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::{Args, Parser};
-use git2::{Commit, ObjectType, Oid, Repository};
+use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
 use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
-use gnostr_asyncgit::sync::commit::SerializableCommit;
 use libp2p::gossipsub;
 //
 use nostr_sdk_0_37_0::prelude::*;
 //
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
 use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
-use sha2::Digest;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt::Write;
 use std::{error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info};
@@ -26,7 +21,7 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use tui_input::Input;
 
 // src/lib/utils.rs
-use crate::utils::byte_array_to_hex_string;
+use crate::utils::parse_json;
 
 pub mod p2p;
 pub mod ui;
@@ -189,10 +184,6 @@ pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
     info!("padded_commit_id:\n{:?}", padded_commit_id);
     let keys = Keys::parse(&padded_commit_id);
     Ok(keys.unwrap())
-}
-
-pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
-    serde_json::from_str(json_string)
 }
 
 pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
