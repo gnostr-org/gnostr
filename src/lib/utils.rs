@@ -8,6 +8,15 @@ pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
 }
 
+pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
+    if let Value::String(s) = json_value {
+        let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
+        Some(lines)
+    } else {
+        None // Return None if the Value is not a string
+    }
+}
+
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key
     let keys = match private_key {
