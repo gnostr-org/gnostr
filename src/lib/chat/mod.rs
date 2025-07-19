@@ -324,8 +324,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
     }
 
     if let Some(name) = args.name {
-        use std::env;
-        env::set_var("USER", &name);
+        env::set_var("USER", &name); //detected later from env
     };
 
     //create a HashMap of custom_tags
