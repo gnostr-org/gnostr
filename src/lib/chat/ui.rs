@@ -146,7 +146,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             }
 
             match app.input_mode {
-                //Modal Commands
+                // Modal Commands
+                // InputMode::Normal
                 InputMode::Normal => match key.code {
                     KeyCode::Char('?') => {
                         //not empty
@@ -167,6 +168,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         }
                         app.input.reset();
+                        app.input_mode = InputMode::Help;
                     }
                     KeyCode::Char('/') => {
                         if !app.input.value().trim().is_empty() {
@@ -234,6 +236,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         }
                         app.input.reset();
+                        app.input_mode = InputMode::VimLike;
                     }
                     KeyCode::Char('e') | KeyCode::Char('i') => {
                         app.input_mode = InputMode::Editing;
@@ -288,6 +291,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = usize::MAX;
                     }
                 },
+                // InputMode::Editing
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
@@ -312,6 +316,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                     KeyCode::Esc => {
                         if !app.input.value().trim().is_empty() {
+                            //reset input and stay in editing mode
+                            app.input.reset();
                         } else {
                             //TODO prompt user if reset app.input
                             app.input_mode = InputMode::Normal;
@@ -337,25 +343,61 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
+                // InputMode::BackSlash
                 InputMode::BackSlash => match key.code {
+                    KeyCode::Esc => {
+                        if !app.input.value().trim().is_empty() {
+                        } else {
+                            //TODO prompt user if reset app.input
+                            app.input_mode = InputMode::Normal;
+                            app.msgs_scroll = app.messages.lock().unwrap().len();
+                        }
+                    }
                     _ => {
                         //TODO count repeat key events
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
+                // InputMode::ForwardSlash
                 InputMode::ForwardSlash => match key.code {
+                    KeyCode::Esc => {
+                        if !app.input.value().trim().is_empty() {
+                        } else {
+                            //TODO prompt user if reset app.input
+                            app.input_mode = InputMode::Normal;
+                            app.msgs_scroll = app.messages.lock().unwrap().len();
+                        }
+                    }
                     _ => {
                         //TODO count repeat key events
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
+                // InputMode::VimLike
                 InputMode::VimLike => match key.code {
+                    KeyCode::Esc => {
+                        if !app.input.value().trim().is_empty() {
+                        } else {
+                            //TODO prompt user if reset app.input
+                            app.input_mode = InputMode::Normal;
+                            app.msgs_scroll = app.messages.lock().unwrap().len();
+                        }
+                    }
                     _ => {
                         //TODO count repeat key events
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
+                // InputMode::Help
                 InputMode::Help => match key.code {
+                    KeyCode::Esc => {
+                        if !app.input.value().trim().is_empty() {
+                        } else {
+                            //TODO prompt user if reset app.input
+                            app.input_mode = InputMode::Normal;
+                            app.msgs_scroll = app.messages.lock().unwrap().len();
+                        }
+                    }
                     _ => {
                         //TODO count repeat key events
                         app.input.handle_event(&Event::Key(key));
