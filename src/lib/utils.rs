@@ -1,8 +1,31 @@
+use log::debug;
 use nostr_sdk_0_32_0::prelude::*;
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 use std::fmt::Write;
 use std::time::Duration;
+use ureq::Agent;
+
+/// ureq_async
+pub async fn ureq_async(url: String) -> String {
+    let s = tokio::spawn(async move {
+        let agent: Agent = ureq::AgentBuilder::new()
+            .timeout_read(Duration::from_secs(10))
+            .timeout_write(Duration::from_secs(10))
+            .build();
+        let body: String = agent
+            .get(&url)
+            .call()
+            .expect("")
+            .into_string()
+            .expect("mempool_url:body:into_string:fail!");
+
+        debug!("ureq_async:body:\n{}", body.clone());
+        body
+    });
+
+    s.await.unwrap()
+}
 
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
