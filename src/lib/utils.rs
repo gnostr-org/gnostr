@@ -1,6 +1,6 @@
-use std::time::Duration;
-
 use nostr_sdk_0_32_0::prelude::*;
+use std::fmt::Write;
+use std::time::Duration;
 
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key
@@ -82,6 +82,14 @@ pub enum Prefix {
 pub enum Keyformat {
     Hex,
     Bech32,
+}
+
+pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
+    let mut hex_string = String::new();
+    for byte in byte_array {
+        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
+    }
+    hex_string
 }
 
 #[cfg(test)]
