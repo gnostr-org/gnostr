@@ -2,33 +2,25 @@
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
 use crate::chat::*;
-use crate::global_rt::global_rt;
 use anyhow::Result;
-use git2::{ObjectType, Repository};
-use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use serde::ser::StdError;
 
-use chrono::Utc;
-
-use libp2p::gossipsub;
-use log;
-use nostr_sdk_0_37_0::prelude::*;
-use nostr_sdk_0_37_0::Client;
-use nostr_sdk_0_37_0::EventBuilder;
 use nostr_sdk_0_37_0::Keys;
-use serde_json;
-use serde_json::Value;
-use std::collections::HashMap;
-use std::{error::Error, time::Duration};
-use tracing::{debug, info, Level};
+use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
-pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
-    run(sub_command_args).await?;
+pub async fn chat(
+    key: &String,
+    sub_command_args: &ChatSubCommands,
+) -> Result<(), Box<dyn StdError>> {
+    run(key, sub_command_args).await?;
     Ok(())
 }
 
-pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
+pub async fn run(
+    key: &String,
+    sub_command_args: &ChatSubCommands,
+) -> Result<(), Box<dyn StdError>> {
     let sub_command_args = sub_command_args;
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
@@ -89,7 +81,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdEr
         }
     }
 
-    let chat = crate::chat::chat(sub_command_args);
+    let chat = crate::chat::chat(key, sub_command_args);
 
     //    //parse keys from sha256 hash
     //    let empty_hash_keys =

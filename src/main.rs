@@ -45,7 +45,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
             //Usage: gnostr --hash <string>
-            if env_args.len().clone() == 3 {
+            //Usage: gnostr --debug --hash <string>
+            if env_args.len().clone() >= 3 && env_args.len().clone() <= 4
+            /*--debug, --trace, --info, etc...*/
+            {
                 print!("{:x}", result);
                 std::process::exit(0);
             }
@@ -63,7 +66,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::chat::chat(sub_command_args).await
+            sub_commands::chat::chat(&args.nsec.unwrap().to_string(), sub_command_args).await
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);

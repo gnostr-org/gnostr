@@ -10,11 +10,12 @@ use nostr_sdk_0_37_0::prelude::*;
 //
 use once_cell::sync::OnceCell;
 use serde_json;
+use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::{error::Error, time::Duration};
+use std::{env, error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
@@ -279,25 +280,15 @@ pub struct ChatSubCommands {
 }
 
 //async tasks
+//TODO refactor src/lib/global_rt.rs
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
     static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
-    //let args: ChatCli = ChatCli::parse();
-
-    let args = sub_command_args.clone();
-
-    if let Some(hash) = args.hash.clone() {
-        debug!("hash={}", hash);
-    };
-
-    if let Some(name) = args.name {
-        use std::env;
-        env::set_var("USER", &name);
-    };
-
+pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
+    let mut args = sub_command_args.clone();
+    let env_args: Vec<String> = env::args().collect();
     let level = if args.debug {
         LevelFilter::DEBUG
     } else if args.trace {
@@ -328,6 +319,15 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     let _ = subscriber.try_init();
 
+    for arg in &env_args {
+        trace!("arg={:?}", arg);
+    }
+
+    if let Some(name) = args.name {
+        use std::env;
+        env::set_var("USER", &name);
+    };
+
     //create a HashMap of custom_tags
     //used to insert commit tags
     let mut custom_tags = HashMap::new();
@@ -340,17 +340,36 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         );
     }
 
+    //basic nostr event
     let mut keys =
         Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
 
+    //args.nsec
     if !args.nsec.is_none() {
         keys = Keys::parse(&args.nsec.unwrap())?;
     }
-    if !args.hash.clone().is_none() {
-        //parse keys from sha256 hash
-        debug!("--nsec arg overridden by --hash arg");
-        keys = Keys::parse(&args.hash.unwrap())?;
-    }
+    ////args.hash overrides args.nsec
+    //if !args.hash.clone().is_none() {
+    //    //parse keys from sha256 hash
+    //    debug!("--nsec arg overridden by --hash arg");
+    //    debug!("hash={:?}", args.hash.clone());
+    //    keys = Keys::parse(&args.hash.clone().unwrap())?;
+    //    //not none
+    //    if let Some(input_string) = args.hash {
+    //        let mut hasher = Sha256::new();
+    //        hasher.update(input_string.as_bytes());
+    //        let result = hasher.finalize();
+    //		//Usage: gnostr chat --hash <string>
+    //        //if env_args.len().clone() <= 4 {
+    //            print!("{:x}", result);
+    //    //        std::process::exit(0);
+    //        //}
+    //        args.nsec = format!("{:x}", result).into();
+    //    } else {
+    //    }
+    //} else {
+    //}
+
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
         let signed_event = create_event(keys, custom_tags, &"gnostr-chat:event").await;
@@ -375,6 +394,8 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
         //parse keys from sha256 hash
         let padded_keys = Keys::parse(padded_commitid).unwrap();
+        info!("padded_keys.secret_key():\n{:?}", padded_keys.secret_key());
+        info!("padded_keys.public_key():\n{}", padded_keys.public_key());
 
         //create a HashMap of custom_tags
         //used to insert commit tags
@@ -742,7 +763,9 @@ pub async fn input_loop(
 ) -> Result<(), Box<dyn Error>> {
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     while let Some(line) = stdin.next_line().await? {
+        //TODO interator for git commit data
         let msg = Msg::default().set_content(line, 0 as usize);
+        debug!("msg:\n{}", msg);
         if let Ok(b) = serde_json::to_vec(&msg) {
             self_input.send(b).await?;
         }
