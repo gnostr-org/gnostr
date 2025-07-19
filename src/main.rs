@@ -44,8 +44,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             let mut hasher = Sha256::new();
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
+            //Usage: gnostr --hash <string>
             if env_args.len().clone() == 3 {
-                debug!("{:x}", result);
+                print!("{:x}", result);
+                std::process::exit(0);
             }
             args.nsec = format!("{:x}", result).into();
         } else {
