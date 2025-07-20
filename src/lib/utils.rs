@@ -6,21 +6,21 @@ use std::fmt::Write;
 use std::time::Duration;
 use ureq::Agent;
 
-/// ureq
-pub fn ureq(url: String) -> String {
-        let agent: Agent = ureq::AgentBuilder::new()
-            .timeout_read(Duration::from_secs(10))
-            .timeout_write(Duration::from_secs(10))
-            .build();
-        let body: String = agent
-            .get(&url)
-            .call()
-            .expect("ureq_async:agent.get(&url) fail!")
-            .into_string()
-            .expect("ureq:url:body:into_string:fail!");
+/// ureq_sync
+pub fn ureq_sync(url: String) -> String {
+    let agent: Agent = ureq::AgentBuilder::new()
+        .timeout_read(Duration::from_millis(250))
+        .timeout_write(Duration::from_millis(250))
+        .build();
+    let body: String = agent
+        .get(&url)
+        .call()
+        .expect("ureq_async:agent.get(&url) fail!")
+        .into_string()
+        .expect("ureq:url:body:into_string:fail!");
 
-        debug!("ureq:body:\n{}", body.clone());
-        body
+    debug!("ureq:body:\n{}", body.clone());
+    body
 }
 /// ureq_async
 pub async fn ureq_async(url: String) -> String {
