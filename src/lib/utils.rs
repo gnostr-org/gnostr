@@ -32,15 +32,14 @@ pub async fn ureq_async(url: String) -> String {
         let body: String = agent
             .get(&url)
             .call()
-            .expect("")
+            .expect("ureq_async:agent.get(&url) fail!")
             .into_string()
-            .expect("mempool_url:body:into_string:fail!");
+            .expect("ureq_async:url:body:into_string:fail!");
 
         debug!("ureq_async:body:\n{}", body.clone());
         body
     });
-
-    s.await.unwrap()
+    s.await.expect("ureq_async fail!")
 }
 
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
