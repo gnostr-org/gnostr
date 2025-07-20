@@ -142,11 +142,8 @@ libp2p = { version = "0.54.1", features = [
   "tokio",
   "gossipsub",
   "mdns",
-  "noise",
-  "macros",
-  "tcp",
-  "yamux",
-  "quic",
+  "async-std", "noise", "macros", "ping", "tcp", "identify", "yamux", "relay", "quic"
+
 ] }
 
 log = "0.4"
