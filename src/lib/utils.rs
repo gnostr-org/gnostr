@@ -26,8 +26,8 @@ pub fn ureq_sync(url: String) -> String {
 pub async fn ureq_async(url: String) -> String {
     let s = tokio::spawn(async move {
         let agent: Agent = ureq::AgentBuilder::new()
-            .timeout_read(Duration::from_secs(10))
-            .timeout_write(Duration::from_secs(10))
+            .timeout_read(Duration::from_millis(250))
+            .timeout_write(Duration::from_millis(250))
             .build();
         let body: String = agent
             .get(&url)
