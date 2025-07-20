@@ -3,6 +3,12 @@ use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
+use libp2p::{
+    core::multiaddr::Protocol,
+    core::Multiaddr,
+    identify, identity, ping, relay,
+};
+
 use std::{env, error::Error, thread};
 use tokio::time::{sleep, Duration};
 use tokio::{io, select};
@@ -111,7 +117,7 @@ pub async fn evt_loop(
 
         debug!("Still running other things while the task is awaited...");
 
-        handle.await.unwrap(); // Wait for the async task to complete
+        handle.await.unwrap_or(()); // Wait for the async task to complete
         debug!("All done!");
 
         // Wait for a second before checking again to avoid rapid looping
