@@ -705,7 +705,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             let value = value.clone();
             global_rt().spawn(async move {
                 debug!("sent: {:?}", m);
-                value.send(m).await.unwrap();
+                value.send(m).await.unwrap_or(());
             });
         });
 
