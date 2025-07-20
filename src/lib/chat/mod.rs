@@ -1,3 +1,4 @@
+use crate::blockheight::blockheight_sync;
 use anyhow::Result;
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
@@ -10,7 +11,6 @@ use nostr_sdk_0_37_0::prelude::*;
 //
 use once_cell::sync::OnceCell;
 use serde_json;
-use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::{env, error::Error, time::Duration};
@@ -302,15 +302,14 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
     let filter = EnvFilter::default()
         .add_directive(level.into())
         .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
+        //.add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         .add_directive("nostr_relay_pool=off".parse().unwrap())
         .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
         .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
         .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
-        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        .add_directive("gnostr::message=off".parse().unwrap())
+        //.add_directive("gnostr::chat::p2p=off".parse().unwrap())
+        //.add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap());
 
     let subscriber = Registry::default()
@@ -332,6 +331,10 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
     let mut custom_tags = HashMap::new();
     custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
+    custom_tags.insert(
+        "blockheight".to_string(),
+        vec![format!("{}", blockheight_sync())],
+    );
     if !args.topic.is_none() {
         custom_tags.insert(
             "topic".to_string(),
@@ -436,7 +439,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
 
         let serialized_commit = serialize_commit(&commit)?;
         let value: Value = parse_json(&serialized_commit.clone())?;
-        //info!("value:\n{}", value);
+        info!("value:\n{}", value);
 
         // Accessing object elements.
         if let Some(id) = value.get("id") {
