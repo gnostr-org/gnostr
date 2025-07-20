@@ -173,7 +173,7 @@ pub enum Keyformat {
 pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
     let mut hex_string = String::new();
     for byte in byte_array {
-        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
+        write!(&mut hex_string, "{:02x}", byte).unwrap();
     }
     hex_string
 }
