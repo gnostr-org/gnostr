@@ -130,7 +130,7 @@ pub async fn evt_loop(
                     .publish(topic.clone(), serde_json::to_vec(&m)?) {
                     debug!("Publish error: {e:?}");
                     let m = Msg::default()
-                        /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", blockheight_async().await), 0).set_kind(MsgKind::System);
+                        /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
                     //NOTE:recv.send - send to self
                     recv.send(m).await?;
                     //let m = Msg::default().set_content("p2p.rs:brief help prompt here!:2".to_string(), 2).set_kind(MsgKind::System);
