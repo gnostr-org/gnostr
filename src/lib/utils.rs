@@ -42,10 +42,12 @@ pub async fn ureq_async(url: String) -> String {
     s.await.expect("ureq_async fail!")
 }
 
+/// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
 }
 
+/// split_value_by_newline
 pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
     if let Value::String(s) = json_value {
         let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
@@ -55,6 +57,7 @@ pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
     }
 }
 
+/// value_to_string
 pub fn value_to_string(value: &Value) -> String {
     match value {
         Value::Null => "null".to_string(),
@@ -75,6 +78,7 @@ pub fn value_to_string(value: &Value) -> String {
     }
 }
 
+/// split_json_string
 pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     if let Value::String(s) = value {
         s.split(&separator).map(|s| s.to_string()).collect()
@@ -83,6 +87,7 @@ pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
     }
 }
 
+/// parse_private_key
 pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
     // Parse and validate private key
     let keys = match private_key {
