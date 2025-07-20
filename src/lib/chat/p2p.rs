@@ -1,14 +1,12 @@
+use crate::blockheight::blockheight_async;
+use crate::chat::msg::{Msg, MsgKind};
+use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-use std::error::Error;
-use std::time::Duration;
+use std::{env, error::Error, thread};
+use tokio::time::{sleep, Duration};
 use tokio::{io, select};
 use tracing::{debug, info, trace, warn};
-
-use ureq::Agent;
-
-use crate::chat::msg::{Msg, MsgKind};
-//use tokio::task;
 
 //const TOPIC: &str = "gnostr";
 /// MyBehaviour
@@ -18,16 +16,6 @@ pub struct MyBehaviour {
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
 }
-
-///// fetch_data_async
-//async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>, ureq::Error> {
-//    task::spawn_blocking(move || {
-//        let response = ureq::get(&url).call();
-//        response
-//    })
-//    .await
-//    .unwrap() // Handle potential join errors
-//}
 
 /// evt_loop
 pub async fn evt_loop(
@@ -100,14 +88,48 @@ pub async fn evt_loop(
     // Kick it off
     loop {
         debug!("p2p.rs:begin loop");
+
+        // Check if the current second is odd
+        let handle = tokio::spawn(async {
+            let now = Local::now();
+
+            // Get the current second
+            let current_second = now.second();
+
+            if current_second % 2 != 0 {
+                debug!("Current second ({}) is odd!", current_second);
+                // Add your code here to be executed only when the time is odd
+                //debug!("blockheight_async():{}", blockheight_async().await);
+                env::set_var("BLOCKHEIGHT", &blockheight_async().await);
+            } else {
+                debug!(
+                    "Current second ({}) is even. Skipping this iteration.",
+                    current_second
+                );
+            }
+        });
+
+        debug!("Still running other things while the task is awaited...");
+
+        handle.await.unwrap(); // Wait for the async task to complete
+        debug!("All done!");
+
+        // Wait for a second before checking again to avoid rapid looping
+        //thread::sleep(Duration::from_secs(1));
+
         select! {
             Some(m) = send.recv() => {
                 if let Err(e) = swarm
                     .behaviour_mut().gossipsub
                     .publish(topic.clone(), serde_json::to_vec(&m)?) {
                     debug!("Publish error: {e:?}");
-                    let m = Msg::default().set_content(format!("publish error: {e:?}"), 0 as usize).set_kind(MsgKind::System);
+                    let m = Msg::default()
+                        /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", blockheight_async().await), 0).set_kind(MsgKind::System);
+                    //NOTE:recv.send - send to self
                     recv.send(m).await?;
+                    //let m = Msg::default().set_content("p2p.rs:brief help prompt here!:2".to_string(), 2).set_kind(MsgKind::System);
+                    ////NOTE:recv.send - send to self
+                    //recv.send(m).await?;
                 }
             }
             event = swarm.select_next_some() => match event {
@@ -127,6 +149,7 @@ pub async fn evt_loop(
                         // recv.send(m).await?;
                     }
                 },
+                //
                 SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
@@ -135,14 +158,19 @@ pub async fn evt_loop(
                     debug!(
                         "Got message: '{}' with id: {id} from peer: {peer_id}",
                         String::from_utf8_lossy(&message.data),
+                        //add type indicator to Msg::content[]
+                        //send git commit info
                     );
                     match serde_json::from_slice::<Msg>(&message.data) {
+                        //NOTE: from slice - reference serialized_commit!
+                        //use MsgType::GitCommit
                         Ok(msg) => {
                             recv.send(msg).await?;
                         },
                         Err(e) => {
                             warn!("Error deserializing message: {e:?}");
                             let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0 as usize).set_kind(MsgKind::System);
+                            //NOTE recv.send - send to self
                             recv.send(m).await?;
                         }
                     }

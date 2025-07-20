@@ -1,4 +1,4 @@
-use crate::{get_blockheight, get_weeble, get_wobble, VERSION};
+use crate::{blockheight::blockheight_sync, get_weeble, get_wobble, VERSION};
 use std::fmt::Display;
 
 use once_cell::sync::Lazy;
@@ -11,6 +11,7 @@ pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
             .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string()),
     )
 });
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 pub enum MsgKind {
     #[default]
@@ -51,12 +52,12 @@ impl Default for Msg {
             from: USER_NAME.clone(),
             content: vec![
                 "0".to_string(), // 0
-                "1".to_string(), // 1
-                "2".to_string(), // 2
-                "3".to_string(), // 3
-                "4".to_string(), // 4
-                "5".to_string(), // 5
-                "6".to_string(), // 6
+                "".to_string(),  // 1
+                "".to_string(),  // 2
+                "".to_string(),  // 3
+                "".to_string(),  // 4
+                "".to_string(),  // 5
+                "".to_string(),  // 6
             ],
             kind: MsgKind::Chat,
             weeble: "0".to_string(),
@@ -77,6 +78,20 @@ impl Msg {
         self.content[index] = content;
         self
     }
+
+    pub fn set_weeble(mut self) -> Self {
+        self.content[1] = blockheight_sync();
+        self
+    }
+    pub fn set_blockheight(mut self) -> Self {
+        self.content[2] = blockheight_sync();
+        self
+    }
+    pub fn set_wobble(mut self) -> Self {
+        self.content[3] = blockheight_sync();
+        self
+    }
+
     pub fn wrap_text(mut self, text: Msg, max_width: usize) -> Self {
         //	for line in text.content.bytes() {
 
@@ -126,32 +141,33 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 vec![
                     Span::styled(
                         format!(
-                            "{{\"commit\": \"v{}:{} joined!/\"}}",
+                            "{{\"version\":\"v{}\"}},{{\"name\":\"{}\"}},",
                             m.chat_version.clone(),
                             m.from.clone(),
                         ),
                         Style::default()
                             .fg(gen_color_by_hash(&m.from))
-                            .fg(Color::Magenta)
+                            .bg(Color::Magenta)
                             .add_modifier(Modifier::ITALIC),
                     ),
-                    m.content[0].clone().into(),
-                    m.content[1].clone().into(),
+                    //m.content[0].clone().into(),
+                    //m.content[1].clone().into(),
                     //m.content[2].clone().into(),
                     //m.content[3].clone().into(),
                     //m.content[4].clone().into(),
                     //m.content[5].clone().into(),
                     //m.content[6].clone().into(),
-                    Span::styled(
-                        format!("{{\"version\": \"{}/\"}}", m.chat_version.clone(),),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.chat_version))
-                            .fg(Color::Magenta)
-                            .add_modifier(Modifier::ITALIC),
-                    ),
+                    ////last element
+                    //Span::styled(
+                    //    format!("{{\"version\": \"{}/\"}}", m.chat_version.clone(),),
+                    //    Style::default()
+                    //        .fg(gen_color_by_hash(&m.chat_version))
+                    //        .fg(Color::Magenta)
+                    //        .add_modifier(Modifier::ITALIC),
+                    //),
                 ]
                 .iter()
-                .map(|i| format!("---{}---", i)),
+                .map(|i| format!("{}", i)),
             ),
             //m.to_string(),
             //Style::default()
@@ -368,15 +384,9 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
 
 impl Display for Msg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.kind {
-            MsgKind::Join => write!(
-                f,
-                "{} joined:{:?}/{:?}/{:?}",
-                self.from,
-                get_weeble(),
-                get_blockheight(),
-                get_wobble()
-            ),
+        let message: Msg = self.clone().set_blockheight();
+        match message.kind {
+            MsgKind::Join => write!(f, "{} joined!", self.from,),
             MsgKind::Leave => write!(f, "{} left", self.from),
             MsgKind::Chat => write!(f, "{}: {}", self.from, self.content[0]),
             MsgKind::System => write!(f, "[System] {}", self.content[0]),
