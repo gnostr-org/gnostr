@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.104"
+version = "0.0.105"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -17,24 +17,25 @@ categories = ["command-line-utilities"]
 build = "build.rs"
 
 exclude = [
-    "*assets/",
-    "*vendor/",
-    "*target/",
     ".git/",
     ".github/",
     ".gnostr",
     ".gnostr/.git",
-    "git2-testing",
-    "*docs/",
-    "*examples/",
-    "tests/",
+    "**.gif",
+    "**.md",
+    "*assets/",
     "*benches/",
     "*ci/",
-    "**.md",
-    "**.gif",
-    "xq",
+    "*docs/",
+    "*examples/",
+    "*target/",
+    "*vendor/",
+    "config/",
+    "git2-testing",
+    "tests/",
     "org",
     "proxy",
+    "xq",
     #"test_utils",
 ]
 
