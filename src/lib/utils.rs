@@ -1,4 +1,4 @@
-use log::debug;
+use log::{debug, error};
 use nostr_sdk_0_32_0::prelude::*;
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
@@ -230,5 +230,148 @@ mod tests {
             result.unwrap(),
             String::from("bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4")
         );
+    }
+}
+
+//use log::{debug, error}; // Import error for better error logging
+//use nostr_sdk_0_32_0::prelude::*;
+//use serde_json;
+//use serde_json::{Result as SerdeJsonResult, Value};
+//use std::fmt::Write;
+//use std::time::Duration;
+//use ureq::Agent;
+
+/// Synchronous HTTP request using ureq.
+/// Handles errors gracefully instead of panicking.
+pub fn ureq_sync_new(url: String) -> Result<String, String> {
+    // Build the ureq agent with more generous timeouts.
+    // 5 seconds for read and write should be more robust for network operations.
+    let agent: Agent = ureq::AgentBuilder::new()
+        .timeout_read(Duration::from_secs(5)) // Increased timeout
+        .timeout_write(Duration::from_secs(5)) // Increased timeout
+        .build();
+
+    // Attempt to make the GET request and handle potential errors.
+    match agent.get(&url).call() {
+        Ok(response) => {
+            // If the call was successful, try to convert the response into a string.
+            match response.into_string() {
+                Ok(body) => {
+                    debug!("ureq_sync:body:\n{}", body); // Debug log the body
+                    Ok(body)
+                }
+                Err(e) => {
+                    // Log an error if converting the response to string fails.
+                    error!(
+                        "Failed to convert ureq_sync response to string for URL {}: {}",
+                        url, e
+                    );
+                    Err(format!("Failed to convert response to string: {}", e))
+                }
+            }
+        }
+        Err(e) => {
+            // Log a detailed error if the ureq call fails.
+            // This will show up in your logs if the log level is configured to show errors.
+            error!("ureq_sync:agent.get(&url) failed for URL {}: {:?}", url, e);
+            Err(format!("HTTP request failed: {}", e))
+        }
+    }
+}
+
+/// Asynchronous HTTP request using tokio and ureq.
+/// Handles errors gracefully instead of panicking.
+pub async fn ureq_async_new(url: String) -> Result<String, String> {
+    let s = tokio::spawn(async move {
+        // Build the ureq agent with more generous timeouts.
+        let agent: Agent = ureq::AgentBuilder::new()
+            .timeout_read(Duration::from_secs(5)) // Increased timeout
+            .timeout_write(Duration::from_secs(5)) // Increased timeout
+            .build();
+
+        // Attempt to make the GET request and handle potential errors.
+        match agent.get(&url).call() {
+            Ok(response) => {
+                // If the call was successful, try to convert the response into a string.
+                match response.into_string() {
+                    Ok(body) => {
+                        debug!("ureq_async:body:\n{}", body); // Debug log the body
+                        Ok(body)
+                    }
+                    Err(e) => {
+                        // Log an error if converting the response to string fails.
+                        error!(
+                            "Failed to convert ureq_async response to string for URL {}: {}",
+                            url, e
+                        );
+                        Err(format!("Failed to convert response to string: {}", e))
+                    }
+                }
+            }
+            Err(e) => {
+                // Log a detailed error if the ureq call fails.
+                error!("ureq_async:agent.get(&url) failed for URL {}: {:?}", url, e);
+                Err(format!("HTTP request failed: {}", e))
+            }
+        }
+    });
+
+    // Await the spawned task and handle its result.
+    // The `?` operator here will propagate any `Err` from the spawned task.
+    s.await
+        .map_err(|e| format!("Asynchronous task failed: {}", e))?
+}
+
+// Example usage (you would typically put this in a main function or a test)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Initialize logging for tests
+    fn setup_logging() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
+    #[tokio::test]
+    async fn test_ureq_async_success() {
+        setup_logging();
+        // Use a reliable test URL, e.g., a public API that returns JSON
+        let url = "https://jsonplaceholder.typicode.com/todos/1".to_string();
+        let result = ureq_async(url).await;
+        assert!(result.is_ok(), "Expected success, got: {:?}", result.err());
+        let body = result.unwrap();
+        assert!(!body.is_empty());
+        // You can add more assertions here to check the content of the body
+        println!("Async success body: {}", body);
+    }
+
+    #[tokio::test]
+    async fn test_ureq_async_failure() {
+        setup_logging();
+        // Use a URL that is expected to fail or time out quickly
+        let url = "http://127.0.0.1:9999/nonexistent".to_string(); // Localhost non-existent port
+        let result = ureq_async(url).await;
+        assert!(result.is_err());
+        println!("Async failure error: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_ureq_sync_success() {
+        setup_logging();
+        let url = "https://jsonplaceholder.typicode.com/todos/1".to_string();
+        let result = ureq_sync(url);
+        assert!(result.is_ok(), "Expected success, got: {:?}", result.err());
+        let body = result.unwrap();
+        assert!(!body.is_empty());
+        println!("Sync success body: {}", body);
+    }
+
+    #[test]
+    fn test_ureq_sync_failure() {
+        setup_logging();
+        let url = "http://127.0.0.1:9999/nonexistent".to_string(); // Localhost non-existent port
+        let result = ureq_sync(url);
+        assert!(result.is_err());
+        println!("Sync failure error: {:?}", result.err());
     }
 }
