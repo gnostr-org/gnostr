@@ -6,42 +6,6 @@ use std::fmt::Write;
 use std::time::Duration;
 use ureq::Agent;
 
-/// ureq_sync
-pub fn ureq_sync(url: String) -> String {
-    let agent: Agent = ureq::AgentBuilder::new()
-        .timeout_read(Duration::from_millis(250))
-        .timeout_write(Duration::from_millis(250))
-        .build();
-    let body: String = agent
-        .get(&url)
-        .call()
-        .expect("ureq_async:agent.get(&url) fail!")
-        .into_string()
-        .expect("ureq:url:body:into_string:fail!");
-
-    debug!("ureq:body:\n{}", body.clone());
-    body
-}
-/// ureq_async
-pub async fn ureq_async(url: String) -> String {
-    let s = tokio::spawn(async move {
-        let agent: Agent = ureq::AgentBuilder::new()
-            .timeout_read(Duration::from_millis(250))
-            .timeout_write(Duration::from_millis(250))
-            .build();
-        let body: String = agent
-            .get(&url)
-            .call()
-            .expect("ureq_async:agent.get(&url) fail!")
-            .into_string()
-            .expect("ureq_async:url:body:into_string:fail!");
-
-        debug!("ureq_async:body:\n{}", body.clone());
-        body
-    });
-    s.await.expect("ureq_async fail!")
-}
-
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
@@ -233,17 +197,9 @@ mod tests {
     }
 }
 
-//use log::{debug, error}; // Import error for better error logging
-//use nostr_sdk_0_32_0::prelude::*;
-//use serde_json;
-//use serde_json::{Result as SerdeJsonResult, Value};
-//use std::fmt::Write;
-//use std::time::Duration;
-//use ureq::Agent;
-
 /// Synchronous HTTP request using ureq.
 /// Handles errors gracefully instead of panicking.
-pub fn ureq_sync_new(url: String) -> Result<String, String> {
+pub fn ureq_sync(url: String) -> Result<String, String> {
     // Build the ureq agent with more generous timeouts.
     // 5 seconds for read and write should be more robust for network operations.
     let agent: Agent = ureq::AgentBuilder::new()
@@ -281,7 +237,7 @@ pub fn ureq_sync_new(url: String) -> Result<String, String> {
 
 /// Asynchronous HTTP request using tokio and ureq.
 /// Handles errors gracefully instead of panicking.
-pub async fn ureq_async_new(url: String) -> Result<String, String> {
+pub async fn ureq_async(url: String) -> Result<String, String> {
     let s = tokio::spawn(async move {
         // Build the ureq agent with more generous timeouts.
         let agent: Agent = ureq::AgentBuilder::new()
