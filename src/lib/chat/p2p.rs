@@ -2,12 +2,8 @@ use crate::blockheight::blockheight_async;
 use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
+use libp2p::{core::multiaddr::Protocol, core::Multiaddr, identify, identity, ping, relay};
 use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-use libp2p::{
-    core::multiaddr::Protocol,
-    core::Multiaddr,
-    identify, identity, ping, relay,
-};
 
 use std::{env, error::Error, thread};
 use tokio::time::{sleep, Duration};
