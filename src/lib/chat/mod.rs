@@ -742,11 +742,11 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
                 .send(
                     Msg::default()
                         .set_kind(MsgKind::Join)
-                        .set_content("0".to_string(), 0)
+                        .set_content(env::var("USER".to_string()).expect("env $USER fail!"), 0)
                         .set_content("1".to_string(), 1),
                 )
                 .await
-                .unwrap();
+                .unwrap_or(());
         });
 
         app.run()?;
