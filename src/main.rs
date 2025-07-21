@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
-use gnostr::sub_commands;
+use gnostr::{blockheight, sub_commands};
 use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, error, info, trace, warn};
@@ -12,7 +12,9 @@ use serde::ser::StdError;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
-    let mut args: GnostrCli = GnostrCli::parse();
+
+	env::set_var("BLOCKHEIGHT", blockheight::blockheight_sync());
+	let mut args: GnostrCli = GnostrCli::parse();
     let app_cache = get_app_cache_path();
     let _logging = if args.logging {
         let logging = setup_logging();
