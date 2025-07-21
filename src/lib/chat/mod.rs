@@ -308,8 +308,9 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
         .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
         .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        //.add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        //.add_directive("gnostr::message=off".parse().unwrap())
+        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
+        .add_directive("gnostr::message=off".parse().unwrap())
+        .add_directive("gnostr::utils=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap());
 
     let subscriber = Registry::default()
