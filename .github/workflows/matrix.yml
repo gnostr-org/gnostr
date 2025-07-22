@@ -195,7 +195,7 @@ jobs:
       - run: gnostr ngit fetch --help
       - run: gnostr ngit fetch
       - run: |
-          cargo t -vv -p gnostr || true
+          cargo t -p gnostr || true
         if: matrix.rustup == '1.88'
 
       - run: V=1 sudo make docs || true
