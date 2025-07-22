@@ -295,7 +295,7 @@ mod when_branch_is_checked_out {
             }
         }
 
-        async fn prep_and_run() -> Result<(GitTestRepo, Vec<nostr::Event>)> {
+        async fn prep_and_run() -> Result<(GitTestRepo, Vec<nostr_0_34_1::Event>)> {
             // fallback (51,52) user write (53, 55) repo (55, 56)
             let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
                 Relay::new(8051, None, None),

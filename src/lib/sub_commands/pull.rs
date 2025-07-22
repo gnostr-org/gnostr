@@ -1,6 +1,6 @@
 use crate::git_events::is_event_proposal_root_for_branch;
 use anyhow::{bail, Context, Result};
-use nostr_sdk::PublicKey;
+use nostr_sdk_0_34_0::PublicKey;
 
 use crate::{
     client::{

@@ -7,7 +7,7 @@ use crate::{
     },
 };
 use anyhow::{bail, Context, Result};
-use nostr_sdk::Kind;
+use nostr_sdk_0_34_0::Kind;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
@@ -42,19 +42,19 @@ pub async fn launch() -> Result<()> {
 
     let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
 
-    let proposals_and_revisions: Vec<nostr::Event> =
+    let proposals_and_revisions: Vec<nostr_0_34_1::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates()).await?;
     if proposals_and_revisions.is_empty() {
         println!("no proposals found... create one? try `ngit send`");
         return Ok(());
     }
 
-    let statuses: Vec<nostr::Event> = {
+    let statuses: Vec<nostr_0_34_1::Event> = {
         let mut statuses = get_events_from_cache(
             git_repo_path,
-            vec![nostr::Filter::default()
+            vec![nostr_0_34_1::Filter::default()
                 .kinds(status_kinds().clone())
-                .events(proposals_and_revisions.iter().map(nostr::Event::id))],
+                .events(proposals_and_revisions.iter().map(nostr_0_34_1::Event::id))],
         )
         .await?;
         statuses.sort_by_key(|e| e.created_at);
@@ -62,12 +62,12 @@ pub async fn launch() -> Result<()> {
         statuses
     };
 
-    let mut open_proposals: Vec<&nostr::Event> = vec![];
-    let mut draft_proposals: Vec<&nostr::Event> = vec![];
-    let mut closed_proposals: Vec<&nostr::Event> = vec![];
-    let mut applied_proposals: Vec<&nostr::Event> = vec![];
+    let mut open_proposals: Vec<&nostr_0_34_1::Event> = vec![];
+    let mut draft_proposals: Vec<&nostr_0_34_1::Event> = vec![];
+    let mut closed_proposals: Vec<&nostr_0_34_1::Event> = vec![];
+    let mut applied_proposals: Vec<&nostr_0_34_1::Event> = vec![];
 
-    let proposals: Vec<nostr::Event> = proposals_and_revisions
+    let proposals: Vec<nostr_0_34_1::Event> = proposals_and_revisions
         .iter()
         .filter(|e| !event_is_revision_root(e))
         .cloned()
@@ -82,7 +82,7 @@ pub async fn launch() -> Result<()> {
                         .iter()
                         .any(|t| t.as_vec()[1].eq(&proposal.id.to_string()))
             })
-            .collect::<Vec<&nostr::Event>>()
+            .collect::<Vec<&nostr_0_34_1::Event>>()
             .first()
         {
             e.kind()
@@ -182,7 +182,7 @@ pub async fn launch() -> Result<()> {
         let cover_letter = event_to_cover_letter(proposals_for_status[selected_index])
             .context("cannot extract proposal details from proposal root event")?;
 
-        let commits_events: Vec<nostr::Event> = get_all_proposal_patch_events_from_cache(
+        let commits_events: Vec<nostr_0_34_1::Event> = get_all_proposal_patch_events_from_cache(
             git_repo_path,
             &repo_ref,
             &proposals_for_status[selected_index].id(),
@@ -653,7 +653,7 @@ pub async fn launch() -> Result<()> {
     }
 }
 
-fn launch_git_am_with_patches(mut patches: Vec<nostr::Event>) -> Result<()> {
+fn launch_git_am_with_patches(mut patches: Vec<nostr_0_34_1::Event>) -> Result<()> {
     println!("applying to current branch with `git am`");
     // TODO: add PATCH x/n to appended patches
     patches.reverse();
@@ -684,11 +684,11 @@ fn launch_git_am_with_patches(mut patches: Vec<nostr::Event>) -> Result<()> {
     Ok(())
 }
 
-fn event_id_extra_shorthand(event: &nostr::Event) -> String {
+fn event_id_extra_shorthand(event: &nostr_0_34_1::Event) -> String {
     event.id.to_string()[..5].to_string()
 }
 
-fn save_patches_to_dir(mut patches: Vec<nostr::Event>, git_repo: &Repo) -> Result<()> {
+fn save_patches_to_dir(mut patches: Vec<nostr_0_34_1::Event>, git_repo: &Repo) -> Result<()> {
     // TODO: add PATCH x/n to appended patches
     patches.reverse();
     let path = git_repo.get_path()?.join("patches");

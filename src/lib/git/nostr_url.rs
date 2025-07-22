@@ -2,8 +2,8 @@ use core::fmt;
 use std::{collections::HashSet, str::FromStr};
 
 use anyhow::{anyhow, bail, Context, Error, Result};
-use nostr::nips::nip01::Coordinate;
-use nostr_sdk::{PublicKey, Url};
+use nostr_0_34_1::nips::nip01::Coordinate;
+use nostr_sdk_0_34_0::{PublicKey, Url};
 
 #[derive(Debug, PartialEq, Default, Clone)]
 pub enum ServerProtocol {
@@ -137,7 +137,7 @@ impl std::str::FromStr for NostrUrlDecoded {
         let part = parts.first().context(INCORRECT_NOSTR_URL_FORMAT_ERROR)?;
         // naddr used
         if let Ok(coordinate) = Coordinate::parse(part) {
-            if coordinate.kind.eq(&nostr_sdk::Kind::GitRepoAnnouncement) {
+            if coordinate.kind.eq(&nostr_sdk_0_34_0::Kind::GitRepoAnnouncement) {
                 coordinates.insert(coordinate);
             } else {
                 bail!("naddr doesnt point to a git repository announcement");
@@ -163,7 +163,7 @@ impl std::str::FromStr for NostrUrlDecoded {
             coordinates.insert(Coordinate {
                 identifier,
                 public_key,
-                kind: nostr_sdk::Kind::GitRepoAnnouncement,
+                kind: nostr_sdk_0_34_0::Kind::GitRepoAnnouncement,
                 relays,
             });
         } else {
@@ -860,7 +860,7 @@ mod tests {
                     "npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr",
                 )
                 .unwrap(),
-                kind: nostr_sdk::Kind::GitRepoAnnouncement,
+                kind: nostr_sdk_0_34_0::Kind::GitRepoAnnouncement,
                 relays: if relays {
                     vec!["wss://nos.lol/".to_string()]
                 } else {
@@ -882,7 +882,7 @@ mod tests {
                             "npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr",
                         )
                         .unwrap(),
-                        kind: nostr_sdk::Kind::GitRepoAnnouncement,
+                        kind: nostr_sdk_0_34_0::Kind::GitRepoAnnouncement,
                         relays: vec!["wss://nos.lol".to_string()], // wont add the slash
                     }]),
                     protocol: None,
@@ -965,7 +965,7 @@ mod tests {
                                 "npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr",
                             )
                             .unwrap(),
-                            kind: nostr_sdk::Kind::GitRepoAnnouncement,
+                            kind: nostr_sdk_0_34_0::Kind::GitRepoAnnouncement,
                             relays: vec![
                                 "wss://nos.lol/".to_string(),
                                 "wss://relay.damus.io/".to_string(),
@@ -1062,7 +1062,7 @@ mod tests {
                                 "npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr",
                             )
                             .unwrap(),
-                            kind: nostr_sdk::Kind::GitRepoAnnouncement,
+                            kind: nostr_sdk_0_34_0::Kind::GitRepoAnnouncement,
                             relays: vec![
                                 "wss://nos.lol/".to_string(),
                                 "wss://relay.damus.io/".to_string(),

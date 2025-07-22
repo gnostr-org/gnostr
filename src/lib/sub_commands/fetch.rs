@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::{Context, Result};
 use clap;
-use nostr::nips::nip01::Coordinate;
+use nostr_0_34_1::nips::nip01::Coordinate;
 
 use crate::{
     //cli::Cli,

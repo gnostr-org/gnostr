@@ -16,7 +16,7 @@ use anyhow::{bail, Context, Result};
 use client::{consolidate_fetch_reports, get_repo_ref_from_cache, Connect};
 use git::{nostr_url::NostrUrlDecoded, RepoActions};
 use gnostr::{client, git};
-use nostr::nips::nip01::Coordinate;
+use nostr_0_34_1::nips::nip01::Coordinate;
 use utils::read_line;
 
 use crate::{client::Client, git::Repo};

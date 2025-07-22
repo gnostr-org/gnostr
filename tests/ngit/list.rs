@@ -50,7 +50,7 @@ async fn prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(
 mod cannot_find_repo_event {
     use super::*;
     mod cli_prompts {
-        use nostr::{nips::nip01::Coordinate, ToBech32};
+        use nostr_0_34_1::{nips::nip01::Coordinate, ToBech32};
 
         use super::*;
         #[cfg(feature = "expensive_tests")]
@@ -90,7 +90,7 @@ mod cannot_find_repo_event {
                     let mut input = p.expect_input("repository naddr")?;
                     input.succeeds_with(
                         &Coordinate {
-                            kind: nostr::Kind::GitRepoAnnouncement,
+                            kind: nostr_0_34_1::Kind::GitRepoAnnouncement,
                             public_key: TEST_KEY_1_KEYS.public_key(),
                             identifier: repo_event.identifier().unwrap().to_string(),
                             relays: vec!["ws://localhost:8056".to_string()],

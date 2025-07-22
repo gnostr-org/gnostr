@@ -12,8 +12,8 @@ use crate::{
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
-use nostr_sdk::prelude::*;
-use nostr_sqlite::SQLiteDatabase;
+use nostr_sdk_0_34_0::prelude::*;
+use nostr_sqlite_0_34_0::SQLiteDatabase;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span, Text},

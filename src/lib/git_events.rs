@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
 use anyhow::{bail, Context, Result};
-use nostr::nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19};
-use nostr_sdk::{
+use nostr_0_34_1::nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19};
+use nostr_sdk_0_34_0::{
     hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId, FromBech32, Kind, PublicKey, Tag,
     TagKind, TagStandard, UncheckedUrl,
 };
-use nostr_signer::NostrSigner;
+use nostr_signer_0_34_0::NostrSigner;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
@@ -37,7 +37,7 @@ pub fn get_commit_id_from_patch(event: &Event) -> Result<String> {
     }
 }
 
-pub fn get_event_root(event: &nostr::Event) -> Result<EventId> {
+pub fn get_event_root(event: &nostr_0_34_1::Event) -> Result<EventId> {
     Ok(EventId::parse(
         event
             .tags()
@@ -85,23 +85,23 @@ pub async fn generate_patch_event(
     git_repo: &Repo,
     root_commit: &Sha1Hash,
     commit: &Sha1Hash,
-    thread_event_id: Option<nostr::EventId>,
-    signer: &nostr_sdk::NostrSigner,
+    thread_event_id: Option<nostr_0_34_1::EventId>,
+    signer: &nostr_sdk_0_34_0::NostrSigner,
     repo_ref: &RepoRef,
-    parent_patch_event_id: Option<nostr::EventId>,
+    parent_patch_event_id: Option<nostr_0_34_1::EventId>,
     series_count: Option<(u64, u64)>,
     branch_name: Option<String>,
     root_proposal_id: &Option<String>,
-    mentions: &[nostr::Tag],
-) -> Result<nostr::Event> {
+    mentions: &[nostr_0_34_1::Tag],
+) -> Result<nostr_0_34_1::Event> {
     let commit_parent = git_repo
         .get_commit_parent(commit)
         .context("failed to get parent commit")?;
-    let relay_hint = repo_ref.relays.first().map(nostr::UncheckedUrl::from);
+    let relay_hint = repo_ref.relays.first().map(nostr_0_34_1::UncheckedUrl::from);
 
     sign_event(
         EventBuilder::new(
-            nostr::event::Kind::GitPatch,
+            nostr_0_34_1::event::Kind::GitPatch,
             git_repo
                 .make_patch_from_commit(commit, &series_count)
                 .context(format!("cannot make patch for commit {commit}"))?,
@@ -111,7 +111,7 @@ pub async fn generate_patch_event(
                     .iter()
                     .map(|m| {
                         Tag::coordinate(Coordinate {
-                            kind: nostr::Kind::GitRepoAnnouncement,
+                            kind: nostr_0_34_1::Kind::GitRepoAnnouncement,
                             public_key: *m,
                             identifier: repo_ref.identifier.to_string(),
                             relays: repo_ref.relays.clone(),
@@ -137,7 +137,7 @@ pub async fn generate_patch_event(
                     ),
                 ],
                 if let Some(thread_event_id) = thread_event_id {
-                    vec![Tag::from_standardized(nostr_sdk::TagStandard::Event {
+                    vec![Tag::from_standardized(nostr_sdk_0_34_0::TagStandard::Event {
                         event_id: thread_event_id,
                         relay_url: relay_hint.clone(),
                         marker: Some(Marker::Root),
@@ -162,7 +162,7 @@ pub async fn generate_patch_event(
                 },
                 mentions.to_vec(),
                 if let Some(id) = parent_patch_event_id {
-                    vec![Tag::from_standardized(nostr_sdk::TagStandard::Event {
+                    vec![Tag::from_standardized(nostr_sdk_0_34_0::TagStandard::Event {
                         event_id: id,
                         relay_url: relay_hint.clone(),
                         marker: Some(Marker::Reply),
@@ -219,7 +219,7 @@ pub async fn generate_patch_event(
                     ),
                     // removing description tag will not cause
                     // anything to break
-                    Tag::from_standardized(nostr_sdk::TagStandard::Description(
+                    Tag::from_standardized(nostr_sdk_0_34_0::TagStandard::Description(
                         git_repo.get_commit_message(commit)?.to_string(),
                     )),
                     Tag::custom(
@@ -248,7 +248,7 @@ pub fn event_tag_from_nip19_or_hex(
     marker: Marker,
     allow_npub_reference: bool,
     prompt_for_correction: bool,
-) -> Result<nostr::Tag> {
+) -> Result<nostr_0_34_1::Tag> {
     let mut bech32 = reference.to_string();
     loop {
         if bech32.is_empty() {
@@ -259,7 +259,7 @@ pub fn event_tag_from_nip19_or_hex(
         if let Ok(nip19) = Nip19::from_bech32(bech32.clone()) {
             match nip19 {
                 Nip19::Event(n) => {
-                    break Ok(Tag::from_standardized(nostr_sdk::TagStandard::Event {
+                    break Ok(Tag::from_standardized(nostr_sdk_0_34_0::TagStandard::Event {
                         event_id: n.event_id,
                         relay_url: n.relays.first().map(UncheckedUrl::new),
                         marker: Some(marker),
@@ -267,7 +267,7 @@ pub fn event_tag_from_nip19_or_hex(
                     }));
                 }
                 Nip19::EventId(id) => {
-                    break Ok(Tag::from_standardized(nostr_sdk::TagStandard::Event {
+                    break Ok(Tag::from_standardized(nostr_sdk_0_34_0::TagStandard::Event {
                         event_id: id,
                         relay_url: None,
                         marker: Some(marker),
@@ -290,8 +290,8 @@ pub fn event_tag_from_nip19_or_hex(
                 _ => {}
             }
         }
-        if let Ok(id) = nostr::EventId::from_str(&bech32) {
-            break Ok(Tag::from_standardized(nostr_sdk::TagStandard::Event {
+        if let Ok(id) = nostr_0_34_1::EventId::from_str(&bech32) {
+            break Ok(Tag::from_standardized(nostr_sdk_0_34_0::TagStandard::Event {
                 event_id: id,
                 relay_url: None,
                 marker: Some(marker),
@@ -316,8 +316,8 @@ pub async fn generate_cover_letter_and_patch_events(
     signer: &NostrSigner,
     repo_ref: &RepoRef,
     root_proposal_id: &Option<String>,
-    mentions: &[nostr::Tag],
-) -> Result<Vec<nostr::Event>> {
+    mentions: &[nostr_0_34_1::Tag],
+) -> Result<Vec<nostr_0_34_1::Event>> {
     let root_commit = git_repo
         .get_root_commit()
         .context("failed to get root commit of the repository")?;
@@ -328,7 +328,7 @@ pub async fn generate_cover_letter_and_patch_events(
         events.push(
             sign_event(
                 EventBuilder::new(
-                    nostr::event::Kind::GitPatch,
+                    nostr_0_34_1::event::Kind::GitPatch,
                     format!(
             "From {} Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/{}] {title}\n\n{description}",
             commits.last().unwrap(),
@@ -340,7 +340,7 @@ pub async fn generate_cover_letter_and_patch_events(
                             .iter()
                             .map(|m| {
                                 Tag::coordinate(Coordinate {
-                                    kind: nostr::Kind::GitRepoAnnouncement,
+                                    kind: nostr_0_34_1::Kind::GitRepoAnnouncement,
                                     public_key: *m,
                                     identifier: repo_ref.identifier.to_string(),
                                     relays: repo_ref.relays.clone(),
@@ -353,7 +353,7 @@ pub async fn generate_cover_letter_and_patch_events(
                             ))),
                             Tag::hashtag("cover-letter"),
                             Tag::custom(
-                                nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                                nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
                                 vec![format!("git patch cover letter: {}", title.clone())],
                             ),
                         ],
@@ -385,7 +385,7 @@ pub async fn generate_cover_letter_and_patch_events(
                                 && !branch_name.eq("origin/master")
                             {
                                 vec![Tag::custom(
-                                    nostr::TagKind::Custom(std::borrow::Cow::Borrowed(
+                                    nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed(
                                         "branch-name",
                                     )),
                                     vec![
@@ -426,7 +426,7 @@ pub async fn generate_cover_letter_and_patch_events(
                 events.first().map(|event| event.id),
                 signer,
                 repo_ref,
-                events.last().map(nostr::Event::id),
+                events.last().map(nostr_0_34_1::Event::id),
                 if events.is_empty() && commits.len().eq(&1) {
                     None
                 } else {
@@ -467,7 +467,7 @@ pub struct CoverLetter {
     pub title: String,
     pub description: String,
     pub branch_name: String,
-    pub event_id: Option<nostr::EventId>,
+    pub event_id: Option<nostr_0_34_1::EventId>,
 }
 
 impl CoverLetter {
@@ -483,7 +483,7 @@ impl CoverLetter {
         ))
     }
 }
-pub fn event_is_cover_letter(event: &nostr::Event) -> bool {
+pub fn event_is_cover_letter(event: &nostr_0_34_1::Event) -> bool {
     // TODO: look for Subject:[ PATCH 0/n ] but watch out for:
     //   [PATCH v1 0/n ] or
     //   [PATCH subsystem v2 0/n ]
@@ -495,7 +495,7 @@ pub fn event_is_cover_letter(event: &nostr::Event) -> bool {
             .any(|t| t.as_vec()[1].eq("cover-letter"))
 }
 
-pub fn commit_msg_from_patch(patch: &nostr::Event) -> Result<String> {
+pub fn commit_msg_from_patch(patch: &nostr_0_34_1::Event) -> Result<String> {
     if let Ok(msg) = tag_value(patch, "description") {
         Ok(msg)
     } else {
@@ -511,14 +511,14 @@ pub fn commit_msg_from_patch(patch: &nostr::Event) -> Result<String> {
     }
 }
 
-pub fn commit_msg_from_patch_oneliner(patch: &nostr::Event) -> Result<String> {
+pub fn commit_msg_from_patch_oneliner(patch: &nostr_0_34_1::Event) -> Result<String> {
     Ok(commit_msg_from_patch(patch)?
         .split('\n')
         .collect::<Vec<&str>>()[0]
         .to_string())
 }
 
-pub fn event_to_cover_letter(event: &nostr::Event) -> Result<CoverLetter> {
+pub fn event_to_cover_letter(event: &nostr_0_34_1::Event) -> Result<CoverLetter> {
     if !event_is_patch_set_root(event) {
         bail!("event is not a patch set root event (root patch or cover letter)")
     }
@@ -562,13 +562,13 @@ pub fn event_to_cover_letter(event: &nostr::Event) -> Result<CoverLetter> {
 }
 
 pub fn get_most_recent_patch_with_ancestors(
-    mut patches: Vec<nostr::Event>,
-) -> Result<Vec<nostr::Event>> {
+    mut patches: Vec<nostr_0_34_1::Event>,
+) -> Result<Vec<nostr_0_34_1::Event>> {
     patches.sort_by_key(|e| e.created_at);
 
     let youngest_patch = patches.last().context("no patches found")?;
 
-    let patches_with_youngest_created_at: Vec<&nostr::Event> = patches
+    let patches_with_youngest_created_at: Vec<&nostr_0_34_1::Event> = patches
         .iter()
         .filter(|p| p.created_at.eq(&youngest_patch.created_at))
         .collect();
@@ -604,7 +604,7 @@ pub fn get_most_recent_patch_with_ancestors(
     Ok(res)
 }
 
-fn get_event_parent_id(event: &nostr::Event) -> Result<String> {
+fn get_event_parent_id(event: &nostr_0_34_1::Event) -> Result<String> {
     Ok(if let Some(reply_tag) = event
         .tags
         .iter()
@@ -643,16 +643,16 @@ mod tests {
     mod event_to_cover_letter {
         use super::*;
 
-        fn generate_cover_letter(title: &str, description: &str) -> Result<nostr::Event> {
-            Ok(nostr::event::EventBuilder::new(
-                nostr::event::Kind::GitPatch,
+        fn generate_cover_letter(title: &str, description: &str) -> Result<nostr_0_34_1::Event> {
+            Ok(nostr_0_34_1::event::EventBuilder::new(
+                nostr_0_34_1::event::Kind::GitPatch,
                 format!("From ea897e987ea9a7a98e7a987e97987ea98e7a3334 Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/2] {title}\n\n{description}"),
                 [
                     Tag::hashtag("cover-letter"),
                     Tag::hashtag("root"),
                 ],
             )
-            .to_event(&nostr::Keys::generate())?)
+            .to_event(&nostr_0_34_1::Keys::generate())?)
         }
 
         #[test]

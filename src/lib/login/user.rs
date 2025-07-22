@@ -1,5 +1,5 @@
-use nostr::PublicKey;
-use nostr_sdk::Timestamp;
+use nostr_0_34_1::PublicKey;
+use nostr_sdk_0_34_0::Timestamp;
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
