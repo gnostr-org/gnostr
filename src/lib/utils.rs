@@ -2,9 +2,14 @@ use log::{debug, error};
 use nostr_sdk_0_32_0::prelude::*;
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
+use std::env;
 use std::fmt::Write;
 use std::time::Duration;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 use ureq::Agent;
+
+use std::path::PathBuf;
 
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
@@ -221,6 +226,34 @@ pub async fn ureq_async(url: String) -> Result<String, String> {
     // The `?` operator here will propagate any `Err` from the spawned task.
     s.await
         .map_err(|e| format!("Asynchronous task failed: {}", e))?
+}
+
+/// pub fn get_epoch_secs() -> f64
+pub fn get_epoch_secs() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64()
+}
+/// pub fn get_epoch_millisecs() -> f64
+pub fn get_epoch_millisecs() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64()
+        * 1000f64
+    //.as_millis()
+}
+/// pub fn get_current_working_dir() -> std::io::Result\<PathBuf\>
+pub fn get_current_working_dir() -> std::io::Result<PathBuf> {
+    env::current_dir()
+}
+/// pub fn strip_trailing_newline(input: &str) -> &str
+pub fn strip_trailing_newline(input: &str) -> &str {
+    input
+        .strip_suffix("\r\n")
+        .or(input.strip_suffix("\n"))
+        .unwrap_or(input)
 }
 
 // Example usage (you would typically put this in a main function or a test)
