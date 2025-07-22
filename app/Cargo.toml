@@ -32,7 +32,7 @@ actix-rt = "2.10.0"
 anyhow = "1.0.86"
 clap = { version = "4.5.16", features = ["derive"] }
 clio = { version = "0.3.5", features = ["clap-parse"] }
-gnostr = { version = "0.0.101", path = ".." }
+gnostr = { version = "0.0.106", path = ".." }
 gpui = { git = "https://github.com/zed-industries/zed" }
 indicatif = "0.17.8"
 nostr-db = { version = "0.4.5", path = "./db", features = ["search"] }
