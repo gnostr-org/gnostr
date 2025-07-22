@@ -113,7 +113,6 @@ impl Connect for Client {
                                                      * to delete all messages */
                 "wss://nos.lol".to_string(),
                 "wss://cfrelay.haorendashu.workers.dev".to_string(),
-                "wss://sendit.nosflare.com".to_string(),
             ]
         };
 
