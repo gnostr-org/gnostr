@@ -132,7 +132,6 @@ gnostr-chat: 	## 	gnostr-chat
 	gnostr chat --topic gnostr --name "\$(shell gnostr-weeble)/\$(shell gnostr-blockheight)/\$(shell gnostr-wobble):\$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
-	cargo install --bin fetch_by_id --path .
 	cargo install --bin gnostr-fetch-by-id --path .
 	event_id=\$(shell gnostr note -c test --hex | jq .id | sed "s/\\"//g") && gnostr-fetch-by-id \$$event_id;
 
