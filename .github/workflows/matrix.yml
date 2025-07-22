@@ -188,7 +188,7 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       - run: gnostr -V
       - run: gnostr -h
-      - run: gnostr ngit
+      - run: gnostr ngit >/dev/null
       - run: |
           cargo t -vv -p gnostr || true
         if: matrix.rustup == '1.88'
