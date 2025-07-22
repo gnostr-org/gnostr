@@ -142,7 +142,7 @@ impl Handler {
                         .await?;
 
                     if let Some(message) = repo_config.failed_push_message {
-                        knob.repo_note(&message).await?;
+                        knob.repo_note(&message.clone()).await?;
                     }
 
                     knob.close().await?;
