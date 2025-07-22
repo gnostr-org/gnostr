@@ -98,6 +98,8 @@ jobs:
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: matrix.os != 'windows-latest'
       - run: |
+          cargo test -vv -- --nocapture
+      - run: |
           cargo install --path . --force
         if: matrix.os == 'windows-latest'
       - run: |
