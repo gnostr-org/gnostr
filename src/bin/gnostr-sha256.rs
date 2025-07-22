@@ -1,5 +1,9 @@
 #[allow(unused_imports)]
 use gnostr::run;
+use gnostr::utils::get_current_working_dir;
+use gnostr::utils::get_epoch_millisecs;
+use gnostr::utils::get_epoch_secs;
+use gnostr::utils::strip_trailing_newline;
 #[allow(unused_imports)]
 use gnostr::Config;
 use std::io::Result;
@@ -7,33 +11,6 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{env, process};
 
-/// fn get_epoch_secs() -> f64
-fn get_epoch_secs() -> f64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs_f64()
-}
-/// fn get_epoch_millisecs() -> f64
-fn get_epoch_millisecs() -> f64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs_f64()
-        * 1000f64
-    //.as_millis()
-}
-/// fn get_current_working_dir() -> std::io::Result\<PathBuf\>
-fn get_current_working_dir() -> std::io::Result<PathBuf> {
-    env::current_dir()
-}
-/// fn strip_trailing_newline(input: &str) -> &str
-fn strip_trailing_newline(input: &str) -> &str {
-    input
-        .strip_suffix("\r\n")
-        .or(input.strip_suffix("\n"))
-        .unwrap_or(input)
-}
 fn main() -> Result<()> {
     if cfg!(debug_assertions) {
         let mut start = get_epoch_millisecs();
