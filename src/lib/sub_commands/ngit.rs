@@ -9,7 +9,7 @@ use crate::sub_commands::pull;
 use crate::sub_commands::push;
 use crate::sub_commands::send;
 use clap::Args;
-use nostr_sdk::prelude::*;
+use nostr_sdk_0_34_0::prelude::*;
 
 use serde::ser::StdError;
 

@@ -3,11 +3,11 @@ use std::path::Path;
 use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use anyhow::{bail, Context, Result};
 use console::Style;
-use nostr::{
+use nostr_0_34_1::{
     nips::{nip10::Marker, nip19::Nip19Event},
     ToBech32,
 };
-use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
 use crate::{
     //cli::Cli,
@@ -372,19 +372,19 @@ fn summarise_commit_for_selection(git_repo: &Repo, commit: &Sha1Hash) -> Result<
 async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     git_repo_path: &Path,
     in_reply_to: &[String],
-) -> Result<(Option<String>, Vec<nostr::Tag>)> {
+) -> Result<(Option<String>, Vec<nostr_0_34_1::Tag>)> {
     let root_proposal_id = if let Some(first) = in_reply_to.first() {
         match event_tag_from_nip19_or_hex(first, "in-reply-to", Marker::Root, true, false)?
             .as_standardized()
         {
-            Some(nostr_sdk::TagStandard::Event {
+            Some(nostr_sdk_0_34_0::TagStandard::Event {
                 event_id,
                 relay_url: _,
                 marker: _,
                 public_key: _,
             }) => {
                 let events =
-                    get_events_from_cache(git_repo_path, vec![nostr::Filter::new().id(*event_id)])
+                    get_events_from_cache(git_repo_path, vec![nostr_0_34_1::Filter::new().id(*event_id)])
                         .await?;
 
                 if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {

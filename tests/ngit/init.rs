@@ -1,5 +1,5 @@
 use anyhow::Result;
-use nostr_sdk::Kind;
+use nostr_sdk_0_34_0::Kind;
 use serial_test::serial;
 use test_utils::{git::GitTestRepo, *};
 
@@ -387,8 +387,8 @@ mod when_repo_not_previously_claimed {
 
         mod git_config_updated {
 
-            use nostr::nips::nip01::Coordinate;
-            use nostr_sdk::ToBech32;
+            use nostr_0_34_1::nips::nip01::Coordinate;
+            use nostr_sdk_0_34_0::ToBech32;
 
             use super::*;
 
@@ -435,7 +435,7 @@ mod when_repo_not_previously_claimed {
                             .value()
                             .unwrap(),
                         Coordinate {
-                            kind: nostr_sdk::Kind::GitRepoAnnouncement,
+                            kind: nostr_sdk_0_34_0::Kind::GitRepoAnnouncement,
                             identifier: "example-identifier".to_string(),
                             public_key: TEST_KEY_1_KEYS.public_key(),
                             relays: vec![],
@@ -477,7 +477,7 @@ mod when_repo_not_previously_claimed {
             async fn d_replaceable_event_identifier() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -496,7 +496,7 @@ mod when_repo_not_previously_claimed {
             async fn earliest_unique_commit_as_reference_with_euc_marker() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -517,7 +517,7 @@ mod when_repo_not_previously_claimed {
             async fn name() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -537,7 +537,7 @@ mod when_repo_not_previously_claimed {
             async fn alt() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -556,7 +556,7 @@ mod when_repo_not_previously_claimed {
             async fn description() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -575,7 +575,7 @@ mod when_repo_not_previously_claimed {
             async fn git_server() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -597,7 +597,7 @@ mod when_repo_not_previously_claimed {
             async fn relays() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -620,7 +620,7 @@ mod when_repo_not_previously_claimed {
             async fn web() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))
@@ -643,7 +643,7 @@ mod when_repo_not_previously_claimed {
             async fn maintainers() -> Result<()> {
                 let (_, _, r53, r55, r56, r57) = prep_run_init().await?;
                 for relay in [&r53, &r55, &r56, &r57] {
-                    let event: &nostr::Event = relay
+                    let event: &nostr_0_34_1::Event = relay
                         .events
                         .iter()
                         .find(|e| e.kind.eq(&Kind::GitRepoAnnouncement))

@@ -18,8 +18,8 @@ use gnostr::{
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr::nips::nip19;
-use nostr_sdk::ToBech32;
+use nostr_0_34_1::nips::nip19;
+use nostr_sdk_0_34_0::ToBech32;
 
 use crate::utils::{
     count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,

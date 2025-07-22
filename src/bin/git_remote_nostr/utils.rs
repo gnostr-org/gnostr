@@ -23,7 +23,7 @@ use gnostr::{
     },
     repo_ref::RepoRef,
 };
-use nostr_sdk::{Event, EventId, Kind, PublicKey, Url};
+use nostr_sdk_0_34_0::{Event, EventId, Kind, PublicKey, Url};
 
 pub fn get_short_git_server_name(git_repo: &Repo, url: &str) -> std::string::String {
     if let Ok(name) = get_remote_name_by_url(&git_repo.git_repo, url) {
@@ -99,7 +99,7 @@ pub async fn get_open_proposals(
     repo_ref: &RepoRef,
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
-    let proposals: Vec<nostr::Event> =
+    let proposals: Vec<nostr_0_34_1::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
@@ -107,12 +107,12 @@ pub async fn get_open_proposals(
             .cloned()
             .collect();
 
-    let statuses: Vec<nostr::Event> = {
+    let statuses: Vec<nostr_0_34_1::Event> = {
         let mut statuses = get_events_from_cache(
             git_repo_path,
-            vec![nostr::Filter::default()
+            vec![nostr_0_34_1::Filter::default()
                 .kinds(status_kinds().clone())
-                .events(proposals.iter().map(nostr::Event::id))],
+                .events(proposals.iter().map(nostr_0_34_1::Event::id))],
         )
         .await?;
         statuses.sort_by_key(|e| e.created_at);
@@ -130,7 +130,7 @@ pub async fn get_open_proposals(
                         .iter()
                         .any(|t| t.as_vec()[1].eq(&proposal.id.to_string()))
             })
-            .collect::<Vec<&nostr::Event>>()
+            .collect::<Vec<&nostr_0_34_1::Event>>()
             .first()
         {
             e.kind()
@@ -159,7 +159,7 @@ pub async fn get_all_proposals(
     repo_ref: &RepoRef,
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
-    let proposals: Vec<nostr::Event> =
+    let proposals: Vec<nostr_0_34_1::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()

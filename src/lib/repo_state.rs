@@ -6,11 +6,11 @@ use git2::Oid;
 pub struct RepoState {
     pub identifier: String,
     pub state: HashMap<String, String>,
-    pub event: nostr::Event,
+    pub event: nostr_0_34_1::Event,
 }
 
 impl RepoState {
-    pub fn try_from(mut state_events: Vec<nostr::Event>) -> Result<Self> {
+    pub fn try_from(mut state_events: Vec<nostr_0_34_1::Event>) -> Result<Self> {
         state_events.sort_by_key(|e| e.created_at);
         let event = state_events.first().context("no state events")?;
         let mut state = HashMap::new();

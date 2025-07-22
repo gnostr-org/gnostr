@@ -1,14 +1,14 @@
 use std::{collections::HashSet, path::Path, str::FromStr, time::Duration};
 
 use anyhow::{bail, Context, Result};
-use nostr::{
+use nostr_0_34_1::{
     nips::{nip05, nip46::NostrConnectURI},
     PublicKey,
 };
-use nostr_sdk::{
+use nostr_sdk_0_34_0::{
     Alphabet, FromBech32, JsonUtil, Keys, Kind, NostrSigner, SingleLetterTag, Timestamp, ToBech32,
 };
-use nostr_signer::Nip46Signer;
+use nostr_signer_0_34_0::Nip46Signer;
 use tracing::debug;
 
 #[cfg(not(test))]
@@ -178,7 +178,7 @@ fn get_keys_from_nsec(
     nsec: &String,
     password: &Option<String>,
     save_local: bool,
-) -> Result<nostr::Keys> {
+) -> Result<nostr_0_34_1::Keys> {
     #[allow(unused_assignments)]
     let mut s = String::new();
     let keys = if nsec.contains("ncryptsec") {
@@ -194,7 +194,7 @@ fn get_keys_from_nsec(
         .context("failed to decrypt ncryptsec supplied as nsec with password")?
     } else {
         s = nsec.to_string();
-        nostr::Keys::from_str(nsec).context("invalid nsec parameter")?
+        nostr_0_34_1::Keys::from_str(nsec).context("invalid nsec parameter")?
     };
     if save_local {
         if let Some(password) = password {
@@ -273,7 +273,7 @@ fn silently_save_to_git_config(
     git_repo.save_git_config_item("nostr.npub", npub, global)
 }
 
-fn get_keys_with_password(git_repo: &Repo, password: &str) -> Result<nostr::Keys> {
+fn get_keys_with_password(git_repo: &Repo, password: &str) -> Result<nostr_0_34_1::Keys> {
     decrypt_key(
         &git_repo
             .get_git_config_item("nostr.nsec", None)
@@ -291,7 +291,7 @@ async fn get_nip46_signer_from_uri_and_key(uri: &str, app_key: &str) -> Result<N
     let signer = NostrSigner::nip46(
         Nip46Signer::new(
             uri,
-            nostr::Keys::from_str(app_key).context("invalid app key")?,
+            nostr_0_34_1::Keys::from_str(app_key).context("invalid app key")?,
             Duration::from_secs(30),
             None,
         )
@@ -313,7 +313,7 @@ async fn get_signer_with_git_config_nsec_or_bunker_without_prompts(
             bail!("git global config item nostr.nsec is an ncryptsec")
         }
         Ok(NostrSigner::Keys(
-            nostr::Keys::from_str(local_nsec).context("invalid nsec parameter")?,
+            nostr_0_34_1::Keys::from_str(local_nsec).context("invalid nsec parameter")?,
         ))
     } else if let Ok((uri, app_key)) = get_git_config_bunker_uri_and_app_key(git_repo, Some(false))
     {
@@ -327,7 +327,7 @@ async fn get_signer_with_git_config_nsec_or_bunker_without_prompts(
             bail!("git global config item nostr.nsec is an ncryptsec")
         }
         Ok(NostrSigner::Keys(
-            nostr::Keys::from_str(global_nsec).context("invalid nsec parameter")?,
+            nostr_0_34_1::Keys::from_str(global_nsec).context("invalid nsec parameter")?,
         ))
     } else if let Ok((uri, app_key)) = get_git_config_bunker_uri_and_app_key(git_repo, Some(true)) {
         get_nip46_signer_from_uri_and_key(&uri, &app_key).await
@@ -367,7 +367,7 @@ async fn fresh_login(
         let input = Interactor::default()
             .input(PromptInputParms::default().with_prompt(prompt))
             .context("failed to get nsec input from interactor")?;
-        if let Ok(keys) = nostr::Keys::from_str(&input) {
+        if let Ok(keys) = nostr_0_34_1::Keys::from_str(&input) {
             if let Err(error) = save_keys(git_repo, &keys, always_save) {
                 println!("{error}");
             }
@@ -484,7 +484,7 @@ fn save_bunker(
     Ok(())
 }
 
-fn save_keys(git_repo: &Repo, keys: &nostr::Keys, always_save: bool) -> Result<()> {
+fn save_keys(git_repo: &Repo, keys: &nostr_0_34_1::Keys, always_save: bool) -> Result<()> {
     if always_save
         || Interactor::default()
             .confirm(PromptConfirmParms::default().with_prompt("save login details?"))?
@@ -543,17 +543,17 @@ fn get_config_item(git_repo: &Repo, name: &str) -> Result<String> {
 
 //
 fn extract_user_metadata(
-    public_key: &nostr::PublicKey,
-    events: &[nostr::Event],
+    public_key: &nostr_0_34_1::PublicKey,
+    events: &[nostr_0_34_1::Event],
 ) -> Result<UserMetadata> {
     let event = events
         .iter()
-        .filter(|e| e.kind.eq(&nostr::Kind::Metadata) && e.pubkey.eq(public_key))
+        .filter(|e| e.kind.eq(&nostr_0_34_1::Kind::Metadata) && e.pubkey.eq(public_key))
         .max_by_key(|e| e.created_at);
 
-    let metadata: Option<nostr::Metadata> = if let Some(event) = event {
+    let metadata: Option<nostr_0_34_1::Metadata> = if let Some(event) = event {
         Some(
-            nostr::Metadata::from_json(event.content.clone())
+            nostr_0_34_1::Metadata::from_json(event.content.clone())
                 .context("metadata cannot be found in kind 0 event content")?,
         )
     } else {
@@ -587,10 +587,10 @@ fn extract_user_metadata(
     })
 }
 
-fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -> UserRelays {
+fn extract_user_relays(public_key: &nostr_0_34_1::PublicKey, events: &[nostr_0_34_1::Event]) -> UserRelays {
     let event = events
         .iter()
-        .filter(|e| e.kind.eq(&nostr::Kind::RelayList) && e.pubkey.eq(public_key))
+        .filter(|e| e.kind.eq(&nostr_0_34_1::Kind::RelayList) && e.pubkey.eq(public_key))
         .max_by_key(|e| e.created_at);
 
     if let Some(e) = event {
@@ -604,7 +604,7 @@ fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -
                 .iter()
                 .filter(|t| {
                     t.kind()
-                        .eq(&nostr::TagKind::SingleLetter(SingleLetterTag::lowercase(
+                        .eq(&nostr_0_34_1::TagKind::SingleLetter(SingleLetterTag::lowercase(
                             Alphabet::R,
                         )))
                 })
@@ -700,10 +700,10 @@ pub async fn get_user_ref_from_cache(
     public_key: &PublicKey,
 ) -> Result<UserRef> {
     let filters = vec![
-        nostr::Filter::default()
+        nostr_0_34_1::Filter::default()
             .author(*public_key)
             .kind(Kind::Metadata),
-        nostr::Filter::default()
+        nostr_0_34_1::Filter::default()
             .author(*public_key)
             .kind(Kind::RelayList),
     ];

@@ -149,14 +149,14 @@ libp2p = { version = "0.54.1", features = [
 
 log = "0.4"
 
-nostr = "0.34.1"
-nostr-database = "0.34.0"
-nostr-sdk = "0.34.0"
+nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
+nostr-database_0_34_0 = { package = "nostr-database", version ="0.34.0" }
+nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
-nostr-signer = "0.34.0"
-nostr-sqlite = "0.34.0"
+nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
+nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 #log = "0.4"
 
 ##cli
