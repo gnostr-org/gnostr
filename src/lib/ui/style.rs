@@ -300,13 +300,15 @@ impl Theme {
 impl Default for Theme {
     fn default() -> Self {
         Self {
-            selected_tab: Color::Reset,
+            //selected_tab: Color::White,
+            selected_tab: Color::Gray,
             command_fg: Color::White,
             selection_bg: Color::Magenta,
             selection_fg: Color::White,
             cmdbar_bg: Color::Reset,
             cmdbar_extra_lines_bg: Color::Reset,
-            disabled_fg: Color::DarkGray,
+            disabled_fg: Color::Gray,
+            //disabled_fg: Color::Reset,
             diff_line_add: Color::Green,
             diff_line_delete: Color::Red,
             diff_file_added: Color::LightGreen,
