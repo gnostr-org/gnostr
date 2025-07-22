@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.105"
+version = "0.0.106"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -30,7 +30,7 @@ exclude = [
     "*examples/",
     "*target/",
     "*vendor/",
-    "config/",
+    "config/",##for app
     "git2-testing",
     "tests/",
     "org",
