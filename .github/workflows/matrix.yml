@@ -186,6 +186,9 @@ jobs:
           fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
+      - run: gnostr -V
+      - run: gnostr -h
+      - run: gnostr ngit
       - run: |
           cargo t -vv -p gnostr || true
         if: matrix.rustup == '1.88'
