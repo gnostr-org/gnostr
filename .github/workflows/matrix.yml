@@ -99,7 +99,7 @@ jobs:
         if: matrix.os != 'windows-latest'
       - run: |
           cargo t -vv -p gnostr -- --nocapture
-        if: matrix.rustup == 'stable'
+        if: matrix.rustup == '1.88'
       - run: |
           cargo install --path . --force
         if: matrix.os == 'windows-latest'
