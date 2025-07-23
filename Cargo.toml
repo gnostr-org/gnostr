@@ -257,11 +257,12 @@ sd-notify = "0.4.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [dev-dependencies]
-cargo-depgraph = "1.6.0"
+##cargo-depgraph = "1.6.0"
 ##nostr
 env_logger = "0.11"
 gnostr-bins = "0.0.71"
 gnostr-cat = "0.0.40"
+gnostr-query = "0.0.5"
 gnostr-xq = "0.0.3"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
