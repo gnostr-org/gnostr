@@ -1260,50 +1260,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e93abca9e28e0a1b9877922aacb20576e05d4679ffa78c3d6dc22a26a216659"
 
 [[package]]
-name = "camino"
-version = "1.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b96ec4966b5813e2c0507c1f86115c8c5abaadc3980879c3424042a02fd1ad3"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "cargo-depgraph"
-version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b62895292d88c935f74dc3220a90cc07b7ddc05e233e2236db914369e61b65b7"
-dependencies = [
- "anyhow",
- "cargo_metadata",
- "clap 4.5.37",
- "petgraph",
-]
-
-[[package]]
-name = "cargo-platform"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e35af189006b9c0f00a064685c727031e3ed2d8020f7ba284d78cc2671bd36ea"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "cargo_metadata"
-version = "0.18.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
-dependencies = [
- "camino",
- "cargo-platform",
- "semver 1.0.26",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3266,7 +3222,6 @@ dependencies = [
  "bugreport",
  "bwrap",
  "bytesize",
- "cargo-depgraph",
  "chacha20poly1305",
  "chrono",
  "clap 4.5.37",
@@ -3298,6 +3253,7 @@ dependencies = [
  "gnostr-bins",
  "gnostr-cat",
  "gnostr-crawler",
+ "gnostr-query",
  "gnostr-types 0.7.6",
  "gnostr-xq",
  "gnostr_qr",
@@ -3569,6 +3525,21 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "gnostr-query"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47ca6c6ab5fa98ea694311561dba378a61c27395a02d68a384f5ee5c495c2e29"
+dependencies = [
+ "clap 4.5.37",
+ "futures 0.3.31",
+ "serde",
+ "serde_json",
+ "tokio 1.44.2",
+ "tokio-tungstenite 0.13.0",
+ "url 2.5.4",
 ]
 
 [[package]]
@@ -4592,6 +4563,15 @@ checksum = "879f10e63c20629ecabbb64a8010319738c66a5cd0c29b02d63d272b03751d01"
 dependencies = [
  "block-padding 0.3.3",
  "generic-array 0.14.7",
+]
+
+[[package]]
+name = "input_buffer"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f97967975f448f1a7ddb12b0bc41069d09ed6a1c161a92687e057325db35d413"
+dependencies = [
+ "bytes 1.10.1",
 ]
 
 [[package]]
@@ -9044,9 +9024,6 @@ name = "semver"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "semver-parser"
@@ -9197,6 +9174,19 @@ dependencies = [
  "digest 0.8.1",
  "fake-simd",
  "opaque-debug 0.2.3",
+]
+
+[[package]]
+name = "sha-1"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99cd6713db3cf16b6c84e06321e049a9b9f699826e16096d23bbcc44d15d51a6"
+dependencies = [
+ "block-buffer 0.9.0",
+ "cfg-if 1.0.0",
+ "cpufeatures",
+ "digest 0.9.0",
+ "opaque-debug 0.3.1",
 ]
 
 [[package]]
@@ -10605,6 +10595,21 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1a5f475f1b9d077ea1017ecbc60890fda8e54942d680ca0b1d2b47cfa2d861b"
+dependencies = [
+ "futures-util",
+ "log 0.4.27",
+ "native-tls",
+ "pin-project",
+ "tokio 1.44.2",
+ "tokio-native-tls",
+ "tungstenite 0.12.0",
+]
+
+[[package]]
+name = "tokio-tungstenite"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54319c93411147bced34cb5609a80e0a8e44c5999c93903a81cd866630ec0bfd"
@@ -11179,6 +11184,26 @@ dependencies = [
  "crossterm",
  "ratatui 0.28.1",
  "unicode-width 0.1.14",
+]
+
+[[package]]
+name = "tungstenite"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ada8297e8d70872fa9a551d93250a9f407beb9f37ef86494eb20012a2ff7c24"
+dependencies = [
+ "base64 0.13.1",
+ "byteorder",
+ "bytes 1.10.1",
+ "http 0.2.12",
+ "httparse",
+ "input_buffer",
+ "log 0.4.27",
+ "native-tls",
+ "rand 0.8.5",
+ "sha-1 0.9.8",
+ "url 2.5.4",
+ "utf-8",
 ]
 
 [[package]]
@@ -11895,7 +11920,7 @@ dependencies = [
  "futures 0.1.31",
  "native-tls",
  "rand 0.6.5",
- "sha-1",
+ "sha-1 0.8.2",
  "tokio-codec",
  "tokio-io",
  "tokio-tcp",
