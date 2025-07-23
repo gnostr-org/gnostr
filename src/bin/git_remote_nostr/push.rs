@@ -1011,7 +1011,9 @@ async fn create_merge_status(
                         "{merge_commit}"
                     ))),
                     Tag::custom(
-                        nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed("merge-commit-id")),
+                        nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed(
+                            "merge-commit-id",
+                        )),
                         vec![format!("{merge_commit}")],
                     ),
                 ],
