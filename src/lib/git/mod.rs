@@ -1633,7 +1633,9 @@ mod tests {
         use super::*;
         use crate::{git_events::generate_patch_event, repo_ref::RepoRef};
 
-        async fn generate_patch_from_head_commit(test_repo: &GitTestRepo) -> Result<nostr_0_34_1::Event> {
+        async fn generate_patch_from_head_commit(
+            test_repo: &GitTestRepo,
+        ) -> Result<nostr_0_34_1::Event> {
             let original_oid = test_repo.git_repo.head()?.peel_to_commit()?.id();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             generate_patch_event(
