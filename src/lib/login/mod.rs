@@ -587,7 +587,10 @@ fn extract_user_metadata(
     })
 }
 
-fn extract_user_relays(public_key: &nostr_0_34_1::PublicKey, events: &[nostr_0_34_1::Event]) -> UserRelays {
+fn extract_user_relays(
+    public_key: &nostr_0_34_1::PublicKey,
+    events: &[nostr_0_34_1::Event],
+) -> UserRelays {
     let event = events
         .iter()
         .filter(|e| e.kind.eq(&nostr_0_34_1::Kind::RelayList) && e.pubkey.eq(public_key))
@@ -603,10 +606,9 @@ fn extract_user_relays(public_key: &nostr_0_34_1::PublicKey, events: &[nostr_0_3
                 .tags
                 .iter()
                 .filter(|t| {
-                    t.kind()
-                        .eq(&nostr_0_34_1::TagKind::SingleLetter(SingleLetterTag::lowercase(
-                            Alphabet::R,
-                        )))
+                    t.kind().eq(&nostr_0_34_1::TagKind::SingleLetter(
+                        SingleLetterTag::lowercase(Alphabet::R),
+                    ))
                 })
                 .map(|t| UserRelayRef {
                     //url: (t.as_vec().len() == 2 || t.as_vec()[1].clone()).to_string(),

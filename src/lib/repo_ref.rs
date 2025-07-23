@@ -158,7 +158,9 @@ impl RepoRef {
                             self.relays.clone(),
                         ),
                         Tag::custom(
-                            nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
+                            nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed(
+                                "maintainers",
+                            )),
                             self.maintainers
                                 .iter()
                                 .map(std::string::ToString::to_string)

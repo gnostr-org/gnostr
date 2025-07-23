@@ -651,8 +651,14 @@ fn get_dedup_events(relay_results: Vec<Result<Vec<nostr_0_34_1::Event>>>) -> Vec
     dedup_events
 }
 
-pub async fn sign_event(event_builder: EventBuilder, signer: &NostrSigner) -> Result<nostr_0_34_1::Event> {
-    if signer.r#type().eq(&nostr_signer_0_34_0::NostrSignerType::NIP46) {
+pub async fn sign_event(
+    event_builder: EventBuilder,
+    signer: &NostrSigner,
+) -> Result<nostr_0_34_1::Event> {
+    if signer
+        .r#type()
+        .eq(&nostr_signer_0_34_0::NostrSignerType::NIP46)
+    {
         let term = console::Term::stderr();
         term.write_line("signing event with remote signer...")?;
         let event = signer
@@ -769,7 +775,10 @@ pub async fn get_event_from_global_cache(
         .context("cannot execute query on opened ngit nostr cache database")
 }
 
-pub async fn save_event_in_cache(git_repo_path: &Path, event: &nostr_0_34_1::Event) -> Result<bool> {
+pub async fn save_event_in_cache(
+    git_repo_path: &Path,
+    event: &nostr_0_34_1::Event,
+) -> Result<bool> {
     get_local_cache_database(git_repo_path)
         .await?
         .save_event(event)
