@@ -184,7 +184,7 @@ jobs:
           fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
-      - run: gnostr-fetch-by-id
+      #- run: gnostr-fetch-by-id
       - run: gnostr -V
       - run: gnostr -h
       - run: gnostr ngit -h
