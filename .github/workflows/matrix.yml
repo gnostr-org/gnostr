@@ -2,8 +2,6 @@ name: build-install-matrix
 
 # Controls when the action will run.
 on:
-  schedule:
-    - cron: '*/30 * * * *' # run 30th minute
   pull_request:
     branches:
       - '*'
