@@ -137,7 +137,10 @@ impl std::str::FromStr for NostrUrlDecoded {
         let part = parts.first().context(INCORRECT_NOSTR_URL_FORMAT_ERROR)?;
         // naddr used
         if let Ok(coordinate) = Coordinate::parse(part) {
-            if coordinate.kind.eq(&nostr_sdk_0_34_0::Kind::GitRepoAnnouncement) {
+            if coordinate
+                .kind
+                .eq(&nostr_sdk_0_34_0::Kind::GitRepoAnnouncement)
+            {
                 coordinates.insert(coordinate);
             } else {
                 bail!("naddr doesnt point to a git repository announcement");

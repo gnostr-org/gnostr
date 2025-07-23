@@ -22,7 +22,9 @@ use gnostr_asyncgit::{
     AsyncCommitFiles, CommitFilesParams,
 };
 use nostr_0_34_1::prelude::Tag;
-use nostr_database_0_34_0::{nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order};
+use nostr_database_0_34_0::{
+    nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order,
+};
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
