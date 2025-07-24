@@ -25,9 +25,9 @@ use tui_input::Input;
 use crate::utils::parse_json;
 use crate::utils::split_json_string;
 
-pub mod p2p;
+use crate::p2p;
 pub mod ui;
-pub use p2p::evt_loop;
+use crate::p2p::evt_loop;
 pub mod msg;
 pub use msg::*;
 
