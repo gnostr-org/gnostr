@@ -262,7 +262,7 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 env_logger = "0.11"
 gnostr-bins = "0.0.71"
 gnostr-cat = "0.0.40"
-gnostr-query = "0.0.5"
+gnostr-query = "*"
 gnostr-xq = "0.0.3"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
