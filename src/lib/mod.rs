@@ -1,106 +1,123 @@
 //! gnostr: a git+nostr workflow utility and library
+//!
+///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
+pub mod app;
+///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
+pub mod bug_report;
+///  <https://docs.rs/gnostr/latest/gnostr/chat/index.html>
+pub mod chat;
+///  <https://docs.rs/gnostr/latest/gnostr/cli/index.html>
+pub mod cli;
+///  <https://docs.rs/gnostr/latest/gnostr/cli_interactor/index.html>
+pub mod cli_interactor;
+///  <https://docs.rs/gnostr/latest/gnostr/client/index.html>
+pub mod client;
+///  <https://docs.rs/gnostr/latest/gnostr/clipboard/index.html>
+pub mod clipboard;
+///  <https://docs.rs/gnostr/latest/gnostr/cmdbar/index.html>
+pub mod cmdbar;
+///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
+pub mod components;
+///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
+pub mod dns_resolver;
+///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
+pub mod git;
+///  <https://docs.rs/gnostr/latest/gnostr/git_events/index.html>
+pub mod git_events;
+///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
+pub mod global_rt;
+///  <https://docs.rs/gnostr/latest/gnostr/gnostr/index.html>
+pub mod gnostr;
+///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
+pub mod input;
+///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
+pub mod keys;
+///  <https://docs.rs/gnostr/latest/gnostr/login/index.html>
+pub mod login;
+///  <https://docs.rs/gnostr/latest/gnostr/notify_mutex/index.html>
+pub mod notify_mutex;
+///  <https://docs.rs/gnostr/latest/gnostr/options/index.html>
+pub mod options;
+///  <https://docs.rs/gnostr/latest/gnostr/p2p/index.html>
+pub mod p2p;
+///  <https://docs.rs/gnostr/latest/gnostr/popup_stack/index.html>
+pub mod popup_stack;
+///  <https://docs.rs/gnostr/latest/gnostr/popup/index.html>
+pub mod popups;
+///  <https://docs.rs/gnostr/latest/gnostr/queue/index.html>
+pub mod queue;
+///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>
+pub mod remote;
+///  <https://docs.rs/gnostr/latest/gnostr/repo_ref/index.html>
+pub mod repo_ref;
+///  <https://docs.rs/gnostr/latest/gnostr/repo_state/index.html>
+pub mod repo_state;
+///  <https://docs.rs/gnostr/latest/gnostr/spinner/index.html>
+pub mod spinner;
+///  <https://docs.rs/gnostr/latest/gnostr/ssh/index.html>
+pub mod ssh;
+///  <https://docs.rs/gnostr/latest/gnostr/string_utils/index.html>
+pub mod string_utils;
+///  <https://docs.rs/gnostr/latest/gnostr/strings/index.html>
+pub mod strings;
+///  <https://docs.rs/gnostr/latest/gnostr/sub_commands/index.html>
+pub mod sub_commands;
+///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
+pub mod tabs;
+///  <https://docs.rs/gnostr/latest/gnostr/tui/index.html>
+pub mod tui;
+///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
+pub mod ui;
+///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
+pub mod utils;
+///  <https://docs.rs/gnostr/latest/gnostr/verify_keypair/index.html>
+pub mod verify_keypair;
+///  <https://docs.rs/gnostr/latest/gnostr/watcher/index.html>
+pub mod watcher;
+///
+
+/// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
+pub mod ws;
+///
 pub use base64::Engine;
+///
 pub use colorful::{Color, Colorful};
+///
 pub use futures_util::stream::FusedStream;
+///
 pub use futures_util::{SinkExt, StreamExt};
+///
 pub use http::Uri;
+///
 pub use lazy_static::lazy_static;
+///
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
+///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
 pub use gnostr_types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
+//
+///
 pub use nostr_sdk_0_19_1::prelude::rand;
+//
+///
 pub use tokio::sync::mpsc::{Receiver, Sender};
+///
 pub use tungstenite::Message;
+///
 pub use zeroize::Zeroize;
 //pub use gnip44::*;
 //avoid?//upgrade?
 //pub use lightning;
 
 ///
-pub mod app;
-///
-pub mod args;
-///
-pub mod bug_report;
-///
-pub mod chat;
-///
-pub mod cli;
-///
-pub mod cli_interactor;
-///
-pub mod client;
-///
-pub mod clipboard;
-///
-pub mod cmdbar;
-///
-pub mod components;
-///
-pub mod dns_resolver;
-///
-pub mod git;
-///
-pub mod git_events;
-///
-pub mod global_rt;
-///
-pub mod gnostr;
-///
-pub mod input;
-///
-pub mod keys;
-///
-pub mod login;
-///
-pub mod notify_mutex;
-///
-pub mod options;
-///
-pub mod popup_stack;
-///
-pub mod popups;
-///
-pub mod queue;
-///
-pub mod remote;
-///
-pub mod repo_ref;
-///
-pub mod repo_state;
-///
-pub mod spinner;
-///
-pub mod ssh;
-///
-pub mod string_utils;
-///
-pub mod strings;
-///
-pub mod sub_commands;
-///
-pub mod tabs;
-///
-pub mod tui;
-///
-pub mod ui;
-///
-pub mod utils;
-///
-pub mod verify_keypair;
-///
-pub mod watcher;
-///
-
-/// simple-websockets
-pub mod ws;
-
 use anyhow::{anyhow, Result};
+///
 use directories::ProjectDirs;
 
+///
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 ///
@@ -111,17 +128,23 @@ pub fn get_dirs() -> Result<ProjectDirs> {
     ))
 }
 
+///
 type Ws =
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
+///
 pub mod reflog;
+///
 pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message};
 
+///
 pub use relays::{
     relays, relays_by_nip, relays_offline, relays_online, relays_paid, relays_public,
 };
 
+///
 pub mod watch_list;
+///
 pub use watch_list::*;
 
 //TODO
@@ -298,27 +321,27 @@ pub fn print_event(event: &Event) {
 mod internal;
 use internal::*;
 
-/// <https://docs.rs/gnostr-bins/latest/gnostr_bins/weeble/index.html>
+/// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;
 pub use weeble::weeble;
 pub use weeble::weeble_async;
 pub use weeble::weeble_millis;
 
-/// <https://docs.rs/gnostr-bins/latest/gnostr_bins/wobble/index.html>
+/// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
 pub mod wobble;
 pub use crate::wobble::wobble_millis;
 pub use wobble::wobble;
 pub use wobble::wobble_async;
 
-/// <https://docs.rs/gnostr-bins/latest/gnostr_bins/blockhash/index.html>
+/// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
 pub mod blockhash;
 pub use blockhash::blockhash;
 
-/// <https://docs.rs/gnostr-bins/latest/gnostr_bins/blockheight/index.html>
+/// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
 pub mod blockheight;
 pub use blockheight::blockheight;
 
-/// <https://docs.rs/gnostr-bins/latest/gnostr_bins/hash/index.html>
+/// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
 pub use hash::hash;
 
