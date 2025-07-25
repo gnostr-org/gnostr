@@ -1,0 +1,31 @@
+[package]
+name = "gnostr-query"
+version = "0.0.8"
+authors = ["gnostr-org <admin@gnostr.org>"]
+description = "gnostr-query: retrieve nostr events."
+repository = "https://github.com/gnostr-org/gnostr-query.git"
+homepage = "https://github.com/gnostr-org/gnostr-query"
+documentation = "https://github.com/gnostr-org/gnostr-query"
+edition = "2021"
+license = "MIT"
+categories = ["command-line-utilities"]
+keywords = ["terminal", "input", "event", "cli"]
+
+[lib]
+name = "gnostr_query"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+futures = "0.3"
+log = "0.4.27"
+serde = "1.0"
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
+url = "2.2"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
