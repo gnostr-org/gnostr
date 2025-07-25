@@ -121,6 +121,7 @@ git2 = "^0.18" ## asyncgit ^0.19
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.4", default-features = false }
 gnostr-crawler = { version = "0.0.8", path = "crawler" }
+gnostr-query = { version = "0.0.8", path = "query" }
 gnostr-types = { version = "0.7.6", path = "types" }
 #gnostr-types = "0.7.6"
 gnostr_qr = { version = "0.0.7", path = "qr" }
@@ -262,7 +263,6 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 env_logger = "0.11"
 gnostr-bins = "0.0.71"
 gnostr-cat = "0.0.40"
-gnostr-query = "*"
 gnostr-xq = "0.0.3"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
