@@ -1,10 +1,10 @@
-//! # Easy Retry
+//! # GnostrRetry
 //!
-//! `easy_retry` is a Rust library that provides utilities for retrying operations with different strategies.
+//! `gnostr::utils::retry` is a Rust library that provides utilities for retrying operations with different strategies.
 //!
 //! This library provides several retry strategies, including linear, exponential, and their asynchronous versions. You can choose the strategy that best fits your needs.
 //!
-//! The library is designed to be simple and easy to use. It provides a single enum, `EasyRetry`, that represents different retry strategies. You can create a new retry strategy by calling one of the `new_*` methods on the `EasyRetry` enum.
+//! The library is designed to be simple and easy to use. It provides a single enum, `GnostrRetry`, that represents different retry strategies. You can create a new retry strategy by calling one of the `new_*` methods on the `GnostrRetry` enum.
 //!
 //! The library provides a `run` method that takes a closure and runs the operation with the specified retry strategy. The `run` method returns the result of the operation, or an error if the operation fails after all retries.
 //!
@@ -20,14 +20,14 @@
 //! # Examples
 //!
 //! ```
-//! use easy_retry::EasyRetry;
+//! use gnostr::utils::GnostrRetry;
 //!
 //! fn my_sync_fn(_n: &str) -> Result<(), std::io::Error> {
 //!     Err(std::io::Error::new(std::io::ErrorKind::Other, "generic error"))
 //! }
 //!
 //! // Retry the operation with a linear strategy (1 second delay, 2 retries)
-//! let retry_strategy = EasyRetry::new_linear(1, 2);
+//! let retry_strategy = GnostrRetry::new_linear(1, 2);
 //! let result = retry_strategy.run(|| my_sync_fn("Hi"));
 //! assert!(result.is_err());
 //!
@@ -36,7 +36,7 @@
 //! # Asynchronous Example
 //!
 //! ```rust
-//! use easy_retry::EasyRetry;
+//! use gnostr::utils::GnostrRetry;
 //!
 //! async fn my_async_fn(_n: u64) -> Result<(), std::io::Error> {
 //!    Err(std::io::Error::new(std::io::ErrorKind::Other, "generic error"))
@@ -45,7 +45,7 @@
 //! #[tokio::main]
 //! async fn main() {
 //!     // Retry the operation with an exponential strategy (1 second delay, 2 retries)
-//!     let retry_strategy = EasyRetry::new_exponential_async(1, 2);
+//!     let retry_strategy = GnostrRetry::new_exponential_async(1, 2);
 //!     let result = retry_strategy.run_async(|| my_async_fn(42)).await;
 //!     assert!(result.is_err());
 //!
@@ -63,15 +63,15 @@
 //! Then, add this to your crate root (`main.rs` or `lib.rs`):
 //!
 //! ```rust
-//! extern crate easy_retry;
+//! extern crate gnostr::utils::retry;
 //! ```
 //!
-//! Now, you can use the `EasyRetry` enum to create a retry strategy:
+//! Now, you can use the `GnostrRetry` enum to create a retry strategy:
 //!
 //! ```rust
-//! use easy_retry::EasyRetry;
+//! use gnostr::utils::GnostrRetry;
 //!
-//! let retry_strategy = EasyRetry::new_linear(100, 5);
+//! let retry_strategy = GnostrRetry::new_linear(100, 5);
 //! ```
 //!
 //! # License
@@ -84,8 +84,8 @@ use std::fmt::Debug;
 use std::future::Future;
 #[derive(Debug, Copy, Clone)]
 
-/// `EasyRetry` is an enum representing different kinds of retry strategies.
-pub enum EasyRetry {
+/// `GnostrRetry` is an enum representing different kinds of retry strategies.
+pub enum GnostrRetry {
     /// Represents a linear retry strategy.
     Linear {
         #[doc(hidden)]
@@ -130,8 +130,8 @@ pub enum EasyRetry {
     },
 }
 
-impl EasyRetry {
-    /// Creates a new `EasyRetry::Linear` variant with the specified delay and number of retries.
+impl GnostrRetry {
+    /// Creates a new `GnostrRetry::Linear` variant with the specified delay and number of retries.
     ///
     /// # Arguments
     ///
@@ -141,15 +141,15 @@ impl EasyRetry {
     /// # Examples
     ///
     /// ```
-    /// use easy_retry::EasyRetry;
+    /// use gnostr::utils::GnostrRetry;
     ///
-    /// let retry_strategy = EasyRetry::new_linear(100, 5);
+    /// let retry_strategy = GnostrRetry::new_linear(100, 5);
     /// ```
     pub fn new_linear(delay: u64, retries: u64) -> Self {
-        EasyRetry::Linear { delay, retries }
+        GnostrRetry::Linear { delay, retries }
     }
 
-    /// Creates a new `EasyRetry::Exponential` variant with the specified initial delay and number of retries.
+    /// Creates a new `GnostrRetry::Exponential` variant with the specified initial delay and number of retries.
     ///
     /// # Arguments
     ///
@@ -159,15 +159,15 @@ impl EasyRetry {
     /// # Examples
     ///
     /// ```
-    /// use easy_retry::EasyRetry;
+    /// use gnostr::utils::GnostrRetry;
     ///
-    /// let retry_strategy = EasyRetry::new_exponential(100, 5);
+    /// let retry_strategy = GnostrRetry::new_exponential(100, 5);
     /// ```
     pub fn new_exponential(delay: u64, retries: u64) -> Self {
-        EasyRetry::Exponential { delay, retries }
+        GnostrRetry::Exponential { delay, retries }
     }
 
-    /// Creates a new `EasyRetry::LinearAsync` variant with the specified delay and number of retries.
+    /// Creates a new `GnostrRetry::LinearAsync` variant with the specified delay and number of retries.
     ///
     /// # Arguments
     ///
@@ -177,16 +177,16 @@ impl EasyRetry {
     /// # Examples
     ///
     /// ```
-    /// use easy_retry::EasyRetry;
+    /// use gnostr::utils::GnostrRetry;
     ///
-    /// let retry_strategy = EasyRetry::new_linear_async(100, 5);
+    /// let retry_strategy = GnostrRetry::new_linear_async(100, 5);
     /// ```
     #[cfg(feature = "async")]
     pub fn new_linear_async(delay: u64, retries: u64) -> Self {
-        EasyRetry::LinearAsync { delay, retries }
+        GnostrRetry::LinearAsync { delay, retries }
     }
 
-    /// Creates a new `EasyRetry::ExponentialAsync` variant with the specified initial delay and number of retries.
+    /// Creates a new `GnostrRetry::ExponentialAsync` variant with the specified initial delay and number of retries.
     ///
     /// # Arguments
     ///
@@ -196,13 +196,13 @@ impl EasyRetry {
     /// # Examples
     ///
     /// ```
-    /// use easy_retry::EasyRetry;
+    /// use gnostr::utils::GnostrRetry;
     ///
-    /// let retry_strategy = EasyRetry::new_exponential_async(100, 5);
+    /// let retry_strategy = GnostrRetry::new_exponential_async(100, 5);
     /// ```
     #[cfg(feature = "async")]
     pub fn new_exponential_async(delay: u64, retries: u64) -> Self {
-        EasyRetry::ExponentialAsync { delay, retries }
+        GnostrRetry::ExponentialAsync { delay, retries }
     }
 
     /// Runs the provided function `f` with a retry strategy.
@@ -242,23 +242,23 @@ impl EasyRetry {
 
     fn get_retries(&self) -> u64 {
         match self {
-            EasyRetry::Linear { retries, .. } => *retries,
-            EasyRetry::Exponential { retries, .. } => *retries,
+            GnostrRetry::Linear { retries, .. } => *retries,
+            GnostrRetry::Exponential { retries, .. } => *retries,
             #[cfg(feature = "async")]
-            EasyRetry::LinearAsync { retries, .. } => *retries,
+            GnostrRetry::LinearAsync { retries, .. } => *retries,
             #[cfg(feature = "async")]
-            EasyRetry::ExponentialAsync { retries, .. } => *retries,
+            GnostrRetry::ExponentialAsync { retries, .. } => *retries,
         }
     }
 
     fn get_delay(&self) -> u64 {
         match self {
-            EasyRetry::Linear { delay, .. } => *delay,
-            EasyRetry::Exponential { delay, .. } => *delay,
+            GnostrRetry::Linear { delay, .. } => *delay,
+            GnostrRetry::Exponential { delay, .. } => *delay,
             #[cfg(feature = "async")]
-            EasyRetry::LinearAsync { delay, .. } => *delay,
+            GnostrRetry::LinearAsync { delay, .. } => *delay,
             #[cfg(feature = "async")]
-            EasyRetry::ExponentialAsync { delay, .. } => *delay,
+            GnostrRetry::ExponentialAsync { delay, .. } => *delay,
         }
     }
 
@@ -272,17 +272,17 @@ impl EasyRetry {
 
     fn retry_fn(&self) -> fn(u64) -> u64 {
         match self {
-            EasyRetry::Linear { .. } => Self::linear,
-            EasyRetry::Exponential { .. } => Self::exponential,
+            GnostrRetry::Linear { .. } => Self::linear,
+            GnostrRetry::Exponential { .. } => Self::exponential,
             #[cfg(feature = "async")]
-            EasyRetry::LinearAsync { .. } => Self::linear,
+            GnostrRetry::LinearAsync { .. } => Self::linear,
             #[cfg(feature = "async")]
-            EasyRetry::ExponentialAsync { .. } => Self::exponential,
+            GnostrRetry::ExponentialAsync { .. } => Self::exponential,
         }
     }
 }
 
-fn do_retry<F, T, E>(mut f: F, t: EasyRetry) -> Result<T, E>
+fn do_retry<F, T, E>(mut f: F, t: GnostrRetry) -> Result<T, E>
 where
     F: FnMut() -> Result<T, E>,
 {
@@ -304,7 +304,7 @@ where
 }
 
 #[cfg(feature = "async")]
-async fn do_retry_async<F, T, E>(mut f: F, t: EasyRetry) -> Result<T, E>
+async fn do_retry_async<F, T, E>(mut f: F, t: GnostrRetry) -> Result<T, E>
 where
     F: FnMut() -> std::pin::Pin<Box<dyn Future<Output = Result<T, E>>>>,
 {
@@ -330,7 +330,7 @@ impl Retry {
     #[cfg(feature = "async")]
     async fn run_async<T>(
         mut f: T,
-        t: EasyRetry,
+        t: GnostrRetry,
     ) -> Result<<T as AsyncReturn>::Item, <T as AsyncReturn>::Error>
     where
         T: AsyncReturn + 'static,
@@ -338,7 +338,7 @@ impl Retry {
         do_retry_async(move || Box::pin(f.run()), t).await
     }
 
-    fn run<T>(mut f: T, t: EasyRetry) -> Result<<T as SyncReturn>::Item, <T as SyncReturn>::Error>
+    fn run<T>(mut f: T, t: GnostrRetry) -> Result<<T as SyncReturn>::Item, <T as SyncReturn>::Error>
     where
         T: SyncReturn,
     {
@@ -501,7 +501,7 @@ mod test {
         let retries = 2;
         let delay = 1;
         let instant = std::time::Instant::now();
-        let s = EasyRetry::Linear { retries, delay }.run(|| to_retry(1));
+        let s = GnostrRetry::Linear { retries, delay }.run(|| to_retry(1));
         assert!(s.is_err());
         let elapsed = instant.elapsed();
         assert!(elapsed.as_secs() >= retries * delay);
@@ -512,7 +512,7 @@ mod test {
         let retries = 2;
         let delay = 1;
         let instant = std::time::Instant::now();
-        let s = EasyRetry::Exponential { retries, delay }.run(|| to_retry(1));
+        let s = GnostrRetry::Exponential { retries, delay }.run(|| to_retry(1));
         assert!(s.is_err());
         let elapsed = instant.elapsed();
         assert!(elapsed.as_secs() >= retries * delay);
@@ -525,7 +525,7 @@ mod test {
         let not_copy = NotCopy { _n: 1 };
         let instant = std::time::Instant::now();
 
-        let s = EasyRetry::Linear { retries, delay }.run(|| to_retry_not_copy(&not_copy));
+        let s = GnostrRetry::Linear { retries, delay }.run(|| to_retry_not_copy(&not_copy));
         assert!(s.is_err());
         let elapsed = instant.elapsed();
         assert!(elapsed.as_secs() >= retries * delay);
@@ -537,7 +537,7 @@ mod test {
         let retries = 2;
         let delay = 1;
         let instant = std::time::Instant::now();
-        let s = EasyRetry::LinearAsync { retries, delay }
+        let s = GnostrRetry::LinearAsync { retries, delay }
             .run_async(|| to_retry_async(1))
             .await;
         assert!(s.is_err());
@@ -551,7 +551,7 @@ mod test {
         let retries = 2;
         let delay = 1;
         let instant = std::time::Instant::now();
-        let s = EasyRetry::ExponentialAsync { retries, delay }
+        let s = GnostrRetry::ExponentialAsync { retries, delay }
             .run_async(|| to_retry_async(1))
             .await;
         assert!(s.is_err());
