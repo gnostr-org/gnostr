@@ -3529,12 +3529,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-query"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47ca6c6ab5fa98ea694311561dba378a61c27395a02d68a384f5ee5c495c2e29"
+version = "0.0.8"
 dependencies = [
  "clap 4.5.37",
  "futures 0.3.31",
+ "log 0.4.27",
  "serde",
  "serde_json",
  "tokio 1.44.2",
