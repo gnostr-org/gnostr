@@ -559,4 +559,3 @@ mod test {
         assert!(elapsed.as_secs() >= retries * delay);
     }
 }
-
