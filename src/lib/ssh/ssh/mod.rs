@@ -10,7 +10,7 @@ use tokio::process::ChildStdin;
 
 use crate::ssh::config::server::ServerUser;
 use crate::ssh::State;
-use log::{debug, error, info};
+use log::{debug, error};
 use tokio::sync::Mutex;
 use toml::Table;
 
