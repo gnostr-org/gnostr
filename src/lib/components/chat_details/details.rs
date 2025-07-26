@@ -14,7 +14,6 @@ use sync::CommitTags;
 use super::style::Detail;
 use crate::{
     app::Environment,
-    chat,
     components::{
         chat_details::style::style_detail,
         dialog_paragraph,
