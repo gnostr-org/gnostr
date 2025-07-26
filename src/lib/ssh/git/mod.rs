@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-use log::{debug, info};
+use log::debug;
 pub struct Repo {
     dir: PathBuf,
 }
