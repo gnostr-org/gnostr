@@ -15,7 +15,6 @@ use ratatui::{
 };
 
 use std::{
-    env,
     error::Error,
     io,
     sync::{Arc, Mutex},
@@ -135,9 +134,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
         terminal.draw(|f| ui(f, &app))?;
 
         if !event::poll(tick_rate)? {
-            //env::set_var("BLOCKHEIGHT", blockheight_sync());
-            env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
-            env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
             continue;
         }
 
@@ -185,13 +181,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default() //default Msg type Chat
                                 .set_content(
-                                    format!(
-                                        "{}/{}/{}>{}",
-                                        &env::var("WEEBLE").unwrap(),
-                                        &env::var("BLOCKHEIGHT").unwrap(),
-                                        &env::var("WOBBLE").unwrap(),
-                                        "</>".to_string()
-                                    ),
+                                    "</> forward slash modal trigger".to_string(),
                                     0 as usize,
                                 );
                             app.add_message(m.clone());
@@ -213,13 +203,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default() //default Msg type Chat
                                 .set_content(
-                                    format!(
-                                        "{}/{}/{}>{}",
-                                        &env::var("WEEBLE").unwrap(),
-                                        &env::var("BLOCKHEIGHT").unwrap(),
-                                        &env::var("WOBBLE").unwrap(),
-                                        "<\\>".to_string()
-                                    ),
+                                    "<\\> back slash modal trigger".to_string(),
                                     0 as usize,
                                 );
                             app.add_message(m.clone());
@@ -239,17 +223,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         } else {
                             //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default() //default Msg type Chat
-                                .set_content(
-                                    format!(
-                                        "{}/{}/{}>{}",
-                                        &env::var("WEEBLE").unwrap(),
-                                        &env::var("BLOCKHEIGHT").unwrap(),
-                                        &env::var("WOBBLE").unwrap(),
-                                        "<:>".to_string()
-                                    ),
-                                    0 as usize,
-                                );
+                            let m =
+                                msg::Msg::default() //default Msg type Chat
+                                    .set_content(
+                                        "<:> vim like command prompt".to_string(),
+                                        0 as usize,
+                                    );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -289,11 +268,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default().set_content(
                                 format!(
-                                    "{}/{}/{}>{}",
-                                    &env::var("WEEBLE").unwrap(),
-                                    &env::var("BLOCKHEIGHT").unwrap(),
-                                    &env::var("WOBBLE").unwrap(),
-                                    "<ENTER>".to_string()
+                                    "{}:{}",
+                                    &blockheight_sync(),
+                                    "test message <ENTER>".to_string()
                                 ),
                                 0 as usize,
                             );
@@ -310,11 +287,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.reset();
                         let m = msg::Msg::default().set_content(
                             format!(
-                                "{}/{}/{}>{}",
-                                &env::var("WEEBLE").unwrap(),
-                                &env::var("BLOCKHEIGHT").unwrap(),
-                                &env::var("WOBBLE").unwrap(),
-                                "<ESC>".to_string()
+                                "{}:{}",
+                                &blockheight_sync(),
+                                "<test message ESC>".to_string()
                             ),
                             0 as usize,
                         );
