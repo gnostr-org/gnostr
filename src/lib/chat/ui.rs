@@ -266,8 +266,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         } else {
                             //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default()
-                                .set_content("test message <ENTER>".to_string(), 0 as usize);
+                            let m = msg::Msg::default().set_content(
+                                format!(
+                                    "{}:{}",
+                                    &blockheight_sync(),
+                                    "test message <ENTER>".to_string()
+                                ),
+                                0 as usize,
+                            );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -279,8 +285,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = usize::MAX;
                         app.msgs_scroll = usize::MAX;
                         app.input.reset();
-                        let m = msg::Msg::default()
-                            .set_content("test message <ESC>".to_string(), 0 as usize);
+                        let m = msg::Msg::default().set_content(
+                            format!(
+                                "{}:{}",
+                                &blockheight_sync(),
+                                "<test message ESC>".to_string()
+                            ),
+                            0 as usize,
+                        );
                         app.add_message(m.clone());
                         if let Some(ref mut hook) = app._on_input_enter {
                             hook(m);
