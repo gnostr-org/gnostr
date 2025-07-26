@@ -184,15 +184,16 @@ jobs:
           fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
-      #- run: gnostr-fetch-by-id
-      - run: #gnostr -V
-      - run: gnostr -h
-      - run: gnostr ngit -h
-      - run: gnostr ngit --help
-      - run: gnostr ngit help
-      - run: gnostr ngit fetch -h
-      - run: gnostr ngit fetch --help
-      - run: gnostr ngit fetch
+      - run: cargo t -p gnostr
+      #- run: #gnostr -V
+      #- run: gnostr -h
+      #- run: gnostr ngit -h
+      -
+      #-run: gnostr ngit --help
+      #- run: gnostr ngit help
+      #- run: gnostr ngit fetch -h
+      #- run: gnostr ngit fetch --help
+      #- run: gnostr ngit fetch
       - run: |
           cargo t -p gnostr || true
         if: matrix.rustup == '1.88'
