@@ -29,7 +29,7 @@ pub async fn launch(
     #[cfg(test)]
     let mut client: &crate::client::MockConnect = &mut Default::default();
     #[cfg(not(test))]
-    let mut client = Client::default();
+    let client = Client::default();
 
     let repo_coordinates = if args.repo.is_empty() {
         get_repo_coordinates(&git_repo, &client).await?
