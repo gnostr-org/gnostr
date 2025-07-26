@@ -1,3 +1,5 @@
+pub mod retry;
+
 use log::{debug, error};
 use nostr_sdk_0_32_0::prelude::*;
 use serde_json;

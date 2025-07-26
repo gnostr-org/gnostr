@@ -120,7 +120,7 @@ impl Connect for Client {
             BOOTSTRAP_RELAYS.to_vec()
         };
 
-		more_fallback_relays.push("wss://relayable.org".to_string());
+        more_fallback_relays.push("wss://relayable.org".to_string());
 
         let blaster_relays: Vec<String> = if std::env::var("NGITTEST").is_ok() {
             vec!["ws://localhost:8057".to_string()]

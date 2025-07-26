@@ -6,7 +6,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use gnostr_asyncgit::sync::{get_config_string, utils::repo_work_dir, RepoPath};
+use gnostr_asyncgit::sync::{utils::repo_work_dir, RepoPath};
 use ratatui::{
     layout::Rect,
     text::{Line, Span},

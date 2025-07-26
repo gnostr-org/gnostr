@@ -31,7 +31,6 @@ fn main() {
         //if let Some(font_dir) = Some(base_dirs.font_dir()) {
         //    println!("User Fonts: {}", font_dir.display());
         //}
-
     } else {
         println!("Could not determine base directories.");
     }
