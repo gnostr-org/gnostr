@@ -103,6 +103,7 @@ pub async fn evt_loop(
                 // Add your code here to be executed only when the time is odd
                 //debug!("blockheight_async():{}", blockheight_async().await);
                 env::set_var("BLOCKHEIGHT", &blockheight_async().await);
+                env::set_var("BLOCKHASH", &blockhash_async().await);
             } else {
                 debug!(
                     "Current second ({}) is even. Skipping this iteration.",
