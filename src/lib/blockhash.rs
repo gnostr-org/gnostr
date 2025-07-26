@@ -1,13 +1,6 @@
 use crate::utils::{ureq_async, ureq_sync};
-use std::io::Read;
-use std::time::SystemTime;
-
 use reqwest::Url;
-
-pub fn check_curl() {
-
-    //println!("check_curl");
-}
+use std::io::Read;
 
 pub fn blockhash() -> Result<String, ascii::AsciiChar> {
     let url = Url::parse("https://mempool.space/api/blocks/tip/hash").unwrap();
