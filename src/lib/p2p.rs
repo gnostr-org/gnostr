@@ -100,8 +100,6 @@ pub async fn evt_loop(
 
             if current_second % 2 != 0 {
                 debug!("Current second ({}) is odd!", current_second);
-                // Add your code here to be executed only when the time is odd
-                //debug!("blockheight_async():{}", blockheight_async().await);
                 env::set_var("BLOCKHEIGHT", &blockheight_async().await);
                 env::set_var("BLOCKHASH", &blockhash_async().await);
             } else {
