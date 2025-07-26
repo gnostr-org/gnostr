@@ -1,7 +1,5 @@
 use crate::blockheight::blockheight_sync;
 use crate::chat::msg;
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
