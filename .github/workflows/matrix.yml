@@ -188,8 +188,7 @@ jobs:
       #- run: #gnostr -V
       #- run: gnostr -h
       #- run: gnostr ngit -h
-      -
-      #-run: gnostr ngit --help
+      #- run: gnostr ngit --help
       #- run: gnostr ngit help
       #- run: gnostr ngit fetch -h
       #- run: gnostr ngit fetch --help
