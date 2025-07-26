@@ -26,10 +26,7 @@
 //TODO:
 // #![deny(clippy::expect_used)]
 
-use std::{
-    cell::RefCell,
-    time::{Duration, Instant},
-};
+use std::{cell::RefCell, time::Instant};
 
 use crate::app::App;
 use crate::app::QuitState;
@@ -39,12 +36,8 @@ use crate::spinner::Spinner;
 use crate::sub_commands::tui::*;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
-use anyhow::{bail, Result};
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
-use crossterm::{
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
-};
+use anyhow::Result;
+use crossbeam_channel::{never, tick, unbounded};
 use gnostr_asyncgit::{
     sync::{utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
