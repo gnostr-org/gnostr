@@ -7,7 +7,7 @@ use nostr_sdk_0_32_0::prelude::*;
 use crate::utils::{create_client, parse_private_key};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 
-use tracing::{debug, error, info, trace, warn};
+use tracing::debug;
 
 #[derive(Args, Debug)]
 pub struct ReactionSubCommand {
