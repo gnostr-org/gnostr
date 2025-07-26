@@ -1,14 +1,14 @@
+use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
 use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
-use libp2p::{core::multiaddr::Protocol, core::Multiaddr, identify, identity, ping, relay};
 use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
 
 use std::{env, error::Error, thread};
-use tokio::time::{sleep, Duration};
+use tokio::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, warn};
 
 //const TOPIC: &str = "gnostr";
 /// MyBehaviour
