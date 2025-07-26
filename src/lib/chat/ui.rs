@@ -1,3 +1,5 @@
+use crate::blockheight::blockheight_sync;
+use crate::chat::msg;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -6,13 +8,12 @@ use ratatui::{
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
     layout::{Constraint, Direction, Layout},
-    style::Color,
+    style::{Color, Style},
     text::Line,
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
 
-use ratatui::style::Style;
 use std::{
     error::Error,
     io,
@@ -21,8 +22,6 @@ use std::{
 };
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
-
-use crate::chat::msg;
 
 #[derive(Default)]
 pub enum InputMode {
