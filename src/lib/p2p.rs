@@ -126,8 +126,12 @@ pub async fn evt_loop(
                     .behaviour_mut().gossipsub
                     .publish(topic.clone(), serde_json::to_vec(&m)?) {
                     debug!("Publish error: {e:?}");
-                    let m = Msg::default()
+                    let mut m = Msg::default()
                         /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
+                    //NOTE:recv.send - send to self
+                    recv.send(m).await?;
+                    m = Msg::default()
+                        /**/.set_content(format!("{{\"blockhash\":\"{}\"}}", env::var("BLOCKHASH").unwrap()), 0).set_kind(MsgKind::System);
                     //NOTE:recv.send - send to self
                     recv.send(m).await?;
                     //let m = Msg::default().set_content("p2p.rs:brief help prompt here!:2".to_string(), 2).set_kind(MsgKind::System);
