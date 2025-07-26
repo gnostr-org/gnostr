@@ -4,7 +4,7 @@ use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::{blockheight, sub_commands};
 use sha2::{Digest, Sha256};
 use std::env;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::FmtSubscriber;
 
