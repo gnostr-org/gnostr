@@ -20,7 +20,7 @@
 //! # Examples
 //!
 //! ```
-//! use gnostr::utils::GnostrRetry;
+//! use gnostr::utils::retry::GnostrRetry;
 //!
 //! fn my_sync_fn(_n: &str) -> Result<(), std::io::Error> {
 //!     Err(std::io::Error::new(std::io::ErrorKind::Other, "generic error"))
@@ -36,7 +36,7 @@
 //! # Asynchronous Example
 //!
 //! ```rust
-//! use gnostr::utils::GnostrRetry;
+//! use gnostr::utils::retry::GnostrRetry;
 //!
 //! async fn my_async_fn(_n: u64) -> Result<(), std::io::Error> {
 //!    Err(std::io::Error::new(std::io::ErrorKind::Other, "generic error"))
@@ -57,19 +57,19 @@
 //!
 //! ```toml
 //! [dependencies]
-//! easy_retry = "0.1.0"
+//! gnostr = "*"
 //! ```
 //!
 //! Then, add this to your crate root (`main.rs` or `lib.rs`):
 //!
 //! ```rust
-//! extern crate gnostr::utils::retry;
+//! use gnostr::utils::retry;
 //! ```
 //!
 //! Now, you can use the `GnostrRetry` enum to create a retry strategy:
 //!
 //! ```rust
-//! use gnostr::utils::GnostrRetry;
+//! use gnostr::utils::retry::GnostrRetry;
 //!
 //! let retry_strategy = GnostrRetry::new_linear(100, 5);
 //! ```
@@ -80,7 +80,7 @@
 
 #![deny(missing_docs)]
 use std::fmt::Debug;
-#[cfg(feature = "async")]
+//#[cfg(feature = "async")]
 use std::future::Future;
 #[derive(Debug, Copy, Clone)]
 
@@ -107,7 +107,7 @@ pub enum GnostrRetry {
     /// Represents an asynchronous version of the linear retry strategy.
     ///
     /// This variant is only available when the `async` feature is enabled.
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     LinearAsync {
         /// The delay between retries in seconds.
         #[doc(hidden)]
@@ -119,7 +119,7 @@ pub enum GnostrRetry {
     /// Represents an asynchronous version of the exponential retry strategy.
     ///
     /// This variant is only available when the `async` feature is enabled.
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     ExponentialAsync {
         /// The delay between retries in seconds.
         #[doc(hidden)]
@@ -141,7 +141,7 @@ impl GnostrRetry {
     /// # Examples
     ///
     /// ```
-    /// use gnostr::utils::GnostrRetry;
+    /// use gnostr::utils::retry::GnostrRetry;
     ///
     /// let retry_strategy = GnostrRetry::new_linear(100, 5);
     /// ```
@@ -159,7 +159,7 @@ impl GnostrRetry {
     /// # Examples
     ///
     /// ```
-    /// use gnostr::utils::GnostrRetry;
+    /// use gnostr::utils::retry::GnostrRetry;
     ///
     /// let retry_strategy = GnostrRetry::new_exponential(100, 5);
     /// ```
@@ -177,11 +177,11 @@ impl GnostrRetry {
     /// # Examples
     ///
     /// ```
-    /// use gnostr::utils::GnostrRetry;
+    /// use gnostr::utils::retry::GnostrRetry;
     ///
     /// let retry_strategy = GnostrRetry::new_linear_async(100, 5);
     /// ```
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     pub fn new_linear_async(delay: u64, retries: u64) -> Self {
         GnostrRetry::LinearAsync { delay, retries }
     }
@@ -196,11 +196,11 @@ impl GnostrRetry {
     /// # Examples
     ///
     /// ```
-    /// use gnostr::utils::GnostrRetry;
+    /// use gnostr::utils::retry::GnostrRetry;
     ///
     /// let retry_strategy = GnostrRetry::new_exponential_async(100, 5);
     /// ```
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     pub fn new_exponential_async(delay: u64, retries: u64) -> Self {
         GnostrRetry::ExponentialAsync { delay, retries }
     }
@@ -229,7 +229,7 @@ impl GnostrRetry {
     /// # Errors
     ///
     /// Will return an error if the operation fails after all retries.
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     pub async fn run_async<'a, T>(
         &'a self,
         f: T,
@@ -244,9 +244,9 @@ impl GnostrRetry {
         match self {
             GnostrRetry::Linear { retries, .. } => *retries,
             GnostrRetry::Exponential { retries, .. } => *retries,
-            #[cfg(feature = "async")]
+            //#[cfg(feature = "async")]
             GnostrRetry::LinearAsync { retries, .. } => *retries,
-            #[cfg(feature = "async")]
+            //#[cfg(feature = "async")]
             GnostrRetry::ExponentialAsync { retries, .. } => *retries,
         }
     }
@@ -255,9 +255,9 @@ impl GnostrRetry {
         match self {
             GnostrRetry::Linear { delay, .. } => *delay,
             GnostrRetry::Exponential { delay, .. } => *delay,
-            #[cfg(feature = "async")]
+            //#[cfg(feature = "async")]
             GnostrRetry::LinearAsync { delay, .. } => *delay,
-            #[cfg(feature = "async")]
+            //#[cfg(feature = "async")]
             GnostrRetry::ExponentialAsync { delay, .. } => *delay,
         }
     }
@@ -274,9 +274,9 @@ impl GnostrRetry {
         match self {
             GnostrRetry::Linear { .. } => Self::linear,
             GnostrRetry::Exponential { .. } => Self::exponential,
-            #[cfg(feature = "async")]
+            //#[cfg(feature = "async")]
             GnostrRetry::LinearAsync { .. } => Self::linear,
-            #[cfg(feature = "async")]
+            //#[cfg(feature = "async")]
             GnostrRetry::ExponentialAsync { .. } => Self::exponential,
         }
     }
@@ -303,7 +303,7 @@ where
     }
 }
 
-#[cfg(feature = "async")]
+//#[cfg(feature = "async")]
 async fn do_retry_async<F, T, E>(mut f: F, t: GnostrRetry) -> Result<T, E>
 where
     F: FnMut() -> std::pin::Pin<Box<dyn Future<Output = Result<T, E>>>>,
@@ -327,7 +327,7 @@ where
 }
 struct Retry;
 impl Retry {
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     async fn run_async<T>(
         mut f: T,
         t: GnostrRetry,
@@ -364,7 +364,7 @@ impl Retry {
 /// # Examples
 ///
 /// ```
-/// use easy_retry::AsyncReturn;
+/// use gnostr::utils::retry::AsyncReturn;
 /// use std::fmt::Debug;
 /// use futures::future::ready;
 ///
@@ -384,7 +384,7 @@ impl Retry {
 /// let mut operation = MyOperation;
 /// let future = operation.run();
 /// ```
-#[cfg(feature = "async")]
+//#[cfg(feature = "async")]
 pub trait AsyncReturn {
     /// The type of the value returned by the `run` method.
     type Item: Debug;
@@ -397,7 +397,7 @@ pub trait AsyncReturn {
     fn run(&mut self) -> Self::Future;
 }
 
-#[cfg(feature = "async")]
+//#[cfg(feature = "async")]
 impl<I: Debug, E: Debug, T: Future<Output = Result<I, E>>, F: FnMut() -> T> AsyncReturn for F {
     type Item = I;
     type Error = E;
@@ -427,7 +427,7 @@ impl<I: Debug, E: Debug, T: Future<Output = Result<I, E>>, F: FnMut() -> T> Asyn
 /// # Examples
 ///
 /// ```
-/// use easy_retry::SyncReturn;
+/// use gnostr::utils::retry::SyncReturn;
 /// use std::fmt::Debug;
 ///
 /// struct MyOperation;
@@ -488,7 +488,7 @@ mod test {
         ))
     }
 
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     async fn to_retry_async(n: usize) -> Result<(), std::io::Error> {
         Err(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -531,7 +531,7 @@ mod test {
         assert!(elapsed.as_secs() >= retries * delay);
     }
 
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     #[tokio::test]
     async fn test_linear_async() {
         let retries = 2;
@@ -545,7 +545,7 @@ mod test {
         assert!(elapsed.as_secs() >= retries * delay);
     }
 
-    #[cfg(feature = "async")]
+    //#[cfg(feature = "async")]
     #[tokio::test]
     async fn test_expontential_async() {
         let retries = 2;
