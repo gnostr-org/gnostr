@@ -6,8 +6,7 @@ use anyhow::*;
 //https://crates.io/crates/bincode/1.3.1
 //bincode
 use core::result::Result::Ok;
-use log::{debug, error, info, trace, LevelFilter};
-use simple_logger::SimpleLogger;
+use log::{debug, error, info, trace};
 use std::{
     fs::File,
     io::{Read, Write},
