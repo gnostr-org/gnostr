@@ -123,7 +123,7 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-wobble
-use gnostr::wobble::{/*wobble, */ wobble_millis_sync, wobble_sync};
+use gnostr::wobble::{wobble, wobble_millis_sync, wobble_sync};
 use std::env;
 ///
 /// wobble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
@@ -141,9 +141,9 @@ fn main() {
         None => "false".to_string(), // Default value if no argument is provided
     };
     if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
-        print!("{}", wobble_millis_sync().unwrap());
+        print!("{}", wobble_millis_sync().unwrap().to_string());
     } else {
-        print!("{}", wobble_sync().unwrap());
+        print!("{}", wobble_sync().unwrap().to_string());
     }
 }
 
