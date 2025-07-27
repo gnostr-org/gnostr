@@ -123,7 +123,8 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-weeble
-use gnostr::weeble::{/*weeble, */ weeble_millis_sync, weeble_sync};
+use gnostr::global_rt::global_rt;
+use gnostr::weeble::{weeble, weeble_millis_sync, weeble_sync};
 use std::env;
 ///
 /// weeble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
@@ -141,9 +142,9 @@ fn main() {
         None => "false".to_string(), // Default value if no argument is provided
     };
     if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
-        print!("{}", weeble_millis_sync().unwrap());
+        print!("{}", weeble_millis_sync().unwrap().to_string());
     } else {
-        print!("{}", weeble_sync().unwrap());
+        print!("{}", weeble_sync().unwrap().to_string());
     }
 }
 
@@ -152,8 +153,6 @@ mod tests {
     use super::*;
     use gnostr::get_weeble_async;
     use gnostr::get_weeble_sync;
-    use gnostr::global_rt::global_rt;
-    use gnostr::weeble::{weeble, weeble_sync};
     /// cargo test --bin gnostr-weeble -- --nocapture
     #[test]
     fn gnostr_weeble() {
