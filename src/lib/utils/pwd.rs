@@ -31,5 +31,5 @@ pub fn pwd() -> Result<String, &'static str> {
 
     let _mutable_string = String::new();
     let mutable_string = _pwd.clone();
-    Ok(mutable_string.to_string())
+    Ok(format!("{}", mutable_string))
 } //end pwd()
