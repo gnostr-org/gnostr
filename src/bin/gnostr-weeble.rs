@@ -123,7 +123,6 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-weeble
-use gnostr::global_rt::global_rt;
 use gnostr::weeble::{weeble, weeble_millis_sync, weeble_sync};
 use std::env;
 ///
@@ -153,6 +152,7 @@ mod tests {
     use super::*;
     use gnostr::get_weeble_async;
     use gnostr::get_weeble_sync;
+    use gnostr::global_rt::global_rt;
     /// cargo test --bin gnostr-weeble -- --nocapture
     #[test]
     fn gnostr_weeble() {
