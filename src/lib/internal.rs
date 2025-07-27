@@ -1,7 +1,10 @@
-use crate::get_weeble;
+use crate::blockheight::blockheight_sync;
+use crate::weeble::{weeble_async, weeble_sync};
+use crate::wobble::{wobble_async, wobble_sync};
 use base64::Engine;
 use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
+use log::debug;
 use std::process::Command;
 use tungstenite::protocol::Message;
 pub(crate) fn pwd() -> Result<String, &'static str> {
@@ -40,7 +43,15 @@ pub(crate) fn pwd() -> Result<String, &'static str> {
 } //end pwd()
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
-    let message = ClientMessage::Req(SubscriptionId(get_weeble().expect("").to_owned()), filters);
+    let message = ClientMessage::Req(
+        SubscriptionId(format!(
+            "{:?}/{:?}/{:?}",
+            weeble_sync(),
+            blockheight_sync(),
+            weeble_sync(),
+        )),
+        filters,
+    );
     serde_json::to_string(&message).expect("Could not serialize message")
 }
 
@@ -101,9 +112,12 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
                     RelayMessageV5::Event(_, e) => events.push(*e),
                     RelayMessageV5::Notice(s) => println!("NOTICE: {}", s),
                     RelayMessageV5::Eose(_) => {
-                        let message = ClientMessage::Close(SubscriptionId(
-                            get_weeble().expect("").to_owned(),
-                        ));
+                        let message = ClientMessage::Close(SubscriptionId(format!(
+                            "{:?}/{:?}/{:?}",
+                            weeble_sync(),
+                            blockheight_sync(),
+                            weeble_sync(),
+                        )));
                         let wire = match serde_json::to_string(&message) {
                             Ok(w) => w,
                             Err(e) => {
@@ -174,7 +188,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
     let (mut websocket, _response) =
         tungstenite::connect(request).expect("Could not connect to relay");
 
-    //print!("{}\n", wire);
+    debug!("{}\n", wire);
     websocket
         .send(Message::Text(wire))
         .expect("Could not send message to relay");
@@ -195,7 +209,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
             let relay_message: RelayMessage = serde_json::from_str(&s).expect(&s);
             match relay_message {
                 RelayMessage::Event(_, e) => {
-                    println!("EVENT: {}", serde_json::to_string(&e).unwrap())
+                    println!("[\"EVENT\": {}]", serde_json::to_string(&e).unwrap())
                 }
                 RelayMessage::Notice(s) => println!("NOTICE: {}", s),
                 RelayMessage::Eose(_) => println!("EOSE"),
