@@ -399,6 +399,7 @@ pub fn fetch_by_id(url: &str, id: IdHex) -> Option<Event> {
     }
 }
 
+use crate::utils::pwd::pwd;
 pub fn get_pwd() -> Result<String, &'static str> {
     let mut no_nl = pwd().unwrap().to_string();
     no_nl.retain(|c| c != '\n');
