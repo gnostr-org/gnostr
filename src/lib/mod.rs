@@ -191,6 +191,11 @@ pub fn get_relays_offline() -> Result<String, &'static str> {
     Ok(format!("{}", relays_offline().unwrap().to_string()))
 }
 
+/// weeble
+/// pub fn get_weeble() -> Result<String, &'static str>
+pub fn get_weeble() -> Result<String, &'static str> {
+    get_weeble_sync()
+}
 /// pub fn get_weeble_sync() -> Result<String, &'static str>
 pub fn get_weeble_sync() -> Result<String, &'static str> {
     Ok(format!("{}", weeble_sync().unwrap_or(0_f64).to_string()))
@@ -209,9 +214,14 @@ pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
         weeble_millis_async().await.unwrap_or(0_f64).to_string()
     ))
 }
+/// wobble
 /// pub fn get_wobble() -> Result<String, &'static str>
 pub fn get_wobble() -> Result<String, &'static str> {
-    Ok(format!("{}", wobble().unwrap_or(0_f64).to_string()))
+    get_wobble_sync()
+}
+/// pub fn get_wobble_sync() -> Result<String, &'static str>
+pub fn get_wobble_sync() -> Result<String, &'static str> {
+    Ok(format!("{}", wobble_sync().unwrap_or(0_f64).to_string()))
 }
 /// pub async fn get_wobble_async() -> Result<String, &'static str>
 pub async fn get_wobble_async() -> Result<String, &'static str> {
@@ -220,10 +230,14 @@ pub async fn get_wobble_async() -> Result<String, &'static str> {
         wobble_async().await.unwrap_or(0_f64).to_string()
     ))
 }
-/// pub fn get_wobble_millis() -> Result<String, &'static str>
-pub fn get_wobble_millis() -> Result<String, &'static str> {
-    Ok(format!("{}", wobble_millis().unwrap_or(0_f64).to_string()))
+/// pub fn get_wobble_millis_async() -> Result<String, &'static str>
+pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
+    Ok(format!(
+        "{}",
+        wobble_millis_async().await.unwrap_or(0_f64).to_string()
+    ))
 }
+
 /// pub fn get_blockheight() -> Result<String, &'static str>
 pub fn get_blockheight() -> Result<String, &'static str> {
     Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
@@ -326,15 +340,17 @@ use internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;
+pub use weeble::weeble;
 pub use weeble::weeble_async;
 pub use weeble::weeble_millis_async;
 pub use weeble::weeble_sync;
 
 /// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
 pub mod wobble;
-pub use crate::wobble::wobble_millis;
 pub use wobble::wobble;
 pub use wobble::wobble_async;
+pub use wobble::wobble_millis_async;
+pub use wobble::wobble_sync;
 
 /// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
 pub mod blockhash;
