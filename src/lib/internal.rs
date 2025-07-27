@@ -1,4 +1,5 @@
 use crate::blockheight::blockheight_sync;
+use crate::utils::pwd::pwd;
 use crate::weeble::{weeble_async, weeble_sync};
 use crate::wobble::{wobble_async, wobble_sync};
 use base64::Engine;
@@ -7,40 +8,6 @@ use http::Uri;
 use log::debug;
 use std::process::Command;
 use tungstenite::protocol::Message;
-pub(crate) fn pwd() -> Result<String, &'static str> {
-    let get_pwd = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "echo %cd%"])
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("echo ${PWD##*/}")
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("echo ${PWD##*/}")
-            .output()
-            .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg("echo ${PWD##*/}")
-            .output()
-            .expect("failed to execute process")
-    };
-
-    let mut _pwd = String::from_utf8(get_pwd.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-
-    let _mutable_string = String::new();
-    let mutable_string = _pwd.clone();
-    Ok(format!("{}", mutable_string))
-} //end pwd()
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(
@@ -188,7 +155,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
     let (mut websocket, _response) =
         tungstenite::connect(request).expect("Could not connect to relay");
 
-    debug!("{}\n", wire);
+    print!("{}\n", wire);
     websocket
         .send(Message::Text(wire))
         .expect("Could not send message to relay");
