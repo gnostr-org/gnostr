@@ -190,7 +190,28 @@ fn main() {
 
 // Helper function to set file permissions
 fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
-    let mut perms = fs::metadata(path)?.permissions();
-    perms.set_mode(mode);
-    fs::set_permissions(path, perms)
+    // Detect specific operating systems
+    #[cfg(target_os = "macos")]
+    {
+        println!("Running on macOS!");
+        // macOS-specific code here
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(mode);
+        fs::set_permissions(path, perms)
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        println!("Running on Linux!");
+        // Linux-specific code here
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(mode);
+        fs::set_permissions(path, perms)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        println!("Running on Windows!");
+        // Windows-specific code here
+    }
 }
