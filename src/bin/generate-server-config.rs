@@ -1,13 +1,9 @@
-use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
-use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
-#[cfg(not(windows))]
 use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
-
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
@@ -40,74 +36,11 @@ struct Extra {
     extra: String,
 }
 
-fn move_gnostr_gnit_key() -> io::Result<()> {
-    let home_dir = env::var("HOME").expect("HOME environment variable not set");
-    let ssh_dir = PathBuf::from(&home_dir).join(".ssh");
-    debug!("{}", ssh_dir.display());
-    let gnostr_gnit_key_path = PathBuf::from(&home_dir)
-        .join(".ssh")
-        .join("gnostr-gnit-key");
-    let gnostr_gnit_key_path_weeble_blockheight_wobble =
-        PathBuf::from(&home_dir).join(".ssh").join(format!(
-            "gnostr-gnit-key-{}-{}-{}",
-            &weeble_sync().unwrap().to_string(),
-            blockheight_sync(),
-            &wobble_sync().unwrap().to_string()
-        ));
-
-    println!(
-        "Attempting to rename/move '{}' to '{}'",
-        gnostr_gnit_key_path.display(),
-        gnostr_gnit_key_path_weeble_blockheight_wobble.display()
-    );
-
-    // Rename the file
-    match fs::rename(
-        gnostr_gnit_key_path,
-        gnostr_gnit_key_path_weeble_blockheight_wobble,
-    ) {
-        Ok(_) => {
-            println!("File renamed successfully!");
-        }
-        Err(e) => {
-            eprintln!("Error renaming file: {}", e);
-        }
-    }
-
-    // Clean up (optional)
-    // fs::remove_file(to_path)?;
-    // println!("Cleaned up '{}'", to_path.display());
-
-    Ok(())
-}
-
 // --- Helper function for setting file permissions ---
 fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
-    // Detect specific operating systems
-    #[cfg(target_os = "macos")]
-    {
-        println!("Running on macOS!");
-        // macOS-specific code here
-        let mut perms = fs::metadata(path)?.permissions();
-        perms.set_mode(mode);
-        fs::set_permissions(path, perms)
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        println!("Running on Linux!");
-        // Linux-specific code here
-        let mut perms = fs::metadata(path)?.permissions();
-        perms.set_mode(mode);
-        fs::set_permissions(path, perms)
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        println!("Running on Windows!");
-        // Windows-specific code here
-        return Ok(());
-    }
+    let mut perms = fs::metadata(path)?.permissions();
+    perms.set_mode(mode);
+    fs::set_permissions(path, perms)
 }
 
 fn main() -> io::Result<()> {
@@ -138,22 +71,6 @@ fn main() -> io::Result<()> {
         }
     } else {
         println!("Directory '{}' already exists.", ssh_dir.display());
-    }
-
-    let private_key_types = vec![
-        //"id_rsa",
-        //"id_dsa",
-        //"id_ecdsa",
-        //"id_ed25519",
-        "gnostr-gnit-key",
-    ];
-
-    println!("Checking for and setting permissions for private SSH keys...");
-    for key_type in private_key_types {
-        let private_key_file = ssh_dir.join(key_type);
-        if private_key_file.exists() {
-            let _ = move_gnostr_gnit_key();
-        }
     }
 
     // Call ssh-keygen
@@ -263,32 +180,6 @@ fn main() -> io::Result<()> {
                     "Permissions for '{}' set to 600.",
                     private_key_file.display()
                 );
-
-                println!("Generating SSH key add (gnostr-gnit-key)...");
-                let key_file_name = "gnostr-gnit-key";
-                let output = Command::new("ssh-add")
-                    .arg(ssh_dir.join(key_file_name))
-                    .output();
-
-                match output {
-                    Ok(output) => {
-                        if output.status.success() {
-                            println!("SSH key-add successful.");
-                        } else {
-                            eprintln!("Error: ssh-add failed.");
-                            eprintln!("Stdout: {}", String::from_utf8_lossy(&output.stdout));
-                            eprintln!("Stderr: {}", String::from_utf8_lossy(&output.stderr));
-                            exit(1);
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!(
-                        "Error: Could not execute ssh-add. Is it installed and in your PATH? {}",
-                        e
-                    );
-                        exit(1);
-                    }
-                }
             }
         } else {
             println!("Private key '{}' not found.", private_key_file.display());
@@ -318,7 +209,7 @@ fn main() -> io::Result<()> {
                 Ok(output) => {
                     if output.status.success() {
                         let capture_output = &output.clone().stdout;
-                        gnostr_gnit_pubkey = String::from_utf8_lossy(capture_output)
+                        gnostr_gnit_pubkey = (&String::from_utf8_lossy(&capture_output))
                             .to_string()
                             .replace("\"\"", "");
                         println!("gnostr-gnit-key.pub:\n{:?}", output.stdout);
@@ -371,7 +262,7 @@ fn main() -> io::Result<()> {
 
     let mut users = HashMap::new();
 
-    println!("{}", gnostr_gnit_pubkey.clone());
+    println!("{}", gnostr_gnit_pubkey.clone().to_string());
     users.insert(
         "gnostr".to_string(),
         User {
