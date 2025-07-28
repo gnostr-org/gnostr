@@ -16,13 +16,13 @@ use toml::Table;
 
 mod keys;
 use self::keys::server_keys;
-
+use log::info;
 mod commands;
 mod messages;
 
 pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
-    debug!("start_server");
-    debug!("russh::server::Config");
+    info!("start_server");
+    info!("russh::server::Config");
     let config = russh::server::Config {
         connection_timeout: Some(std::time::Duration::from_secs(3600)),
         auth_rejection_time: std::time::Duration::from_secs(3),
@@ -32,14 +32,14 @@ pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
     };
 
     let config = Arc::new(config);
-    debug!("russh::server::Config:{:?}", config);
+    info!("russh::server::Config:{:?}", config);
 
     let sh = Server {
         state: state.clone(),
     };
 
     let port = state.lock().await.server_config.port;
-    debug!(
+    info!(
         "russh::server::run({:?}, (\"0.0.0.0\", {}), sh)",
         config, port
     );

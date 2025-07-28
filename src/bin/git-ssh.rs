@@ -1,14 +1,39 @@
 use env_logger::Env;
 use gnostr::ssh::start;
+use log::info;
+use std::net::TcpListener;
+use std::time::Duration;
+fn port_is_available(port: u16) -> bool {
+    match TcpListener::bind(format!("127.0.0.1:{}", port)) {
+        Ok(listener) => {
+            // If binding was successful, the port is available.
+            // We can immediately close the listener as we only needed to check availability.
+            drop(listener);
+            true
+        }
+        Err(_) => {
+            // If binding failed, the port is likely not available.
+            false
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
-    if let Err(e) = start().await {
-        println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
-        println!("check the port in your server.toml is available!");
-        println!("check the port in your server.toml is available!");
-        println!("check the port in your server.toml is available!\n");
-        println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
+    if !port_is_available(2222) {
+        info!("is NOT avail");
+        std::process::exit(1);
+    } else {
+        info!("is avail");
+        //env_logger::init_from_env(Env::default().default_filter_or("info"));
+        if let Err(e) = start().await {
+            println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
+            println!("check the port in your server.toml is available!");
+            println!("check the port in your server.toml is available!");
+            println!("check the port in your server.toml is available!\n");
+            println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
+        }
     }
 }
 
