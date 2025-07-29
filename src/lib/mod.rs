@@ -123,7 +123,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
-    ProjectDirs::from("ngit", "gnostr", ".gnostr").ok_or(anyhow!(
+    ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
 }
