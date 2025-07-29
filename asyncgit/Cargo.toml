@@ -17,6 +17,16 @@ trace-libgit = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
+
+argparse    = "0.2.2"
+gnostr-types = "0.7.1-unstable"
+pad = "0.1.6"
+rust-crypto = "0.2.36"
+sha2 = "0.10.7"
+time        = "0.1.42"
+#crypto      = "0.4.0"
+
+
 #anyhow = "1.0"
 bitflags = "2"
 crossbeam-channel = "0.5"
