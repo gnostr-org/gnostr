@@ -1,5 +1,5 @@
 extern crate directories;
-use directories::{BaseDirs, UserDirs, ProjectDirs};
+use directories::{BaseDirs, ProjectDirs, UserDirs};
 
 fn main() {
     println!("--- Project Directories ---");
