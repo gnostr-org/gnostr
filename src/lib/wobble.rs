@@ -1,7 +1,7 @@
 use crate::blockheight::{blockheight_async, blockheight_sync};
 use log::debug;
-use std::time::SystemTime;
 use std::env;
+use std::time::SystemTime;
 /// pub fn wobble() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn wobble() -> Result<f64, ascii::AsciiChar> {
@@ -10,7 +10,7 @@ pub fn wobble() -> Result<f64, ascii::AsciiChar> {
 /// pub fn wobble_sync() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn wobble_sync() -> Result<f64, ascii::AsciiChar> {
-    //! wobble = utc_secs / blockheight
+    //! wobble = utc_secs % blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -27,7 +27,7 @@ pub fn wobble_sync() -> Result<f64, ascii::AsciiChar> {
 /// pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar> {
-    //! wobble = utc_secs / blockheight
+    //! wobble = utc_secs % blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
