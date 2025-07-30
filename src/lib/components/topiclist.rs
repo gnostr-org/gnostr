@@ -2,7 +2,6 @@ use crate::weeble::{weeble_async, weeble_sync};
 use crate::wobble_sync;
 use anyhow::Result;
 use chrono::{DateTime, Local};
-use std::env;
 use gnostr_asyncgit::sync::{
     self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 };
@@ -15,6 +14,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use std::env;
 use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
 
 use super::utils::logitems::{ItemBatch, LogEntry};
@@ -696,11 +696,14 @@ impl TopicList {
             };
 
             //txt.push("topiclist:695:text".into());
-            txt.push(format!("{}/{}/{}",
-                     env::var("WEEBLE").unwrap().to_string(),
-                     env::var("BLOCKHEIGHT").unwrap(),
-                     env::var("WOBBLE").unwrap().to_string()).into()
-                     //wobble_sync().unwrap()).into()
+            txt.push(
+                format!(
+                    "{}/{}/{}",
+                    env::var("WEEBLE").unwrap().to_string(),
+                    env::var("BLOCKHEIGHT").unwrap(),
+                    env::var("WOBBLE").unwrap().to_string()
+                )
+                .into(), //wobble_sync().unwrap()).into()
             );
             //get_detail_to_add
             txt.push(self.get_detail_to_add(
