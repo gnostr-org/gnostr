@@ -1,7 +1,7 @@
 use crate::blockheight::{blockheight_async, blockheight_sync};
 use log::debug;
-use std::time::SystemTime;
 use std::env;
+use std::time::SystemTime;
 /// pub fn weeble() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn weeble() -> Result<f64, ascii::AsciiChar> {
