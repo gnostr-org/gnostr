@@ -3227,23 +3227,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnip44"
-version = "0.0.72"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51eafc4073467e17a6c2261e612cef97249f51ba0d8581db61e6c56fb96af0b1"
-dependencies = [
- "base64 0.22.1",
- "chacha20",
- "constant_time_eq",
- "hkdf",
- "hmac",
- "rand_core 0.6.4",
- "secp256k1 0.29.1",
- "sha2 0.10.9",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "gnostr"
 version = "0.0.113"
 dependencies = [
@@ -3388,7 +3371,6 @@ name = "gnostr-asyncgit"
 version = "0.0.4"
 dependencies = [
  "arboard",
- "argparse",
  "bitflags 2.9.0",
  "chrono",
  "clap 4.5.37",
@@ -3402,29 +3384,24 @@ dependencies = [
  "git-version",
  "git2",
  "git2-hooks",
- "gnostr-types 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.14.0",
  "log 0.4.27",
  "nom",
  "nostr-sdk 0.37.0",
  "notify 7.0.0",
  "openssl-sys",
- "pad",
  "ratatui 0.29.0",
  "rayon",
  "rayon-core",
  "regex",
- "rust-crypto",
  "scopetime",
  "serde",
  "serde_json",
- "sha2 0.10.9",
  "similar",
  "simple-logging",
  "ssh-key",
  "strip-ansi-escapes",
  "thiserror 1.0.69",
- "time 0.1.45",
  "toml 0.8.22",
  "tree-sitter",
  "tree-sitter-bash",
@@ -3639,43 +3616,6 @@ dependencies = [
  "core-net",
  "derive_more",
  "gnip44 0.0.72",
- "hex",
- "hmac",
- "lazy_static",
- "lightning-invoice 0.33.2",
- "linkify",
- "num_cpus",
- "pbkdf2 0.12.2",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "regex",
- "scrypt",
- "secp256k1 0.29.1",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "thread-priority",
- "unicode-normalization",
- "url 2.5.4",
- "zeroize",
-]
-
-[[package]]
-name = "gnostr-types"
-version = "0.7.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27d2e95eb6a135755b79f473441f2c28215083ab203574ec9dbb29d714fa2d43"
-dependencies = [
- "aes",
- "base64 0.22.1",
- "bech32 0.11.0",
- "cbc",
- "chacha20",
- "chacha20poly1305",
- "core-net",
- "derive_more",
- "gnip44 0.0.72 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex",
  "hmac",
  "lazy_static",

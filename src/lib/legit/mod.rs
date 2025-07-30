@@ -374,6 +374,10 @@ fn cli() -> io::Result<()> {
         //repo:    ".".to_string(),
         repo: path.as_path().display().to_string(),
         timestamp: time::now(),
+        weeble,
+        wobble,
+        blockheight,
+        //.duration_since(SystemTime::UNIX_EPOCH)
     };
 
     parse_args_or_exit(&mut opts);

@@ -1,6 +1,5 @@
 use crypto::digest::Digest;
 use crypto::sha1;
-use log::debug;
 use std::sync::mpsc;
 //use time;
 
@@ -74,21 +73,23 @@ impl Worker {
     }
 
     fn generate_blob(&mut self, value: u32, tstamp: &str) -> (String, String) {
-        debug!("self.message={}\n", self.message);
+        if cfg!(debug_assertions) {
+            print!("self.message={}\n", self.message);
 
-        debug!("self.tree={}\n", self.tree);
-        debug!("self.parent={}\n", self.parent);
-        debug!("self.author={}\n", self.author);
-        debug!("self.author={}\n", self.author);
-        //debug!("self.committer={}\n",self.committer);
-        debug!("self.tree={}\n", self.tree);
-        debug!("self.parent={}\n", self.parent);
-        debug!("self.weeble.trim()={}\n", self.weeble.trim());
-        debug!("self.blockheight.trim()={}\n", self.blockheight.trim());
-        debug!("self.wobble.trim()={}\n", self.wobble.trim());
-        debug!("self.id={}\n", self.id);
-        debug!("self.value={}\n", value);
-        debug!("self.message={}\n", self.message);
+            print!("self.tree={}\n", self.tree);
+            print!("self.parent={}\n", self.parent);
+            print!("self.author={}\n", self.author);
+            print!("self.author={}\n", self.author);
+            //print!("self.committer={}\n",self.committer);
+            print!("self.tree={}\n", self.tree);
+            print!("self.parent={}\n", self.parent);
+            print!("self.weeble.trim()={}\n", self.weeble.trim());
+            print!("self.blockheight.trim()={}\n", self.blockheight.trim());
+            print!("self.wobble.trim()={}\n", self.wobble.trim());
+            print!("self.id={}\n", self.id);
+            print!("self.value={}\n", value);
+            print!("self.message={}\n", self.message);
+        }
 
         let raw = format!(
 			"tree {}\n\
@@ -119,11 +120,15 @@ impl Worker {
 			self.id, value,
 			self.message
 		);
-        debug!("raw={}\n", raw);
+        if cfg!(debug_assertions) {
+            print!("raw={}\n", raw);
+        }
 
         //be careful when changing - fails silently when wrong.
         let blob = format!("commit {}\0{}", raw.len(), raw);
-        debug!("blob={}\n", blob);
+        if cfg!(debug_assertions) {
+            print!("blob={}\n", blob);
+        }
 
         (raw, blob)
     }

@@ -1,9 +1,5 @@
 use super::worker::Worker;
-use crate::blockheight::blockheight_sync;
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
 use git2::*;
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -19,6 +15,9 @@ pub struct Options {
     pub pwd_hash: String,
     pub repo: String,
     pub timestamp: time::Tm,
+    pub weeble: String,
+    pub wobble: String,
+    pub blockheight: String,
 }
 
 pub struct Gitminer {
@@ -68,9 +67,9 @@ impl Gitminer {
             let msg = self.opts.message.clone();
             let wtx = tx.clone();
             let ts = self.opts.timestamp;
-            let weeble = weeble_sync().unwrap().to_string();
-            let wobble = wobble_sync().unwrap().to_string();
-            let bh = blockheight_sync();
+            let weeble = self.opts.weeble.clone();
+            let wobble = self.opts.wobble.clone();
+            let bh = self.opts.blockheight.clone();
             let (wtree, wparent) = (tree.clone(), parent.clone());
 
             thread::spawn(move || {
@@ -94,9 +93,9 @@ impl Gitminer {
         Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
-            .output()
-            .ok()
-            .expect("Failed to generate commit");
+            .output();
+        //.ok()
+        //.expect("Failed to generate commit");
 
         /* repo.blob() generates a blob, not a commit.
          * we write the commit, then
@@ -117,21 +116,18 @@ impl Gitminer {
         //write the commit
         Command::new("sh")
             .arg("-c")
-            .arg(format!(
-                "cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}",
-                self.opts.repo, tmpfile, hash
-            ))
-            .output()
-            .ok()
-            .expect("Failed to generate commit");
+            .arg(format!("cd {} && gnostr-git hash-object -t commit -w --stdin < {} && gnostr-git reset --hard {}", self.opts.repo, tmpfile, hash))
+            .output();
+        //.ok()
+        //.expect("Failed to generate commit");
 
         //write the blob
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/blobs/{} && git show {} > .gnostr/blobs/{}", self.opts.repo, hash, hash, hash))
-            .output()
-			.ok()
-			.expect("Failed to write .gnostr/blobs/<hash>");
+            .output();
+        //.ok()
+        //.expect("Failed to write .gnostr/blobs/<hash>");
 
         //REF:
         //gnostr-git reflog --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd:commit:%s'
@@ -152,15 +148,15 @@ impl Gitminer {
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git reflog --format='wss://{}/{}/%C(auto)%H/%<|(17)%gd:commit:%s' > .gnostr/reflog", self.opts.repo, "{RELAY}", "{REPO}"))
-            .output()
-			.ok()
-			.expect("Failed to write .gnostr/reflog");
+            .output();
+        //.ok()
+        //.expect("Failed to write .gnostr/reflog");
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && mkdir -p .gnostr && touch -f .gnostr/reflog && gnostr-git update-index --assume-unchaged .gnostr/reflog", self.opts.repo))
-            .output()
-			.ok()
-			.expect("Failed to write .gnostr/reflog");
+            .output();
+        //.ok()
+        //.expect("Failed to write .gnostr/reflog");
         Ok(())
     }
 
@@ -200,7 +196,7 @@ impl Gitminer {
         let relays = match cfg.get_string("gnostr.relays") {
             Ok(s) => s,
             Err(_) => {
-                BOOTSTRAP_RELAYS[0].to_string() //return Err("Failed to find git config gnostr.relays");
+                return Err("Failed to find git config gnostr.relays");
             }
         };
 
@@ -250,7 +246,6 @@ impl Gitminer {
 
         for i in 0..statuses.len() {
             let status_entry = statuses.get(i).unwrap();
-            //println!("status_entry:{}", status_entry.unwrap().clone());
             if status_entry.status().intersects(m) {
                 println!("Please stash all unstaged changes before running.");
                 //return Err("Please stash all unstaged changes before running.");
