@@ -32,6 +32,8 @@ pub mod gnostr;
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
 pub mod keys;
+///  <https://docs.rs/gnostr/latest/gnostr/legit/index.html>
+pub mod legit;
 ///  <https://docs.rs/gnostr/latest/gnostr/login/index.html>
 pub mod login;
 ///  <https://docs.rs/gnostr/latest/gnostr/notify_mutex/index.html>

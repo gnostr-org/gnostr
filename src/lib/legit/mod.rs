@@ -1,8 +1,13 @@
 #![allow(unused)]
 #![allow(dead_code)]
 extern crate chrono;
+use crate::event_to_wire;
+use crate::internal;
+use crate::post;
 use chrono::offset::Utc;
 use chrono::DateTime;
+use gnostr_types::Event;
+use http::Uri;
 use std::process::Command;
 //use std::time::SystemTime;
 use std::any::type_name;
@@ -58,6 +63,26 @@ fn example() {
 fn example() {
     //println!("Debugging disabled");
     //println!("cwd={:?}",get_current_working_dir());
+}
+
+/// pub fn post_event(url: &str, event: Event)
+pub fn post_event(url: &str, event: Event) {
+    let (host, uri) = url_to_host_and_uri(url);
+    let wire = event_to_wire(event);
+    post(host, uri, wire)
+}
+
+pub fn url_to_host_and_uri(url: &str) -> (String, Uri) {
+    let uri: http::Uri = url.parse::<http::Uri>().expect("Could not parse url");
+    let authority = uri.authority().expect("Has no hostname").as_str();
+    let host = authority
+        .find('@')
+        .map(|idx| authority.split_at(idx + 1).1)
+        .unwrap_or_else(|| authority);
+    if host.is_empty() {
+        panic!("URL has empty hostname");
+    }
+    (host.to_owned(), uri)
 }
 
 fn cli() -> io::Result<()> {
@@ -152,8 +177,7 @@ fn cli() -> io::Result<()> {
             .output()
             .expect("try:\ngnostr-git config -l | grep gnostr.relays")
     } else if cfg!(target_os = "macos") {
-        
-		Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg("gnostr-set-relays")
             .output()
@@ -209,8 +233,7 @@ fn cli() -> io::Result<()> {
             .output()
             .expect("failed to execute process")
     } else if cfg!(target_os = "macos") {
-    
-		Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg("echo ${PWD##*/}")
             .output()
@@ -246,8 +269,7 @@ fn cli() -> io::Result<()> {
             .output()
             .expect("failed to execute process")
     } else if cfg!(target_os = "macos") {
-    
-		Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg("gnostr-weeble 2>/tmp/gnostr-legit.log || echo weeble")
             .output()
@@ -281,8 +303,7 @@ fn cli() -> io::Result<()> {
             .output()
             .expect("failed to execute process")
     } else if cfg!(target_os = "macos") {
-    
-		Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg("gnostr-wobble || echo wobble")
             .output()
@@ -312,8 +333,7 @@ fn cli() -> io::Result<()> {
             .output()
             .expect("failed to execute process")
     } else if cfg!(target_os = "macos") {
-    
-		Command::new("sh")
+        Command::new("sh")
             .arg("-c")
             .arg("gnostr-blockheight || echo blockheight")
             .output()
@@ -422,8 +442,7 @@ fn cli() -> io::Result<()> {
                 .output()
                 .expect("failed to execute process")
     } else if cfg!(target_os = "macos") {
-
-		Command::new("sh")
+        Command::new("sh")
                 .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git show HEAD)\" "])
                 .output()
                 .expect("failed to execute process")
