@@ -5,7 +5,9 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
+#[cfg(not(windows))]
 use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
+
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
