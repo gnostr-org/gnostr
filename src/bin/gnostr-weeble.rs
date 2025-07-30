@@ -150,10 +150,10 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gnostr::weeble::{weeble, weeble_sync};
     use gnostr::get_weeble_async;
     use gnostr::get_weeble_sync;
     use gnostr::global_rt::global_rt;
+    use gnostr::weeble::{weeble, weeble_sync};
     /// cargo test --bin gnostr-weeble -- --nocapture
     #[test]
     fn gnostr_weeble() {
