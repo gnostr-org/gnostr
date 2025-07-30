@@ -100,7 +100,7 @@ fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
 
     #[cfg(target_os = "windows")]
     {
-        println!("Running on Windows!");
+        println!("Running on Windows!")
         // Windows-specific code here
     }
 }
