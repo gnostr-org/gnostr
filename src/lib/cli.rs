@@ -179,6 +179,8 @@ pub enum GnostrCommands {
     Tui(crate::gnostr::GnostrSubCommands),
     /// Chat sub commands
     Chat(crate::chat::ChatSubCommands),
+    /// Legit sub commands
+    Legit(legit::LegitSubCommand),
     /// Ngit sub commands
     Ngit(ngit::NgitSubCommand),
     /// Set metadata.
