@@ -45,6 +45,11 @@ use gnostr_asyncgit::{
 use scopetime;
 use scopetime::scope_time;
 
+use std::env;
+use crate::weeble::weeble_async;
+use crate::blockheight::blockheight_async;
+use crate::wobble::wobble_async;
+
 /// # Errors
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
@@ -101,6 +106,12 @@ pub async fn run_app(
     log::trace!("app start: {} ms", app_start.elapsed().as_millis());
 
     loop {
+
+
+       env::set_var("WEEBLE", weeble_async().await.unwrap().to_string());
+       env::set_var("BLOCKHEIGHT", blockheight_async().await);
+       env::set_var("WOBBLE", wobble_async().await.unwrap().to_string());
+
         let event = if first_update {
             first_update = false;
             QueueEvent::Notify

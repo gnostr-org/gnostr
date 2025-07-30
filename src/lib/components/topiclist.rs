@@ -1,4 +1,5 @@
 use crate::weeble::{weeble_async, weeble_sync};
+use crate::wobble_sync;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use std::env;
@@ -698,7 +699,8 @@ impl TopicList {
             txt.push(format!("{}/{}/{}",
                      env::var("WEEBLE").unwrap().to_string(),
                      env::var("BLOCKHEIGHT").unwrap(),
-                     env::var("WOBBLE").unwrap()).into()
+                     env::var("WOBBLE").unwrap().to_string()).into()
+                     //wobble_sync().unwrap()).into()
             );
             //get_detail_to_add
             txt.push(self.get_detail_to_add(
