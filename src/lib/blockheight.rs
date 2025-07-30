@@ -1,8 +1,8 @@
 use crate::utils::{ureq_async, ureq_sync};
+use reqwest::Url;
+use std::env;
 use std::io::Read;
 use std::time::SystemTime;
-use std::env;
-use reqwest::Url;
 
 pub fn check_curl() {
 
