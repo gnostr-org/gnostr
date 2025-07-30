@@ -150,6 +150,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use gnostr::wobble::{wobble, wobble_sync};
     use gnostr::get_wobble_async;
     use gnostr::get_wobble_sync;
     use gnostr::global_rt::global_rt;
