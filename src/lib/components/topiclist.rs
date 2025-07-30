@@ -1,5 +1,7 @@
+use crate::weeble::{weeble_async, weeble_sync};
 use anyhow::Result;
 use chrono::{DateTime, Local};
+use std::env;
 use gnostr_asyncgit::sync::{
     self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 };
@@ -692,6 +694,12 @@ impl TopicList {
                 None
             };
 
+            //txt.push("topiclist:695:text".into());
+            txt.push(format!("{}/{}/{}",
+                     env::var("WEEBLE").unwrap().to_string(),
+                     env::var("BLOCKHEIGHT").unwrap(),
+                     env::var("WOBBLE").unwrap()).into()
+            );
             //get_detail_to_add
             txt.push(self.get_detail_to_add(
                 e,
@@ -704,6 +712,7 @@ impl TopicList {
                 now,
                 marked,
             ));
+            txt.push("topiclist:708:text".into());
         }
 
         txt
@@ -980,7 +989,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            "topiclist.rs:937: {} {}/{} ",
+            "topiclist.rs:984: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -1027,7 +1036,7 @@ impl DrawableComponent for TopicList {
                     //.borders(Borders::ALL)
                     .title(Span::styled(
                         format!(
-                            "more_detail--->{:>}<---",
+                            "1032:more_detail--->{:>}<---",
                             //"{}",
                             title.as_str().to_owned(),
                             //more_text.as_str()
