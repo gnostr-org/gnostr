@@ -1,7 +1,7 @@
 use crate::utils::{ureq_async, ureq_sync};
 use std::io::Read;
 use std::time::SystemTime;
-
+use std::env;
 use reqwest::Url;
 
 pub fn check_curl() {
@@ -32,17 +32,22 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
     //let blockheight = seconds as f64 / tmp_u64 as f64;
     let blockheight = tmp_u64 as f64;
     //return Ok(blockheight.floor());
+    env::set_var("BLOCKHEIGHT", blockheight.to_string());
     Ok(blockheight)
 }
 
 pub async fn blockheight_async() -> String {
-    ureq_async("https://mempool.space/api/blocks/tip/height".to_string())
+    let blockheight = ureq_async("https://mempool.space/api/blocks/tip/height".to_string())
         .await
         .unwrap()
-        .to_string()
+        .to_string();
+    env::set_var("BLOCKHEIGHT", blockheight.clone().to_string());
+    blockheight
 }
 pub fn blockheight_sync() -> String {
-    ureq_sync("https://mempool.space/api/blocks/tip/height".to_string())
+    let blockheight = ureq_sync("https://mempool.space/api/blocks/tip/height".to_string())
         .unwrap()
-        .to_string()
+        .to_string();
+    env::set_var("BLOCKHEIGHT", blockheight.clone().to_string());
+    blockheight
 }
