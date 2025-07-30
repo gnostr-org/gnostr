@@ -25,6 +25,12 @@ pub struct LegitSubCommand {
     ///// password to decrypt nsec
     #[arg(short, long, global = true)]
     password: Option<String>,
+    ///// nsec or hex private key
+    #[arg(short, long, global = true)]
+    repo: Option<String>,
+    ///// password to decrypt nsec
+    #[arg(long, global = true)]
+    pow: Option<String>,
     ///// disable spinner animations
     #[arg(long, action)]
     disable_cli_spinners: bool,
