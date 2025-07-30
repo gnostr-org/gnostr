@@ -1,8 +1,5 @@
 use crate::blockheight::{blockheight_async, blockheight_sync};
 use log::debug;
-use reqwest;
-use reqwest::Url;
-use std::io::Read;
 use std::time::SystemTime;
 
 /// pub fn weeble() -> Result<f64, ascii::AsciiChar>
