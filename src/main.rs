@@ -69,6 +69,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(&args.nsec.unwrap().to_string(), sub_command_args).await
         }
+        Some(GnostrCommands::Legit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::legit::legit(sub_command_args).await
+        }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::ngit::ngit(sub_command_args).await
