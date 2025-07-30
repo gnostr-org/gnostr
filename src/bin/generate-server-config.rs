@@ -1,4 +1,5 @@
 use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
@@ -40,6 +41,7 @@ struct Extra {
 fn move_gnostr_gnit_key() -> io::Result<()> {
     let home_dir = env::var("HOME").expect("HOME environment variable not set");
     let ssh_dir = PathBuf::from(&home_dir).join(".ssh");
+    debug!("{}", ssh_dir.display());
     let gnostr_gnit_key_path = PathBuf::from(&home_dir)
         .join(".ssh")
         .join("gnostr-gnit-key");
