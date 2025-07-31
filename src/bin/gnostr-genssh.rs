@@ -180,21 +180,12 @@ fn main() {
             println!("Public key '{}' not found.", public_key_file.display());
         }
     }
-
-    println!("SSH permissions setup complete.");
-    println!("You can verify permissions with:");
-    println!("ls -ld ~/.ssh");
-    println!("ls -l ~/.ssh/");
 }
 
-// Helper function to set file permissions
 fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
-    // Detect specific operating systems
     #[cfg(target_os = "macos")]
     {
-        use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
-        println!("Running on macOS!");
-        // macOS-specific code here
+        use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_mode(mode);
         fs::set_permissions(path, perms)
@@ -202,9 +193,7 @@ fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
-        println!("Running on Linux!");
-        // Linux-specific code here
+        use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_mode(mode);
         fs::set_permissions(path, perms)
