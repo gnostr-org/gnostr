@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
@@ -193,6 +192,7 @@ fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
     // Detect specific operating systems
     #[cfg(target_os = "macos")]
     {
+        use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
         println!("Running on macOS!");
         // macOS-specific code here
         let mut perms = fs::metadata(path)?.permissions();
@@ -202,6 +202,7 @@ fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
 
     #[cfg(target_os = "linux")]
     {
+        use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
         println!("Running on Linux!");
         // Linux-specific code here
         let mut perms = fs::metadata(path)?.permissions();
