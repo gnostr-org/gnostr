@@ -94,9 +94,9 @@ impl Gitminer {
         Command::new("sh")
             .arg("-c")
             .arg(format!("mkdir -p {}.gnostr/{} && ", self.opts.repo, hash))
-            .output();
-        //.ok()
-        //.expect("Failed to generate commit");
+            .output()
+            .ok()
+            .expect("Failed to generate commit");
 
         /* repo.blob() generates a blob, not a commit.
          * we write the commit, then
@@ -250,6 +250,7 @@ impl Gitminer {
 
         for i in 0..statuses.len() {
             let status_entry = statuses.get(i).unwrap();
+            //println!("status_entry:{}", status_entry.unwrap().clone());
             if status_entry.status().intersects(m) {
                 println!("Please stash all unstaged changes before running.");
                 //return Err("Please stash all unstaged changes before running.");
