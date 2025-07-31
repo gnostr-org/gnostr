@@ -21,8 +21,6 @@ act/
 aes.o
 base64.o
 bash_profile.log
-bin/
-bins/
 bits/
 cat/
 cli/
