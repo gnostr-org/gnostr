@@ -4,7 +4,7 @@ extern crate chrono;
 extern crate time;
 use chrono::offset::Utc;
 use chrono::DateTime;
-use gnostr_asyncgit::sync::commit::{serialize_commit, padded_commit_id};
+use gnostr_asyncgit::sync::commit::{padded_commit_id, serialize_commit};
 
 use gnostr::global_rt::global_rt;
 use log::debug;
@@ -22,7 +22,7 @@ use std::error::Error;
 use std::io::Result;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use time::{get_time,now};
+use time::{get_time, now};
 //use std::mem::size_of;
 use argparse::{ArgumentParser, Store};
 use git2::*;
@@ -81,7 +81,7 @@ fn example() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-#[allow(clippy::if_same_then_else)]
+    #[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
     } else {
@@ -163,61 +163,58 @@ async fn main() -> Result<()> {
         }
     };
 
-        //initialize git repo
-        let repo = Repository::discover(".").expect("");
+    //initialize git repo
+    let repo = Repository::discover(".").expect("");
 
-        //gather some repo info
-        //find HEAD
-        let head = repo.head().expect("");
-        let obj = head
-            .resolve()
-            .expect("")
-            .peel(ObjectType::Commit)
-            .expect("");
+    //gather some repo info
+    //find HEAD
+    let head = repo.head().expect("");
+    let obj = head
+        .resolve()
+        .expect("")
+        .peel(ObjectType::Commit)
+        .expect("");
 
-        //read top commit
-        let commit = obj.peel_to_commit().expect("");
-        let commit_id = commit.id().to_string();
+    //read top commit
+    let commit = obj.peel_to_commit().expect("");
+    let commit_id = commit.id().to_string();
 
-       let serialized_commit = serialize_commit(&commit).expect("gnostr-async:error!");
-       println!("Serialized commit:\n{}", serialized_commit.clone());
+    let serialized_commit = serialize_commit(&commit).expect("gnostr-async:error!");
+    println!("Serialized commit:\n{}", serialized_commit.clone());
 
+    //some info wrangling
+    println!("commit_id:\n{}", commit_id);
+    let padded_commitid = padded_commit_id(format!("{:0>64}", commit_id.clone()));
+    println!("padded_commitid:\n{}", padded_commitid.clone());
+    global_rt().spawn(async move {
+        //// commit based keys
+        //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+        //info!("keys.secret_key():\n{:?}", keys.secret_key());
+        //info!("keys.public_key():\n{}", keys.public_key());
 
+        //parse keys from sha256 hash
+        let padded_keys = Keys::parse(padded_commitid).unwrap();
+        //create nostr client with commit based keys
+        //let client = Client::new(keys);
+        let client = Client::new(padded_keys.clone());
+        client.add_relay("wss://relay.damus.io").await.expect("");
+        client.add_relay("wss://e.nos.lol").await.expect("");
+        client.connect().await;
 
-		//some info wrangling
-        println!("commit_id:\n{}", commit_id);
-        let padded_commitid = padded_commit_id(format!("{:0>64}", commit_id.clone()));
-        println!("padded_commitid:\n{}", padded_commitid.clone());
-        global_rt().spawn(async move {
-            //// commit based keys
-            //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
-            //info!("keys.secret_key():\n{:?}", keys.secret_key());
-            //info!("keys.public_key():\n{}", keys.public_key());
+        //build git gnostr event
+        let builder = EventBuilder::text_note(serialized_commit.clone());
 
-            //parse keys from sha256 hash
-            let padded_keys = Keys::parse(padded_commitid).unwrap();
-            //create nostr client with commit based keys
-            //let client = Client::new(keys);
-            let client = Client::new(padded_keys.clone());
-            client.add_relay("wss://relay.damus.io").await.expect("");
-            client.add_relay("wss://e.nos.lol").await.expect("");
-            client.connect().await;
+        //send git gnostr event
+        let output = client.send_event_builder(builder).await.expect("");
 
-            //build git gnostr event
-            let builder = EventBuilder::text_note(serialized_commit.clone());
+        //some reporting
+        info!("Event ID: {}", output.id());
+        info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+        info!("Sent to: {:?}", output.success);
+        info!("Not sent to: {:?}", output.failed);
+    });
 
-            //send git gnostr event
-            let output = client.send_event_builder(builder).await.expect("");
-
-            //some reporting
-            info!("Event ID: {}", output.id());
-            info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
-            info!("Sent to: {:?}", output.success);
-            info!("Not sent to: {:?}", output.failed);
-        });
-
-
-	Ok(())
+    Ok(())
 }
 
 fn parse_args_or_exit(opts: &mut gitminer::Options) {
