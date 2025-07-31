@@ -8,6 +8,7 @@ use gnostr_asyncgit::sync::commit::{serialize_commit, padded_commit_id};
 
 use gnostr::global_rt::global_rt;
 use log::debug;
+use log::info;
 //
 use nostr_sdk_0_37_0::prelude::*;
 //
@@ -17,6 +18,7 @@ use std::process::Command;
 use std::any::type_name;
 use std::convert::TryInto;
 use std::env;
+use std::error::Error;
 use std::io::Result;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -77,8 +79,8 @@ fn example() {
     debug!("cwd={:?}", get_current_working_dir());
 }
 
-use std::error::Error;
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
 #[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
@@ -178,14 +180,14 @@ fn main() -> Result<()> {
         let commit_id = commit.id().to_string();
 
        let serialized_commit = serialize_commit(&commit).expect("gnostr-async:error!");
-        debug!("Serialized commit:\n{}", serialized_commit.clone());
+       println!("Serialized commit:\n{}", serialized_commit.clone());
 
 
 
 		//some info wrangling
-        debug!("commit_id:\n{}", commit_id);
+        println!("commit_id:\n{}", commit_id);
         let padded_commitid = padded_commit_id(format!("{:0>64}", commit_id.clone()));
-        debug!("padded_commitid:\n{}", padded_commitid.clone());
+        println!("padded_commitid:\n{}", padded_commitid.clone());
         global_rt().spawn(async move {
             //// commit based keys
             //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
@@ -205,13 +207,13 @@ fn main() -> Result<()> {
             let builder = EventBuilder::text_note(serialized_commit.clone());
 
             //send git gnostr event
-            //let output = client.send_event_builder(builder).await.expect("");
+            let output = client.send_event_builder(builder).await.expect("");
 
             //some reporting
-            //info!("Event ID: {}", output.id());
-            //info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
-            //info!("Sent to: {:?}", output.success);
-            //info!("Not sent to: {:?}", output.failed);
+            info!("Event ID: {}", output.id());
+            info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+            info!("Sent to: {:?}", output.success);
+            info!("Not sent to: {:?}", output.failed);
         });
 
 
