@@ -3,6 +3,7 @@ use crate::blockheight::blockheight_sync;
 use crate::weeble::weeble_sync;
 use crate::wobble::wobble_sync;
 use git2::*;
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -199,7 +200,7 @@ impl Gitminer {
         let relays = match cfg.get_string("gnostr.relays") {
             Ok(s) => s,
             Err(_) => {
-                return Err("Failed to find git config gnostr.relays");
+                BOOTSTRAP_RELAYS[0].to_string() //return Err("Failed to find git config gnostr.relays");
             }
         };
 
