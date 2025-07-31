@@ -1,8 +1,8 @@
 use super::worker::Worker;
-use git2::*;
+use crate::blockheight::blockheight_sync;
 use crate::weeble::weeble_sync;
 use crate::wobble::wobble_sync;
-use crate::blockheight::blockheight_sync;
+use git2::*;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -116,10 +116,13 @@ impl Gitminer {
         //write the commit
         Command::new("sh")
             .arg("-c")
-            .arg(format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash))
+            .arg(format!(
+                "cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}",
+                self.opts.repo, tmpfile, hash
+            ))
             .output()
-			.ok()
-			.expect("Failed to generate commit");
+            .ok()
+            .expect("Failed to generate commit");
 
         //write the blob
         Command::new("sh")

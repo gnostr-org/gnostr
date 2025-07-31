@@ -1,9 +1,17 @@
 #![allow(unused)]
 #![allow(dead_code)]
 extern crate chrono;
+extern crate time;
 use chrono::offset::Utc;
 use chrono::DateTime;
+use gnostr_asyncgit::sync::commit::{serialize_commit, padded_commit_id};
+
+use gnostr::global_rt::global_rt;
 use log::debug;
+//
+use nostr_sdk_0_37_0::prelude::*;
+//
+
 use std::process::Command;
 //use std::time::SystemTime;
 use std::any::type_name;
@@ -12,6 +20,7 @@ use std::env;
 use std::io::Result;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use time::{get_time,now};
 //use std::mem::size_of;
 use argparse::{ArgumentParser, Store};
 use git2::*;
@@ -68,8 +77,9 @@ fn example() {
     debug!("cwd={:?}", get_current_working_dir());
 }
 
-fn main() -> io::Result<()> {
-    #[allow(clippy::if_same_then_else)]
+use std::error::Error;
+fn main() -> Result<()> {
+#[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
     } else {
@@ -82,7 +92,7 @@ fn main() -> io::Result<()> {
     debug!("Debugging disabled");
     example();
 
-    let start = time::get_time();
+    let start = get_time();
     let epoch = get_epoch_ms();
     println!("epoch:{}", epoch.clone());
     let system_time = SystemTime::now();
@@ -151,96 +161,61 @@ fn main() -> io::Result<()> {
         }
     };
 
-    let mut hasher = Sha256::new();
-    hasher.update(&hash);
-    // `update` can be called repeatedly and is generic over `AsRef<[u8]>`
-    //hasher.update("String data");
-    // Note that calling `finalize()` consumes hasher
-    //let gnostr_sec = hasher.finalize();
-    let gnostr_sec: String = format!("{:X}", hasher.finalize());
-    //println!("Binary hash: {:?}", hash);
-    //println!("hash before: {:?}", hash);
-    //println!("hash after pad: {:?}", hash);
-    //println!("&hash before: {:?}", &hash);
-    //println!("&hash after pad: {:?}", &hash);
-    //println!("gnostr_sec before pad: {:?}", gnostr_sec);
-    //println!("gnostr_sec after pad: {:?}", gnostr_sec.pad(64, '0', Alignment::Right, true));
-    //println!("&gnostr_sec before pad: {:?}", &gnostr_sec);
-    //println!("&gnostr_sec after pad: {:?}", &gnostr_sec.pad(64, '0', Alignment::Right, true));
+        //initialize git repo
+        let repo = Repository::discover(".").expect("");
 
-    //let s = "12345".pad(64, '0', Alignment::Right, true);
-    //println!("s: {:?}", s);
-    // echo "000000b64a065760e5441bf47f0571cb690b28fc" | openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
-    //
-    //
-    //shell test
-    let touch = Command::new("sh")
-        .args(["-c", "touch ", &hash])
-        .output()
-        .expect("failed to execute process");
-    let touch_event = String::from_utf8(touch.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-    let cat = Command::new("sh")
-        .args(["-c", "touch ", &hash])
-        .output()
-        .expect("failed to execute process");
-    let cat_event = String::from_utf8(cat.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
-    //shell test
-    //git rev-parse --verify HEAD
-    #[allow(clippy::if_same_then_else)]
-    let event = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-                .args(["/C", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
-                .output()
-                .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-                .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git show HEAD)\" "])
-                .output()
-                .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-                .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
-                .output()
-                .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-                .args(["-c", "gnostr --sec $(gnostr-sha256 $(gnostr-weeble || echo)) -t gnostr --tag weeble $(gnostr-weeble || echo weeble) --tag wobble $(gnostr-wobble || echo wobble) --tag blockheight $(gnostr-blockheight || echo blockheight) --content \"$(gnostr-git diff HEAD~1 || gnostr-git diff)\" "])
-                .output()
-                .expect("failed to execute process")
-    };
+        //gather some repo info
+        //find HEAD
+        let head = repo.head().expect("");
+        let obj = head
+            .resolve()
+            .expect("")
+            .peel(ObjectType::Commit)
+            .expect("");
 
-    let gnostr_event = String::from_utf8(event.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
+        //read top commit
+        let commit = obj.peel_to_commit().expect("");
+        let commit_id = commit.id().to_string();
 
-    //assert...
-    //echo gnostr|openssl dgst -sha256 | sed 's/SHA2-256(stdin)= //g'
+       let serialized_commit = serialize_commit(&commit).expect("gnostr-async:error!");
+        debug!("Serialized commit:\n{}", serialized_commit.clone());
 
-    //gnostr-legit must only return a sha256 generated by the
-    //recent commit hash
-    //to enable nested commands
-    //REF:
-    //gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD")
-    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "git rev-parse --verify HEAD"))
-    //Example:
-    //gnostr --sec $(gnostr --hash $(gnostr legit . -p 00000 -m "#gnostr will exist!")) --envelope --content "$(gnostr-git log -n 1)" | gnostr-cat -u wss://relay.damus.io
-    //
-    //
-    //
-    let duration = time::get_time() - start;
-    //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
-    //
-    //
-    let relay_url = "wss://nos.lol";
-    let event: Event = serde_json::from_str(&gnostr_event).unwrap();
-    post_event(relay_url, event);
 
-    println!("{}", gnostr_event);
-    Ok(())
+
+		//some info wrangling
+        debug!("commit_id:\n{}", commit_id);
+        let padded_commitid = padded_commit_id(format!("{:0>64}", commit_id.clone()));
+        debug!("padded_commitid:\n{}", padded_commitid.clone());
+        global_rt().spawn(async move {
+            //// commit based keys
+            //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
+            //info!("keys.secret_key():\n{:?}", keys.secret_key());
+            //info!("keys.public_key():\n{}", keys.public_key());
+
+            //parse keys from sha256 hash
+            let padded_keys = Keys::parse(padded_commitid).unwrap();
+            //create nostr client with commit based keys
+            //let client = Client::new(keys);
+            let client = Client::new(padded_keys.clone());
+            client.add_relay("wss://relay.damus.io").await.expect("");
+            client.add_relay("wss://e.nos.lol").await.expect("");
+            client.connect().await;
+
+            //build git gnostr event
+            let builder = EventBuilder::text_note(serialized_commit.clone());
+
+            //send git gnostr event
+            //let output = client.send_event_builder(builder).await.expect("");
+
+            //some reporting
+            //info!("Event ID: {}", output.id());
+            //info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+            //info!("Sent to: {:?}", output.success);
+            //info!("Not sent to: {:?}", output.failed);
+        });
+
+
+	Ok(())
 }
 
 fn parse_args_or_exit(opts: &mut gitminer::Options) {
