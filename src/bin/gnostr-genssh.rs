@@ -213,5 +213,6 @@ fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
     {
         println!("Running on Windows!");
         // Windows-specific code here
-    }
+        Ok()
+	}
 }
