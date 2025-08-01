@@ -86,7 +86,6 @@ jobs:
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
         #if: matrix.os != 'windows-latest'
-      - run: cargo-binstall --no-confirm mempool_space
       - run: cargo-binstall --no-confirm gnostr-xq
       - run: cargo-binstall --no-confirm gnostr
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
