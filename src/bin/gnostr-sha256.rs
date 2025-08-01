@@ -7,8 +7,7 @@ use gnostr::utils::strip_trailing_newline;
 #[allow(unused_imports)]
 use gnostr::Config;
 use std::io::Result;
-use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 use std::{env, process};
 
 fn main() -> Result<()> {

@@ -25,6 +25,48 @@ pub struct CliArgs {
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
+pub struct LegitCli {
+    #[command(subcommand)]
+    pub command: LegitCommands,
+    /// remote signer address
+    #[arg(long, global = true)]
+    pub bunker_uri: Option<String>,
+    /// remote signer app secret key
+    #[arg(long, global = true)]
+    pub bunker_app_key: Option<String>,
+    /// nsec or hex private key
+    #[arg(short, long, global = true)]
+    pub nsec: Option<String>,
+    /// password to decrypt nsec
+    #[arg(short, long, global = true)]
+    pub password: Option<String>,
+    /// disable spinner animations
+    #[arg(long, action, default_value = "false")]
+    pub disable_cli_spinners: Option<bool>,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum LegitCommands {
+    /// update cache with latest updates from nostr
+    Fetch(sub_commands::fetch::SubCommandArgs),
+    /// signal you are this repo's maintainer accepting proposals via
+    /// nostr
+    Init(sub_commands::init::SubCommandArgs),
+    /// issue commits as a proposal
+    Send(sub_commands::send::SubCommandArgs),
+    /// list proposals; checkout, apply or download selected
+    List,
+    /// send proposal revision
+    Push(sub_commands::push::SubCommandArgs),
+    /// fetch and apply new proposal commits / revisions linked to
+    /// branch
+    Pull,
+    /// run with --nsec flag to change npub
+    Login(sub_commands::login::SubCommandArgs),
+}
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
 pub struct NgitCli {
     #[command(subcommand)]
     pub command: NgitCommands,
@@ -137,6 +179,8 @@ pub enum GnostrCommands {
     Tui(crate::gnostr::GnostrSubCommands),
     /// Chat sub commands
     Chat(crate::chat::ChatSubCommands),
+    /// Legit sub commands
+    Legit(legit::LegitSubCommand),
     /// Ngit sub commands
     Ngit(ngit::NgitSubCommand),
     /// Set metadata.

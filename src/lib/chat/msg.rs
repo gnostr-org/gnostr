@@ -1,4 +1,4 @@
-use crate::{blockheight::blockheight_sync, get_weeble, get_wobble, VERSION};
+use crate::{blockheight::blockheight_sync, VERSION};
 use std::fmt::Display;
 
 use once_cell::sync::Lazy;
@@ -92,7 +92,7 @@ impl Msg {
         self
     }
 
-    pub fn wrap_text(mut self, text: Msg, max_width: usize) -> Self {
+    pub fn wrap_text(self, text: Msg, max_width: usize) -> Self {
         //	for line in text.content.bytes() {
 
         //    line

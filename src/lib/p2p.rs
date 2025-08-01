@@ -1,14 +1,14 @@
+use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
 use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
-use libp2p::{core::multiaddr::Protocol, core::Multiaddr, identify, identity, ping, relay};
 use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
 
 use std::{env, error::Error, thread};
-use tokio::time::{sleep, Duration};
+use tokio::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, warn};
 
 //const TOPIC: &str = "gnostr";
 /// MyBehaviour
@@ -100,9 +100,8 @@ pub async fn evt_loop(
 
             if current_second % 2 != 0 {
                 debug!("Current second ({}) is odd!", current_second);
-                // Add your code here to be executed only when the time is odd
-                //debug!("blockheight_async():{}", blockheight_async().await);
                 env::set_var("BLOCKHEIGHT", &blockheight_async().await);
+                env::set_var("BLOCKHASH", &blockhash_async().await);
             } else {
                 debug!(
                     "Current second ({}) is even. Skipping this iteration.",
@@ -125,8 +124,12 @@ pub async fn evt_loop(
                     .behaviour_mut().gossipsub
                     .publish(topic.clone(), serde_json::to_vec(&m)?) {
                     debug!("Publish error: {e:?}");
-                    let m = Msg::default()
+                    let mut m = Msg::default()
                         /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
+                    //NOTE:recv.send - send to self
+                    recv.send(m).await?;
+                    m = Msg::default()
+                        /**/.set_content(format!("{{\"blockhash\":\"{}\"}}", env::var("BLOCKHASH").unwrap()), 0).set_kind(MsgKind::System);
                     //NOTE:recv.send - send to self
                     recv.send(m).await?;
                     //let m = Msg::default().set_content("p2p.rs:brief help prompt here!:2".to_string(), 2).set_kind(MsgKind::System);
