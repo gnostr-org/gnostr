@@ -4,6 +4,7 @@ use gnostr::ssh::start;
 async fn main() {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     if let Err(e) = start().await {
+        println!("{}", e);
         println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
         println!("check the port in your server.toml is available!");
         println!("check the port in your server.toml is available!");
