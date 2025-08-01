@@ -4,8 +4,8 @@ use std::io::Result;
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
-#[cfg(target_os = "windows")]
-use std::os::windows::fs::PermissionsExt;
+//#[cfg(target_os = "windows")]
+//use std::os::windows::fs::PermissionsExt;
 
 fn main() {
     let email = env::args()
