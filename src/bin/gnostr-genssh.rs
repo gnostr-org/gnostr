@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
+use std::io::Result;
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
@@ -9,13 +9,14 @@ fn main() {
         .nth(1)
         .unwrap_or_else(|| "gnostr@gnostr.org".to_string());
 
-    let home_dir = env::var("HOME").expect("HOME environment variable not set");
+    let home_dir = env::var("HOME")
+        .or_else(|_| env::var("USERPROFILE"))
+        .expect("HOME or USERPROFILE environment variable not set");
     let ssh_dir = PathBuf::from(&home_dir).join(".ssh");
     let authorized_keys_file = ssh_dir.join("authorized_keys");
 
     println!("Starting SSH permissions setup...");
 
-    // 1. Check if the ~/.ssh directory exists. If not, create it.
     if !ssh_dir.exists() {
         println!(
             "Directory '{}' does not exist. Creating it...",
@@ -33,7 +34,6 @@ fn main() {
         println!("Directory '{}' already exists.", ssh_dir.display());
     }
 
-    // Call ssh-keygen
     println!("Generating SSH key pair (gnostr-gnit-key)...");
     let key_file_name = "gnostr-gnit-key";
     let output = Command::new("ssh-keygen")
@@ -43,6 +43,8 @@ fn main() {
         .arg(ssh_dir.join(key_file_name))
         .arg("-C")
         .arg(&email)
+        .arg("-N")
+        .arg("")
         .output();
 
     match output {
@@ -65,9 +67,11 @@ fn main() {
         }
     }
 
-    // 2. Set permissions for the ~/.ssh directory to 700 (drwx------).
-    println!("Setting permissions for '{}' to 700...", ssh_dir.display());
-    if let Err(e) = set_permissions(&ssh_dir, 0o700) {
+    // 2. Set permissions for the ~/.ssh directory.
+    // On Windows, setting specific "mode" bits like 700 directly isn't equivalent.
+    // We'll aim for "owner only" via readonly and then rely on ACLs for security.
+    println!("Setting permissions for '{}'...", ssh_dir.display());
+    if let Err(e) = set_directory_permissions(&ssh_dir) {
         eprintln!(
             "Error: Failed to set permissions for '{}'. {}",
             ssh_dir.display(),
@@ -75,17 +79,17 @@ fn main() {
         );
         exit(1);
     } else {
-        println!("Permissions for '{}' set to 700.", ssh_dir.display());
+        println!("Permissions for '{}' adjusted for OS.", ssh_dir.display());
     }
 
     // 3. Set permissions for the authorized_keys file.
     if authorized_keys_file.exists() {
         println!("File '{}' found.", authorized_keys_file.display());
         println!(
-            "Setting permissions for '{}' to 600...",
+            "Setting permissions for '{}'...",
             authorized_keys_file.display()
         );
-        if let Err(e) = set_permissions(&authorized_keys_file, 0o600) {
+        if let Err(e) = set_file_permissions(&authorized_keys_file) {
             eprintln!(
                 "Error: Failed to set permissions for '{}'. {}",
                 authorized_keys_file.display(),
@@ -94,7 +98,7 @@ fn main() {
             exit(1);
         } else {
             println!(
-                "Permissions for '{}' set to 600.",
+                "Permissions for '{}' adjusted for OS.",
                 authorized_keys_file.display()
             );
         }
@@ -111,13 +115,7 @@ fn main() {
     }
 
     // 4. Set permissions for private SSH keys.
-    let private_key_types = vec![
-        "id_rsa",
-        "id_dsa",
-        "id_ecdsa",
-        "id_ed25519",
-        "gnostr-gnit-key",
-    ];
+    let private_key_types = vec!["id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", key_file_name];
 
     println!("Checking for and setting permissions for private SSH keys...");
     for key_type in private_key_types {
@@ -125,10 +123,10 @@ fn main() {
         if private_key_file.exists() {
             println!("Private key '{}' found.", private_key_file.display());
             println!(
-                "Setting permissions for '{}' to 600...",
+                "Setting permissions for '{}'...",
                 private_key_file.display()
             );
-            if let Err(e) = set_permissions(&private_key_file, 0o600) {
+            if let Err(e) = set_file_permissions(&private_key_file) {
                 eprintln!(
                     "Error: Failed to set permissions for '{}'. {}",
                     private_key_file.display(),
@@ -137,7 +135,7 @@ fn main() {
                 exit(1);
             } else {
                 println!(
-                    "Permissions for '{}' set to 600.",
+                    "Permissions for '{}' adjusted for OS.",
                     private_key_file.display()
                 );
             }
@@ -147,12 +145,14 @@ fn main() {
     }
 
     // 5. Set permissions for public SSH keys.
+
+    let binding = key_file_name.to_owned() + ".pub";
     let public_key_types = vec![
         "id_rsa.pub",
         "id_dsa.pub",
         "id_ecdsa.pub",
         "id_ed25519.pub",
-        "gnostr-gnit-key.pub",
+        &binding,
     ];
 
     println!("Checking for and setting permissions for public SSH keys...");
@@ -160,11 +160,8 @@ fn main() {
         let public_key_file = ssh_dir.join(key_type);
         if public_key_file.exists() {
             println!("Public key '{}' found.", public_key_file.display());
-            println!(
-                "Setting permissions for '{}' to 644...",
-                public_key_file.display()
-            );
-            if let Err(e) = set_permissions(&public_key_file, 0o644) {
+            println!("Setting permissions for '{}'...", public_key_file.display());
+            if let Err(e) = set_public_key_permissions(&public_key_file) {
                 eprintln!(
                     "Error: Failed to set permissions for '{}'. {}",
                     public_key_file.display(),
@@ -173,7 +170,7 @@ fn main() {
                 exit(1);
             } else {
                 println!(
-                    "Permissions for '{}' set to 644.",
+                    "Permissions for '{}' adjusted for OS.",
                     public_key_file.display()
                 );
             }
@@ -181,37 +178,113 @@ fn main() {
             println!("Public key '{}' not found.", public_key_file.display());
         }
     }
-
-    println!("SSH permissions setup complete.");
-    println!("You can verify permissions with:");
-    println!("ls -ld ~/.ssh");
-    println!("ls -l ~/.ssh/");
 }
 
-// Helper function to set file permissions
-fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
-    // Detect specific operating systems
+// Function to set permissions for directories
+fn set_directory_permissions(path: &Path) -> Result<()> {
     #[cfg(target_os = "macos")]
     {
-        println!("Running on macOS!");
-        // macOS-specific code here
+        use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(path)?.permissions();
-        perms.set_mode(mode);
+        perms.set_mode(0o700); // rwx------
         fs::set_permissions(path, perms)
     }
 
     #[cfg(target_os = "linux")]
     {
-        println!("Running on Linux!");
-        // Linux-specific code here
+        use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(path)?.permissions();
-        perms.set_mode(mode);
+        perms.set_mode(0o700); // rwx------
         fs::set_permissions(path, perms)
     }
 
     #[cfg(target_os = "windows")]
     {
-        println!("Running on Windows!");
-        // Windows-specific code here
+        // On Windows, there's no direct equivalent to chmod for directories to make them owner-only
+        // using just standard library `Permissions`.
+        // The `SetFileAttributes` function (which `set_permissions` uses) primarily sets
+        // flags like `FILE_ATTRIBUTE_READONLY`.
+        // For true granular control (like owner-only), you need to work with ACLs.
+        // For SSH, the critical part is that the user account running SSH *can* access these files,
+        // and that other users *cannot*. Relying on default Windows permissions where only the
+        // current user has full control is often sufficient for ~/.ssh.
+        // If a stricter ACL is needed, a crate like `windows-permissions` or direct WinAPI calls
+        // would be necessary. For this script, we'll ensure it's not world-writable via the
+        // `set_readonly(true)` if it's a file, but for directories, `create_dir_all` often
+        // inherits sensible permissions. We'll simply ensure it's not marked as readonly.
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_readonly(false); // Ensure it's not read-only
+        fs::set_permissions(path, perms)?;
+        println!("  (Windows: Relying on default ACLs for directory permissions.)");
+        Ok(())
+    }
+}
+
+// Function to set permissions for private files (like private keys, authorized_keys)
+fn set_file_permissions(path: &Path) -> Result<()> {
+    #[cfg(target_os = "macos")]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(0o600); // rw-------
+        fs::set_permissions(path, perms)
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(0o600); // rw-------
+        fs::set_permissions(path, perms)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows, setting a file to "600" (owner read/write only) means ensuring
+        // it's not set as FILE_ATTRIBUTE_READONLY and that its ACL only grants
+        // the current user full control. `set_readonly(true)` makes it *more* restricted.
+        // For private keys, we want to ensure only the owner can read/write.
+        // The `std::fs::set_permissions` function on Windows corresponds to `SetFileAttributes`.
+        // Setting `set_readonly(true)` is the closest standard library equivalent to restrict
+        // writes, but true owner-only access usually involves ACL manipulation.
+        // SSH on Windows generally expects the private key file to *not* be accessible
+        // by other users. The default file creation permissions often achieve this.
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_readonly(true); // Attempt to make it read-only for all, closest to 600
+        fs::set_permissions(path, perms)?;
+        println!("  (Windows: Set file to read-only attribute. For stronger security, consider manual ACL review.)");
+        Ok(())
+    }
+}
+
+// Function to set permissions for public files (like public keys)
+fn set_public_key_permissions(path: &Path) -> Result<()> {
+    #[cfg(target_os = "macos")]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(0o644); // rw-r--r--
+        fs::set_permissions(path, perms)
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_mode(0o644); // rw-r--r--
+        fs::set_permissions(path, perms)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        // For public keys (644), we want owner read/write, others read.
+        // On Windows, this translates to ensuring it's not marked as readonly,
+        // and relying on default ACLs that typically allow read by "Everyone"
+        // and write by "Owner" (or administrators).
+        let mut perms = fs::metadata(path)?.permissions();
+        perms.set_readonly(false); // Ensure it's not read-only
+        fs::set_permissions(path, perms)?;
+        println!("  (Windows: Ensured public key is not read-only. Default ACLs usually allow broader read access.)");
+        Ok(())
     }
 }
