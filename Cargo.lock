@@ -3219,7 +3219,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.111"
+version = "0.0.112"
 dependencies = [
  "anyhow",
  "argparse",
@@ -3544,7 +3544,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-query"
-version = "0.0.8"
+version = "0.0.9"
 dependencies = [
  "clap 4.5.37",
  "futures 0.3.31",

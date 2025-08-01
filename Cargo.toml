@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.111"
+version = "0.0.112"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -104,7 +104,7 @@ git2 = "^0.18" ## asyncgit ^0.19
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.4", default-features = false }
 gnostr-crawler = { version = "0.0.8", path = "crawler" }
-gnostr-query = { version = "0.0.8", path = "query" }
+gnostr-query = { version = "0.0.9", path = "query" }
 gnostr-types = { version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
 
