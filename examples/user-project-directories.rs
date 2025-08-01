@@ -1,4 +1,5 @@
-use directories::ProjectDirs;
+extern crate directories;
+use directories::{BaseDirs, ProjectDirs, UserDirs};
 
 fn main() {
     println!("--- Project Directories ---");
@@ -7,8 +8,8 @@ fn main() {
     // qualifier: usually a reverse domain name (e.g., "com.mycompany")
     // organization: Your company or organization name
     // application: Your application name
-    if let Some(proj_dirs) = ProjectDirs::from("com", "MyCompany", "MyRustApp") {
-        //println!("Application Name: {}", proj_dirs.application_name());
+    if let Some(proj_dirs) = ProjectDirs::from("org", "gnostr", "gnostr") {
+        println!("ProjectDirs: {:?}", proj_dirs);
 
         if let Some(config_dir) = proj_dirs.config_dir().to_str() {
             println!("Config Dir: {}", config_dir);

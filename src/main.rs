@@ -12,7 +12,9 @@ use serde::ser::StdError;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
-    env::set_var("BLOCKHEIGHT", blockheight::blockheight_sync());
+    env::set_var("WEEBLE", "0");
+    env::set_var("BLOCKHEIGHT", "0");
+    env::set_var("WOBBLE", "0");
     let mut args: GnostrCli = GnostrCli::parse();
     let app_cache = get_app_cache_path();
     let _logging = if args.logging {
@@ -68,6 +70,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(&args.nsec.unwrap().to_string(), sub_command_args).await
+        }
+        Some(GnostrCommands::Legit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::legit::legit(sub_command_args).await
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);

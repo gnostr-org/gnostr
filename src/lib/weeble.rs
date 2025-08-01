@@ -1,10 +1,7 @@
 use crate::blockheight::{blockheight_async, blockheight_sync};
 use log::debug;
-use reqwest;
-use reqwest::Url;
-use std::io::Read;
+use std::env;
 use std::time::SystemTime;
-
 /// pub fn weeble() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn weeble() -> Result<f64, ascii::AsciiChar> {
@@ -24,6 +21,7 @@ pub fn weeble_sync() -> Result<f64, ascii::AsciiChar> {
     let blockheight = blockheight_sync();
     let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
     let weeble = seconds as f64 / tmp_u64 as f64;
+    env::set_var("WEEBLE", weeble.clone().to_string());
     return Ok(weeble.floor());
 }
 /// pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar>
@@ -41,6 +39,7 @@ pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar> {
     let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
     //gnostr-chat uses millis
     let weeble = now_millis as f64 / tmp_u64 as f64;
+    env::set_var("WEEBLE_MILLIS", weeble.clone().to_string());
     return Ok(weeble.floor());
 }
 /// pub async fn weeble_async() -> Result<f64, ascii::AsciiChar>
@@ -57,6 +56,7 @@ pub async fn weeble_async() -> Result<f64, ascii::AsciiChar> {
     let blockheight = blockheight_async();
     let tmp_u64 = blockheight.await.parse::<u64>().unwrap_or(0);
     let weeble = seconds as f64 / tmp_u64 as f64;
+    env::set_var("WEEBLE", weeble.clone().to_string());
     return Ok(weeble.floor());
 }
 /// pub fn weeble_millis_async() -> Result<f64, ascii::AsciiChar>

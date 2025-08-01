@@ -32,6 +32,8 @@ pub mod gnostr;
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
 pub mod keys;
+///  <https://docs.rs/gnostr/latest/gnostr/legit/index.html>
+pub mod legit;
 ///  <https://docs.rs/gnostr/latest/gnostr/login/index.html>
 pub mod login;
 ///  <https://docs.rs/gnostr/latest/gnostr/notify_mutex/index.html>
@@ -123,7 +125,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
-    ProjectDirs::from("ngit", "gnostr", ".gnostr").ok_or(anyhow!(
+    ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
 }
@@ -399,9 +401,8 @@ pub fn fetch_by_id(url: &str, id: IdHex) -> Option<Event> {
     }
 }
 
-use crate::utils::pwd::pwd;
 pub fn get_pwd() -> Result<String, &'static str> {
-    let mut no_nl = pwd().unwrap().to_string();
+    let mut no_nl = crate::utils::pwd::pwd().unwrap().to_string();
     no_nl.retain(|c| c != '\n');
     return Ok(format!("{  }", no_nl));
 }
