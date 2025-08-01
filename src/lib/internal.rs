@@ -1,12 +1,11 @@
 use crate::blockheight::blockheight_sync;
 use crate::utils::pwd::pwd;
-use crate::weeble::{weeble_async, weeble_sync};
-use crate::wobble::{wobble_async, wobble_sync};
+use crate::weeble::weeble_sync;
+use crate::wobble::wobble_sync;
 use base64::Engine;
 use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
 use log::debug;
-use std::process::Command;
 use tungstenite::protocol::Message;
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
