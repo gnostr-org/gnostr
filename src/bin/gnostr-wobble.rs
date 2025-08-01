@@ -123,7 +123,7 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-wobble
-use gnostr::wobble::{wobble, wobble_millis_sync, wobble_sync};
+use gnostr::wobble::{/*wobble, */ wobble_millis_sync, wobble_sync};
 use std::env;
 ///
 /// wobble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
@@ -153,6 +153,7 @@ mod tests {
     use gnostr::get_wobble_async;
     use gnostr::get_wobble_sync;
     use gnostr::global_rt::global_rt;
+    use gnostr::wobble::{wobble, wobble_sync};
     /// cargo test --bin gnostr-wobble -- --nocapture
     #[test]
     fn gnostr_wobble() {
