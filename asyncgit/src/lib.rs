@@ -47,7 +47,6 @@ mod diff;
 mod error;
 mod fetch_job;
 mod filter_commits;
-//mod gitui;
 mod progress;
 mod pull;
 mod push;

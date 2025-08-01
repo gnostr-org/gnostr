@@ -8,6 +8,7 @@ pub mod delete_event;
 pub mod delete_profile;
 pub mod generate_keypair;
 pub mod hide_public_channel_message;
+pub mod legit;
 pub mod list_events;
 pub mod mute_publickey;
 pub mod ngit;

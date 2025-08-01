@@ -30,7 +30,7 @@ pub async fn launch() -> Result<()> {
     }
 
     #[cfg(test)]
-    let mut client: &crate::client::MockConnect = &mut Default::default();
+    let client: &crate::client::MockConnect = &mut Default::default();
     #[cfg(not(test))]
     let mut client = Client::default();
 
