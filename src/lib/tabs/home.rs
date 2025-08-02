@@ -36,7 +36,7 @@ use crate::{
         TopicList,
     },
     keys::{key_match, SharedKeyConfig},
-    popups::{DisplayChatOpen, FileTreeOpen, InspectChatOpen, InspectCommitOpen},
+    popups::{FileTreeOpen, InspectChatOpen, InspectCommitOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order},
     try_or_popup,
