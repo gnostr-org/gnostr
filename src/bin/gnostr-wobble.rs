@@ -123,64 +123,16 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-wobble
-//!
-//! async reqwest to <https://mempool.space/api/blocks/tip/height>
-use futures::executor::block_on;
+use gnostr::wobble::{/*wobble, */ wobble_millis_sync, wobble_sync};
 use std::env;
 ///
-/// weeble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
+/// wobble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
 ///
-/// Weebles wobble, but they don't fall down
-/// <https://en.wikipedia.org/wiki/Weeble>
+/// wobbles wobble, but they don't fall down
+/// <https://en.wikipedia.org/wiki/wobble>
 ///
-/// async fn print_wobble()
-///
-/// let wobble = gnostr::get_wobble();
-///
-/// print!("{}",wobble.unwrap());
-pub async fn print_wobble(millis: bool) {
-    #[cfg(debug_assertions)]
-    let start = std::time::SystemTime::now()
-        .duration_since(std::time::SystemTime::UNIX_EPOCH)
-        .expect("get millis error");
-    #[cfg(debug_assertions)]
-    let seconds = start.as_secs();
-    #[cfg(debug_assertions)]
-    let start_subsec_millis = start.subsec_millis() as u64;
-    #[cfg(debug_assertions)]
-    let start_millis = seconds * 1000 + start_subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("start_millis: {}", start_millis);
-
-    if millis {
-        let wobble = gnostr::get_wobble_millis();
-        print!("{}", wobble.unwrap());
-    } else {
-        let wobble = gnostr::get_wobble();
-        print!("{}", wobble.unwrap());
-    }
-
-    #[cfg(debug_assertions)]
-    let stop = std::time::SystemTime::now()
-        .duration_since(std::time::SystemTime::UNIX_EPOCH)
-        .expect("get millis error");
-    #[cfg(debug_assertions)]
-    let seconds = stop.as_secs();
-    #[cfg(debug_assertions)]
-    let stop_subsec_millis = stop.subsec_millis() as u64;
-    #[cfg(debug_assertions)]
-    let stop_millis = seconds * 1000 + stop_subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("\nstop_millis: {}", stop_millis);
-    #[cfg(debug_assertions)]
-    println!("\ndelta_millis: {}", stop_millis - start_millis);
-}
 
 /// fn main()
-///
-///let future = print_wobble();
-///
-/// futures::executor::block_on(future);
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name
@@ -189,16 +141,75 @@ fn main() {
         None => "false".to_string(), // Default value if no argument is provided
     };
     if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
-        let future = print_wobble(true);
-        block_on(future);
+        print!("{}", wobble_millis_sync().unwrap().to_string());
     } else {
-        let future = print_wobble(false);
-        block_on(future);
+        print!("{}", wobble_sync().unwrap().to_string());
     }
 }
-/// cargo test --bin gnostr-wobble -- --nocapture
-#[test]
-fn gnostr_wobble() {
-    //let future = print_wobble(); // Nothing is printed
-    //block_on(future);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gnostr::get_wobble_async;
+    use gnostr::get_wobble_sync;
+    use gnostr::global_rt::global_rt;
+    use gnostr::wobble::{wobble, wobble_sync};
+    /// cargo test --bin gnostr-wobble -- --nocapture
+    #[test]
+    fn gnostr_wobble() {
+        print!("\nwobble:{}\n", wobble().unwrap().to_string());
+        print!("\nwobble_sync:{}\n", wobble_sync().unwrap().to_string());
+        print!(
+            "\nwobble_millis_sync:{}\n",
+            wobble_millis_sync().unwrap().to_string()
+        );
+    }
+
+    #[test]
+    fn test_wobble_global_rt() {
+        let rt1 = global_rt();
+        let rt2 = global_rt();
+
+        // Ensure that the same runtime is returned each time.
+        assert!(std::ptr::eq(rt1, rt2));
+
+        // Ensure the runtime is functional by spawning a simple task.
+        rt1.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-wobble:main test begin...");
+                main();
+                println!("\ngnostr-wobble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+        // Ensure the runtime is functional by spawning a simple task.
+        rt2.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-wobble:main test begin...");
+                main();
+                println!("\ngnostr-wobble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+        rt1.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-wobble:main test begin...");
+                let _ = get_wobble_async().await;
+                println!("\ngnostr-wobble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+        rt1.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-wobble:main test begin...");
+                let _ = get_wobble_sync();
+                println!("\ngnostr-wobble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+    }
 }

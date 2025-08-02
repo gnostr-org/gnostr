@@ -4,7 +4,7 @@ use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::{blockheight, sub_commands};
 use sha2::{Digest, Sha256};
 use std::env;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::FmtSubscriber;
 
@@ -12,7 +12,9 @@ use serde::ser::StdError;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
-    env::set_var("BLOCKHEIGHT", blockheight::blockheight_sync());
+    env::set_var("WEEBLE", "0");
+    env::set_var("BLOCKHEIGHT", "0");
+    env::set_var("WOBBLE", "0");
     let mut args: GnostrCli = GnostrCli::parse();
     let app_cache = get_app_cache_path();
     let _logging = if args.logging {
@@ -68,6 +70,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(&args.nsec.unwrap().to_string(), sub_command_args).await
+        }
+        Some(GnostrCommands::Legit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::legit::legit(sub_command_args).await
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);

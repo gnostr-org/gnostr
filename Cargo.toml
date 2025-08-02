@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.111"
+version = "0.0.112"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -53,25 +53,18 @@ regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
 trace-libgit = ["gnostr-asyncgit/trace-libgit"]
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
-##serde_json = "1.0"
-##serde = { version = "1.0.152", features = ["derive"] }
-#tokio = { version = "1", features = ["full"] }
-##futures = "0.3.25"
 
 [dependencies]
-#notify-debouncer-mini = "0.2.0"
-
 anyhow = "1.0.75"
+argparse    = "0.2.2"
 ascii = "1.1.0"
 async-std = "1.12"
 async-trait = "0.1.73"
 
 ##nostr
-#async-trait = "0.1.73"
 auth-git2 = "0.5.5"
 backtrace = "0.3"
 base64 = "0.21"
-#log = "0.4"
 bincode = "1.3.1"
 bitcoin_hashes = "0.14.0"
 bitflags = "2.6"
@@ -86,29 +79,19 @@ colored = "2.0.0"
 colorful = "0.2"
 comrak = "0.18.0"
 console = "0.15.7"
-##clap = { version = "4.5", features = ["env", "cargo"] }
 crossbeam-channel = "0.5"
-#clap = { version = "4.3.19", features = ["derive"] }
-#console = "0.15.7"
 crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
-#clap = { version = "4.5.6", features = ["derive"] }
 csv = "1.3.0"
-#clap = { version = "4.2", features = ["derive"] }
-#serde = { version = "1.0", features = ["derive"] }
 ctrlc = { version = "3.2", features = ["termination"] }
 dialoguer = "0.10.4"
 directories = "5.0.1"
-#crossterm = { version = "0.28", features = ["serde"] }
 dirs = "5.0.1"
 easy-cast = "0.5"
-#dialoguer = "0.10.4"
-#directories = "5.0.1"
 env_logger = "0.11"
 filetreelist = { path = "./filetreelist", version = "0.5" }
 
 flume = "0.10"
 futures = "0.3.28"
-#futures = "0.3.28"
 futures-core = { version = "0.3", optional = false, default-features = false }
 futures-timer = "3.0"
 futures-util = "0.3"
@@ -121,12 +104,9 @@ git2 = "^0.18" ## asyncgit ^0.19
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.4", default-features = false }
 gnostr-crawler = { version = "0.0.8", path = "crawler" }
-gnostr-query = { version = "0.0.8", path = "query" }
+gnostr-query = { version = "0.0.9", path = "query" }
 gnostr-types = { version = "0.7.6", path = "types" }
-#gnostr-types = "0.7.6"
 gnostr_qr = { version = "0.0.7", path = "qr" }
-#gpui = "0.1.0"
-#gpui-component = "0.1.0"
 
 hex = "0.4"
 hostname = "0.3.1"
@@ -135,8 +115,6 @@ indexmap = "2"
 indicatif = "0.17.7"
 itertools = "0.13"
 k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
-##gnostr-tui provides ngit
-##gnostr-tui = { version = "0.0.62", path = "crates/tui" }
 #indicatif = "0.17.7"
 keyring = "2.0.5"
 lazy_static = "1.4"
@@ -150,26 +128,20 @@ libp2p = { version = "0.54.1", features = [
 
 log = "0.4"
 
-#nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
-
-#nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
 
-#nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
 nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
-#nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
+
 nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 
-##cli
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 
-##primary nostr dep
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
 
 notify = "6.1"
@@ -178,6 +150,7 @@ num-bigint = "0.4.6"
 
 num_cpus = "1.16.0"
 once_cell = "1.21.3"
+pad = "0.1.6"
 #once_cell = "1"
 # pin until upgrading this does not introduce a duplicate dependency
 parking_lot_core = "=0.9.9"
@@ -194,6 +167,7 @@ ron = "0.8"
 rpassword = "7.2"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
+rust-crypto = "0.2.36"
 scopeguard = "1.2"
 scopetime = { path = "./scopetime", version = "0.1" }
 scrypt = "0.11.0"
@@ -201,16 +175,11 @@ secp256k1 = { version = "0.31.0", features = ["hashes"] }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 serde_yaml = "0.9.27"
-#serde = { version = "1.0.181", features = ["derive"] }
-#serde_json = "1.0.105"
-#serde_yaml = "0.9.27"
 serial_test = "2.0.0"
 sha2 = "0.10.8"
 sha256 = "1.5.0"
-#serde = "1.0"
 shellexpand = "3.1"
 shellwords = "1.1.0"
-#anyhow = "1.0"
 simple_logger = "4.1"
 simplelog = { version = "0.12", default-features = false }
 struct-patch = "0.4"
@@ -226,12 +195,11 @@ tempfile = "3.5.0"
 tera = "1.18.1"
 textwrap = "0.16.0"
 thiserror = "1"
-time = "0.1.39"
+time        = "0.1.42"
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] }
 
 toml = "0.7.3"
-##tracing = { version = "0.1.37", features = ["std", "attributes"] }
 tracing = { version = "0.1.38", default-features = false }
 tracing-core = "0.1.33"
 
@@ -239,7 +207,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 trust-dns-resolver = "0.23" # Use the latest version
 tui-input = "0.10.1"
 tui-textarea = "0.6"
-##tokio-tungstenite = "0.20"
 tungstenite = { version = "0.21", features = [ "rustls-tls-webpki-roots" ] }
 two-face = { version = "0.4.0", default-features = false }
 unicode-segmentation = "1.12"
@@ -258,15 +225,12 @@ sd-notify = "0.4.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [dev-dependencies]
-##cargo-depgraph = "1.6.0"
-##nostr
 env_logger = "0.11"
 gnostr-bins = "0.0.71"
 gnostr-cat = "0.0.40"
 gnostr-xq = "0.0.3"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
-##examples/sniper
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 serial_test = "2.0.0"
@@ -282,7 +246,6 @@ test_utils = { path = "test_utils" }
 ###
 ###
 tokio = { version = "1", features = ["full"] } # Required for async operations
-##trust-dns-resolver = "0.23" # Use the latest version
 tungstenite = { version = "0.21.0", features = ["native-tls"] }
 url = "2.2.2"
 
