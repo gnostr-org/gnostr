@@ -241,12 +241,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         } else {
                             //TODO refresh and query topic nostr DMs
-                            let m =
-                                msg::Msg::default() //default Msg type Chat
-                                    .set_content(
-                                        "<:> vim like command prompt".to_string(),
-                                        0 as usize,
-                                    );
+                            let m = msg::Msg::default() //default Msg type Chat
+                                .set_content(
+                                    format!(
+                                        "{}/{}/{}>{}",
+                                        &env::var("WEEBLE").unwrap(),
+                                        &env::var("BLOCKHEIGHT").unwrap(),
+                                        &env::var("WOBBLE").unwrap(),
+                                        "<:>".to_string()
+                                    ),
+                                    0 as usize,
+                                );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
