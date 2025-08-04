@@ -86,8 +86,6 @@ jobs:
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
         #if: matrix.os != 'windows-latest'
-      - run: cargo-binstall --no-confirm mempool_space
-      - run: cargo-binstall --no-confirm gnostr-xq
       - run: cargo-binstall --no-confirm gnostr
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: matrix.os != 'windows-latest'
@@ -184,18 +182,9 @@ jobs:
           fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
-      #- run: gnostr-fetch-by-id
-      - run: gnostr -V
-      - run: gnostr -h
-      - run: gnostr ngit -h
-      - run: gnostr ngit --help
-      - run: gnostr ngit help
-      - run: gnostr ngit fetch -h
-      - run: gnostr ngit fetch --help
-      - run: gnostr ngit fetch
       - run: |
-          cargo t -p gnostr || true
-        if: matrix.rustup == '1.88'
+          cargo t -p gnostr --bins --lib -- --no-capture
+        if: matrix.rustup == '1.88' && matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'

@@ -123,9 +123,7 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-weeble
-//!
-//! async reqwest to <https://mempool.space/api/blocks/tip/height>
-use futures::executor::block_on;
+use gnostr::weeble::{/*weeble, */ weeble_millis_sync, weeble_sync};
 use std::env;
 ///
 /// weeble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
@@ -133,54 +131,8 @@ use std::env;
 /// Weebles wobble, but they don't fall down
 /// <https://en.wikipedia.org/wiki/Weeble>
 ///
-/// async fn print_weeble()
-///
-/// let weeble = gnostr::get_weeble();
-///
-/// print!("{}",weeble.unwrap());
-pub async fn print_weeble(millis: bool) {
-    #[cfg(debug_assertions)]
-    let start = std::time::SystemTime::now()
-        .duration_since(std::time::SystemTime::UNIX_EPOCH)
-        .expect("get millis error");
-    #[cfg(debug_assertions)]
-    let seconds = start.as_secs();
-    #[cfg(debug_assertions)]
-    let start_subsec_millis = start.subsec_millis() as u64;
-    #[cfg(debug_assertions)]
-    let start_millis = seconds * 1000 + start_subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("start_millis: {}", start_millis);
-
-    if millis {
-        let weeble = gnostr::get_weeble_millis();
-        print!("{}", weeble.unwrap());
-    } else {
-        let weeble = gnostr::get_weeble();
-        print!("{}", weeble.unwrap());
-    }
-
-    #[cfg(debug_assertions)]
-    let stop = std::time::SystemTime::now()
-        .duration_since(std::time::SystemTime::UNIX_EPOCH)
-        .expect("get millis error");
-    #[cfg(debug_assertions)]
-    let seconds = stop.as_secs();
-    #[cfg(debug_assertions)]
-    let stop_subsec_millis = stop.subsec_millis() as u64;
-    #[cfg(debug_assertions)]
-    let stop_millis = seconds * 1000 + stop_subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("\nstop_millis: {}", stop_millis);
-    #[cfg(debug_assertions)]
-    println!("\ndelta_millis: {}", stop_millis - start_millis);
-}
 
 /// fn main()
-///
-///let future = print_weeble();
-///
-/// futures::executor::block_on(future);
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name
@@ -189,16 +141,75 @@ fn main() {
         None => "false".to_string(), // Default value if no argument is provided
     };
     if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
-        let future = print_weeble(true);
-        block_on(future);
+        print!("{}", weeble_millis_sync().unwrap().to_string());
     } else {
-        let future = print_weeble(false);
-        block_on(future);
+        print!("{}", weeble_sync().unwrap().to_string());
     }
 }
-/// cargo test --bin gnostr-weeble -- --nocapture
-#[test]
-fn gnostr_weeble() {
-    //let future = print_weeble(); // Nothing is printed
-    //block_on(future);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gnostr::get_weeble_async;
+    use gnostr::get_weeble_sync;
+    use gnostr::global_rt::global_rt;
+    use gnostr::weeble::{weeble, weeble_sync};
+    /// cargo test --bin gnostr-weeble -- --nocapture
+    #[test]
+    fn gnostr_weeble() {
+        print!("\nweeble:{}\n", weeble().unwrap().to_string());
+        print!("\nweeble_sync:{}\n", weeble_sync().unwrap().to_string());
+        print!(
+            "\nweeble_millis_sync:{}\n",
+            weeble_millis_sync().unwrap().to_string()
+        );
+    }
+
+    #[test]
+    fn test_weeble_global_rt() {
+        let rt1 = global_rt();
+        let rt2 = global_rt();
+
+        // Ensure that the same runtime is returned each time.
+        assert!(std::ptr::eq(rt1, rt2));
+
+        // Ensure the runtime is functional by spawning a simple task.
+        rt1.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-weeble:main test begin...");
+                main();
+                println!("\ngnostr-weeble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+        // Ensure the runtime is functional by spawning a simple task.
+        rt2.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-weeble:main test begin...");
+                main();
+                println!("\ngnostr-weeble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+        rt1.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-weeble:main test begin...");
+                let _ = get_weeble_async().await;
+                println!("\ngnostr-weeble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+        rt1.block_on(async {
+            let _ = tokio::spawn(async {
+                println!("gnostr-weeble:main test begin...");
+                let _ = get_weeble_sync();
+                println!("\ngnostr-weeble:main test end...");
+            })
+            .await
+            .unwrap();
+        });
+    }
 }

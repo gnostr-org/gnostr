@@ -8,30 +8,20 @@ use super::{
 use crate::{
     accessors,
     app::Environment,
-    chat,
     keys::{key_match, SharedKeyConfig},
     strings,
 };
 use anyhow::Result;
 use chat_details::CompareDetailsComponent;
-use crossterm::event::Event as CrossTermEvent;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use details::DetailsComponent;
 use gnostr_asyncgit::{
     sync::{commit_files::OldNew, CommitTags},
     AsyncCommitFiles, CommitFilesParams,
 };
-use nostr_0_34_1::prelude::Tag;
-use nostr_database_0_34_0::{
-    nostr::event::Event, nostr::types::filter::Filter, NostrDatabase, Order,
-};
-use nostr_sqlite_0_34_0::SQLiteDatabase;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     Frame,
 };
-use std::time::Duration;
-use tracing_subscriber::fmt::format::FmtSpan;
 
 pub struct ChatDetailsComponent {
     commit: Option<CommitFilesParams>,

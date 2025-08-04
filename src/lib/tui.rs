@@ -26,10 +26,8 @@
 //TODO:
 // #![deny(clippy::expect_used)]
 
-use std::{
-    cell::RefCell,
-    time::{Duration, Instant},
-};
+use chrono::{Local, Timelike};
+use std::{cell::RefCell, time::Instant};
 
 use crate::app::App;
 use crate::app::QuitState;
@@ -39,12 +37,8 @@ use crate::spinner::Spinner;
 use crate::sub_commands::tui::*;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
-use anyhow::{bail, Result};
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
-use crossterm::{
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
-};
+use anyhow::Result;
+use crossbeam_channel::{never, tick, unbounded};
 use gnostr_asyncgit::{
     sync::{utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
@@ -52,6 +46,12 @@ use gnostr_asyncgit::{
 use scopetime;
 use scopetime::scope_time;
 
+use crate::blockhash::blockhash_async;
+use crate::blockheight::blockheight_async;
+use crate::weeble::weeble_async;
+use crate::wobble::wobble_async;
+use std::env;
+use tracing::debug;
 /// # Errors
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
@@ -108,6 +108,34 @@ pub async fn run_app(
     log::trace!("app start: {} ms", app_start.elapsed().as_millis());
 
     loop {
+        let my_string = "hello".to_string();
+        let my_string2 = "hello".to_string();
+
+        //// Check if the current second is odd
+        //let handle = tokio::spawn(async {
+        //    let now = Local::now();
+
+        //    // Get the current second
+        //    let current_second = now.second();
+
+        //    if current_second % 2 != 0 {
+        //        debug!("Current second ({}) is odd!", current_second);
+        //        //env::set_var("BLOCKHEIGHT", &blockheight_async().await);
+        //        env::set_var("WEEBLE", &weeble_async().await.unwrap().to_string());
+        //        //env::set_var("BLOCKHASH", &blockhash_async().await);
+        //    } else {
+        //        debug!(
+        //            "Current second ({}) is even. Skipping this iteration.",
+        //            current_second
+        //        );
+        //    }
+        //});
+
+        //debug!("Still running other things while the task is awaited...");
+
+        //handle.await.unwrap_or(()); // Wait for the async task to complete
+        //debug!("All done!");
+
         let event = if first_update {
             first_update = false;
             QueueEvent::Notify
@@ -125,6 +153,35 @@ pub async fn run_app(
         {
             if matches!(event, QueueEvent::SpinnerUpdate) {
                 spinner.update();
+
+                //let my_string = "hello".to_string();
+                //let my_string2 = "hello".to_string();
+
+                //// Check if the current second is odd
+                //let handle = tokio::spawn(async {
+                //    let now = Local::now();
+
+                //    // Get the current second
+                //    let current_second = now.second();
+
+                //    if current_second % 2 != 0 {
+                //        debug!("Current second ({}) is odd!", current_second);
+                //        //env::set_var("BLOCKHEIGHT", &blockheight_async().await);
+                //        env::set_var("WEEBLE", &weeble_async().await.unwrap().to_string());
+                //        //env::set_var("BLOCKHASH", &blockhash_async().await);
+                //    } else {
+                //        debug!(
+                //            "Current second ({}) is even. Skipping this iteration.",
+                //            current_second
+                //        );
+                //    }
+                //});
+
+                //debug!("Still running other things while the task is awaited...");
+
+                //handle.await.unwrap_or(()); // Wait for the async task to complete
+                //debug!("All done!");
+
                 spinner.draw(terminal)?;
                 continue;
             }
