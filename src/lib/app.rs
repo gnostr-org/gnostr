@@ -3,6 +3,7 @@ use std::{
     env,
     path::{Path, PathBuf},
     rc::Rc,
+    thread,
 };
 
 use crate::blockheight::blockheight_sync;
@@ -377,17 +378,13 @@ impl App {
 
         self.update_commands();
 
+        Self::set_env();
         Ok(())
     }
 
     ///
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
-
-        env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
-        env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
-        log::debug!("WEEBLE: {:?}", env::var("WEEBLE"));
-
         if let AsyncNotification::Git(ev) = ev {
             //chat_tab.update_git
             self.chat_tab.update_git(ev)?;
@@ -651,10 +648,19 @@ impl App {
         self.cmdbar.borrow_mut().set_cmds(self.commands(false));
     }
 
+    fn set_env() {
+        let _ = thread::spawn(move || {
+            env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
+            env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
+            log::debug!("WEEBLE: {:?}", env::var("WEEBLE"));
+        }); //handle.join().unwrap();
+    }
     fn process_queue(&mut self, flags: NeedsUpdate) -> Result<()> {
         let mut flags = flags;
         let new_flags = self.process_internal_events()?;
         flags.insert(new_flags);
+
+        Self::set_env();
 
         if flags.contains(NeedsUpdate::ALL) {
             self.update()?;
@@ -682,6 +688,7 @@ impl App {
     }
 
     fn open_popup(&mut self, popup: StackablePopupOpen) -> Result<()> {
+        //Self::set_env();
         match popup {
             StackablePopupOpen::BlameFile(params) => {
                 self.blame_file_popup.open(params)?;
@@ -730,6 +737,7 @@ impl App {
     }
 
     fn process_internal_events(&mut self) -> Result<NeedsUpdate> {
+        //Self::set_env();
         let mut flags = NeedsUpdate::empty();
 
         loop {
@@ -764,6 +772,8 @@ impl App {
                 self.msg_popup.show_info(msg.as_str())?;
                 flags.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
             }
+
+            //
             InternalEvent::Update(u) => flags.insert(u),
             //
             InternalEvent::OpenCommit => self.commit_popup.show()?,

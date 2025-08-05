@@ -664,6 +664,48 @@ impl TopicList {
         Line::from(txt)
     }
 
+    fn get_nip34_text(&self, height: usize, width: usize) -> Vec<Line> {
+        let selection = self.relative_selection();
+        let mut txt: Vec<Line> = Vec::with_capacity(height);
+        let any_marked = !self.marked.is_empty();
+        for (idx, e) in self
+            .items
+            .iter()
+            .skip(self.scroll_top.get())
+            .take(height)
+            .enumerate()
+        {
+            let marked = if any_marked {
+                self.is_marked(&e.id)
+            } else {
+                None
+            };
+
+            ////txt.push("topiclist:695:text".into());
+            txt.push(
+                format!(
+                    "{}/{}/{}",
+                    env::var("WEEBLE").unwrap().to_string(),
+                    env::var("BLOCKHEIGHT").unwrap(),
+                    env::var("WOBBLE").unwrap().to_string()
+                )
+                .into(), //wobble_sync().unwrap()).into()
+            );
+            //get_detail_to_add
+            //txt.push(self.get_detail_to_add(
+            //    e,
+            //    idx + self.scroll_top.get() == selection,
+            //    self.remote_branches_string(e),
+            //    &self.theme,
+            //    width - 6 as usize,
+            //    now,
+            //    marked,
+            //));
+            txt.push("topiclist:708:text".into());
+        }
+
+        txt
+    }
     fn get_detail_text(&self, height: usize, width: usize) -> Vec<Line> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
@@ -695,16 +737,16 @@ impl TopicList {
                 None
             };
 
-            //txt.push("topiclist:695:text".into());
-            txt.push(
-                format!(
-                    "{}/{}/{}",
-                    env::var("WEEBLE").unwrap().to_string(),
-                    env::var("BLOCKHEIGHT").unwrap(),
-                    env::var("WOBBLE").unwrap().to_string()
-                )
-                .into(), //wobble_sync().unwrap()).into()
-            );
+            ////txt.push("topiclist:695:text".into());
+            //txt.push(
+            //    format!(
+            //        "{}/{}/{}",
+            //        env::var("WEEBLE").unwrap().to_string(),
+            //        env::var("BLOCKHEIGHT").unwrap(),
+            //        env::var("WOBBLE").unwrap().to_string()
+            //    )
+            //    .into(), //wobble_sync().unwrap()).into()
+            //);
             //get_detail_to_add
             txt.push(self.get_detail_to_add(
                 e,
@@ -958,7 +1000,7 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(3),       //help and tools height
+                    Constraint::Length(10),      //help and tools height
                     Constraint::Length(3),       //timer
                     Constraint::Percentage(100), //table
                 ]
@@ -984,7 +1026,7 @@ impl DrawableComponent for TopicList {
         );
         self.current_size.set(Some(current_size));
 
-        let topic_height_in_lines = 1 as usize; //current_size.1 as usize;
+        let topic_height_in_lines = 8 as usize; //current_size.1 as usize;
         let selection = self.relative_selection();
 
         self.scroll_top.set(calc_scroll_top(
@@ -999,22 +1041,16 @@ impl DrawableComponent for TopicList {
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
         );
-        //let more_text = format!(
-        //    " {} {}/{} ",
-        //    self.title,
-        //    self.commits.len().saturating_sub(self.selection),
-        //    self.commits.len(),
-        //);
+        if self.selection == self.commits.len() {}
 
-        //render commit info in topiclist
-        //
         f.render_widget(
+            //topic scroll list
             Paragraph::new(
-                self.get_topic_text(topic_height_in_lines, (current_size.0 + 10) as usize),
+                self.get_topic_text(topic_height_in_lines, (current_size.0 + 0) as usize),
             )
             .block(
                 Block::default()
-                    .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
+                    .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
                     .title(Span::styled(
                         format!(
                             "self.get_topic_text:pubkey--->{:>}<---",
@@ -1029,19 +1065,20 @@ impl DrawableComponent for TopicList {
             .alignment(Alignment::Left),
             left_chunks[0],
         );
+
         //TODO nip-0034 git stuff display
         f.render_widget(
-            Paragraph::new(self.get_detail_text(
+            Paragraph::new(self.get_nip34_text(
                 10 as usize * topic_height_in_lines,
-                (current_size.0 - 6) as usize,
+                (current_size.0 - 10) as usize,
             ))
             .block(
                 Block::default()
-                    .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
+                    .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
                     //.borders(Borders::ALL)
                     .title(Span::styled(
                         format!(
-                            "1032:more_detail--->{:>}<---",
+                            "1049:more_detail--->{:>}<---",
                             //"{}",
                             title.as_str().to_owned(),
                             //more_text.as_str()
@@ -1054,26 +1091,27 @@ impl DrawableComponent for TopicList {
             left_chunks[1],
         );
         //TODO p2p/nostr chat box
-        f.render_widget(
-            Paragraph::new(
-                self.get_chat_text(current_size.0 as usize, (current_size.0 + 10) as usize),
-            )
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(Span::styled(
-                        format!(
-                            "1052:self.get_chat_text:chat widget--->{:>}",
-                            title.as_str().to_owned(),
-                            //more_text.as_str()
-                        ),
-                        self.theme.title(true),
-                    ))
-                    .border_style(self.theme.block(true)),
-            )
-            .alignment(Alignment::Left),
-            left_chunks[2], //constrain to half width
-        );
+
+        //f.render_widget(
+        //    Paragraph::new(
+        //        self.get_chat_text(current_size.0 as usize, (current_size.0 + 10) as usize),
+        //    )
+        //    .block(
+        //        Block::default()
+        //            .borders(Borders::ALL)
+        //            .title(Span::styled(
+        //                format!(
+        //                    "1052:self.get_chat_text:chat widget--->{:>}",
+        //                    title.as_str().to_owned(),
+        //                    //more_text.as_str()
+        //                ),
+        //                self.theme.title(true),
+        //            ))
+        //            .border_style(self.theme.block(true)),
+        //    )
+        //    .alignment(Alignment::Left),
+        //    left_chunks[2], //constrain to half width
+        //);
 
         //draw_scrollbar(
         //    f,
