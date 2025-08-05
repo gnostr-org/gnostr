@@ -1,5 +1,3 @@
-use crate::weeble::{weeble_async, weeble_sync};
-use crate::wobble_sync;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
@@ -664,46 +662,19 @@ impl TopicList {
         Line::from(txt)
     }
 
-    fn get_nip34_text(&self, height: usize, width: usize) -> Vec<Line> {
-        let selection = self.relative_selection();
-        let mut txt: Vec<Line> = Vec::with_capacity(height);
-        let any_marked = !self.marked.is_empty();
-        for (idx, e) in self
-            .items
-            .iter()
-            .skip(self.scroll_top.get())
-            .take(height)
-            .enumerate()
-        {
-            let marked = if any_marked {
-                self.is_marked(&e.id)
-            } else {
-                None
-            };
-
-            ////txt.push("topiclist:695:text".into());
-            txt.push(
-                format!(
-                    "{}/{}/{}",
-                    env::var("WEEBLE").unwrap().to_string(),
-                    env::var("BLOCKHEIGHT").unwrap(),
-                    env::var("WOBBLE").unwrap().to_string()
-                )
-                .into(), //wobble_sync().unwrap()).into()
-            );
-            //get_detail_to_add
-            //txt.push(self.get_detail_to_add(
-            //    e,
-            //    idx + self.scroll_top.get() == selection,
-            //    self.remote_branches_string(e),
-            //    &self.theme,
-            //    width - 6 as usize,
-            //    now,
-            //    marked,
-            //));
-            txt.push("topiclist:708:text".into());
-        }
-
+    fn get_weeble_bh_wobble(&self, height: usize, width: usize) -> Vec<Line> {
+        let mut txt: Vec<Line> = Vec::with_capacity(1);
+        txt.push(
+            format!(
+                "{}/{}/{}",
+                env::var("WEEBLE").unwrap_or("".to_string()).to_string(),
+                env::var("BLOCKHEIGHT")
+                    .unwrap_or("".to_string())
+                    .to_string(),
+                env::var("WOBBLE").unwrap_or("".to_string()).to_string()
+            )
+            .into(),
+        );
         txt
     }
     fn get_detail_text(&self, height: usize, width: usize) -> Vec<Line> {
@@ -737,17 +708,6 @@ impl TopicList {
                 None
             };
 
-            ////txt.push("topiclist:695:text".into());
-            //txt.push(
-            //    format!(
-            //        "{}/{}/{}",
-            //        env::var("WEEBLE").unwrap().to_string(),
-            //        env::var("BLOCKHEIGHT").unwrap(),
-            //        env::var("WOBBLE").unwrap().to_string()
-            //    )
-            //    .into(), //wobble_sync().unwrap()).into()
-            //);
-            //get_detail_to_add
             txt.push(self.get_detail_to_add(
                 e,
                 idx + self.scroll_top.get() == selection,
@@ -1000,8 +960,8 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(10),      //help and tools height
-                    Constraint::Length(3),       //timer
+                    Constraint::Length(1),       //weeble_bh_wobble
+                    Constraint::Length(10),      //timer
                     Constraint::Percentage(100), //table
                 ]
                 .as_ref(),
@@ -1043,6 +1003,31 @@ impl DrawableComponent for TopicList {
         );
         if self.selection == self.commits.len() {}
 
+        //TODO nip-0034 git stuff display
+        f.render_widget(
+            Paragraph::new(self.get_weeble_bh_wobble(
+                10 as usize * topic_height_in_lines,
+                (current_size.0 - 10) as usize,
+            ))
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT)
+                    ////.borders(Borders::ALL)
+                    //.title(Span::styled(
+                    //    format!(
+                    //        "1049:more_detail--->{:>}<---",
+                    //        //"{}",
+                    //        title.as_str().to_owned(),
+                    //        //more_text.as_str()
+                    //    ),
+                    //    self.theme.title(true),
+                    //))
+                    .border_style(self.theme.block(false)),
+            )
+            .alignment(Alignment::Right),
+            left_chunks[0],
+        );
+
         f.render_widget(
             //topic scroll list
             Paragraph::new(
@@ -1063,33 +1048,9 @@ impl DrawableComponent for TopicList {
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
-            left_chunks[0],
-        );
-
-        //TODO nip-0034 git stuff display
-        f.render_widget(
-            Paragraph::new(self.get_nip34_text(
-                10 as usize * topic_height_in_lines,
-                (current_size.0 - 10) as usize,
-            ))
-            .block(
-                Block::default()
-                    .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-                    //.borders(Borders::ALL)
-                    .title(Span::styled(
-                        format!(
-                            "1049:more_detail--->{:>}<---",
-                            //"{}",
-                            title.as_str().to_owned(),
-                            //more_text.as_str()
-                        ),
-                        self.theme.title(true),
-                    ))
-                    .border_style(self.theme.block(false)),
-            )
-            .alignment(Alignment::Left),
             left_chunks[1],
         );
+
         //TODO p2p/nostr chat box
 
         //f.render_widget(
