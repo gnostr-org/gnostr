@@ -996,7 +996,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            "topiclist.rs:984: {} {}/{} ",
+            "999:{} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -1012,16 +1012,6 @@ impl DrawableComponent for TopicList {
             .block(
                 Block::default()
                     .borders(Borders::LEFT | Borders::RIGHT)
-                    ////.borders(Borders::ALL)
-                    //.title(Span::styled(
-                    //    format!(
-                    //        "1049:more_detail--->{:>}<---",
-                    //        //"{}",
-                    //        title.as_str().to_owned(),
-                    //        //more_text.as_str()
-                    //    ),
-                    //    self.theme.title(true),
-                    //))
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Right),
@@ -1037,12 +1027,7 @@ impl DrawableComponent for TopicList {
                 Block::default()
                     .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
                     .title(Span::styled(
-                        format!(
-                            "self.get_topic_text:pubkey--->{:>}<---",
-                            //"{}",
-                            title.as_str().to_owned(),
-                            //more_text.as_str()
-                        ),
+                        format!("{:>}", title.as_str().to_owned(),),
                         self.theme.title(true),
                     ))
                     .border_style(self.theme.block(false)),
@@ -1074,14 +1059,14 @@ impl DrawableComponent for TopicList {
         //    left_chunks[2], //constrain to half width
         //);
 
-        //draw_scrollbar(
-        //    f,
-        //    area,
-        //    &self.theme,
-        //    self.commits.len(),
-        //    self.selection,
-        //    Orientation::Vertical,
-        //);
+        draw_scrollbar(
+            f,
+            left_chunks[1],
+            &self.theme,
+            self.commits.len(),
+            self.selection,
+            Orientation::Vertical,
+        );
         //
         Ok(())
     }
