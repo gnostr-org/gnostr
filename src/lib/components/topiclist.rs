@@ -5,6 +5,8 @@ use gnostr_asyncgit::sync::{
 };
 use indexmap::IndexSet;
 use itertools::Itertools;
+use nostr_0_34_1::Alphabet;
+use nostr_sdk_0_34_0::nips::nip01;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
@@ -12,7 +14,9 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use std::collections::HashSet;
 use std::env;
+use std::path::Path;
 use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
 
 use super::utils::logitems::{ItemBatch, LogEntry};
@@ -23,8 +27,11 @@ use crate::{
         utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
         EventState, ScrollType,
     },
+    git::Repo,
     keys::{key_match, SharedKeyConfig},
+    login::get_curent_user,
     queue::{InternalEvent, Queue},
+    repo_ref::{get_repo_coordinates_from_git_config, try_and_get_repo_coordinates},
     strings::{self, symbol},
     try_or_popup,
     ui::{
@@ -995,9 +1002,35 @@ impl DrawableComponent for TopicList {
             selection,
         ));
 
+        // Get the HashSet
+        let coordinates =
+            get_repo_coordinates_from_git_config(&Repo::from_path(&Path::new(".").to_path_buf())?)?;
+
+        // Get a single coordinate (or handle the case where the set is empty)
+        if let Some(first_coordinate) = coordinates.iter().next() {
+            // You would need to figure out how to get a char from the coordinate
+            // Maybe something like first_coordinate.get_char()?
+
+            //// A hypothetical fix for the `get_char` error
+            if let Some(first_char) = first_coordinate.identifier.chars().next() {
+                // ... use first_char here
+                //	println!("{}", first_char);
+            } else {
+                // Handle the case where the identifier is empty
+                // For example, return an error or use a default character
+                //	println!("......");
+            }
+
+            //let alphabet = Alphabet::from_char(character_from_coord)?;
+            //// Now you can use the `alphabet` variable.
+        } else {
+            //	println!("......");
+        }
+
         let title = format!(
-            "999:{} {}/{} ",
+            "999:{} {:?} {}/{} ",
             self.title,
+            get_curent_user(&Repo::from_path(&Path::new(".").to_path_buf())?).unwrap(), //alphabet,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
         );
