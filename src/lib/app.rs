@@ -385,7 +385,9 @@ impl App {
     ///
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
+        Self::set_env();
         if let AsyncNotification::Git(ev) = ev {
+            //Self::set_env();
             //chat_tab.update_git
             self.chat_tab.update_git(ev)?;
             //
@@ -660,7 +662,7 @@ impl App {
         let new_flags = self.process_internal_events()?;
         flags.insert(new_flags);
 
-        Self::set_env();
+        //Self::set_env();
 
         if flags.contains(NeedsUpdate::ALL) {
             self.update()?;
@@ -737,13 +739,13 @@ impl App {
     }
 
     fn process_internal_events(&mut self) -> Result<NeedsUpdate> {
-        //Self::set_env();
         let mut flags = NeedsUpdate::empty();
 
         loop {
             let front = self.queue.pop();
             if let Some(e) = front {
                 flags.insert(self.process_internal_event(e)?);
+                Self::set_env();
             } else {
                 break;
             }
