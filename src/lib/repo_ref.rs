@@ -255,7 +255,7 @@ pub async fn try_and_get_repo_coordinates(
     Ok(repo_coordinates)
 }
 
-fn get_repo_coordinates_from_git_config(git_repo: &Repo) -> Result<HashSet<Coordinate>> {
+pub fn get_repo_coordinates_from_git_config(git_repo: &Repo) -> Result<HashSet<Coordinate>> {
     let mut repo_coordinates = HashSet::new();
     if let Some(repo_override) = git_repo.get_git_config_item("nostr.repo", Some(false))? {
         for s in repo_override.split(',') {
