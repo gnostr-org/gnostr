@@ -46,7 +46,7 @@ pub async fn blockheight_async() -> String {
 }
 pub fn blockheight_sync() -> String {
     let blockheight = ureq_sync("https://mempool.space/api/blocks/tip/height".to_string())
-        .unwrap()
+        .unwrap_or("0".to_string())
         .to_string();
     env::set_var("BLOCKHEIGHT", blockheight.clone().to_string());
     blockheight
