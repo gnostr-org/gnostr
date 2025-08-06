@@ -1,6 +1,4 @@
 use crate::utils::{ureq_async, ureq_sync};
-use chrono::{Local, Timelike};
-use log::debug;
 use reqwest::Url;
 use std::env;
 use std::io::Read;
@@ -22,23 +20,7 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
 
     //let bh = get_blockheight();
     //println!("{}",bh.unwrap());
-    let mut url = Url::parse("https://mempool.space/api/blocks/tip/height").unwrap();
-
-    let now = Local::now();
-
-    // Get the current second
-    let current_second = now.second();
-
-    if current_second % 2 != 0 {
-        debug!("Current second ({}) is odd!", current_second);
-        url = Url::parse("https://bitcoin.gob.sv/api/blocks/tip/height").unwrap();
-    } else {
-        debug!(
-            "Current second ({}) is even. Skipping this iteration.",
-            current_second
-        );
-    }
-
+    let url = Url::parse("https://mempool.space/api/blocks/tip/height").unwrap();
     let mut res = reqwest::blocking::get(url).unwrap();
 
     let mut tmp_string = String::new();
@@ -64,7 +46,7 @@ pub async fn blockheight_async() -> String {
 }
 pub fn blockheight_sync() -> String {
     let blockheight = ureq_sync("https://mempool.space/api/blocks/tip/height".to_string())
-        .unwrap_or("".to_string())
+        .unwrap_or("0".to_string())
         .to_string();
     env::set_var("BLOCKHEIGHT", blockheight.clone().to_string());
     blockheight
