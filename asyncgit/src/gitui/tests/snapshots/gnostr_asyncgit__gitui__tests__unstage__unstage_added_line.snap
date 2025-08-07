@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/unstage.rs
+expression: ctx.redact_buffer()
+---
+ On branch main                                                                 |
+                                                                                |
+ Unstaged changes (1)                                                           |
+ modified   firstfile                                                           |
+ @@ -1 +1,2 @@                                                                  |
+▌+weehooo                                                                       |
+  blrergh                                                                       |
+                                                                                |
+ Staged changes (1)                                                             |
+ modified   firstfile                                                           |
+ @@ -1,2 +1 @@                                                                  |
+ -testing                                                                       |
+ -testtest                                                                      |
+ +blrergh                                                                       |
+                                                                                |
+ Recent commits                                                                 |
+ 95a979d main add firstfile                                                     |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git apply --cached --reverse --recount                                        |
+styles_hash: 6e19913f88d78443
