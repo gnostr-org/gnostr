@@ -7,11 +7,15 @@ use std::str;
 use std::{error::Error, time::Duration};
 
 use futures::stream::StreamExt;
+use libp2p::kad::store::Error as KadError;
 use libp2p::PeerId;
 use libp2p::StreamProtocol;
 use libp2p::{
     identify, kad,
-    kad::{store::MemoryStore, store::MemoryStoreConfig, Mode, Record, RecordKey},
+    kad::{
+        store::MemoryStore, store::MemoryStoreConfig, store::RecordStore, Mode, PutRecordError,
+        Quorum, Record, RecordKey,
+    },
     mdns, noise, ping, rendezvous,
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux,
@@ -229,11 +233,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             tracing::debug!("The maximum value for usize is: {}", std::usize::MAX);
             //handle large git commit diffs
-            let mut store_config = MemoryStoreConfig {
-                max_records: usize::MAX,
+            let store_config = MemoryStoreConfig {
+                max_records: (1024 * 1024),
                 max_value_bytes: usize::MAX,
                 max_providers_per_key: usize::MAX,
-                max_provided_keys: usize::MAX,
+                max_provided_keys: (1024 * 1024),
             };
 
             let ipfs_store = kad::store::MemoryStore::with_config(
@@ -296,6 +300,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .behaviour_mut()
             .kademlia
             .add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
+        swarm
+            .behaviour_mut()
+            .commit_message
+            .add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
+        swarm
+            .behaviour_mut()
+            .commit_diff
+            .add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
     }
 
     // TODO get weeble/blockheight/wobble
@@ -323,7 +335,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         //run
         let result = run(&args, &mut swarm.behaviour_mut().kademlia).await;
-        log::trace!("result={:?}", result);
+        log::info!("result={:?}", result);
+        //let result = run(&args, &mut swarm.behaviour_mut().ipfs).await;
+        //log::trace!("result={:?}", result);
+        //let result = run(&args, &mut swarm.behaviour_mut().commit_message).await;
+        //log::trace!("result={:?}", result);
+        //let result = run(&args, &mut swarm.behaviour_mut().commit_diff).await;
+        //log::trace!("result={:?}", result);
 
         select! {
                 Ok(Some(line)) = stdin.next_line() => {
@@ -561,7 +579,7 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
             std::process::exit(0);
         }
         _ => {
-            tracing::debug!("\nGET, GET_PROVIDERS, PUT, PUT_PROVIDER <commit_hash>");
+            tracing::info!("\nGET, GET_PROVIDERS, PUT, PUT_PROVIDER <commit_hash>");
             eprint!("gnostr> ");
         }
     }
@@ -642,6 +660,19 @@ fn match_with_parent(
 }
 
 async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<(), GitError> {
+    // Assuming you have a Kademlia instance named `kademlia`
+    let keystore: &MemoryStore = kademlia.store_mut();
+
+    // Now you can get the length of the keystore
+    let num_records = keystore.records().len();
+
+    tracing::info!("The number of records in the keystore is: {}", num_records);
+
+    if num_records >= 1024 {
+        tracing::info!("The number of records in the keystore is: {}", num_records);
+        //std::process::exit(0);
+    }
+
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
 
@@ -802,19 +833,42 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         let value = Vec::from(commit.message_bytes());
         tracing::debug!("value={:?}", value.clone());
 
+        let quorum = Quorum::from(Quorum::Majority);
         let record = kad::Record {
             key,
             value,
             publisher: None,
             expires: None,
         };
-        kademlia
-            .put_record(record, kad::Quorum::One)
-            .expect("Failed to store record locally.");
+
+        match kademlia.put_record(record, quorum) {
+            Ok(query_id) => {
+                // Record was successfully put locally, and a query was started.
+                tracing::debug!(
+                    "Successfully started put_record query with ID: {:?}",
+                    query_id
+                );
+            }
+            Err(e) => {
+                // The put_record call failed. Handle the error here.
+                eprintln!("Failed to put record: {:?}", e);
+                // You could also specifically check for the MaxRecords error
+                if let libp2p::kad::store::Error::MaxRecords = e {
+                    eprintln!("The record could not be stored due to the MaxRecords limit.");
+                    // Maybe you want to evict an old record here, or just log and continue.
+                }
+            }
+        }
+
+        //        kademlia
+        //            //commit_message
+        //            .put_record(record, quorum)
+        //            .expect("Failed to store record locally.");
         let key = kad::RecordKey::new(&format!("{}", &commit.id()));
-        kademlia
-            .start_providing(key)
-            .expect("Failed to start providing key");
+        ////kademlia
+        //commit_message
+        //    .start_providing(key)
+        //    .expect("Failed to start providing key");
 
         let repo_path = "."; // Path to your Git repository
         let repo = Repository::discover(repo_path).expect("Failed to open repository");
@@ -834,25 +888,45 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             }
         }
 
-        ////store git commit diff <commit_hash>-diff
-        //let key = kad::RecordKey::new(&format!("{}-diff", &commit.id()));
-        //let diff = get_commit_diff_as_string(&repo, commit.id());
-        //tracing::debug!("diff={:?}", diff?);
-        //let value = get_commit_diff_as_bytes(&repo, commit.id())?;
+        //store git commit diff <commit_hash>-diff
+        let key = kad::RecordKey::new(&format!("{}-diff", &commit.id()));
+        let diff = get_commit_diff_as_string(&repo, commit.id());
+        tracing::debug!("diff={:?}", diff?);
+        let value = get_commit_diff_as_bytes(&repo, commit.id())?;
 
-        //let record = kad::Record {
-        //    key,
-        //    value,
-        //    publisher: None,
-        //    expires: None,
-        //};
-        //kademlia
-        //    .put_record(record, kad::Quorum::One)
-        //    .expect("Failed to store record locally.");
-        //let key = kad::RecordKey::new(&format!("{}", &commit.id()));
-        //kademlia
-        //    .start_providing(key)
-        //    .expect("Failed to start providing key");
+        let record = kad::Record {
+            key,
+            value,
+            publisher: None,
+            expires: None,
+        };
+
+        match kademlia.put_record(record, quorum) {
+            Ok(query_id) => {
+                // Record was successfully put locally, and a query was started.
+                tracing::debug!(
+                    "Successfully started put_record query with ID: {:?}",
+                    query_id
+                );
+            }
+            Err(e) => {
+                // The put_record call failed. Handle the error here.
+                eprintln!("Failed to put record: {:?}", e);
+                // You could also specifically check for the MaxRecords error
+                if let libp2p::kad::store::Error::MaxRecords = e {
+                    eprintln!("The record could not be stored due to the MaxRecords limit.");
+                    // Maybe you want to evict an old record here, or just log and continue.
+                }
+            }
+        }
+
+        //        kademlia
+        //            .put_record(record, kad::Quorum::One)
+        //            .expect("Failed to store record locally.");
+        let key = kad::RecordKey::new(&format!("{}", &commit.id()));
+        kademlia
+            .start_providing(key)
+            .expect("Failed to start providing key");
 
         ////println!("commit.tree_id={}", &commit.tree_id());
         //let key = kad::RecordKey::new(&format!("{}", &commit.tree_id()));
