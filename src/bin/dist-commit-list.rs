@@ -234,13 +234,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
             tracing::debug!("The maximum value for usize is: {}", std::usize::MAX);
             //handle large git commit diffs
             let store_config = MemoryStoreConfig {
-                max_records: (1024 * 1024),
+                max_records: usize::MAX,
                 max_value_bytes: usize::MAX,
                 max_providers_per_key: usize::MAX,
-                max_provided_keys: (1024 * 1024),
+                max_provided_keys: usize::MAX,
             };
 
             let ipfs_store = kad::store::MemoryStore::with_config(
+                key.public().to_peer_id(),
+                store_config.clone(),
+            );
+            let kademlia_store = kad::store::MemoryStore::with_config(
                 key.public().to_peer_id(),
                 store_config.clone(),
             );
@@ -250,6 +254,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             );
             let commit_diff =
                 kad::store::MemoryStore::with_config(key.public().to_peer_id(), store_config);
+
             Ok(Behaviour {
                 ipfs: kad::Behaviour::with_config(
                     key.public().to_peer_id(),
@@ -264,7 +269,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 commit_diff: kad::Behaviour::with_config(
                     key.public().to_peer_id(),
                     commit_diff,
-                    ipfs_cfg,
+                    ipfs_cfg.clone(),
                 ),
                 identify: identify::Behaviour::new(identify::Config::new(
                     "/yamux/1.0.0".to_string(),
@@ -276,9 +281,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(1)),
                 ),
-                kademlia: kad::Behaviour::new(
+                kademlia: kad::Behaviour::with_config(
                     key.public().to_peer_id(),
-                    MemoryStore::new(key.public().to_peer_id()),
+                    kademlia_store,
+                    ipfs_cfg.clone(),
                 ),
                 mdns: mdns::tokio::Behaviour::new(
                     mdns::Config::default(),
@@ -551,9 +557,29 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
                 publisher: None,
                 expires: None,
             };
-            kademlia
-                .put_record(record, kad::Quorum::One)
-                .expect("Failed to store record locally.");
+
+            match kademlia.put_record(record, Quorum::One) {
+                Ok(query_id) => {
+                    // Record was successfully put locally, and a query was started.
+                    tracing::debug!(
+                        "Successfully started put_record query with ID: {:?}",
+                        query_id
+                    );
+                }
+                Err(e) => {
+                    // The put_record call failed. Handle the error here.
+                    eprintln!("565:Failed to put record: {:?}", e);
+                    // You could also specifically check for the MaxRecords error
+                    if let libp2p::kad::store::Error::MaxRecords = e {
+                        eprintln!("The record could not be stored due to the MaxRecords limit.");
+                        // Maybe you want to evict an old record here, or just log and continue.
+                    }
+                }
+            }
+
+            //kademlia
+            //  .put_record(record, kad::Quorum::One)
+            //.expect("Failed to store record locally.");
         }
         Some("PUT_PROVIDER") => {
             let key = {
@@ -841,7 +867,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             expires: None,
         };
 
-        match kademlia.put_record(record, quorum) {
+        match kademlia.put_record(record, Quorum::One) {
             Ok(query_id) => {
                 // Record was successfully put locally, and a query was started.
                 tracing::debug!(
@@ -851,7 +877,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             }
             Err(e) => {
                 // The put_record call failed. Handle the error here.
-                eprintln!("Failed to put record: {:?}", e);
+                eprintln!("874:Failed to put record: {:?}", e);
                 // You could also specifically check for the MaxRecords error
                 if let libp2p::kad::store::Error::MaxRecords = e {
                     eprintln!("The record could not be stored due to the MaxRecords limit.");
@@ -901,7 +927,8 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             expires: None,
         };
 
-        match kademlia.put_record(record, quorum) {
+        //match kademlia.put_record(record, quorum) {
+        match kademlia.put_record(record, Quorum::One) {
             Ok(query_id) => {
                 // Record was successfully put locally, and a query was started.
                 tracing::debug!(
@@ -911,7 +938,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             }
             Err(e) => {
                 // The put_record call failed. Handle the error here.
-                eprintln!("Failed to put record: {:?}", e);
+                eprintln!("934:Failed to put record: {:?}", e);
                 // You could also specifically check for the MaxRecords error
                 if let libp2p::kad::store::Error::MaxRecords = e {
                     eprintln!("The record could not be stored due to the MaxRecords limit.");
