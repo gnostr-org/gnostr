@@ -1,0 +1,44 @@
+use clap::{Parser, Subcommand};
+
+///
+#[derive(Default, Debug, Parser)]
+#[command(name = "gnostr-async")]
+#[command(flatten_help = true)]
+pub struct Args {
+    #[command(subcommand)]
+    ///
+    pub command: Option<Commands>,
+
+    /// Send keys on startup (eg: `gnostr-asyncgit -k ll`).
+    ///     It is possible to send:
+    ///     - single char-keys: a, b, c, ...
+    ///     - special keys: <backspace>, <enter>, <up>, <tab>, <delete>, <esc>, ...
+    ///     - modifiers: <ctrl+a>, <ctrl+shift+alt+a>, <shift+delete>
+    #[clap(short, long, verbatim_doc_comment)]
+    ///
+    pub keys: Option<String>,
+
+    /// Print one frame and exit. Useful for debugging.
+    #[clap(long, action)]
+    ///
+    pub print: bool,
+
+    /// Enable logging to 'gnostr-asyncgit.log'
+    #[clap(long, action)]
+    ///
+    pub log: bool,
+
+    #[clap(long, action)]
+    /// Print version
+    pub version: bool,
+}
+
+///
+#[derive(Debug, Subcommand)]
+pub enum Commands {
+    ///
+    Show {
+        ///
+        reference: String,
+    },
+}
