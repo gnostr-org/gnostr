@@ -1,0 +1,34 @@
+#!/bin/bash
+# A simple script to display basic system information and its own PID.
+
+echo "--- System Information ---"
+
+# Display hostname
+echo "Hostname: $(hostname)"
+
+# Display operating system and kernel version
+echo "OS/Kernel: $(uname -a)"
+
+# Display CPU information
+echo "CPU Model: $(grep -m 1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^[ \t]*//')"
+
+# Display total memory
+echo "Total Memory: $(free -h | awk '/^Mem:/ {print $2}')"
+
+# Display current user
+echo "Current User: $(whoami)"
+
+# Display current working directory
+echo "Current Directory: $(pwd)"
+
+echo "" # Blank line for separation
+
+echo "--- Script Information ---"
+
+# Display the script's own Process ID (PID)
+echo "Script PID: $$"
+
+# Display the name of the script itself
+echo "Script Name: $0"
+
+echo "Hello, World!"
