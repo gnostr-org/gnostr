@@ -342,7 +342,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         //run
         let result = run(&args, &mut swarm.behaviour_mut().kademlia).await;
-        log::info!("result={:?}", result);
+        log::debug!("loop::run::result={:?}", result);
         //let result = run(&args, &mut swarm.behaviour_mut().ipfs).await;
         //log::trace!("result={:?}", result);
         //let result = run(&args, &mut swarm.behaviour_mut().commit_message).await;
@@ -352,14 +352,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         select! {
                 Ok(Some(line)) = stdin.next_line() => {
-                    log::trace!("line.len()={}", line.len());
+                    tracing::debug!("line.len()={}", line.len());
                     if line.len() <= 3 {
-                    log::debug!("{:?}", swarm.local_peer_id());
+                    tracing::debug!("{:?}", swarm.local_peer_id());
                     for address in swarm.external_addresses() {
-                        log::trace!("{:?}", address);
+                        tracing::debug!("{:?}", address);
                     }
                     for peer in swarm.connected_peers() {
-                        log::trace!("{:?}", peer);
+                        tracing::debug!("{:?}", peer);
                     }
                     }
                     handle_input_line(&mut swarm.behaviour_mut().kademlia, line).await;
@@ -512,7 +512,7 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
             };
             let query_id = kademlia.get_record(key.clone());
             //print_record(record);
-            tracing::debug!(
+            tracing::info!(
                 "kademlia.get_record({})\n{}",
                 kademlia.get_record(key),
                 query_id
@@ -693,12 +693,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
     // Now you can get the length of the keystore
     let num_records = keystore.records().len();
 
-    tracing::debug!("The number of records in the keystore is: {}", num_records);
-
-    if num_records >= 1024 {
-        tracing::info!("The number of records in the keystore is: {}", num_records);
-        //std::process::exit(0);
-    }
+    tracing::trace!("The number of records in the keystore is: {}", num_records);
 
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
@@ -706,7 +701,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
     let tag_names = &repo.tag_names(Some("")).expect("REASON");
     for tag in tag_names {
         //println!("println!={}", tag.unwrap());
-        log::trace!("tag.unwrap()={}", tag.unwrap());
+        tracing::debug!("tag.unwrap()={}", tag.unwrap());
     }
 
     let mut revwalk = repo.revwalk()?;
@@ -854,7 +849,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
 
         //store git commit message
         let key = kad::RecordKey::new(&format!("{}", &commit.id()));
-        tracing::info!("857:key={:?}", hex::encode(key.clone().as_ref()));
+        tracing::trace!("857:key={:?}", hex::encode(key.clone().as_ref()));
 
         //push commit key and commit content as value
         //let value = Vec::from(commit.message_bytes().clone());
@@ -872,7 +867,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         match kademlia.put_record(record, quorum) {
             Ok(query_id) => {
                 // Record was successfully put locally, and a query was started.
-                tracing::debug!(
+                tracing::trace!(
                     "Successfully started put_record query with ID: {:?}",
                     query_id
                 );
@@ -913,7 +908,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
 
         //store git commit diff <commit_hash>-diff
         let key = kad::RecordKey::new(&format!("{}-diff", &commit.id()));
-        tracing::info!("919:key={:?}", hex::encode(key.clone().as_ref()));
+        tracing::trace!("911:key={:?}", hex::encode(key.clone().as_ref()));
         let diff = get_commit_diff_as_string(&repo, commit.id());
         tracing::trace!("diff=\n{:?}", diff?);
         let value = get_commit_diff_as_bytes(&repo, commit.id())?;
@@ -929,7 +924,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         match kademlia.put_record(record, Quorum::One) {
             Ok(query_id) => {
                 // Record was successfully put locally, and a query was started.
-                tracing::debug!(
+                tracing::trace!(
                     "Successfully started put_record query with ID: {:?}",
                     query_id
                 );
