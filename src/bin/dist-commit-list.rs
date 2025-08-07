@@ -3,6 +3,7 @@
 use clap::Parser;
 use git2::{Commit, Diff, DiffOptions, ObjectType, Oid, Repository, Signature, Time};
 use git2::{DiffFormat, Error as GitError, Pathspec};
+use hex;
 use std::str;
 use std::{error::Error, time::Duration};
 
@@ -561,7 +562,7 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
             match kademlia.put_record(record, Quorum::One) {
                 Ok(query_id) => {
                     // Record was successfully put locally, and a query was started.
-                    tracing::debug!(
+                    tracing::trace!(
                         "Successfully started put_record query with ID: {:?}",
                         query_id
                     );
@@ -692,7 +693,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
     // Now you can get the length of the keystore
     let num_records = keystore.records().len();
 
-    tracing::info!("The number of records in the keystore is: {}", num_records);
+    tracing::debug!("The number of records in the keystore is: {}", num_records);
 
     if num_records >= 1024 {
         tracing::info!("The number of records in the keystore is: {}", num_records);
@@ -845,19 +846,20 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         //TODO construct nostr event
         //commit_privkey
         let commit_privkey: String = String::from(format!("{:0>64}", &commit.id().clone()));
-        log::debug!("commit_privkey=\n{}", commit_privkey);
+        tracing::trace!("commit_privkey=\n{}", commit_privkey);
 
         //commit.id
         //we want to broadcast as provider for the actual commit.id()
-        log::debug!("&commit.id=\n{}", &commit.id());
+        tracing::debug!("&commit.id=\n{}", &commit.id());
 
         //store git commit message
         let key = kad::RecordKey::new(&format!("{}", &commit.id()));
+        tracing::info!("857:key={:?}", hex::encode(key.clone().as_ref()));
 
         //push commit key and commit content as value
         //let value = Vec::from(commit.message_bytes().clone());
         let value = Vec::from(commit.message_bytes());
-        tracing::debug!("value={:?}", value.clone());
+        tracing::trace!("value={:?}", value.clone());
 
         let quorum = Quorum::from(Quorum::Majority);
         let record = kad::Record {
@@ -867,7 +869,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             expires: None,
         };
 
-        match kademlia.put_record(record, Quorum::One) {
+        match kademlia.put_record(record, quorum) {
             Ok(query_id) => {
                 // Record was successfully put locally, and a query was started.
                 tracing::debug!(
@@ -886,15 +888,10 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             }
         }
 
-        //        kademlia
-        //            //commit_message
-        //            .put_record(record, quorum)
-        //            .expect("Failed to store record locally.");
         let key = kad::RecordKey::new(&format!("{}", &commit.id()));
-        ////kademlia
-        //commit_message
-        //    .start_providing(key)
-        //    .expect("Failed to start providing key");
+        kademlia
+            .start_providing(key)
+            .expect("Failed to start providing key");
 
         let repo_path = "."; // Path to your Git repository
         let repo = Repository::discover(repo_path).expect("Failed to open repository");
@@ -916,8 +913,9 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
 
         //store git commit diff <commit_hash>-diff
         let key = kad::RecordKey::new(&format!("{}-diff", &commit.id()));
+        tracing::info!("919:key={:?}", hex::encode(key.clone().as_ref()));
         let diff = get_commit_diff_as_string(&repo, commit.id());
-        tracing::debug!("diff={:?}", diff?);
+        tracing::trace!("diff=\n{:?}", diff?);
         let value = get_commit_diff_as_bytes(&repo, commit.id())?;
 
         let record = kad::Record {
@@ -947,9 +945,6 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             }
         }
 
-        //        kademlia
-        //            .put_record(record, kad::Quorum::One)
-        //            .expect("Failed to store record locally.");
         let key = kad::RecordKey::new(&format!("{}", &commit.id()));
         kademlia
             .start_providing(key)
@@ -999,7 +994,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         //println!("commit.raw_header={:?}", commit.raw_header());
         let raw_header_parts = commit.raw_header().clone().unwrap().split("\n");
         for part in raw_header_parts {
-            log::debug!("raw_header part={}:{}", part_index, part.replace("", ""));
+            log::trace!("raw_header part={}:{}", part_index, part.replace("", ""));
             part_index += 1;
         }
         //parts = commit.raw_header().clone().unwrap().split("gpgsig");
