@@ -119,12 +119,24 @@ k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 keyring = "2.0.5"
 lazy_static = "1.4"
 libp2p = { version = "0.54.1", features = [
-  "tokio",
+  "async-std",
+  "dns",
   "gossipsub",
+  "identify",
+  "kad",
+  "macros",
   "mdns",
-  "async-std", "noise", "macros", "ping", "tcp", "identify", "yamux", "relay", "quic"
-
-] }
+  "noise",
+  "ping",
+  "quic",
+  "relay",
+  "rendezvous",
+  "tcp",
+  "rsa",
+  "tcp",
+  "tokio",
+  "yamux"
+  ] }
 
 log = "0.4"
 
@@ -163,6 +175,7 @@ ratatui = { version = "0.28", default-features = false, features = [
 ] }
 rayon-core = "1.12"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+ring = "0.17.8"
 ron = "0.8"
 rpassword = "7.2"
 russh = { version = "0.37.1", features = ["openssl"] }
@@ -202,8 +215,9 @@ tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "ru
 toml = "0.7.3"
 tracing = { version = "0.1.38", default-features = false }
 tracing-core = "0.1.33"
+tracing-log = "0.2.0"
 
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "std", "fmt", "json"] }
 trust-dns-resolver = "0.23" # Use the latest version
 tui-input = "0.10.1"
 tui-textarea = "0.6"
