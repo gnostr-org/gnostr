@@ -1,119 +1,277 @@
-use std::str::FromStr;
-use std::sync::{Arc, Mutex};
-use clap::{Args, Parser, Subcommand};
-use nostr_rust::Identity;
-use nostr_rust::nostr_client::Client;
-use secp256k1::{KeyPair, Secp256k1, XOnlyPublicKey};
-use secp256k1::rand::rngs::OsRng;
+use anyhow::Result;
+use clap::{Parser /*, Subcommand*/};
+use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
+use gnostr::{blockheight, sub_commands};
+use sha2::{Digest, Sha256};
+use std::env;
+use tracing::{debug, trace};
+use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::FmtSubscriber;
 
-/// Simple CLI application to interact with nostr
-#[derive(Parser)]
-#[command(name = "nostr-tool")]
-#[command(author = "0xtr. <oxtrr@protonmail.com")]
-#[command(version = "0.1")]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    /// User private key
-    #[arg(short, long)]
-    privatekey: Option<String>,
-    /// Relay to connect to
-    #[arg(short, long, action = clap::ArgAction::Append)]
-    relay: Vec<String>,
-    /// Event kind
-    #[arg(short, long)]
-    kind: u32,
-    /// Text note content
-    #[arg(short, long)]
-    content: Option<String>,
-    /// Pubkey references
-    #[arg(long, action = clap::ArgAction::Append)]
-    ptag: Vec<String>,
-    #[arg(long, action = clap::ArgAction::Append)]
-    etag: Vec<String>,
-    /// Name value for kind 0 event
-    #[arg(long)]
-    name: Option<String>,
-    /// About value for kind 0 event
-    #[arg(long)]
-    about: Option<String>,
-    /// Picture value to set for kind 0 event
-    #[arg(long)]
-    picture: Option<String>,
-}
+use serde::ser::StdError;
 
-fn main() {
-    // Parse input
-    let args: Cli = Cli::parse();
-    // Parse and validate private key
-    let identity = match args.privatekey {
-        Some(pk) => {
-            println!("Using provided private key");
-            let identity = Identity::from_str(pk.as_str()).unwrap();
-            identity
-        }
-        None => {
-            println!("No private key provided, creating new identity");
-            let (secret_key, _) = nostr_rust::keys::get_random_secret_key();
-            let identity = Identity::from_str(&secret_key.display_secret().to_string()).unwrap();
-            println!("Using new private key {}", identity.secret_key.display_secret().to_string());
-            println!("Using new public key {}", identity.public_key.to_string());
-            identity
-        }
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn StdError>> {
+    env::set_var("WEEBLE", "0");
+    env::set_var("BLOCKHEIGHT", "0");
+    env::set_var("WOBBLE", "0");
+    let mut args: GnostrCli = GnostrCli::parse();
+    let app_cache = get_app_cache_path();
+    let _logging = if args.logging {
+        let logging = setup_logging();
+        trace!("{:?}", logging);
     };
-    let str_slice = args.relay.iter().map(String::as_str).collect();
-    // Set up relay connection(s)
-    let client = Arc::new(Mutex::new(
-        Client::new(str_slice).unwrap()
-    ));
+    let level = if args.debug {
+        LevelFilter::DEBUG
+    } else if args.trace {
+        LevelFilter::TRACE
+    } else if args.info {
+        LevelFilter::INFO
+    } else if args.warn {
+        LevelFilter::WARN
+    } else {
+        LevelFilter::OFF
+    };
+    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    trace!("{:?}", app_cache);
 
-    // Set up tags
-    let mut tags: Vec<Vec<String>> = vec![];
-    for tag in args.ptag.iter() {
-        let new_tag = vec![String::from("p"), String::from(tag)];
-        tags.push(new_tag);
+    let env_args: Vec<String> = env::args().collect();
+
+    for arg in &env_args {
+        trace!("arg={:?}", arg);
     }
-    for tag in args.etag.iter() {
-        let new_tag = vec![String::from("e"), String::from(tag)];
-        tags.push(new_tag);
+    if !args.hash.is_none() {
+        //not none
+        if let Some(input_string) = args.hash {
+            let mut hasher = Sha256::new();
+            hasher.update(input_string.as_bytes());
+            let result = hasher.finalize();
+            //Usage: gnostr --hash <string>
+            //Usage: gnostr --debug --hash <string>
+            if env_args.len().clone() >= 3 && env_args.len().clone() <= 4
+            /*--debug, --trace, --info, etc...*/
+            {
+                print!("{:x}", result);
+                std::process::exit(0);
+            }
+            args.nsec = format!("{:x}", result).into();
+        } else {
+        }
+    } else {
     }
 
     // Post event
-    match &args.kind {
-        0 => {
-            // Set metadata
-            let name = match &args.name {
-                Some(name) => Some(name.as_str()),
-                None => None,
-            };
-            let about = match &args.about {
-                Some(about) => Some(about.as_str()),
-                None => None,
-            };
-            let picture = match &args.picture {
-                Some(picture) => Some(picture.as_str()),
-                None => None,
-            };
-            client
-                .lock()
-                .unwrap()
-                .set_metadata(&identity, name, about, picture)
-                .unwrap();
+    match &args.command {
+        Some(GnostrCommands::Tui(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::tui::tui(sub_command_args).await
         }
-        1 => {
-            // Create text note
-            let content = match &args.content {
-                Some(content) => content,
-                None => panic!("Content must be set to create a kind 1 event")
-            };
-            let event = client
-                .lock()
-                .unwrap()
-                .publish_text_note(&identity, content, &tags)
-                .unwrap();
-            println!("Published text note with id: {}", event.id);
+        Some(GnostrCommands::Chat(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::chat::chat(&args.nsec.unwrap().to_string(), sub_command_args).await
         }
-        _ => {
-            panic!("Unknown event kind {}", args.kind)
+        Some(GnostrCommands::Legit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::legit::legit(sub_command_args).await
+        }
+        Some(GnostrCommands::Ngit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::ngit::ngit(sub_command_args).await
+        }
+        Some(GnostrCommands::SetMetadata(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            {
+                sub_commands::set_metadata::set_metadata(
+                    args.nsec,
+                    args.relays,
+                    args.difficulty_target,
+                    sub_command_args,
+                )
+            }
+            .await
+        }
+        Some(GnostrCommands::Note(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::note::broadcast_textnote(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::PublishContactListCsv(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::publish_contactlist_csv::publish_contact_list_from_csv_file(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::DeleteEvent(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::delete_event::delete(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::DeleteProfile(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::delete_profile::delete(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::React(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::react::react_to_event(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::ListEvents(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::list_events::list_events(args.relays, sub_command_args).await
+        }
+        Some(GnostrCommands::GenerateKeypair(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::generate_keypair::get_new_keypair(sub_command_args).await
+        }
+        Some(GnostrCommands::ConvertKey(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::convert_key::convert_key(sub_command_args).await
+        }
+        Some(GnostrCommands::Vanity(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::vanity::vanity(sub_command_args).await
+        }
+        Some(GnostrCommands::CreatePublicChannel(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::create_public_channel::create_public_channel(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::SetChannelMetadata(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::set_channel_metadata::set_channel_metadata(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::SendChannelMessage(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::send_channel_message::send_channel_message(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::HidePublicChannelMessage(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::hide_public_channel_message::hide_public_channel_message(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::MutePublicKey(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::mute_publickey::mute_publickey(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::BroadcastEvents(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::broadcast_events::broadcast_events(
+                Some(args.nsec.expect("")),
+                args.relays,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::CreateBadge(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::create_badge::create_badge(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::AwardBadge(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::award_badge::award_badge(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::ProfileBadges(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::profile_badges::set_profile_badges(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::CustomEvent(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::custom_event::create_custom_event(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        Some(GnostrCommands::SetUserStatus(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::user_status::set_user_status(
+                args.nsec,
+                args.relays,
+                args.difficulty_target,
+                sub_command_args,
+            )
+            .await
+        }
+        None => {
+            {
+                let gnostr_subcommands = gnostr::gnostr::GnostrSubCommands::default();
+                let _ = sub_commands::tui::tui(&gnostr_subcommands).await;
+            };
+            Ok(())
         }
     }
 }
