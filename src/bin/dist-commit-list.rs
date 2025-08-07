@@ -7,8 +7,8 @@ use std::str;
 use std::{error::Error, time::Duration};
 
 use futures::stream::StreamExt;
-use libp2p::StreamProtocol;
 use libp2p::PeerId;
+use libp2p::StreamProtocol;
 use libp2p::{
     identify, kad,
     kad::{store::MemoryStore, store::MemoryStoreConfig, Mode, Record, RecordKey},
@@ -199,11 +199,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // TODO --key arg
     let keypair = libp2p::identity::Keypair::ed25519_from_bytes([0; 32]).unwrap();
     let local_peer_id = PeerId::from(keypair.public());
+
     // We create a custom network behaviour that combines
     // Kademlia and mDNS identify rendezvous ping
     #[derive(NetworkBehaviour)]
     struct Behaviour {
         ipfs: kad::Behaviour<MemoryStore>,
+        commit_message: kad::Behaviour<MemoryStore>,
+        commit_diff: kad::Behaviour<MemoryStore>,
         kademlia: kad::Behaviour<MemoryStore>,
         mdns: mdns::tokio::Behaviour,
         identify: identify::Behaviour,
@@ -224,6 +227,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let mut ipfs_cfg = kad::Config::new(IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
 
+            tracing::debug!("The maximum value for usize is: {}", std::usize::MAX);
             //handle large git commit diffs
             let mut store_config = MemoryStoreConfig {
                 max_records: usize::MAX,
@@ -232,9 +236,32 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 max_provided_keys: usize::MAX,
             };
 
-            let ipfs_store = kad::store::MemoryStore::with_config(key.public().to_peer_id(), store_config);
+            let ipfs_store = kad::store::MemoryStore::with_config(
+                key.public().to_peer_id(),
+                store_config.clone(),
+            );
+            let commit_message = kad::store::MemoryStore::with_config(
+                key.public().to_peer_id(),
+                store_config.clone(),
+            );
+            let commit_diff =
+                kad::store::MemoryStore::with_config(key.public().to_peer_id(), store_config);
             Ok(Behaviour {
-                ipfs: kad::Behaviour::with_config(key.public().to_peer_id(), ipfs_store, ipfs_cfg),
+                ipfs: kad::Behaviour::with_config(
+                    key.public().to_peer_id(),
+                    ipfs_store,
+                    ipfs_cfg.clone(),
+                ),
+                commit_message: kad::Behaviour::with_config(
+                    key.public().to_peer_id(),
+                    commit_message,
+                    ipfs_cfg.clone(),
+                ),
+                commit_diff: kad::Behaviour::with_config(
+                    key.public().to_peer_id(),
+                    commit_diff,
+                    ipfs_cfg,
+                ),
                 identify: identify::Behaviour::new(identify::Config::new(
                     "/yamux/1.0.0".to_string(),
                     key.public(),
@@ -368,7 +395,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 match result {
                     kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FoundProviders { key, providers, .. })) => {
                         for peer in providers {
-                            log::info!(
+                            println!(
                                 "Peer {peer:?} provides key {:?}",
                                 std::str::from_utf8(key.as_ref()).unwrap()
                             );
@@ -767,12 +794,27 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         //we want to broadcast as provider for the actual commit.id()
         log::debug!("&commit.id=\n{}", &commit.id());
 
+        //store git commit message
         let key = kad::RecordKey::new(&format!("{}", &commit.id()));
 
         //push commit key and commit content as value
         //let value = Vec::from(commit.message_bytes().clone());
         let value = Vec::from(commit.message_bytes());
         tracing::debug!("value={:?}", value.clone());
+
+        let record = kad::Record {
+            key,
+            value,
+            publisher: None,
+            expires: None,
+        };
+        kademlia
+            .put_record(record, kad::Quorum::One)
+            .expect("Failed to store record locally.");
+        let key = kad::RecordKey::new(&format!("{}", &commit.id()));
+        kademlia
+            .start_providing(key)
+            .expect("Failed to start providing key");
 
         let repo_path = "."; // Path to your Git repository
         let repo = Repository::discover(repo_path).expect("Failed to open repository");
@@ -792,42 +834,43 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
             }
         }
 
-        let key = kad::RecordKey::new(&format!("{}-diff", &commit.id()));
-        let diff = get_commit_diff_as_string(&repo, commit.id());
-        tracing::debug!("diff={:?}", diff?);
-        let value = get_commit_diff_as_bytes(&repo, commit.id())?;
+        ////store git commit diff <commit_hash>-diff
+        //let key = kad::RecordKey::new(&format!("{}-diff", &commit.id()));
+        //let diff = get_commit_diff_as_string(&repo, commit.id());
+        //tracing::debug!("diff={:?}", diff?);
+        //let value = get_commit_diff_as_bytes(&repo, commit.id())?;
 
-        let record = kad::Record {
-            key,
-            value,
-            publisher: None,
-            expires: None,
-        };
-        kademlia
-            .put_record(record, kad::Quorum::One)
-            .expect("Failed to store record locally.");
-        let key = kad::RecordKey::new(&format!("{}", &commit.id()));
-        kademlia
-            .start_providing(key)
-            .expect("Failed to start providing key");
+        //let record = kad::Record {
+        //    key,
+        //    value,
+        //    publisher: None,
+        //    expires: None,
+        //};
+        //kademlia
+        //    .put_record(record, kad::Quorum::One)
+        //    .expect("Failed to store record locally.");
+        //let key = kad::RecordKey::new(&format!("{}", &commit.id()));
+        //kademlia
+        //    .start_providing(key)
+        //    .expect("Failed to start providing key");
 
-        //println!("commit.tree_id={}", &commit.tree_id());
-        let key = kad::RecordKey::new(&format!("{}", &commit.tree_id()));
-        //println!("commit.tree={:?}", &commit.tree());
-        let value = Vec::from(format!("{:?}", commit.tree()));
-        let record = kad::Record {
-            key,
-            value,
-            publisher: None,
-            expires: None,
-        };
-        kademlia
-            .put_record(record, kad::Quorum::One)
-            .expect("Failed to store record locally.");
-        let key = kad::RecordKey::new(&format!("{}", &commit.id()));
-        kademlia
-            .start_providing(key)
-            .expect("Failed to start providing key");
+        ////println!("commit.tree_id={}", &commit.tree_id());
+        //let key = kad::RecordKey::new(&format!("{}", &commit.tree_id()));
+        ////println!("commit.tree={:?}", &commit.tree());
+        //let value = Vec::from(format!("{:?}", commit.tree()));
+        //let record = kad::Record {
+        //    key,
+        //    value,
+        //    publisher: None,
+        //    expires: None,
+        //};
+        //kademlia
+        //    .put_record(record, kad::Quorum::One)
+        //    .expect("Failed to store record locally.");
+        //let key = kad::RecordKey::new(&format!("{}", &commit.id()));
+        //kademlia
+        //    .start_providing(key)
+        //    .expect("Failed to start providing key");
 
         //println!("commit.tree={:?}", &commit.tree());
         //println!("commit.raw={:?}", &commit.raw()); //pointer?
