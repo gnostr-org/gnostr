@@ -3,6 +3,7 @@
 use clap::Parser;
 use git2::{Commit, Diff, DiffOptions, ObjectType, Oid, Repository, Signature, Time};
 use git2::{DiffFormat, Error as GitError, Pathspec};
+use gnostr::blockheight::{blockheight_async, blockheight_sync};
 use hex;
 use std::str;
 use std::{error::Error, time::Duration};
@@ -61,23 +62,11 @@ fn init_subscriber(_level: Level) -> Result<(), Box<dyn Error + Send + Sync + 's
     Ok(())
 }
 
-async fn get_blockheight() -> Result<String, Box<dyn Error>> {
-    let client = reqwest::Client::builder()
-        .build()
-        .expect("should be able to build reqwest client");
-    let blockheight = client
-        .get("https://mempool.space/api/blocks/tip/height")
-        .send()
-        .await?;
-    log::debug!("mempool.space status: {}", blockheight.status());
-    if blockheight.status() != reqwest::StatusCode::OK {
-        log::debug!("didn't get OK status: {}", blockheight.status());
-        Ok(String::from(">>>>>"))
-    } else {
-        let blockheight = blockheight.text().await?;
-        log::debug!("{}", blockheight);
-        Ok(blockheight)
-    }
+async fn get_blockheight_async() -> Result<String, Box<dyn Error>> {
+    Ok(blockheight_async().await)
+}
+fn get_blockheight_sync() -> Result<String, Box<dyn Error>> {
+    Ok(blockheight_sync())
 }
 
 const IPFS_BOOTNODES: [&str; 4] = [
@@ -190,8 +179,10 @@ fn print_record(record: Record) {
 async fn main() -> Result<(), Box<dyn Error>> {
     let _ = init_subscriber(Level::INFO);
 
-    //let blockheight = get_blockheight().await.unwrap();
-    //log::info!("blockheight = {blockheight:?}");
+    let blockheight = get_blockheight_async().await.unwrap();
+    tracing::info!("blockheight = {blockheight:?}");
+    let blockheight = get_blockheight_sync().unwrap();
+    tracing::info!("blockheight = {blockheight:?}");
 
     //TODO create key from arg
     let args = Args::parse();
@@ -318,10 +309,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // TODO get weeble/blockheight/wobble
-    let listen_on = swarm.listen_on("/ip4/0.0.0.0/tcp/62649".parse().unwrap());
-    log::debug!("listen_on={}", listen_on.unwrap());
+    //let listen_on = swarm.listen_on("/ip4/0.0.0.0/tcp/62649".parse().unwrap());
+    let listen_on = swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse().unwrap());
+    tracing::info!("listen_on={}", listen_on.unwrap());
     swarm.behaviour_mut().kademlia.set_mode(Some(Mode::Server));
-    log::info!("swarm.local_peer_id()={:?}", swarm.local_peer_id());
+    tracing::info!("swarm.local_peer_id()={:?}", swarm.local_peer_id());
     //net work is primed
 
     //run
@@ -336,7 +328,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Listen on all interfaces and whatever port the OS assigns.
     // TODO get weeble/blockheight/wobble
     let listen_on = swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
-    log::debug!("listen_on={}", listen_on);
+    tracing::debug!("listen_on={}", listen_on);
 
     // Kick it off.
     loop {
@@ -352,14 +344,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         select! {
                 Ok(Some(line)) = stdin.next_line() => {
-                    tracing::debug!("line.len()={}", line.len());
+                    tracing::info!("line.len()={}", line.len());
                     if line.len() <= 3 {
-                    tracing::debug!("{:?}", swarm.local_peer_id());
+                    tracing::info!("349:swarm.local_peer_id()={:?}", swarm.local_peer_id());
                     for address in swarm.external_addresses() {
-                        tracing::debug!("{:?}", address);
+                        tracing::info!("351:address={:?}", address);
                     }
                     for peer in swarm.connected_peers() {
-                        tracing::debug!("{:?}", peer);
+                        tracing::info!("354:peer={:?}", peer);
                     }
                     }
                     handle_input_line(&mut swarm.behaviour_mut().kademlia, line).await;
@@ -371,16 +363,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 //match event
 
                     SwarmEvent::ConnectionEstablished { peer_id, .. } => {
-                        tracing::trace!("Connected to {}", peer_id);
+                        tracing::info!("366:Connected to {}", peer_id);
                     }
                     SwarmEvent::ConnectionClosed { peer_id, .. } => {
-                        tracing::trace!("Disconnected from {}", peer_id);
+                        tracing::info!("369:Disconnected from {}", peer_id);
                     }
                     SwarmEvent::Behaviour(BehaviourEvent::Rendezvous(
                         rendezvous::server::Event::PeerRegistered { peer, registration },
                     )) => {
                         tracing::info!(
-                            "Peer {} registered for namespace '{}'",
+                            "375:Peer {} registered for namespace '{}'",
                             peer,
                             registration.namespace
                         );
@@ -392,7 +384,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         },
                     )) => {
                         tracing::info!(
-                            "Served peer {} with {} registrations",
+                            "387:Served peer {} with {} registrations",
                             enquirer,
                             registrations.len()
                         );
@@ -402,15 +394,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 //    }
 
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    log::debug!("Listening in {address:?}");
+                    tracing::info!("397:Listening in {address:?}");
                 }
 
 
                 SwarmEvent::Behaviour(BehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                     for (peer_id, multiaddr) in list {
                         swarm.behaviour_mut().kademlia.add_address(&peer_id, multiaddr.clone());
-                        tracing::info!("{}", peer_id.clone());
-                        tracing::info!("{}", multiaddr.clone());
+                        tracing::info!("404:peer_id={}", peer_id.clone());
+                        tracing::info!("405:muliaddr={}", multiaddr.clone());
                     }
                 }
 
@@ -420,7 +412,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 match result {
                     kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FoundProviders { key, providers, .. })) => {
                         for peer in providers {
-                            println!(
+                            tracing::info!(
                                 "Peer {peer:?} provides key {:?}",
                                 std::str::from_utf8(key.as_ref()).unwrap()
                             );
@@ -440,9 +432,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         )
                         )
                         ) => {
-                        //tracing::info!("{}",record);
-
-                        println!(
+                        tracing::info!(
                             "{{\"key\":{:?},\"value\":{:?}}}",
                             std::str::from_utf8(key.as_ref()).unwrap(),
                             std::str::from_utf8(&value).unwrap(),
@@ -466,20 +456,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         log::debug!("Failed to put record: {err:?}");
                     }
                     kad::QueryResult::StartProviding(Ok(kad::AddProviderOk { key })) => {
-                        log::debug!(
+                        tracing::info!(
                             "PUT_PROVIDER {:?}",
                             std::str::from_utf8(key.as_ref()).unwrap()
                         );
                     }
                     kad::QueryResult::StartProviding(Err(err)) => {
                         //eprintln!("Failed to put provider record: {err:?}");
-                        log::trace!("Failed to put provider record: {err:?}");
+                        tracing::trace!("Failed to put provider record: {err:?}");
                     }
-                    _ => {}
+                    _ => {
+                        tracing::info!("469:Unknown QueryResult!");
+
+                    }
                 }
             }
             other => {
-                tracing::debug!("Unhandled {:?}", other);
+                tracing::info!("Unhandled {:?}", other);
             }
                 }
         }
@@ -496,10 +489,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 //        .expect("Failed to start providing key");
 //}
 async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: String) {
+    tracing::info!("492:handle_input_line!");
     let mut args = line.split(' ');
 
     match args.next() {
         Some("GET") => {
+            tracing::info!("497:GET!");
             let key = {
                 match args.next() {
                     Some(key) => kad::RecordKey::new(&key),
@@ -511,14 +506,15 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
                 }
             };
             let query_id = kademlia.get_record(key.clone());
-            //print_record(record);
             tracing::info!(
                 "kademlia.get_record({})\n{}",
-                kademlia.get_record(key),
+                kademlia.get_record(key.clone()),
                 query_id
             );
+            kademlia.get_record(key);
         }
         Some("GET_PROVIDERS") => {
+            tracing::info!("517:GET_PROVIDERS!");
             let key = {
                 match args.next() {
                     Some(key) => kad::RecordKey::new(&key),
@@ -532,6 +528,7 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
             kademlia.get_providers(key);
         }
         Some("PUT") => {
+            tracing::info!("531:PUT!");
             let key = {
                 match args.next() {
                     Some(key) => kad::RecordKey::new(&key),
@@ -583,6 +580,7 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
             //.expect("Failed to store record locally.");
         }
         Some("PUT_PROVIDER") => {
+            tracing::info!("583:PUT_PROVIDERS!");
             let key = {
                 match args.next() {
                     Some(key) => kad::RecordKey::new(&key),
@@ -606,7 +604,7 @@ async fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: Str
             std::process::exit(0);
         }
         _ => {
-            tracing::info!("\nGET, GET_PROVIDERS, PUT, PUT_PROVIDER <commit_hash>");
+            //tracing::info!("\nGET, GET_PROVIDERS, PUT, PUT_PROVIDER <commit_hash>");
             eprint!("gnostr> ");
         }
     }
@@ -856,7 +854,7 @@ async fn run(args: &Args, kademlia: &mut kad::Behaviour<MemoryStore>) -> Result<
         let value = Vec::from(commit.message_bytes());
         tracing::trace!("value={:?}", value.clone());
 
-        let quorum = Quorum::from(Quorum::Majority);
+        let quorum = Quorum::from(Quorum::One);
         let record = kad::Record {
             key,
             value,
