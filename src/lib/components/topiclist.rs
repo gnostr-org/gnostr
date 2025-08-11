@@ -480,12 +480,36 @@ impl TopicList {
         }
         txt.push(splitter.clone());
 
-        let style_hash = if normal { theme.commit_hash(selected) } else { theme.commit_unhighlighted() };
-        let style_time = if normal { theme.commit_time(selected) } else { theme.commit_unhighlighted() };
-        let style_author = if normal { theme.commit_author(selected) } else { theme.commit_unhighlighted() };
-        let style_tags = if normal { theme.tags(selected) } else { theme.commit_unhighlighted() };
-        let style_branches = if normal { theme.branch(selected, true) } else { theme.commit_unhighlighted() };
-        let style_msg = if normal { theme.text(true, selected) } else { theme.commit_unhighlighted() };
+        let style_hash = if normal {
+            theme.commit_hash(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_time = if normal {
+            theme.commit_time(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_author = if normal {
+            theme.commit_author(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_tags = if normal {
+            theme.tags(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_branches = if normal {
+            theme.branch(selected, true)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_msg = if normal {
+            theme.text(true, selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
 
         // commit hash
         //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
@@ -580,12 +604,36 @@ impl TopicList {
         }
         txt.push(splitter.clone());
 
-        let style_hash = if normal { theme.commit_hash(selected) } else { theme.commit_unhighlighted() };
-        let style_time = if normal { theme.commit_time(selected) } else { theme.commit_unhighlighted() };
-        let style_author = if normal { theme.commit_author(selected) } else { theme.commit_unhighlighted() };
-        let style_tags = if normal { theme.tags(selected) } else { theme.commit_unhighlighted() };
-        let style_branches = if normal { theme.branch(selected, true) } else { theme.commit_unhighlighted() };
-        let style_msg = if normal { theme.text(true, selected) } else { theme.commit_unhighlighted() };
+        let style_hash = if normal {
+            theme.commit_hash(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_time = if normal {
+            theme.commit_time(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_author = if normal {
+            theme.commit_author(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_tags = if normal {
+            theme.tags(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_branches = if normal {
+            theme.branch(selected, true)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_msg = if normal {
+            theme.text(true, selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
 
         // commit hash
         //txt.push(Span::styled(Cow::from(&*""), style_hash));

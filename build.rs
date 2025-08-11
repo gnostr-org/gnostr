@@ -11,9 +11,7 @@ fn check_brew() -> bool {
 
 fn install_openssl_brew() {
     println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
-    let install_result = Command::new("brew")
-        .args(["install", "openssl@3"])
-        .status();
+    let install_result = Command::new("brew").args(["install", "openssl@3"]).status();
 
     match install_result {
         Ok(status) if status.success() => {

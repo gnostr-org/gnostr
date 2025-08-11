@@ -4,16 +4,10 @@ use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-	gossipsub,
-	mdns,
-	noise,
-	swarm::{
-		NetworkBehaviour,
-		SwarmEvent
-		},
-	tcp,
-	yamux
-	};
+    gossipsub, mdns, noise,
+    swarm::{NetworkBehaviour, SwarmEvent},
+    tcp, yamux,
+};
 
 use std::{env, error::Error, thread};
 use tokio::time::Duration;
