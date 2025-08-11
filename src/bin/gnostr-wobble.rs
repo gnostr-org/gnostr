@@ -141,9 +141,9 @@ fn main() {
         None => "false".to_string(), // Default value if no argument is provided
     };
     if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
-        print!("{}", wobble_millis_sync().unwrap().to_string());
+        print!("{}", wobble_millis_sync().unwrap());
     } else {
-        print!("{}", wobble_sync().unwrap().to_string());
+        print!("{}", wobble_sync().unwrap());
     }
 }
 
