@@ -34,8 +34,7 @@ pub async fn run_list(
     decoded_nostr_url: &NostrUrlDecoded,
     for_push: bool,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
-    let nostr_state =
-        (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
+    let nostr_state = (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
 
     let term = console::Term::stderr();
 

@@ -204,17 +204,11 @@ pub fn get_weeble_sync() -> Result<String, &'static str> {
 }
 /// pub async fn get_weeble_async() -> Result<String, &'static str>
 pub async fn get_weeble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_async().await.unwrap_or(0_f64)
-    ))
+    Ok(format!("{}", weeble_async().await.unwrap_or(0_f64)))
 }
 /// pub fn get_weeble_millis_async() -> Result<String, &'static str>
 pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_millis_async().await.unwrap_or(0_f64)
-    ))
+    Ok(format!("{}", weeble_millis_async().await.unwrap_or(0_f64)))
 }
 /// wobble
 /// pub fn get_wobble() -> Result<String, &'static str>
@@ -227,17 +221,11 @@ pub fn get_wobble_sync() -> Result<String, &'static str> {
 }
 /// pub async fn get_wobble_async() -> Result<String, &'static str>
 pub async fn get_wobble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_async().await.unwrap_or(0_f64)
-    ))
+    Ok(format!("{}", wobble_async().await.unwrap_or(0_f64)))
 }
 /// pub fn get_wobble_millis_async() -> Result<String, &'static str>
 pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_millis_async().await.unwrap_or(0_f64)
-    ))
+    Ok(format!("{}", wobble_millis_async().await.unwrap_or(0_f64)))
 }
 
 /// pub fn get_blockheight() -> Result<String, &'static str>
