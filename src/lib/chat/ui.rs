@@ -1,7 +1,5 @@
 use crate::blockheight::blockheight_sync;
 use crate::chat::msg;
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -17,7 +15,6 @@ use ratatui::{
 };
 
 use std::{
-    env,
     error::Error,
     io,
     sync::{Arc, Mutex},
@@ -134,12 +131,9 @@ impl App {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     let tick_rate = Duration::from_millis(100);
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, app))?;
 
         if !event::poll(tick_rate)? {
-            //env::set_var("BLOCKHEIGHT", blockheight_sync());
-            env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
-            env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
             continue;
         }
 
@@ -158,7 +152,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         //not empty
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -166,7 +160,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         } else {
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default()//default Msg type Chat
-                                .set_content("<?> TODO: help".to_string(), 0 as usize);
+                                .set_content("<?> TODO: help".to_string(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -178,7 +172,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Char('/') => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -187,14 +181,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default() //default Msg type Chat
                                 .set_content(
-                                    format!(
-                                        "{}/{}/{}>{}",
-                                        &env::var("WEEBLE").unwrap(),
-                                        &env::var("BLOCKHEIGHT").unwrap(),
-                                        &env::var("WOBBLE").unwrap(),
-                                        "</>".to_string()
-                                    ),
-                                    0 as usize,
+                                    "</> forward slash modal trigger".to_string(),
+                                    0_usize,
                                 );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
@@ -206,7 +194,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Char('\\') => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -215,14 +203,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default() //default Msg type Chat
                                 .set_content(
-                                    format!(
-                                        "{}/{}/{}>{}",
-                                        &env::var("WEEBLE").unwrap(),
-                                        &env::var("BLOCKHEIGHT").unwrap(),
-                                        &env::var("WOBBLE").unwrap(),
-                                        "<\\>".to_string()
-                                    ),
-                                    0 as usize,
+                                    "<\\> back slash modal trigger".to_string(),
+                                    0_usize,
                                 );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
@@ -234,24 +216,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Char(':') => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
                             }
                         } else {
                             //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default() //default Msg type Chat
-                                .set_content(
-                                    format!(
-                                        "{}/{}/{}>{}",
-                                        &env::var("WEEBLE").unwrap(),
-                                        &env::var("BLOCKHEIGHT").unwrap(),
-                                        &env::var("WOBBLE").unwrap(),
-                                        "<:>".to_string()
-                                    ),
-                                    0 as usize,
-                                );
+                            let m =
+                                msg::Msg::default() //default Msg type Chat
+                                    .set_content(
+                                        "<:> vim like command prompt".to_string(),
+                                        0_usize,
+                                    );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -282,7 +259,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -291,13 +268,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default().set_content(
                                 format!(
-                                    "{}/{}/{}>{}",
-                                    &env::var("WEEBLE").unwrap(),
-                                    &env::var("BLOCKHEIGHT").unwrap(),
-                                    &env::var("WOBBLE").unwrap(),
-                                    "<ENTER>".to_string()
+                                    "{}:{}",
+                                    &blockheight_sync(),
+                                    "test message <ENTER>"
                                 ),
-                                0 as usize,
+                                0_usize,
                             );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
@@ -312,13 +287,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.reset();
                         let m = msg::Msg::default().set_content(
                             format!(
-                                "{}/{}/{}>{}",
-                                &env::var("WEEBLE").unwrap(),
-                                &env::var("BLOCKHEIGHT").unwrap(),
-                                &env::var("WOBBLE").unwrap(),
-                                "<ESC>".to_string()
+                                "{}:{}",
+                                &blockheight_sync(),
+                                "<test message ESC>"
                             ),
-                            0 as usize,
+                            0_usize,
                         );
                         app.add_message(m.clone());
                         if let Some(ref mut hook) = app._on_input_enter {
@@ -334,7 +307,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -343,7 +316,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default().set_content(
                                 "InputMode::Editing:KeyCode::Enter".to_string(),
-                                0 as usize,
+                                0_usize,
                             );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
