@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
-use gnostr::{blockheight, sub_commands};
+use gnostr::sub_commands;
 use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, trace};
@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     env::set_var("WOBBLE", "0");
     let mut args: GnostrCli = GnostrCli::parse();
     let app_cache = get_app_cache_path();
-    let _logging = if args.logging {
+    if args.logging {
         let logging = setup_logging();
         trace!("{:?}", logging);
     };
@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     for arg in &env_args {
         trace!("arg={:?}", arg);
     }
-    if !args.hash.is_none() {
+    if args.hash.is_some() {
         //not none
         if let Some(input_string) = args.hash {
             let mut hasher = Sha256::new();
@@ -49,16 +49,14 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             let result = hasher.finalize();
             //Usage: gnostr --hash <string>
             //Usage: gnostr --debug --hash <string>
-            if env_args.len().clone() >= 3 && env_args.len().clone() <= 4
+            if env_args.len() >= 3 && env_args.len() <= 4
             /*--debug, --trace, --info, etc...*/
             {
                 print!("{:x}", result);
                 std::process::exit(0);
             }
             args.nsec = format!("{:x}", result).into();
-        } else {
         }
-    } else {
     }
 
     // Post event

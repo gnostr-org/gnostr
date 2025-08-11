@@ -335,7 +335,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         "blockheight".to_string(),
         vec![format!("{}", blockheight_sync())],
     );
-    if !args.topic.is_none() {
+    if args.topic.is_some() {
         custom_tags.insert(
             "topic".to_string(),
             vec![args.topic.clone().expect("REASON")],
@@ -347,8 +347,8 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
 
     //args.nsec
-    if !args.nsec.is_none() {
-        keys = Keys::parse(&args.nsec.unwrap())?;
+    if args.nsec.is_some() {
+        keys = Keys::parse(args.nsec.unwrap())?;
     }
     ////args.hash overrides args.nsec
     //if !args.hash.clone().is_none() {
@@ -374,7 +374,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
 
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event = create_event(keys, custom_tags, &"gnostr-chat:event").await;
+        let signed_event = create_event(keys, custom_tags, "gnostr-chat:event").await;
         debug!("signed_event:\n{:?}", signed_event);
     });
 
@@ -412,7 +412,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         global_rt().spawn(async move {
             //send to create_event function with &"custom content"
             let signed_event =
-                create_event(padded_keys.clone(), custom_tags, &"gnostr-chat:event").await;
+                create_event(padded_keys.clone(), custom_tags, "gnostr-chat:event").await;
             debug!("signed_event:\n{:?}", signed_event);
         });
 
@@ -451,7 +451,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         // Accessing parent commits (merge may be array)
         if let Some(parent) = value.get("parents") {
             if let Value::Array(arr) = parent {
-                if let Some(parent) = arr.get(0) {
+                if let Some(parent) = arr.first() {
                     debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
                 }
                 if let Some(parent) = arr.get(1) {
@@ -477,7 +477,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
 
         //split the commit message into a Vec<String>
         if let Some(message) = value.get("message") {
-            let parts = split_json_string(&message, "\n");
+            let parts = split_json_string(message, "\n");
             for part in parts {
                 debug!("\n{}", part);
             }
@@ -568,7 +568,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("id:\n{}", id.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(id.as_str().unwrap_or("")), 0 as usize)
+                    .set_content(String::from(id.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitId),
             );
         }
@@ -576,18 +576,18 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("tree:\n{}", tree.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(tree.as_str().unwrap_or("")), 0 as usize)
+                    .set_content(String::from(tree.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitTree),
             );
         }
         // Accessing parent commits (merge may be array)
         if let Some(parent) = value.get("parents") {
             if let Value::Array(arr) = parent {
-                if let Some(parent) = arr.get(0) {
+                if let Some(parent) = arr.first() {
                     debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
                     app.add_message(
                         Msg::default()
-                            .set_content(String::from(parent.as_str().unwrap_or("")), 0 as usize)
+                            .set_content(String::from(parent.as_str().unwrap_or("")), 0_usize)
                             .set_kind(MsgKind::GitCommitParent),
                     );
                 }
@@ -595,7 +595,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
                     debug!("parent:\n{}", parent.as_str().unwrap_or(""));
                     app.add_message(
                         Msg::default()
-                            .set_content(String::from(parent.as_str().unwrap_or("")), 0 as usize)
+                            .set_content(String::from(parent.as_str().unwrap_or("")), 0_usize)
                             .set_kind(MsgKind::GitCommitParent),
                     );
                 }
@@ -605,7 +605,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(String::from(author_name.as_str().unwrap_or("")), 0 as usize)
+                    .set_content(String::from(author_name.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitAuthor),
             );
         }
@@ -613,10 +613,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(
-                        String::from(author_email.as_str().unwrap_or("")),
-                        0 as usize,
-                    )
+                    .set_content(String::from(author_email.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitEmail),
             );
         }
@@ -624,10 +621,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(
-                        String::from(committer_name.as_str().unwrap_or("")),
-                        0 as usize,
-                    )
+                    .set_content(String::from(committer_name.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitName),
             );
         }
@@ -640,7 +634,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
                 Msg::default()
                     .set_content(
                         String::from(committer_email.as_str().unwrap_or("")),
-                        0 as usize,
+                        0_usize,
                     )
                     .set_kind(MsgKind::GitCommitEmail),
             );
@@ -665,7 +659,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
 
             app.add_message(
                 Msg::default()
-                    .set_content(time.to_string(), 0 as usize)
+                    .set_content(time.to_string(), 0_usize)
                     .set_kind(MsgKind::GitCommitTime),
             );
         }
@@ -710,10 +704,9 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         });
 
         //
-        let mut topic = String::from(commit_id.to_string());
-        if !args.topic.is_none() {
+        let mut topic = commit_id.to_string();
+        if args.topic.is_some() {
             topic = args.topic.expect("");
-        } else {
         }
 
         app.topic = Input::new(topic.clone().to_string());
@@ -741,7 +734,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
                 .send(
                     Msg::default()
                         .set_kind(MsgKind::Join)
-                        .set_content(env::var("USER".to_string()).expect("env $USER fail!"), 0)
+                        .set_content(env::var("USER").expect("env $USER fail!"), 0)
                         .set_content("1".to_string(), 1),
                 )
                 .await
@@ -766,7 +759,7 @@ pub async fn input_loop(
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     while let Some(line) = stdin.next_line().await? {
         //TODO interator for git commit data
-        let msg = Msg::default().set_content(line, 0 as usize);
+        let msg = Msg::default().set_content(line, 0_usize);
         debug!("msg:\n{}", msg);
         if let Ok(b) = serde_json::to_vec(&msg) {
             self_input.send(b).await?;
