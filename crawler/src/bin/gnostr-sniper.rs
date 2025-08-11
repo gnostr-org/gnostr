@@ -63,7 +63,7 @@ async fn main() -> Result<(), reqwest::Error> {
             let client = &client;
             async move {
                 let resp = client
-                    .get(&url.replace("wss://", "https://"))
+                    .get(url.replace("wss://", "https://"))
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
@@ -113,7 +113,6 @@ async fn main() -> Result<(), reqwest::Error> {
                     && !url.contains(".local")
                 {
                     //we want a view of the network
-                    ()
                 }
                 r
             }
