@@ -162,35 +162,35 @@ pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str> {
 pub fn get_relays() -> Result<String, &'static str> {
     let _relays_no_nl = relays().unwrap().to_string();
 
-    Ok(format!("{}", relays().unwrap().to_string()))
+    Ok(relays().unwrap().to_string())
 }
 /// get_relays_online <https://api.nostr.watch>
 /// pub fn get_relays_online() -> Result<String, &'static str>
 pub fn get_relays_online() -> Result<String, &'static str> {
     let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_online().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_public <https://api.nostr.watch>
 /// pub fn get_relays_public() -> Result<String, &'static str>
 pub fn get_relays_public() -> Result<String, &'static str> {
     let _relays_no_nl = relays_public().unwrap().to_string();
 
-    Ok(format!("{}", relays_public().unwrap().to_string()))
+    Ok(relays_public().unwrap().to_string())
 }
 /// get_relays_paid <https://api.nostr.watch>
 /// pub fn get_relays_paid() -> Result<String, &'static str>
 pub fn get_relays_paid() -> Result<String, &'static str> {
     let _relays_no_nl = relays_paid().unwrap().to_string();
 
-    Ok(format!("{}", relays_paid().unwrap().to_string()))
+    Ok(relays_paid().unwrap().to_string())
 }
 /// get_relays_offline <https://api.nostr.watch>
 /// pub fn get_relays_offline() -> Result<String, &'static str>
 pub fn get_relays_offline() -> Result<String, &'static str> {
     let _relays_no_nl = relays_offline().unwrap().to_string();
 
-    Ok(format!("{}", relays_offline().unwrap().to_string()))
+    Ok(relays_offline().unwrap().to_string())
 }
 
 /// weeble
@@ -200,21 +200,15 @@ pub fn get_weeble() -> Result<String, &'static str> {
 }
 /// pub fn get_weeble_sync() -> Result<String, &'static str>
 pub fn get_weeble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", weeble_sync().unwrap_or(0_f64).to_string()))
+    Ok(format!("{}", weeble_sync().unwrap_or(0_f64)))
 }
 /// pub async fn get_weeble_async() -> Result<String, &'static str>
 pub async fn get_weeble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(format!("{}", weeble_async().await.unwrap_or(0_f64)))
 }
 /// pub fn get_weeble_millis_async() -> Result<String, &'static str>
 pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(format!("{}", weeble_millis_async().await.unwrap_or(0_f64)))
 }
 /// wobble
 /// pub fn get_wobble() -> Result<String, &'static str>
@@ -223,30 +217,24 @@ pub fn get_wobble() -> Result<String, &'static str> {
 }
 /// pub fn get_wobble_sync() -> Result<String, &'static str>
 pub fn get_wobble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", wobble_sync().unwrap_or(0_f64).to_string()))
+    Ok(format!("{}", wobble_sync().unwrap_or(0_f64)))
 }
 /// pub async fn get_wobble_async() -> Result<String, &'static str>
 pub async fn get_wobble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(format!("{}", wobble_async().await.unwrap_or(0_f64)))
 }
 /// pub fn get_wobble_millis_async() -> Result<String, &'static str>
 pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(format!("{}", wobble_millis_async().await.unwrap_or(0_f64)))
 }
 
 /// pub fn get_blockheight() -> Result<String, &'static str>
 pub fn get_blockheight() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
+    Ok(format!("{}", blockheight().unwrap_or(0_f64)))
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    Ok(format!("{}", blockhash().unwrap().to_string()))
+    Ok(blockhash().unwrap().to_string())
 }
 
 /// pub fn hash_list()
@@ -404,7 +392,7 @@ pub fn fetch_by_id(url: &str, id: IdHex) -> Option<Event> {
 pub fn get_pwd() -> Result<String, &'static str> {
     let mut no_nl = crate::utils::pwd::pwd().unwrap().to_string();
     no_nl.retain(|c| c != '\n');
-    return Ok(format!("{  }", no_nl));
+    Ok(no_nl.to_string())
 }
 
 pub struct Prefixes {
