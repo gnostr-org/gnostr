@@ -70,15 +70,15 @@ pub async fn run(
     tracing::info!("\n{:?}\n", &sub_command_args);
     //print!("{:?}", &sub_command_args);
 
-    if (sub_command_args.debug || sub_command_args.trace)
-        && sub_command_args.nsec.clone().is_some() {
-            let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
-            debug!(
-                "{{\"private_key\":\"{}\"}}",
-                keys.secret_key().display_secret()
-            );
-            debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
-        }
+    if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
+    {
+        let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+        debug!(
+            "{{\"private_key\":\"{}\"}}",
+            keys.secret_key().display_secret()
+        );
+        debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
+    }
 
     let chat = crate::chat::chat(key, sub_command_args);
 

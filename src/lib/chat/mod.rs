@@ -613,10 +613,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("author_email:\n{}", author_email.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(
-                        String::from(author_email.as_str().unwrap_or("")),
-                        0_usize,
-                    )
+                    .set_content(String::from(author_email.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitEmail),
             );
         }
@@ -624,10 +621,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
             debug!("committer_name:\n{}", committer_name.as_str().unwrap_or(""));
             app.add_message(
                 Msg::default()
-                    .set_content(
-                        String::from(committer_name.as_str().unwrap_or("")),
-                        0_usize,
-                    )
+                    .set_content(String::from(committer_name.as_str().unwrap_or("")), 0_usize)
                     .set_kind(MsgKind::GitCommitName),
             );
         }
@@ -713,7 +707,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         let mut topic = commit_id.to_string();
         if args.topic.is_some() {
             topic = args.topic.expect("");
-        } 
+        }
 
         app.topic = Input::new(topic.clone().to_string());
 

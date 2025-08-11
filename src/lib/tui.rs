@@ -33,7 +33,10 @@ use crate::app::QuitState;
 use crate::input::{Input, InputEvent, InputState};
 use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
-use crate::sub_commands::tui::{Updater, Terminal, TICK_INTERVAL, SPINNER_INTERVAL, QueueEvent, select_event, AsyncNotification, draw};
+use crate::sub_commands::tui::{
+    draw, select_event, AsyncNotification, QueueEvent, Terminal, Updater, SPINNER_INTERVAL,
+    TICK_INTERVAL,
+};
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
 use anyhow::Result;
