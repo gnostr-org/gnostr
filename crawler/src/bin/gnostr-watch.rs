@@ -85,7 +85,7 @@ async fn main() -> Result<(), reqwest::Error> {
             && !modified_line.contains(".local")
         //we want a view of the network
         {
-            file.write(modified_line.as_bytes()).expect("");
+            file.write_all(modified_line.as_bytes()).expect("");
             //file.write(b"\n").expect("");
         }
         ////writeln!(file, "{}", line).expect("");
@@ -139,7 +139,7 @@ async fn main() -> Result<(), reqwest::Error> {
                             if n == &nip {
                                 println!("{} Supports nip{nip}", url);
                             }
-                            nip_count = nip_count - 1;
+                            nip_count -= 1;
                         }
                         print!("\"}}");
                         println!();
