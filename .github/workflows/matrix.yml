@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rustup: [1.88, stable, nightly]
+        rustup: [1.89, stable, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -129,7 +129,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rustup: [1.88, nightly]
+        rustup: [1.89, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -184,7 +184,7 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       - run: |
           cargo t -p gnostr --bins --lib -- --no-capture
-        if: matrix.rustup == '1.88' && matrix.os != 'windows-latest'
+        if: matrix.rustup == '1.89' && matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
@@ -225,7 +225,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rustup: [1.88, nightly]
+        rustup: [1.89, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
