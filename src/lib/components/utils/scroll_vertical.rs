@@ -12,6 +12,12 @@ pub struct VerticalScroll {
     max_top: Cell<usize>,
 }
 
+impl Default for VerticalScroll {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VerticalScroll {
     pub const fn new() -> Self {
         Self {
