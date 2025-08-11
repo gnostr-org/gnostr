@@ -127,7 +127,7 @@ async fn main() -> Result<()> {
     let pwd = env::current_dir()?;
     println!("pwd={}", pwd.clone().display());
     let mut hasher = Sha256::new();
-    hasher.update(&format!("{}", pwd.clone().display()));
+    hasher.update(format!("{}", pwd.clone().display()));
     //sha256sum <(echo gnostr-legit)
     let pwd_hash: String = format!("{:x}", hasher.finalize());
     println!("pwd_hash={:?}", pwd_hash);

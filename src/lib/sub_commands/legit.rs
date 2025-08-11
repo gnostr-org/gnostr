@@ -38,13 +38,13 @@ pub struct LegitSubCommand {
 
 pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-        LegitCommands::Login(args) => login::launch(&args).await?,
-        LegitCommands::Init(args) => init::launch(&args).await?,
-        LegitCommands::Send(args) => send::launch(&args, true).await?,
+        LegitCommands::Login(args) => login::launch(args).await?,
+        LegitCommands::Init(args) => init::launch(args).await?,
+        LegitCommands::Send(args) => send::launch(args, true).await?,
         LegitCommands::List => list::launch().await?,
         LegitCommands::Pull => pull::launch().await?,
-        LegitCommands::Push(args) => push::launch(&args).await?,
-        LegitCommands::Fetch(args) => fetch::launch(&args).await?,
+        LegitCommands::Push(args) => push::launch(args).await?,
+        LegitCommands::Fetch(args) => fetch::launch(args).await?,
     }
     Ok(())
 }

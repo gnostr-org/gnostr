@@ -4,24 +4,11 @@ use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-	core::Multiaddr,
 	gossipsub,
-	identity,
-	kad,
 	mdns,
-	multiaddr::Protocol,
 	noise,
-	PeerId,
-	request_response::{
-		self,
-		OutboundRequestId,
-		ProtocolSupport,
-		ResponseChannel
-		},
-	StreamProtocol,
 	swarm::{
 		NetworkBehaviour,
-		Swarm,
 		SwarmEvent
 		},
 	tcp,
@@ -82,7 +69,7 @@ pub async fn evt_loop(
                 // content-address messages.
                 // No two messages of the same content will be propagated.
                 .build()
-                .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+                .map_err(io::Error::other)?;
             // Temporary hack because `build` does not return a proper `std::error::Error`.
 
             // build a gossipsub network behaviour
@@ -197,7 +184,7 @@ pub async fn evt_loop(
                         },
                         Err(e) => {
                             warn!("Error deserializing message: {e:?}");
-                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0 as usize).set_kind(MsgKind::System);
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0_usize).set_kind(MsgKind::System);
                             //NOTE recv.send - send to self
                             recv.send(m).await?;
                         }

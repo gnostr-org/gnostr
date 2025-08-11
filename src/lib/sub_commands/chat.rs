@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
-use crate::chat::*;
+use crate::chat::ChatSubCommands;
 use anyhow::Result;
 use serde::ser::StdError;
 
@@ -25,7 +25,7 @@ pub async fn run(
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
         env::set_var("USER", &name);
-    };
+    }
 
     let level = if sub_command_args.debug {
         Level::DEBUG
@@ -70,16 +70,15 @@ pub async fn run(
     tracing::info!("\n{:?}\n", &sub_command_args);
     //print!("{:?}", &sub_command_args);
 
-    if sub_command_args.debug || sub_command_args.trace {
-        if sub_command_args.nsec.clone().is_some() {
-            let keys = Keys::parse(&sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+    if (sub_command_args.debug || sub_command_args.trace)
+        && sub_command_args.nsec.clone().is_some() {
+            let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
             debug!(
                 "{{\"private_key\":\"{}\"}}",
                 keys.secret_key().display_secret()
             );
             debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
         }
-    }
 
     let chat = crate::chat::chat(key, sub_command_args);
 

@@ -3,7 +3,7 @@
 
 use crate::app::App;
 use crate::app::QuitState;
-use crate::gnostr::*;
+use crate::gnostr::GnostrSubCommands;
 use crate::input::{Input, InputEvent, InputState};
 use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
@@ -260,7 +260,7 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
         env::set_var("USER", &name);
-    };
+    }
 
     let level = if sub_command_args.debug {
         Level::DEBUG
@@ -301,16 +301,15 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     tracing::info!("\n{:?}\n", &sub_command_args);
     //print!("{:?}", &sub_command_args);
 
-    if sub_command_args.debug || sub_command_args.trace {
-        if sub_command_args.nsec.clone().is_some() {
-            let keys = Keys::parse(&sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+    if (sub_command_args.debug || sub_command_args.trace)
+        && sub_command_args.nsec.clone().is_some() {
+            let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
             debug!(
                 "{{\"private_key\":\"{}\"}}",
                 keys.secret_key().display_secret()
             );
             debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
         }
-    }
 
     loop {
         let quit_state = run_app(
