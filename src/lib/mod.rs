@@ -202,6 +202,7 @@ pub fn get_weeble() -> Result<String, &'static str> {
 pub fn get_weeble_sync() -> Result<String, &'static str> {
     Ok(format!("{}", weeble_sync().unwrap_or(0_f64)))
 }
+
 /// pub async fn get_weeble_async() -> Result<String, &'static str>
 pub async fn get_weeble_async() -> Result<String, &'static str> {
     Ok(format!("{}", weeble_async().await.unwrap_or(0_f64)))

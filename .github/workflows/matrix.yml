@@ -31,6 +31,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         rustup: [1.89, stable, nightly]
+
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
@@ -85,7 +86,7 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
-        if: matrix.rustup == '1.89'
+        #if: matrix.os != 'windows-latest'
       - run: cargo-binstall --no-confirm gnostr
         if: matrix.rustup == '1.89'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
@@ -185,7 +186,7 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       - run: |
           cargo t -p gnostr --bins --lib -- --no-capture
-        if: matrix.rustup == '1.89' && matrix.os != 'windows-latest'
+        if: matrix.rustup == '1.88' && matrix.os != 'windows-latest'
 
       - run: V=1 sudo make docs || true
         if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'

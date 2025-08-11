@@ -48,6 +48,12 @@ use gnostr_asyncgit::{
 use scopetime;
 use scopetime::scope_time;
 
+use crate::blockhash::blockhash_async;
+use crate::blockheight::blockheight_async;
+use crate::weeble::weeble_async;
+use crate::wobble::wobble_async;
+use std::env;
+use tracing::debug;
 /// # Errors
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
