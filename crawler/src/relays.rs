@@ -55,7 +55,7 @@ impl Relays {
 
     pub fn print(&self) {
         for u in &self.r {
-            let mut relay = format!("{}", u.to_string());
+            let mut relay = format!("{}", u);
             if relay.ends_with('/') {
                 relay.pop();
                 println!("{}", relay);
