@@ -12,7 +12,6 @@ pub const BOOTSTRAP_RELAY3: &str = "wss://relay.damus.io";
 pub const BOOTSTRAP_RELAY4: &str = "wss://purplerelay.com";
 pub const BOOTSTRAP_RELAY5: &str = "wss://nos.lol";
 
-
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     // The vec! macro and String::from calls are now inside a closure,
     // which is executed at runtime when the static variable is first needed.
