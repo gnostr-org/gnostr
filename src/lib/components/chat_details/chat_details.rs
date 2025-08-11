@@ -70,7 +70,7 @@ impl CompareDetailsComponent {
                     Ok(())
                 } else {
                     use git2::{Repository, RepositoryInitOptions};
-                    let _ = match Repository::discover(&".") {
+                    let _ = match Repository::discover(".") {
                         Ok(repo) => {
                             println!("Found existing git repository in {:?}", base_path);
                             repo
@@ -78,7 +78,7 @@ impl CompareDetailsComponent {
                         Err(_) => {
                             let mut opts = RepositoryInitOptions::new();
                             opts.initial_head("gnostr"); // Set the initial branch name
-                            let repo = Repository::init_opts(&base_path, &opts)?;
+                            let repo = Repository::init_opts(base_path, &opts)?;
                             println!("Initialized new git repository in {:?}", base_path);
                             repo
                         }
@@ -178,7 +178,7 @@ impl DrawableComponent for CompareDetailsComponent {
                     &strings::commit::compare_details_info_title(
                         true,
                         //Nostr PublicKey
-                        &Keys::parse(&data.old.padded_hash())
+                        &Keys::parse(data.old.padded_hash())
                             .unwrap()
                             .public_key()
                             //.to_bech32()?,
@@ -198,7 +198,7 @@ impl DrawableComponent for CompareDetailsComponent {
                 dialog_paragraph(
                     &strings::commit::compare_details_info_title(
                         false,
-                        &Keys::parse(&data.new.padded_hash())
+                        &Keys::parse(data.new.padded_hash())
                             .unwrap()
                             .public_key()
                             //.to_bech32()?,
