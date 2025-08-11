@@ -1,5 +1,7 @@
 use crate::blockheight::blockheight_sync;
 use crate::chat::msg;
+use crate::weeble::weeble_sync;
+use crate::wobble::wobble_sync;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -15,6 +17,7 @@ use ratatui::{
 };
 
 use std::{
+    env,
     error::Error,
     io,
     sync::{Arc, Mutex},
@@ -134,6 +137,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
         terminal.draw(|f| ui(f, app))?;
 
         if !event::poll(tick_rate)? {
+            //env::set_var("BLOCKHEIGHT", blockheight_sync());
+            env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
+            env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
             continue;
         }
 
