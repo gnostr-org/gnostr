@@ -56,8 +56,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 std::process::exit(0);
             }
             args.nsec = format!("{:x}", result).into();
-        } 
-    } 
+        }
+    }
 
     // Post event
     match &args.command {
