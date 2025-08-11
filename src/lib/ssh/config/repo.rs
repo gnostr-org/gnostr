@@ -22,7 +22,7 @@ pub struct RepoConfig {
 }
 
 pub async fn load_repo_config(repo_path: &Path) -> anyhow::Result<RepoConfig> {
-    let config_file_path = home_dir().expect("REASON").join(&REPO_CONFIG_FILE);
+    let config_file_path = home_dir().expect("REASON").join(REPO_CONFIG_FILE);
     info!("Using config file: {:?}", config_file_path);
 
     if config_file_path.exists() {

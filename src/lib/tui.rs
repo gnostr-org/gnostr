@@ -26,7 +26,6 @@
 //TODO:
 // #![deny(clippy::expect_used)]
 
-use chrono::{Local, Timelike};
 use std::{cell::RefCell, time::Instant};
 
 use crate::app::App;
@@ -34,7 +33,10 @@ use crate::app::QuitState;
 use crate::input::{Input, InputEvent, InputState};
 use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
-use crate::sub_commands::tui::*;
+use crate::sub_commands::tui::{
+    draw, select_event, AsyncNotification, QueueEvent, Terminal, Updater, SPINNER_INTERVAL,
+    TICK_INTERVAL,
+};
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
 use anyhow::Result;
