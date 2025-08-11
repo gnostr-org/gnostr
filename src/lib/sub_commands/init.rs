@@ -79,13 +79,7 @@ pub async fn launch(
     #[cfg(not(test))]
     let mut client = Client::default();
 
-    let repo_coordinates = if let Ok(repo_coordinates) =
-        try_and_get_repo_coordinates(&git_repo, &client, false).await
-    {
-        Some(repo_coordinates)
-    } else {
-        None
-    };
+    let repo_coordinates = (try_and_get_repo_coordinates(&git_repo, &client, false).await).ok();
 
     let repo_ref = if let Some(repo_coordinates) = repo_coordinates {
         fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;

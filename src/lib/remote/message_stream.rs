@@ -44,6 +44,12 @@ pub struct MessageStream {
     pub data: Vec<u8>,
 }
 
+impl Default for MessageStream {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MessageStream {
     pub fn new() -> MessageStream {
         MessageStream {

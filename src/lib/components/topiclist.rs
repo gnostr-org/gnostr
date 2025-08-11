@@ -1,5 +1,3 @@
-use crate::weeble::{weeble_async, weeble_sync};
-use crate::wobble_sync;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
@@ -30,9 +28,8 @@ use crate::{
     strings::{self, symbol},
     try_or_popup,
     ui::{
-        calc_scroll_top, draw_scrollbar,
+        calc_scroll_top,
         style::{SharedTheme, Theme},
-        Orientation,
     },
 };
 
@@ -483,31 +480,43 @@ impl TopicList {
         }
         txt.push(splitter.clone());
 
-        let style_hash = normal
-            .then(|| theme.commit_hash(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_time = normal
-            .then(|| theme.commit_time(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_author = normal
-            .then(|| theme.commit_author(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_tags = normal
-            .then(|| theme.tags(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_branches = normal
-            .then(|| theme.branch(selected, true))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_msg = normal
-            .then(|| theme.text(true, selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_hash = if normal {
+            theme.commit_hash(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_time = if normal {
+            theme.commit_time(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_author = if normal {
+            theme.commit_author(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_tags = if normal {
+            theme.tags(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_branches = if normal {
+            theme.branch(selected, true)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_msg = if normal {
+            theme.text(true, selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
 
         // commit hash
         //txt.push(Span::styled(Cow::from(&*e.hash_padded), style_hash));
         //txt.push(Span::styled(Cow::from(&*e.keys), style_hash));
         //txt.push(splitter.clone());
         txt.push(Span::styled(
-            format!("{} ", &truncate_chars(&e.keys, 64 as usize)),
+            format!("{} ", &truncate_chars(&e.keys, 64_usize)),
             style_hash,
         ));
         txt.push(splitter.clone());
@@ -595,24 +604,36 @@ impl TopicList {
         }
         txt.push(splitter.clone());
 
-        let style_hash = normal
-            .then(|| theme.commit_hash(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_time = normal
-            .then(|| theme.commit_time(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_author = normal
-            .then(|| theme.commit_author(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_tags = normal
-            .then(|| theme.tags(selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_branches = normal
-            .then(|| theme.branch(selected, true))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
-        let style_msg = normal
-            .then(|| theme.text(true, selected))
-            .unwrap_or_else(|| theme.commit_unhighlighted());
+        let style_hash = if normal {
+            theme.commit_hash(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_time = if normal {
+            theme.commit_time(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_author = if normal {
+            theme.commit_author(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_tags = if normal {
+            theme.tags(selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_branches = if normal {
+            theme.branch(selected, true)
+        } else {
+            theme.commit_unhighlighted()
+        };
+        let style_msg = if normal {
+            theme.text(true, selected)
+        } else {
+            theme.commit_unhighlighted()
+        };
 
         // commit hash
         //txt.push(Span::styled(Cow::from(&*""), style_hash));
@@ -699,9 +720,9 @@ impl TopicList {
             txt.push(
                 format!(
                     "{}/{}/{}",
-                    env::var("WEEBLE").unwrap().to_string(),
+                    env::var("WEEBLE").unwrap(),
                     env::var("BLOCKHEIGHT").unwrap(),
-                    env::var("WOBBLE").unwrap().to_string()
+                    env::var("WOBBLE").unwrap()
                 )
                 .into(), //wobble_sync().unwrap()).into()
             );
@@ -713,7 +734,7 @@ impl TopicList {
                 local_branches,
                 self.remote_branches_string(e),
                 &self.theme,
-                width - 6 as usize,
+                width - 6_usize,
                 now,
                 marked,
             ));
@@ -761,7 +782,7 @@ impl TopicList {
                 local_branches,
                 self.remote_branches_string(e),
                 &self.theme,
-                width - 6 as usize,
+                width - 6_usize,
                 now,
                 marked,
             ));
@@ -936,7 +957,7 @@ impl TopicList {
                 local_branches,
                 self.remote_branches_string(e),
                 &self.theme,
-                width - 6 as usize,
+                width - 6_usize,
                 now,
                 marked,
             ));
@@ -984,7 +1005,7 @@ impl DrawableComponent for TopicList {
         );
         self.current_size.set(Some(current_size));
 
-        let topic_height_in_lines = 1 as usize; //current_size.1 as usize;
+        let topic_height_in_lines = 1_usize; //current_size.1 as usize;
         let selection = self.relative_selection();
 
         self.scroll_top.set(calc_scroll_top(
@@ -1032,7 +1053,7 @@ impl DrawableComponent for TopicList {
         //TODO nip-0034 git stuff display
         f.render_widget(
             Paragraph::new(self.get_detail_text(
-                10 as usize * topic_height_in_lines,
+                10_usize * topic_height_in_lines,
                 (current_size.0 - 6) as usize,
             ))
             .block(

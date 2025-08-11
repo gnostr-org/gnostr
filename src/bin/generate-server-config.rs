@@ -318,7 +318,7 @@ fn main() -> io::Result<()> {
                 Ok(output) => {
                     if output.status.success() {
                         let capture_output = &output.clone().stdout;
-                        gnostr_gnit_pubkey = (&String::from_utf8_lossy(&capture_output))
+                        gnostr_gnit_pubkey = String::from_utf8_lossy(capture_output)
                             .to_string()
                             .replace("\"\"", "");
                         println!("gnostr-gnit-key.pub:\n{:?}", output.stdout);
@@ -371,7 +371,7 @@ fn main() -> io::Result<()> {
 
     let mut users = HashMap::new();
 
-    println!("{}", gnostr_gnit_pubkey.clone().to_string());
+    println!("{}", gnostr_gnit_pubkey.clone());
     users.insert(
         "gnostr".to_string(),
         User {

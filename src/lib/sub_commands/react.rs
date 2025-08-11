@@ -45,7 +45,7 @@ pub async fn react_to_event(
 
     let subscription: Filter;
     let event_id = EventId::from_hex(&sub_command_args.event_id)?;
-    if sub_command_args.author_pubkey.len() > 0 {
+    if !sub_command_args.author_pubkey.is_empty() {
         let author_pubkey = PublicKey::from_hex(sub_command_args.author_pubkey.clone())?;
         subscription = Filter::new().event(event_id).author(author_pubkey);
     } else {

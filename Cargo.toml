@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.112"
+version = "0.0.113"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -103,7 +103,7 @@ git2 = "^0.18" ## asyncgit ^0.19
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "./asyncgit", version = "0.0.4", default-features = false }
-gnostr-crawler = { version = "0.0.8", path = "crawler" }
+gnostr-crawler = { version = "0.0.9", path = "crawler" }
 gnostr-query = { version = "0.0.9", path = "query" }
 gnostr-types = { version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
@@ -119,11 +119,22 @@ k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 keyring = "2.0.5"
 lazy_static = "1.4"
 libp2p = { version = "0.54.1", features = [
-  "tokio",
+  "async-std",
+  "cbor",
+  "dns",
   "gossipsub",
+  "identify",
+  "kad",
+  "macros",
   "mdns",
-  "async-std", "noise", "macros", "ping", "tcp", "identify", "yamux", "relay", "quic"
-
+  "noise",
+  "ping",
+  "quic",
+  "relay",
+  "request-response",
+  "tcp",
+  "tokio",
+  "yamux"
 ] }
 
 log = "0.4"

@@ -1,11 +1,8 @@
 use crate::blockheight::blockheight_sync;
-use crate::utils::pwd::pwd;
 use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
 use base64::Engine;
 use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
-use log::debug;
 use tungstenite::protocol::Message;
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
@@ -154,7 +151,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
     let (mut websocket, _response) =
         tungstenite::connect(request).expect("Could not connect to relay");
 
-    print!("{}\n", wire);
+    println!("{}", wire);
     websocket
         .send(Message::Text(wire))
         .expect("Could not send message to relay");
@@ -203,7 +200,6 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
         }
         Message::Close(_) => {
             //println!("Closing");
-            return;
         }
         Message::Frame(_) => {
             println!("UNEXPECTED RAW WEBSOCKET FRAME")
