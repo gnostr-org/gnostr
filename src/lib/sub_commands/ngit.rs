@@ -32,13 +32,13 @@ pub struct NgitSubCommand {
 
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-        NgitCommands::Login(args) => login::launch(&args).await?,
-        NgitCommands::Init(args) => init::launch(&args).await?,
-        NgitCommands::Send(args) => send::launch(&args, true).await?,
+        NgitCommands::Login(args) => login::launch(args).await?,
+        NgitCommands::Init(args) => init::launch(args).await?,
+        NgitCommands::Send(args) => send::launch(args, true).await?,
         NgitCommands::List => list::launch().await?,
         NgitCommands::Pull => pull::launch().await?,
-        NgitCommands::Push(args) => push::launch(&args).await?,
-        NgitCommands::Fetch(args) => fetch::launch(&args).await?,
+        NgitCommands::Push(args) => push::launch(args).await?,
+        NgitCommands::Fetch(args) => fetch::launch(args).await?,
     }
     Ok(())
 }

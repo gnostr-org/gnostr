@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     debug!("{config:?}");
     let q = json!(["REQ", "gnostr-query", filt]);
     let query_string = to_string(&q)?;
-    let relay_url_str = matches.get_one::<String>("relay").clone().unwrap();
+    let relay_url_str = matches.get_one::<String>("relay").unwrap();
     let relay_url = Url::parse(relay_url_str)?;
     let vec_result = gnostr_query::send(query_string.clone(), relay_url, Some(limit_check)).await;
     //trace

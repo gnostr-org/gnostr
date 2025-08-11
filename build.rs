@@ -12,7 +12,7 @@ fn check_brew() -> bool {
 fn install_openssl_brew() {
     println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
     let install_result = Command::new("brew")
-        .args(&["install", "openssl@3"])
+        .args(["install", "openssl@3"])
         .status();
 
     match install_result {
@@ -43,7 +43,7 @@ fn install_openssl_brew() {
 fn install_pkg_config() {
     println!("cargo:warning=Attempting to install pkg-config using Homebrew...");
     let install_result = Command::new("brew")
-        .args(&["install", "pkg-config"])
+        .args(["install", "pkg-config"])
         .status();
 
     match install_result {
@@ -125,40 +125,40 @@ fn main() {
             println!("cargo:rustc-cfg=target_arch_x86_64");
             // Add x86_64 specific build logic here
 
-            if target_os == "linux" {}
-            if target_os == "macos" {}
+            target_os == "linux";
+            target_os == "macos";
             if target_os == "windows" {}
         }
         "aarch64" => {
             println!("cargo:warning=Building for aarch64 architecture.");
             println!("cargo:rustc-cfg=target_arch_aarch64");
             // Add aarch64 specific build logic here
-            if target_os == "linux" {}
-            if target_os == "macos" {}
+            target_os == "linux";
+            target_os == "macos";
             if target_os == "windows" {}
         }
         "arm" => {
             println!("cargo:warning=Building for arm architecture.");
             println!("cargo:rustc-cfg=target_arch_arm");
             // Add arm specific build logic here
-            if target_os == "linux" {}
-            if target_os == "macos" {}
+            target_os == "linux";
+            target_os == "macos";
             if target_os == "windows" {}
         }
         "wasm32" => {
             println!("cargo:warning=Building for wasm32 architecture.");
             println!("cargo:rustc-cfg=target_arch_wasm32");
             // Add wasm32 specific build logic here
-            if target_os == "linux" {}
-            if target_os == "macos" {}
+            target_os == "linux";
+            target_os == "macos";
             if target_os == "windows" {}
         }
         "riscv64" => {
             println!("cargo:warning=Building for riscv64 architecture.");
             println!("cargo:rustc-cfg=target_arch_riscv64");
             // Add riscv64 specific build logic here
-            if target_os == "linux" {}
-            if target_os == "macos" {}
+            target_os == "linux";
+            target_os == "macos";
             if target_os == "windows" {}
         }
         _ => {
@@ -167,8 +167,8 @@ fn main() {
                 target_arch
             );
             // Handle unknown architectures or provide a default
-            if target_os == "linux" {}
-            if target_os == "macos" {}
+            target_os == "linux";
+            target_os == "macos";
             if target_os == "windows" {}
         }
     }

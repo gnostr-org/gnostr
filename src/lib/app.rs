@@ -5,7 +5,6 @@ use std::{
     rc::Rc,
 };
 
-use crate::blockheight::blockheight_sync;
 use crate::weeble::weeble_sync;
 use crate::wobble::wobble_sync;
 use anyhow::{bail, Result};

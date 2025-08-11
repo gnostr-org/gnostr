@@ -141,9 +141,9 @@ fn main() {
         None => "false".to_string(), // Default value if no argument is provided
     };
     if millis.eq_ignore_ascii_case("true") || millis.eq_ignore_ascii_case("millis") {
-        print!("{}", weeble_millis_sync().unwrap().to_string());
+        print!("{}", weeble_millis_sync().unwrap());
     } else {
-        print!("{}", weeble_sync().unwrap().to_string());
+        print!("{}", weeble_sync().unwrap());
     }
 }
 

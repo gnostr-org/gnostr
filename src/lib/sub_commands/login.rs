@@ -42,7 +42,7 @@ pub async fn launch(
         #[cfg(test)]
         let mut client: &crate::client::MockConnect = &mut Default::default();
         #[cfg(not(test))]
-        let mut client = Client::default();
+        let client = Client::default();
 
         login::launch(
             &git_repo,

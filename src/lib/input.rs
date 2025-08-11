@@ -39,6 +39,12 @@ pub struct Input {
     aborted: Arc<AtomicBool>,
 }
 
+impl Default for Input {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Input {
     ///
     pub fn new() -> Self {

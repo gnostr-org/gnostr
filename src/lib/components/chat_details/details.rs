@@ -158,12 +158,7 @@ impl DetailsComponent {
                 //
                 Line::from(vec![
                     Span::styled(
-                        Cow::from(format!(
-                            //"162:chat_details/details.rs {}",
-                            //"162:{}",
-                            "{}",
-                            strings::commit::details_sha()
-                        )),
+                        Cow::from(strings::commit::details_sha().to_string()),
                         self.theme.text(false, false),
                     ),
                     Span::styled(Cow::from(data.hash.clone()), self.theme.text(true, false)),
@@ -196,12 +191,7 @@ impl DetailsComponent {
                     Line::from(vec![
                         style_detail(&self.theme, &Detail::Date),
                         Span::styled(
-                            Cow::from(format!(
-                                //"197:chat_details:details.rs:get_text_info {}",
-                                //"197:{}",
-                                "{}",
-                                time_to_string(committer.time, false)
-                            )),
+                            Cow::from(time_to_string(committer.time, false).to_string()),
                             self.theme.text(true, false),
                         ),
                     ]),

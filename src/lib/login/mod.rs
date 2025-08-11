@@ -686,11 +686,7 @@ pub async fn get_logged_in_user(git_repo_path: &Path) -> Result<Option<PublicKey
     let git_repo = Repo::from_path(&git_repo_path.to_path_buf())?;
     Ok(
         if let Some(npub) = git_repo.get_git_config_item("nostr.npub", None)? {
-            if let Ok(pubic_key) = PublicKey::parse(npub) {
-                Some(pubic_key)
-            } else {
-                None
-            }
+            PublicKey::parse(npub).ok()
         } else {
             None
         },
@@ -725,11 +721,7 @@ pub async fn get_user_ref_from_cache(
 pub fn get_curent_user(git_repo: &Repo) -> Result<Option<PublicKey>> {
     Ok(
         if let Some(npub) = git_repo.get_git_config_item("nostr.npub", None)? {
-            if let Ok(public_key) = PublicKey::parse(npub) {
-                Some(public_key)
-            } else {
-                None
-            }
+            PublicKey::parse(npub).ok()
         } else {
             None
         },

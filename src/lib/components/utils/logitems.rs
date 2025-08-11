@@ -32,7 +32,7 @@ impl From<CommitInfo> for LogEntry {
         let hash = c.id.to_string().into();
         let hash_short = c.id.get_short_string().into();
         let hash_padded = c.id.get_padded_hash_string().into();
-        let keys = &Keys::parse(&c.id.get_padded_hash_string())
+        let keys = &Keys::parse(c.id.get_padded_hash_string())
             .unwrap()
             .public_key()
             .to_string();

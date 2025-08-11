@@ -206,7 +206,7 @@ impl EventHub {
 pub fn launch(port: u16) -> Result<EventHub, Error> {
     let address = format!("0.0.0.0:{}", port);
     let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
-    return launch_from_listener(listener);
+    launch_from_listener(listener)
 }
 
 /// Start listening for websocket connections with the specified [`TcpListener`](std::net::TcpListener).
@@ -252,12 +252,9 @@ fn start_runtime(
                     println!("stopping listening on port");
                     break Ok(());
                 }
-                match tokio_listener.accept().await {
-                    Ok((stream, _)) => {
-                        tokio::spawn(handle_connection(stream, event_tx.clone(), current_id));
-                        current_id = current_id.wrapping_add(1);
-                    }
-                    _ => {}
+                if let Ok((stream, _)) = tokio_listener.accept().await {
+                    tokio::spawn(handle_connection(stream, event_tx.clone(), current_id));
+                    current_id = current_id.wrapping_add(1);
                 }
             }
         })

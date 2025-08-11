@@ -165,6 +165,12 @@ pub struct Queue {
     data: Rc<RefCell<VecDeque<InternalEvent>>>,
 }
 
+impl Default for Queue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Queue {
     pub fn new() -> Self {
         Self {
