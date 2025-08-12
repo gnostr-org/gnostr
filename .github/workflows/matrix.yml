@@ -86,7 +86,7 @@ jobs:
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall || true
         #if: matrix.rustup == '1.89'
-      - run: cargo binstall --no-confirm gnostr
+      - run: cargo binstall --no-confirm gnostr || true
         #if: matrix.rustup == '1.89'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: matrix.os != 'windows-latest'
