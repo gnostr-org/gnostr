@@ -19,11 +19,6 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     env::set_var("WOBBLE", "0");
     let mut args: GnostrCli = GnostrCli::parse();
 
-    let env_args: Vec<String> = env::args().collect();
-    for arg in &env_args {
-        println!("44:arg={:?}", arg);
-    }
-
     let app_cache = get_app_cache_path();
     if args.logging {
         let logging = setup_logging();
@@ -40,6 +35,11 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     } else {
         LevelFilter::OFF
     };
+    let env_args: Vec<String> = env::args().collect();
+    for arg in &env_args {
+        debug!("24:arg={:?}", arg);
+    }
+
     let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     trace!("{:?}", app_cache);
@@ -47,16 +47,16 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     if args.gitdir.is_some() {
         // Assuming 'args' and 'gitdir' are correctly defined elsewhere
         let repo_path: RepoPath = args.gitdir.clone().expect("");
-        println!("repo_path={:?}", repo_path);
+        debug!("main:50:repo_path={:?}", repo_path);
         // Convert the RepoPath to an OsStr reference
         let path_os_str = repo_path.as_path().as_os_str();
 
         // Now set the environment variable
         env::set_var("GNOSTR_GITDIR", path_os_str);
 
-        println!("59:{:?}", args.gitdir.clone().expect(""));
+        debug!("main:57:{:?}", args.gitdir.clone().expect(""));
         //env::set_var("GNOSTR_GITDIR", args.gitdir.clone().expect(""));
-        println!("61:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+        debug!("59:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
         //replace gnostr tui --gitdir
         //std::process::exit(0);
     }
