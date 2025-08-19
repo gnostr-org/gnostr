@@ -125,12 +125,22 @@ pub struct GnostrCli {
     ///
     #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
     pub hash: Option<String>,
-    ///
-    #[arg(long, value_name = "WORKDIR", help = "gnostr --workdir '<string>'")]
+    /// TODO handle gnostr tui --repo_path
+    #[arg(
+        long,
+        value_name = "WORKDIR",
+        default_value = ".",
+        help = "gnostr --workdir '<string>'"
+    )]
     pub workdir: Option<String>,
-    ///
-    #[arg(long, value_name = "GITDIR", help = "gnostr --gitdir '<string>'")]
-    pub gitdir: Option<String>,
+    /// TODO handle gnostr tui --repo_path
+    #[arg(
+        long,
+        value_name = "GITDIR",
+        default_value = ".",
+        help = "gnostr --gitdir '<string>'"
+    )]
+    pub gitdir: Option<RepoPath>,
     ///
     #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
     pub directory: Option<String>,
