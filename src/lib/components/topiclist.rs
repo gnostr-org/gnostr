@@ -685,7 +685,7 @@ impl TopicList {
         Line::from(txt)
     }
 
-    fn get_detail_text(&self, height: usize, width: usize) -> Vec<Line> {
+    fn get_detail_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
         let now = Local::now();
@@ -743,7 +743,7 @@ impl TopicList {
 
         txt
     }
-    fn get_topic_text(&self, height: usize, width: usize) -> Vec<Line> {
+    fn get_topic_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
         let now = Local::now();
@@ -918,7 +918,7 @@ impl TopicList {
             }
         }
     }
-    fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line> {
+    fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
         let now = Local::now();

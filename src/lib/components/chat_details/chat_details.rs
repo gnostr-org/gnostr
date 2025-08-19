@@ -124,7 +124,7 @@ impl CompareDetailsComponent {
 
     //commit header Info
     #[allow(unstable_name_collisions)]
-    fn get_commit_text(&self, data: &CommitDetails) -> Vec<Line> {
+    fn get_commit_text(&self, data: &CommitDetails) -> Vec<Line<'_>> {
         //TODO git commit log formatting
         let mut res = vec![
             Line::from(vec![

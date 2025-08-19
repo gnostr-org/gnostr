@@ -283,7 +283,7 @@ impl SubmodulesListPopup {
         Ok(())
     }
 
-    fn get_text(&self, theme: &SharedTheme, width_available: u16, height: usize) -> Text {
+    fn get_text(&self, theme: &SharedTheme, width_available: u16, height: usize) -> Text<'_> {
         const THREE_DOTS: &str = "...";
         const THREE_DOTS_LENGTH: usize = THREE_DOTS.len(); // "..."
         const COMMIT_HASH_LENGTH: usize = 8;
@@ -329,7 +329,7 @@ impl SubmodulesListPopup {
         Text::from(txt)
     }
 
-    fn get_info_text(&self, theme: &SharedTheme) -> Text {
+    fn get_info_text(&self, theme: &SharedTheme) -> Text<'_> {
         self.selected_entry()
             .map_or_else(Text::default, |submodule| {
                 let span_title_path = Span::styled("Path:", theme.text(false, false));
@@ -368,7 +368,7 @@ impl SubmodulesListPopup {
             })
     }
 
-    fn get_local_info_text(&self, theme: &SharedTheme) -> Text {
+    fn get_local_info_text(&self, theme: &SharedTheme) -> Text<'_> {
         let mut spans = vec![
             Line::from(vec![Span::styled("Current:", theme.text(false, false))]),
             Line::from(vec![Span::styled(

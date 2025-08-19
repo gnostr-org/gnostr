@@ -1,13 +1,6 @@
 use clap::Args;
-use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::RepoPath;
-use nostr_sdk_0_37_0::prelude::*;
-use std::error::Error;
 use std::path::PathBuf;
-use tracing::debug;
-use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 #[derive(Args, Debug, Clone)]
 #[command(author, version, about, long_about = None)]

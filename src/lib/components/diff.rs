@@ -308,7 +308,7 @@ impl DiffComponent {
     }
 
     ///fn get_text(&self, width: u16, height: u16) -> Vec<Line>
-    fn get_text(&self, width: u16, height: u16) -> Vec<Line> {
+    fn get_text(&self, width: u16, height: u16) -> Vec<Line<'_>> {
         if let Some(diff) = &self.diff {
             return if diff.hunks.is_empty() {
                 self.get_text_binary(diff)
@@ -361,7 +361,7 @@ impl DiffComponent {
         vec![]
     }
 
-    fn get_text_binary(&self, diff: &FileDiff) -> Vec<Line> {
+    fn get_text_binary(&self, diff: &FileDiff) -> Vec<Line<'_>> {
         let is_positive = diff.size_delta >= 0;
         let delta_byte_size = ByteSize::b(diff.size_delta.unsigned_abs());
         let sign = if is_positive { "+" } else { "-" };
