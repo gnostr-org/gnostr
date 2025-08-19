@@ -1,5 +1,7 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
+use gnostr_asyncgit::sync::RepoPath;
+use gnostr::cli;
 use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use sha2::{Digest, Sha256};
@@ -39,8 +41,29 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let env_args: Vec<String> = env::args().collect();
 
     for arg in &env_args {
-        trace!("arg={:?}", arg);
+        println!("arg={:?}", arg);
     }
+    if args.gitdir.is_some() {
+
+
+    // Assuming 'args' and 'gitdir' are correctly defined elsewhere
+    let repo_path: RepoPath = args.gitdir.clone().expect("");
+
+    // Convert the RepoPath to an OsStr reference
+    let path_os_str = repo_path.as_path().as_os_str();
+
+    // Now set the environment variable
+    env::set_var("GNOSTR_GITDIR", path_os_str);
+
+
+		println!("59:{:?}", args.gitdir.clone().expect(""));
+        //env::set_var("GNOSTR_GITDIR", args.gitdir.clone().expect(""));
+        println!("61:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+        //replace gnostr tui --gitdir
+        //std::process::exit(0);
+	}
+    if args.workdir.is_some() {}
+    if args.directory.is_some() {}
     if args.hash.is_some() {
         //not none
         if let Some(input_string) = args.hash {
@@ -61,10 +84,12 @@ async fn main() -> Result<(), Box<dyn StdError>> {
 
     // Post event
     match &args.command {
-        Some(GnostrCommands::Tui(sub_command_args)) => {
-            debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::tui::tui(sub_command_args).await
-        }
+        ////
+        //Some(GnostrCommands::Tui(sub_command_args)) => {
+        //    debug!("sub_command_args:{:?}", sub_command_args);
+        //    sub_commands::tui::tui(sub_command_args).await
+        //}
+        ////
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(&args.nsec.unwrap().to_string(), sub_command_args).await
@@ -264,10 +289,14 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             )
             .await
         }
+        Some(GnostrCommands::Tui(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::tui::tui(sub_command_args.clone()).await
+        }
         None => {
             {
-                let gnostr_subcommands = gnostr::gnostr::GnostrSubCommands::default();
-                let _ = sub_commands::tui::tui(&gnostr_subcommands).await;
+                let mut gnostr_subcommands = gnostr::gnostr::GnostrSubCommands::default();
+                let _ = sub_commands::tui::tui(gnostr_subcommands).await;
             };
             Ok(())
         }

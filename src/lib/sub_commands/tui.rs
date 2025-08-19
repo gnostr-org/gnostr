@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
+use std::env;
 
 use crate::app::App;
 use crate::app::QuitState;
@@ -10,6 +11,7 @@ use crate::spinner::Spinner;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
 use anyhow::{bail, Result};
+use async_std::path::PathBuf;
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
@@ -124,8 +126,8 @@ pub fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 }
 
 #[must_use]
-pub fn valid_path(repo_path: &RepoPath) -> bool {
-    let error = gnostr_asyncgit::sync::repo_open_error(repo_path);
+pub fn valid_path(gitdir: &RepoPath) -> bool {
+    let error = gnostr_asyncgit::sync::repo_open_error(gitdir);
     if let Some(error) = &error {
         log::error!("repo open error: {error}");
     }
@@ -225,13 +227,26 @@ pub fn set_panic_handlers() -> Result<()> {
     Ok(())
 }
 
-pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
+pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
-    if !valid_path(&sub_command_args.repo_path.clone().unwrap()) {
+    if valid_path(&mut sub_command_args.gitdir.clone().expect("")) {
         eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
-        return Ok(());
+        if Some(env::var("GNOSTR_GITDIR")).is_some() {
+            println!("237:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+            //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
+            let repo_path: RepoPath = RepoPath::from(
+                env::var("GNOSTR_GITDIR")
+                    .unwrap_or(env::var("HOME").unwrap().to_string() /*TODO*/)
+                    .as_ref(),
+            );
+
+			println!("245:{:?}", repo_path);
+            sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
+		    println!("{:?}", sub_command_args.gitdir);
+        }
+        //return Ok(());
     }
 
     let key_config = KeyConfig::init()
@@ -247,7 +262,7 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     set_panic_handlers()?;
 
     let mut terminal = start_terminal(io::stdout()).await.expect("");
-    let mut repo_path = sub_command_args.repo_path.clone().unwrap();
+    let mut gitdir = sub_command_args.gitdir.clone().unwrap();
     let input = Input::new();
 
     let updater = if sub_command_args.notify_watcher {
@@ -314,7 +329,7 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
     loop {
         let quit_state = run_app(
             app_start,
-            repo_path.clone(),
+            gitdir.clone(),
             theme.clone(),
             key_config.clone(),
             &input,
@@ -326,7 +341,7 @@ pub async fn tui(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Std
 
         match quit_state {
             QuitState::OpenSubmodule(p) => {
-                repo_path = p;
+                gitdir = p;
             }
             _ => break,
         }
