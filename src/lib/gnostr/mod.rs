@@ -17,8 +17,8 @@ pub struct GnostrSubCommands {
     #[arg(long = "theme", default_value = "theme.rom")]
     pub theme: Option<PathBuf>,
     /// repo path
-    #[arg(long = "repo_path", default_value = ".")]
-    pub repo_path: Option<RepoPath>,
+    #[arg(long = "gitdir", default_value = ".")]
+    pub gitdir: Option<RepoPath>,
     /// Enable notify_watcher
     #[clap(
         long,
@@ -56,7 +56,7 @@ impl Default for GnostrSubCommands {
     fn default() -> Self {
         GnostrSubCommands {
             theme: Some(PathBuf::from("theme.rom")),
-            repo_path: Some(RepoPath::from(".")),
+            gitdir: Some(RepoPath::from(".")),
             notify_watcher: false,
             nsec: None,
             password: None,
@@ -71,71 +71,71 @@ impl Default for GnostrSubCommands {
     }
 }
 
-pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Error>> {
-    let _ = crate::tui::tui().await;
-    //let args: ChatCli = ChatCli::parse();
-
-    let args = sub_command_args.clone();
-
-    if let Some(hash) = args.hash {
-        debug!("hash={}", hash);
-    };
-
-    if let Some(name) = args.name {
-        use std::env;
-        env::set_var("USER", &name);
-    };
-
-    let level = if args.debug {
-        LevelFilter::DEBUG
-    } else if args.trace {
-        LevelFilter::TRACE
-    } else if args.info {
-        LevelFilter::INFO
-    } else {
-        LevelFilter::OFF
-    };
-
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
-        .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-        .add_directive("nostr_relay_pool=off".parse().unwrap())
-        .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
-        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
-        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        .add_directive("gnostr::message=off".parse().unwrap())
-        .add_directive("gnostr::nostr_proto=off".parse().unwrap());
-
-    let subscriber = Registry::default()
-        .with(fmt::layer().with_writer(std::io::stdout))
-        .with(filter);
-
-    let _ = subscriber.try_init();
-
-    //initialize git repo
-    let repo = Repository::discover(".").expect("");
-
-    //gather some repo info
-    //find HEAD
-    let head = repo.head().expect("");
-    let obj = head
-        .resolve()
-        .expect("")
-        .peel(ObjectType::Commit)
-        .expect("");
-
-    //read top commit
-    let commit = obj.peel_to_commit().expect("");
-    let commit_id = commit.id().to_string();
-    //some info wrangling
-    println!("commit_id:\n{}", commit_id);
-
-    println!("{:?}", &sub_command_args.clone());
-    let _ = crate::tui::tui().await;
-
-    Ok(())
-}
+//pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Error>> {
+//    let _ = crate::tui::tui().await;
+//    //let args: ChatCli = ChatCli::parse();
+//
+//    let args = sub_command_args.clone();
+//
+//    if let Some(hash) = args.hash {
+//        debug!("hash={}", hash);
+//    };
+//
+//    if let Some(name) = args.name {
+//        use std::env;
+//        env::set_var("USER", &name);
+//    };
+//
+//    let level = if args.debug {
+//        LevelFilter::DEBUG
+//    } else if args.trace {
+//        LevelFilter::TRACE
+//    } else if args.info {
+//        LevelFilter::INFO
+//    } else {
+//        LevelFilter::OFF
+//    };
+//
+//    let filter = EnvFilter::default()
+//        .add_directive(level.into())
+//        .add_directive("nostr_sdk=off".parse().unwrap())
+//        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
+//        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
+//        .add_directive("nostr_relay_pool=off".parse().unwrap())
+//        .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
+//        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
+//        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
+//        //.add_directive("nostr_sdk::relay::*,off".parse().unwrap())
+//        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
+//        .add_directive("gnostr::message=off".parse().unwrap())
+//        .add_directive("gnostr::nostr_proto=off".parse().unwrap());
+//
+//    let subscriber = Registry::default()
+//        .with(fmt::layer().with_writer(std::io::stdout))
+//        .with(filter);
+//
+//    let _ = subscriber.try_init();
+//
+//    //initialize git repo
+//    let repo = Repository::discover(".").expect("");
+//
+//    //gather some repo info
+//    //find HEAD
+//    let head = repo.head().expect("");
+//    let obj = head
+//        .resolve()
+//        .expect("")
+//        .peel(ObjectType::Commit)
+//        .expect("");
+//
+//    //read top commit
+//    let commit = obj.peel_to_commit().expect("");
+//    let commit_id = commit.id().to_string();
+//    //some info wrangling
+//    println!("commit_id:\n{}", commit_id);
+//
+//    println!("{:?}", &sub_command_args.clone());
+//    let _ = crate::tui::tui().await;
+//
+//    Ok(())
+//}
