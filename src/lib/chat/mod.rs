@@ -13,8 +13,8 @@ use once_cell::sync::OnceCell;
 use serde_json;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::{env, error::Error, time::Duration};
 use std::str::FromStr;
+use std::{env, error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info, trace};
 use tracing_core::metadata::LevelFilter;
@@ -93,9 +93,6 @@ impl Network {
         }
     }
 }
-
-
-
 
 pub async fn create_event_with_custom_tags(
     keys: &Keys,
@@ -388,10 +385,7 @@ pub struct ChatSubCommands {
     #[arg(last = true)]
     arg_spec: Vec<String>,
 
-
-
-
-	#[arg(long, action)]
+    #[arg(long, action)]
     pub info: bool,
     #[arg(long, action)]
     pub debug: bool,
@@ -407,7 +401,6 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 }
 
 pub fn chat(key: &String, sub_command_args: &mut ChatSubCommands) -> Result<(), Box<dyn Error>> {
-
     let mut args = sub_command_args.clone();
     let env_args: Vec<String> = env::args().collect();
 

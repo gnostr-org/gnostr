@@ -3,8 +3,8 @@ pub mod kvs;
 pub mod opt;
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
-use crate::chat::ChatSubCommands;
 use crate::chat::msg::{Msg, MsgKind};
+use crate::chat::ChatSubCommands;
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::StreamProtocol;
@@ -34,7 +34,7 @@ use std::{
 };
 use tokio::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, info, warn};
+use tracing::{debug, info, trace, warn};
 //const TOPIC: &str = "gnostr";
 
 const IPFS_BOOTNODES: [&str; 6] = [
@@ -72,7 +72,7 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
     bytes[31] = bytes[31] ^ secret_key_seed;
     for (i, byte) in bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
-        debug!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
+        trace!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
 
         // A `u8` has 8 bits. We iterate from 7 down to 0 to print
         // the most significant bit (MSB) first.
@@ -85,20 +85,20 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
             // Use the bitwise AND operator `&` to check if the bit at the mask's
             // position is set. If the result is not 0, the bit is 1.
             if byte & mask == 0 {
-                debug!("0");
+                trace!("0");
             } else {
-                debug!("1");
+                trace!("1");
             }
         }
         // Add a newline to separate the output for each byte.
-        debug!("\n");
+        trace!("\n");
     }
 
     // bytes[31] = secret_key_seed;
 
     for (i, byte) in bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
-        debug!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
+        trace!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
 
         // A `u8` has 8 bits. We iterate from 7 down to 0 to print
         // the most significant bit (MSB) first.
@@ -111,13 +111,13 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
             // Use the bitwise AND operator `&` to check if the bit at the mask's
             // position is set. If the result is not 0, the bit is 1.
             if byte & mask == 0 {
-                debug!("0");
+                trace!("0");
             } else {
-                debug!("1");
+                trace!("1");
             }
         }
         // Add a newline to separate the output for each byte.
-        debug!("\n");
+        trace!("\n");
     }
 
     let keypair =
@@ -134,7 +134,7 @@ fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
     for (i, byte) in close_bytes.iter().enumerate() {
         if i < 32 {
             // Print context: the index and value (decimal and hex) of the current byte.
-            debug!("Byte i={:02} [{:3} / {:#04x}]: ", i, byte, byte);
+            trace!("Byte i={:02} [{:3} / {:#04x}]: ", i, byte, byte);
 
             // A `u8` has 8 bits. We iterate from 7 down to 0 to print
             // the most significant bit (MSB) first.
@@ -147,24 +147,24 @@ fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
                 // Use the bitwise AND operator `&` to check if the bit at the mask's
                 // position is set. If the result is not 0, the bit is 1.
                 if byte & mask == 0 {
-                    debug!("0");
+                    trace!("0");
                 } else {
-                    debug!("1");
+                    trace!("1");
                 }
             }
             // Add a newline to separate the output for each byte.
-            debug!("\n");
+            trace!("\n");
         } // end if
     }
     let mut keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
-    println!("262:{}", keypair.public().to_peer_id());
+    trace!("262:{}", keypair.public().to_peer_id());
 
     close_bytes[31] = bytes[31] ^ 0u8;
 
     for (i, byte) in close_bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
-        print!("265:Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
+        trace!("265:Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
 
         // A `u8` has 8 bits. We iterate from 7 down to 0 to print
         // the most significant bit (MSB) first.
@@ -177,18 +177,18 @@ fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
             // Use the bitwise AND operator `&` to check if the bit at the mask's
             // position is set. If the result is not 0, the bit is 1.
             if byte & mask == 0 {
-                print!("0");
+                trace!("0");
             } else {
-                print!("1");
+                trace!("1");
             }
         }
         // Add a newline to separate the output for each byte.
-        println!();
+        trace!("");
     }
 
     keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
-    println!("292:{}", keypair.public().to_peer_id());
+    trace!("292:{}", keypair.public().to_peer_id());
     keypair.public().to_peer_id()
 }
 
@@ -202,7 +202,7 @@ const GNOSTR_SHA256: [u8; 32] = [
 /// evt_loop
 pub async fn evt_loop(
     args: ChatSubCommands,
-	mut send: tokio::sync::mpsc::Receiver<Msg>,
+    mut send: tokio::sync::mpsc::Receiver<Msg>,
     recv: tokio::sync::mpsc::Sender<Msg>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
