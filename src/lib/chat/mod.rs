@@ -1,11 +1,11 @@
 use crate::blockheight::blockheight_sync;
 use anyhow::Result;
-use clap::{Args, Parser};
+use clap::{Args, Parser, ValueEnum};
 use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
 use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
-use libp2p::gossipsub;
+use libp2p::{gossipsub, Multiaddr, PeerId};
 //
 use nostr_sdk_0_37_0::prelude::*;
 //
@@ -14,6 +14,7 @@ use serde_json;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::{env, error::Error, time::Duration};
+use std::str::FromStr;
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info, trace};
 use tracing_core::metadata::LevelFilter;
@@ -29,6 +30,72 @@ pub mod ui;
 use crate::p2p::evt_loop;
 pub mod msg;
 pub use msg::*;
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum Network {
+    Kusama,
+    Polkadot,
+    Ipfs,
+    Ursa,
+}
+
+impl Network {
+    #[rustfmt::skip]
+    fn bootnodes(&self) -> Vec<(Multiaddr, PeerId)> {
+    match self {
+    Network::Kusama => {
+    vec![
+    ("/dns/p2p.cc3-0.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd").unwrap()),
+    ("/dns/p2p.cc3-1.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWNpGriWPmf621Lza9UWU9eLLBdCFaErf6d4HSK7Bcqnv4").unwrap()),
+    ("/dns/p2p.cc3-2.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWLmLiB4AenmN2g2mHbhNXbUcNiGi99sAkSk1kAQedp8uE").unwrap()),
+    ("/dns/p2p.cc3-3.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWEGHw84b4hfvXEfyq4XWEmWCbRGuHMHQMpby4BAtZ4xJf").unwrap()),
+    ("/dns/p2p.cc3-4.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWF9KDPRMN8WpeyXhEeURZGP8Dmo7go1tDqi7hTYpxV9uW").unwrap()),
+    ("/dns/p2p.cc3-5.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWDiwMeqzvgWNreS9sV1HW3pZv1PA7QGA7HUCo7FzN5gcA").unwrap()),
+    ("/dns/kusama-bootnode-0.paritytech.net/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWSueCPH3puP2PcvqPJdNaDNF3jMZjtJtDiSy35pWrbt5h").unwrap()),
+    ("/dns/kusama-bootnode-1.paritytech.net/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWQKqane1SqWJNWMQkbia9qiMWXkcHtAdfW5eVF8hbwEDw").unwrap())
+    ]
+    }
+    Network::Polkadot => {
+    vec![
+    // ("/dns/p2p.cc1-0.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWEdsXX9657ppNqqrRuaCHFvuNemasgU5msLDwSJ6WqsKc").unwrap()),
+    ("/dns/p2p.cc1-1.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWAtx477KzC8LwqLjWWUG6WF4Gqp2eNXmeqAG98ehAMWYH").unwrap()),
+    ("/dns/p2p.cc1-2.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWAGCCPZbr9UWGXPtBosTZo91Hb5M3hU8v6xbKgnC5LVao").unwrap()),
+    ("/dns/p2p.cc1-3.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWJ4eyPowiVcPU46pXuE2cDsiAmuBKXnFcFPapm4xKFdMJ").unwrap()),
+    ("/dns/p2p.cc1-4.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWNMUcqwSj38oEq1zHeGnWKmMvrCFnpMftw7JzjAtRj2rU").unwrap()),
+    ("/dns/p2p.cc1-5.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWDs6LnpmWDWgZyGtcLVr3E75CoBxzg1YZUPL5Bb1zz6fM").unwrap()),
+    ("/dns/cc1-0.parity.tech/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWSz8r2WyCdsfWHgPyvD8GKQdJ1UAiRmrcrs8sQB3fe2KU").unwrap()),
+    ("/dns/cc1-1.parity.tech/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWFN2mhgpkJsDBuNuE5427AcDrsib8EoqGMZmkxWwx3Md4").unwrap()),
+    ]
+    }
+    Network::Ipfs => {
+    vec![
+    ("/ip4/104.131.131.82/tcp/4001".parse().unwrap(), FromStr::from_str("QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ").unwrap()),
+    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN").unwrap()),
+    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa").unwrap()),
+    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb").unwrap()),
+    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt").unwrap()),
+    ]
+    }
+    Network::Ursa => {
+    vec![
+    ("/dns/bootstrap-node-0.ursa.earth/tcp/6009".parse().unwrap(), FromStr::from_str("12D3KooWDji7xMLia6GAsyr4oiEFD2dd3zSryqNhfxU3Grzs1r9p").unwrap()),
+    ]
+    }
+    }
+    }
+
+    fn protocol(&self) -> Option<String> {
+        match self {
+            Network::Kusama => Some("/ksmcc3/kad".to_string()),
+            Network::Polkadot => Some("/dot/kad".to_string()),
+            Network::Ipfs => None,
+            Network::Ursa => Some("/ursa/kad/0.0.1".to_string()),
+        }
+    }
+}
+
+
+
 
 pub async fn create_event_with_custom_tags(
     keys: &Keys,
@@ -186,7 +253,7 @@ pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
 }
 
 /// gnostr chat - p2p chat
-#[derive(Debug, Parser)]
+#[derive(Clone, Debug, Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
@@ -201,7 +268,7 @@ pub struct ChatCli {
     )]
     pub name: Option<String>,
     ///
-    #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
+    #[arg(long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
 		action = clap::ArgAction::Append,
 		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     pub nsec: Option<String>,
@@ -220,7 +287,7 @@ pub struct ChatCli {
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
     pub relays: Vec<String>,
     /// Enable debug logging
-    #[clap(
+    #[arg(
         long,
         value_name = "DEBUG",
         help = "gnostr --debug",
@@ -228,7 +295,7 @@ pub struct ChatCli {
     )]
     pub debug: bool,
     /// Enable info logging
-    #[clap(
+    #[arg(
         long,
         value_name = "INFO",
         help = "gnostr --info",
@@ -236,7 +303,7 @@ pub struct ChatCli {
     )]
     pub info: bool,
     /// Enable trace logging
-    #[clap(
+    #[arg(
         long,
         value_name = "TRACE",
         help = "gnostr --trace",
@@ -270,7 +337,61 @@ pub struct ChatSubCommands {
     ///// disable spinner animations
     #[arg(long, action, default_value = "false")]
     pub disable_cli_spinners: bool,
-    #[arg(long, action)]
+    #[arg(long)]
+    pub secret: Option<u8>,
+
+    // peer implies lookup by dht default --network ipfs
+    #[arg(long)]
+    peer: Option<String>,
+
+    // multiaddr implies direct connect
+    #[arg(long)]
+    multiaddr: Option<Multiaddr>,
+
+    // network
+    #[arg(long, value_enum, default_value = &"ipfs")]
+    network: Option<Network>,
+
+    #[arg(long)]
+    flag_topo_order: bool,
+    #[arg(long)]
+    flag_date_order: bool,
+    #[arg(long)]
+    flag_reverse: bool,
+    #[arg(long)]
+    flag_author: Option<String>,
+    #[arg(long)]
+    flag_committer: Option<String>,
+    #[arg(long = "grep")]
+    flag_grep: Option<String>,
+    #[arg(long = "git-dir")]
+    flag_git_dir: Option<String>,
+    #[arg(long)]
+    flag_skip: Option<usize>,
+    #[arg(long)]
+    flag_max_count: Option<usize>,
+    #[arg(long)]
+    flag_merges: bool,
+    #[arg(long)]
+    flag_no_merges: bool,
+    #[arg(long)]
+    flag_no_min_parents: bool,
+    #[arg(long)]
+    flag_no_max_parents: bool,
+    #[arg(long)]
+    flag_max_parents: Option<usize>,
+    #[arg(long)]
+    flag_min_parents: Option<usize>,
+    #[arg(long, short)]
+    flag_patch: bool,
+    arg_commit: Vec<String>,
+    #[arg(last = true)]
+    arg_spec: Vec<String>,
+
+
+
+
+	#[arg(long, action)]
     pub info: bool,
     #[arg(long, action)]
     pub debug: bool,
@@ -285,9 +406,11 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
-    let args = sub_command_args.clone();
+pub fn chat(key: &String, sub_command_args: &mut ChatSubCommands) -> Result<(), Box<dyn Error>> {
+
+    let mut args = sub_command_args.clone();
     let env_args: Vec<String> = env::args().collect();
+
     let level = if args.debug {
         LevelFilter::DEBUG
     } else if args.trace {
@@ -322,7 +445,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         trace!("arg={:?}", arg);
     }
 
-    if let Some(name) = args.name {
+    if let Some(ref name) = args.name {
         env::set_var("USER", &name); //detected later from env
     };
 
@@ -348,7 +471,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
 
     //args.nsec
     if args.nsec.is_some() {
-        keys = Keys::parse(args.nsec.unwrap())?;
+        keys = Keys::parse(args.nsec.clone().unwrap())?;
     }
     ////args.hash overrides args.nsec
     //if !args.hash.clone().is_none() {
@@ -706,7 +829,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         //
         let mut topic = commit_id.to_string();
         if args.topic.is_some() {
-            topic = args.topic.expect("");
+            topic = args.topic.clone().expect("");
         }
 
         app.topic = Input::new(topic.clone().to_string());
@@ -714,7 +837,7 @@ pub fn chat(key: &String, sub_command_args: &ChatSubCommands) -> Result<(), Box<
         let topic = gossipsub::IdentTopic::new(format!("{:?}", topic.clone()));
 
         global_rt().spawn(async move {
-            evt_loop(input_rx, peer_tx, topic).await.unwrap();
+            evt_loop(args, input_rx, peer_tx, topic).await.unwrap();
         });
 
         // recv from peer
