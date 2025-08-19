@@ -11,7 +11,6 @@ use crate::spinner::Spinner;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
 use anyhow::{bail, Result};
-use async_std::path::PathBuf;
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
@@ -231,6 +230,8 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
+    println!("{:?}", sub_command_args);
+
     if valid_path(&mut sub_command_args.gitdir.clone().expect("")) {
         eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
@@ -242,9 +243,9 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
                     .as_ref(),
             );
 
-			println!("245:{:?}", repo_path);
+            println!("245:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-		    println!("{:?}", sub_command_args.gitdir);
+            println!("{:?}", sub_command_args.gitdir);
         }
         //return Ok(());
     }

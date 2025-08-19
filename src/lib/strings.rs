@@ -314,7 +314,7 @@ pub fn rename_branch_popup_msg(_key_config: &SharedKeyConfig) -> String {
 pub fn copy_success(s: &str) -> String {
     format!("{POPUP_SUCCESS_COPY} \"{s}\"")
 }
-pub fn ellipsis_trim_start(s: &str, width: usize) -> Cow<str> {
+pub fn ellipsis_trim_start(s: &str, width: usize) -> Cow<'_, str> {
     if s.width() <= width {
         Cow::Borrowed(s)
     } else {

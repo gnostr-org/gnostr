@@ -20,9 +20,6 @@ use libp2p::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::p2p::handle_input;
-use crate::p2p::opt;
-
 /// Creates the network components, namely:
 ///
 /// - The network client to interact with the network layer from anywhere within your application.

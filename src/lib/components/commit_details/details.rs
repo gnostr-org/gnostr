@@ -112,7 +112,7 @@ impl DetailsComponent {
         }
     }
 
-    fn get_wrapped_text_message(&self, width: usize, height: usize) -> Vec<Line> {
+    fn get_wrapped_text_message(&self, width: usize, height: usize) -> Vec<Line<'_>> {
         let (wrapped_title, wrapped_message) = Self::get_wrapped_lines(&self.data, width);
 
         [&wrapped_title[..], &wrapped_message[..]]
@@ -131,7 +131,7 @@ impl DetailsComponent {
     }
 
     #[allow(unstable_name_collisions, clippy::too_many_lines)]
-    fn get_text_info(&self) -> Vec<Line> {
+    fn get_text_info(&self) -> Vec<Line<'_>> {
         self.data.as_ref().map_or_else(Vec::new, |data| {
             let mut res = vec![];
 

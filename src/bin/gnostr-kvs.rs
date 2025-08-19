@@ -10,10 +10,7 @@ use std::{
 use clap::{Parser, ValueEnum};
 //use distributed_commit_list::utils;
 use futures::stream::StreamExt;
-use git2::{
-    Commit, DiffFormat, ObjectType,
-    Repository,
-};
+use git2::{Commit, DiffFormat, ObjectType, Repository};
 use libp2p::StreamProtocol;
 use libp2p::{
     core::transport::Transport,

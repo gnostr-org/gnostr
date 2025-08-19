@@ -52,7 +52,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
     if urls_str.chars().next().is_some() {
-        char_iter.next() == Some('[');
+        let _ = char_iter.next() == Some('[');
         loop {
             match char_iter.next() {
                 Some(']') => {
@@ -83,8 +83,8 @@ pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
     let mut collected = Vec::new();
     let mut char_iter = urls_str.chars();
     if urls_str.chars().next().is_some() {
-        char_iter.next() == Some('[');
-        char_iter.next() == Some(',');
+        let _ = char_iter.next() == Some('[');
+        let _ = char_iter.next() == Some(',');
         loop {
             match char_iter.next() {
                 Some(']') => {
