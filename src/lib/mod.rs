@@ -66,8 +66,6 @@ pub mod strings;
 pub mod sub_commands;
 ///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
 pub mod tabs;
-///  <https://docs.rs/gnostr/latest/gnostr/tui/index.html>
-pub mod tui;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
