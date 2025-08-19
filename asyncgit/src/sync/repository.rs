@@ -40,6 +40,11 @@ impl RepoPath {
             Self::Workdir { workdir, .. } => Some(workdir.as_path()),
         }
     }
+
+    ///
+    pub fn as_path(&self) -> &Path {
+        self.gitpath()
+    }
 }
 
 impl From<&str> for RepoPath {
