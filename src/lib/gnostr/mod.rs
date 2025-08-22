@@ -10,7 +10,8 @@ pub struct GnostrSubCommands {
     #[arg(long = "theme", default_value = "theme.rom")]
     pub theme: Option<PathBuf>,
     /// repo path
-    #[arg(long = "gitdir", default_value = ".")]
+    //#[arg(long = "gitdir", default_value = ".")]
+    #[arg(long = "gitdir")]
     pub gitdir: Option<RepoPath>,
     /// Enable notify_watcher
     #[clap(

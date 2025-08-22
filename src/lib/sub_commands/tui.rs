@@ -33,7 +33,7 @@ use std::{
     panic, process,
     time::{Duration, Instant},
 };
-use tracing::{debug, Level};
+use tracing::{debug, trace, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 //use crate::{app::App, cli::process_cmdline};
@@ -225,17 +225,21 @@ pub fn set_panic_handlers() -> Result<()> {
 
     Ok(())
 }
-
+/// GNOSTR_TUI
 pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
-    println!("{:?}", sub_command_args);
+    debug!("233:tui:{:?}", sub_command_args);
+    //debug!("234:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
 
-    if valid_path(&mut sub_command_args.gitdir.clone().expect("")) {
-        eprintln!("invalid path\nplease run gitui inside of a non-bare git repository");
+    //TODO gnostr --gitdir
+    //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
+    let mut gitdir = sub_command_args.gitdir.clone().unwrap();
+    if !valid_path(&gitdir) {
+        debug!("237:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            println!("237:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+            debug!("241:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
             //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
             let repo_path: RepoPath = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
@@ -243,11 +247,15 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
                     .as_ref(),
             );
 
-            println!("245:{:?}", repo_path);
+            debug!("247:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            println!("{:?}", sub_command_args.gitdir);
+            println!("251:{:?}", sub_command_args.gitdir);
+
+            //return Ok(());
+        } else {
+            debug!("TODO:git init in $HOME/.gnostr/tmp repo or /tmp/...");
+            return Ok(());
         }
-        //return Ok(());
     }
 
     let key_config = KeyConfig::init()
@@ -263,7 +271,7 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
     set_panic_handlers()?;
 
     let mut terminal = start_terminal(io::stdout()).await.expect("");
-    let mut gitdir = sub_command_args.gitdir.clone().unwrap();
+    //let mut gitdir = sub_command_args.gitdir.clone().unwrap();
     let input = Input::new();
 
     let updater = if sub_command_args.notify_watcher {
@@ -312,10 +320,7 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
         .with(filter);
 
     let _ = subscriber.try_init();
-    tracing::trace!("\n{:?}\n", &sub_command_args);
-    tracing::debug!("\n{:?}\n", &sub_command_args);
-    tracing::info!("\n{:?}\n", &sub_command_args);
-    //print!("{:?}", &sub_command_args);
+    debug!("\n{:?}\n", &sub_command_args);
 
     if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
     {

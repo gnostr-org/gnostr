@@ -68,7 +68,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::tui::tui(sub_command_args).await
+            sub_commands::tui::tui(sub_command_args.clone()).await
         }
         //
         None => {
@@ -77,6 +77,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 let _ = sub_commands::tui::tui(gnostr_subcommands).await;
             };
             Ok(())
-        } //&Some(_) => todo!(),
+        }
+        &Some(_) => todo!(),
     }
 }
