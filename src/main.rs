@@ -357,6 +357,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
         None => {
             {
+                //TODO handle more scenarios
                 let gnostr_subcommands = gnostr::gnostr::GnostrSubCommands::default();
                 let _ = sub_commands::tui::tui(gnostr_subcommands).await;
             };
