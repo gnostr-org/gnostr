@@ -329,34 +329,29 @@ async fn main() -> Result<(), Box<dyn StdError>> {
 
             if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
                 // This block is only entered if the env var is found and is valid.
-                println!(
-                    "324:The GNOSTR_GITDIR environment variable is set to: {}",
+                debug!(
+                    "333:The GNOSTR_GITDIR environment variable is set to: {}",
                     gitdir_env_value
                 );
 
-                //println!("{}", gnostr_cli_args.gitdir);
-                //if let Some(git_dir_value) = sub_command_args_mut.clone().gitdir {
                 if let Some(git_dir_value) = gitdir_value {
                     // You have the value!
-                    println!("331:OVERRIDE!! The git directory is: {:?}", git_dir_value);
-
-                    // Corrected line using .as_str():
+                    debug!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
                     let gitdir_string = format!("{}", gitdir_env_value);
-                    println!(
-                        "335:OVERRIDE!! The git directory is: {:?}",
+                    debug!(
+                        "342:OVERRIDE!! The git directory is: {:?}",
                         gitdir_string.clone()
                     );
                     sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
-                    //
                     sub_commands::tui::tui(sub_command_args_mut.clone()).await
                 } else {
                     Ok({
-                        println!("No git directory specified.");
+                        debug!("No git directory specified.");
                     })
                 }
             } else {
                 // This block is entered if the env var is not found.
-                println!("350:The GNOSTR_GITDIR environment variable is not set.");
+                debug!("354:The GNOSTR_GITDIR environment variable is not set.");
                 sub_commands::tui::tui(sub_command_args.clone()).await
             }
         }
