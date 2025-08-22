@@ -249,14 +249,15 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
 
             debug!("247:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            println!("251:{:?}", sub_command_args.gitdir);
-
-            //return Ok(());
+            debug!("251:{:?}", sub_command_args.gitdir);
         } else {
+            debug!("GNOSTR_GITDIR NOT set case!");
+            debug!("fork no return  case!");
             debug!("TODO:git init in $HOME/.gnostr/tmp repo or /tmp/...");
-            return Ok(());
+            //return Ok(());
         }
-    }
+    } else { /*NOT NOT valid case!*/
+    } //must be a valid path to a git repo!
 
     let key_config = KeyConfig::init()
         .map_err(|e| eprintln!("KeyConfig loading error: {e}"))
@@ -399,7 +400,7 @@ pub async fn run_app(
         key_config,
     )
     .await
-    .expect("");
+    .expect("402:App::new fail!");
 
     let mut spinner = Spinner::default();
     let mut first_update = true;
