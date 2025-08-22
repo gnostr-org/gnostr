@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
 
     match gitdir_value.clone() {
         Some(value) => {
-            println!("63:The --gitdir value is: {}", value);
+            debug!("63:The --gitdir value is: {}", value);
             let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
             debug!("main:73:repo_path={:?}", repo_path);
             // Convert the RepoPath to an OsStr reference
