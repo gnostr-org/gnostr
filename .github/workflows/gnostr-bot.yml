@@ -122,7 +122,7 @@ jobs:
             --hex || true) && \
             echo $EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT) && \
-            echo $NOTE && \
+            export NOTE=$NOTE && \
             curl https://nostr.band/$NOTE
         if: matrix.os == 'macos-latest'
       - run: |
