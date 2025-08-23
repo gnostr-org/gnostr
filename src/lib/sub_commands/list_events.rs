@@ -1,48 +1,49 @@
-use std::{str::FromStr, time::Duration};
-
+use crate::utils::create_client;
 use clap::Args;
 use nostr_sdk_0_32_0::prelude::*;
-
-use crate::utils::create_client;
+use std::{str::FromStr, time::Duration};
+use tracing::debug;
 
 #[derive(Args, Debug)]
 pub struct ListEventsSubCommand {
     /// Ids
     #[arg(short, long, action = clap::ArgAction::Append)]
-    ids: Option<Vec<String>>,
+    pub ids: Option<Vec<String>>,
     /// Authors
     #[arg(short, long, action = clap::ArgAction::Append)]
-    authors: Option<Vec<String>>,
+    pub authors: Option<Vec<String>>,
     /// Kinds
-    #[arg(short, long, action = clap::ArgAction::Append)]
-    kinds: Option<Vec<u64>>,
+    #[arg(short, long, action = clap::ArgAction::Append, default_values = [
+           "30617", "30618", "1617", "1621", "1630", "1631", "1632", "1633"
+       ])]
+    pub kinds: Option<Vec<u64>>,
     /// e tag
     #[arg(long, action = clap::ArgAction::Append)]
-    etag: Option<Vec<String>>,
+    pub etag: Option<Vec<String>>,
     /// p tag
     #[arg(long, action = clap::ArgAction::Append)]
-    ptag: Option<Vec<String>>,
+    pub ptag: Option<Vec<String>>,
     /// d tag
     #[arg(long, action = clap::ArgAction::Append)]
-    dtag: Option<Vec<String>>,
+    pub dtag: Option<Vec<String>>,
     /// a tag
     #[arg(long, action = clap::ArgAction::Append)]
-    atag: Option<Vec<String>>,
+    pub atag: Option<Vec<String>>,
     /// Since
     #[arg(short, long, action = clap::ArgAction::Append)]
-    since: Option<u64>,
+    pub since: Option<u64>,
     /// Until
     #[arg(short, long, action = clap::ArgAction::Append)]
-    until: Option<u64>,
+    pub until: Option<u64>,
     /// Limit
     #[arg(short, long, action = clap::ArgAction::Append)]
-    limit: Option<usize>,
-    /// Output
+    pub limit: Option<usize>,
+    /// Output .git/<output>.json
     #[arg(short, long)]
-    output: Option<String>,
+    pub output: Option<String>,
     /// Timeout in seconds
     #[arg(long)]
-    timeout: Option<u64>,
+    pub timeout: Option<u64>,
 }
 
 pub async fn list_events(
@@ -92,6 +93,7 @@ pub async fn list_events(
             .map(Kind::from)
             .collect();
         filter = filter.kinds(kinds);
+    } else {
     }
 
     // Handle e-tags
@@ -148,9 +150,13 @@ pub async fn list_events(
     let events: Vec<Event> = client.get_events_of(vec![filter], timeout).await?;
 
     if let Some(output) = &sub_command_args.output {
-        let file = std::fs::File::create(output)?;
+        let file = std::fs::File::create(".git/".to_owned() + output)?;
         serde_json::to_writer_pretty(file, &events)?;
-        println!("Wrote {} event(s) to {}", events.len(), output);
+        debug!(
+            "Wrote {} event(s) to {}",
+            events.len(),
+            ".git/".to_owned() + output
+        );
     } else {
         println!("{}", serde_json::to_string_pretty(&events)?)
     }
