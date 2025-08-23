@@ -120,9 +120,9 @@ jobs:
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
             --hex || true) && \
-            echo $EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT) && \
-            export NOTE=$NOTE && \
+            export EVENT=$EVENT && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
         if: matrix.os == 'macos-latest'
       - run: |
