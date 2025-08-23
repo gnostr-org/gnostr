@@ -6,7 +6,7 @@ on:
     - cron: '*/30 * * * *' # run 30th minute
   push:
     branches:
-      - 'ma**'
+      - '**'
 
   workflow_dispatch:
 
