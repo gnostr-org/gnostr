@@ -80,7 +80,7 @@ pub async fn run(
         debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
     }
 
-    let chat = crate::chat::chat(key, sub_command_args);
+    let chat = crate::chat::chat(key, sub_command_args).await;
 
     Ok(())
 }
