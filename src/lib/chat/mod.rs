@@ -23,6 +23,7 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use tui_input::Input;
 
 // src/lib/utils.rs
+use crate::sub_commands::list_events::{list_events, ListEventsSubCommand};
 use crate::utils::parse_json;
 use crate::utils::split_json_string;
 
@@ -337,7 +338,10 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub fn chat(key: &String, sub_command_args: &mut ChatSubCommands) -> Result<(), Box<dyn Error>> {
+pub async fn chat(
+    key: &String,
+    sub_command_args: &mut ChatSubCommands,
+) -> Result<(), Box<dyn Error>> {
     let mut args = sub_command_args.clone();
     let env_args: Vec<String> = env::args().collect();
 
@@ -375,10 +379,35 @@ pub fn chat(key: &String, sub_command_args: &mut ChatSubCommands) -> Result<(), 
         trace!("arg={:?}", arg);
     }
 
+    let author = Keys::parse(key.clone())?;
+    //let authors: Vec<String> = [author.public_key()];
+    let pubkey: String = author.public_key().to_hex();
+    let mut authors: Vec<String> = vec![];
+    authors.push(pubkey.clone());
+    let mut relays: Vec<String> = vec![];
+    relays.push("wss://relay.damus.io".to_string());
+
+    let listevents_subcommand = ListEventsSubCommand {
+        atag: None,
+        dtag: None,
+        etag: None,
+        authors: Some(authors),
+        ids: None,
+        kinds: None,
+        ptag: None,
+        limit: None,
+        output: Some(format!("{}.json", pubkey)),
+        since: None,
+        timeout: None,
+        until: None,
+    };
     if let Some(ref name) = args.name {
         env::set_var("USER", &name); //detected later from env
     };
 
+    let list_events = list_events(relays, &listevents_subcommand).await;
+    debug!("{:?}", listevents_subcommand);
+    debug!("{:?}", list_events);
     //create a HashMap of custom_tags
     //used to insert commit tags
     let mut custom_tags = HashMap::new();
