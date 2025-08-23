@@ -1,9 +1,7 @@
-use std::str::FromStr;
-
+use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
 use clap::Args;
 use nostr_sdk_0_32_0::prelude::*;
-
-use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
+use std::str::FromStr;
 
 #[derive(Args, Debug)]
 pub struct ConvertKeySubCommand {
@@ -22,7 +20,7 @@ pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> Result<()> 
     if sub_command_args.to_hex {
         // Input is bech32 encoded so we find the hex value
         let hex_key_or_id = parse_key_or_id_to_hex_string(sub_command_args.key.clone()).await?;
-        println!("{hex_key_or_id}");
+        print!("{hex_key_or_id}");
     } else {
         // Input is hex so we bech32 encode it based on the provided prefix value
         let encoded_key: String = match sub_command_args
@@ -34,7 +32,7 @@ pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> Result<()> 
             Prefix::Nsec => SecretKey::from_str(sub_command_args.key.as_str())?.to_bech32()?,
             Prefix::Note => EventId::from_str(sub_command_args.key.as_str())?.to_bech32()?,
         };
-        println!("{encoded_key}");
+        print!("{encoded_key}");
     }
 
     Ok(())
