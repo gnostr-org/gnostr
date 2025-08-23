@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             // Now set the environment variable
             env::set_var("GNOSTR_GITDIR", path_os_str);
         }
-        None => println!("63:The --gitdir argument was not found or has no value."),
+        None => debug!("72:The --gitdir argument was not found or has no value."),
     }
 
     let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
