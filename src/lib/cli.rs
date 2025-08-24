@@ -1,11 +1,10 @@
-use anyhow::{anyhow, Result};
-use clap::{
-    Args,
-    /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
-    Subcommand,
-};
 use crate::sub_commands;
 use crate::sub_commands::*;
+use anyhow::{anyhow, Result};
+use clap::{
+    Args, /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
+    Subcommand,
+};
 
 use gnostr_asyncgit::sync::RepoPath;
 use libp2p::Multiaddr;

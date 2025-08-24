@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         debug!("40:arg={:?}", arg);
     }
     let gnostr_cli_gitdir = if gnostr_cli_args.gitdir.is_some() {
-    debug!("{:?}", gnostr_cli_args.gitdir.unwrap());
+        debug!("{:?}", gnostr_cli_args.gitdir.unwrap());
     };
 
     if env_args.contains(&String::from("--gitdir")) {

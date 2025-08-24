@@ -1,8 +1,8 @@
 use crate::blockheight::blockheight_sync;
+use crate::cli::{ChatCli, ChatSubCommands};
 use anyhow::Result;
 use clap::{Args, Parser, ValueEnum};
 use git2::{ObjectType, Repository};
-use crate::cli::{ChatCli, ChatSubCommands};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
 use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
