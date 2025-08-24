@@ -237,19 +237,19 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
     //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap();
     if !valid_path(&gitdir) {
-        debug!("237:invalid path\nplease run gitui inside of a non-bare git repository");
+        debug!("240:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
             debug!("241:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
             //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
-            let repo_path: RepoPath = RepoPath::from(
+            gitdir = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
                     .unwrap_or(env::var("HOME").unwrap().to_string() /*TODO*/)
                     .as_ref(),
             );
 
-            debug!("247:{:?}", repo_path);
-            sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            debug!("251:{:?}", sub_command_args.gitdir);
+            debug!("250:{:?}", gitdir);
+            sub_command_args.gitdir = Some(gitdir.clone()); //env::var("GNOSTR_GITDIR").unwrap().to_string()
+            debug!("252:{:?}", sub_command_args.gitdir);
         } else {
             debug!("GNOSTR_GITDIR NOT set case!");
             debug!("fork no return  case!");

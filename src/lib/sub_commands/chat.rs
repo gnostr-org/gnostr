@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
-use crate::chat::ChatSubCommands;
+use crate::cli::ChatSubCommands;
 use anyhow::Result;
 use serde::ser::StdError;
 

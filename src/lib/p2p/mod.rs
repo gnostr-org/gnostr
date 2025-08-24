@@ -4,7 +4,7 @@ pub mod opt;
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
 use crate::chat::msg::{Msg, MsgKind};
-use crate::chat::ChatSubCommands;
+use crate::cli::ChatSubCommands;
 use chrono::{Local, Timelike};
 use clap::ValueEnum;
 use futures::stream::StreamExt;

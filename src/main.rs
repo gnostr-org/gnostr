@@ -6,7 +6,7 @@ use gnostr::sub_commands;
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
 use std::env;
-use tracing::{debug, trace};
+use tracing::{debug, info, trace, warn};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::FmtSubscriber;
 
@@ -22,15 +22,19 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let app_cache = get_app_cache_path();
     if gnostr_cli_args.logging {
         let logging = setup_logging();
-        trace!("{:?}", logging);
     };
+
     let level = if gnostr_cli_args.debug {
+        debug!("debug={:?}", gnostr_cli_args.debug);
         LevelFilter::DEBUG
     } else if gnostr_cli_args.trace {
+        trace!("trace={:?}", gnostr_cli_args.trace);
         LevelFilter::TRACE
     } else if gnostr_cli_args.info {
+        info!("info={:?}", gnostr_cli_args.info);
         LevelFilter::INFO
     } else if gnostr_cli_args.warn {
+        warn!("warn={:?}", gnostr_cli_args.warn);
         LevelFilter::WARN
     } else {
         LevelFilter::OFF
@@ -39,6 +43,9 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     for arg in &env_args {
         debug!("40:arg={:?}", arg);
     }
+    let gnostr_cli_gitdir = if gnostr_cli_args.gitdir.is_some() {
+    debug!("{:?}", gnostr_cli_args.gitdir.unwrap());
+    };
 
     if env_args.contains(&String::from("--gitdir")) {
         debug!("44:The --gitdir argument was found!");
@@ -58,11 +65,12 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         }
     }
 
+    let mut repo_path = RepoPath::from(".");
     match gitdir_value.clone() {
         Some(value) => {
             debug!("63:The --gitdir value is: {}", value);
-            let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
-            debug!("main:73:repo_path={:?}", repo_path);
+            repo_path = RepoPath::from(gitdir_value.clone().unwrap().as_str());
+            debug!("main:65:repo_path={:?}", repo_path);
             // Convert the RepoPath to an OsStr reference
             let path_os_str = repo_path.as_path().as_os_str();
 

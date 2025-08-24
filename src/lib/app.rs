@@ -158,6 +158,7 @@ impl App {
     ) -> Result<Self> {
         log::trace!("open repo at: {:?}", &repo);
 
+        //
         let repo_path_text = repo_work_dir(&repo.borrow()).unwrap_or_default();
 
         let env = Environment {

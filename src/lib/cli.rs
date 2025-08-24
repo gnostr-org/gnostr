@@ -1,11 +1,14 @@
-use crate::sub_commands;
-use crate::sub_commands::*;
 use anyhow::{anyhow, Result};
 use clap::{
+    Args,
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
 };
+use crate::sub_commands;
+use crate::sub_commands::*;
+
 use gnostr_asyncgit::sync::RepoPath;
+use libp2p::Multiaddr;
 use simplelog::{Config, LevelFilter, WriteLogger};
 use std::{
     //env,
@@ -20,6 +23,152 @@ pub struct CliArgs {
     pub theme: PathBuf,
     pub repo_path: RepoPath,
     pub notify_watcher: bool,
+}
+
+/// gnostr chat - p2p chat
+#[derive(Clone, Debug, Parser)]
+#[command(name = "gnostr")]
+#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
+#[command(version = "0.0.1")]
+#[command(author, version, about, long_about = "long_about")]
+pub struct ChatCli {
+    /// gnostr chat --name <alias_string>
+    #[arg(
+        long,
+        value_name = "NAME",
+        help = "gnostr --name <string>",
+        /*default_value = ""*/ //decide whether to allow env var $USER as default
+    )]
+    pub name: Option<String>,
+    ///
+    #[arg(long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
+		action = clap::ArgAction::Append,
+		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    pub nsec: Option<String>,
+    ///
+    #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
+    pub hash: Option<String>,
+    ///
+    #[arg(long, value_name = "CHAT", help = "gnostr chat")]
+    pub chat: Option<String>,
+    ///
+    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
+    pub topic: Option<String>,
+    ///
+    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
+		action = clap::ArgAction::Append,
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
+    pub relays: Vec<String>,
+    /// Enable debug logging
+    #[arg(
+        long,
+        value_name = "DEBUG",
+        help = "gnostr --debug",
+        default_value = "false"
+    )]
+    pub debug: bool,
+    /// Enable info logging
+    #[arg(
+        long,
+        value_name = "INFO",
+        help = "gnostr --info",
+        default_value = "false"
+    )]
+    pub info: bool,
+    /// Enable trace logging
+    #[arg(
+        long,
+        value_name = "TRACE",
+        help = "gnostr --trace",
+        default_value = "false"
+    )]
+    pub trace: bool,
+    #[arg(long = "cfg", default_value = "")]
+    pub config: String,
+}
+
+#[derive(Args, Debug, Clone)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+pub struct ChatSubCommands {
+    //#[command(subcommand)]
+    //command: ChatCommands,
+    ///// nsec or hex private key
+    #[arg(short, long, global = true)]
+    pub nsec: Option<String>,
+    ///// password to decrypt nsec
+    #[arg(short, long, global = true)]
+    pub password: Option<String>,
+    #[arg(long, global = true)]
+    pub name: Option<String>,
+    ///// chat topic
+    #[arg(long, global = true)]
+    pub topic: Option<String>,
+    ///// chat hash
+    #[arg(long, global = true)]
+    pub hash: Option<String>,
+    ///// disable spinner animations
+    #[arg(long, action, default_value = "false")]
+    pub disable_cli_spinners: bool,
+    #[arg(long)]
+    pub secret: Option<u8>,
+
+    // peer implies lookup by dht default --network ipfs
+    #[arg(long)]
+    peer: Option<String>,
+
+    // multiaddr implies direct connect
+    #[arg(long)]
+    multiaddr: Option<Multiaddr>,
+
+    // network
+    #[arg(long, value_enum, default_value = &"ipfs")]
+    network: Option<crate::p2p::Network>,
+
+    #[arg(long)]
+    flag_topo_order: bool,
+    #[arg(long)]
+    flag_date_order: bool,
+    #[arg(long)]
+    flag_reverse: bool,
+    #[arg(long)]
+    flag_author: Option<String>,
+    #[arg(long)]
+    flag_committer: Option<String>,
+    #[arg(long = "grep")]
+    flag_grep: Option<String>,
+
+    #[arg(long = "gitdir")]
+    flag_gitdir: Option<String>,
+
+    #[arg(long)]
+    flag_skip: Option<usize>,
+    #[arg(long)]
+    flag_max_count: Option<usize>,
+    #[arg(long)]
+    flag_merges: bool,
+    #[arg(long)]
+    flag_no_merges: bool,
+    #[arg(long)]
+    flag_no_min_parents: bool,
+    #[arg(long)]
+    flag_no_max_parents: bool,
+    #[arg(long)]
+    flag_max_parents: Option<usize>,
+    #[arg(long)]
+    flag_min_parents: Option<usize>,
+    #[arg(long, short)]
+    flag_patch: bool,
+    arg_commit: Vec<String>,
+    #[arg(last = true)]
+    arg_spec: Vec<String>,
+
+    #[arg(long, action)]
+    pub info: bool,
+    #[arg(long, action)]
+    pub debug: bool,
+    #[arg(long, action)]
+    pub trace: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -188,7 +337,7 @@ pub enum GnostrCommands {
     /// Gnostr sub commands
     Tui(crate::gnostr::GnostrSubCommands),
     /// Chat sub commands
-    Chat(crate::chat::ChatSubCommands),
+    Chat(crate::cli::ChatSubCommands),
     /// Legit sub commands
     Legit(legit::LegitSubCommand),
     /// Ngit sub commands
