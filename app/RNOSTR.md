@@ -1,4 +1,4 @@
-# Rnostr [![Build](https://github.com/RandyMcMillan/rnostr/actions/workflows/build.yml/badge.svg)](https://github.com/RandyMcMillan/rnostr/actions/workflows/build.yml) [![Test](https://github.com/RandyMcMillan/rnostr/actions/workflows/test.yml/badge.svg)](https://github.com/RandyMcMillan/rnostr/actions/workflows/test.yml)
+# Rnostr [![Build](https://github.com/gnostr-org/gnostr/actions/workflows/build.yml/badge.svg)](https://github.com/RandyMcMillan/gnostr/actions/workflows/matrix.yml) [![Test](https://github.com/gnostr-org/rnostr/actions/workflows/test.yml/badge.svg)](https://github.com/gnostr-org/gnostr/actions/workflows/test.yml)
 
 
 A high-performance and scalable [nostr](https://github.com/nostr-protocol/nostr) relay written in Rust.
@@ -129,21 +129,21 @@ See docker compose [example](./docker-compose.yml)
 rnostr provides other commands such as import and export.
 
 ```shell
-
 ./target/release/rnostr --help
 
-# Usage: rnostr <COMMAND>
+```
+```
+Usage: rnostr <COMMAND>
 
-# Commands:
-#   import  Import data from jsonl file
-#   export  Export data to jsonl file
-#   bench   Benchmark filter
-#   relay   Start nostr relay server
-#   delete  Delete data by filter
-#   help    Print this message or the help of the given subcommand(s)
+Commands:
+   import  Import data from jsonl file
+   export  Export data to jsonl file
+   bench   Benchmark filter
+   relay   Start nostr relay server
+   delete  Delete data by filter
+   help    Print this message or the help of the given subcommand(s)
 
-# Options:
-#   -h, --help     Print help
-#   -V, --version  Print version
-
+ Options:
+   -h, --help     Print help
+   -V, --version  Print version
 ```

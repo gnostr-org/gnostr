@@ -1,10 +1,26 @@
 //! gnostr-relay
+
 use clap::Parser;
+use std::fs;
+use std::fs::File;
+use std::path::PathBuf;
 #[macro_use]
 extern crate clap;
 
+use anyhow::anyhow;
+use gnostr::cli::setup_logging;
 use gnostr_app::*;
 use gpui::*;
+
+use gnostr::Config;
+
+//use simplelog::*;
+//use simplelog::{Config, LevelFilter, WriteLogger};
+use simplelog::WriteLogger;
+
+use tracing::{debug, info, trace, warn};
+use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::FmtSubscriber;
 
 /// Cli
 #[derive(Debug, Parser)]
@@ -12,6 +28,26 @@ use gpui::*;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+
+    /// logging
+    #[arg(long, value_name = "LOGGING")]
+    pub logging: bool,
+
+    /// logging level
+    #[arg(long, value_name = "INFO")]
+    pub info: bool,
+
+    /// logging level
+    #[arg(long, value_name = "DEBUG")]
+    pub debug: bool,
+
+    /// logging level
+    #[arg(long, value_name = "TRACE")]
+    pub trace: bool,
+
+    /// logging level
+    #[arg(long, value_name = "WARN")]
+    pub warn: bool,
 }
 
 /// Commands
@@ -34,8 +70,32 @@ enum Commands {
     Gui(GuiOpts),
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> gnostr_app::Result<(), anyhow::Error> {
     let args = Cli::parse();
+
+    if args.logging {
+        //     let logging = gnostr::cli::setup_logging();
+    };
+
+    let level = if args.debug {
+        debug!("debug={:?}", args.debug);
+        LevelFilter::DEBUG
+    } else if args.trace {
+        trace!("trace={:?}", args.trace);
+        LevelFilter::TRACE
+    } else if args.info {
+        info!("info={:?}", args.info);
+        LevelFilter::INFO
+    } else if args.warn {
+        warn!("warn={:?}", args.warn);
+        LevelFilter::WARN
+    } else {
+        LevelFilter::OFF
+    };
+    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    //trace!("{:?}", app_cache);
+
     match args.command {
         Commands::Gui(opts) => {
             gui()?;
@@ -93,7 +153,7 @@ impl Render for GnostrApp {
 }
 
 fn gui() -> anyhow::Result<()> {
-	Application::new().run(|cx: &mut App| {
+    Application::new().run(|cx: &mut App| {
         cx.open_window(WindowOptions::default(), |_, cx| {
             cx.new(|_cx| GnostrApp {
                 text: "blockheight".into(),
@@ -101,5 +161,5 @@ fn gui() -> anyhow::Result<()> {
         })
         .unwrap();
     });
-Ok(())
+    Ok(())
 }

@@ -12,6 +12,10 @@ use std::{
 mod bench;
 mod relay;
 
+use gnostr::cli::setup_logging;
+
+use tracing_subscriber::filter::LevelFilter;
+
 pub use bench::*;
 pub use relay::*;
 
