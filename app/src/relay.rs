@@ -22,7 +22,7 @@ pub struct RelayOpts {
 
 #[actix_rt::main]
 pub async fn relay(config: &PathBuf, watch: bool) -> Result<()> {
-    tracing_subscriber::fmt::init();
+    //tracing_subscriber::fmt::init();
     info!("Start relay server");
 
     // actix_rt::System::new().block_on(async {
