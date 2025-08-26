@@ -89,7 +89,7 @@ pub enum Error {
     NoRepoWorkdir,
     /// SpawnCmd(io::Error),
     SpawnCmd(io::Error),
-    /// CmdBadExit(String, Option<i32>),
+    /// CmdBadExit(String, `Option<i32>`),
     CmdBadExit(String, Option<i32>),
     /// CouldntReadCmdOutput(io::Error),
     CouldntReadCmdOutput(io::Error),
