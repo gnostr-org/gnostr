@@ -29,7 +29,7 @@ const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 /// Keeps a set of active connections to relays
 pub struct RelayManager {
     // app_keys: Keys,
-    relays: Relays,
+    pub relays: Relays,
     relay_client: Client,
     pub processor: Processor,
     /// Time of last event seen (real time, Unix timestamp)
@@ -278,6 +278,7 @@ impl RelayManager {
         Ok(())
     }
 
+    //#[allow(unused_variables)]
     fn handle_event(&mut self, event: &Event) {
         match event.kind {
             Kind::Metadata => {
@@ -348,7 +349,7 @@ impl RelayManager {
                 self.update_event_time();
                 // count p tags
                 let mut cnt = 0;
-                for t in &event.tags {
+                for _t in &event.tags {
                     //if let Tag::PubKey(_pk, Some(ss)) = t {
                     //  state.pubkeys.add(pk);
                     //if let Some(ss) = s {
@@ -363,24 +364,24 @@ impl RelayManager {
             Kind::RelayList => {
                 debug!("{:?}", event.kind);
             }
-            Kind::Replaceable(u16) => {
+            Kind::Replaceable(_u16) => {
                 debug!("{:?}", event.kind);
             }
-            Kind::Ephemeral(u16) => {
+            Kind::Ephemeral(_u16) => {
                 debug!("{:?}", event.kind);
             }
-            Kind::ParameterizedReplaceable(u16) => {
+            Kind::ParameterizedReplaceable(_u16) => {
                 debug!("{:?}", event.kind);
             }
-            Kind::Custom(u64) => {
+            Kind::Custom(_u64) => {
                 debug!("{:?}", event.kind);
             }
             Kind::ContactList => {
                 self.update_event_time();
                 // count p tags
                 let mut count = 0;
-                for t in &event.tags {
-                    if let Tag::PubKey(pk, Some(ss)) = t {
+                for _t in &event.tags {
+                    if let Tag::PubKey(_pk, Some(ss)) = _t {
                         //state.pubkeys.add(pk);
                         //if let Some(ss) = s {
                         debug!("    {ss}");
@@ -396,9 +397,6 @@ impl RelayManager {
                 self.update_event_time();
                 debug!("\n393:Relay(s): {}\n", event.content);
                 let _ = self.relays.add(&event.content);
-            }
-            _ => {
-                debug!("Unsupported event {:?}", event.kind)
             }
         }
     }
