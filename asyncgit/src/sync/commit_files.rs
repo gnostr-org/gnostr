@@ -113,6 +113,9 @@ pub fn get_compare_commits_diff(
 }
 
 /// get diff of a commit to its first parent
+/// get diff of a commit to its first parent
+/// get diff of a commit to its first parent
+/// get diff of a commit to its first parent
 pub(crate) fn get_commit_diff<'a>(
     repo: &'a Repository,
     id: CommitId,
