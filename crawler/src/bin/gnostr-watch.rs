@@ -1,16 +1,20 @@
 use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
-use std::{
-    fs::File,
-    io::{self, BufRead, BufReader, Write},
-    path::Path,
-    process::{Command, Stdio},
-};
-
+use std::collections::HashSet;
+use std::fs;
+use std::io::{self, BufRead, BufReader};
+use std::path::Path;
 use tracing::debug;
-//use tracing_subscriber::FmtSubscriber;
-//use tracing_core::metadata::LevelFilter;
+
+use gnostr_crawler::processor::Processor;
+use gnostr_crawler::processor::APP_SECRET_KEY;
+use gnostr_crawler::processor::BOOTSTRAP_RELAY1;
+use gnostr_crawler::processor::BOOTSTRAP_RELAY2;
+use gnostr_crawler::processor::BOOTSTRAP_RELAY3;
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr_crawler::relay_manager::RelayManager;
+use nostr_sdk::prelude::{FromBech32, Keys, SecretKey};
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -24,129 +28,88 @@ struct Relay {
     version: String,
 }
 
-async fn gnostr_crawler() -> Result<(), Box<dyn std::error::Error>> {
-    let mut command = Command::new("gnostr-crawler");
-
-    command.arg("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
-    // Configure the command to capture standard output
-    command.stdout(Stdio::piped());
-
-    let mut child = command.spawn()?;
-
-    // Open the file to write to
-    let mut outfile = File::create("relays.yaml")?;
-
-    if let Some(mut stdout) = child.stdout.take() {
-        let mut buffer = Vec::new();
-        std::io::copy(&mut stdout, &mut buffer)?;
-        outfile.write_all(&buffer)?;
-    }
-
-    // Wait for the child process to finish
-    child.wait()?;
-
-    Ok(())
-}
-
-fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-    BufReader::new(File::open(filename)?).lines().collect()
+fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
+    BufReader::new(fs::File::open(filename)?).lines().collect()
 }
 
 #[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
-    let file_path = "./relays.yaml".to_string();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Get relays from the crawler
+    let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
+    let app_keys = Keys::new(app_secret_key);
+    let processor = Processor::new();
+    let mut relay_manager = RelayManager::new(app_keys, processor);
 
-    //TODO:gnostr-sniper --refresh
-    let _gnostr_crawler = gnostr_crawler().await;
-    let file = File::open(file_path.clone()).expect("");
+    let bootstrap_relays = vec![
+        BOOTSTRAP_RELAY1,
+        BOOTSTRAP_RELAY2,
+        BOOTSTRAP_RELAY3,
+        BOOTSTRAP_RELAYS
+            .get(3)
+            .expect("BOOTSTRAP_RELAYS should have at least 4 elements")
+            .as_str(),
+    ];
+    relay_manager.run(bootstrap_relays).await?;
+    let relays: Vec<String> = relay_manager.relays.get_all();
 
-    let reader = io::BufReader::new(&file);
-    for line_result in reader.lines() {
-        //append_to_file(&filename, line_result.expect(""));
-        let modified_line = line_result
-            .expect("use http/https:// when querying supported nips")
-            .replace("wss://", "https://")
-            .replace("ws://", "http://");
-
-        debug!("{}", modified_line);
-        let mut file = File::create(file_path.clone() + ".txt")
-            .expect("create relays.yaml.txt and modify protocol (ws/wss to http/https)");
-        if !modified_line.contains("monad.jb55.com")
-            && !modified_line.contains("onlynotes")
-            && !modified_line.contains("archives")
-            && !modified_line.contains("relay.siamstr.com")
-            && !modified_line.contains("no.str")
-            && !modified_line.contains("multiplexer.huszonegy.world")
-            && !modified_line.contains("relay.0xchat.com")
-            && !modified_line.contains("snort.social")
-            && !modified_line.contains("mguy")
-            && !modified_line.contains("stoner.com")
-            && !modified_line.contains("nostr.info")
-            && !modified_line.contains(".local")
-        //we want a view of the network
-        {
-            file.write_all(modified_line.as_bytes()).expect("");
-            //file.write(b"\n").expect("");
+    let shitlist = match load_shitlist("shitlist.txt") {
+        Ok(shitlist) => shitlist,
+        Err(e) => {
+            eprintln!("Failed to load shitlist.txt: {}", e);
+            return Err(e.into());
         }
-        ////writeln!(file, "{}", line).expect("");
+    };
 
-        let file_path = "./relays.yaml.txt".to_string();
+    let relays_iterator = relays.into_iter().filter(|url| {
+        !shitlist
+            .iter()
+            .any(|shitlisted_url| url.contains(shitlisted_url))
+    });
 
-        //}
+    let client = reqwest::Client::new();
+    let bodies = stream::iter(relays_iterator)
+        .map(|url| {
+            let client = &client;
+            async move {
+                let resp = client
+                    .get(
+                        &url.replace("wss://", "https://")
+                            .replace("ws://", "http://"),
+                    )
+                    .header(ACCEPT, "application/nostr+json")
+                    .send()
+                    .await?;
+                let text = resp.text().await?;
+                Ok((url, text))
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS);
 
-        let relays = load_file(&file_path).unwrap();
-        // Nip you are looking for on relays
-        //println!("{:?}", relays);
-        let nip = 0;
-
-        let client = reqwest::Client::new();
-        let bodies = stream::iter(relays)
-            .map(|url| {
-                let client = &client;
-                async move {
-                    let resp = client
-                        .get(&url)
-                        .header(ACCEPT, "application/nostr+json")
-                        .send()
-                        .await?;
-                    let text = resp.text().await?;
-
-                    let r: Result<(String, String), reqwest::Error> =
-                        Ok((url.clone(), text.clone()));
-                    //tracing::info!("{:?}", r);
-                    println!("{{\"relay\":\"{}\"}}", url);
-                    println!("{}", text);
-                    r
-                }
-            })
-            .buffer_unordered(CONCURRENT_REQUESTS);
-
-        bodies
-            .for_each(|b| async {
-                if let Ok((url, json)) = b {
-                    let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json);
-                    if let Ok(json) = data {
-                        print!("{{\"nips\":\"");
-                        debug!("len:{} ", json.supported_nips.len());
-                        let mut nip_count = json.supported_nips.len();
-                        for n in &json.supported_nips {
-                            debug!("nip_count:{}", nip_count);
-                            if nip_count > 1 {
-                                print!("{:<3}", format!("{:0>2}", n));
-                            } else {
-                                print!("{:<2}", format!("{:0>2}", n));
-                            }
-                            if n == &nip {
-                                println!("{} Supports nip{nip}", url);
-                            }
-                            nip_count -= 1;
+    bodies
+        .for_each(|b: Result<(String, String), reqwest::Error>| async {
+            if let Ok((url, json)) = b {
+                println!("{{\"relay\":\"{}\"}}", url);
+                println!("{}", json);
+                let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json);
+                if let Ok(relay_info) = data {
+                    print!("{{\"nips\":\"");
+                    debug!("len:{} ", relay_info.supported_nips.len());
+                    let mut nip_count = relay_info.supported_nips.len();
+                    for n in &relay_info.supported_nips {
+                        debug!("nip_count:{}", nip_count);
+                        if nip_count > 1 {
+                            print!("{:0>2} ", n);
+                        } else {
+                            print!("{:0>2}", n);
                         }
-                        print!("\"}}");
-                        println!();
+                        nip_count -= 1;
                     }
+                    print!("{}", "\"}}");
+                    println!();
                 }
-            })
-            .await;
-    }
+            }
+        })
+        .await;
+
     Ok(())
 }
