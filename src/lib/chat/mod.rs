@@ -641,10 +641,12 @@ pub async fn chat(
 
         //TODO construct git commit message header
 
+        //add diff to serialized_commit
         let serialized_commit = serialize_commit(&commit)?;
         let value: Value = parse_json(&serialized_commit.clone())?;
         //info!("value:\n{}", value);
 
+        //initial display in chat
         // Accessing object elements.
         if let Some(id) = value.get("id") {
             debug!("id:\n{}", id.as_str().unwrap_or(""));
@@ -795,6 +797,7 @@ pub async fn chat(
 
         let topic = gossipsub::IdentTopic::new(format!("{:?}", topic.clone()));
 
+        //evt_loop
         global_rt().spawn(async move {
             evt_loop(args, input_rx, peer_tx, topic).await.unwrap();
         });
