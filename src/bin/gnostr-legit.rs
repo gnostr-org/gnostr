@@ -134,12 +134,12 @@ async fn main() -> Result<()> {
 
     let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
-        target: "00000".to_string(), //default 00000
+        target: cli.prefix.unwrap_or("00000".to_string()), // Use prefix from CLI
         //gnostr:##:nonce
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
         pwd_hash: pwd_hash.clone(),
-        message: cwd.unwrap(),
+        message: cli.message.unwrap_or(cwd.unwrap()), // Use message from CLI
         //message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
@@ -164,19 +164,19 @@ async fn main() -> Result<()> {
     };
 
     //initialize git repo
-    let repo = Repository::discover(".").expect("");
+    let repo = Repository::discover(".").expect("Failed to discover repository");
 
     //gather some repo info
     //find HEAD
-    let head = repo.head().expect("");
+    let head = repo.head().expect("Failed to get HEAD");
     let obj = head
         .resolve()
-        .expect("")
+        .expect("Failed to resolve HEAD")
         .peel(ObjectType::Commit)
-        .expect("");
+        .expect("Failed to peel to commit");
 
     //read top commit
-    let commit = obj.peel_to_commit().expect("");
+    let commit = obj.peel_to_commit().expect("Failed to peel to commit");
     let commit_id = commit.id().to_string();
 
     let serialized_commit = serialize_commit(&commit).expect("gnostr-async:error!");
@@ -197,19 +197,19 @@ async fn main() -> Result<()> {
         //create nostr client with commit based keys
         //let client = Client::new(keys);
         let client = Client::new(padded_keys.clone());
-        client.add_relay("wss://relay.damus.io").await.expect("");
-        client.add_relay("wss://e.nos.lol").await.expect("");
+        client.add_relay("wss://relay.damus.io").await.expect("Failed to add relay");
+        client.add_relay("wss://e.nos.lol").await.expect("Failed to add relay");
         client.connect().await;
 
         //build git gnostr event
         let builder = EventBuilder::text_note(serialized_commit.clone());
 
         //send git gnostr event
-        let output = client.send_event_builder(builder).await.expect("");
+        let output = client.send_event_builder(builder).await.expect("Failed to send event");
 
         //some reporting
         info!("Event ID: {}", output.id());
-        info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+        info!("Event ID BECH32: {}", output.id().to_bech32().expect("Failed to convert event ID to bech32"));
         info!("Sent to: {:?}", output.success);
         info!("Not sent to: {:?}", output.failed);
     });
