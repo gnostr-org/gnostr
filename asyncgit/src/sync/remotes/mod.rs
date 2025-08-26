@@ -64,7 +64,7 @@ fn get_current_branch(repo: &Repository) -> Result<Option<git2::Branch<'_>>> {
 /// Tries to find the default repo to fetch from based on
 /// configuration.
 ///
-/// > branch.<name>.remote
+/// > branch.`<name>`.remote
 /// >
 /// > When on branch `<name>`, it tells `git fetch` and `git push`
 /// > which remote to fetch from or
@@ -111,7 +111,7 @@ pub(crate) fn get_default_remote_for_fetch_in_repo(repo: &Repository) -> Result<
 /// > `branch.<name>.remote` for all branches, and is
 /// > overridden by `branch.<name>.pushRemote` for specific branches.
 ///
-/// > branch.<name>.remote
+/// > branch.`<name>`.remote
 /// >
 /// > When on branch `<name>`, it tells `git fetch` and `git push`
 /// > which remote to fetch from or
