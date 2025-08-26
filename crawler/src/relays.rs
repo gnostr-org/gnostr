@@ -36,8 +36,8 @@ impl Relays {
         self.r.len()
     }
 
-    pub fn de_dup(&self, list: &Vec<Url>) -> Vec<Url> {
-        let list: Vec<Url> = list.clone().into_iter().collect();
+    pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
+        let list: Vec<Url> = list.to_owned().into_iter().collect();
         list
     }
 
