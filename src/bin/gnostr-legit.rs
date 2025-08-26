@@ -81,22 +81,41 @@ fn example() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let mut repo: Option<String> = None;
+    let mut prefix: Option<String> = None;
+    let mut message: Option<String> = None;
+    
+    let mut repo = if let Some(path_str) = repo {
+        // We have a path, so try to discover the repository.
+        Repository::discover(&path_str).expect("Couldn't open repository at provided path")
+    } else {
+        // No path was provided, so use the current directory.
+        Repository::discover(".").expect("Couldn't discover repository from current directory")
+    };
 
 
-
-	let mut repo: Option<String> = None;
-	let mut prefix: Option<String> = None;
-	let mut message: Option<String> = None;
 
     let args: Vec<String> = env::args().collect();
 
     for arg in env::args() {
         println!("  {}", arg);
-        if arg == "--repo" { repo = Some(arg.clone()); }
-        if arg == "--prefix" { prefix = Some(arg.clone()); }
-        if arg == "--prefix" { message = Some(arg.clone()); }
-	}
-if let Some(arg) = args.get(1) {
+        if arg == "--repo" {
+            
+
+
+
+
+
+			repo = Repository::discover(arg.clone()).expect("");
+        }
+        if arg == "--prefix" {
+            prefix = Some(arg.clone());
+        }
+        if arg == "--prefix" {
+            message = Some(arg.clone());
+        }
+    }
+    if let Some(arg) = args.get(1) {
         if arg == "--repo" {
             println!("The second argument is '--repo'.");
             // Do something here...
@@ -107,9 +126,7 @@ if let Some(arg) = args.get(1) {
         println!("The second argument was not provided.");
     }
 
-
-
-#[allow(clippy::if_same_then_else)]
+    #[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
     } else {
@@ -141,9 +158,9 @@ if let Some(arg) = args.get(1) {
     let state = repo::state();
     println!("{:#?}", state);
     //
-    let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
-    println!("repo_root={:?}", repo_root.as_str());
-    let repo = Repository::discover(repo_root.as_str()).expect("Couldn't open repository");
+    //let repo_root = &repo;//std::env::args().nth(1).unwrap_or(".".to_string());
+    //println!("repo_root={:?}", repo_root);
+    //let repo = Repository::discover(repo.clone()).expect("Couldn't open repository");
     println!("{} state={:?}", repo.path().display(), repo.state());
     println!("state={:?}", repo.state());
 
@@ -159,9 +176,6 @@ if let Some(arg) = args.get(1) {
     //sha256sum <(echo gnostr-legit)
     let pwd_hash: String = format!("{:x}", hasher.finalize());
     println!("pwd_hash={:?}", pwd_hash);
-
-
-
 
     let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
@@ -228,19 +242,34 @@ if let Some(arg) = args.get(1) {
         //create nostr client with commit based keys
         //let client = Client::new(keys);
         let client = Client::new(padded_keys.clone());
-        client.add_relay("wss://relay.damus.io").await.expect("Failed to add relay");
-        client.add_relay("wss://e.nos.lol").await.expect("Failed to add relay");
+        client
+            .add_relay("wss://relay.damus.io")
+            .await
+            .expect("Failed to add relay");
+        client
+            .add_relay("wss://e.nos.lol")
+            .await
+            .expect("Failed to add relay");
         client.connect().await;
 
         //build git gnostr event
         let builder = EventBuilder::text_note(serialized_commit.clone());
 
         //send git gnostr event
-        let output = client.send_event_builder(builder).await.expect("Failed to send event");
+        let output = client
+            .send_event_builder(builder)
+            .await
+            .expect("Failed to send event");
 
         //some reporting
         info!("Event ID: {}", output.id());
-        info!("Event ID BECH32: {}", output.id().to_bech32().expect("Failed to convert event ID to bech32"));
+        info!(
+            "Event ID BECH32: {}",
+            output
+                .id()
+                .to_bech32()
+                .expect("Failed to convert event ID to bech32")
+        );
         info!("Sent to: {:?}", output.success);
         info!("Not sent to: {:?}", output.failed);
     });
