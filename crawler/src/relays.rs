@@ -53,6 +53,10 @@ impl Relays {
         res
     }
 
+    pub fn get_all(&self) -> Vec<String> {
+        self.r.iter().map(|u| u.to_string()).collect()
+    }
+
     pub fn print(&self) {
         for u in &self.r {
             let mut relay = format!("{}", u);
