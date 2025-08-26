@@ -81,7 +81,35 @@ fn example() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    #[allow(clippy::if_same_then_else)]
+
+
+
+	let mut repo: Option<String> = None;
+	let mut prefix: Option<String> = None;
+	let mut message: Option<String> = None;
+
+    let args: Vec<String> = env::args().collect();
+
+    for arg in env::args() {
+        println!("  {}", arg);
+        if arg == "--repo" { repo = Some(arg.clone()); }
+        if arg == "--prefix" { prefix = Some(arg.clone()); }
+        if arg == "--prefix" { message = Some(arg.clone()); }
+	}
+if let Some(arg) = args.get(1) {
+        if arg == "--repo" {
+            println!("The second argument is '--repo'.");
+            // Do something here...
+        } else {
+            println!("The second argument is '{}'.", arg);
+        }
+    } else {
+        println!("The second argument was not provided.");
+    }
+
+
+
+#[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
     } else {
@@ -132,14 +160,17 @@ async fn main() -> Result<()> {
     let pwd_hash: String = format!("{:x}", hasher.finalize());
     println!("pwd_hash={:?}", pwd_hash);
 
+
+
+
     let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
-        target: cli.prefix.unwrap_or("00000".to_string()), // Use prefix from CLI
+        target: prefix.unwrap_or("00000".to_string()), // Use prefix from CLI
         //gnostr:##:nonce
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
         pwd_hash: pwd_hash.clone(),
-        message: cli.message.unwrap_or(cwd.unwrap()), // Use message from CLI
+        message: message.unwrap_or(cwd.unwrap()), // Use message from CLI
         //message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
