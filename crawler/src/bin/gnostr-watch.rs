@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             async move {
                 let resp = client
                     .get(
-                        &url.replace("wss://", "https://")
+                        url.replace("wss://", "https://")
                             .replace("ws://", "http://"),
                     )
                     .header(ACCEPT, "application/nostr+json")
@@ -104,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                         nip_count -= 1;
                     }
-                    print!("{}", "\"}}");
+                    print!("\"}}}}");
                     println!();
                 }
             }
