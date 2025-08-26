@@ -87,7 +87,7 @@ pub struct CliArgs {
 pub fn run(args: &CliArgs) -> Result<()> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
-    let revwalk = repo.revwalk()?;
+    let _revwalk = repo.revwalk()?;
 
     //println!("{:?}", args.arg_nsec.clone());
     let _run_async = async {
