@@ -50,6 +50,7 @@ pub trait RepoActions {
     fn get_commit_or_tip_of_reference(&self, reference: &str) -> Result<Sha1Hash>;
     fn get_root_commit(&self) -> Result<Sha1Hash>;
     fn does_commit_exist(&self, commit: &str) -> Result<bool>;
+    fn does_oid_exist(&self, commit: &str) -> Result<bool>;
     fn get_head_commit(&self) -> Result<Sha1Hash>;
     fn get_commit_parent(&self, commit: &Sha1Hash) -> Result<Sha1Hash>;
     fn get_commit_message(&self, commit: &Sha1Hash) -> Result<String>;
@@ -269,6 +270,15 @@ impl RepoActions for Repo {
 
     fn does_commit_exist(&self, commit: &str) -> Result<bool> {
         if self.git_repo.find_commit(Oid::from_str(commit)?).is_ok() {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    fn does_oid_exist(&self, oid: &str) -> Result<bool> {
+        let oid_obj = Oid::from_str(oid).context("not an oid hash")?;
+        if self.git_repo.find_object(oid_obj, None).is_ok() {
             Ok(true)
         } else {
             Ok(false)

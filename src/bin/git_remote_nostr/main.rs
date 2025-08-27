@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
 
     let mut client = Client::new(Params::with_git_config_relay_defaults(&Some(&git_repo)));
 
-    if let Ok((signer, _, _)) = load_existing_login(
+    let user_ref = if let Ok((signer, user_ref, _)) = load_existing_login(
         &Some(&git_repo),
         &None,
         &None,
@@ -52,7 +52,10 @@ async fn main() -> Result<()> {
     {
         // signer for to respond to relay auth request
         client.set_signer(signer).await;
-    }
+        Some(user_ref)
+    } else {
+        None
+    };
 
     fetching_with_report_for_helper(git_repo_path, &client, &decoded_nostr_url.coordinate).await?;
 
@@ -60,6 +63,9 @@ async fn main() -> Result<()> {
         get_repo_ref_from_cache(Some(git_repo_path), &decoded_nostr_url.coordinate).await?;
 
     repo_ref.set_nostr_git_url(decoded_nostr_url.clone());
+
+    let user_is_known_and_maintainer =
+        user_ref.is_some_and(|u| repo_ref.maintainers.contains(&u.public_key));
 
     let _ = set_git_timeout();
 
@@ -98,10 +104,16 @@ async fn main() -> Result<()> {
                 .await?;
             }
             ["list"] => {
-                list_outputs = Some(list::run_list(&git_repo, &repo_ref, false).await?);
+                list_outputs = Some(
+                    list::run_list(&git_repo, &repo_ref, user_is_known_and_maintainer, false)
+                        .await?,
+                );
             }
             ["list", "for-push"] => {
-                list_outputs = Some(list::run_list(&git_repo, &repo_ref, true).await?);
+                list_outputs = Some(
+                    list::run_list(&git_repo, &repo_ref, user_is_known_and_maintainer, true)
+                        .await?,
+                );
             }
             [] => {
                 return Ok(());
