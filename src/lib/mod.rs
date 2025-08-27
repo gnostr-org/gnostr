@@ -147,6 +147,18 @@ pub mod watch_list;
 ///
 pub use watch_list::*;
 
+use thiserror::Error as ThisError;
+#[derive(ThisError, Debug)]
+pub enum GnostrError {
+    #[error("Git error: {0}")]
+    Git(#[from] git2::Error),
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    // Add other error types as needed
+}
+
+//impl Error for GnostrError { /* ... */ }
+
 //TODO
 /// get_relays_by_nip
 /// pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str>

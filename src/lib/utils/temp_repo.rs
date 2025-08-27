@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use tempfile::{tempdir, TempDir};
 
-fn create_temp_repo() -> Result<(Repository, TempDir), git2::Error> {
+pub fn create_temp_repo() -> Result<(Repository, TempDir), git2::Error> {
     let dir = tempdir().expect("Failed to create temporary directory");
     let repo_path = dir.path();
 
@@ -45,13 +45,13 @@ fn create_temp_repo() -> Result<(Repository, TempDir), git2::Error> {
     Ok((repo, dir))
 }
 
-fn main() {
-    match create_temp_repo() {
-        Ok((_repo, _dir)) => {
-            println!("Temporary repository created and used successfully!");
-        }
-        Err(e) => eprintln!("Error: {}", e),
-    }
-
-    println!("Temporary directory has been cleaned up.");
-}
+//fn main() {
+//    match create_temp_repo() {
+//        Ok((_repo, _dir)) => {
+//            println!("Temporary repository created and used successfully!");
+//        }
+//        Err(e) => eprintln!("Error: {}", e),
+//    }
+//
+//    println!("Temporary directory has been cleaned up.");
+//}
