@@ -6,10 +6,9 @@ use chrono::offset::Utc;
 use chrono::DateTime;
 use gnostr_asyncgit::sync::commit::{padded_commit_id, serialize_commit};
 
-use async_std::path::Path;
-
+use gnostr::utils::temp_repo::create_temp_repo;
+use gnostr::GnostrError;
 use gnostr::global_rt::global_rt;
-use gnostr::git::Repo;
 use log::debug;
 use log::info;
 //
@@ -22,7 +21,7 @@ use std::any::type_name;
 use std::convert::TryInto;
 use std::env;
 use std::error::Error;
-use std::io::Result;
+use std::io::Result as StdResult;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use time::{get_time, now};
@@ -30,11 +29,13 @@ use time::{get_time, now};
 use argparse::{ArgumentParser, Store};
 use git2::*;
 use gnostr::get_pwd;
+
 use gnostr::legit::gitminer;
 use gnostr::legit::gitminer::Gitminer;
 use gnostr::legit::post_event;
 use gnostr::legit::repo;
 use gnostr::legit::worker;
+
 use gnostr_types::Event;
 use gnostr_types::EventV3;
 use pad::{Alignment, PadStr};
@@ -82,52 +83,62 @@ fn example() {
     debug!("cwd={:?}", get_current_working_dir());
 }
 
+type Result<T> = std::result::Result<T, GnostrError>;
+
+fn do_something_that_can_fail() -> Result<()> {
+    // This could fail with a git or IO error
+    let _ = git2::Repository::init(".")?; 
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args: Vec<String> = env::args().collect();
-    
-	let mut opt_repo_string: Option<String> = None;
-	let mut repo: Option<Repository> = Some(Repository::discover(".").expect(""));
-    let mut prefix: Option<String> = None;
-    let mut message: Option<String> = None;
-    
-    for arg in env::args() {
-        println!("  {}", arg);
 
-    if arg == "--repo" {
-	 if let Ok(arg) = Repository::discover(&opt_repo_string.clone().expect("")) {
-        // We have a path, so try to discover the repository.
-        repo = Some(Repository::discover(&opt_repo_string.clone().expect("")).expect("Couldn't open repository at provided path"))
-    } else {
-        // No path was provided, so use the current directory.
-        repo = Some(Repository::discover(".").expect("Couldn't discover repository from current directory"))
-    };
 
-        }
-        if arg == "--prefix" {
-            prefix = Some(arg.clone());
-        }
-        if arg == "--prefix" {
-            message = Some(arg.clone());
-        }
-    }
-    if let Some(arg) = args.get(1) {
-        if arg == "--repo" {
-            println!("The second argument is '--repo'.");
-            // Do something here...
-        } else {
-            println!("The second argument is '{}'.", arg);
-        }
-    } else {
-        println!("The second argument was not provided.");
-    }
+	    //do_something_that_can_fail()?;
+	    do_something_that_can_fail().expect("");
 
-    #[allow(clippy::if_same_then_else)]
+    //let mut repo_root: String = String::from(".");
+#[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
     } else {
         debug!("Debugging disabled");
     }
+
+
+
+match create_temp_repo()? {
+    (repo, repo_dir) => {
+        // This code runs if the function succeeds.
+        // `repo` and `repo_dir` are now available and ready to use.
+        println!("Successfully created the repository.");
+        
+        // ... now use repo and repo_dir ...
+
+
+
+
+
+
+
+	}
+}
+
+//let Ok(mut (repo, repo_dir)) = create_temp_repo();
+    //let mut repo: Repository = create_temp_repo();//Some(None);//::discover(repo_root.as_str()).expect("Couldn't open repository");
+let (repo, dir) = create_temp_repo().expect("");
+
+	let mut repo_root: Option<String> = Some(String::from("."));
+    let args: Vec<String> = env::args().collect();
+
+	let mut args_length = args.len();
+        println!("  {}", args_length);
+	for arg in env::args() {
+        println!("  {}", arg);
+ if arg == "--repo" { /*set repo_root*/ }
+}
+    //let repo = Repository::discover(repo_root.as_str()).expect("Couldn't open repository");
 
     #[cfg(debug_assertions)]
     debug!("Debugging enabled");
@@ -154,18 +165,18 @@ async fn main() -> Result<()> {
     let state = repo::state();
     println!("{:#?}", state);
     //
-    //let repo_root = &repo;//std::env::args().nth(1).unwrap_or(".".to_string());
-    //println!("repo_root={:?}", repo_root);
-    //let repo = Repository::discover(repo.clone()).expect("Couldn't open repository");
-    //println!("{} state={:?}", repo.expect("REASON").path().display(), repo.expect("").state());
-    //println!("state={:?}", repo.clone().expect("").state());
+    //let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
+    println!("repo_root={:?}", repo_root.expect("169:repo_root").as_str());
+    //let repo = Repository::discover(repo_root.as_str()).expect("Couldn't open repository");
+    println!("{} state={:?}", repo.path().display(), repo.state());
+    println!("state={:?}", repo.state());
 
-    let count = thread::available_parallelism()?.get();
+    let count = thread::available_parallelism().expect("").get();
     assert!(count >= 1_usize);
 
     let now = SystemTime::now();
 
-    let pwd = env::current_dir()?;
+    let pwd = env::current_dir().expect("");
     println!("pwd={}", pwd.clone().display());
     let mut hasher = Sha256::new();
     hasher.update(format!("{}", pwd.clone().display()));
@@ -173,21 +184,23 @@ async fn main() -> Result<()> {
     let pwd_hash: String = format!("{:x}", hasher.finalize());
     println!("pwd_hash={:?}", pwd_hash);
 
+	//
     let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
-        target: prefix.unwrap_or("00000".to_string()), // Use prefix from CLI
+        target: "00000".to_string(), //default 00000
         //gnostr:##:nonce
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
         pwd_hash: pwd_hash.clone(),
-        message: message.unwrap_or(cwd.unwrap()), // Use message from CLI
+        message: cwd.unwrap(),
         //message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
-        repo: repo.expect("REASON").path().display().to_string(),
+        repo: repo.path().display().to_string(),
         timestamp: time::now(),
     };
 
+	//
     parse_args_or_exit(&mut opts);
 
     let mut miner = match Gitminer::new(opts) {
@@ -205,19 +218,19 @@ async fn main() -> Result<()> {
     };
 
     //initialize git repo
-    let repo = Repository::discover(".").expect("Failed to discover repository");
+    let repo = Repository::discover(".").expect("");
 
     //gather some repo info
     //find HEAD
-    let head = repo.head().expect("Failed to get HEAD");
+    let head = repo.head().expect("");
     let obj = head
         .resolve()
-        .expect("Failed to resolve HEAD")
+        .expect("")
         .peel(ObjectType::Commit)
-        .expect("Failed to peel to commit");
+        .expect("");
 
     //read top commit
-    let commit = obj.peel_to_commit().expect("Failed to peel to commit");
+    let commit = obj.peel_to_commit().expect("");
     let commit_id = commit.id().to_string();
 
     let serialized_commit = serialize_commit(&commit).expect("gnostr-async:error!");
@@ -238,39 +251,24 @@ async fn main() -> Result<()> {
         //create nostr client with commit based keys
         //let client = Client::new(keys);
         let client = Client::new(padded_keys.clone());
-        client
-            .add_relay("wss://relay.damus.io")
-            .await
-            .expect("Failed to add relay");
-        client
-            .add_relay("wss://e.nos.lol")
-            .await
-            .expect("Failed to add relay");
+        client.add_relay("wss://relay.damus.io").await.expect("");
+        client.add_relay("wss://e.nos.lol").await.expect("");
         client.connect().await;
 
         //build git gnostr event
         let builder = EventBuilder::text_note(serialized_commit.clone());
 
         //send git gnostr event
-        let output = client
-            .send_event_builder(builder)
-            .await
-            .expect("Failed to send event");
+        let output = client.send_event_builder(builder).await.expect("");
 
         //some reporting
         info!("Event ID: {}", output.id());
-        info!(
-            "Event ID BECH32: {}",
-            output
-                .id()
-                .to_bech32()
-                .expect("Failed to convert event ID to bech32")
-        );
+        info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
         info!("Sent to: {:?}", output.success);
         info!("Not sent to: {:?}", output.failed);
     });
 
-    Ok(())
+Ok(())
 }
 
 fn parse_args_or_exit(opts: &mut gitminer::Options) {
