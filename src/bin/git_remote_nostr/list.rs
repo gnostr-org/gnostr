@@ -10,6 +10,7 @@ use ngit::{
     git_events::{KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE, event_to_cover_letter, tag_value},
     list::{get_ahead_behind, list_from_remotes},
     login::get_curent_user,
+    push::push_to_remote,
     repo_ref::{self},
     utils::{get_all_proposals, get_open_or_draft_proposals, get_short_git_server_name},
 };
@@ -20,6 +21,7 @@ use crate::{fetch::make_commits_for_proposal, git::Repo};
 pub async fn run_list(
     git_repo: &Repo,
     repo_ref: &RepoRef,
+    user_is_known_and_maintainer: bool,
     for_push: bool,
 ) -> Result<HashMap<String, (HashMap<String, String>, bool)>> {
     let nostr_state = (get_state_from_cache(Some(git_repo.get_path()?), repo_ref).await).ok();
@@ -35,33 +37,14 @@ pub async fn run_list(
     );
 
     let mut state = if let Some(nostr_state) = nostr_state {
-        for (name, value) in &nostr_state.state {
-            for (url, (remote_state, _is_grasp_server)) in &remote_states {
-                let remote_name = get_short_git_server_name(git_repo, url);
-                if let Some(remote_value) = remote_state.get(name) {
-                    if value.ne(remote_value) {
-                        term.write_line(
-                            format!(
-                                "WARNING: {remote_name} {name} is {} nostr ",
-                                if let Ok((ahead, behind)) =
-                                    get_ahead_behind(git_repo, value, remote_value)
-                                {
-                                    format!("{} ahead {} behind", ahead.len(), behind.len())
-                                } else {
-                                    "out of sync with".to_string()
-                                }
-                            )
-                            .as_str(),
-                        )?;
-                    }
-                } else {
-                    term.write_line(
-                        format!("WARNING: {remote_name} {name} is missing but tracked on nostr")
-                            .as_str(),
-                    )?;
-                }
-            }
-        }
+        sync_git_servers_with_nostr_state(
+            git_repo,
+            repo_ref,
+            &term,
+            &nostr_state.state,
+            &remote_states,
+            user_is_known_and_maintainer,
+        )?;
         nostr_state.state
     } else {
         let (state, _is_grasp_server) = repo_ref
@@ -102,6 +85,101 @@ pub async fn run_list(
 
     println!();
     Ok(remote_states)
+}
+
+fn sync_git_servers_with_nostr_state(
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    term: &console::Term,
+    nostr_state: &HashMap<String, String>,
+    remote_states: &HashMap<String, (HashMap<String, String>, bool)>,
+    user_is_known_and_maintainer: bool,
+) -> Result<()> {
+    let mut to_immediately_sync: HashMap<String, (Vec<String>, bool)> = HashMap::new();
+    for (name, value) in nostr_state {
+        for (url, (remote_state, is_grasp_server)) in remote_states {
+            let remote_name = get_short_git_server_name(git_repo, url);
+            if let Some(remote_value) = remote_state.get(name) {
+                if value.ne(remote_value) {
+                    if let Ok((ahead, behind)) = get_ahead_behind(git_repo, value, remote_value) {
+                        // TODO maybe we should try and fix it and only warn if we cant?
+                        term.write_line(
+                            format!(
+                                "WARNING: {remote_name} {name} is {} ahead {} behind nostr",
+                                ahead.len(),
+                                behind.len()
+                            )
+                            .as_str(),
+                        )?;
+                        if *is_grasp_server {
+                            if git_repo.does_oid_exist(value).is_ok_and(|v| v) {
+                                to_immediately_sync
+                                    .entry(url.to_string())
+                                    .or_insert((Vec::new(), *is_grasp_server))
+                                    .0
+                                    .push(format!(
+                                        "{}{value}:{name}",
+                                        if *is_grasp_server { "+" } else { "" }
+                                    ));
+                            }
+                        } else if behind.is_empty() {
+                            if user_is_known_and_maintainer {
+                                to_immediately_sync
+                                    .entry(url.to_string())
+                                    .or_insert((Vec::new(), *is_grasp_server))
+                                    .0
+                                    .push(format!("{value}:{name}"));
+                            } else {
+                                // ff push to non-grasp server by someone with
+                                // keys required
+                            }
+                        } else if user_is_known_and_maintainer {
+                            // TODO warn maintainer about conflicts and
+                            // suggesting running `ngit sync --force`
+                        }
+                    } else {
+                        // here we probably dont have the git data to push
+                        term.write_line(
+                            format!("WARNING: {remote_name} {name} is out of sync with nostr ")
+                                .as_str(),
+                        )?;
+                    }
+                }
+            } else {
+                term.write_line(
+                    format!("WARNING: {remote_name} {name} is missing but tracked on nostr")
+                        .as_str(),
+                )?;
+                to_immediately_sync
+                    .entry(url.to_string())
+                    .or_insert((Vec::new(), *is_grasp_server))
+                    .0
+                    .push(format!("{value}:{name}"));
+            }
+        }
+    }
+    if !to_immediately_sync.is_empty() {
+        term.write_line("attempting to align git servers with nostr state")?;
+
+        for (url, (remote_refspecs, is_grasp_server)) in to_immediately_sync {
+            if let Err(error) = push_to_remote(
+                git_repo,
+                &url,
+                &repo_ref.nostr_git_url.clone().context("run_list should only be called in git-remote-nostr where nostr_git_url is always set")?,
+                &remote_refspecs,
+                term,
+                is_grasp_server,
+            ) {
+                let remote_name = get_short_git_server_name(git_repo, &url);
+
+                term.write_line(
+                    format!("  - failed to align {remote_name} with nostr state: {error}")
+                        .as_str(),
+                )?;
+            }
+        }
+    }
+    Ok(())
 }
 
 /// fetches branches and tags from git servers so patch parent commits can be
