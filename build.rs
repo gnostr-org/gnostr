@@ -65,6 +65,33 @@ fn install_pkg_config() {
         }
     }
 }
+fn install_zlib() {
+    println!("cargo:warning=Attempting to install zlib using Homebrew...");
+    let install_result = Command::new("brew")
+        .args(["install", "zlib"])
+        .status();
+
+    match install_result {
+        Ok(status) if status.success() => {
+            println!("cargo:warning=Successfully installed zlib via Homebrew.");
+            // Linking will be handled via pkg-config.
+        }
+        Ok(status) => {
+            println!(
+                "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
+                status
+            );
+            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!("cargo:warning=  brew install zlib");
+        }
+        Err(e) => {
+            println!(
+                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
+                e
+            );
+        }
+    }
+}
 
 use chrono::TimeZone;
 
@@ -177,6 +204,7 @@ fn main() {
             if check_brew() {
                 println!("cargo:warning=Homebrew detected.");
                 install_pkg_config();
+                install_zlib();
                 install_openssl_brew();
 
                 // Instruct rustc to link against the OpenSSL libraries.
@@ -194,6 +222,8 @@ fn main() {
             } else {
                 println!("cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:");
                 println!("cargo:warning=  brew install openssl@3");
+                println!("cargo:warning=  brew install pkg-config");
+                println!("cargo:warning=  brew install zlib");
                 println!("cargo:warning=Or using MacPorts:");
                 println!("cargo:warning=  sudo port install openssl@3");
                 println!("cargo:warning=And ensure your system can find the libraries.");
