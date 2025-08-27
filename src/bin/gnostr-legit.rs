@@ -6,7 +6,10 @@ use chrono::offset::Utc;
 use chrono::DateTime;
 use gnostr_asyncgit::sync::commit::{padded_commit_id, serialize_commit};
 
+use async_std::path::Path;
+
 use gnostr::global_rt::global_rt;
+use gnostr::git::Repo;
 use log::debug;
 use log::info;
 //
@@ -81,32 +84,27 @@ fn example() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut repo: Option<String> = None;
+    let args: Vec<String> = env::args().collect();
+    
+	let mut opt_repo_string: Option<String> = None;
+	let mut repo: Repository = Repository::discover(".").expect("");
     let mut prefix: Option<String> = None;
     let mut message: Option<String> = None;
     
-    let mut repo = if let Some(path_str) = repo {
-        // We have a path, so try to discover the repository.
-        Repository::discover(&path_str).expect("Couldn't open repository at provided path")
-    } else {
-        // No path was provided, so use the current directory.
-        Repository::discover(".").expect("Couldn't discover repository from current directory")
-    };
-
-
-
-    let args: Vec<String> = env::args().collect();
-
     for arg in env::args() {
         println!("  {}", arg);
-        if arg == "--repo" {
-            
+   
 
 
+    if arg == "--repo" {
+	 if let Ok(arg) = Repository::discover(&opt_repo_string.clone().expect("")) {
+        // We have a path, so try to discover the repository.
+        repo = Repository::discover(&opt_repo_string.clone().expect("")).expect("Couldn't open repository at provided path")
+    } else {
+        // No path was provided, so use the current directory.
+        repo = Repository::discover(".").expect("Couldn't discover repository from current directory")
+    };
 
-
-
-			repo = Repository::discover(arg.clone()).expect("");
         }
         if arg == "--prefix" {
             prefix = Some(arg.clone());
