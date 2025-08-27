@@ -112,7 +112,7 @@ match create_temp_repo()? {
     (repo, repo_dir) => {
         // This code runs if the function succeeds.
         // `repo` and `repo_dir` are now available and ready to use.
-        println!("Successfully created the repository.");
+        println!("Successfully created the repository. {:?},{:?}",repo.path(), repo_dir);
         
         // ... now use repo and repo_dir ...
 
@@ -127,7 +127,7 @@ match create_temp_repo()? {
 
 //let Ok(mut (repo, repo_dir)) = create_temp_repo();
     //let mut repo: Repository = create_temp_repo();//Some(None);//::discover(repo_root.as_str()).expect("Couldn't open repository");
-let (repo, dir) = create_temp_repo().expect("");
+let (repo, tempdir) = create_temp_repo().expect("");
 
 	let mut repo_root: Option<String> = Some(String::from("."));
     let args: Vec<String> = env::args().collect();
