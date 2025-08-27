@@ -1,5 +1,6 @@
 pub mod pwd;
 pub mod retry;
+pub mod temp_repo;
 
 use log::{debug, error};
 use nostr_sdk_0_32_0::prelude::*;
