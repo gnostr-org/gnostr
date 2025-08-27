@@ -87,22 +87,20 @@ async fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     
 	let mut opt_repo_string: Option<String> = None;
-	let mut repo: Repository = Repository::discover(".").expect("");
+	let mut repo: Option<Repository> = Some(Repository::discover(".").expect(""));
     let mut prefix: Option<String> = None;
     let mut message: Option<String> = None;
     
     for arg in env::args() {
         println!("  {}", arg);
-   
-
 
     if arg == "--repo" {
 	 if let Ok(arg) = Repository::discover(&opt_repo_string.clone().expect("")) {
         // We have a path, so try to discover the repository.
-        repo = Repository::discover(&opt_repo_string.clone().expect("")).expect("Couldn't open repository at provided path")
+        repo = Some(Repository::discover(&opt_repo_string.clone().expect("")).expect("Couldn't open repository at provided path"))
     } else {
         // No path was provided, so use the current directory.
-        repo = Repository::discover(".").expect("Couldn't discover repository from current directory")
+        repo = Some(Repository::discover(".").expect("Couldn't discover repository from current directory"))
     };
 
         }
@@ -159,8 +157,8 @@ async fn main() -> Result<()> {
     //let repo_root = &repo;//std::env::args().nth(1).unwrap_or(".".to_string());
     //println!("repo_root={:?}", repo_root);
     //let repo = Repository::discover(repo.clone()).expect("Couldn't open repository");
-    println!("{} state={:?}", repo.path().display(), repo.state());
-    println!("state={:?}", repo.state());
+    //println!("{} state={:?}", repo.expect("REASON").path().display(), repo.expect("").state());
+    //println!("state={:?}", repo.clone().expect("").state());
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
@@ -186,7 +184,7 @@ async fn main() -> Result<()> {
         //message: message,
         //message: count.to_string(),
         //repo:    ".".to_string(),
-        repo: repo.path().display().to_string(),
+        repo: repo.expect("REASON").path().display().to_string(),
         timestamp: time::now(),
     };
 
