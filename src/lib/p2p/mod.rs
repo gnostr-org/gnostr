@@ -134,55 +134,6 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
                                              //];
 
     bytes[31] = bytes[31] ^ secret_key_seed;
-    for (i, byte) in bytes.iter().enumerate() {
-        // Print context: the index and value (decimal and hex) of the current byte.
-        trace!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
-
-        // A `u8` has 8 bits. We iterate from 7 down to 0 to print
-        // the most significant bit (MSB) first.
-        for j in (0..8).rev() {
-            // Create a "mask" by shifting the number 1 to the left `j` times.
-            // For j=7, mask is 10000000
-            // For j=0, mask is 00000001
-            let mask = 1 << j;
-
-            // Use the bitwise AND operator `&` to check if the bit at the mask's
-            // position is set. If the result is not 0, the bit is 1.
-            if byte & mask == 0 {
-                trace!("0");
-            } else {
-                trace!("1");
-            }
-        }
-        // Add a newline to separate the output for each byte.
-        trace!("\n");
-    }
-
-    // bytes[31] = secret_key_seed;
-
-    for (i, byte) in bytes.iter().enumerate() {
-        // Print context: the index and value (decimal and hex) of the current byte.
-        trace!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
-
-        // A `u8` has 8 bits. We iterate from 7 down to 0 to print
-        // the most significant bit (MSB) first.
-        for j in (0..8).rev() {
-            // Create a "mask" by shifting the number 1 to the left `j` times.
-            // For j=7, mask is 10000000
-            // For j=0, mask is 00000001
-            let mask = 1 << j;
-
-            // Use the bitwise AND operator `&` to check if the bit at the mask's
-            // position is set. If the result is not 0, the bit is 1.
-            if byte & mask == 0 {
-                trace!("0");
-            } else {
-                trace!("1");
-            }
-        }
-        // Add a newline to separate the output for each byte.
-        trace!("\n");
-    }
 
     let keypair =
         identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length");
@@ -192,63 +143,13 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
 }
 
 fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
-    let mut close_bytes = [0u8; 32];
-    close_bytes = bytes;
+    let mut close_bytes = bytes;
 
-    for (i, byte) in close_bytes.iter().enumerate() {
-        if i < 32 {
-            // Print context: the index and value (decimal and hex) of the current byte.
-            trace!("Byte i={:02} [{:3} / {:#04x}]: ", i, byte, byte);
-
-            // A `u8` has 8 bits. We iterate from 7 down to 0 to print
-            // the most significant bit (MSB) first.
-            for j in (0..8).rev() {
-                // Create a "mask" by shifting the number 1 to the left `j` times.
-                // For j=7, mask is 10000000
-                // For j=0, mask is 00000001
-                let mask = 1 << j;
-
-                // Use the bitwise AND operator `&` to check if the bit at the mask's
-                // position is set. If the result is not 0, the bit is 1.
-                if byte & mask == 0 {
-                    trace!("0");
-                } else {
-                    trace!("1");
-                }
-            }
-            // Add a newline to separate the output for each byte.
-            trace!("\n");
-        } // end if
-    }
     let mut keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("262:{}", keypair.public().to_peer_id());
 
     close_bytes[31] = bytes[31] ^ 0u8;
-
-    for (i, byte) in close_bytes.iter().enumerate() {
-        // Print context: the index and value (decimal and hex) of the current byte.
-        trace!("265:Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
-
-        // A `u8` has 8 bits. We iterate from 7 down to 0 to print
-        // the most significant bit (MSB) first.
-        for j in (0..8).rev() {
-            // Create a "mask" by shifting the number 1 to the left `j` times.
-            // For j=7, mask is 10000000
-            // For j=0, mask is 00000001
-            let mask = 1 << j;
-
-            // Use the bitwise AND operator `&` to check if the bit at the mask's
-            // position is set. If the result is not 0, the bit is 1.
-            if byte & mask == 0 {
-                trace!("0");
-            } else {
-                trace!("1");
-            }
-        }
-        // Add a newline to separate the output for each byte.
-        trace!("");
-    }
 
     keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
@@ -256,8 +157,10 @@ fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
     keypair.public().to_peer_id()
 }
 
+/// Hexadecimal string representation of GNOSTR_SHA256.
 const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
 
+/// SHA256 hash used as a base for generating Ed25519 keypairs.
 const GNOSTR_SHA256: [u8; 32] = [
     0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,
     0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, 0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06,
@@ -276,15 +179,19 @@ pub async fn evt_loop(
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);
 
-    // kad_store_config
+    // Kademlia store configuration
     let kad_store_config = MemoryStoreConfig {
         max_provided_keys: usize::MAX,
         max_providers_per_key: usize::MAX,
         max_records: usize::MAX,
         max_value_bytes: usize::MAX,
     };
-    let kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
-    let kad_config = KadConfig::default();
+    // Kademlia configuration
+    let mut kad_config = KadConfig::default();
+    kad_config.set_query_timeout(Duration::from_secs(120));
+    kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
+    kad_config.set_publication_interval(Some(Duration::from_secs(10)));
+    kad_config.disjoint_query_paths(false);
     let message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
         message.data.hash(&mut s);
@@ -312,6 +219,10 @@ pub async fn evt_loop(
         .build()
         .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
 
+    let mut ipfs_cfg = kad::Config::new(IPFS_PROTO_NAME);
+    ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
+    let ipfs_store = kad::store::MemoryStore::new(keypair.public().to_peer_id());
+
     let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
         .with_tcp(
@@ -322,21 +233,6 @@ pub async fn evt_loop(
         .with_quic()
         .with_dns()?
         .with_behaviour(|key| {
-            let kad_store_config = MemoryStoreConfig {
-                max_provided_keys: usize::MAX,
-                max_providers_per_key: usize::MAX,
-                max_records: usize::MAX,
-                max_value_bytes: usize::MAX,
-            };
-            let mut kad_config = kad::Config::default();
-            kad_config.set_query_timeout(Duration::from_secs(120));
-            kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
-            kad_config.set_publication_interval(Some(Duration::from_secs(10)));
-            kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id.clone(), kad_store_config);
-            let mut ipfs_cfg = kad::Config::new(IPFS_PROTO_NAME);
-            ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
-            let ipfs_store = kad::store::MemoryStore::new(key.public().to_peer_id());
             Ok(MyBehaviour {
                 gossipsub: gossipsub::Behaviour::new(
                     gossipsub::MessageAuthenticity::Signed(key.clone()),
@@ -346,7 +242,7 @@ pub async fn evt_loop(
                 ipfs: kad::Behaviour::with_config(key.public().to_peer_id(), ipfs_store, ipfs_cfg),
                 kademlia: kad::Behaviour::with_config(
                     key.public().to_peer_id(),
-                    kad_store,
+                    MemoryStore::with_config(peer_id.clone(), kad_store_config),
                     kad_config,
                 ),
                 identify: identify::Behaviour::new(identify::Config::new(
@@ -376,38 +272,42 @@ pub async fn evt_loop(
 
     debug!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
 
-    // Kick it off
-    // Kick it off
-    loop {
-        debug!("p2p.rs:begin loop");
-
-        // Check if the current second is odd
-        let handle = tokio::spawn(async {
+    // Spawn a task to periodically update BLOCKHEIGHT and BLOCKHASH
+    let block_update_sender = recv.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(1));
+        loop {
+            interval.tick().await;
             let now = Local::now();
-
-            // Get the current second
             let current_second = now.second();
 
             if current_second % 2 != 0 {
                 debug!("Current second ({}) is odd!", current_second);
-                env::set_var("BLOCKHEIGHT", &blockheight_async().await);
-                env::set_var("BLOCKHASH", &blockhash_async().await);
+                let blockheight = blockheight_async().await;
+                let blockhash = blockhash_async().await;
+                env::set_var("BLOCKHEIGHT", &blockheight);
+                env::set_var("BLOCKHASH", &blockhash);
+
+                let m_height = Msg::default()
+                    .set_content(format!("{{\"blockheight\":\"{}\"}}", blockheight), 0)
+                    .set_kind(MsgKind::System);
+                let _ = block_update_sender.send(m_height).await;
+
+                let m_hash = Msg::default()
+                    .set_content(format!("{{\"blockhash\":\"{}\"}}", blockhash), 0)
+                    .set_kind(MsgKind::System);
+                let _ = block_update_sender.send(m_hash).await;
             } else {
                 debug!(
                     "Current second ({}) is even. Skipping this iteration.",
                     current_second
                 );
             }
-        });
+        }
+    });
 
-        debug!("Still running other things while the task is awaited...");
-
-        handle.await.unwrap_or(()); // Wait for the async task to complete
-        debug!("All done!");
-
-        // Wait for a second before checking again to avoid rapid looping
-        thread::sleep(Duration::from_millis(250));
-
+    // Kick it off
+    loop {
         select! {
             Some(m) = send.recv() => {
                 if let Err(e) = swarm
@@ -476,6 +376,6 @@ pub async fn evt_loop(
                 _ => {}
             }
         }
-        debug!("p2p.rs:end loop");
+        
     }
 }
