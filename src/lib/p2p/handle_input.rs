@@ -1,7 +1,10 @@
 #![doc = include_str!("../../../README.md")]
 use libp2p::{kad, kad::store::MemoryStore};
 
-pub fn handle_input_line(kademlia: &mut kad::Behaviour<MemoryStore>, line: String) -> Result<(), String> {
+pub fn handle_input_line(
+    kademlia: &mut kad::Behaviour<MemoryStore>,
+    line: String,
+) -> Result<(), String> {
     let mut args = line.split(' ');
 
     match args.next() {
