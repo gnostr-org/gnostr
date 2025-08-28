@@ -6,9 +6,9 @@ use chrono::offset::Utc;
 use chrono::DateTime;
 use gnostr_asyncgit::sync::commit::{padded_commit_id, serialize_commit};
 
+use gnostr::global_rt::global_rt;
 use gnostr::utils::temp_repo::create_temp_repo;
 use gnostr::GnostrError;
-use gnostr::global_rt::global_rt;
 use log::debug;
 use log::info;
 //
@@ -85,60 +85,59 @@ fn example() {
 
 type Result<T> = std::result::Result<T, GnostrError>;
 
-fn do_something_that_can_fail() -> Result<()> {
+fn test() -> Result<()> {
     // This could fail with a git or IO error
-    let _ = git2::Repository::init(".")?; 
+    let _ = git2::Repository::init(".")?;
+
+    match create_temp_repo()? {
+        (repo, repo_dir) => {
+            // This code runs if the function succeeds.
+            // `repo` and `repo_dir` are now available and ready to use.
+            debug!(
+                "Successfully created the repository. {:?},{:?}",
+                repo.path(),
+                repo_dir
+            );
+
+            // ... now use repo and repo_dir ...
+        }
+    }
+
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    test().expect("");
 
-
-	    //do_something_that_can_fail()?;
-	    do_something_that_can_fail().expect("");
-
-    //let mut repo_root: String = String::from(".");
-#[allow(clippy::if_same_then_else)]
+    #[allow(clippy::if_same_then_else)]
     if cfg!(debug_assertions) {
         debug!("Debugging enabled");
     } else {
         debug!("Debugging disabled");
     }
 
+    //faux repo
+    let (mut repo, mut tempdir) = create_temp_repo().expect("");
+    println!("repo.path() {:?}", repo.path());
+    println!(
+        "tempdir.path() {:?}",
+        tempdir.path().file_name().unwrap().to_str().unwrap()
+    );
 
-
-match create_temp_repo()? {
-    (repo, repo_dir) => {
-        // This code runs if the function succeeds.
-        // `repo` and `repo_dir` are now available and ready to use.
-        println!("Successfully created the repository. {:?},{:?}",repo.path(), repo_dir);
-        
-        // ... now use repo and repo_dir ...
-
-
-
-
+    let mut repo_root: Option<String> = Some(String::from(tempdir.path().file_name().unwrap().to_str().unwrap()));
+    println!("repo_root={:?}", repo_root.expect("128:repo_root").as_str());
 
 
 
-	}
-}
-
-//let Ok(mut (repo, repo_dir)) = create_temp_repo();
-    //let mut repo: Repository = create_temp_repo();//Some(None);//::discover(repo_root.as_str()).expect("Couldn't open repository");
-let (repo, tempdir) = create_temp_repo().expect("");
-
-	let mut repo_root: Option<String> = Some(String::from("."));
     let args: Vec<String> = env::args().collect();
 
-	let mut args_length = args.len();
-        println!("  {}", args_length);
-	for arg in env::args() {
-        println!("  {}", arg);
- if arg == "--repo" { /*set repo_root*/ }
-}
-    //let repo = Repository::discover(repo_root.as_str()).expect("Couldn't open repository");
+    let mut args_length = args.len();
+    println!("args_length:{}", args_length);
+    for arg in env::args() {
+        println!("arg:{}", arg);
+        if arg == "--repo" { /*set repo_root*/ }
+    }
 
     #[cfg(debug_assertions)]
     debug!("Debugging enabled");
@@ -148,22 +147,22 @@ let (repo, tempdir) = create_temp_repo().expect("");
 
     let start = get_time();
     let epoch = get_epoch_ms();
-    println!("epoch:{}", epoch.clone());
+    debug!("epoch:{}", epoch.clone());
     let system_time = SystemTime::now();
-    println!("system_time:{:?}", system_time.clone());
+    debug!("system_time:{:?}", system_time.clone());
 
     let datetime: DateTime<Utc> = system_time.into();
-    println!("{}", datetime.format("%d/%m/%Y %T/%s"));
-    println!("{}", datetime.format("%d/%m/%Y %T/%f"));
-    println!("{}", datetime.format("%d/%m/%Y %T"));
+    debug!("{}", datetime.format("%d/%m/%Y %T/%s"));
+    debug!("{}", datetime.format("%d/%m/%Y %T/%f"));
+    debug!("{}", datetime.format("%d/%m/%Y %T"));
 
     //let cwd = get_current_working_dir();
     let cwd = get_pwd();
     #[cfg(debug_assertions)]
     println!("Debugging enabled");
-    println!("{:#?}", cwd);
+    debug!("cwd={:#?}", cwd);
     let state = repo::state();
-    println!("{:#?}", state);
+    println!("state={:#?}", state);
     //
     //let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
     println!("repo_root={:?}", repo_root.expect("169:repo_root").as_str());
@@ -184,7 +183,7 @@ let (repo, tempdir) = create_temp_repo().expect("");
     let pwd_hash: String = format!("{:x}", hasher.finalize());
     println!("pwd_hash={:?}", pwd_hash);
 
-	//
+    //
     let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
         target: "00000".to_string(), //default 00000
@@ -200,7 +199,7 @@ let (repo, tempdir) = create_temp_repo().expect("");
         timestamp: time::now(),
     };
 
-	//
+    //
     parse_args_or_exit(&mut opts);
 
     let mut miner = match Gitminer::new(opts) {
@@ -268,7 +267,7 @@ let (repo, tempdir) = create_temp_repo().expect("");
         info!("Not sent to: {:?}", output.failed);
     });
 
-Ok(())
+    Ok(())
 }
 
 fn parse_args_or_exit(opts: &mut gitminer::Options) {
