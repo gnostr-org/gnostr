@@ -1,3 +1,7 @@
+//! This module implements a Key-Value Store (KVS) client and event loop using libp2p's request-response and Kademlia behaviors.
+//! It provides an API for starting listening, dialing, providing/getting files, and requesting/responding to file content.
+//! This module can be used as a standalone KVS client/server or integrated as a component within a larger libp2p application.
+
 use std::{
     collections::{hash_map, HashMap, HashSet},
     error::Error,
@@ -19,6 +23,8 @@ use libp2p::{
     tcp, yamux, PeerId, StreamProtocol,
 };
 use serde::{Deserialize, Serialize};
+
+const FILE_EXCHANGE_PROTOCOL: StreamProtocol = StreamProtocol::new("/file-exchange/1");
 
 /// Creates the network components, namely:
 ///
@@ -54,10 +60,7 @@ pub async fn new(
                 kad::store::MemoryStore::new(key.public().to_peer_id()),
             ),
             request_response: request_response::cbor::Behaviour::new(
-                [(
-                    StreamProtocol::new("/file-exchange/1"),
-                    ProtocolSupport::Full,
-                )],
+                [(FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Full)],
                 request_response::Config::default(),
             ),
         })?
