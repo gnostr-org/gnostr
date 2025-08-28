@@ -351,7 +351,7 @@ impl EventLoop {
                         }
                     }
                 } else {
-                    todo!("Already dialing peer.");
+                    let _ = sender.send(Ok(()));
                 }
             }
             Command::StartProviding { file_name, sender } => {
