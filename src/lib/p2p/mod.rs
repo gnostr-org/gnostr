@@ -376,6 +376,5 @@ pub async fn evt_loop(
                 _ => {}
             }
         }
-        
     }
 }
