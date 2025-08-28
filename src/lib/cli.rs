@@ -6,6 +6,7 @@ use clap::{
     Subcommand,
 };
 use gnostr_asyncgit::sync::RepoPath;
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use simplelog::{Config, LevelFilter, WriteLogger};
 use std::{
     //env,
@@ -152,7 +153,13 @@ pub struct GnostrCli {
     pub watcher: Option<String>,
     ///
     #[arg(short, long, action = clap::ArgAction::Append,
-		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
+		default_values_t = ["wss://relay.damus.io".to_string(),
+					"wss://nos.lol".to_string(),
+					"wss://relay.primal.net".to_string(),
+					"wss://offchain.pub".to_string(),
+					"wss://nostr21.com".to_string(),
+					"wss://relay.nostr.band/all".to_string()]
+	)]
     pub relays: Vec<String>,
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
@@ -181,6 +188,19 @@ pub struct GnostrCli {
     /// Enable logging
     #[clap(long, default_value = "false")]
     pub logging: bool,
+}
+
+impl GnostrCli {
+    /// A method to get the final list of relays, including defaults.
+    pub fn get_relays(&self) -> Vec<String> {
+        if self.relays.is_empty() {
+            // If the user did not provide any relays, use the bootstrap relays
+            BOOTSTRAP_RELAYS.clone()
+        } else {
+            // If the user provided relays, use those
+            self.relays.clone()
+        }
+    }
 }
 
 #[derive(Subcommand)]
