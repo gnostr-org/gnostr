@@ -8,17 +8,20 @@ pub fn create_temp_repo() -> Result<(Repository, TempDir), git2::Error> {
     let repo_path = dir.path();
 
     let repo = Repository::init(repo_path)?;
-    println!("Successfully initialized a new Git repository at: {}", repo_path.display());
+    println!(
+        "Successfully initialized a new Git repository at: {}",
+        repo_path.display()
+    );
 
     let file_path = repo_path.join("README.md");
     let mut file = File::create(&file_path).expect("Failed to create file");
     writeln!(file, "# My Temporary Git Repository").expect("Failed to write to file");
 
     let mut index = repo.index()?;
-    
+
     let relative_path = file_path.strip_prefix(repo_path).expect("Path error");
     index.add_path(relative_path)?;
-    
+
     let oid = index.write_tree()?;
 
     let signature = Signature::now("John Doe", "john.doe@example.com")?;
