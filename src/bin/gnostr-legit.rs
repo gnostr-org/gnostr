@@ -126,7 +126,7 @@ async fn main() -> Result<()> {
     );
 
     let mut repo_root: Option<String> = Some(String::from(tempdir.path().file_name().unwrap().to_str().unwrap()));
-    println!("repo_root={:?}", repo_root.expect("128:repo_root").as_str());
+    println!("repo_root={:?}", repo_root.clone().expect("128:repo_root").as_str());
 
 
 
