@@ -65,8 +65,10 @@ pub async fn react_to_event(
         eprintln!("Unable to find note with the provided event id");
         exit(0);
     }
+    debug!("{:?}", events);
 
     let event_to_react_to = events.first().unwrap();
+    debug!("{:?}", event_to_react_to);
 
     let id = client
         .reaction(event_to_react_to, sub_command_args.reaction.clone())
