@@ -1,8 +1,3 @@
-use git2::{Repository, Signature};
-use std::fs::File;
-use std::io::prelude::*;
-use tempfile::{tempdir, TempDir};
-
 use gnostr::utils::temp_repo::*;
 fn main() {
     match create_temp_repo() {
