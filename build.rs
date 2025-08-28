@@ -67,9 +67,7 @@ fn install_pkg_config() {
 }
 fn install_zlib() {
     println!("cargo:warning=Attempting to install zlib using Homebrew...");
-    let install_result = Command::new("brew")
-        .args(["install", "zlib"])
-        .status();
+    let install_result = Command::new("brew").args(["install", "zlib"]).status();
 
     match install_result {
         Ok(status) if status.success() => {
