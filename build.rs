@@ -101,22 +101,27 @@ fn get_git_hash() -> String {
     if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
         return commit[..7].to_string();
     };
-    let commit = Command::new("git")
+    let commit_output = Command::new("git")
         .arg("rev-parse")
         .arg("--short=7")
         .arg("--verify")
         .arg("HEAD")
-        .output();
-    if let Ok(commit_output) = commit {
-        let commit_string = String::from_utf8_lossy(&commit_output.stdout);
+        .output()
+        .expect("Failed to execute git command to get commit hash");
+    let commit_string = String::from_utf8_lossy(&commit_output.stdout);
 
-        return commit_string.lines().next().unwrap_or("").into();
-    }
-
-    panic!("Can not get git commit: {}", commit.unwrap_err());
+    return commit_string.lines().next().unwrap_or("").into();
 }
 
 fn main() {
+    // Tell Cargo to rerun this build script only if the Git HEAD or index changes
+    println!("cargo:rerun-if-changed=.git/HEAD");
+    println!("cargo:rerun-if-changed=.git/index");
+
+    // Tell Cargo to rerun this build script only if these environment variables change
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+    println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
+
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
             .timestamp_opt(val.parse::<i64>().unwrap(), 0)
@@ -139,8 +144,8 @@ fn main() {
     println!("cargo:warning=buildname '{}'", build_name);
     println!("cargo:rustc-env=GITUI_BUILD_NAME={}", build_name);
 
-    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     match target_arch.as_str() {
         "x86_64" => {
@@ -236,7 +241,7 @@ fn main() {
 }
 
 fn if_windows() -> bool {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "windows" {
         println!("cargo:rustc-cfg=target_os_windows");
@@ -255,7 +260,7 @@ fn if_windows() -> bool {
     }
 }
 fn if_linux_unknown() -> bool {
-    let target = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target == "aarch64-unknown-linux-gnu" {
         println!(
@@ -300,7 +305,7 @@ fn if_linux_unknown() -> bool {
     // Add other build logic here if needed
 }
 fn linux_install_pkg_config() {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "linux" {
         println!("cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate.");
@@ -345,7 +350,7 @@ fn linux_install_pkg_config() {
 }
 
 fn musl_install_pkg_config() {
-    let target = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target == "x86_64-unknown-linux-musl" {
         println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
