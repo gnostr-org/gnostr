@@ -1,6 +1,6 @@
 use crate::Result;
 use clap::Parser;
-use nostr_relay::App;
+use gnostr_relay::App;
 use std::path::PathBuf;
 use tracing::info;
 
