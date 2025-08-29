@@ -143,4 +143,4 @@ enabled = false
 # NIP-50 Search extension
 # use carefully. see README.md#search
 [search]
-enabled = false
+enabled = true
