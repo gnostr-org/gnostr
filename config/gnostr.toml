@@ -66,9 +66,9 @@ min_prefix = 10
 # in any event, this is the maximum number of elements in the tags list. default 5000
 max_event_tags = 5000
 # Events older than this will be rejected. default 3 years
-max_event_time_older_than_now = 94608000
+## max_event_time_older_than_now = 94608000
 # Events newer than this will be rejected. default 15 minutes
-max_event_time_newer_than_now = 900
+## max_event_time_newer_than_now = 900
 
 # Metrics extension, get the metrics data from https://example.com/metrics?auth=auth_key
 [metrics]
