@@ -20,7 +20,7 @@ pub enum Error {
     #[error(transparent)]
     Db(#[from] nostr_db::Error),
     #[error(transparent)]
-    Relay(#[from] nostr_relay::Error),
+    Relay(#[from] gnostr_relay::Error),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
