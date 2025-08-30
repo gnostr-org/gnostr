@@ -2,16 +2,15 @@
 name = "nostr-extensions"
 version = "0.4.8"
 description = "Nostr relay extensions."
-edition.workspace = true
-license.workspace = true
-homepage.workspace = true
-repository.workspace = true
-authors.workspace = true
+edition = "2021"
+##license.workspace = true
+##homepage.workspace = true
+##repository.workspace = true
+##authors.workspace = true
 
 
 [dependencies]
 
-nostr-relay = { version = "0.4.8", path = "../relay" }
 metrics = "0.23.0"
 metrics-exporter-prometheus = { version = "0.15.3", optional = true, default-features = false, features = [
     "push-gateway",
@@ -25,6 +24,7 @@ actix-web = "4.9.0"
 parking_lot = "0.12.3"
 tracing = "0.1.40"
 governor = { version = "0.6.3", optional = true }
+gnostr-relay = { version = "0.0.5", path = "..", features = ["search"] }
 
 [features]
 default = ["metrics", "rate_limiter", "count", "search"]
