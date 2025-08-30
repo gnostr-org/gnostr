@@ -1,5 +1,5 @@
 use metrics::{describe_histogram, histogram};
-use nostr_relay::{
+use gnostr_relay::{
     db::{Db, Filter},
     duration::NonZeroDuration,
     message::{ClientMessage, IncomingMessage, OutgoingMessage},

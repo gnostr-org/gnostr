@@ -1,6 +1,6 @@
 use metrics::{counter, describe_counter};
-use nostr_relay::db::now;
-use nostr_relay::{
+use gnostr_relay::db::now;
+use gnostr_relay::{
     message::{ClientMessage, IncomingMessage, OutgoingMessage},
     setting::SettingWrapper,
     Extension, ExtensionMessageResult, List, Session,

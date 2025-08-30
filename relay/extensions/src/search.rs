@@ -1,4 +1,4 @@
-use nostr_relay::{
+use gnostr_relay::{
     message::{ClientMessage, IncomingMessage},
     setting::SettingWrapper,
     Extension, ExtensionMessageResult, Session,

@@ -2,8 +2,8 @@ use governor::{
     clock::DefaultClock, state::keyed::DashMapStateStore, Quota, RateLimiter as GovernorRateLimiter,
 };
 use metrics::{counter, describe_counter};
-use nostr_relay::db::Event;
-use nostr_relay::{
+use gnostr_relay::db::Event;
+use gnostr_relay::{
     duration::NonZeroDuration,
     message::{ClientMessage, IncomingMessage, OutgoingMessage},
     setting::SettingWrapper,
