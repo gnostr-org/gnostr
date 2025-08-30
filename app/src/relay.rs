@@ -1,8 +1,10 @@
 use crate::Result;
 use clap::Parser;
-use gnostr_relay::App;
+use gnostr_relay::*;
 use std::path::PathBuf;
 use tracing::info;
+
+use nostr_extensions;
 
 /// Start relay options
 #[derive(Debug, Clone, Parser)]
