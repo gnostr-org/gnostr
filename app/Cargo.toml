@@ -35,7 +35,7 @@ gnostr-relay = { version = "0.0.5", path = "../relay", features = ["search"] }
 gpui = { git = "https://github.com/zed-industries/zed" }
 indicatif = "0.17.8"
 nostr-db = { version = "0.4.5", features = ["search"] }
-nostr-extensions = "0.4.8"
+nostr-extensions = { version = "0.4.8", path = "../relay/extensions" }
 rayon = "1.10.0"
 #smallvec = "1.13.2"
 thiserror = "1.0.63"
