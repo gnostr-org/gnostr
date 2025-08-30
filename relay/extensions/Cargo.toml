@@ -28,7 +28,7 @@ gnostr-relay = { version = "0.0.5", path = "..", features = ["search"] }
 
 [features]
 default = ["metrics", "rate_limiter", "count", "search"]
-search = ["nostr-relay/search"]
+search = ["gnostr-relay/search"]
 metrics = ["metrics-exporter-prometheus", "metrics-util"]
 rate_limiter = ["governor"]
 count = []
