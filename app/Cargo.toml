@@ -9,8 +9,8 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 
-# [features]
-# zstd = ["nostr-db/zstd"]
+[features]
+zstd = ["nostr-db/zstd"]
 
 [workspace]
 
