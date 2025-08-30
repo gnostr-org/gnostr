@@ -60,7 +60,7 @@ argparse    = "0.2.2"
 ascii = "1.1.0"
 async-std = "1.12"
 async-trait = "0.1.73"
-
+actix-web = "4.9.0"
 ##nostr
 auth-git2 = "0.5.5"
 backtrace = "0.3"
