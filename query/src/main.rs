@@ -10,9 +10,9 @@ use url::Url;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = cli().await?;
-    
-	let mut filt = serde_json::Map::new();
-	let mut search = serde_json::Map::new();
+
+    let mut filt = serde_json::Map::new();
+    let mut search = serde_json::Map::new();
 
     if let Some(authors) = matches.get_one::<String>("authors") {
         filt.insert(
@@ -81,9 +81,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(search) = matches.get_many::<String>("search") {
         let search_vec: Vec<&String> = search.collect();
         //if search_vec.len() == 2 {
-            let search_string = format!("search");
-            let val = search_vec[0].split(',').collect::<String>();
-            filt.insert(search_string, json!(val));
+        let search_string = format!("search");
+        let val = search_vec[0].split(',').collect::<String>();
+        filt.insert(search_string, json!(val));
         //}
     }
 
@@ -100,27 +100,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .mentions("")
         .references("")
         .kinds("")
-        .search("","")
+        .search("", "")
         .build()?;
 
-    println!("config=\n{config:?}");
+    debug!("config=\n{config:?}");
     let q = json!(["REQ", "gnostr-query", filt]);
     let query_string = to_string(&q)?;
-    println!("query_string:\n{:?}", query_string);
+    debug!("query_string:\n{:?}", query_string);
+
     let relay_url_str = matches.get_one::<String>("relay").clone().unwrap();
     let relay_url = Url::parse(relay_url_str)?;
-    let vec_result = gnostr_query::send(query_string.clone(), relay_url, Some(limit_check)).await;
-    //trace
-    debug!("vec_result:\n{:?}", vec_result);
 
-    let mut json_result: Vec<String> = vec![];
-    for element in vec_result.unwrap() {
-        info!("element=\n{}", element);
-        json_result.push(element);
-    }
+    if let Some(search) = matches.get_many::<String>("search") {
+        let vec_result = gnostr_query::send(
+            query_string.clone(),
+            Url::parse("wss://nostr.wine").expect(""),
+            Some(limit_check),
+        )
+        .await;
 
-    for element in json_result {
-        println!("{}", element);
+        //trace
+        debug!("vec_result:\n{:?}", vec_result);
+
+        let mut json_result: Vec<String> = vec![];
+        for element in vec_result.unwrap() {
+            debug!("element=\n{}", element);
+            json_result.push(element);
+        }
+
+        for element in json_result {
+            print!("{}", element);
+        }
+        std::process::exit(0);
+    } else {
+        let vec_result =
+            gnostr_query::send(query_string.clone(), relay_url, Some(limit_check)).await;
+
+        //trace
+        debug!("vec_result:\n{:?}", vec_result);
+
+        let mut json_result: Vec<String> = vec![];
+        for element in vec_result.unwrap() {
+            debug!("element=\n{}", element);
+            json_result.push(element);
+        }
+
+        for element in json_result {
+            print!("{}", element);
+        }
     }
     Ok(())
 }
