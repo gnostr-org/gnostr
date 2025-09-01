@@ -1,6 +1,6 @@
 use gnostr_query::cli::cli;
 use gnostr_query::ConfigBuilder;
-use log::{debug, trace};
+use log::{debug, info, trace};
 use serde_json::{json, to_string};
 use url::Url;
 
@@ -10,7 +10,9 @@ use url::Url;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = cli().await?;
+
     let mut filt = serde_json::Map::new();
+    let mut search = serde_json::Map::new();
 
     if let Some(authors) = matches.get_one::<String>("authors") {
         filt.insert(
@@ -37,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let generic_vec: Vec<&String> = generic.collect();
         if generic_vec.len() == 2 {
             let tag = format!("#{}", generic_vec[0]);
-            let val = generic_vec[1].split(',').collect::<Vec<&str>>();
+            let val = generic_vec[1].split(',').collect::<String>();
             filt.insert(tag, json!(val));
         }
     }
@@ -75,6 +77,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             std::process::exit(1);
         }
     }
+    //["REQ", "", { "search": "orange" }, { "kinds": [1, 2], "search": "purple" }]
+    if let Some(search) = matches.get_many::<String>("search") {
+        let search_vec: Vec<&String> = search.collect();
+        //if search_vec.len() == 2 {
+        let search_string = format!("search");
+        let val = search_vec[0].split(',').collect::<String>();
+        filt.insert(search_string, json!(val));
+        //}
+    }
 
     let config = ConfigBuilder::new()
         .host("localhost")
@@ -89,25 +100,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .mentions("")
         .references("")
         .kinds("")
+        .search("", "")
         .build()?;
 
-    debug!("{config:?}");
+    debug!("config=\n{config:?}");
     let q = json!(["REQ", "gnostr-query", filt]);
     let query_string = to_string(&q)?;
-    let relay_url_str = matches.get_one::<String>("relay").unwrap();
-    let relay_url = Url::parse(relay_url_str)?;
-    let vec_result = gnostr_query::send(query_string.clone(), relay_url, Some(limit_check)).await;
-    //trace
-    trace!("{:?}", vec_result);
+    debug!("query_string:\n{:?}", query_string);
 
-    let mut json_result: Vec<String> = vec![];
-    for element in vec_result.unwrap() {
-        println!("{}", element);
-        json_result.push(element);
-    }
-    //trace
-    for element in json_result {
-        trace!("json_result={}", element);
+    let relay_url_str = matches.get_one::<String>("relay").clone().unwrap();
+    let relay_url = Url::parse(relay_url_str)?;
+
+    if let Some(search) = matches.get_many::<String>("search") {
+        let vec_result = gnostr_query::send(
+            query_string.clone(),
+            Url::parse("wss://nostr.wine").expect(""),
+            Some(limit_check),
+        )
+        .await;
+
+        //trace
+        debug!("vec_result:\n{:?}", vec_result);
+
+        let mut json_result: Vec<String> = vec![];
+        for element in vec_result.unwrap() {
+            debug!("element=\n{}", element);
+            json_result.push(element);
+        }
+
+        for element in json_result {
+            print!("{}", element);
+        }
+    } else {
+        let vec_result =
+            gnostr_query::send(query_string.clone(), relay_url, Some(limit_check)).await;
+
+        //trace
+        debug!("vec_result:\n{:?}", vec_result);
+
+        let mut json_result: Vec<String> = vec![];
+        for element in vec_result.unwrap() {
+            debug!("element=\n{}", element);
+            json_result.push(element);
+        }
+
+        for element in json_result {
+            print!("{}", element);
+        }
     }
     Ok(())
 }
