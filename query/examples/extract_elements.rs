@@ -34,33 +34,27 @@ fn main() {
     "#;
 
     let keys_to_extract = [
-//		"name",
-//		"age",
-//		"city",
-//		"is_active",
-		"address",
-//		"street",
-		"zip"
-	];
+        //		"name",
+        //		"age",
+        //		"city",
+        //		"is_active",
+        "address", //		"street",
+        "zip",
+    ];
 
     match extract_elements(json_str, &keys_to_extract) {
         Ok(extracted_json) => {
             println!("1:Extracted JSON: {}", extracted_json);
-        
+
             match extract_elements(&extracted_json.to_string(), &["address", "zip"]) {
                 Ok(extracted_json) => {
                     println!("2:Extracted JSON: {}", extracted_json);
-                
-
-
-	        	}
+                }
                 Err(err) => {
                     eprintln!("Error: {}", err);
                 }
             }
-
-
-		}
+        }
         Err(err) => {
             eprintln!("Error: {}", err);
         }
@@ -100,7 +94,7 @@ fn main() {
         Err(e) => eprintln!("Error extracting from array: {}", e),
     }
 
-	let _ = levels();
+    let _ = levels();
 }
 
 fn levels() -> Result<()> {
@@ -153,8 +147,9 @@ fn levels() -> Result<()> {
     println!("Non-existent key: {:?}", non_existent_key); // Prints Null
 
     // Using .get() for safer access
-    let non_existent_key_safe = parsed_json.get("level1_key")
-                                           .and_then(|l1| l1.get("non_existent_safe"));
+    let non_existent_key_safe = parsed_json
+        .get("level1_key")
+        .and_then(|l1| l1.get("non_existent_safe"));
     println!("Non-existent key (safe): {:?}", non_existent_key_safe); // Prints None
 
     Ok(())
