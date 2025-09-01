@@ -110,7 +110,7 @@ fn get_git_hash() -> String {
         .expect("Failed to execute git command to get commit hash");
     let commit_string = String::from_utf8_lossy(&commit_output.stdout);
 
-    return commit_string.lines().next().unwrap_or("").into();
+    commit_string.lines().next().unwrap_or("").into()
 }
 
 fn main() {
