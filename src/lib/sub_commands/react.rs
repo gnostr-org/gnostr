@@ -33,6 +33,7 @@ pub async fn react_to_event(
 ) -> Result<()> {
     if relays.is_empty() {
         relays = BOOTSTRAP_RELAYS.to_vec();
+        debug!("using BOOTSTRAP_RELAYS={:?}", BOOTSTRAP_RELAYS.to_vec());
     }
 
     let keys = parse_private_key(private_key, false).await?;
