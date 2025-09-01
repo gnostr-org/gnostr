@@ -1,11 +1,12 @@
 use futures::{SinkExt, StreamExt};
-use log::debug;
+use log::info;
 use serde_json::{json, Map};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
 pub mod cli;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Config {
     host: String,
@@ -20,6 +21,7 @@ pub struct Config {
     mentions: String,
     references: String,
     kinds: String,
+    search: (String, String),
 }
 
 #[derive(Debug, Default)]
@@ -36,6 +38,7 @@ pub struct ConfigBuilder {
     mentions: Option<String>,
     references: Option<String>,
     kinds: Option<String>,
+    search: Option<(String, String)>,
 }
 impl ConfigBuilder {
     pub fn new() -> Self {
@@ -52,6 +55,7 @@ impl ConfigBuilder {
             mentions: None,
             references: None,
             kinds: None,
+            search: None,
         }
     }
     pub fn host(mut self, host: &str) -> Self {
@@ -104,6 +108,10 @@ impl ConfigBuilder {
         self.kinds = Some(kinds.to_string());
         self
     }
+    pub fn search(mut self, element: &str, search: &str) -> Self {
+        self.search = Some((element.to_string(), search.to_string()));
+        self
+    }
     pub fn build(self) -> Result<Config, String> {
         Ok(Config {
             host: self.host.ok_or("Missing host")?,
@@ -118,6 +126,7 @@ impl ConfigBuilder {
             mentions: self.mentions.ok_or("")?,
             references: self.references.ok_or("")?,
             kinds: self.kinds.ok_or("")?,
+            search: self.search.ok_or("")?,
         })
     }
 }
@@ -129,9 +138,9 @@ pub async fn send(
     //println!("\n{}\n", query_string);
     //println!("\n{}\n", relay_url);
     //println!("\n{}\n", limit.unwrap());
-    debug!("\n{query_string}\n");
-    debug!("\n{relay_url}\n");
-    debug!("\n{}\n", limit.unwrap());
+    info!("\n{query_string}\n");
+    info!("\n{relay_url}\n");
+    info!("\n{}\n", limit.unwrap());
     let (ws_stream, _) = connect_async(relay_url).await?;
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string)).await?;
@@ -152,6 +161,7 @@ pub async fn send(
     Ok(vec_result)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn build_gnostr_query(
     authors: Option<&str>,
     ids: Option<&str>,
@@ -161,6 +171,7 @@ pub fn build_gnostr_query(
     mentions: Option<&str>,
     references: Option<&str>,
     kinds: Option<&str>,
+    search: Option<(&str, &str)>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut filt = Map::new();
 
@@ -219,7 +230,16 @@ pub fn build_gnostr_query(
             }
         }
     }
+    if search.is_some() {
+        filt.insert(
+            "search".to_string(),
+            json!(search.expect("REASON")),
+        );
+    }
 
+    println!("{:?}", filt);
     let q = json!(["REQ", "gnostr-query", filt]);
+    info!("q={}", q);
+    info!("{}", serde_json::to_string(&q)?);
     Ok(serde_json::to_string(&q)?)
 }

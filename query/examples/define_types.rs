@@ -42,7 +42,6 @@ fn main() -> Result<()> {
     let level2_value_b = parsed_data.level1_key.level2_key_b;
     let deep_value = parsed_data.level1_key.another_nested.deep_key;
 
-
     println!("Value of level2_key_a: {}", level2_value_a);
     println!("Value of level2_key_b: {}", level2_value_b);
     println!("Value of deep_key: {}", deep_value);
