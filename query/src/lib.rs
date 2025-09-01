@@ -1,11 +1,12 @@
 use futures::{SinkExt, StreamExt};
-use log::{debug, info};
+use log::info;
 use serde_json::{json, Map};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
 pub mod cli;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Config {
     host: String,
@@ -160,6 +161,7 @@ pub async fn send(
     Ok(vec_result)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn build_gnostr_query(
     authors: Option<&str>,
     ids: Option<&str>,
@@ -228,27 +230,12 @@ pub fn build_gnostr_query(
             }
         }
     }
-    if let Some(search) = search {
+    if search.is_some() {
         filt.insert(
             "search".to_string(),
-            json!(hashtag.expect("REASON")),//.split(',').collect::<Vec<&str>>()),
-            //json!(hashtag.expect("REASON").split(',').collect::<Vec<&str>>()),
+            json!(search.expect("REASON")),
         );
     }
-    //if let Some(search) = search {
-    //    let search_terms: Result<Vec<String>, _> =
-    //        search.split(',').map(|s| s.parse::<String>()).collect();
-    //    match search_terms {
-    //        Ok(search_terms) => {
-    //            filt.insert("search".to_string(), json!(search_terms[0]));
-    //        }
-    //        Err(_) => {
-    //            return Err("Unknonw error parsing search terns.".into());
-    //        }
-    //    }
-    //}
-    //TODO ["REQ", "", { "search": "orange" }, { "kinds": [1, 2], "search": "purple" }]
-    //TODO ["REQ", "1", {"search": "nostr"}]
 
     println!("{:?}", filt);
     let q = json!(["REQ", "gnostr-query", filt]);
