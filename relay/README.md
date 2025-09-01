@@ -6,7 +6,7 @@ A high-performance and scalable [nostr](https://github.com/nostr-protocol/nostr)
 
 ```shell
 
-cargo add nostr-relay actix-web tracing-subscriber
+cargo add gnostr-relay actix-web tracing-subscriber
 
 ```
 
