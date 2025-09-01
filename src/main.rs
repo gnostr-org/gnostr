@@ -91,8 +91,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     //    //replace gnostr tui --gitdir
     //    //std::process::exit(0);
     //}
-    if gnostr_cli_args.workdir.is_some() {}
-    if gnostr_cli_args.directory.is_some() {}
+    gnostr_cli_args.workdir.is_some();
+    gnostr_cli_args.directory.is_some();
     if gnostr_cli_args.hash.is_some() {
         //not none
         if let Some(input_string) = gnostr_cli_args.hash {
@@ -336,7 +336,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 if let Some(git_dir_value) = gitdir_value {
                     // You have the value!
                     debug!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
-                    let gitdir_string = format!("{}", gitdir_env_value);
+                    let gitdir_string = gitdir_env_value.to_string();
                     debug!(
                         "342:OVERRIDE!! The git directory is: {:?}",
                         gitdir_string.clone()

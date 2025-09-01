@@ -33,7 +33,7 @@ use std::{
     panic, process,
     time::{Duration, Instant},
 };
-use tracing::{debug, trace, Level};
+use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 //use crate::{app::App, cli::process_cmdline};
@@ -225,7 +225,7 @@ pub fn set_panic_handlers() -> Result<()> {
 
     Ok(())
 }
-/// GNOSTR_TUI
+/// `GNOSTR_TUI`
 pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
@@ -236,14 +236,15 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
     //TODO gnostr --gitdir
     //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap();
-    if !valid_path(&gitdir) {
+    if valid_path(&gitdir) { /*NOT NOT valid case!*/
+    } else {
         debug!("237:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            debug!("241:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+            debug!("241:{}", env::var("GNOSTR_GITDIR").unwrap().clone());
             //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
             let repo_path: RepoPath = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
-                    .unwrap_or(env::var("HOME").unwrap().to_string() /*TODO*/)
+                    .unwrap_or(env::var("HOME").unwrap().clone() /*TODO*/)
                     .as_ref(),
             );
 
@@ -256,7 +257,6 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
             debug!("TODO:git init in $HOME/.gnostr/tmp repo or /tmp/...");
             //return Ok(());
         }
-    } else { /*NOT NOT valid case!*/
     } //must be a valid path to a git repo!
 
     let key_config = KeyConfig::init()

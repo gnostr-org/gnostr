@@ -131,7 +131,7 @@ impl App {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     let tick_rate = Duration::from_millis(100);
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, app))?;
 
         if !event::poll(tick_rate)? {
             continue;
@@ -147,167 +147,160 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             match app.input_mode {
                 // Modal Commands
                 // InputMode::Normal
-                InputMode::Normal => match key.code {
-                    KeyCode::Char('?') => {
-                        //not empty
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
+                InputMode::Normal => {
+                    match key.code {
+                        KeyCode::Char('?') => {
+                            //not empty
+                            if !app.input.value().trim().is_empty() {
+                                let m = msg::Msg::default()//default Msg type Chat
+                                .set_content(app.input.value().to_owned(), 0_usize);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
+                            } else {
+                                //TODO refresh and query topic nostr DMs
+                                let m = msg::Msg::default()//default Msg type Chat
+                                .set_content("<?> TODO: help".to_string(), 0_usize);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
                             }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content("<?> TODO: help".to_string(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
+                            app.input.reset();
+                            app.input_mode = InputMode::Help;
                         }
-                        app.input.reset();
-                        app.input_mode = InputMode::Help;
-                    }
-                    KeyCode::Char('/') => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
+                        KeyCode::Char('/') => {
+                            if !app.input.value().trim().is_empty() {
+                                let m = msg::Msg::default()//default Msg type Chat
+                                .set_content(app.input.value().to_owned(), 0_usize);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
+                            } else {
+                                //TODO refresh and query topic nostr DMs
+                                let m = msg::Msg::default() //default Msg type Chat
+                                    .set_content(
+                                        "</> forward slash modal trigger".to_string(),
+                                        0_usize,
+                                    );
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
                             }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default() //default Msg type Chat
-                                .set_content(
-                                    "</> forward slash modal trigger".to_string(),
-                                    0 as usize,
-                                );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
+                            app.input.reset();
                         }
-                        app.input.reset();
-                    }
-                    KeyCode::Char('\\') => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
+                        KeyCode::Char('\\') => {
+                            if !app.input.value().trim().is_empty() {
+                                let m = msg::Msg::default()//default Msg type Chat
+                                .set_content(app.input.value().to_owned(), 0_usize);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
+                            } else {
+                                //TODO refresh and query topic nostr DMs
+                                let m = msg::Msg::default() //default Msg type Chat
+                                    .set_content(
+                                        "<\\> back slash modal trigger".to_string(),
+                                        0_usize,
+                                    );
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
                             }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default() //default Msg type Chat
-                                .set_content(
-                                    "<\\> back slash modal trigger".to_string(),
-                                    0 as usize,
-                                );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
+                            app.input.reset();
                         }
-                        app.input.reset();
-                    }
-                    KeyCode::Char(':') => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m =
-                                msg::Msg::default() //default Msg type Chat
+                        KeyCode::Char(':') => {
+                            if !app.input.value().trim().is_empty() {
+                                let m = msg::Msg::default()//default Msg type Chat
+                                .set_content(app.input.value().to_owned(), 0_usize);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
+                            } else {
+                                //TODO refresh and query topic nostr DMs
+                                let m = msg::Msg::default() //default Msg type Chat
                                     .set_content(
                                         "<:> vim like command prompt".to_string(),
-                                        0 as usize,
+                                        0_usize,
                                     );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
                             }
+                            app.input.reset();
+                            app.input_mode = InputMode::VimLike;
                         }
-                        app.input.reset();
-                        app.input_mode = InputMode::VimLike;
-                    }
-                    KeyCode::Char('e') | KeyCode::Char('i') => {
-                        app.input_mode = InputMode::Editing;
-                        app.msgs_scroll = usize::MAX;
-                    }
-                    KeyCode::Char('q') => {
-                        return Ok(());
-                    }
-                    //TODO Navigate to Topic
-                    //Edit Topic Mode
-                    KeyCode::Up => {
-                        let l = app.messages.lock().unwrap().len();
+                        KeyCode::Char('e') | KeyCode::Char('i') => {
+                            app.input_mode = InputMode::Editing;
+                            app.msgs_scroll = usize::MAX;
+                        }
+                        KeyCode::Char('q') => {
+                            return Ok(());
+                        }
+                        //TODO Navigate to Topic
+                        //Edit Topic Mode
+                        KeyCode::Up => {
+                            let l = app.messages.lock().unwrap().len();
 
-                        app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
-                    }
-                    KeyCode::Down => {
-                        let l = app.messages.lock().unwrap().len();
+                            app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
+                        }
+                        KeyCode::Down => {
+                            let l = app.messages.lock().unwrap().len();
 
-                        app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
-                    }
-                    KeyCode::Enter => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
+                            app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
+                        }
+                        KeyCode::Enter => {
+                            if !app.input.value().trim().is_empty() {
+                                let m = msg::Msg::default()
+                                    .set_content(app.input.value().to_owned(), 0_usize);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
+                            } else {
+                                //TODO refresh and query topic nostr DMs
+                                let m = msg::Msg::default().set_content(
+                                    format!("{}:{}", &blockheight_sync(), "test message <ENTER>"),
+                                    0_usize,
+                                );
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
                             }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
+                            app.input.reset();
+                        }
+                        KeyCode::Esc => {
+                            app.msgs_scroll = usize::MAX;
+                            app.msgs_scroll = usize::MAX;
+                            app.input.reset();
                             let m = msg::Msg::default().set_content(
-                                format!(
-                                    "{}:{}",
-                                    &blockheight_sync(),
-                                    "test message <ENTER>".to_string()
-                                ),
-                                0 as usize,
+                                format!("{}:{}", &blockheight_sync(), "<test message ESC>"),
+                                0_usize,
                             );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
                             }
                         }
-                        app.input.reset();
-                    }
-                    KeyCode::Esc => {
-                        app.msgs_scroll = usize::MAX;
-                        app.msgs_scroll = usize::MAX;
-                        app.input.reset();
-                        let m = msg::Msg::default().set_content(
-                            format!(
-                                "{}:{}",
-                                &blockheight_sync(),
-                                "<test message ESC>".to_string()
-                            ),
-                            0 as usize,
-                        );
-                        app.add_message(m.clone());
-                        if let Some(ref mut hook) = app._on_input_enter {
-                            hook(m);
+                        _ => {
+                            app.msgs_scroll = usize::MAX;
                         }
                     }
-                    _ => {
-                        app.msgs_scroll = usize::MAX;
-                    }
-                },
+                }
                 // InputMode::Editing
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let m = msg::Msg::default()
-                                .set_content(app.input.value().to_owned(), 0 as usize);
+                                .set_content(app.input.value().to_owned(), 0_usize);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -316,7 +309,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             //TODO refresh and query topic nostr DMs
                             let m = msg::Msg::default().set_content(
                                 "InputMode::Editing:KeyCode::Enter".to_string(),
-                                0 as usize,
+                                0_usize,
                             );
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {

@@ -167,7 +167,7 @@ fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
                                              //    0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06, //
                                              //];
 
-    bytes[31] = bytes[31] ^ secret_key_seed;
+    bytes[31] ^= secret_key_seed;
     for (i, byte) in bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
         debug!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
@@ -221,7 +221,7 @@ fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
     let keypair =
         identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length");
     // println!("141:{}", keypair.public().to_peer_id());
-    generate_close_peer_id(bytes.clone(), 32usize);
+    generate_close_peer_id(bytes, 32usize);
     keypair
 }
 
@@ -258,7 +258,7 @@ fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     println!("262:{}", keypair.public().to_peer_id());
 
-    close_bytes[31] = bytes[31] ^ 0u8;
+    close_bytes[31] = bytes[31];
 
     for (i, byte) in close_bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
@@ -313,7 +313,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if let Some(true) = Some(args.network.is_some()) {}
     if let Some(true) = Some(args.secret.is_some()) {}
 
-    let keypair: identity::Keypair = generate_ed25519(args.secret.clone().unwrap_or(0));
+    let keypair: identity::Keypair = generate_ed25519(args.secret.unwrap_or(0));
     let keypair_clone: identity::Keypair = generate_ed25519(args.secret.unwrap_or(0));
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
@@ -325,7 +325,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         max_records: usize::MAX,
         max_value_bytes: usize::MAX,
     };
-    let kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
+    let kad_memstore = MemoryStore::with_config(peer_id, kad_store_config.clone());
     let kad_config = KadConfig::default();
     let message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
@@ -352,7 +352,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .validation_mode(gossipsub::ValidationMode::Permissive)
         .message_id_fn(message_id_fn)
         .build()
-        .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+        .map_err(io::Error::other)?;
 
     let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
@@ -375,7 +375,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id.clone(), kad_store_config);
+            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
             let mut ipfs_cfg = kad::Config::new(IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = kad::store::MemoryStore::new(key.public().to_peer_id());
@@ -627,10 +627,11 @@ async fn handle_input_line(swarm: &mut Swarm<Behaviour>, line: String) {
                         key.clone()
                     );
 
-                    let topic = IdentTopic::new(format!(
-                        "{}",
-                        std::str::from_utf8(record.key.as_ref()).unwrap_or("invalid utf8"),
-                    ));
+                    let topic = IdentTopic::new(
+                        std::str::from_utf8(record.key.as_ref())
+                            .unwrap_or("invalid utf8")
+                            .to_string(),
+                    );
 
                     println!("652:subscribe topic={}", topic.clone());
                     swarm
@@ -671,29 +672,27 @@ async fn run(args: &Args, swarm: &mut Swarm<Behaviour>) -> Result<(), Box<dyn Er
     let path = args.flag_git_dir.as_ref().map_or(".", |s| &s[..]);
     let repo = Repository::discover(path)?;
     if let Ok(tag_names) = repo.tag_names(None) {
-        for tag_name_opt in tag_names.iter() {
-            if let Some(tag_name) = tag_name_opt {
-                if let Ok(commit_id) = get_commit_id_of_tag(&repo, tag_name) {
-                    let key = kad::RecordKey::new(&tag_name);
-                    let record = kad::Record {
-                        key: key.clone(),
-                        value: commit_id.into_bytes(),
-                        publisher: Some(swarm.local_peer_id().clone()),
-                        expires: None,
-                    };
-                    swarm
-                        .behaviour_mut()
-                        .kademlia
-                        .put_record(record, kad::Quorum::Majority)?;
-                    swarm
-                        .behaviour_mut()
-                        .kademlia
-                        .start_providing(key.clone())?;
+        for tag_name in tag_names.iter().flatten() {
+            if let Ok(commit_id) = get_commit_id_of_tag(&repo, tag_name) {
+                let key = kad::RecordKey::new(&tag_name);
+                let record = kad::Record {
+                    key: key.clone(),
+                    value: commit_id.into_bytes(),
+                    publisher: Some(*swarm.local_peer_id()),
+                    expires: None,
+                };
+                swarm
+                    .behaviour_mut()
+                    .kademlia
+                    .put_record(record, kad::Quorum::Majority)?;
+                swarm
+                    .behaviour_mut()
+                    .kademlia
+                    .start_providing(key.clone())?;
 
-                    let topic = IdentTopic::new(tag_name);
-                    debug!("676:subscribe topic={}", topic.clone());
-                    swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
-                }
+                let topic = IdentTopic::new(tag_name);
+                debug!("676:subscribe topic={}", topic.clone());
+                swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
             }
         }
     }

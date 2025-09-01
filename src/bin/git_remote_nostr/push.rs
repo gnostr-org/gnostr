@@ -106,7 +106,7 @@ pub async fn run_push(
     )?;
 
     git_server_refspecs.retain(|refspec| {
-        if let Some(rejected) = rejected_refspecs.get(&refspec.to_string()) {
+        if let Some(rejected) = rejected_refspecs.get(&refspec.clone()) {
             let (_, to) = refspec_to_from_to(refspec).unwrap();
             println!("error {to} {} out of sync with nostr", rejected.join(" "));
             false
@@ -261,14 +261,14 @@ pub async fn run_push(
                             println!(
                                 "error {to} cannot fastforward as newer patches found on proposal"
                             );
-                            rejected_proposal_refspecs.push(refspec.to_string());
+                            rejected_proposal_refspecs.push(refspec.clone());
                         }
                     }
                 } else {
                     println!(
 						"error {to} permission denied. you are not the proposal author or a repo maintainer"
 					);
-                    rejected_proposal_refspecs.push(refspec.to_string());
+                    rejected_proposal_refspecs.push(refspec.clone());
                 }
             } else {
                 // TODO new proposal / couldn't find exisiting
@@ -722,9 +722,9 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                                 refspecs_for_remote.push(refspec.clone());
                             } else {
                                 rejected_refspecs
-                                    .entry(refspec.to_string())
-                                    .and_modify(|a| a.push(url.to_string()))
-                                    .or_insert(vec![url.to_string()]);
+                                    .entry(refspec.clone())
+                                    .and_modify(|a| a.push(url.clone()))
+                                    .or_insert(vec![url.clone()]);
                                 term.write_line(
                                     format!(
                                         "ERROR: {short_name} {to} conflicts with nostr ({} ahead {} behind) and local ({} ahead {} behind). either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote",
@@ -742,9 +742,9 @@ fn create_rejected_refspecs_and_remotes_refspecs(
 
                         // cant soft push
                         rejected_refspecs
-                            .entry(refspec.to_string())
-                            .and_modify(|a| a.push(url.to_string()))
-                            .or_insert(vec![url.to_string()]);
+                            .entry(refspec.clone())
+                            .and_modify(|a| a.push(url.clone()))
+                            .or_insert(vec![url.clone()]);
                         term.write_line(
                             format!("ERROR: {short_name} {to} conflicts with nostr and is not an ancestor of local branch. either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote").as_str(),
                         )?;
@@ -772,9 +772,9 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                     } else {
                         // cant soft push
                         rejected_refspecs
-                            .entry(refspec.to_string())
-                            .and_modify(|a| a.push(url.to_string()))
-                            .or_insert(vec![url.to_string()]);
+                            .entry(refspec.clone())
+                            .and_modify(|a| a.push(url.clone()))
+                            .or_insert(vec![url.clone()]);
                         term.write_line(
                                     format!(
                                         "ERROR: {short_name} already contains {to} {} ahead and {} behind local branch. either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote",
@@ -788,9 +788,9 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                     // TODO fetch oid from remote
                     // cant soft push
                     rejected_refspecs
-                        .entry(refspec.to_string())
-                        .and_modify(|a| a.push(url.to_string()))
-                        .or_insert(vec![url.to_string()]);
+                        .entry(refspec.clone())
+                        .and_modify(|a| a.push(url.clone()))
+                        .or_insert(vec![url.clone()]);
                     term.write_line(
                         format!("ERROR: {short_name} already contains {to} at {remote_value} which is not an ancestor of local branch. either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote").as_str(),
                     )?;
@@ -801,7 +801,7 @@ fn create_rejected_refspecs_and_remotes_refspecs(
             }
         }
         if !refspecs_for_remote.is_empty() {
-            refspecs_for_remotes.insert(url.to_string(), refspecs_for_remote);
+            refspecs_for_remotes.insert(url.clone(), refspecs_for_remote);
         }
     }
 
@@ -810,7 +810,7 @@ fn create_rejected_refspecs_and_remotes_refspecs(
     let mut remotes_refspecs_without_rejected = HashMap::new();
     for (url, value) in &refspecs_for_remotes {
         remotes_refspecs_without_rejected.insert(
-            url.to_string(),
+            url.clone(),
             value
                 .iter()
                 .filter(|refspec| !rejected_refspecs.contains_key(*refspec))
@@ -1005,7 +1005,7 @@ async fn create_merge_status(
                     .collect::<Vec<Tag>>(),
                 vec![
                     Tag::from_standardized(nostr_0_34_1::TagStandard::Reference(
-                        repo_ref.root_commit.to_string(),
+                        repo_ref.root_commit.clone(),
                     )),
                     Tag::from_standardized(nostr_0_34_1::TagStandard::Reference(format!(
                         "{merge_commit}"
