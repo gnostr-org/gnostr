@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-query"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["gnostr-org <admin@gnostr.org>"]
 description = "gnostr-query: retrieve nostr events."
 repository = "https://github.com/gnostr-org/gnostr-query.git"
@@ -14,6 +14,10 @@ keywords = ["terminal", "input", "event", "cli"]
 [lib]
 name = "gnostr_query"
 path = "src/lib.rs"
+
+[[bin]]
+name = "gnostr_query"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
