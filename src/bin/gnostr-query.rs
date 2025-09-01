@@ -1,6 +1,6 @@
 use gnostr_query::cli::cli;
 use gnostr_query::ConfigBuilder;
-use log::{debug, info, trace};
+use log::debug;
 use serde_json::{json, to_string};
 use url::Url;
 
@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = cli().await?;
 
     let mut filt = serde_json::Map::new();
-    let mut search = serde_json::Map::new();
+    let _ = serde_json::Map::new();
 
     if let Some(authors) = matches.get_one::<String>("authors") {
         filt.insert(
@@ -81,7 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(search) = matches.get_many::<String>("search") {
         let search_vec: Vec<&String> = search.collect();
         //if search_vec.len() == 2 {
-        let search_string = format!("search");
+        let search_string = "search".to_string();
         let val = search_vec[0].split(',').collect::<String>();
         filt.insert(search_string, json!(val));
         //}
@@ -108,10 +108,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let query_string = to_string(&q)?;
     debug!("query_string:\n{:?}", query_string);
 
-    let relay_url_str = matches.get_one::<String>("relay").clone().unwrap();
+    let relay_url_str = matches.get_one::<String>("relay").unwrap();
     let relay_url = Url::parse(relay_url_str)?;
 
-    if let Some(search) = matches.get_many::<String>("search") {
+    if matches.get_many::<String>("search").is_some() {
         let vec_result = gnostr_query::send(
             query_string.clone(),
             Url::parse("wss://nostr.wine").expect(""),

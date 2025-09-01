@@ -11,9 +11,7 @@ use futures::stream::StreamExt;
 use libp2p::StreamProtocol;
 use libp2p::{
     core::transport::Transport,
-    gossipsub,
-    gossipsub::IdentTopic,
-    identify, identity,
+    gossipsub, identify, identity,
     kad::{
         self,
         // Kademlia, KademliaConfig, KademliaEvent,
@@ -22,7 +20,7 @@ use libp2p::{
     },
     mdns, noise, ping, rendezvous,
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, Multiaddr, PeerId, Swarm,
+    tcp, yamux, Multiaddr, PeerId,
 };
 use std::{
     env,
@@ -30,7 +28,6 @@ use std::{
     hash::{DefaultHasher, Hash, Hasher},
     str,
     str::FromStr,
-    thread,
     //    time::Duration,
 };
 use tokio::time::Duration;
@@ -133,12 +130,12 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
                                              //    0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06, //
                                              //];
 
-    bytes[31] = bytes[31] ^ secret_key_seed;
+    bytes[31] ^= secret_key_seed;
 
     let keypair =
         identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length");
     // println!("141:{}", keypair.public().to_peer_id());
-    generate_close_peer_id(bytes.clone(), 32usize);
+    generate_close_peer_id(bytes, 32usize);
     keypair
 }
 
@@ -149,7 +146,7 @@ fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("262:{}", keypair.public().to_peer_id());
 
-    close_bytes[31] = bytes[31] ^ 0u8;
+    close_bytes[31] = bytes[31];
 
     keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
@@ -173,7 +170,7 @@ pub async fn evt_loop(
     recv: tokio::sync::mpsc::Sender<Msg>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
-    let keypair: identity::Keypair = generate_ed25519(args.secret.clone().unwrap_or(0));
+    let keypair: identity::Keypair = generate_ed25519(args.secret.unwrap_or(0));
     let keypair_clone: identity::Keypair = generate_ed25519(args.secret.unwrap_or(0));
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
@@ -217,7 +214,7 @@ pub async fn evt_loop(
         .validation_mode(gossipsub::ValidationMode::Permissive)
         .message_id_fn(message_id_fn)
         .build()
-        .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+        .map_err(io::Error::other)?;
 
     let mut ipfs_cfg = kad::Config::new(IPFS_PROTO_NAME);
     ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
@@ -242,7 +239,7 @@ pub async fn evt_loop(
                 ipfs: kad::Behaviour::with_config(key.public().to_peer_id(), ipfs_store, ipfs_cfg),
                 kademlia: kad::Behaviour::with_config(
                     key.public().to_peer_id(),
-                    MemoryStore::with_config(peer_id.clone(), kad_store_config),
+                    MemoryStore::with_config(peer_id, kad_store_config),
                     kad_config,
                 ),
                 identify: identify::Behaviour::new(identify::Config::new(
@@ -281,7 +278,7 @@ pub async fn evt_loop(
             let now = Local::now();
             let current_second = now.second();
 
-            if current_second % 2 != 0 {
+            if !current_second.is_multiple_of(2) {
                 debug!("Current second ({}) is odd!", current_second);
                 let blockheight = blockheight_async().await;
                 let blockhash = blockhash_async().await;

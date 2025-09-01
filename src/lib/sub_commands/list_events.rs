@@ -93,7 +93,6 @@ pub async fn list_events(
             .map(Kind::from)
             .collect();
         filter = filter.kinds(kinds);
-    } else {
     }
 
     // Handle e-tags

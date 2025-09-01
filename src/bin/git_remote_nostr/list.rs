@@ -90,7 +90,7 @@ pub async fn run_list(
             if let Ok(mut branch_name) = cl.get_branch_name() {
                 branch_name = if let Some(public_key) = current_user {
                     if proposal.author().eq(&public_key) {
-                        cl.branch_name.to_string()
+                        cl.branch_name.clone()
                     } else {
                         branch_name
                     }
@@ -141,7 +141,7 @@ pub fn list_from_remotes(
                 errors.insert(url, error);
             }
             Ok(state) => {
-                remote_states.insert(url.to_string(), state);
+                remote_states.insert(url.clone(), state);
             }
         }
     }

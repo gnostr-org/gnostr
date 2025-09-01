@@ -1,11 +1,11 @@
 use crate::blockheight::blockheight_sync;
 use anyhow::Result;
-use clap::{Args, Parser, ValueEnum};
+use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::commit::deserialize_commit;
 use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::commit::serialize_commit;
-use libp2p::{gossipsub, Multiaddr, PeerId};
+use libp2p::{gossipsub, Multiaddr};
 //
 use nostr_sdk_0_37_0::prelude::*;
 //
@@ -13,7 +13,6 @@ use once_cell::sync::OnceCell;
 use serde_json;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::{env, error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info, trace};
@@ -342,7 +341,7 @@ pub async fn chat(
     key: &String,
     sub_command_args: &mut ChatSubCommands,
 ) -> Result<(), Box<dyn Error>> {
-    let mut args = sub_command_args.clone();
+    let args = sub_command_args.clone();
     let env_args: Vec<String> = env::args().collect();
 
     let level = if args.debug {
@@ -402,7 +401,7 @@ pub async fn chat(
         until: None,
     };
     if let Some(ref name) = args.name {
-        env::set_var("USER", &name); //detected later from env
+        env::set_var("USER", name); //detected later from env
     };
 
     let list_events = list_events(relays, &listevents_subcommand).await;
