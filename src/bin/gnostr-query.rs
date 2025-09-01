@@ -131,6 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for element in json_result {
             print!("{}", element);
         }
+        std::process::exit(0);
     } else {
         let vec_result =
             gnostr_query::send(query_string.clone(), relay_url, Some(limit_check)).await;
