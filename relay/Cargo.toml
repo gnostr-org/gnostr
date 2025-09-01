@@ -1,9 +1,15 @@
 [package]
 name = "gnostr-relay"
 version = "0.0.5"
-description = "A high-performance and scalable nostr relay library."
-keywords = ["nostr", "nostr-relay", "gnostr"]
 edition = "2021"
+authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
+description = "gnostr:git+nostr protocol relay"
+readme = "README.md"
+homepage = "https://gnostr.org"
+repository = "https://github.com/gnostr-org/gnostr.git"
+license = "MIT"
+keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
+categories = ["network-programming", "web-programming"]
 
 [dependencies]
 actix = "0.13.5"
