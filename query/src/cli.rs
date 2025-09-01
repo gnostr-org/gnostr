@@ -63,12 +63,8 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .default_value("wss://relay.damus.io"),
         )
         .arg(
-            Arg::new("search")
-                .short('s')
-                .long("search")
-                .required(false)
-                //.help("-r wss://relay.damus.io")
-                //.default_value("gnostr"),
+            Arg::new("search").short('s').long("search").required(false), //.help("-r wss://relay.damus.io")
+                                                                          //.default_value("gnostr"),
         )
         .get_matches();
 
