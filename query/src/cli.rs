@@ -51,7 +51,7 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .short('l')
                 .long("limit")
                 .value_parser(clap::value_parser!(i32))
-                .default_value("500")
+                .default_value("1")
                 .help("Limit the number of results"),
         )
         .arg(
