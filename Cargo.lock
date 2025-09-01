@@ -3902,7 +3902,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.115"
+version = "0.0.116"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -4044,7 +4044,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "arboard",
  "bitflags 2.9.0",
@@ -4200,7 +4200,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "assert_cmd",
  "chrono",
