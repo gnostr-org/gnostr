@@ -348,16 +348,15 @@ impl RelayManager {
                 debug!("{:?}", event.kind);
                 self.update_event_time();
                 // count p tags
-                let mut cnt = 0;
-                for _t in &event.tags {
+                for (mut _cnt, _t) in event.tags.iter().enumerate() {
                     //if let Tag::PubKey(_pk, Some(ss)) = t {
                     //  state.pubkeys.add(pk);
                     //if let Some(ss) = s {
                     //debug!("    {ss}");
                     //let _ = self.relays.add(ss);
                     //}
-                    debug!("    {cnt}");
-                    cnt += 1;
+                    debug!("    {_cnt}");
+                    _cnt += 1;
                     //}
                 }
             }
