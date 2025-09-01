@@ -29,7 +29,7 @@ fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 async fn main() -> Result<(), reqwest::Error> {
     let args: Vec<String> = env::args().collect();
     let mut nip_lower: i32 = 1;
-    let mut nip_upper: i32 = 1;
+    //let mut nip_upper: i32 = 1;
     if args.len() > 1 {
         let first_argument = &args[1];
 
@@ -46,8 +46,8 @@ async fn main() -> Result<(), reqwest::Error> {
         let second_argument = &args[2];
 
         match second_argument.parse::<i32>() {
-            Ok(number) => {
-                nip_upper = number;
+            Ok(_number) => {
+                //nip_upper = number;
             }
             Err(e) => {
                 eprintln!("Error converting first argument to i32: {}", e);
@@ -63,7 +63,7 @@ async fn main() -> Result<(), reqwest::Error> {
             let client = &client;
             async move {
                 let resp = client
-                    .get(&url.replace("wss://","https://"))
+                    .get(url.replace("wss://", "https://"))
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
@@ -143,7 +143,12 @@ async fn main() -> Result<(), reqwest::Error> {
                                 debug!("{dir_name} already exists...");
                             }
 
-                            let file_name = url.replace("https://", "").replace("http://", "").replace("ws://","").replace("wss://","") + ".json";
+                            let file_name = url
+                                .replace("https://", "")
+                                .replace("http://", "")
+                                .replace("ws://", "")
+                                .replace("wss://", "")
+                                + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
                             debug!("\n\n{}\n\n", file_path_str);
@@ -161,7 +166,13 @@ async fn main() -> Result<(), reqwest::Error> {
                                 Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
                             }
 
-                            println!("{}/{}", nip_lower, url.replace("https://", "").replace("wss://","").replace("ws://",""));
+                            println!(
+                                "{}/{}",
+                                nip_lower,
+                                url.replace("https://", "")
+                                    .replace("wss://", "")
+                                    .replace("ws://", "")
+                            );
                         }
                     }
                 }
