@@ -4229,7 +4229,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-query"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "clap 4.5.37",
  "futures 0.3.31",
