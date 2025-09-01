@@ -119,7 +119,7 @@ impl App {
             .as_ref()
             .map(|s| {
                 format!(
-                    ", config will be overrided by ENV seting with prefix `{}_`",
+                    ", config will be overrided by ENV setting with prefix `{}_`",
                     s
                 )
             })
