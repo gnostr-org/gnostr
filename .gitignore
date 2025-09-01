@@ -72,7 +72,6 @@ org/
 proxy/
 pubkeys.txt
 py/
-relay/
 response.txt
 secp256k1/
 server.crt
