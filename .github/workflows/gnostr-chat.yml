@@ -123,6 +123,7 @@ jobs:
             curl https://nostr.band/$NOTE
       - run: |
           gnostr chat & sleep 60 && pkill -f gnostr || true
+          make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true
 
       - name: Save rustup
         id: cache-rustup-save
