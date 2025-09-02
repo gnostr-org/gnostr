@@ -51,7 +51,7 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .short('l')
                 .long("limit")
                 .value_parser(clap::value_parser!(i32))
-                .default_value("500")
+                .default_value("1")
                 .help("Limit the number of results"),
         )
         .arg(
@@ -61,6 +61,10 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .required(false)
                 //.help("-r wss://relay.damus.io")
                 .default_value("wss://relay.damus.io"),
+        )
+        .arg(
+            Arg::new("search").short('s').long("search").required(false), //.help("-r wss://relay.damus.io")
+                                                                          //.default_value("gnostr"),
         )
         .get_matches();
 

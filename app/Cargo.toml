@@ -9,12 +9,10 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 
-# [features]
-# zstd = ["nostr-db/zstd"]
+[features]
+zstd = ["nostr-db/zstd"]
 
 [workspace]
-
-members = ["db", "db/bench", "extensions", "kv", "kv/bench", "relay"]
 
 [workspace.package]
 edition = "2021"
@@ -33,11 +31,11 @@ anyhow = "1.0.86"
 clap = { version = "4.5.16", features = ["derive"] }
 clio = { version = "0.3.5", features = ["clap-parse"] }
 gnostr = { version = "*", path = ".." }
+gnostr-relay = { version = "0.0.5", path = "../relay", features = ["search"] }
 gpui = { git = "https://github.com/zed-industries/zed" }
 indicatif = "0.17.8"
-nostr-db = { version = "0.4.5", path = "./db", features = ["search"] }
-nostr-extensions = { version = "0.4.8", path = "./extensions" }
-nostr-relay = { version = "0.4.8", path = "./relay", features = ["search"] }
+nostr-db = { version = "0.4.5", features = ["search"] }
+nostr-extensions = { version = "0.4.8", path = "../relay/extensions" }
 rayon = "1.10.0"
 #smallvec = "1.13.2"
 thiserror = "1.0.63"
