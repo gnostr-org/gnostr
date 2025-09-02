@@ -122,8 +122,10 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
       - run: |
-          gnostr chat & sleep 60 && pkill -f gnostr || true
-          make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true
+          gnostr chat --name github-ci-node & sleep 10 && pkill -f gnostr || true
+          make gnostr-chat & sleep 10 && pkill -f make && pkill -f gnostr || true
+          gnostr chat --name github-ci-node & sleep 10 && pkill -f gnostr || true
+          make gnostr-chat & sleep 10 && pkill -f make && pkill -f gnostr || true
 
       - name: Save rustup
         id: cache-rustup-save
