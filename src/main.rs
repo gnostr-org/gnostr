@@ -123,7 +123,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(
-                //    &gnostr_cli_args.nsec.unwrap().to_string(),
+            //    &gnostr_cli_args.nsec.unwrap().to_string(),
                 &mut sub_command_args.clone(),
             )
             .await
