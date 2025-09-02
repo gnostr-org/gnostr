@@ -1,0 +1,63 @@
+name: gnostr-chat.yml
+
+# Controls when the action will run.
+on:
+  schedule:
+    - cron: '*/30 * * * *' # run 30th minute
+  push:
+    branches:
+      - 'm*'
+
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  gnostr-chat:
+    env:
+      FORCE: "--force"
+      GNOSTR: "gnostr"
+      POW: "16"
+      DAMUS: "wss://relay.damus.io"
+      NOS: "wss://nos.lol"
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        rustup: [stable]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: echo test
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo MEMPOOL=${{ env.MEMPOOL }}
+          echo POW=${{ env.POW }}
+          echo DAMUS=${{ env.DAMUS }}
+          echo NOS=${{ env.NOS }}
+          printenv
+        env:
+          MEMPOOL: "mempool"
+          MEMPOOL_SPACE: "mempool-space"
+
+      - uses: styfle/cancel-workflow-action@0.11.0
+        if: ${{ !env.ACT }}
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'false'
+
+      - run: rustup default ${{ matrix.rustup }}
+      - run: cargo-binstall --no-confirm gnostr
+      - run: |
+          gnostr -d ${{ env.POW }} \
+          -r ${{ env.DAMUS }} \
+          --nsec "$(gnostr-sha256)" \
+          note \
+          -c "gnostr-chat gnostr://$(gnostr-weeble)/$(gnostr-blockheight)"
+      - run: |
+          gnostr ngit --nsec $(gnostr-sha256) fetch
+      - run: |
+          gnostr chat & sleep 360 && pkill -f gnostr
