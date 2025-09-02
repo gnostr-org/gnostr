@@ -140,7 +140,7 @@ fn macos() {
                 "a" => execute_macoscommand("screencapture", &["-c"]),
                 "b" => execute_macoscommand("screencapture", &["-ic"]),
                 "c" => execute_macoscommand("screencapture", &["-wc"]),
-                _ => println!("Invalid choice."),
+                _ => execute_macoscommand("screencapture", &["-c"]),
             }
         }
         _ => {
