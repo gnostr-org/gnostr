@@ -23,6 +23,7 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         rustup: [stable, nightly]
+    fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - name: echo test
