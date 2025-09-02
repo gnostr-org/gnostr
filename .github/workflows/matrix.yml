@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rustup: [stable, nightly]
+        rustup: [1.89, stable, nightly]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -83,7 +83,6 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'false'
 
-      - uses: cargo-bins/cargo-binstall@main
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall || true
@@ -246,7 +245,6 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: cargo-bins/cargo-binstall@main
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
@@ -283,7 +281,7 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
       - run: |
-          cargo install -vv --path . --force
+          cargo install --path . --force
         if: matrix.os == 'windows-latest' && matrix.rustup == 'nightly'
       - run: |
           make cargo-install || sudo make cargo-install
