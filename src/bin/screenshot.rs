@@ -1,3 +1,5 @@
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
 use std::io::{self, Write};
 use std::process::Command;
 
@@ -119,6 +121,7 @@ fn macos() {
         }
         "4" => {
             // Captures to the clipboard.
+            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
             println!("Choose an option to capture to the clipboard:");
             println!("  [a] for whole screen");
             println!("  [b] for a specific area");
@@ -132,24 +135,39 @@ fn macos() {
                 .expect("Failed to read line");
             let clipboard_input = clipboard_input.trim();
 
-            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-
-            // Get the text from the clipboard.
+			if Some(ctx.get_contents()).is_some() {
+				println!("1:is some!");
             match ctx.get_contents() {
                 Ok(contents) => {
-                    println!("Clipboard contents:\n{}", contents);
+				println!("1:match!");
+                    println!("1:Clipboard contents:\n{}", contents);
                 }
                 Err(e) => {
-                    eprintln!("Failed to get clipboard contents: {}", e);
+                    eprintln!("1:Failed to get clipboard contents: {}", e);
                 }
             }
-
+			}
             match clipboard_input {
                 "a" => execute_macoscommand("screencapture", &["-c"]),
                 "b" => execute_macoscommand("screencapture", &["-ic"]),
                 "c" => execute_macoscommand("screencapture", &["-wc"]),
                 // default
                 _ => execute_macoscommand("screencapture", &["-c"]),
+            }
+            //let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+
+			if Some(ctx.get_contents()).is_some() {
+				println!("2:is some!");
+            // Get the text from the clipboard.
+            match ctx.get_contents() {
+                Ok(contents) => {
+				println!("2:match!");
+                    println!("2:Clipboard contents:\n{}", contents);
+                }
+                Err(e) => {
+                    eprintln!("2:Failed to get clipboard contents: {}", e);
+                }
+            }
             }
         }
         _ => {
