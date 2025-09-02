@@ -123,8 +123,10 @@ jobs:
             curl https://nostr.band/$NOTE
       - run: |
           gnostr chat --name github-ci-node & sleep 60 && pkill -f gnostr || true & \
-          make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true & \
+          gnostr chat --name github-ci-node & sleep 60 && pkill -f gnostr || true
+          make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true
           gnostr chat --name github-ci-node & sleep 60 && pkill -f gnostr || true & \
+          gnostr chat --name github-ci-node & sleep 60 && pkill -f gnostr || true
           make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true
 
       - name: Save rustup
