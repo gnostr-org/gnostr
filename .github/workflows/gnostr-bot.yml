@@ -76,14 +76,11 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'true'
 
+      - run: printenv || true
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
-        if: matrix.rustup == '1.89'
-      - run: cargo-binstall --no-confirm gnostr-xq
-        if: matrix.rustup == '1.89'
       - run: cargo-binstall --no-confirm gnostr
-        if: matrix.rustup == '1.89'
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
@@ -94,6 +91,7 @@ jobs:
         if: matrix.os == 'macos-latest'
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'macos-latest'
+      - run: gnostr --help
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \

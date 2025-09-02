@@ -75,7 +75,7 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: 'true'
+          fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
