@@ -122,6 +122,7 @@ fn macos() {
         "4" => {
             // Captures to the clipboard.
             let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+            let mut alt_ctx: ClipboardContext = ClipboardProvider::new().unwrap();
             println!("Choose an option to capture to the clipboard:");
             println!("  [a] for whole screen");
             println!("  [b] for a specific area");
@@ -129,11 +130,12 @@ fn macos() {
             print!("Enter your choice: ");
             io::stdout().flush().unwrap();
 
-            let mut clipboard_input = String::new();
+            let mut clipboard_input_1 = String::new();
             io::stdin()
-                .read_line(&mut clipboard_input)
+                .read_line(&mut clipboard_input_1)
                 .expect("Failed to read line");
-            let clipboard_input = clipboard_input.trim();
+            let clipboard_input = clipboard_input_1.trim();
+            println!("clipboard_input_1={}", clipboard_input_1.trim());
 
             if Some(ctx.get_contents()).is_some() {
                 println!("1:is some!");
@@ -146,7 +148,60 @@ fn macos() {
                         eprintln!("1:Failed to get clipboard contents: {}", e);
                     }
                 }
+                println!("display alt_ctx1:is some!");
+                match alt_ctx.get_contents() {
+                    Ok(contents) => {
+                        println!("display alt_ctx1:match!");
+                        println!("display alt_ctx1:Clipboard contents:\n{}", contents);
+                    }
+                    Err(e) => {
+                        eprintln!("display alt_ctx1:Failed to get clipboard contents: {}", e);
+                    }
+                }
             }
+            if Some(ctx.get_contents()).is_some() {
+                println!("1b:is some!");
+                match ctx.get_contents() {
+                    Ok(contents) => {
+                        println!("1b:match!");
+                        println!("1b:Clipboard contents:\n{}", contents);
+                    }
+                    Err(e) => {
+                        eprintln!("1b:Failed to get clipboard contents: {}", e);
+                    }
+                }
+                println!("display alt_ctx1b:is some!");
+                match alt_ctx.get_contents() {
+                    Ok(contents) => {
+                        println!("display alt_ctx1b:match!");
+                        println!("display alt_ctx1b:Clipboard contents:\n{}", contents);
+                    }
+                    Err(e) => {
+                        eprintln!("display alt_ctx1b:Failed to get clipboard contents: {}", e);
+                    }
+                }
+            }
+
+            let set_result = alt_ctx
+                .set_contents(format!(
+                    "formatted! {}",
+                    clipboard_input_1.clone().to_string()
+                ))
+                .expect("set_result failed!");
+
+            if Some(alt_ctx.get_contents()).is_some() {
+                println!("1b_alt_ctx:is some!");
+                match alt_ctx.get_contents() {
+                    Ok(contents) => {
+                        println!("1b_alt_ctx:match!");
+                        println!("1b_alt_ctx:Clipboard contents:\n{}", contents);
+                    }
+                    Err(e) => {
+                        eprintln!("1b_alt_ctx:Failed to get clipboard contents: {}", e);
+                    }
+                }
+            }
+
             match clipboard_input {
                 "a" => execute_macoscommand("screencapture", &["-c"]),
                 "b" => execute_macoscommand("screencapture", &["-ic"]),
