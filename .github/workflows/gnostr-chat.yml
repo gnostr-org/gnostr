@@ -79,11 +79,8 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
-        if: matrix.rustup == '1.89'
       - run: cargo-binstall --no-confirm gnostr-xq
-        if: matrix.rustup == '1.89'
       - run: cargo-binstall --no-confirm gnostr
-        if: matrix.rustup == '1.89'
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
@@ -91,9 +88,9 @@ jobs:
       - run: brew tap nostorg/nostr || true
         if: matrix.os == 'macos-latest'
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os == 'macos-latest'
+        if: matrix.os != 'windows-latest'
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os == 'macos-latest'
+        if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
@@ -103,10 +100,8 @@ jobs:
           -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
-        if: matrix.os == 'macos-latest'
       - run: |
           gnostr ngit --nsec $(gnostr-sha256) fetch
-        if: matrix.os == 'macos-latest'
       - run: |
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
             -d ${{ env.POW }} \
@@ -125,7 +120,6 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: matrix.os == 'macos-latest'
       - run: |
           gnostr chat & sleep 360 && pkill -f gnostr
 
