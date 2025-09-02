@@ -1,5 +1,7 @@
-use crate::blockheight::blockheight_sync;
-use crate::chat::msg;
+/// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
+//use crate::ui::event::Event;
+//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
+use ratatui::prelude::*;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -8,12 +10,13 @@ use ratatui::{
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
+    style::Color,
     text::Line,
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
 
+use ratatui::style::Style;
 use std::{
     error::Error,
     io,
@@ -23,15 +26,13 @@ use std::{
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
+use crate::chat::msg;
+
 #[derive(Default)]
 pub enum InputMode {
-    #[default]
     Normal,
+    #[default]
     Editing,
-    Help,
-    BackSlash,
-    ForwardSlash,
-    VimLike,
 }
 
 /// App holds the state of the application
@@ -44,8 +45,7 @@ pub struct App {
     pub messages: Arc<Mutex<Vec<msg::Msg>>>,
     pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
     pub msgs_scroll: usize,
-    pub topic: Input,
-    pub diffs: Arc<Mutex<Vec<msg::Msg>>>,
+    pub topic: String,
 }
 
 impl Default for App {
@@ -56,8 +56,7 @@ impl Default for App {
             messages: Default::default(),
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
-            topic: Input::default(),
-            diffs: Default::default(), //TODO: like messages
+            topic: String::from("gnostr"),
         }
     }
 }
@@ -68,7 +67,6 @@ impl App {
     }
 
     pub fn add_message(&self, msg: msg::Msg) {
-        //ref src/lib/chat/ui.rs
         let mut msgs = self.messages.lock().unwrap();
         Self::add_msg(&mut msgs, msg);
     }
@@ -77,30 +75,11 @@ impl App {
         msgs.push(msg);
     }
 
-    //pubic
     pub fn add_msg_fn(&self) -> Box<dyn FnMut(msg::Msg) + 'static + Send> {
         let m = self.messages.clone();
         Box::new(move |msg| {
             let mut msgs = m.lock().unwrap();
             Self::add_msg(&mut msgs, msg);
-        })
-    }
-    //GitCommitDiff type
-    pub fn add_diff_message(&self, msg: msg::Msg) {
-        let mut diffs = self.diffs.lock().unwrap();
-        //TODO add to Topic
-        Self::add_diff(&mut diffs, msg);
-    }
-
-    fn add_diff(diffs: &mut Vec<msg::Msg>, msg: msg::Msg) {
-        diffs.push(msg);
-    }
-
-    pub fn add_diff_fn(&self) -> Box<dyn FnMut(msg::Msg) + 'static + Send> {
-        let m = self.diffs.clone();
-        Box::new(move |msg| {
-            let mut diffs = m.lock().unwrap();
-            Self::add_diff(&mut diffs, msg);
         })
     }
 
@@ -145,98 +124,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             }
 
             match app.input_mode {
-                // Modal Commands
-                // InputMode::Normal
                 InputMode::Normal => match key.code {
-                    KeyCode::Char('?') => {
-                        //not empty
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content("<?> TODO: help".to_string(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        }
-                        app.input.reset();
-                        app.input_mode = InputMode::Help;
-                    }
-                    KeyCode::Char('/') => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default() //default Msg type Chat
-                                .set_content(
-                                    "</> forward slash modal trigger".to_string(),
-                                    0 as usize,
-                                );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        }
-                        app.input.reset();
-                    }
-                    KeyCode::Char('\\') => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default() //default Msg type Chat
-                                .set_content(
-                                    "<\\> back slash modal trigger".to_string(),
-                                    0 as usize,
-                                );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        }
-                        app.input.reset();
-                    }
-                    KeyCode::Char(':') => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()//default Msg type Chat
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m =
-                                msg::Msg::default() //default Msg type Chat
-                                    .set_content(
-                                        "<:> vim like command prompt".to_string(),
-                                        0 as usize,
-                                    );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        }
-                        app.input.reset();
-                        app.input_mode = InputMode::VimLike;
-                    }
                     KeyCode::Char('e') | KeyCode::Char('i') => {
                         app.input_mode = InputMode::Editing;
                         app.msgs_scroll = usize::MAX;
@@ -244,80 +132,27 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
-                    //TODO Navigate to Topic
-                    //Edit Topic Mode
                     KeyCode::Up => {
                         let l = app.messages.lock().unwrap().len();
-
                         app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
                     }
                     KeyCode::Down => {
                         let l = app.messages.lock().unwrap().len();
-
                         app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
-                    }
-                    KeyCode::Enter => {
-                        if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default().set_content(
-                                format!(
-                                    "{}:{}",
-                                    &blockheight_sync(),
-                                    "test message <ENTER>".to_string()
-                                ),
-                                0 as usize,
-                            );
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        }
-                        app.input.reset();
                     }
                     KeyCode::Esc => {
                         app.msgs_scroll = usize::MAX;
                         app.msgs_scroll = usize::MAX;
                         app.input.reset();
-                        let m = msg::Msg::default().set_content(
-                            format!(
-                                "{}:{}",
-                                &blockheight_sync(),
-                                "<test message ESC>".to_string()
-                            ),
-                            0 as usize,
-                        );
-                        app.add_message(m.clone());
-                        if let Some(ref mut hook) = app._on_input_enter {
-                            hook(m);
-                        }
                     }
                     _ => {
                         app.msgs_scroll = usize::MAX;
                     }
                 },
-                // InputMode::Editing
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default()
-                                .set_content(app.input.value().to_owned(), 0 as usize);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
-                            }
-                        } else {
-                            //TODO refresh and query topic nostr DMs
-                            let m = msg::Msg::default().set_content(
-                                "InputMode::Editing:KeyCode::Enter".to_string(),
-                                0 as usize,
-                            );
+                            let m = msg::Msg::default().set_content(app.input.value().to_owned(), 0);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -326,91 +161,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.reset();
                     }
                     KeyCode::Esc => {
-                        if !app.input.value().trim().is_empty() {
-                            //reset input and stay in editing mode
-                            app.input.reset();
-                        } else {
-                            //TODO prompt user if reset app.input
-                            app.input_mode = InputMode::Normal;
-                            app.msgs_scroll = app.messages.lock().unwrap().len();
-                        }
-                    }
-                    KeyCode::Up => {
-                        if !app.input.value().trim().is_empty() {
-                        } else {
-                            let l = app.messages.lock().unwrap().len();
-                            app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
-                        }
-                    }
-                    KeyCode::Down => {
-                        if !app.input.value().trim().is_empty() {
-                        } else {
-                            let l = app.messages.lock().unwrap().len();
-                            app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
-                        }
+                        app.input_mode = InputMode::Normal;
+                        app.msgs_scroll = app.messages.lock().unwrap().len();
                     }
                     _ => {
-                        //TODO count repeat key events
-                        app.input.handle_event(&Event::Key(key));
-                    }
-                },
-                // InputMode::BackSlash
-                InputMode::BackSlash => match key.code {
-                    KeyCode::Esc => {
-                        if !app.input.value().trim().is_empty() {
-                        } else {
-                            //TODO prompt user if reset app.input
-                            app.input_mode = InputMode::Normal;
-                            app.msgs_scroll = app.messages.lock().unwrap().len();
-                        }
-                    }
-                    _ => {
-                        //TODO count repeat key events
-                        app.input.handle_event(&Event::Key(key));
-                    }
-                },
-                // InputMode::ForwardSlash
-                InputMode::ForwardSlash => match key.code {
-                    KeyCode::Esc => {
-                        if !app.input.value().trim().is_empty() {
-                        } else {
-                            //TODO prompt user if reset app.input
-                            app.input_mode = InputMode::Normal;
-                            app.msgs_scroll = app.messages.lock().unwrap().len();
-                        }
-                    }
-                    _ => {
-                        //TODO count repeat key events
-                        app.input.handle_event(&Event::Key(key));
-                    }
-                },
-                // InputMode::VimLike
-                InputMode::VimLike => match key.code {
-                    KeyCode::Esc => {
-                        if !app.input.value().trim().is_empty() {
-                        } else {
-                            //TODO prompt user if reset app.input
-                            app.input_mode = InputMode::Normal;
-                            app.msgs_scroll = app.messages.lock().unwrap().len();
-                        }
-                    }
-                    _ => {
-                        //TODO count repeat key events
-                        app.input.handle_event(&Event::Key(key));
-                    }
-                },
-                // InputMode::Help
-                InputMode::Help => match key.code {
-                    KeyCode::Esc => {
-                        if !app.input.value().trim().is_empty() {
-                        } else {
-                            //TODO prompt user if reset app.input
-                            app.input_mode = InputMode::Normal;
-                            app.msgs_scroll = app.messages.lock().unwrap().len();
-                        }
-                    }
-                    _ => {
-                        //TODO count repeat key events
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
@@ -419,19 +173,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
     }
 }
 
-//as popup widget is constructed in chat_details/mod.rs
+//as popup widget is constructed in chat_details/mos.rs
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         // .margin(2)
-        .constraints(
-            [
-                Constraint::Length(10), /*fit a git commit*/
-                Constraint::Fill(5),
-                Constraint::Length(3),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Fill(5), Constraint::Length(3)].as_ref())
         .split(f.size());
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
@@ -441,14 +188,10 @@ fn ui(f: &mut Frame, app: &App) {
         .style(match app.input_mode {
             InputMode::Normal => Style::default(),
             InputMode::Editing => Style::default().fg(Color::Cyan),
-            InputMode::BackSlash => Style::default().fg(Color::Blue),
-            InputMode::ForwardSlash => Style::default().fg(Color::Blue),
-            InputMode::VimLike => Style::default().fg(Color::Green),
-            InputMode::Help => Style::default().fg(Color::Red),
         })
         .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
-    f.render_widget(input, chunks[2]);
+    f.render_widget(input, chunks[1]);
 
     match app.input_mode {
         InputMode::Normal =>
@@ -459,18 +202,14 @@ fn ui(f: &mut Frame, app: &App) {
             // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
             f.set_cursor(
                 // Put cursor past the end of the input text
-                chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                 // Move one line down, from the border to the input line
-                chunks[2].y + 1,
+                chunks[1].y + 1,
             )
         }
-        InputMode::BackSlash => {}
-        InputMode::ForwardSlash => {}
-        InputMode::VimLike => {}
-        InputMode::Help => {}
     }
 
-    let height = chunks[1].height;
+    let height = chunks[0].height;
     let msgs = app.messages.lock().unwrap();
     let messages: Vec<ListItem> = msgs[0..app.msgs_scroll.min(msgs.len())]
         .iter()
@@ -481,18 +220,5 @@ fn ui(f: &mut Frame, app: &App) {
     let messages = List::new(messages)
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
-    f.render_widget(messages, chunks[1]);
-
-    let topic = Paragraph::new(app.topic.value())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Cyan),
-            InputMode::BackSlash => Style::default().fg(Color::Blue),
-            InputMode::ForwardSlash => Style::default().fg(Color::Blue),
-            InputMode::VimLike => Style::default().fg(Color::Green),
-            InputMode::Help => Style::default().fg(Color::Red),
-        })
-        .scroll((0, scroll as u16))
-        .block(Block::default().borders(Borders::ALL).title("TOPIC"));
-    f.render_widget(topic, chunks[0]);
+    f.render_widget(messages, chunks[0]);
 }

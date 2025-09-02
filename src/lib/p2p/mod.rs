@@ -124,7 +124,7 @@ struct MyBehaviour {
     gossipsub: gossipsub::Behaviour,
 }
 
-pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
+pub fn generate_ed25519(secret_key_seed: &[u8]) -> identity::Keypair {
     // let mut bytes = [0u8; 32];
     let mut bytes: [u8; 32] = GNOSTR_SHA256; //[
                                              //    0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, //
@@ -133,7 +133,7 @@ pub fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
                                              //    0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06, //
                                              //];
 
-    bytes[31] = bytes[31] ^ secret_key_seed;
+    bytes[31] = bytes[31] ^ secret_key_seed[31];
     for (i, byte) in bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
         trace!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
@@ -270,8 +270,8 @@ pub async fn evt_loop(
     recv: tokio::sync::mpsc::Sender<Msg>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
-    let keypair: identity::Keypair = generate_ed25519(args.secret.clone().unwrap_or(0));
-    let keypair_clone: identity::Keypair = generate_ed25519(args.secret.unwrap_or(0));
+let keypair: identity::Keypair = generate_ed25519(&*args.nsec.clone().unwrap().as_bytes());
+let keypair_clone: identity::Keypair = generate_ed25519(&*args.nsec.unwrap().as_bytes());
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);
