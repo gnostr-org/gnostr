@@ -42,6 +42,33 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+
       - uses: actions/checkout@v3
         with:
           submodules: 'true'
@@ -50,8 +77,20 @@ jobs:
           fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
+      - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
       - run: cargo-binstall --no-confirm gnostr
+        if: matrix.rustup == '1.89'
+      - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if: matrix.os == 'macos-latest'
+      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+        if: matrix.os == 'macos-latest'
+      - run: brew tap nostorg/nostr || true
+        if: matrix.os == 'macos-latest'
+      - run: brew tap randymcmillan/homebrew-randymcmillan || true
+        if: matrix.os == 'macos-latest'
+      - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+        if: matrix.os == 'macos-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
