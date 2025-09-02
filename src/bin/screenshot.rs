@@ -3,13 +3,9 @@ use std::process::Command;
 
 fn main() {
     if cfg!(target_os = "macos") {
-        println!("This is running on macOS!");
         macos()
-    //Ok(())
     } else {
-        println!("This is not running on macOS.");
         linux()
-        //Ok(())
     }
 }
 
@@ -56,8 +52,8 @@ fn linux() {
             execute_linuxcommand("gnome-screenshot", &["-a"]);
         }
         _ => {
-            // Handles any incorrect input.
-            println!("Please enter a correct input.\n");
+            // default
+            execute_linuxcommand("gnome-screenshot", &[]);
         }
     }
 }
@@ -93,7 +89,7 @@ fn macos() {
     println!("\n[ 1 ] for Capturing the whole Screen");
     println!("[ 2 ] for Capturing the Specific Area");
     println!("[ 3 ] for Capturing a specific Window");
-    println!("[ 4 ] for Capturing to Clipboard\n");
+    println!("[ 4 ] for Capturing from Clipboard\n");
 
     // Read the user input.
     print!("Enter your choice: ");
@@ -136,15 +132,28 @@ fn macos() {
                 .expect("Failed to read line");
             let clipboard_input = clipboard_input.trim();
 
+            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+
+            // Get the text from the clipboard.
+            match ctx.get_contents() {
+                Ok(contents) => {
+                    println!("Clipboard contents:\n{}", contents);
+                }
+                Err(e) => {
+                    eprintln!("Failed to get clipboard contents: {}", e);
+                }
+            }
+
             match clipboard_input {
                 "a" => execute_macoscommand("screencapture", &["-c"]),
                 "b" => execute_macoscommand("screencapture", &["-ic"]),
                 "c" => execute_macoscommand("screencapture", &["-wc"]),
+                // default
                 _ => execute_macoscommand("screencapture", &["-c"]),
             }
         }
         _ => {
-            // Handles any incorrect input.
+            // default
             execute_macoscommand("screencapture", &["-x", "full_screen.png"]);
         }
     }
