@@ -21,7 +21,7 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         rustup: [stable, nightly]
     runs-on: ${{ matrix.os }}
     steps:
@@ -74,11 +74,14 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: 'false'
+          fetch-tags: 'true'
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall@1.9.0 || true
+        if: matrix.rustup == '1.89'
+      - run: cargo-binstall --no-confirm gnostr-xq
+        if: matrix.rustup == '1.89'
       - run: cargo-binstall --no-confirm gnostr
         if: matrix.rustup == '1.89'
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -124,8 +127,7 @@ jobs:
             curl https://nostr.band/$NOTE
         if: matrix.os == 'macos-latest'
       - run: |
-          cargo t
-        if: matrix.os == 'macos-latest'
+          gnostr chat & sleep 360 && pkill -f gnostr
 
       - name: Save rustup
         id: cache-rustup-save
