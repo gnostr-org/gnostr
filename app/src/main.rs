@@ -37,7 +37,7 @@ enum Commands {
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
     match args.command {
-        Commands::Gui(opts) => {
+        Commands::Gui(_opts) => {
             gui()?;
         }
         Commands::Import(opts) => {
