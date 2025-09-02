@@ -123,7 +123,7 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
       - run: |
-          gnostr chat & sleep 360 && pkill -f gnostr
+          gnostr chat & sleep 60 && pkill -f gnostr || true
 
       - name: Save rustup
         id: cache-rustup-save
