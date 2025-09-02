@@ -1,3 +1,5 @@
+data/
+
 gnostr-gnit-key
 gnostr-gnit-key.pub
 .gnostr
@@ -68,7 +70,6 @@ org/
 proxy/
 pubkeys.txt
 py/
-relay/
 response.txt
 secp256k1/
 server.crt
