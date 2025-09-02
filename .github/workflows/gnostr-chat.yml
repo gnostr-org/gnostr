@@ -89,11 +89,10 @@ jobs:
       - run: brew tap nostorg/nostr || true
         if: matrix.os == 'macos-latest'
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'macos-latest'
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'macos-latest'
       - run: gnostr --help
-        if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
