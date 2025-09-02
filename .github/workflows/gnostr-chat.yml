@@ -91,6 +91,8 @@ jobs:
         if: matrix.os != 'windows-latest'
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os != 'windows-latest'
+      - run: gnostr --help
+        if: matrix.os != 'windows-latest'
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
