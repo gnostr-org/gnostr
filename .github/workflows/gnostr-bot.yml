@@ -139,9 +139,11 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):\ngnostr CI failure!\n$(printenv)" \
-            -t "a|blah" \
-            -t "a|$(date +%s)" \
+            -c "$(GITHUB_REPOSITORY_OWNER) $(GITHUB_WORKFLOW_REF) Failure!" \
+            -t "a|$(GITHUB_REPOSITORY)" \
+            -t "a|$(GITHUB_WORKFLOW)" \
+            -t "a|$(GITHUB_WORKFLOW_REF)" \
+            -t "a|$(GITHUB_REF)" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -160,9 +162,11 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):\ngnostr CI cancelled!\n$(printenv)" \
-            -t "a|blah" \
-            -t "a|$(date +%s)" \
+            -c "$(GITHUB_REPOSITORY_OWNER) $(GITHUB_WORKFLOW_REF) Cancelled!" \
+            -t "a|$(GITHUB_REPOSITORY)" \
+            -t "a|$(GITHUB_WORKFLOW)" \
+            -t "a|$(GITHUB_WORKFLOW_REF)" \
+            -t "a|$(GITHUB_REF)" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -181,9 +185,11 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):\ngnostr CI success!\n$(printenv)" \
-            -t "a|blah" \
-            -t "a|$(date +%s)" \
+            -c "$(GITHUB_REPOSITORY_OWNER) $(GITHUB_WORKFLOW_REF) Success!" \
+            -t "a|$(GITHUB_REPOSITORY)" \
+            -t "a|$(GITHUB_WORKFLOW)" \
+            -t "a|$(GITHUB_WORKFLOW_REF)" \
+            -t "a|$(GITHUB_REF)" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
