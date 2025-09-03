@@ -2922,7 +2922,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.118"
+version = "0.0.119"
 dependencies = [
  "anyhow",
  "argparse",
