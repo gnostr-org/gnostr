@@ -151,7 +151,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: failure() == true && ${{ matrix.os }} != "windows-latest"
+        if: failure() && ${{ matrix.os }} != "windows-latest"
       - name: Execute script on cancelled
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
@@ -174,7 +174,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: cancelled() == true && ${{ matrix.os }} != "windows-latest"
+        if: cancelled() && ${{ matrix.os }} != "windows-latest"
       - name: Execute script on success
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
@@ -197,7 +197,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: success() == true && ${{ matrix.os }} != "windows-latest"
+        if: success() && ${{ matrix.os }} != "windows-latest"
 
       - name: Save rustup
         id: cache-rustup-save
