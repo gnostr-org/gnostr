@@ -281,7 +281,7 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
       - run: |
-          cargo install --path . --force
+          cargo install -vv --path . --force
         if: matrix.os == 'windows-latest' && matrix.rustup == 'nightly'
       - run: |
           make cargo-install || sudo make cargo-install
