@@ -31,6 +31,18 @@ cargo-build:
 cargo-install:
   @make cargo-install
 
+crawler:
+  @make crawler
+
+asyncgit:
+  @make asyncgit
+
+relay:
+  @make relay
+
+query:
+  @make query
+
 cargo-build-release:
   @make cargo-build-release
 
@@ -60,12 +72,6 @@ cargo-dist-build:
 
 cargo-dist-manifest:
   @make cargo-dist-manifest
-
-crawler:
-  @make crawler
-
-asyncgit:
-  @make asyncgit
 
 dep-graph:
   @make dep-graph

@@ -1,5 +1,19 @@
 #!/bin/bash
 
+if command -v fzf &> /dev/null
+then
+    echo "fzf is available."
+    # Your code here to use fzf
+else
+    echo "fzf is NOT available. Please install it."
+    # Your code here for the case where fzf is missing
+    if command -v brew &> /dev/null
+    then
+        brew install fzf
+    fi
+fi
+
+
 # Install cargo-binstall
 curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && cargo binstall just
 
@@ -83,6 +97,18 @@ cargo-build: 	## 	cargo build
 cargo-install: 	crawler asyncgit 	###         cargo install --path . \$(FORCE)
 	@. \$(HOME)/.cargo/env
 	@cargo install --path . \$(FORCE)
+
+.PHONY:crawler asyncgit relay query
+crawler: 	###     crawler
+	@cargo install --path ./crawler \$(FORCE)
+asyncgit: 	###     asyncgit
+	@cargo install --path ./asyncgit \$(FORCE)
+relay: 	###     relay
+	@cargo install --path ./relay \$(FORCE)
+query: 	###     query
+	@cargo install --path ./query \$(FORCE)
+
+
 ## 	cargo-br q=true
 cargo-build-release: 	### 	cargo-build-release
 ## 	cargo-build-release q=true
@@ -117,12 +143,6 @@ cargo-dist-build: 	### 	cargo-dist-build
 	RUSTFLAGS="--cfg tokio_unstable" cargo dist build
 cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
 	cargo dist manifest --artifacts=all
-
-.PHONY:crawler asyncgit
-crawler: 	### 	crawler
-	@cargo install --path ./crawler \$(FORCE)
-asyncgit: 	### 	asyncgit
-	@cargo install --path ./asyncgit \$(FORCE)
 
 dep-graph: 	### 	dep-graph
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
