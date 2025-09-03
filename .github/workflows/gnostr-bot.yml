@@ -131,6 +131,7 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - name: Execute script on failure
+        shell: bash
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -154,6 +155,7 @@ jobs:
             curl https://nostr.band/$NOTE
         if: failure()
       - name: Execute script on cancelled
+        shell: bash
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -177,6 +179,7 @@ jobs:
             curl https://nostr.band/$NOTE
         if: cancelled()
       - name: Execute script on success
+        shell: bash
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
