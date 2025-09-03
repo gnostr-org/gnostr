@@ -9,6 +9,70 @@ fn check_brew() -> bool {
         .unwrap_or(false)
 }
 
+fn install_xcb_deps() {
+    // Check if the target is a Linux environment.
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    if target_os == "linux" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Linux OS. Attempting to install xcb dependencies.");
+
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi")
+            .output();
+
+        match output {
+            Ok(output) => {
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                    // Exit the build process with an error
+                    panic!("Failed to install required Linux dependencies.");
+                } else {
+                    println!("cargo:warning=Successfully installed xcb dependencies.");
+                }
+            }
+            Err(e) => {
+                println!(
+                    "cargo:warning=Failed to run dependency installation command: {}",
+                    e
+                );
+                // Exit the build process with an error
+                panic!("Failed to run dependency installation command.");
+            }
+        }
+    }
+    if target_os == "macos" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected macOS. Attempting to install 'libxcb' using Homebrew.");
+
+        // We use a shell command to first check if 'brew' is installed,
+        // and then run the installation command.
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("if command -v brew >/dev/null 2>&1; then brew install libxcb; else echo 'Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.'; exit 1; fi")
+            .output();
+
+        match output {
+            Ok(output) => {
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                    // Exit the build process with a panick, since the build cannot continue.
+                    panic!("Failed to install required macOS dependencies.");
+                } else {
+                    println!("cargo:warning=Successfully installed xcb dependencies.");
+                }
+            }
+            Err(e) => {
+                println!("cargo:warning=Failed to run Homebrew command: {}", e);
+                // Exit the build process with a panick.
+                panic!("Failed to run Homebrew command.");
+            }
+        }
+    }
+}
+
 fn install_openssl_brew() {
     println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
     let install_result = Command::new("brew").args(["install", "openssl@3"]).status();
@@ -65,6 +129,31 @@ fn install_pkg_config() {
         }
     }
 }
+fn install_zlib() {
+    println!("cargo:warning=Attempting to install zlib using Homebrew...");
+    let install_result = Command::new("brew").args(["install", "zlib"]).status();
+
+    match install_result {
+        Ok(status) if status.success() => {
+            println!("cargo:warning=Successfully installed zlib via Homebrew.");
+            // Linking will be handled via pkg-config.
+        }
+        Ok(status) => {
+            println!(
+                "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
+                status
+            );
+            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!("cargo:warning=  brew install zlib");
+        }
+        Err(e) => {
+            println!(
+                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
+                e
+            );
+        }
+    }
+}
 
 use chrono::TimeZone;
 
@@ -76,22 +165,27 @@ fn get_git_hash() -> String {
     if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
         return commit[..7].to_string();
     };
-    let commit = Command::new("git")
+    let commit_output = Command::new("git")
         .arg("rev-parse")
         .arg("--short=7")
         .arg("--verify")
         .arg("HEAD")
-        .output();
-    if let Ok(commit_output) = commit {
-        let commit_string = String::from_utf8_lossy(&commit_output.stdout);
+        .output()
+        .expect("Failed to execute git command to get commit hash");
+    let commit_string = String::from_utf8_lossy(&commit_output.stdout);
 
-        return commit_string.lines().next().unwrap_or("").into();
-    }
-
-    panic!("Can not get git commit: {}", commit.unwrap_err());
+    commit_string.lines().next().unwrap_or("").into()
 }
 
 fn main() {
+    // Tell Cargo to rerun this build script only if the Git HEAD or index changes
+    println!("cargo:rerun-if-changed=.git/HEAD");
+    println!("cargo:rerun-if-changed=.git/index");
+
+    // Tell Cargo to rerun this build script only if these environment variables change
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+    println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
+
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
             .timestamp_opt(val.parse::<i64>().unwrap(), 0)
@@ -114,8 +208,8 @@ fn main() {
     println!("cargo:warning=buildname '{}'", build_name);
     println!("cargo:rustc-env=GITUI_BUILD_NAME={}", build_name);
 
-    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     match target_arch.as_str() {
         "x86_64" => {
@@ -168,6 +262,7 @@ fn main() {
     if !if_windows() {
         //try
         musl_install_pkg_config();
+        install_xcb_deps();
         if if_linux_unknown() {
             linux_install_pkg_config();
         }
@@ -177,6 +272,7 @@ fn main() {
             if check_brew() {
                 println!("cargo:warning=Homebrew detected.");
                 install_pkg_config();
+                install_zlib();
                 install_openssl_brew();
 
                 // Instruct rustc to link against the OpenSSL libraries.
@@ -194,6 +290,8 @@ fn main() {
             } else {
                 println!("cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:");
                 println!("cargo:warning=  brew install openssl@3");
+                println!("cargo:warning=  brew install pkg-config");
+                println!("cargo:warning=  brew install zlib");
                 println!("cargo:warning=Or using MacPorts:");
                 println!("cargo:warning=  sudo port install openssl@3");
                 println!("cargo:warning=And ensure your system can find the libraries.");
@@ -208,7 +306,7 @@ fn main() {
 }
 
 fn if_windows() -> bool {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "windows" {
         println!("cargo:rustc-cfg=target_os_windows");
@@ -227,7 +325,7 @@ fn if_windows() -> bool {
     }
 }
 fn if_linux_unknown() -> bool {
-    let target = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target == "aarch64-unknown-linux-gnu" {
         println!(
@@ -272,7 +370,7 @@ fn if_linux_unknown() -> bool {
     // Add other build logic here if needed
 }
 fn linux_install_pkg_config() {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "linux" {
         println!("cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate.");
@@ -317,7 +415,7 @@ fn linux_install_pkg_config() {
 }
 
 fn musl_install_pkg_config() {
-    let target = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target == "x86_64-unknown-linux-musl" {
         println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
