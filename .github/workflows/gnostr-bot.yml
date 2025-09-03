@@ -138,11 +138,11 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(GITHUB_REPOSITORY_OWNER) $(GITHUB_WORKFLOW_REF) Failure!" \
-            -t "a|$(GITHUB_REPOSITORY)" \
-            -t "a|$(GITHUB_WORKFLOW)" \
-            -t "a|$(GITHUB_WORKFLOW_REF)" \
-            -t "a|$(GITHUB_REF)" \
+            -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Failed!" \
+            -t "a|$GITHUB_REPOSITORY" \
+            -t "a|$GITHUB_WORKFLOW" \
+            -t "a|$GITHUB_WORKFLOW_REF" \
+            -t "a|$GITHUB_REF" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -161,11 +161,11 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(GITHUB_REPOSITORY_OWNER) $(GITHUB_WORKFLOW_REF) Cancelled!" \
-            -t "a|$(GITHUB_REPOSITORY)" \
-            -t "a|$(GITHUB_WORKFLOW)" \
-            -t "a|$(GITHUB_WORKFLOW_REF)" \
-            -t "a|$(GITHUB_REF)" \
+            -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Cancelled!" \
+            -t "a|$GITHUB_REPOSITORY" \
+            -t "a|$GITHUB_WORKFLOW" \
+            -t "a|$GITHUB_WORKFLOW_REF" \
+            -t "a|$GITHUB_REF" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -185,10 +185,10 @@ jobs:
             custom-event \
             -k 1 \
             -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Success!" \
-            -t "a|$(GITHUB_REPOSITORY)" \
-            -t "a|$(GITHUB_WORKFLOW)" \
-            -t "a|$(GITHUB_WORKFLOW_REF)" \
-            -t "a|$(GITHUB_REF)" \
+            -t "a|$GITHUB_REPOSITORY" \
+            -t "a|$GITHUB_WORKFLOW" \
+            -t "a|$GITHUB_WORKFLOW_REF" \
+            -t "a|$GITHUB_REF" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
