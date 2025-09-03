@@ -26,7 +26,8 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - name: echo test
+      - name: Use Bash for all subsequent steps
+        shell: bash
         run: |
           echo GNOSTR=${{ env.GNOSTR }}
           echo MEMPOOL=${{ env.MEMPOOL }}
