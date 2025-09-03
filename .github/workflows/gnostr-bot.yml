@@ -139,7 +139,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-						-c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):\ngnostr CI failure!\n$(printenv)" \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):\ngnostr CI failure!\n$(printenv)" \
             -t "a|blah" \
             -t "a|$(date +%s)" \
             -t "$(gnostr-weeble)" \
