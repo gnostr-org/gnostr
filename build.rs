@@ -71,6 +71,14 @@ fn install_xcb_deps() {
             }
         }
     }
+    if target_os == "windows" {
+        println!("cargo:rerun-if-changed=build.rs");
+
+        // This project uses conditional compilation to handle Windows dependencies.
+        // No external package manager is needed for `libxcb` because it's an X11 library.
+        // The linker will automatically use the correct platform-specific APIs.
+        println!("cargo:warning=Detected Windows. No XCB libraries are required for this build.");
+    }
 }
 
 fn install_openssl_brew() {
