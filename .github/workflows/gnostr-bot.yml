@@ -151,7 +151,7 @@ jobs:
 
 
       - name: Get Current Job Log URL
-        uses: Tiryoh/gha-jobid-action@v1
+        uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
         with:
           job_name: "gnostr-bot (${{ matrix.os }})" # input job.<job-id>.name and matrix here.
