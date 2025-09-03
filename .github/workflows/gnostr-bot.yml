@@ -37,6 +37,7 @@ jobs:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
 
+      - uses: cargo-bins/cargo-binstall@main
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
@@ -79,7 +80,7 @@ jobs:
       - run: printenv || true
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
-      - run: cargo install cargo-binstall@1.9.0 || true
+      - run: cargo install cargo-binstall@main || true
       - run: cargo-binstall --no-confirm gnostr
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
