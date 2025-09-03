@@ -130,7 +130,6 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - name: Execute script on failure
-        if: failure() && matrix.os != "windows-latest"
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -152,8 +151,8 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
+        if: failure() && matrix.os != "windows-latest"
       - name: Execute script on cancelled
-        if: cancelled() && matrix.os != "windows-latest"
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -175,8 +174,8 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
+        if: cancelled() && matrix.os != "windows-latest"
       - name: Execute script on success
-        if: success() && matrix.os != "windows-latest"
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -198,6 +197,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
+        if: success() && matrix.os != "windows-latest"
 
       - name: Save rustup
         id: cache-rustup-save
