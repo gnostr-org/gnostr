@@ -151,7 +151,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: failure() == true && ${ matrix.os } != "windows-latest"
+        if: failure() == true && ${{ matrix.os }} != "windows-latest"
       - name: Execute script on cancelled
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
