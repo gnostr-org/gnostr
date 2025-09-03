@@ -184,7 +184,7 @@ nip_thirty_four_requests: 	### 	nip_thirty_four_requests
 
 
 plan-dist-manifest: 	### 	plan-dist-manifest
-	dist host --allow-dirty --steps=create --tag=v0.0.99 --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
+	dist host --allow-dirty --steps=create --tag=\$(TAG) --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
