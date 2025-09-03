@@ -83,6 +83,7 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'false'
 
+      - uses: cargo-bins/cargo-binstall@main
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall || true
@@ -245,6 +246,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - uses: cargo-bins/cargo-binstall@main
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
