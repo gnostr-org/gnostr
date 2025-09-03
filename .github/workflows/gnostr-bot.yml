@@ -184,7 +184,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(GITHUB_REPOSITORY_OWNER) $(GITHUB_WORKFLOW_REF) Success!" \
+            -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Success!" \
             -t "a|$(GITHUB_REPOSITORY)" \
             -t "a|$(GITHUB_WORKFLOW)" \
             -t "a|$(GITHUB_WORKFLOW_REF)" \
