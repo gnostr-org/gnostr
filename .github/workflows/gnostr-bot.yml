@@ -149,7 +149,6 @@ jobs:
       - run: |
           printenv
 
-
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
