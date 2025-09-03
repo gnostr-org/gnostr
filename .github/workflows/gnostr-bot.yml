@@ -132,6 +132,7 @@ jobs:
 
       - name: Execute script on failure
         shell: bash
+        if: failure()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -153,9 +154,10 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: failure()
+
       - name: Execute script on cancelled
         shell: bash
+        if: cancelled()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -177,7 +179,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
-        if: cancelled()
+
       - name: Execute script on success
         shell: bash
         if: success()
