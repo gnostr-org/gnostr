@@ -171,6 +171,27 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
+      - name: Execute script on success
+        if: success()
+        run: |
+          echo "A previous step failed! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec $(gnostr-sha256) \
+            -d ${{ env.POW }} \
+            -r ${{ env.DAMUS }} \
+            -r ${{ env.NOS }} \
+            custom-event \
+            -k 1 \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble):\ngnostr CI success!\n$(printenv)" \
+            -t "a|blah" \
+            -t "a|$(date +%s)" \
+            -t "$(gnostr-weeble)" \
+            -t "$(gnostr-blockheight)" \
+            -t "$(gnostr-wobble)" \
+            --hex || true) && \
+            export EVENT=$EVENT && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            curl https://nostr.band/$NOTE
 
       - name: Save rustup
         id: cache-rustup-save
