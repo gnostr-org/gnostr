@@ -239,9 +239,6 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [dev-dependencies]
 env_logger = "0.11"
-gnostr-bins = "0.0.71"
-gnostr-cat = "0.0.40"
-gnostr-xq = "0.0.3"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
