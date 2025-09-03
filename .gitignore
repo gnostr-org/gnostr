@@ -6,7 +6,6 @@ gnostr-gnit-key.pub
 executable
 test
 gnostr.git
-gnostr/*
 .gnostr/*
 *.png
 relays.yaml**
@@ -35,7 +34,6 @@ ext/
 ffi/
 get-relays/
 git/
-gnostr
 gnostr-act
 gnostr-am
 gnostr-client

@@ -270,8 +270,8 @@ pub async fn evt_loop(
     recv: tokio::sync::mpsc::Sender<Msg>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
-let keypair: identity::Keypair = generate_ed25519(&*args.nsec.clone().unwrap().as_bytes());
-let keypair_clone: identity::Keypair = generate_ed25519(&*args.nsec.unwrap().as_bytes());
+    let keypair: identity::Keypair = generate_ed25519(&*args.nsec.clone().unwrap().as_bytes());
+    let keypair_clone: identity::Keypair = generate_ed25519(&*args.nsec.unwrap().as_bytes());
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);
