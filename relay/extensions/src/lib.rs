@@ -29,8 +29,8 @@ pub fn temp_data_path(p: &str) -> anyhow::Result<tempfile::TempDir> {
 }
 
 #[cfg(test)]
-pub fn create_test_app(db_path: &str) -> anyhow::Result<nostr_relay::App> {
-    Ok(nostr_relay::App::create(
+pub fn create_test_app(db_path: &str) -> anyhow::Result<gnostr_relay::App> {
+    Ok(gnostr_relay::App::create(
         None,
         false,
         None,
