@@ -186,7 +186,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "\#\# [gnostr-relay](${{ steps.jobs.outputs.html_url }})\n\n (${{ matrix.os }}, ${{ matrix.rustup }}) Succes!" \
+            -c "## [gnostr-relay](${{ steps.jobs.outputs.html_url }})\n\n (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
             -t "title|$GITHUB_REPOSITORY" \
             -t "summary|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_REPOSITORY" \
