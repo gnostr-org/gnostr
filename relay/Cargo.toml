@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -35,7 +35,6 @@ tracing = "0.1.40"
 bytes = "1.7.1"
 nostr-db = { version = "0.4.5", features = ["search"] }
 tracing-subscriber = "0.3.18"
-nostr-extensions = "0.4.8"
 
 [features]
 search = ["nostr-db/search"]
