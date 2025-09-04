@@ -113,7 +113,7 @@ jobs:
           --nsec "$(gnostr-sha256)" \
           set-metadata \
           -n gnostr \
-          -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+          -a $GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -t "$GITHUB_RUN_ID"
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
@@ -131,7 +131,7 @@ jobs:
             custom-event \
             -k 1 \
             -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-            -t "a|blah" \
+            -t "a|$GITHUB_REPOSITORY_OWNER" \
             -t "a|$(date +%s)" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
