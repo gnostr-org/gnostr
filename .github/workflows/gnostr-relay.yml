@@ -141,7 +141,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }})\n\n (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
+            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
             -t "title|$GITHUB_REPOSITORY" \
             -t "summary|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_REPOSITORY" \
@@ -172,7 +172,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }})\n\n (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
+            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
             -t "a|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_WORKFLOW" \
             -t "a|$GITHUB_WORKFLOW_REF" \
@@ -197,7 +197,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }})\n\n (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
+            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
             -t "title|$GITHUB_REPOSITORY" \
             -t "summary|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_REPOSITORY" \
