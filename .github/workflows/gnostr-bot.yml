@@ -7,8 +7,10 @@ on:
   push:
     branches:
       - '**'
-
   workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -79,21 +81,32 @@ jobs:
           fetch-tags: 'true'
 
       - run: printenv || true
+
       - run: rustup default ${{ matrix.rustup }}
+
       - run: cargo search gnostr --limit 100
+
       - run: cargo install cargo-binstall@main || true
+
       - run: cargo-binstall --no-confirm gnostr
+
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
+
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: matrix.os == 'macos-latest'
+
       - run: brew tap nostorg/nostr || true
         if: matrix.os == 'macos-latest'
+
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: matrix.os == 'macos-latest'
+
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'macos-latest'
+
       - run: gnostr --help
+
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
@@ -104,9 +117,11 @@ jobs:
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         if: matrix.os == 'macos-latest'
+
       - run: |
           gnostr ngit --nsec $(gnostr-sha256) fetch
         if: matrix.os == 'macos-latest'
+
       - run: |
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
             -d ${{ env.POW }} \
@@ -126,57 +141,55 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
         if: matrix.os == 'macos-latest'
+
       - run: |
           cargo t
         if: matrix.os == 'macos-latest'
 
+      - run: |
+          printenv
+
+      - name: Get Current Job Log URL
+        uses: Tiryoh/gha-jobid-action@v1.4.0
+        id: jobs
+        with:
+          job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
+          per_page: 50 # input matrix size here if it is larger than 30
+      - name: Output Current Job Log URL
+        run: echo ${{ steps.jobs.outputs.html_url }}
+
       - name: Execute script on failure
-        run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr-sha256) \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Failed!" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+        shell: bash
         if: failure()
+        run: |
+          echo "A previous step failed! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec $(gnostr-sha256) \
+            -d ${{ env.POW }} \
+            -r ${{ env.DAMUS }} \
+            -r ${{ env.NOS }} \
+            custom-event \
+            -k 1 \
+            -c "${{ steps.jobs.outputs.html_url }} (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
+            -t "a|$GITHUB_REPOSITORY" \
+            -t "a|$GITHUB_WORKFLOW" \
+            -t "a|$GITHUB_WORKFLOW_SHA" \
+            -t "a|$GITHUB_WORKFLOW_REF" \
+            -t "a|$GITHUB_REF" \
+            -t "a|$GITHUB_RUN_ID" \
+            -t "a|$RUNNER_ENVIRONMENT" \
+            -t "a|$RUNNER_OS" \
+            -t "$(gnostr-weeble)" \
+            -t "$(gnostr-blockheight)" \
+            -t "$(gnostr-wobble)" \
+            --hex || true) && \
+            export EVENT=$EVENT && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            curl https://nostr.band/$NOTE
+
       - name: Execute script on cancelled
-        run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr-sha256) \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Cancelled!" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+        shell: bash
         if: cancelled()
-      - name: Execute script on success
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec $(gnostr-sha256) \
@@ -185,7 +198,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $GITHUB_WORKFLOW_REF Success!" \
+            -c "${{ steps.jobs.outputs.html_url }} (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
             -t "a|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_WORKFLOW" \
             -t "a|$GITHUB_WORKFLOW_REF" \
@@ -198,7 +211,31 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
+
+      - name: Execute script on success
+        shell: bash
         if: success()
+        run: |
+          echo "A previous step failed! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec $(gnostr-sha256) \
+            -d ${{ env.POW }} \
+            -r ${{ env.DAMUS }} \
+            -r ${{ env.NOS }} \
+            custom-event \
+            -k 1 \
+            -c "${{ steps.jobs.outputs.html_url }} (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
+            -t "a|$GITHUB_REPOSITORY" \
+            -t "a|$GITHUB_WORKFLOW" \
+            -t "a|$GITHUB_WORKFLOW_REF" \
+            -t "a|$GITHUB_REF" \
+            -t "$(gnostr-weeble)" \
+            -t "$(gnostr-blockheight)" \
+            -t "$(gnostr-wobble)" \
+            --hex || true) && \
+            export EVENT=$EVENT && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            curl https://nostr.band/$NOTE
 
       - name: Save rustup
         id: cache-rustup-save
