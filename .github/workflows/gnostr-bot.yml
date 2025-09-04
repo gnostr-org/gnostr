@@ -169,7 +169,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "${{ steps.jobs.outputs.html_url }} (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
+            -c "[gnostr-bot](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
             -t "a|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_WORKFLOW" \
             -t "a|$GITHUB_WORKFLOW_SHA" \
@@ -198,7 +198,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "${{ steps.jobs.outputs.html_url }} (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
+            -c "[gnostr-bot](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
             -t "a|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_WORKFLOW" \
             -t "a|$GITHUB_WORKFLOW_REF" \
@@ -223,7 +223,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "${{ steps.jobs.outputs.html_url }} (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
+            -c "[gnostr-bot](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
             -t "a|$GITHUB_REPOSITORY" \
             -t "a|$GITHUB_WORKFLOW" \
             -t "a|$GITHUB_WORKFLOW_REF" \
