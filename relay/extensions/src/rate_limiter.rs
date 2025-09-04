@@ -249,18 +249,18 @@ mod tests {
     use actix_web_actors::ws;
     use anyhow::Result;
     use futures_util::{SinkExt as _, StreamExt as _};
-    use nostr_relay::db::{
+    use gnostr_relay::db::{
         now,
         secp256k1::{rand::thread_rng, Keypair},
     };
-    use nostr_relay::{create_web_app, Setting};
+    use gnostr_relay::{create_web_app, Setting};
 
     fn parse_text<T: serde::de::DeserializeOwned>(frame: &ws::Frame) -> Result<T> {
         if let ws::Frame::Text(text) = &frame {
             let data: T = serde_json::from_slice(text)?;
             Ok(data)
         } else {
-            Err(nostr_relay::Error::Message("invalid frame type".to_string()).into())
+            Err(gnostr_relay::Error::Message("invalid frame type".to_string()).into())
         }
     }
 
