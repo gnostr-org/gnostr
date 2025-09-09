@@ -110,7 +110,7 @@ jobs:
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr-sha256 $(echo GITHUB_REPOSITORY_ID))" \
+          --nsec "$(gnostr-sha256 $(echo $GITHUB_REPOSITORY_ID))" \
           set-metadata \
           -n gnostr-bot \
           -a $GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID \
