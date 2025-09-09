@@ -1,4 +1,4 @@
-name: gnostr-relay.yml
+name: gnostr-bot.yml
 
 # Controls when the action will run.
 on:
@@ -14,7 +14,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  gnostr-relay:
+  gnostr-bot:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -110,7 +110,7 @@ jobs:
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
-          --nsec "$GITHUB_SHA" \
+          --nsec "$(gnostr --hash '')" \
           set-metadata \
           -n gnostr \
           -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
@@ -119,7 +119,35 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - run: |
-          cargo t --manifest-path ./relay/Cargo.toml
+          gnostr ngit --nsec $(gnostr --hash '') fetch
+        if: matrix.os == 'macos-latest'
+
+      - run: |
+          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+            -d ${{ env.POW }} \
+            -r ${{ env.DAMUS }} \
+            -r ${{ env.NOS }} \
+            custom-event \
+            -k 1 \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+            -t "a|blah" \
+            -t "a|$(date +%s)" \
+            -t "$(gnostr-weeble)" \
+            -t "$(gnostr-blockheight)" \
+            -t "$(gnostr-wobble)" \
+            --hex || true) && \
+            export EVENT=$EVENT && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            curl https://nostr.band/$NOTE
+        if: matrix.os == 'macos-latest'
+
+      - run: |
+          cargo t
+        if: matrix.os == 'macos-latest'
+
+      - run: |
+          printenv
 
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
@@ -135,7 +163,7 @@ jobs:
         if: failure()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr-sha256) \
+          EVENT=$(gnostr --nsec $(gnostr --hash '') \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -166,7 +194,7 @@ jobs:
         if: cancelled()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr-sha256) \
+          EVENT=$(gnostr --nsec $(gnostr --hash '') \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -191,7 +219,7 @@ jobs:
         if: success()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr-sha256) \
+          EVENT=$(gnostr --nsec $(gnostr --hash '') \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
