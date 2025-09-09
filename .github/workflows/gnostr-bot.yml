@@ -278,6 +278,7 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
+            echo $EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
