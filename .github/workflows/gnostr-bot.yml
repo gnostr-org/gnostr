@@ -220,7 +220,7 @@ jobs:
         shell: bash
         if: cancelled()
         run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
+          echo "A previous step cancelled! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -253,7 +253,7 @@ jobs:
         shell: bash
         if: success()
         run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
+          echo "A previous step suceeded! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
