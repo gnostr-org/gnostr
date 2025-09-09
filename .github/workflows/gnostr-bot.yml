@@ -253,7 +253,7 @@ jobs:
         shell: bash
         if: success()
         run: |
-          echo "A previous step suceeded! Executing cleanup or notification script..."
+          echo "A previous step succeeded! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -278,9 +278,9 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            echo $EVENT && \
+            echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
             curl https://nostr.band/$NOTE
 
       - name: Save rustup
