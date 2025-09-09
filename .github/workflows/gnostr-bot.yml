@@ -112,10 +112,24 @@ jobs:
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr-sha256)" \
           set-metadata \
-          -n gnostr \
-          -a $GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) \
-          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
+          -n gnostr-bot \
+          -a $GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID \
+          -t "$GITHUB_REPOSITORY" \
+          -t "$GITHUB_WORKFLOW" \
+          -t "$GITHUB_WORKFLOW_ID" \
+          -t "$GITHUB_WORKFLOW_SHA" \
+          -t "$GITHUB_WORKFLOW_REF" \
+          -t "$GITHUB_REF" \
           -t "$GITHUB_RUN_ID" \
+          -t "gnostr-bot" \
+          -t "$GITHUB_REPOSITORY_OWNER" \
+          -t "$(date +%s)" \
+          -t "$RUNNER_ENVIRONMENT" \
+          -t "$RUNNER_OS" \
+          -t "$(gnostr-weeble)" \
+          -t "$(gnostr-blockheight)" \
+          -t "$(gnostr-wobble)" \
+          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         if: matrix.os == 'macos-latest'
 
@@ -130,9 +144,19 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-            -t "a|$GITHUB_REPOSITORY_OWNER" \
-            -t "a|$(date +%s)" \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) #$GITHUB_REPOSITORY_ID" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -170,15 +194,19 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-bot](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_SHA" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
-            -t "a|$GITHUB_RUN_ID" \
-            -t "a|$RUNNER_ENVIRONMENT" \
-            -t "a|$RUNNER_OS" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -199,11 +227,19 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-bot](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -224,11 +260,19 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-bot](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
