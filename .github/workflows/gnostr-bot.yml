@@ -186,7 +186,7 @@ jobs:
         shell: bash
         if: failure()
         run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
+          echo "failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -211,7 +211,7 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) && \
             export NOTE=$NOTE && echo $NOTE && \
             curl https://nostr.band/$NOTE
 
