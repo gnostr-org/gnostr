@@ -1,4 +1,4 @@
-name: gnostr-bot.yml
+name: gnostr-relay.yml
 
 # Controls when the action will run.
 on:
@@ -14,7 +14,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  gnostr-bot:
+  gnostr-relay:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -114,15 +114,15 @@ jobs:
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
           set-metadata \
-          -n gnostr-bot \
-          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+          -n "\\#gnostr-bot" \
+          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) \\#$GITHUB_REPOSITORY_ID" \
           -t "$GITHUB_REPOSITORY" \
           -t "$GITHUB_WORKFLOW" \
           -t "$GITHUB_WORKFLOW_SHA" \
           -t "$GITHUB_WORKFLOW_REF" \
           -t "$GITHUB_REF" \
           -t "$GITHUB_RUN_ID" \
-          -t "gnostr-bot" \
+          -t "\\#gnostr" \
           -t "$GITHUB_REPOSITORY_OWNER" \
           -t "$(date +%s)" \
           -t "$RUNNER_ENVIRONMENT" \
@@ -156,8 +156,8 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
+            -t "\\#gnostr" \
+            -t "\\#gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
@@ -207,7 +207,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
-            -t "gnostr-bot" \
+            -t "\\#gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
@@ -241,7 +241,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
-            -t "gnostr-bot" \
+            -t "\\#gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
@@ -275,7 +275,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
-            -t "gnostr-bot" \
+            -t "\\#gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
