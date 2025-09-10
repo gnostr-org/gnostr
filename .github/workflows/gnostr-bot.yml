@@ -107,7 +107,9 @@ jobs:
 
       - run: gnostr --help
 
-      - run: |
+      - name: create set-metadata kind 0
+        shell: bash
+        run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
@@ -133,18 +135,22 @@ jobs:
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         if: matrix.os == 'macos-latest'
 
-      - run: |
+      - name: gnostr ngit compatibility
+        shell: bash
+        run: |
           gnostr ngit --nsec $(gnostr --hash "") fetch
         if: matrix.os == 'macos-latest'
 
-      - run: |
+      - name: Create custom-event kind 1
+        shell: bash
+        run: |
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) #$GITHUB_REPOSITORY_ID" \
+            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_ID" \
@@ -162,9 +168,10 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT) && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
         if: matrix.os == 'macos-latest'
 
       - run: |
@@ -214,7 +221,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Execute script on cancelled
         shell: bash
@@ -247,7 +255,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Execute script on success
         shell: bash
@@ -281,7 +290,8 @@ jobs:
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Save rustup
         id: cache-rustup-save
