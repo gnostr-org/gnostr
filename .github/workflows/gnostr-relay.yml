@@ -1,4 +1,4 @@
-name: gnostr-relay.yml
+name: gnostr-bot.yml
 
 # Controls when the action will run.
 on:
@@ -14,7 +14,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  gnostr-relay:
+  gnostr-bot:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -149,13 +149,14 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) #gnostr!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
@@ -183,7 +184,7 @@ jobs:
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
         with:
-          job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
+          job_name: "gnostr-relay (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
           per_page: 50 # input matrix size here if it is larger than 30
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
