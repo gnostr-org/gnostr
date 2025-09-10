@@ -76,6 +76,8 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4.3.19", features = ["derive", "env", "cargo"] }
 clean-path = "0.2.1"
 clipboard = "0.5.0"
+color-eyre = "0.6.2"
+
 colored = "2.0.0"
 colorful = "0.2"
 comrak = "0.18.0"
@@ -140,7 +142,7 @@ libp2p = { version = "0.54.1", features = [
 ] }
 
 log = "0.4"
-
+ordered-float = "3.4.0"
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
