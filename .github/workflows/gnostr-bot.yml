@@ -168,8 +168,8 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - run: |
-          cargo t
-        if: matrix.os == 'macos-latest'
+          cargo t --all
+        #if: matrix.os == 'macos-latest'
 
       - run: |
           printenv
