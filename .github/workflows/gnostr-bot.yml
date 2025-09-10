@@ -84,6 +84,7 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
 
+      - run: cargo clean ##set cron
       - run: cargo search gnostr --limit 100
 
       - run: cargo install cargo-binstall@main || true
