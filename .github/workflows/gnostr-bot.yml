@@ -107,7 +107,9 @@ jobs:
 
       - run: gnostr --help
 
-      - run: |
+      - name: create set-metadata kind 0
+        shell: bash
+        run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
@@ -133,11 +135,15 @@ jobs:
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         if: matrix.os == 'macos-latest'
 
-      - run: |
+      - name: gnostr ngit compatibility
+        shell: bash
+        run: |
           gnostr ngit --nsec $(gnostr --hash "") fetch
         if: matrix.os == 'macos-latest'
 
-      - run: |
+      - name: Create custom-event kind 1
+        shell: bash
+        run: |
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -166,6 +172,7 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr-query -i $EVENT -r ${{ env.NOS }}
+        if: matrix.os == 'macos-latest'
 
       - run: |
           cargo t
