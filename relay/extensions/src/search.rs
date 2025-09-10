@@ -75,7 +75,7 @@ mod tests {
 
     fn parse_text<T: serde::de::DeserializeOwned>(frame: &ws::Frame) -> Result<T> {
         if let ws::Frame::Text(text) = &frame {
-            // println!("message: {:?}", String::from_utf8(text.to_vec()));
+            println!("message: {:?}", String::from_utf8(text.to_vec()));
             let data: T = serde_json::from_slice(text)?;
             Ok(data)
         } else {
@@ -104,6 +104,8 @@ mod tests {
         let app = web::Data::new(app);
 
         let mut srv = actix_test::start(move || create_web_app(app.clone()));
+        println!("active_text::start!");
+        println!("move || create_web_app(app.clone())");
 
         // client service
         let mut framed = srv.ws_at("/").await.unwrap();
@@ -136,10 +138,13 @@ mod tests {
             .await?;
         let res: (String, String, Event) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.2.content(), "来自中国的nostr用户");
+        println!("{} {}", res.2.content(), "来自中国的nostr用户");
         let res: (String, String, Event) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.2.content(), "nostr users from China");
+        println!("{} {}", res.2.content(), "nostr users from China");
         let res: (String, String) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.0, "EOSE");
+        println!("{} {}", res.0, "EOSE");
 
         framed
             .send(ws::Message::Text(
@@ -148,8 +153,10 @@ mod tests {
             .await?;
         let res: (String, String, Event) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.2.content(), "来自中国的nostr用户");
+        println!("{} {}", res.2.content(), "来自中国的nostr用户");
         let res: (String, String) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.0, "EOSE");
+        println!("{} {}", res.0, "EOSE");
 
         framed
             .send(ws::Message::Text(
@@ -158,8 +165,10 @@ mod tests {
             .await?;
         let res: (String, String, Event) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.2.content(), "nostr users from China");
+        println!("{} {}", res.2.content(), "nostr users from China");
         let res: (String, String) = parse_text(&framed.next().await.unwrap()?)?;
         assert_eq!(res.0, "EOSE");
+        println!("{} {}", res.0, "EOSE");
 
         // close
         framed
