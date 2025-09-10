@@ -97,8 +97,8 @@ jobs:
           set-metadata \
           -n gnostr-bot \
           -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) \#$GITHUB_REPOSITORY_ID" \
-          -t ${{ matrix.os }} \
-          -t ${{ matrix.rustup }} \
+          -t "${{ matrix.os }}" \
+          -t "${{ matrix.rustup }}" \
           -t "$GITHUB_REPOSITORY" \
           -t "$GITHUB_WORKFLOW" \
           -t "$GITHUB_WORKFLOW_ID" \
