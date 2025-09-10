@@ -120,16 +120,17 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - run: |
-          gnostr --hash "" ngit fetch
+          gnostr ngit --nsec $(gnostr --hash "") fetch
+        if: matrix.os == 'macos-latest'
 
       - run: |
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) \#$GITHUB_REPOSITORY_ID" \
+            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_ID" \
@@ -147,10 +148,11 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT) && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            COMMAND="curl https://nostr.band/$NOTE" && echo $COMMAND && $COMMAND
-        if: matrix.os == 'ubuntu-latest'
+            gnostr-query -i $NOTE -r ${{ env.DAMUS }} && \
+            gnostr-query -i $NOTE -r ${{ env.NOS }}
+        if: matrix.os == 'macos-latest'
 
       - run: |
           cargo t -- --no-capture
@@ -171,8 +173,8 @@ jobs:
         shell: bash
         if: failure()
         run: |
-          echo "failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          echo "A previous step failed! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -205,7 +207,7 @@ jobs:
         if: cancelled()
         run: |
           echo "A previous step cancelled! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -230,7 +232,7 @@ jobs:
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
 
       - name: Execute script on success
@@ -238,7 +240,7 @@ jobs:
         if: success()
         run: |
           echo "A previous step succeeded! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
