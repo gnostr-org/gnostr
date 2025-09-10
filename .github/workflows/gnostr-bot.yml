@@ -134,8 +134,8 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - run: |
-          gnostr ngit --nsec $(gnostr-sha256 "") fetch
-        if: matrix.os == 'macos-latest'
+          gnostr --hash "" ngit fetch
+        #if: matrix.os == 'macos-latest'
 
       - run: |
           EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
