@@ -1,4 +1,4 @@
-name: gnostr-bot.yml
+name: gnostr-relay.yml
 
 # Controls when the action will run.
 on:
@@ -14,7 +14,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  gnostr-bot:
+  gnostr-relay:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -107,39 +107,71 @@ jobs:
 
       - run: gnostr --help
 
-      - run: |
+      - name: create set-metadata kind 0
+        shell: bash
+        run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr --hash '')" \
+          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
           set-metadata \
-          -n gnostr \
-          -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+          -n gnostr-bot \
+          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+          -t "$GITHUB_REPOSITORY" \
+          -t "$GITHUB_WORKFLOW" \
+          -t "$GITHUB_WORKFLOW_ID" \
+          -t "$GITHUB_WORKFLOW_SHA" \
+          -t "$GITHUB_WORKFLOW_REF" \
+          -t "$GITHUB_REF" \
+          -t "$GITHUB_RUN_ID" \
+          -t "gnostr-bot" \
+          -t "$GITHUB_REPOSITORY_OWNER" \
+          -t "$(date +%s)" \
+          -t "$RUNNER_ENVIRONMENT" \
+          -t "$RUNNER_OS" \
+          -t "$(gnostr-weeble)" \
+          -t "$(gnostr-blockheight)" \
+          -t "$(gnostr-wobble)" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         if: matrix.os == 'macos-latest'
 
-      - run: |
-          gnostr ngit --nsec $(gnostr --hash '') fetch
+      - name: gnostr ngit compatibility
+        shell: bash
+        run: |
+          gnostr ngit --nsec $(gnostr --hash "") fetch
         if: matrix.os == 'macos-latest'
 
-      - run: |
-          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+      - name: Create custom-event kind 1
+        shell: bash
+        run: |
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
-            -t "a|blah" \
-            -t "a|$(date +%s)" \
+            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT) && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
         if: matrix.os == 'macos-latest'
 
       - run: |
@@ -153,7 +185,7 @@ jobs:
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
         with:
-          job_name: "gnostr-relay (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
+          job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
           per_page: 50 # input matrix size here if it is larger than 30
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
@@ -163,23 +195,25 @@ jobs:
         if: failure()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
-            -t "title|$GITHUB_REPOSITORY" \
-            -t "summary|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_SHA" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
-            -t "a|$GITHUB_RUN_ID" \
-            -t "a|$RUNNER_ENVIRONMENT" \
-            -t "a|$RUNNER_OS" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -187,24 +221,33 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Execute script on cancelled
         shell: bash
         if: cancelled()
         run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+          echo "A previous step cancelled! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
@@ -212,34 +255,43 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Execute script on success
         shell: bash
         if: success()
         run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+          echo "A previous step succeeded! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[gnostr-relay](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
-            -t "title|$GITHUB_REPOSITORY" \
-            -t "summary|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_REPOSITORY" \
-            -t "a|$GITHUB_WORKFLOW" \
-            -t "a|$GITHUB_WORKFLOW_REF" \
-            -t "a|$GITHUB_REF" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
+            -t "$GITHUB_REPOSITORY" \
+            -t "$GITHUB_WORKFLOW" \
+            -t "$GITHUB_WORKFLOW_ID" \
+            -t "$GITHUB_WORKFLOW_SHA" \
+            -t "$GITHUB_WORKFLOW_REF" \
+            -t "$GITHUB_REF" \
+            -t "$GITHUB_RUN_ID" \
+            -t "gnostr-bot" \
+            -t "$GITHUB_REPOSITORY_OWNER" \
+            -t "$(date +%s)" \
+            -t "$RUNNER_ENVIRONMENT" \
+            -t "$RUNNER_OS" \
             -t "$(gnostr-weeble)" \
             -t "$(gnostr-blockheight)" \
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
+            echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Save rustup
         id: cache-rustup-save
