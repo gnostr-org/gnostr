@@ -1,7 +1,3 @@
-use governor::{
-    clock::DefaultClock, state::keyed::DashMapStateStore, Quota, RateLimiter as GovernorRateLimiter,
-};
-use metrics::{counter, describe_counter};
 use gnostr_relay::db::Event;
 use gnostr_relay::{
     duration::NonZeroDuration,
@@ -9,6 +5,10 @@ use gnostr_relay::{
     setting::SettingWrapper,
     Extension, ExtensionMessageResult, Session,
 };
+use governor::{
+    clock::DefaultClock, state::keyed::DashMapStateStore, Quota, RateLimiter as GovernorRateLimiter,
+};
+use metrics::{counter, describe_counter};
 use parking_lot::RwLock;
 use serde::{
     de::{self, SeqAccess, Visitor},
