@@ -126,7 +126,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .spawn(async move {
                     println!("global_rt async task!");
                     //evt_loop(input_rx, peer_tx, topic).await.unwrap();
-                    String::from("global_rt async task!");
+                    let _ = String::from("global_rt async task!");
                 })
                 .await;
             println!("global_rt_result={:?}", global_rt_result?);
