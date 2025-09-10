@@ -7,7 +7,7 @@ async fn main() -> gnostr_relay::Result<()> {
     tracing_subscriber::fmt::init();
     info!("Start relay server");
     let mut app_data = App::create(
-        Some("../config/gnostr.toml"),
+        Some("demo.toml"),
         true,
         Some("NOSTR".to_owned()),
         None,
