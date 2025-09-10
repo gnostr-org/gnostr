@@ -169,7 +169,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - run: |
-          cargo t --all -vv -- --no-capture
+          cargo t --all -- --no-capture
 
       - run: |
           printenv
