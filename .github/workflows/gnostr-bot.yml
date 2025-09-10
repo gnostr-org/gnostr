@@ -64,21 +64,12 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
-      - name: Restore target
-        id: cache-target-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-${{ matrix.rustup }}
-
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          submodules: 'false'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: 'true'
+          fetch-tags: 'false'
 
       - run: printenv || true
 
@@ -301,11 +292,3 @@ jobs:
           path: |
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
-      - name: Save target
-        id: cache-target-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
