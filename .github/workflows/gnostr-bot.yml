@@ -166,7 +166,6 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr-query -i $EVENT -r ${{ env.NOS }}
-        if: matrix.os == 'macos-latest'
 
       - run: |
           cargo t
@@ -285,7 +284,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i EVENT -r ${{ env.NOS }}
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Save rustup
         id: cache-rustup-save
