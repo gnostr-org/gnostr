@@ -144,7 +144,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) #$GITHUB_REPOSITORY_ID" \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) \#$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_ID" \
