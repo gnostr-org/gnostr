@@ -46,6 +46,15 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+
       - name: Restore cargo
         id: cache-cargo-restore
         uses: actions/cache/restore@v3
@@ -55,18 +64,26 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+
       - uses: actions/checkout@v3
         with:
-          submodules: 'false'
+          submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: 'false'
+          fetch-tags: 'true'
 
       - run: printenv || true
 
       - run: rustup default ${{ matrix.rustup }}
 
-      - run: cargo clean ##set cron
       - run: cargo search gnostr --limit 100
 
       - run: cargo install cargo-binstall@main || true
@@ -93,12 +110,10 @@ jobs:
       - run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
           set-metadata \
           -n gnostr-bot \
-          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) \#$GITHUB_REPOSITORY_ID" \
-          -t "${{ matrix.os }}" \
-          -t "${{ matrix.rustup }}" \
+          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
           -t "$GITHUB_REPOSITORY" \
           -t "$GITHUB_WORKFLOW" \
           -t "$GITHUB_WORKFLOW_ID" \
@@ -107,7 +122,6 @@ jobs:
           -t "$GITHUB_REF" \
           -t "$GITHUB_RUN_ID" \
           -t "gnostr-bot" \
-          -t "gnostr" \
           -t "$GITHUB_REPOSITORY_OWNER" \
           -t "$(date +%s)" \
           -t "$RUNNER_ENVIRONMENT" \
@@ -120,16 +134,17 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - run: |
-          gnostr --hash "" ngit fetch
+          gnostr ngit --nsec $(gnostr --hash "") fetch
+        if: matrix.os == 'macos-latest'
 
       - run: |
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) \#$GITHUB_REPOSITORY_ID" \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble) #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_ID" \
@@ -149,11 +164,12 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            COMMAND="curl https://nostr.band/$NOTE" && echo $COMMAND && $COMMAND
-        if: matrix.os == 'ubuntu-latest'
+            curl https://nostr.band/$NOTE
+        if: matrix.os == 'macos-latest'
 
       - run: |
-          cargo t -- --no-capture
+          cargo t
+        if: matrix.os == 'macos-latest'
 
       - run: |
           printenv
@@ -171,8 +187,8 @@ jobs:
         shell: bash
         if: failure()
         run: |
-          echo "failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          echo "A previous step failed! Executing cleanup or notification script..."
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -196,8 +212,8 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) && \
-            export NOTE=$NOTE && echo $NOTE && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
 
       - name: Execute script on cancelled
@@ -205,7 +221,7 @@ jobs:
         if: cancelled()
         run: |
           echo "A previous step cancelled! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -230,7 +246,7 @@ jobs:
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && \
+            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
 
       - name: Execute script on success
@@ -238,7 +254,7 @@ jobs:
         if: success()
         run: |
           echo "A previous step succeeded! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -264,9 +280,17 @@ jobs:
             export EVENT=$EVENT && \
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo NOTE=$NOTE && \
+            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
             curl https://nostr.band/$NOTE
 
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
       - name: Save cargo
         id: cache-cargo-save
         uses: actions/cache/save@v3
@@ -275,3 +299,11 @@ jobs:
           path: |
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
