@@ -164,3 +164,47 @@ Implements NIP-50 for searching events on the relay.
 **Options:**
 
 - `enabled`: A boolean to enable or disable the extension.
+
+### Usage
+
+The search functionality is available via `REQ` messages. Here are some examples using `curl` to send search requests to the relay:
+
+**Search for events by a specific author:**
+
+```bash
+curl -H "Content-Type: application/json" -X POST -d '[
+  "REQ",
+  "some_subscription_id",
+  {
+    "authors": ["<pubkey>"],
+    "search": "some query"
+  }
+]' http://127.0.0.1:8080
+```
+
+**Search for events of a specific kind:**
+
+```bash
+curl -H "Content-Type: application/json" -X POST -d '[
+  "REQ",
+  "some_subscription_id",
+  {
+    "kinds": [1],
+    "search": "some query"
+  }
+]' http://127.0.0.1:8080
+```
+
+**Search for events since a specific time, with a limit:**
+
+```bash
+curl -H "Content-Type: application/json" -X POST -d '[
+  "REQ",
+  "some_subscription_id",
+  {
+    "since": 1648848000,
+    "limit": 10,
+    "search": "some query"
+  }
+]' http://127.0.0.1:8080
+```
