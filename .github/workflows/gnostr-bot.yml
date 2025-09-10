@@ -213,7 +213,7 @@ jobs:
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            export NOTE=$NOTE && echo $NOTE && \
             curl https://nostr.band/$NOTE
 
       - name: Execute script on cancelled
@@ -246,7 +246,7 @@ jobs:
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+            export NOTE=$NOTE && echo $NOTE && \
             curl https://nostr.band/$NOTE
 
       - name: Execute script on success
@@ -280,7 +280,7 @@ jobs:
             export EVENT=$EVENT && \
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
+            export NOTE=$NOTE && echo NOTE=$NOTE && \
             curl https://nostr.band/$NOTE
 
       - name: Save rustup
