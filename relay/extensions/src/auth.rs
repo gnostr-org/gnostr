@@ -1,10 +1,10 @@
-use metrics::{counter, describe_counter};
 use gnostr_relay::db::now;
 use gnostr_relay::{
     message::{ClientMessage, IncomingMessage, OutgoingMessage},
     setting::SettingWrapper,
     Extension, ExtensionMessageResult, List, Session,
 };
+use metrics::{counter, describe_counter};
 use serde::Deserialize;
 use uuid::Uuid;
 
