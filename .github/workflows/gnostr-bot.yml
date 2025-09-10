@@ -122,6 +122,7 @@ jobs:
           -t "$GITHUB_REF" \
           -t "$GITHUB_RUN_ID" \
           -t "gnostr-bot" \
+          -t "gnostr" \
           -t "$GITHUB_REPOSITORY_OWNER" \
           -t "$(date +%s)" \
           -t "$RUNNER_ENVIRONMENT" \
@@ -165,7 +166,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             COMMAND="curl https://nostr.band/$NOTE" && echo $COMMAND && $COMMAND
-        if: matrix.os == 'macos-latest'
+         #if: matrix.os == 'macos-latest'
 
       - run: |
           cargo t --all
