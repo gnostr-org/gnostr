@@ -164,8 +164,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT) && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $NOTE -r ${{ env.DAMUS }} && \
-            gnostr-query -i $NOTE -r ${{ env.NOS }}
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
         if: matrix.os == 'macos-latest'
 
       - run: |
@@ -215,8 +215,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $NOTE -r ${{ env.DAMUS }} && \
-            gnostr-query -i $NOTE -r ${{ env.NOS }}
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Execute script on cancelled
         shell: bash
@@ -249,8 +249,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $NOTE -r ${{ env.DAMUS }} && \
-            gnostr-query -i $NOTE -r ${{ env.NOS }}
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }}
 
       - name: Execute script on success
         shell: bash
@@ -284,8 +284,8 @@ jobs:
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr-query -i $NOTE -r ${{ env.DAMUS }} && \
-            gnostr-query -i $NOTE -r ${{ env.NOS }}
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr-query -i EVENT -r ${{ env.NOS }}
 
       - name: Save rustup
         id: cache-rustup-save
