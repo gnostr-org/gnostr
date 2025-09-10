@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse};
+use gnostr_relay::{setting::SettingWrapper, App, Extension};
 use metrics::{describe_counter, describe_gauge, describe_histogram};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
-use gnostr_relay::{setting::SettingWrapper, App, Extension};
 use serde::Deserialize;
 
 #[derive(Deserialize, Default, Debug)]
