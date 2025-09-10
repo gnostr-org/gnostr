@@ -170,7 +170,6 @@ jobs:
 
       - run: |
           cargo t --all
-        #if: matrix.os == 'macos-latest'
 
       - run: |
           printenv
