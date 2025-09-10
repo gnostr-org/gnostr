@@ -1,7 +1,7 @@
 use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::fs::{self, File};
 use std::{
     env,
     io::{self, BufRead, BufReader, Write},
@@ -26,7 +26,7 @@ fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let mut nip_lower: i32 = 1;
     //let mut nip_upper: i32 = 1;
@@ -50,13 +50,12 @@ async fn main() -> Result<(), reqwest::Error> {
                 //nip_upper = number;
             }
             Err(e) => {
-                eprintln!("Error converting first argument to i32: {}", e);
+                eprintln!("Error converting second argument to i32: {}", e);
             }
         }
     }
 
-    let file = "relays.yaml";
-    let relays = load_file(file).unwrap();
+    let relays = load_file("relays.yaml").unwrap();
     let client = reqwest::Client::new();
     let bodies = stream::iter(relays)
         .map(|url| {
@@ -121,7 +120,7 @@ async fn main() -> Result<(), reqwest::Error> {
     bodies
         .for_each(|b| async {
             if let Ok((url, json)) = b {
-                let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json);
+                let data: Result<Relay, _> = serde_json::from_str(&json);
                 if let Ok(relay_info) = data {
                     for n in &relay_info.supported_nips {
                         if n == &nip_lower.clone() {
@@ -153,7 +152,7 @@ async fn main() -> Result<(), reqwest::Error> {
                             let file_path_str = file_path.display().to_string();
                             debug!("\n\n{}\n\n", file_path_str);
 
-                            match fs::File::create(&file_path) {
+                            match File::create(&file_path) {
                                 Ok(mut file) => {
                                     debug!("{}", &file_path_str);
                                     match file.write_all(json.as_bytes()) {
