@@ -118,7 +118,6 @@ jobs:
           -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
           -t "$GITHUB_REPOSITORY" \
           -t "$GITHUB_WORKFLOW" \
-          -t "$GITHUB_WORKFLOW_ID" \
           -t "$GITHUB_WORKFLOW_SHA" \
           -t "$GITHUB_WORKFLOW_REF" \
           -t "$GITHUB_REF" \
@@ -153,7 +152,6 @@ jobs:
             -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_ID" \
             -t "$GITHUB_WORKFLOW_SHA" \
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
@@ -204,7 +202,6 @@ jobs:
             -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_ID" \
             -t "$GITHUB_WORKFLOW_SHA" \
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
@@ -239,7 +236,6 @@ jobs:
             -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_ID" \
             -t "$GITHUB_WORKFLOW_SHA" \
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
@@ -274,7 +270,6 @@ jobs:
             -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_ID" \
             -t "$GITHUB_WORKFLOW_SHA" \
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
