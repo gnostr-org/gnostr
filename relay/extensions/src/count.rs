@@ -1,4 +1,3 @@
-use metrics::{describe_histogram, histogram};
 use gnostr_relay::{
     db::{Db, Filter},
     duration::NonZeroDuration,
@@ -6,6 +5,7 @@ use gnostr_relay::{
     setting::SettingWrapper,
     Error, Extension, ExtensionMessageResult, Session,
 };
+use metrics::{describe_histogram, histogram};
 use serde::Deserialize;
 use std::sync::Arc;
 use std::time::Instant;
