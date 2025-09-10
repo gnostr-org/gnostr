@@ -164,7 +164,7 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            COMMAND="curl https://nostr.band/$NOTE" && echo $COMMAND && $COMMAND
         if: matrix.os == 'macos-latest'
 
       - run: |
