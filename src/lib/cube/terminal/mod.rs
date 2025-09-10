@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{
+use crate::cube::{
     commands::{init_terminal, quit_terminal, reset_terminal},
     handlers::{
         config::CompleteConfig,

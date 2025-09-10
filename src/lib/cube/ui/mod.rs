@@ -6,7 +6,7 @@ use std::{
     path::Path,
     time::{Duration, Instant},
 };
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
@@ -34,8 +34,8 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>) -> Result<(), Box<dyn Error>>
     let mut last_tick = Instant::now();
     loop {
         terminal.draw(|f| match app.route.screen {
-            Screen::Default => render_default(f, &mut app),
-            Screen::Help => render_help(f),
+            Screen::Default => render_default::<B>(f, &mut app),
+            Screen::Help => render_help::<B>(f),
         })?;
 
         // Non-blocking key detection
@@ -102,7 +102,8 @@ fn handle_input(app: &mut App) -> Result<bool, Box<dyn Error>> {
     Ok(false)
 }
 
-fn render_default<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+//fn render_default<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn render_default<B: Backend>(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(33), Constraint::Min(100)].as_ref())
@@ -132,16 +133,17 @@ fn render_default<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(chunks[1]);
 
-    render_help_and_tools(f, app, left_chunks[0]);
-    render_timer(f, app, left_chunks[1]);
-    render_times(f, app, left_chunks[2]);
+    render_help_and_tools::<B>(f, app, left_chunks[0]);
+    render_timer::<B>(f, app, left_chunks[1]);
+    render_times::<B>(f, app, left_chunks[2]);
 
-    render_bests(f, app, right_chunks[0]);
-    render_topic(f, app, right_chunks[1]);
-    render_main(f, app, right_chunks[2]);
+    render_bests::<B>(f, app, right_chunks[0]);
+    render_topic::<B>(f, app, right_chunks[1]);
+    render_main::<B>(f, app, right_chunks[2]);
 }
 
-fn render_help<B: Backend>(f: &mut Frame<B>) {
+//fn render_help<B: Backend>(f: &mut Frame<B>) {
+fn render_help<B: Backend>(f: &mut Frame) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(100)].as_ref())
@@ -153,7 +155,7 @@ fn render_help<B: Backend>(f: &mut Frame<B>) {
     f.render_widget(paragraph, chunks[0]);
 }
 
-fn render_help_and_tools<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_help_and_tools<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
@@ -192,7 +194,7 @@ fn render_help_and_tools<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chu
     f.render_stateful_widget(list, chunks[1], &mut app.tools_state);
 }
 
-fn render_timer<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_timer<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let text = format!("{}", app.timer.text());
     let borderstyle = app.get_border_style_from_id(ActiveBlock::Timer);
     let mut paragraphstyle = Style::default();
@@ -216,7 +218,7 @@ fn render_timer<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
     f.render_widget(paragraph, layout_chunk);
 }
 
-fn render_times<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_times<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let selected_style = app.get_highlight_style_from_id(ActiveBlock::Times);
     let normal_style = Style::default().fg(Color::Gray);
     let header_cells = ["i", "time", "ao5", "ao12"].iter().map(|h| Cell::from(*h));
@@ -243,7 +245,7 @@ fn render_times<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
         Row::new(cells)
     });
     let border_style = app.get_border_style_from_id(ActiveBlock::Times);
-    let table = Table::new(rows)
+    let table = Table::new(rows, &[])
         .header(header)
         .block(
             Block::default()
@@ -261,7 +263,7 @@ fn render_times<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
     f.render_stateful_widget(table, layout_chunk, &mut app.times_state);
 }
 
-fn render_topic<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_topic<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let border_style = app.get_border_style_from_id(ActiveBlock::Scramble);
     let paragraph = Paragraph::new(format!("\n{}", app.scramble.clone()))
         .block(
@@ -276,7 +278,7 @@ fn render_topic<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
     f.render_widget(paragraph, layout_chunk);
 }
 
-fn render_bests<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_bests<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints(
@@ -292,16 +294,17 @@ fn render_bests<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
         )
         .split(layout_chunk);
 
-    render_stat(f, app, "Stats 1", app.times.pbsingle, chunks[0]);
-    render_stat(f, app, "Stats 2", app.times.pbao5, chunks[1]);
-    render_stat(f, app, "Stats 3", app.times.pbao12, chunks[2]);
+    render_stat::<B>(f, app, "Stats 1", app.times.pbsingle, chunks[0]);
+	render_stat::<B>(f, app, "Stats 1", app.times.pbsingle, chunks[0]);
+    render_stat::<B>(f, app, "Stats 2", app.times.pbao5, chunks[1]);
+    render_stat::<B>(f, app, "Stats 3", app.times.pbao12, chunks[2]);
     //render_stat(f, app, "Stats 4", app.times.ao100, chunks[3]);
     //render_stat(f, app, "Stats 5", app.times.ao1k, chunks[4]);
     //render_stat(f, app, "Stats 6", app.times.rollingavg, chunks[5]);
 }
 
 fn render_stat<B: Backend>(
-    f: &mut Frame<B>,
+    f: &mut Frame,
     app: &mut App,
     title: &str,
     stat: Option<f64>,
@@ -325,15 +328,15 @@ fn render_stat<B: Backend>(
     f.render_widget(paragraph, layout_chunk);
 }
 
-fn render_main<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_main<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     match app.active_tool {
-        Tool::Gnostr => render_gnostr_chat(f, app, layout_chunk),
-        Tool::Relay => render_relay(f, app, layout_chunk),
-        Tool::Commit => render_cube(f, app, layout_chunk),
+        Tool::Gnostr => render_gnostr_chat::<B>(f, app, layout_chunk),
+        Tool::Relay => render_relay::<B>(f, app, layout_chunk),
+        Tool::Commit => render_cube::<B>(f, app, layout_chunk),
     }
 }
 
-fn render_gnostr_chat<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_gnostr_chat<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let border_style = app.get_border_style_from_id(ActiveBlock::Main);
     let paragraph = Paragraph::new(WELCOME_TEXT)
         .block(
@@ -346,7 +349,7 @@ fn render_gnostr_chat<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk:
     f.render_widget(paragraph, layout_chunk);
 }
 
-fn render_cube<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_cube<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let border_style = app.get_border_style_from_id(ActiveBlock::Main);
     let paragraph = Paragraph::new(CUBE_TEXT)
         .block(
@@ -359,7 +362,7 @@ fn render_cube<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) 
     f.render_widget(paragraph, layout_chunk);
 }
 
-fn render_relay<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect) {
+fn render_relay<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let singles = app
         .times
         .times
@@ -437,7 +440,7 @@ fn render_relay<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
                         .iter()
                         .cloned()
                         .map(Span::from)
-                        .collect(),
+                        .collect::<Vec<_>>(),
                 ),
         )
         .y_axis(
@@ -450,8 +453,7 @@ fn render_relay<B: Backend>(f: &mut Frame<B>, app: &mut App, layout_chunk: Rect)
                         .iter()
                         .cloned()
                         .map(Span::from)
-                        .collect(),
-                ),
+                        .collect::<Vec<_>>()),
         );
     f.render_widget(relay, layout_chunk);
 }

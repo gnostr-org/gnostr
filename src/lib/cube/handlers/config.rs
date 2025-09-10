@@ -8,7 +8,7 @@ use std::{
 use color_eyre::eyre::{bail, Error, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::utils::pathing::config_path;
+use crate::cube::utils::pathing::config_path;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(default)]

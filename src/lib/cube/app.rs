@@ -8,7 +8,7 @@ use std::{
     path::Path,
     time::{Duration, Instant},
 };
-use tui::{
+use ratatui::{
     style::{Color, Modifier, Style},
     widgets::{ListState, TableState},
 };
