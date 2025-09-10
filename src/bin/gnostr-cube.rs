@@ -9,11 +9,11 @@
     clippy::future_not_send
 )]
 
-mod app;
-mod cube;
-mod global_rt;
-mod system_command;
-mod ui;
+use gnostr::cube::app;
+use gnostr::cube::cube;
+use gnostr::cube::global_rt;
+use gnostr::cube::system_command;
+use gnostr::cube::ui;
 
 use crate::global_rt::global_rt;
 use clap::{Arg, ArgAction, Command, Parser};
@@ -23,13 +23,13 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
-use cube_tui::chat::chat;
-use cube_tui::system_command::system_command_test;
-use cube_tui::local_git::local_git_test;
-use cube_tui::CompleteConfig;
-use cube_tui::WrapErr;
+use gnostr::cube::chat::chat;
+use gnostr::cube::system_command::system_command_test;
+use gnostr::cube::local_git::local_git_test;
+use gnostr::cube::CompleteConfig;
+use gnostr::cube::WrapErr;
 use std::{error::Error, io};
-use tui::{backend::CrosstermBackend, Terminal};
+use ratatui::{backend::CrosstermBackend, Terminal};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

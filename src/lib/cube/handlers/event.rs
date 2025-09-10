@@ -108,7 +108,8 @@ impl Events {
                                 MouseEventKind::Up(button) => Key::ReleasedButton(button),
                                 MouseEventKind::Drag(button) => Key::Drag(button),
                                 MouseEventKind::Moved => Key::Moved,
-                            };
+                                MouseEventKind::ScrollLeft | MouseEventKind::ScrollRight => todo!(),
+							};
 
                             if let Err(err) = tx.send(Event::Input(key)).await {
                                 eprintln!("Mouse input error: {err}");

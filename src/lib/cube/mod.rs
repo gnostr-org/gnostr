@@ -11,7 +11,7 @@ pub use once_cell::sync::OnceCell;
 // Add more items as needed.
 pub mod app;
 pub mod chat;
-mod commands;
+pub mod commands;
 pub mod cube;
 pub mod evt_loop;
 pub mod global_rt;
