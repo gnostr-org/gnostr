@@ -136,7 +136,6 @@ jobs:
 
       - run: |
           gnostr --hash "" ngit fetch
-        #if: matrix.os == 'macos-latest'
 
       - run: |
           EVENT=$(gnostr --nsec "$(gnostr-sha256 '$GITHUB_REPOSITORY_ID')" \
@@ -166,10 +165,10 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             COMMAND="curl https://nostr.band/$NOTE" && echo $COMMAND && $COMMAND
-         #if: matrix.os == 'macos-latest'
+        if: matrix.os == 'ubuntu-latest'
 
       - run: |
-          cargo t --all
+          cargo t --all -vv -- --no-capture
 
       - run: |
           printenv
