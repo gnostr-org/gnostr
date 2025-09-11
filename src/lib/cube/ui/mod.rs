@@ -1,11 +1,5 @@
 use super::app::*;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use std::{
-    env,
-    error::Error,
-    path::Path,
-    time::{Duration, Instant},
-};
 use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -17,6 +11,12 @@ use ratatui::{
         Table, Wrap,
     },
     Frame, Terminal,
+};
+use std::{
+    env,
+    error::Error,
+    path::Path,
+    time::{Duration, Instant},
 };
 
 const HELP_TEXT: &'static str = include_str!("../text/help.txt");
@@ -113,9 +113,9 @@ fn render_default<B: Backend>(f: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Length(3),//help and tools height
-                Constraint::Length(3),//timer
-                Constraint::Percentage(100),//table
+                Constraint::Length(3),       //help and tools height
+                Constraint::Length(3),       //timer
+                Constraint::Percentage(100), //table
             ]
             .as_ref(),
         )
@@ -125,9 +125,9 @@ fn render_default<B: Backend>(f: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Length(3),//topic
-                Constraint::Length(10),//squares
-                Constraint::Percentage(100),//tools view
+                Constraint::Length(3),       //topic
+                Constraint::Length(10),      //squares
+                Constraint::Percentage(100), //tools view
             ]
             .as_ref(),
         )
@@ -295,7 +295,7 @@ fn render_bests<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
         .split(layout_chunk);
 
     render_stat::<B>(f, app, "Stats 1", app.times.pbsingle, chunks[0]);
-	render_stat::<B>(f, app, "Stats 1", app.times.pbsingle, chunks[0]);
+    render_stat::<B>(f, app, "Stats 1", app.times.pbsingle, chunks[0]);
     render_stat::<B>(f, app, "Stats 2", app.times.pbao5, chunks[1]);
     render_stat::<B>(f, app, "Stats 3", app.times.pbao12, chunks[2]);
     //render_stat(f, app, "Stats 4", app.times.ao100, chunks[3]);
@@ -453,7 +453,8 @@ fn render_relay<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
                         .iter()
                         .cloned()
                         .map(Span::from)
-                        .collect::<Vec<_>>()),
+                        .collect::<Vec<_>>(),
+                ),
         );
     f.render_widget(relay, layout_chunk);
 }
