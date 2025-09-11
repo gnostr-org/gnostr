@@ -100,7 +100,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             Join | Leave | System => Line::from(Span::styled(
                 m.to_string(),
                 Style::default()
-                    .fg(Color::DarkGray)
+                    .fg(Color::Red)
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {
