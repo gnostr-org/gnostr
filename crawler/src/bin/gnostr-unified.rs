@@ -46,7 +46,10 @@ enum Commands {
     },
 }
 
-async fn run_sniper(nip_lower: i32, shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+async fn run_sniper(
+    nip_lower: i32,
+    shitlist_path: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let relays = load_file("relays.yaml").unwrap();
     let client = reqwest::Client::new();
 
@@ -68,7 +71,9 @@ async fn run_sniper(nip_lower: i32, shitlist_path: Option<String>) -> Result<(),
             if shitlist.is_empty() {
                 true
             } else {
-                !shitlist.iter().any(|shitlisted_url| url.contains(shitlisted_url))
+                !shitlist
+                    .iter()
+                    .any(|shitlisted_url| url.contains(shitlisted_url))
             }
         })
         .collect();
@@ -78,7 +83,10 @@ async fn run_sniper(nip_lower: i32, shitlist_path: Option<String>) -> Result<(),
             let client = &client;
             async move {
                 let resp = client
-                    .get(url.replace("wss://", "https://").replace("ws://", "http://"))
+                    .get(
+                        url.replace("wss://", "https://")
+                            .replace("ws://", "http://"),
+                    )
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
@@ -123,11 +131,14 @@ async fn run_sniper(nip_lower: i32, shitlist_path: Option<String>) -> Result<(),
                                 + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!("
+                            debug!(
+                                "
 
 {}
 
-", file_path_str);
+",
+                                file_path_str
+                            );
 
                             match File::create(&file_path) {
                                 Ok(mut file) => {
@@ -193,7 +204,9 @@ async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std::err
         if shitlist.is_empty() {
             true
         } else {
-            !shitlist.iter().any(|shitlisted_url| url.contains(shitlisted_url))
+            !shitlist
+                .iter()
+                .any(|shitlisted_url| url.contains(shitlisted_url))
         }
     });
 
