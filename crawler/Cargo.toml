@@ -11,6 +11,10 @@ license = "MIT"
 keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 
+[[bin]]
+name = "gnostr-unified"
+path = "src/bin/gnostr-unified.rs"
+
 [dependencies]
 assert_cmd = "2.0.17"
 chrono = "0.4.41"
