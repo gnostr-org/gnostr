@@ -77,7 +77,6 @@ impl SystemCommand {
 }
 
 pub fn system_command_test() {
-
     let mut git_status_s = SystemCommand::new("git");
     git_status_s.arg("status").arg("-s");
 
@@ -100,9 +99,6 @@ pub fn system_command_test() {
     //    Ok(output) => println!("CatREADME_md:\n{}", output),
     //    Err(e) => eprintln!("Error: {}", e),
     //}
-
-
-
 
     let test_string = "This is a Test string\nAnother line with test";
 
