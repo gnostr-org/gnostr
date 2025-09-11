@@ -1,16 +1,16 @@
 use super::cube::gen_scramble;
 use super::global_rt::global_rt;
 use ordered_float::*;
+use ratatui::{
+    style::{Color, Modifier, Style},
+    widgets::{ListState, TableState},
+};
 use std::{
     error::Error,
     fmt::{self, Formatter},
     fs,
     path::Path,
     time::{Duration, Instant},
-};
-use ratatui::{
-    style::{Color, Modifier, Style},
-    widgets::{ListState, TableState},
 };
 
 pub struct Route {
@@ -327,7 +327,8 @@ impl<'a> App<'a> {
             tools_state,
             //this plus default active block determine initial navigation move
             pos: (0, 0),
-            layout: vec![//effects nav order
+            layout: vec![
+                //effects nav order
                 vec![ActiveBlock::Tools, ActiveBlock::Timer, ActiveBlock::Times],
                 vec![ActiveBlock::Stats, ActiveBlock::Scramble, ActiveBlock::Main],
             ],
@@ -386,9 +387,11 @@ impl<'a> App<'a> {
     pub fn get_border_style_from_id(&self, id: ActiveBlock) -> Style {
         let style = Style::default();
         if id == self.route.active_block {
-            return style.fg(Color::Magenta).add_modifier(Modifier::BOLD | Modifier::ITALIC);
+            return style
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD | Modifier::ITALIC);
         } else if id == self.route.selected_block {
-            return style.fg(Color::Magenta);//.add_modifier(Modifier::BOLD);
+            return style.fg(Color::Magenta); //.add_modifier(Modifier::BOLD);
         } else {
             return style.fg(Color::Gray);
         }
@@ -399,7 +402,9 @@ impl<'a> App<'a> {
         if id == self.route.active_block {
             return style.fg(Color::Magenta);
         } else if id == self.route.selected_block {
-            return style.fg(Color::Magenta).add_modifier(Modifier::BOLD | Modifier::ITALIC)
+            return style
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD | Modifier::ITALIC);
         } else {
             return style.fg(Color::Magenta);
         }
