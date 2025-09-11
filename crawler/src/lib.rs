@@ -7,11 +7,11 @@ pub mod stats;
 use clap::Parser;
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
-use std::str;
-use std::io::{self, BufRead, BufReader};
-use std::fs;
-use std::path::Path;
 use std::collections::HashSet;
+use std::fs;
+use std::io::{self, BufRead, BufReader};
+use std::path::Path;
+use std::str;
 
 use serde::{Deserialize, Serialize};
 
