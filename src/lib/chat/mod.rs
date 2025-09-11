@@ -732,6 +732,11 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
                 .set_kind(MsgKind::GitCommitTime),
         );
     }
+        app.add_message(
+            Msg::default()
+                .set_content("additional RAW message value".to_string(), 0)
+                .set_kind(MsgKind::Raw),
+        );
 
     let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
     //info!("keys.secret_key():\n{:?}", keys.secret_key());
