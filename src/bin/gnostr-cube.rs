@@ -24,12 +24,12 @@ use crossterm::{
 };
 
 use gnostr::cube::chat::chat;
-use gnostr::cube::system_command::system_command_test;
 use gnostr::cube::local_git::local_git_test;
+use gnostr::cube::system_command::system_command_test;
 use gnostr::cube::CompleteConfig;
 use gnostr::cube::WrapErr;
-use std::{error::Error, io};
 use ratatui::{backend::CrosstermBackend, Terminal};
+use std::{error::Error, io};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
     let global_rt_result = global_rt().spawn(async move {
-	let _ = chat();
+        let _ = chat();
         println!("global_rt async task!");
         String::from("global_rt async task!")
     });
