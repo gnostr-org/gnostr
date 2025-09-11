@@ -44,6 +44,12 @@ enum Commands {
         #[clap(long, short)]
         shitlist: Option<String>,
     },
+    /// Lists relays that are likely to support NIP-34 (Git collaboration)
+    Nip34 {
+        /// Optional: Path to a shitlist file to exclude relays
+        #[clap(long, short)]
+        shitlist: Option<String>,
+    },
 }
 
 async fn run_sniper(
@@ -257,11 +263,79 @@ async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
+async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let relays = load_file("relays.yaml").unwrap();
+    let client = reqwest::Client::new();
+
+    let shitlist = if let Some(path) = shitlist_path {
+        match load_shitlist(&path) {
+            Ok(sl) => sl,
+            Err(e) => {
+                eprintln!("Failed to load shitlist from {}: {}", path, e);
+                return Err(e.into());
+            }
+        }
+    } else {
+        std::collections::HashSet::new()
+    };
+
+    let filtered_relays: Vec<String> = relays
+        .into_iter()
+        .filter(|url| {
+            if shitlist.is_empty() {
+                true
+            } else {
+                !shitlist
+                    .iter()
+                    .any(|shitlisted_url| url.contains(shitlisted_url))
+            }
+        })
+        .collect();
+
+    let bodies = stream::iter(filtered_relays)
+        .map(|url| {
+            let client = &client;
+            async move {
+                let resp = client
+                    .get(
+                        url.replace("wss://", "https://")
+                            .replace("ws://", "http://"),
+                    )
+                    .header(ACCEPT, "application/nostr+json")
+                    .send()
+                    .await?;
+                let text = resp.text().await?;
+
+                let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
+                r
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS);
+
+    bodies
+        .for_each(|b: Result<(String, String), reqwest::Error>| async {
+            if let Ok((url, json_string)) = b {
+                let data: Result<Relay, _> = serde_json::from_str(&json_string);
+                if let Ok(relay_info) = data {
+                    let supports_nip01 = relay_info.supported_nips.contains(&1);
+                    let supports_nip11 = relay_info.supported_nips.contains(&11);
+
+                    if supports_nip01 && supports_nip11 {
+                        println!("{}", url);
+                    }
+                }
+            }
+        })
+        .await;
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
+    //tracing_subscriber::fmt()
+    //    .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+    //    .init();
 
     let cli = Cli::parse();
 
@@ -271,6 +345,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Watch { shitlist } => {
             run_watch(shitlist.clone()).await?;
+        }
+        Commands::Nip34 { shitlist } => {
+            run_nip34(shitlist.clone()).await?;
         }
     }
 
