@@ -240,8 +240,8 @@ pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
     ))
 }
 
-/// pub fn get_blockheight() -> Result<String, &'static str>
-pub fn get_blockheight() -> Result<String, &'static str> {
+/// pub fn get_blockheight_sync() -> Result<String, &'static str>
+pub fn get_blockheight_sync() -> Result<String, &'static str> {
     Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
 }
 /// pub async fn get_blockheight_async() -> Result<String, &'static str>
