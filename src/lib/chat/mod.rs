@@ -1,6 +1,19 @@
+use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
+use git2::{Commit, ObjectType, Oid, Repository};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
+use nostr_sdk_0_37_0::prelude::*;
+//use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
+use serde::{Deserialize, Serialize};
+use serde_json;
+use serde_json::{Result as SerdeJsonResult, Value};
+//use sha2::Digest;
+//use tokio::time::Duration;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::fmt::Write;
 use std::{error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
@@ -9,25 +22,11 @@ use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::fmt::Write;
-
-use anyhow::{anyhow, Result};
-use git2::{Commit, ObjectType, Oid, Repository};
-use nostr_sdk_0_37_0::prelude::*;
-//use nostr_sdk_0_37_0::EventBuilder;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
-use sha2::Digest;
-//use tokio::time::Duration;
-
-pub mod p2p;
-pub mod ui;
-pub use p2p::evt_loop;
 pub mod msg;
 pub use msg::*;
+pub mod p2p;
+pub use p2p::evt_loop;
+pub mod ui;
 
 //const TITLE: &str = include_str!("./title.txt");
 
