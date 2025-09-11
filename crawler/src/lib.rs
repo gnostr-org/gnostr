@@ -8,6 +8,12 @@ use clap::Parser;
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use std::str;
+use std::io::{self, BufRead, BufReader};
+use std::fs;
+use std::path::Path;
+use std::collections::HashSet;
+
+use serde::{Deserialize, Serialize};
 
 use ::time::at;
 use ::time::Timespec;
@@ -22,65 +28,83 @@ use crate::processor::BOOTSTRAP_RELAY2;
 use crate::processor::BOOTSTRAP_RELAY3;
 use crate::processor::BOOTSTRAP_RELAY4;
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Relay {
+    pub contact: String,
+    pub description: String,
+    pub name: String,
+    pub software: String,
+    pub supported_nips: Vec<i32>,
+    pub version: String,
+}
+
+pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
+    BufReader::new(fs::File::open(filename)?).lines().collect()
+}
+
+pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
+    BufReader::new(fs::File::open(filename)?).lines().collect()
+}
+
 #[allow(clippy::manual_strip)]
 #[derive(Parser)]
 pub struct CliArgs {
-    //#[structopt(name = "topo-order", long)]
+    //#[clap(name = "topo-order", long)]
     ///// sort commits in topological order
     //flag_topo_order: bool,
-    //#[structopt(name = "date-order", long)]
+    //#[clap(name = "date-order", long)]
     ///// sort commits in date order
     //flag_date_order: bool,
-    //#[structopt(name = "reverse", long)]
+    //#[clap(name = "reverse", long)]
     ///// sort commits in reverse
     //flag_reverse: bool,
-    //#[structopt(name = "author", long)]
+    //#[clap(name = "author", long)]
     ///// author to sort by
     //flag_author: Option<String>,
-    //#[structopt(name = "committer", long)]
+    //#[clap(name = "committer", long)]
     ///// committer to sort by
     //flag_committer: Option<String>,
-    //#[structopt(name = "pat", long = "grep")]
+    //#[clap(name = "pat", long = "grep")]
     ///// pattern to filter commit messages by
     //flag_grep: Option<String>,
-    #[structopt(name = "dir", long = "git-dir")]
+    #[clap(name = "dir", long = "git-dir")]
     /// alternative git directory to use
     flag_git_dir: Option<String>,
-    //#[structopt(name = "skip", long)]
+    //#[clap(name = "skip", long)]
     ///// number of commits to skip
     //flag_skip: Option<usize>,
-    //#[structopt(name = "max-count", short = 'n', long)]
+    //#[clap(name = "max-count", short = 'n', long)]
     ///// maximum number of commits to show
     //flag_max_count: Option<usize>,
-    //#[structopt(name = "merges", long)]
+    //#[clap(name = "merges", long)]
     ///// only show merge commits
     //flag_merges: bool,
-    //#[structopt(name = "no-merges", long)]
+    //#[clap(name = "no-merges", long)]
     ///// don't show merge commits
     //flag_no_merges: bool,
-    //#[structopt(name = "no-min-parents", long)]
+    //#[clap(name = "no-min-parents", long)]
     ///// don't require a minimum number of parents
     //flag_no_min_parents: bool,
-    //#[structopt(name = "no-max-parents", long)]
+    //#[clap(name = "no-max-parents", long)]
     ///// don't require a maximum number of parents
     //flag_no_max_parents: bool,
-    //#[structopt(name = "max-parents")]
+    //#[clap(name = "max-parents")]
     ///// specify a maximum number of parents for a commit
     //flag_max_parents: Option<usize>,
-    //#[structopt(name = "min-parents")]
+    //#[clap(name = "min-parents")]
     ///// specify a minimum number of parents for a commit
     //flag_min_parents: Option<usize>,
-    #[structopt(name = "patch", long, short)]
+    #[clap(name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[structopt(
+    #[clap(
         name = "nsec",
         default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     )]
     arg_nsec: Option<String>,
-    #[structopt(name = "commit")]
+    #[clap(name = "commit")]
     arg_commit: Vec<String>,
-    #[structopt(name = "spec", last = true)]
+    #[clap(name = "spec", last = true)]
     arg_spec: Vec<String>,
 }
 
