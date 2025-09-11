@@ -77,7 +77,6 @@ impl LocalGit {
 }
 
 pub fn local_git_test() {
-
     let mut git_status_s = LocalGit::new("git");
     git_status_s.arg("status").arg("-s");
 
