@@ -1,3 +1,4 @@
+use crate::{get_blockheight_async, get_weeble_async, get_wobble_async};
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
@@ -83,18 +84,10 @@ pub async fn create_event(
 
     let opts = Options::new().gossip(true);
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
-
-    client.add_discovery_relay("wss://relay.damus.io").await?;
-    client.add_discovery_relay("wss://purplepag.es").await?;
-    client
-        .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
-        .await?;
-
-    // add some relays
-    // TODO get_relay_list here
-    client.add_relay("wss://relay.damus.io").await?;
-    client.add_relay("wss://e.nos.lol").await?;
-    client.add_relay("wss://nos.lol").await?;
+    for relay in BOOTSTRAP_RELAYS.to_vec() {
+        debug!("{}", relay);
+        client.add_discovery_relay(relay).await.expect("");
+    }
 
     // Connect to the relays.
     client.connect().await;
@@ -601,8 +594,11 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         //create nostr client with commit based keys
         //let client = Client::new(keys);
         let client = Client::new(padded_keys.clone());
-        client.add_relay("wss://relay.damus.io").await.expect("");
-        client.add_relay("wss://e.nos.lol").await.expect("");
+
+        for relay in BOOTSTRAP_RELAYS.to_vec() {
+            debug!("{}", relay);
+            client.add_relay(relay).await.expect("");
+        }
         client.connect().await;
 
         //build git gnostr event
@@ -732,11 +728,11 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
                 .set_kind(MsgKind::GitCommitTime),
         );
     }
-        app.add_message(
-            Msg::default()
-                .set_content("additional RAW message value".to_string(), 0)
-                .set_kind(MsgKind::Raw),
-        );
+    app.add_message(
+        Msg::default()
+            .set_content("additional RAW message value".to_string(), 0)
+            .set_kind(MsgKind::Raw),
+    );
 
     let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
     //info!("keys.secret_key():\n{:?}", keys.secret_key());
