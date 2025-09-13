@@ -71,7 +71,7 @@ struct GnostrApp {
 
 impl GnostrApp {
     fn get_blockheight(&self) -> String {
-        gnostr::get_blockheight().expect("REASON")
+        gnostr::get_blockheight_sync().expect("REASON")
     }
 }
 impl Render for GnostrApp {

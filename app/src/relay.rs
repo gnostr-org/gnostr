@@ -4,7 +4,7 @@ use gnostr_relay::*;
 use std::path::PathBuf;
 use tracing::info;
 
-use nostr_extensions;
+use gnostr_extensions;
 
 /// Start relay options
 #[derive(Debug, Clone, Parser)]
@@ -33,11 +33,11 @@ pub async fn relay(config: &PathBuf, watch: bool) -> Result<()> {
     let app_data = App::create(Some(config), watch, Some("GNOSTR".to_owned()), None)?;
     let db = app_data.db.clone();
     app_data
-        .add_extension(nostr_extensions::Metrics::new())
-        .add_extension(nostr_extensions::Auth::new())
-        .add_extension(nostr_extensions::Ratelimiter::new())
-        .add_extension(nostr_extensions::Count::new(db))
-        .add_extension(nostr_extensions::Search::new())
+        .add_extension(gnostr_extensions::Metrics::new())
+        .add_extension(gnostr_extensions::Auth::new())
+        .add_extension(gnostr_extensions::Ratelimiter::new())
+        .add_extension(gnostr_extensions::Count::new(db))
+        .add_extension(gnostr_extensions::Search::new())
         .web_server()?
         .await?;
     info!("Relay server shutdown");
