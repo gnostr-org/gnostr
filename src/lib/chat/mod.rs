@@ -28,6 +28,7 @@ pub use msg::*;
 pub mod p2p;
 pub use p2p::evt_loop;
 pub mod ui;
+pub mod tests;
 
 //const TITLE: &str = include_str!("./title.txt");
 
