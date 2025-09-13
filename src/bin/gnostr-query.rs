@@ -143,12 +143,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut json_result: Vec<String> = vec![];
         for element in vec_result.unwrap() {
-            println!("{{\"146:element\":{}}}", element);
+            println!("{{\"element\":{}}}", element);
             json_result.push(element);
         }
 
         for element in json_result {
-            println!("{{\"151:element\": {} }}", element);
+            //println!("{{\"element\": {} }}", element);
         }
         std::process::exit(0);
     } else {
@@ -162,7 +162,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut json_result: Vec<String> = vec![];
         for element in vec_result.unwrap() {
-            println!("{{ \"element\": \"{}\"}}", element);
+            //println!("{{ \"element\": \"{}\"}}", element);
             json_result.push(element);
         }
 
