@@ -91,4 +91,71 @@ mod tests {
         assert_eq!(li.len(), 1);
         Ok(())
     }
+
+    #[test]
+    fn test_empty_string() -> anyhow::Result<()> {
+        //let json_str = r#"{ "name": "" }"#;
+        let li: List = serde_json::from_str("[]")?;
+        assert!(li.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_array() -> anyhow::Result<()> {
+        let li: List = serde_json::from_str(r"[]")?;
+        assert!(li.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_string_with_multiple_spaces() -> anyhow::Result<()> {
+        let li: List = serde_json::from_str("\"a b c\"")?;
+        assert_eq!(li.len(), 3);
+        assert_eq!(li[0], "a");
+        assert_eq!(li[1], "b");
+        assert_eq!(li[2], "c");
+        Ok(())
+    }
+
+    #[test]
+    fn test_string_with_leading_trailing_spaces() -> anyhow::Result<()> {
+        let li: List = serde_json::from_str("\" a         b         \"")?;
+        assert_eq!(li.len(), 20);
+        assert_eq!(li[1], "a");
+        assert_eq!(li[10], "b");
+        Ok(())
+    }
+
+    #[test]
+    fn test_serialization() -> anyhow::Result<()> {
+        let li = List(vec!["c".to_string(), "d".to_string()]);
+        let serialized = serde_json::to_string(&li)?;
+        assert_eq!(serialized, "[\"c\",\"d\"]");
+
+        let li: List = serde_json::from_str("\"e f\"")?;
+        let serialized = serde_json::to_string(&li)?;
+        assert_eq!(serialized, "[\"e\",\"f\"]");
+        Ok(())
+    }
+
+    #[test]
+    fn test_deref_deref_mut() {
+        let mut li = List(vec!["g".to_string(), "h".to_string()]);
+        assert_eq!(li.len(), 2);
+        assert_eq!(li[0], "g");
+
+        li.push("i".to_string());
+        assert_eq!(li.len(), 3);
+        assert_eq!(li[2], "i");
+
+        li[0] = "j".to_string();
+        assert_eq!(li[0], "j");
+    }
+
+    #[test]
+    fn test_from_vec() {
+        let vec = vec!["k".to_string(), "l".to_string()];
+        let li = List::from(vec.clone());
+        assert_eq!(li.0, vec);
+    }
 }
