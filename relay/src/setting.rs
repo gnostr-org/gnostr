@@ -479,15 +479,7 @@ mod tests {
         let setting = Setting::read(&file, None)?;
         assert_eq!(setting.information.name, "");
         assert!(setting.information.supported_nips.contains(&1));
-        fs::write(
-            &file,
-            r#"
-        [information]
-        name = "nostr"
-        [network]
-        host = "127.0.0.1"
-        "#,
-        )?;
+        fs::write(&file, CONFIG)?;
 
         temp_env::with_vars(
             [
@@ -498,13 +490,21 @@ mod tests {
             ],
             || {
                 let setting = Setting::read(&file, Some("NOSTR".to_owned())).unwrap();
-                assert_eq!(setting.information.name, "nostr".to_string());
+                assert_eq!(setting.information.name, "gnostr-relay".to_string());
                 assert_eq!(setting.information.description, "test".to_string());
                 assert_eq!(setting.information.contact, Some("test".to_string()));
                 assert_eq!(setting.information.pubkey, Some("test".to_string()));
                 assert_eq!(setting.network.port, 1);
             },
         );
+        Ok(())
+    }
+
+    #[test]
+    fn from_config_str() -> Result<()> {
+        let setting = Setting::from_str(CONFIG, FileFormat::Toml)?;
+        assert_eq!(setting.information.name, "gnostr-relay".to_string());
+        assert_eq!(setting.network.port, 8080);
         Ok(())
     }
 
@@ -582,8 +582,14 @@ mod tests {
             }
         }"#;
         let setting_valid = Setting::from_str(json_valid, FileFormat::Json)?;
-        assert_eq!(setting_valid.network.heartbeat_interval, Duration::from_secs(60).try_into().unwrap());
-        assert_eq!(setting_valid.network.heartbeat_timeout, Duration::from_secs(120).try_into().unwrap());
+        assert_eq!(
+            setting_valid.network.heartbeat_interval,
+            Duration::from_secs(60).try_into().unwrap()
+        );
+        assert_eq!(
+            setting_valid.network.heartbeat_timeout,
+            Duration::from_secs(120).try_into().unwrap()
+        );
 
         let json_invalid = r#"{
             "network": {
@@ -593,8 +599,14 @@ mod tests {
         }"#;
         let setting_invalid = Setting::from_str(json_invalid, FileFormat::Json)?;
         // Should revert to default values if invalid
-        assert_eq!(setting_invalid.network.heartbeat_interval, Duration::from_secs(60).try_into().unwrap());
-        assert_eq!(setting_invalid.network.heartbeat_timeout, Duration::from_secs(120).try_into().unwrap());
+        assert_eq!(
+            setting_invalid.network.heartbeat_interval,
+            Duration::from_secs(60).try_into().unwrap()
+        );
+        assert_eq!(
+            setting_invalid.network.heartbeat_timeout,
+            Duration::from_secs(120).try_into().unwrap()
+        );
         Ok(())
     }
 
@@ -613,9 +625,8 @@ mod tests {
         );
         Ok(())
     }
-}
 
-const CONFIG: &str = r#"
+    const CONFIG: &str = r#"
 # Configuration
 # All duration format reference https://docs.rs/duration-str/latest/duration_str/
 #
@@ -763,3 +774,4 @@ enabled = false
 [search]
 enabled = true
 "#;
+}
