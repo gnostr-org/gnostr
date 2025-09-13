@@ -5,6 +5,14 @@ use log::debug;
 use serde_json::{json, to_string};
 use url::Url;
 
+use serde_json::{Map, Value};
+
+fn process_json_map_by_value(json_map: Map<String, Value>) {
+    for (key, value) in json_map {
+        println!("{{\"{}\": {}}}", key, value.to_string());
+    }
+}
+
 /// Usage
 /// nip-0034 kinds
 /// gnostr-query -k 1630,1632,1621,30618,1633,1631,1617,30617
@@ -20,8 +28,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "authors".to_string(),
             json!(authors.split(',').collect::<Vec<&str>>()),
         );
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
     }
 
     if let Some(ids) = matches.get_one::<String>("ids") {
@@ -29,8 +35,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "ids".to_string(),
             json!(ids.split(',').collect::<Vec<&str>>()),
         );
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
     }
 
     let mut limit_check: i32 = 0;
@@ -38,8 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // ["EOSE","gnostr-query"] counts as a message!      + 1
         filt.insert("limit".to_string(), json!(limit.clone() /*+ 1*/));
         limit_check = *limit;
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+		//process_json_map_by_value(filt.clone());
     }
 
     if let Some(generic) = matches.get_many::<String>("generic") {
@@ -48,8 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let tag = format!("#{}", generic_vec[0]);
             let val = generic_vec[1].split(',').collect::<String>();
             filt.insert(tag, json!(val));
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+		//process_json_map_by_value(filt.clone());
         }
     }
 
@@ -58,8 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#t".to_string(),
             json!(hashtag.split(',').collect::<Vec<&str>>()),
         );
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+		//process_json_map_by_value(filt.clone());
     }
 
     if let Some(mentions) = matches.get_one::<String>("mentions") {
@@ -67,8 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#p".to_string(),
             json!(mentions.split(',').collect::<Vec<&str>>()),
         );
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+		//process_json_map_by_value(filt.clone());
     }
 
     if let Some(references) = matches.get_one::<String>("references") {
@@ -76,8 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#e".to_string(),
             json!(references.split(',').collect::<Vec<&str>>()),
         );
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+		//process_json_map_by_value(filt.clone());
     }
 
     if let Some(kinds) = matches.get_one::<String>("kinds") {
@@ -91,8 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("Error parsing kinds. Ensure they are integers.");
             std::process::exit(1);
         }
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+		//process_json_map_by_value(filt.clone());
     }
     //["REQ", "", { "search": "orange" }, { "kinds": [1, 2], "search": "purple" }]
     if let Some(search) = matches.get_many::<String>("search") {
@@ -101,12 +99,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let search_string = "search".to_string();
         let val = search_vec[0].split(',').collect::<String>();
         filt.insert(search_string, json!(val));
-		log::debug!("{:?}", filt);
-		println!("{:?}", filt);
+        //process_json_map_by_value(filt.clone());
         //}
     }
-	log::debug!("{:?}", filt);
-	println!("{:?}", filt);
+    process_json_map_by_value(filt.clone());
     let config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
@@ -125,13 +121,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     log::debug!("config=\n{config:?}");
     let q = json!(["REQ", "gnostr-query", filt]);
+        //println!("{}", q.clone());
     let query_string = to_string(&q)?;
-    log::debug!("query_string:\n{:?}", query_string);
+    println!("{{ \"query_string\" : {} }}", query_string.to_string());
 
     let relay_url_str = matches.get_one::<String>("relay").unwrap();
     let relay_url = Url::parse(relay_url_str)?;
 
     if matches.get_many::<String>("search").is_some() {
+		//println!("search is some {:?}", matches.get_many::<String>("search"));
         let vec_result = gnostr_query::send(
             query_string.clone(),
             //vec![Url::parse(&BOOTSTRAP_RELAYS.to_vec()[0]).expect("")],
@@ -141,16 +139,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await;
 
         //trace
-        debug!("vec_result:\n{:?}", vec_result);
+        //println!("144:{{ \"vec_result\" : \" {:?} \"}}", vec_result);
 
         let mut json_result: Vec<String> = vec![];
         for element in vec_result.unwrap() {
-            debug!("element=\n{}", element);
+            println!("{{\"146:element\":{}}}", element);
             json_result.push(element);
         }
 
         for element in json_result {
-            print!("{}", element);
+            println!("{{\"151:element\": {} }}", element);
         }
         std::process::exit(0);
     } else {
@@ -162,12 +160,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await;
 
-        //trace
-        log::debug!("vec_result:\n{:?}", vec_result);
-
         let mut json_result: Vec<String> = vec![];
         for element in vec_result.unwrap() {
-            log::debug!("element=\n{}", element);
+            println!("{{ \"element\": \"{}\"}}", element);
             json_result.push(element);
         }
 
