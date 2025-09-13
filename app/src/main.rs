@@ -93,7 +93,7 @@ impl Render for GnostrApp {
 }
 
 fn gui() -> anyhow::Result<()> {
-	Application::new().run(|cx: &mut App| {
+    Application::new().run(|cx: &mut App| {
         cx.open_window(WindowOptions::default(), |_, cx| {
             cx.new(|_cx| GnostrApp {
                 text: "blockheight".into(),
@@ -101,5 +101,5 @@ fn gui() -> anyhow::Result<()> {
         })
         .unwrap();
     });
-Ok(())
+    Ok(())
 }
