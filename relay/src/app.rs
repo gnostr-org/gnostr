@@ -297,4 +297,12 @@ pub mod tests {
         assert_eq!(item, ws::Frame::Close(Some(ws::CloseCode::Normal.into())));
         Ok(())
     }
+
+    #[actix_rt::test]
+    async fn test_main_app_creation() -> Result<()> {
+        let app = crate::create_test_app("main_test")?;
+        let _web_app = app.web_app();
+        // If we reach here, it means web_app() was created successfully without panicking.
+        Ok(())
+    }
 }
