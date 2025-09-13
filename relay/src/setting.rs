@@ -537,6 +537,82 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    fn reload() -> Result<()> {
+        let file = Builder::new()
+            .prefix("nostr-relay-config-test-reload")
+            .suffix(".toml")
+            .tempfile()?;
+
+        fs::write(
+            &file,
+            r#"[information]
+    name = "initial"
+    "#,
+        )?;
+
+        let setting_wrapper: SettingWrapper = Setting::read(&file, None)?.into();
+        {
+            let r = setting_wrapper.read();
+            assert_eq!(r.information.name, "initial");
+        }
+
+        fs::write(
+            &file,
+            r#"[information]
+    name = "reloaded"
+    "#,
+        )?;
+
+        setting_wrapper.reload(&file, None)?;
+        {
+            let r = setting_wrapper.read();
+            assert_eq!(r.information.name, "reloaded");
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn correct_heartbeat_duration() -> Result<()> {
+        let json_valid = r#"{
+            "network": {
+                "heartbeat_interval": "60s",
+                "heartbeat_timeout": "120s"
+            }
+        }"#;
+        let setting_valid = Setting::from_str(json_valid, FileFormat::Json)?;
+        assert_eq!(setting_valid.network.heartbeat_interval, Duration::from_secs(60).try_into().unwrap());
+        assert_eq!(setting_valid.network.heartbeat_timeout, Duration::from_secs(120).try_into().unwrap());
+
+        let json_invalid = r#"{
+            "network": {
+                "heartbeat_interval": "120s",
+                "heartbeat_timeout": "60s"
+            }
+        }"#;
+        let setting_invalid = Setting::from_str(json_invalid, FileFormat::Json)?;
+        // Should revert to default values if invalid
+        assert_eq!(setting_invalid.network.heartbeat_interval, Duration::from_secs(60).try_into().unwrap());
+        assert_eq!(setting_invalid.network.heartbeat_timeout, Duration::from_secs(120).try_into().unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn from_env() -> Result<()> {
+        temp_env::with_vars(
+            [
+                ("NOSTR_INFORMATION__NAME", Some("env_name")),
+                ("NOSTR_NETWORK__PORT", Some("9000")),
+            ],
+            || {
+                let setting = Setting::from_env("NOSTR".to_owned()).unwrap();
+                assert_eq!(setting.information.name, "env_name".to_string());
+                assert_eq!(setting.network.port, 9000);
+            },
+        );
+        Ok(())
+    }
 }
 
 const CONFIG: &str = r#"
