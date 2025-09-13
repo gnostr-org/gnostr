@@ -5,7 +5,7 @@ use crate::stats::Stats;
 use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
 use std::sync::LazyLock;
 
-pub const BOOTSTRAP_RELAY0: &str = "wss://nos.lol";
+pub const BOOTSTRAP_RELAY0: &str = "ws://127.0.0.1:8080";
 pub const BOOTSTRAP_RELAY1: &str = "wss://relay.nostr.band";
 pub const BOOTSTRAP_RELAY2: &str = "wss://bitcoiner.social";
 pub const BOOTSTRAP_RELAY3: &str = "wss://relay.damus.io";
