@@ -10,7 +10,7 @@ use std::{
     collections::HashMap,
     time::{Duration, Instant},
 };
-use tracing::debug;
+use tracing::{debug, info, warn};
 use ws::Message;
 
 pub struct Session {
@@ -245,7 +245,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                         ctx.text(OutgoingMessage::notice("payload reached size limit."));
                     }
                     _ => {
-                        debug!("Session error {} {} {:?}", self.id, self.ip, err);
+                        warn!("Session error {} {} {:?}", self.id, self.ip, err);
                         counter!("nostr_relay_session_stop_total", "reason" => "message error")
                             .increment(1);
                         ctx.stop();
@@ -265,7 +265,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
             }
             ws::Message::Text(text) => {
                 let text = text.to_string();
-                debug!("Session text {} {} {}", self.id, self.ip, text);
+                info!(
+                    "Session text self.id={} self.ip={} text={}",
+                    self.id, self.ip, text
+                );
                 self.handle_message(text, ctx);
             }
             ws::Message::Close(reason) => {
