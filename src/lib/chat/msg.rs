@@ -10,7 +10,7 @@ pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
             .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string()),
     )
 });
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub enum MsgKind {
     #[default]
     Chat,
