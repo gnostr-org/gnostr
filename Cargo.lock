@@ -3853,7 +3853,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "0.0.13"
+version = "0.0.14"
 dependencies = [
  "assert_cmd",
  "chrono",
@@ -3886,6 +3886,7 @@ version = "0.0.10"
 dependencies = [
  "clap 4.5.37",
  "futures",
+ "gnostr-crawler",
  "log",
  "serde",
  "serde_json",
