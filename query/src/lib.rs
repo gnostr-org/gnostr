@@ -231,10 +231,7 @@ pub fn build_gnostr_query(
         }
     }
     if search.is_some() {
-        filt.insert(
-            "search".to_string(),
-            json!(search.expect("REASON")),
-        );
+        filt.insert("search".to_string(), json!(search.expect("REASON")));
     }
 
     println!("{:?}", filt);
