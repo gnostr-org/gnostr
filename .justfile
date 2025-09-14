@@ -109,3 +109,9 @@ nip_thirty_four_requests:
 plan-dist-manifest:
   @make plan-dist-manifest
 
+docker-tui:
+  @make docker-tui
+
+docker-chat:
+  @make docker-chat
+
