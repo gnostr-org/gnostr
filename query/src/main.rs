@@ -1,3 +1,4 @@
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_query::cli::cli;
 use gnostr_query::ConfigBuilder;
 use log::debug;
