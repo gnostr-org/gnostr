@@ -7,13 +7,13 @@ use std::sync::LazyLock;
 
 pub const BOOTSTRAP_RELAY0: &str = "ws://127.0.0.1:8080";
 pub const BOOTSTRAP_RELAY1: &str = "wss://relay.nostr.band";
-pub const BOOTSTRAP_RELAY2: &str = "wss://bitcoiner.social";
+pub const BOOTSTRAP_RELAY2: &str = "wss://nostr.wine";
 pub const BOOTSTRAP_RELAY3: &str = "wss://relay.damus.io";
-pub const BOOTSTRAP_RELAY4: &str = "wss://purplerelay.com";
-pub const BOOTSTRAP_RELAY5: &str = "wss://nos.lol";
-pub const BOOTSTRAP_RELAY6: &str = "wss://offchain.pub";
+pub const BOOTSTRAP_RELAY4: &str = "wss://relay.noswhere.com";
+pub const BOOTSTRAP_RELAY5: &str = "wss://search.nos.today";
+pub const BOOTSTRAP_RELAY6: &str = "wss://feeds.nostr.band";
 pub const BOOTSTRAP_RELAY7: &str = "wss://relay.primal.net";
-pub const BOOTSTRAP_RELAY8: &str = "wss://relay.nostr.band/all";
+pub const BOOTSTRAP_RELAY8: &str = "wss://relay.bostr.shop";
 
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     // The vec! macro and String::from calls are now inside a closure,
