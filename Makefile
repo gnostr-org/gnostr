@@ -149,6 +149,8 @@ docker-tui: 	### 	gnostr tui in a docker container
 	docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr tui --gitdir ."
 docker-chat: 	### 	gnostr chat in a docker container
 	docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr-docker"
+docker-shared: 	### 	docker container with volumes
+	docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
