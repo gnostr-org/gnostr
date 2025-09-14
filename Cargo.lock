@@ -3634,7 +3634,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "0.0.122"
+version = "0.0.123"
 dependencies = [
  "actix",
  "actix-cors",
@@ -3882,7 +3882,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-query"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "clap 4.5.37",
  "futures",
