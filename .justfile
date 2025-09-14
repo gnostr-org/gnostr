@@ -118,3 +118,6 @@ docker-tui:
 docker-chat:
   @make docker-chat
 
+docker-shared:
+  @make docker-shared
+
