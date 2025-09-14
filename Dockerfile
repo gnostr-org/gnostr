@@ -1,4 +1,5 @@
 FROM rust:latest AS build
+EXPOSE 4000
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
@@ -19,4 +20,3 @@ RUN git config --global user.email "admin@gnostr.org"
 RUN git config --global user.name "admin@gnostr.org"
 RUN GIT_AUTHOR_DATE="Thu, 01 Jan 1970 00:00:00 +0000" GIT_COMMITTER_DATE="Thu, 01 Jan 1970 00:00:00 +0000" git commit --allow-empty -m 'Initial commit'
 ENTRYPOINT ["bash"]
-#docker run  -it gnostr:latest -c "git init && gnostr tui --gitdir ."

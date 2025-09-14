@@ -143,10 +143,12 @@ nip_thirty_four_requests: 	### 	nip_thirty_four_requests
 plan-dist-manifest: 	### 	plan-dist-manifest
 	dist host --allow-dirty --steps=create --tag=$(TAG) --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
 
+docker: 	### 	gnostr in a docker container
+	docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr-docker"
 docker-tui: 	### 	gnostr tui in a docker container
 	docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr tui --gitdir ."
 docker-chat: 	### 	gnostr chat in a docker container
-	docker run  -it gnostr:latest -c "git config --global init.defaultBranch gnostr && git init && git commit --allow-empty -m "gnostr init" && gnostr chat --name gnostr-chat-docker --topic gnostr"
+	docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr-docker"
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
