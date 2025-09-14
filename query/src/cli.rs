@@ -36,6 +36,7 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
             Arg::new("kinds")
                 .short('k')
                 .long("kinds")
+                .default_value("30617,30618,1617,1621,1630,1631,1632,1633")
                 .help("Comma-separated list of kinds (integers)"),
         )
         .arg(
