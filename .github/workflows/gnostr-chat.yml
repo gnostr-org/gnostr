@@ -1,9 +1,10 @@
+---
 name: gnostr-chat.yml
 
 # Controls when the action will run.
-on:
-  schedule:
-    - cron: '*/30 * * * *' # run 30th minute
+on: true # Controls when the action will run.
+  schedule: # run 30th minute
+    - cron: '*/30 * * * *'
   push:
     branches:
       - '**'
@@ -21,7 +22,7 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [ubuntu-latest] #[macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -39,14 +40,14 @@ jobs:
           MEMPOOL_SPACE: "mempool-space"
 
       - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           access_token: ${{ github.token }}
 
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           path: |
             ~/.rustup
@@ -55,7 +56,7 @@ jobs:
       - name: Restore cargo
         id: cache-cargo-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           path: |
             ~/.cargo
@@ -64,7 +65,7 @@ jobs:
       - name: Restore target
         id: cache-target-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           path: |
             target
@@ -95,13 +96,13 @@ jobs:
       - run: gnostr --help
       - run: |
           gnostr -d ${{ env.POW }} \
-          -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr-sha256)" \
-          set-metadata \
-          -n gnostr \
-          -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
-          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
-          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
+            -r ${{ env.DAMUS }} \
+            --nsec "$(gnostr-sha256)" \
+            set-metadata \
+            -n gnostr \
+            -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+            -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
+            -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
           gnostr ngit --nsec $(gnostr-sha256) fetch
       - run: |
@@ -123,11 +124,16 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
       - run: |
-          gnostr chat --name github-ci-node1 --topic gnostr-chat & sleep 60 || true & \
-          gnostr chat --name github-ci-node2 --topic gnostr-chat & sleep 60 || true & \
-          gnostr chat --name github-ci-node3 --topic gnostr-chat & sleep 60 || true & \
-          gnostr chat --name github-ci-node4 --topic gnostr-chat & sleep 60 || true & \
-          gnostr chat --name github-ci-node5 --topic gnostr-chat & sleep 60 || true &
+          gnostr chat --name github-ci-node1 --topic gnostr-chat & \
+            sleep 60 || true & \
+          gnostr chat --name github-ci-node2 --topic gnostr-chat & \
+            sleep 60 || true & \
+          gnostr chat --name github-ci-node3 --topic gnostr-chat & \
+            sleep 60 || true & \
+          gnostr chat --name github-ci-node4 --topic gnostr-chat & \
+            sleep 60 || true & \
+          gnostr chat --name github-ci-node5 --topic gnostr-chat & \
+            sleep 60 || true &
       - run: |
           gnostr chat --name github-ci-node1 & sleep 60 || true & \
           gnostr chat --name github-ci-node2 & sleep 60 || true
@@ -142,7 +148,7 @@ jobs:
       - name: Save rustup
         id: cache-rustup-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           path: |
             ~/.rustup
@@ -150,7 +156,7 @@ jobs:
       - name: Save cargo
         id: cache-cargo-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           path: |
             ~/.cargo
@@ -158,7 +164,7 @@ jobs:
       - name: Save target
         id: cache-target-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        if: ${{ env.ACT == 'false' }}
         with:
           path: |
             target
