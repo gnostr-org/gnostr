@@ -1,14 +1,14 @@
 {
   "dist_version": "0.28.2",
-  "announcement_tag": "v0.0.119",
+  "announcement_tag": "v0.0.124",
   "announcement_tag_is_implicit": false,
   "announcement_is_prerelease": false,
-  "announcement_title": "v0.0.119",
-  "announcement_github_body": "## Install gnostr 0.0.119\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install gnostr-org/gnostr-org/gnostr\n```\n\n## Download gnostr 0.0.119\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [gnostr-aarch64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-aarch64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-pc-windows-msvc.zip](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-pc-windows-msvc.zip.sha256) |\n| [gnostr-x86_64-unknown-linux-gnu.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n| [gnostr-x86_64-unknown-linux-musl.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-unknown-linux-musl.tar.xz) | x64 MUSL Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-x86_64-unknown-linux-musl.tar.xz.sha256) |\n\n",
+  "announcement_title": "v0.0.124",
+  "announcement_github_body": "## Install gnostr 0.0.124\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install gnostr-org/gnostr-org/gnostr\n```\n\n## Download gnostr 0.0.124\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [gnostr-aarch64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-aarch64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-apple-darwin.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-apple-darwin.tar.xz.sha256) |\n| [gnostr-x86_64-pc-windows-msvc.zip](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-pc-windows-msvc.zip.sha256) |\n| [gnostr-aarch64-unknown-linux-gnu.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-aarch64-unknown-linux-gnu.tar.xz) | ARM64 Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-aarch64-unknown-linux-gnu.tar.xz.sha256) |\n| [gnostr-x86_64-unknown-linux-gnu.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n| [gnostr-x86_64-unknown-linux-musl.tar.xz](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-unknown-linux-musl.tar.xz) | x64 MUSL Linux | [checksum](https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-x86_64-unknown-linux-musl.tar.xz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "gnostr",
-      "app_version": "0.0.119",
+      "app_version": "0.0.124",
       "env": {
         "install_dir_env_var": "GNOSTR_INSTALL_DIR",
         "unmanaged_dir_env_var": "GNOSTR_UNMANAGED_INSTALL",
@@ -29,6 +29,9 @@
         "gnostr-aarch64-apple-darwin-update",
         "gnostr-aarch64-apple-darwin.tar.xz",
         "gnostr-aarch64-apple-darwin.tar.xz.sha256",
+        "gnostr-aarch64-unknown-linux-gnu-update",
+        "gnostr-aarch64-unknown-linux-gnu.tar.xz",
+        "gnostr-aarch64-unknown-linux-gnu.tar.xz.sha256",
         "gnostr-x86_64-apple-darwin-update",
         "gnostr-x86_64-apple-darwin.tar.xz",
         "gnostr-x86_64-apple-darwin.tar.xz.sha256",
@@ -45,7 +48,7 @@
       "hosting": {
         "github": {
           "artifact_base_url": "https://github.com",
-          "artifact_download_path": "/gnostr-org/gnostr/releases/download/v0.0.119",
+          "artifact_download_path": "/gnostr-org/gnostr/releases/download/v0.0.124",
           "owner": "gnostr-org",
           "repo": "gnostr"
         }
@@ -119,6 +122,12 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-aarch64-apple-darwin-exe-gnostr-cube",
+          "name": "gnostr-cube",
+          "path": "gnostr-cube",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-aarch64-apple-darwin-exe-gnostr-genssh",
           "name": "gnostr-genssh",
           "path": "gnostr-genssh",
@@ -143,9 +152,21 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-aarch64-apple-darwin-exe-gnostr-relay",
+          "name": "gnostr-relay",
+          "path": "gnostr-relay",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-aarch64-apple-darwin-exe-gnostr-sha256",
           "name": "gnostr-sha256",
           "path": "gnostr-sha256",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-apple-darwin-exe-gnostr-sniper",
+          "name": "gnostr-sniper",
+          "path": "gnostr-sniper",
           "kind": "executable"
         },
         {
@@ -182,6 +203,153 @@
         "aarch64-apple-darwin"
       ]
     },
+    "gnostr-aarch64-unknown-linux-gnu-update": {
+      "name": "gnostr-aarch64-unknown-linux-gnu-update",
+      "kind": "updater",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ]
+    },
+    "gnostr-aarch64-unknown-linux-gnu.tar.xz": {
+      "name": "gnostr-aarch64-unknown-linux-gnu.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-generate-server-config",
+          "name": "generate-server-config",
+          "path": "generate-server-config",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-git-ssh",
+          "name": "git-ssh",
+          "path": "git-ssh",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-git_remote_nostr",
+          "name": "git_remote_nostr",
+          "path": "git_remote_nostr",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr",
+          "name": "gnostr",
+          "path": "gnostr",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-blockhash",
+          "name": "gnostr-blockhash",
+          "path": "gnostr-blockhash",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-blockheight",
+          "name": "gnostr-blockheight",
+          "path": "gnostr-blockheight",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-cube",
+          "name": "gnostr-cube",
+          "path": "gnostr-cube",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-genssh",
+          "name": "gnostr-genssh",
+          "path": "gnostr-genssh",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-kvs",
+          "name": "gnostr-kvs",
+          "path": "gnostr-kvs",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-legit",
+          "name": "gnostr-legit",
+          "path": "gnostr-legit",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-query",
+          "name": "gnostr-query",
+          "path": "gnostr-query",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-relay",
+          "name": "gnostr-relay",
+          "path": "gnostr-relay",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-sha256",
+          "name": "gnostr-sha256",
+          "path": "gnostr-sha256",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-sniper",
+          "name": "gnostr-sniper",
+          "path": "gnostr-sniper",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-weeble",
+          "name": "gnostr-weeble",
+          "path": "gnostr-weeble",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-gnostr-wobble",
+          "name": "gnostr-wobble",
+          "path": "gnostr-wobble",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-screenshot",
+          "name": "screenshot",
+          "path": "screenshot",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-aarch64-unknown-linux-gnu-exe-server-toml",
+          "name": "server-toml",
+          "path": "server-toml",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "gnostr-aarch64-unknown-linux-gnu.tar.xz.sha256"
+    },
+    "gnostr-aarch64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "gnostr-aarch64-unknown-linux-gnu.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ]
+    },
     "gnostr-installer.ps1": {
       "name": "gnostr-installer.ps1",
       "kind": "installer",
@@ -190,7 +358,7 @@
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-installer.ps1 | iex\"",
+      "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "gnostr-installer.sh": {
@@ -198,13 +366,14 @@
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu",
         "x86_64-unknown-linux-musl-dynamic",
         "x86_64-unknown-linux-musl-static"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.119/gnostr-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v0.0.124/gnostr-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "gnostr-x86_64-apple-darwin-update": {
@@ -273,6 +442,12 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-apple-darwin-exe-gnostr-cube",
+          "name": "gnostr-cube",
+          "path": "gnostr-cube",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-apple-darwin-exe-gnostr-genssh",
           "name": "gnostr-genssh",
           "path": "gnostr-genssh",
@@ -297,9 +472,21 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-apple-darwin-exe-gnostr-relay",
+          "name": "gnostr-relay",
+          "path": "gnostr-relay",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-apple-darwin-exe-gnostr-sha256",
           "name": "gnostr-sha256",
           "path": "gnostr-sha256",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-x86_64-apple-darwin-exe-gnostr-sniper",
+          "name": "gnostr-sniper",
+          "path": "gnostr-sniper",
           "kind": "executable"
         },
         {
@@ -402,6 +589,12 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-cube",
+          "name": "gnostr-cube",
+          "path": "gnostr-cube.exe",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-genssh",
           "name": "gnostr-genssh",
           "path": "gnostr-genssh.exe",
@@ -426,9 +619,21 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-relay",
+          "name": "gnostr-relay",
+          "path": "gnostr-relay.exe",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-sha256",
           "name": "gnostr-sha256",
           "path": "gnostr-sha256.exe",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-x86_64-pc-windows-msvc-exe-gnostr-sniper",
+          "name": "gnostr-sniper",
+          "path": "gnostr-sniper.exe",
           "kind": "executable"
         },
         {
@@ -531,6 +736,12 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-cube",
+          "name": "gnostr-cube",
+          "path": "gnostr-cube",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-genssh",
           "name": "gnostr-genssh",
           "path": "gnostr-genssh",
@@ -555,9 +766,21 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-relay",
+          "name": "gnostr-relay",
+          "path": "gnostr-relay",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-sha256",
           "name": "gnostr-sha256",
           "path": "gnostr-sha256",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-x86_64-unknown-linux-gnu-exe-gnostr-sniper",
+          "name": "gnostr-sniper",
+          "path": "gnostr-sniper",
           "kind": "executable"
         },
         {
@@ -660,6 +883,12 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-unknown-linux-musl-exe-gnostr-cube",
+          "name": "gnostr-cube",
+          "path": "gnostr-cube",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-unknown-linux-musl-exe-gnostr-genssh",
           "name": "gnostr-genssh",
           "path": "gnostr-genssh",
@@ -684,9 +913,21 @@
           "kind": "executable"
         },
         {
+          "id": "gnostr-x86_64-unknown-linux-musl-exe-gnostr-relay",
+          "name": "gnostr-relay",
+          "path": "gnostr-relay",
+          "kind": "executable"
+        },
+        {
           "id": "gnostr-x86_64-unknown-linux-musl-exe-gnostr-sha256",
           "name": "gnostr-sha256",
           "path": "gnostr-sha256",
+          "kind": "executable"
+        },
+        {
+          "id": "gnostr-x86_64-unknown-linux-musl-exe-gnostr-sniper",
+          "name": "gnostr-sniper",
+          "path": "gnostr-sniper",
           "kind": "executable"
         },
         {
@@ -728,6 +969,7 @@
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu",

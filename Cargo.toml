@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "0.0.123"
+version = "0.0.124"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -264,6 +264,7 @@ sd-notify = "0.4.1"
 
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
+cross = { version = "0.2.5", features = ["dev"] }
 
 [dev-dependencies]
 actix-rt = "2.10.0"
