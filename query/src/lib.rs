@@ -135,12 +135,12 @@ pub async fn send(
     relay_url: Vec<Url>,
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    //println!("\n{}\n", query_string);
-    //println!("\n{}\n", relay_url);
-    //println!("\n{}\n", limit.unwrap());
-    info!("\n{query_string}\n");
-    info!("\n{relay_url:?}\n");
-    info!("\n{}\n", limit.unwrap());
+    //println!("query_string=\n{}\n", query_string);
+    //println!("relay_url=\nsrc/lib.rs:139:{:?}\n", relay_url);
+    //println!("limit=\n{}\n", limit.unwrap());
+    //log::info!("query_string=\n{query_string}\n");
+    //log::debug!("relay_url:\n{relay_url:?}\n");
+    //log::info!("\n{}\n", limit.unwrap());
     let (ws_stream, _) = connect_async(relay_url[0].clone()).await?;
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string)).await?;
