@@ -332,7 +332,42 @@ jobs:
     runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GNOSTR: "gnostr"
+      POW: "16"
+      DAMUS: "wss://relay.damus.io"
+      NOS: "wss://nos.lol"
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install cargo-binstall
+        run: curl -L https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar -xzf - --directory /usr/local/bin
+      - name: Install gnostr
+        run: cargo-binstall gnostr --force -y
+      - name: Announce Release on Nostr
+        shell: bash
+        env:
+          ANNOUNCEMENT_TITLE: "${{ fromJson(needs.host.outputs.manifest).announcement_title }}"
+          ANNOUNCEMENT_BODY: "${{ fromJson(needs.host.outputs.manifest).announcement_github_body }}"
+          RELEASE_TAG: "${{ needs.plan.outputs.tag }}"
+        run: |
+          EVENT_CONTENT="New release: $ANNOUNCEMENT_TITLE\n\n$ANNOUNCEMENT_BODY\n\nView on GitHub: https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" 
+            -d ${{ env.POW }} 
+            -r ${{ env.DAMUS }} 
+            -r ${{ env.NOS }} 
+            custom-event 
+            -k 1 
+            -c "$EVENT_CONTENT" 
+            -t "release" 
+            -t "$RELEASE_TAG" 
+            -t "$GITHUB_REPOSITORY" 
+            -t "$GITHUB_REPOSITORY_OWNER" 
+            -t "$(date +%s)" 
+            --hex || true) && 
+            export EVENT=$EVENT && 
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && 
+            export NOTE=$NOTE && echo "Nostr Event ID: $NOTE" && 
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && 
+            gnostr-query -i $EVENT -r ${{ env.NOS }} && 
+            echo "Nostr.band link: http://nostr.band/$NOTE"
