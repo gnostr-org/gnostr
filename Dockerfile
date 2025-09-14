@@ -12,6 +12,7 @@ RUN curl -L https://github.com/cargo-bins/cargo-binstall/releases/latest/downloa
     | tar -xzf - \
     --directory /usr/local/bin
 RUN cargo-binstall -V
+RUN cargo-binstall cross -y
 RUN cargo-binstall gnostr --force -y
 RUN git init
 RUN git config --global user.email "admin@gnostr.org"

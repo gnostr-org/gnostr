@@ -13,3 +13,6 @@
 ## 
 ## [source.vendored-sources]
 ## directory = "vendor"
+# .cargo/config.toml
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-elf-gcc"
