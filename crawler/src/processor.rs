@@ -13,7 +13,7 @@ pub const BOOTSTRAP_RELAY4: &str = "wss://relay.noswhere.com";
 pub const BOOTSTRAP_RELAY5: &str = "wss://search.nos.today";
 pub const BOOTSTRAP_RELAY6: &str = "wss://feeds.nostr.band";
 pub const BOOTSTRAP_RELAY7: &str = "wss://relay.primal.net";
-pub const BOOTSTRAP_RELAY8: &str = "wss://relay.bostr.shop";
+pub const BOOTSTRAP_RELAY8: &str = "wss://gitnostr.com";
 
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     // The vec! macro and String::from calls are now inside a closure,
