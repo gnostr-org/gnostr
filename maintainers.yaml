@@ -1,7 +1,17 @@
+---
 identifier: gnostr
 maintainers:
-- npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k
-- npub10xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqpkge6d
+ - npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k
+ - npub10xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqpkge6d
 relays:
-- wss://relay.damus.io
-- wss://nos.lol
+ - wss://relay.damus.io
+ - wss://nos.lol
+ - ws://127.0.0.1:8080
+ - wss://relay.nostr.band
+ - wss://nostr.wine
+ - wss://relay.damus.io
+ - wss://relay.noswhere.com
+ - wss://search.nos.today
+ - wss://feeds.nostr.band
+ - wss://relay.primal.net
+ - wss://gitnostr.com
