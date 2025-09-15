@@ -344,19 +344,22 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-binstall
-        run: curl --proto '=https' --tlsv1.2 -LsSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+        run: |
+          curl \
+          --proto \
+          '=https' \
+          --tlsv1.2 \
+          -LsSf \
+          https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
+          | bash
       - name: Add cargo to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install gnostr
         run: cargo-binstall gnostr --force -y
       - name: Announce Release on Nostr
         shell: bash
-        env:
-          ANNOUNCEMENT_TITLE: "${{ fromJson(needs.host.outputs.manifest).announcement_title }}"
-          ANNOUNCEMENT_BODY: "${{ fromJson(needs.host.outputs.manifest).announcement_github_body }}"
-          RELEASE_TAG: "${{ needs.plan.outputs.tag }}"
         run: |
-          EVENT_CONTENT="New release: $ANNOUNCEMENT_TITLE\n\n$ANNOUNCEMENT_BODY\n\nView on GitHub: https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+          EVENT_CONTENT="New release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
