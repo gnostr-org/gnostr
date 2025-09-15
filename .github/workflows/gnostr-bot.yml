@@ -142,7 +142,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+            -c "$GITHUB_REPOSITORY_OWNER \n\n$(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
@@ -176,8 +176,8 @@ jobs:
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
         with:
-          job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
-          per_page: 50 # input matrix size here if it is larger than 30
+          job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})"
+          per_page: 50
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
 
@@ -185,7 +185,6 @@ jobs:
         shell: bash
         if: failure()
         run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -212,14 +211,13 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }};
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on cancelled
         shell: bash
         if: cancelled()
         run: |
-          echo "A previous step cancelled! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -246,14 +244,13 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }};
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on success
         shell: bash
         if: success()
         run: |
-          echo "A previous step succeeded! Executing cleanup or notification script..."
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -281,7 +278,7 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }};
             echo "http://nostr.band/$NOTE"
 
       - name: Save rustup
