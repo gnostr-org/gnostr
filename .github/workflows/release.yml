@@ -377,5 +377,5 @@ jobs:
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo "Nostr Event ID: $NOTE" && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }};
             echo "Nostr.band link: http://nostr.band/$NOTE"
