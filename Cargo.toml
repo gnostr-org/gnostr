@@ -57,8 +57,8 @@ name = "ngit"
 path = "src/lib/mod.rs"
 
 [[bin]]
-name = "ngit"
-path = "src/bin/ngit/main.rs"
+name = "main_rs"
+path = "src/main.rs"
 
 [[bin]]
 name = "git-remote-nostr"

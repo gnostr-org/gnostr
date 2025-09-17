@@ -1,12 +1,12 @@
 use anyhow::{Context, Result};
-use ngit::{
+use crate::{
     git::remove_git_config_item,
     login::{SignerInfoSource, existing::load_existing_login},
 };
 
 use crate::{
     git::Repo,
-    sub_commands::login::{format_items_as_list, get_global_login_config_items_set},
+    sub_commands::login::login::{format_items_as_list, get_global_login_config_items_set},
 };
 
 pub async fn launch() -> Result<()> {

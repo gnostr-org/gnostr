@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use console::Style;
-use ngit::{client::send_events, git_events::generate_cover_letter_and_patch_events};
+use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use nostr::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
@@ -19,8 +19,8 @@ use crate::{
     },
     git::{Repo, RepoActions, identify_ahead_behind},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
-    login,
     repo_ref::get_repo_coordinates_when_remote_unknown,
+	sub_commands::login,
 };
 
 #[derive(Debug, clap::Args)]

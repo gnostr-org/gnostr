@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap;
-use ngit::{
+use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
     git::{get_git_config_item, remove_git_config_item},
     login::{SignerInfoSource, existing::load_existing_login},
@@ -58,7 +58,7 @@ pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
 }
 
 /// return ( bool - logged out, bool - log in to local git locally)
-async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool)> {
+pub async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool)> {
     for source in if local_only || std::env::var("NGITTEST").is_ok() {
         vec![SignerInfoSource::GitLocal]
     } else {

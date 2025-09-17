@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use ngit::login::SignerInfo;
+use crate::login::SignerInfo;
 
 use crate::sub_commands;
 
@@ -70,7 +70,7 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum AccountCommands {
     /// login with nsec or nostr connect
-    Login(sub_commands::login::SubCommandArgs),
+    Login(sub_commands::login::login::SubCommandArgs),
     /// remove nostr account details stored in git config
     Logout,
     /// export nostr keys to login to other nostr clients

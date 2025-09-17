@@ -1,7 +1,7 @@
 use std::{io::Write, ops::Add};
 
 use anyhow::{Context, Result, bail};
-use ngit::{
+use crate::{
     client::{get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache},
     git_events::{
         get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
