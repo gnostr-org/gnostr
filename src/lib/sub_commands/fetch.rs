@@ -9,7 +9,7 @@ use std::{
 use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
-use ngit::{
+use crate::{
     cli_interactor::count_lines_per_msg_vec,
     git::{
         Repo, RepoActions,
@@ -128,7 +128,7 @@ pub fn make_commits_for_proposal(
     Ok(tip_commit_id)
 }
 
-async fn fetch_open_or_draft_proposals(
+pub async fn fetch_open_or_draft_proposals(
     git_repo: &Repo,
     term: &console::Term,
     repo_ref: &RepoRef,
@@ -232,7 +232,7 @@ pub fn fetch_from_git_server(
 #[allow(clippy::cast_precision_loss)]
 #[allow(clippy::float_cmp)]
 #[allow(clippy::needless_pass_by_value)]
-fn report_on_transfer_progress(
+pub fn report_on_transfer_progress(
     progress_stats: &Progress<'_>,
     start_time: &Instant,
     end_time: Option<&Instant>,
@@ -396,7 +396,7 @@ impl<'a> FetchReporter<'a> {
     }
 }
 
-fn fetch_from_git_server_url(
+pub fn fetch_from_git_server_url(
     git_repo: &Repository,
     oids: &[String],
     git_server_url: &str,

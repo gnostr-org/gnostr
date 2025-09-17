@@ -14,16 +14,16 @@ use std::{
 use anyhow::{Context, Result, bail};
 use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
 use git::{RepoActions, nostr_url::NostrUrlDecoded};
-use ngit::{client, git, login::existing::load_existing_login};
+use ngit::{client, git, sub_commands::login::existing::load_existing_login};
 use nostr::nips::nip01::Coordinate;
-use utils::read_line;
+use ngit::utils::read_line;
+
+use ngit::sub_commands::fetch;
+use ngit::push;
+
+use ngit::remote::run_list;
 
 use crate::{client::Client, git::Repo};
-
-mod fetch;
-mod list;
-mod push;
-mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -93,10 +93,10 @@ async fn main() -> Result<()> {
                 .await?;
             }
             ["list"] => {
-                list_outputs = Some(list::run_list(&git_repo, &repo_ref, false).await?);
+                list_outputs = Some(run_list(&git_repo, &repo_ref, false).await?);
             }
             ["list", "for-push"] => {
-                list_outputs = Some(list::run_list(&git_repo, &repo_ref, true).await?);
+                list_outputs = Some(run_list(&git_repo, &repo_ref, true).await?);
             }
             [] => {
                 return Ok(());

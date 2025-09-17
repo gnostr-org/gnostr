@@ -17,7 +17,7 @@ use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
 use git2::{Oid, Repository};
-use ngit::{
+use crate::{
     cli_interactor::count_lines_per_msg_vec,
     client::{self, get_event_from_cache_by_id},
     git::{
@@ -41,7 +41,7 @@ use repo_state::RepoState;
 use crate::{
     client::Client,
     git::Repo,
-    list::list_from_remotes,
+    remote::list_from_remotes,
     utils::{
         Direction, find_proposal_and_patches_by_branch_name, get_all_proposals,
         get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,

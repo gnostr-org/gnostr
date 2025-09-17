@@ -5,7 +5,7 @@ use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
-use ngit::{
+use crate::{
     client,
     git::{
         self,
@@ -19,7 +19,7 @@ use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
 use repo_ref::RepoRef;
 
 use crate::{
-    fetch::{fetch_from_git_server, make_commits_for_proposal},
+    sub_commands::fetch::{fetch_from_git_server, make_commits_for_proposal},
     git::Repo,
     utils::{
         Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals,

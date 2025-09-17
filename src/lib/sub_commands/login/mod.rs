@@ -17,6 +17,7 @@ use existing::load_existing_login;
 pub mod user;
 use user::UserRef;
 pub mod fresh;
+pub mod login;
 
 pub async fn login_or_signup(
     git_repo: &Option<&Repo>,
