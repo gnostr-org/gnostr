@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
 use super::{Repo, RepoActions};
 
@@ -16,7 +16,7 @@ pub fn identify_ahead_behind(
             name.to_string(),
             git_repo
                 .get_tip_of_branch(name)
-                .context(format!("cannot find from_branch '{name}'"))?,
+                .context(format!("failed to find from_branch '{name}'"))?,
         ),
         None => (
             if let Ok(name) = git_repo.get_checked_out_branch_name() {
@@ -38,7 +38,7 @@ pub fn identify_ahead_behind(
             name.to_string(),
             git_repo
                 .get_tip_of_branch(name)
-                .context(format!("cannot find to_branch '{name}'"))?,
+                .context(format!("failed to find to_branch '{name}'"))?,
         ),
         None => {
             let (name, commit) = git_repo
@@ -82,7 +82,7 @@ mod tests {
             identify_ahead_behind(&git_repo, &Some(branch_name.to_string()), &None)
                 .unwrap_err()
                 .to_string(),
-            format!("cannot find from_branch '{}'", &branch_name),
+            format!("failed to find from_branch '{}'", &branch_name),
         );
         Ok(())
     }
@@ -98,7 +98,7 @@ mod tests {
             identify_ahead_behind(&git_repo, &None, &Some(branch_name.to_string()))
                 .unwrap_err()
                 .to_string(),
-            format!("cannot find to_branch '{}'", &branch_name),
+            format!("failed to find to_branch '{}'", &branch_name),
         );
         Ok(())
     }
@@ -184,10 +184,10 @@ mod tests {
             identify_ahead_behind(&git_repo, &Some("feature".to_string()), &None)?;
 
         assert_eq!(from_branch, "feature");
-        assert_eq!(
-            ahead,
-            vec![oid_to_sha1(&feature_oid), oid_to_sha1(&dev_oid_first)]
-        );
+        assert_eq!(ahead, vec![
+            oid_to_sha1(&feature_oid),
+            oid_to_sha1(&dev_oid_first)
+        ]);
         assert_eq!(to_branch, "main");
         assert_eq!(behind, vec![]);
 
