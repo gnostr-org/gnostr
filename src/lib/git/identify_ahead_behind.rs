@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
 use super::{Repo, RepoActions};
 

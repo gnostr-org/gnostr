@@ -3,9 +3,9 @@ use std::{str::FromStr, sync::Arc, time::Duration};
 use anyhow::{Context, Result, bail};
 use console::Style;
 use dialoguer::theme::{ColorfulTheme, Theme};
-use nostr::nips::{nip05, nip46::NostrConnectURI};
+use nostr_0_37_0::nips::{nip05, nip46::NostrConnectURI};
 use nostr_connect::client::NostrConnect;
-use nostr_sdk::{EventBuilder, Keys, Metadata, NostrSigner, PublicKey, RelayUrl, ToBech32};
+use nostr_sdk_0_37_0::{EventBuilder, Keys, Metadata, NostrSigner, PublicKey, RelayUrl, ToBech32};
 use qrcode::QrCode;
 use tokio::{signal, sync::Mutex};
 
@@ -175,7 +175,7 @@ pub async fn get_fresh_nsec_signer() -> Result<
                 }
             };
             (keys, signer_info)
-        } else if let Ok(keys) = nostr::Keys::from_str(&input) {
+        } else if let Ok(keys) = nostr_0_37_0::Keys::from_str(&input) {
             let nsec = keys.secret_key().to_bech32()?;
             show_prompt_success("nsec", &shorten_string(&input));
             let signer_info = SignerInfo::Nsec {
@@ -714,7 +714,7 @@ async fn signup(
                 _ => break Ok(None),
             }
         }
-        let keys = nostr::Keys::generate();
+        let keys = nostr_0_37_0::Keys::generate();
         let nsec = keys.secret_key().to_bech32()?;
         show_prompt_success("user display name", &name);
         let signer_info = SignerInfo::Nsec {

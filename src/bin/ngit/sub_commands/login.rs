@@ -13,7 +13,7 @@ use crate::{
     login::fresh::fresh_login_or_signup,
 };
 
-#[derive(clap::Args)]
+#[derive(clap::Args, Debug)]
 pub struct SubCommandArgs {
     /// login to the local git repository only
     #[arg(long, action)]

@@ -8,8 +8,8 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use console::Style;
-use nostr::{FromBech32, PublicKey, Tag, TagStandard, ToBech32, nips::nip01::Coordinate};
-use nostr_sdk::{Kind, NostrSigner, RelayUrl, Timestamp};
+use nostr_0_37_0::{FromBech32, PublicKey, Tag, TagStandard, ToBech32, nips::nip01::Coordinate};
+use nostr_sdk_0_37_0::{Kind, NostrSigner, RelayUrl, Timestamp};
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(test))]
@@ -37,14 +37,14 @@ pub struct RepoRef {
     pub relays: Vec<RelayUrl>,
     pub maintainers: Vec<PublicKey>,
     pub trusted_maintainer: PublicKey,
-    pub events: HashMap<Coordinate, nostr::Event>,
+    pub events: HashMap<Coordinate, nostr_0_37_0::Event>,
     pub nostr_git_url: Option<NostrUrlDecoded>,
 }
 
-impl TryFrom<(nostr::Event, Option<PublicKey>)> for RepoRef {
+impl TryFrom<(nostr_0_37_0::Event, Option<PublicKey>)> for RepoRef {
     type Error = anyhow::Error;
 
-    fn try_from((event, trusted_maintainer): (nostr::Event, Option<PublicKey>)) -> Result<Self> {
+    fn try_from((event, trusted_maintainer): (nostr_0_37_0::Event, Option<PublicKey>)) -> Result<Self> {
         // TODO: turn trusted maintainer into NostrUrlDecoded
         if !event.kind.eq(&Kind::GitRepoAnnouncement) {
             bail!("incorrect kind");
@@ -103,7 +103,7 @@ impl TryFrom<(nostr::Event, Option<PublicKey>)> for RepoRef {
                     }
                     for pk in maintainers {
                         r.maintainers.push(
-                            nostr_sdk::prelude::PublicKey::from_str(pk)
+                            nostr_sdk_0_37_0::prelude::PublicKey::from_str(pk)
                                 .context(format!("failed to convert entry from maintainers tag {pk} into a valid nostr public key. it should be in hex format"))
                                 .context("invalid repository event")?,
                         );
@@ -132,9 +132,9 @@ impl TryFrom<(nostr::Event, Option<PublicKey>)> for RepoRef {
 }
 
 impl RepoRef {
-    pub async fn to_event(&self, signer: &Arc<dyn NostrSigner>) -> Result<nostr::Event> {
+    pub async fn to_event(&self, signer: &Arc<dyn NostrSigner>) -> Result<nostr_0_37_0::Event> {
         sign_event(
-            nostr_sdk::EventBuilder::new(nostr::event::Kind::GitRepoAnnouncement, "").tags(
+            nostr_sdk_0_37_0::EventBuilder::new(nostr_0_37_0::event::Kind::GitRepoAnnouncement, "").tags(
                 [
                     vec![
                         Tag::identifier(if self.identifier.to_string().is_empty() {
@@ -156,32 +156,32 @@ impl RepoRef {
                             self.identifier.to_string()
                         }),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("r")),
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("r")),
                             vec![self.root_commit.to_string(), "euc".to_string()],
                         ),
                         Tag::from_standardized(TagStandard::Name(self.name.clone())),
                         Tag::from_standardized(TagStandard::Description(self.description.clone())),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
                             self.git_server.clone(),
                         ),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
                             self.web.clone(),
                         ),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
                             self.relays.iter().map(|r| r.to_string()),
                         ),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
                             self.maintainers
                                 .iter()
                                 .map(std::string::ToString::to_string)
                                 .collect::<Vec<String>>(),
                         ),
                         Tag::custom(
-                            nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
                             vec![format!("git repository: {}", self.name.clone())],
                         ),
                     ],
@@ -491,7 +491,7 @@ pub fn extract_pks(pk_strings: Vec<String>) -> Result<Vec<PublicKey>> {
     let mut pks: Vec<PublicKey> = vec![];
     for s in pk_strings {
         pks.push(
-            nostr_sdk::prelude::PublicKey::from_bech32(s.clone()).context(format!(
+            nostr_sdk_0_37_0::prelude::PublicKey::from_bech32(s.clone()).context(format!(
                 "failed to convert {s} into a valid nostr public key"
             ))?,
         );
@@ -537,7 +537,7 @@ mod tests {
 
     use super::*;
 
-    async fn create() -> nostr::Event {
+    async fn create() -> nostr_0_37_0::Event {
         RepoRef {
             identifier: "123412341".to_string(),
             name: "test name".to_string(),
@@ -603,11 +603,11 @@ mod tests {
         }
 
         mod root_commit_is_empty_if_no_r_tag_which_is_sha1_format {
-            use nostr::JsonUtil;
+            use nostr_0_37_0::JsonUtil;
 
             use super::*;
-            async fn create_with_incorrect_first_commit_ref(s: &str) -> nostr::Event {
-                nostr::Event::from_json(
+            async fn create_with_incorrect_first_commit_ref(s: &str) -> nostr_0_37_0::Event {
+                nostr_0_37_0::Event::from_json(
                     create()
                         .await
                         .as_json()
@@ -759,7 +759,7 @@ mod tests {
             #[tokio::test]
             async fn relays() {
                 let event = create().await;
-                let relays_tag: &nostr::Tag = event
+                let relays_tag: &nostr_0_37_0::Tag = event
                     .tags
                     .iter()
                     .find(|t| t.as_slice()[0].eq("relays"))
@@ -772,7 +772,7 @@ mod tests {
             #[tokio::test]
             async fn web() {
                 let event = create().await;
-                let web_tag: &nostr::Tag = event
+                let web_tag: &nostr_0_37_0::Tag = event
                     .tags
                     .iter()
                     .find(|t| t.as_slice()[0].eq("web"))
@@ -785,7 +785,7 @@ mod tests {
             #[tokio::test]
             async fn maintainers() {
                 let event = create().await;
-                let maintainers_tag: &nostr::Tag = event
+                let maintainers_tag: &nostr_0_37_0::Tag = event
                     .tags
                     .iter()
                     .find(|t| t.as_slice()[0].eq("maintainers"))

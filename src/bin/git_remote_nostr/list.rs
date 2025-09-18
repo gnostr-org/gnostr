@@ -15,7 +15,7 @@ use ngit::{
     login::get_curent_user,
     repo_ref,
 };
-use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 use repo_ref::RepoRef;
 
 use crate::{

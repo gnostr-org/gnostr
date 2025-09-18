@@ -2,8 +2,8 @@ use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
 use fresh::fresh_login_or_signup;
-use nostr::PublicKey;
-use nostr_sdk::{NostrSigner, Timestamp, ToBech32};
+use nostr_0_37_0::PublicKey;
+use nostr_sdk_0_37_0::{NostrSigner, Timestamp, ToBech32};
 
 #[cfg(not(test))]
 use crate::client::Client;

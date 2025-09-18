@@ -23,7 +23,7 @@ use ngit::{
     },
     repo_ref::RepoRef,
 };
-use nostr_sdk::{Event, EventId, Kind, PublicKey, Url};
+use nostr_sdk_0_37_0::{Event, EventId, Kind, PublicKey, Url};
 
 pub fn get_short_git_server_name(git_repo: &Repo, url: &str) -> std::string::String {
     if let Ok(name) = get_remote_name_by_url(&git_repo.git_repo, url) {
@@ -99,7 +99,7 @@ pub async fn get_open_or_draft_proposals(
     repo_ref: &RepoRef,
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
-    let proposals: Vec<nostr::Event> =
+    let proposals: Vec<nostr_0_37_0::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
@@ -107,9 +107,9 @@ pub async fn get_open_or_draft_proposals(
             .cloned()
             .collect();
 
-    let statuses: Vec<nostr::Event> = {
+    let statuses: Vec<nostr_0_37_0::Event> = {
         let mut statuses = get_events_from_local_cache(git_repo_path, vec![
-            nostr::Filter::default()
+            nostr_0_37_0::Filter::default()
                 .kinds(status_kinds().clone())
                 .events(proposals.iter().map(|e| e.id)),
         ])
@@ -129,7 +129,7 @@ pub async fn get_open_or_draft_proposals(
                         t.as_slice().len() > 1 && t.as_slice()[1].eq(&proposal.id.to_string())
                     })
             })
-            .collect::<Vec<&nostr::Event>>()
+            .collect::<Vec<&nostr_0_37_0::Event>>()
             .first()
         {
             e.kind
@@ -158,7 +158,7 @@ pub async fn get_all_proposals(
     repo_ref: &RepoRef,
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
-    let proposals: Vec<nostr::Event> =
+    let proposals: Vec<nostr_0_37_0::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()

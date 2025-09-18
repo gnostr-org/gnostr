@@ -20,8 +20,8 @@ use ngit::{
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr::nips::nip19;
-use nostr_sdk::{Event, ToBech32};
+use nostr_0_37_0::nips::nip19;
+use nostr_sdk_0_37_0::{Event, ToBech32};
 
 use crate::utils::{
     Direction, fetch_or_list_error_is_not_authentication_failure,

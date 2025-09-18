@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::join;
-use nostr_sdk::Kind;
+use nostr_sdk_0_37_0::Kind;
 use serial_test::serial;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
@@ -84,7 +84,7 @@ mod when_commits_behind_ask_to_proceed {
     }
 }
 
-fn is_cover_letter(event: &nostr::Event) -> bool {
+fn is_cover_letter(event: &nostr_0_37_0::Event) -> bool {
     event.kind.eq(&Kind::GitPatch)
         && event
             .tags
@@ -92,7 +92,7 @@ fn is_cover_letter(event: &nostr::Event) -> bool {
             .any(|t| t.as_slice()[1].eq("cover-letter"))
 }
 
-fn is_patch(event: &nostr::Event) -> bool {
+fn is_patch(event: &nostr_0_37_0::Event) -> bool {
     event.kind.eq(&Kind::GitPatch)
         && !event
             .tags
@@ -296,7 +296,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
     {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
         for relay in [&r53, &r55, &r56] {
-            let patch_events: Vec<&nostr::Event> =
+            let patch_events: Vec<&nostr_0_37_0::Event> =
                 relay.events.iter().filter(|e| is_patch(e)).collect();
 
             assert_eq!(
@@ -363,7 +363,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn root_commit_as_r() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
 
                 assert_eq!(
@@ -384,7 +384,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn a_tag_for_repo_event_of_each_maintainer() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert!(
                     cover_letter_event
@@ -425,7 +425,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
                 for m in maintainers {
-                    let cover_letter_event: &nostr::Event =
+                    let cover_letter_event: &nostr_0_37_0::Event =
                         relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                     assert!(
                         cover_letter_event
@@ -443,7 +443,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn t_tag_cover_letter() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert!(
                     cover_letter_event.tags.iter().any(|t| {
@@ -459,7 +459,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn t_tag_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert!(
                     cover_letter_event
@@ -476,7 +476,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn cover_letter_tags_branch_name() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
 
                 // branch-name tag
@@ -498,7 +498,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn cover_letter_tags_alt() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
 
                 // branch-name tag
@@ -519,7 +519,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
     mod patch_tags {
         use super::*;
 
-        async fn prep() -> Result<nostr::Event> {
+        async fn prep() -> Result<nostr_0_37_0::Event> {
             let (_, _, r53, _, _) = prep_run_create_proposal(true).await?;
             Ok(r53.events.iter().find(|e| is_patch(e)).unwrap().clone())
         }
@@ -683,7 +683,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         async fn patch_tags_cover_letter_event_as_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let patch_events: Vec<&nostr::Event> =
+                let patch_events: Vec<&nostr_0_37_0::Event> =
                     relay.events.iter().filter(|e| is_patch(e)).collect();
 
                 let most_recent_patch = patch_events[0];
@@ -716,7 +716,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
                     .events
                     .iter()
                     .filter(|e| is_patch(e))
-                    .collect::<Vec<&nostr::Event>>();
+                    .collect::<Vec<&nostr_0_37_0::Event>>();
                 assert_eq!(
                     patch_events[1]
                         .tags
@@ -1080,7 +1080,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
                 .events
                 .iter()
                 .filter(|e| is_patch(e))
-                .collect::<Vec<&nostr::Event>>();
+                .collect::<Vec<&nostr_0_37_0::Event>>();
 
             // first patch tagged as root
             assert!(
@@ -1109,7 +1109,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
                 .events
                 .iter()
                 .filter(|e| is_patch(e))
-                .collect::<Vec<&nostr::Event>>();
+                .collect::<Vec<&nostr_0_37_0::Event>>();
 
             // branch-name tag
             assert_eq!(
@@ -1134,7 +1134,7 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
                 .events
                 .iter()
                 .filter(|e| is_patch(e))
-                .collect::<Vec<&nostr::Event>>();
+                .collect::<Vec<&nostr_0_37_0::Event>>();
 
             assert_eq!(
                 patch_events[1]
@@ -1329,7 +1329,7 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
 
 mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_letter_details_specified {
 
-    use nostr::ToBech32;
+    use nostr_0_37_0::ToBech32;
 
     use super::*;
 
@@ -1515,7 +1515,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
         async fn t_tag_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert!(
                     cover_letter_event
@@ -1532,7 +1532,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
         async fn t_tag_revision_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert!(
                     cover_letter_event.tags.iter().any(|t| {
@@ -1548,7 +1548,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
         async fn e_tag_in_reply_to_event_as_reply() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert_eq!(
                     cover_letter_event
@@ -1574,7 +1574,7 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
     async fn patch_tags_cover_letter_event_as_root() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let patch_events: Vec<&nostr::Event> =
+            let patch_events: Vec<&nostr_0_37_0::Event> =
                 relay.events.iter().filter(|e| is_patch(e)).collect();
 
             let cover_letter_event = relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
@@ -1600,10 +1600,10 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 }
 
 mod in_reply_to_mentions_issue {
-    use nostr::ToBech32;
+    use nostr_0_37_0::ToBech32;
 
     use super::*;
-    pub fn get_pretend_issue_event() -> nostr::Event {
+    pub fn get_pretend_issue_event() -> nostr_0_37_0::Event {
         serde_json::from_str(r#"{"created_at":1709286372,"content":"please provide feedback\nthis is an example ngit issue to demonstrate gitworkshop.dev.\n\nplease provide feedback with in reply to this issue or by creating a new issue.","tags":[["r","26689f97810fc656c7134c76e2a37d33b2e40ce7"],["a","30617:a008def15796fba9a0d6fab04e8fd57089285d9fd505da5a83fe8aad57a3564d:ngit","wss://relay.damus.io","root"],["p","a008def15796fba9a0d6fab04e8fd57089285d9fd505da5a83fe8aad57a3564d"]],"kind":1621,"pubkey":"a008def15796fba9a0d6fab04e8fd57089285d9fd505da5a83fe8aad57a3564d","id":"e944765d625ae7323d080da0df069c726a0e5490a17b452f854d85e18f781588","sig":"a1af9e89a35f1f7ef93e3de33986bd86cb7c4d7d9abb233c0c6405f32b5788171e47f84551afe8515b3107d12f03472721ea784b8791ff3f25e66a3169a54c20"}"#).unwrap()
     }
 
@@ -1693,7 +1693,7 @@ mod in_reply_to_mentions_issue {
     async fn issue_event_mentioned_in_tagged_cover_letter() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let cover_letter_event: &nostr::Event =
+            let cover_letter_event: &nostr_0_37_0::Event =
                 relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
             assert!(cover_letter_event.tags.iter().any(|t| {
                 t.as_slice()[0].eq("e")
@@ -1709,7 +1709,7 @@ mod in_reply_to_mentions_issue {
     async fn isnt_tagged_as_revision() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let cover_letter_event: &nostr::Event =
+            let cover_letter_event: &nostr_0_37_0::Event =
                 relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
             assert!(
                 !cover_letter_event
@@ -1810,11 +1810,11 @@ mod in_reply_to_mentions_npub_and_nprofile_which_get_mentioned_in_proposal_root 
     async fn npub_and_nprofile_mentioned_in_tagged_cover_letter() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let cover_letter_event: &nostr::Event =
+            let cover_letter_event: &nostr_0_37_0::Event =
                 relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
             assert!(cover_letter_event.tags.iter().any(|t| {
                 t.as_slice()[0].eq("p")
-                    && t.as_slice()[1].eq(&nostr::Keys::parse(
+                    && t.as_slice()[1].eq(&nostr_0_37_0::Keys::parse(
                         "nsec1q3c5xnsm5m4wgsrhwnz04p0d5mevkryyggqgdpa9jwulpq9gldhswgtxvq",
                     )
                     .unwrap()
@@ -1823,7 +1823,7 @@ mod in_reply_to_mentions_npub_and_nprofile_which_get_mentioned_in_proposal_root 
             }));
             assert!(cover_letter_event.tags.iter().any(|t| {
                 t.as_slice()[0].eq("p")
-                    && t.as_slice()[1].eq(&nostr::Keys::parse(
+                    && t.as_slice()[1].eq(&nostr_0_37_0::Keys::parse(
                         "nsec1nx5ulvcndhcuu8k6q8fenw50l6y75sec7pj8vr0r68l6a44w3lqspvj02k",
                     )
                     .unwrap()

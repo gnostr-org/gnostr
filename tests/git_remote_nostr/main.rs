@@ -3,8 +3,8 @@ use std::{collections::HashSet, env::current_dir};
 use anyhow::{Context, Result};
 use futures::join;
 use git2::Oid;
-use nostr::nips::nip01::Coordinate;
-use nostr_sdk::{Event, JsonUtil, Kind, RelayUrl, ToBech32, secp256k1::rand};
+use nostr_0_37_0::nips::nip01::Coordinate;
+use nostr_sdk_0_37_0::{Event, JsonUtil, Kind, RelayUrl, ToBech32, secp256k1::rand};
 use relay::Relay;
 use serial_test::serial;
 use test_utils::{git::GitTestRepo, *};
@@ -14,7 +14,7 @@ mod list;
 mod push;
 
 static NOSTR_REMOTE_NAME: &str = "nostr";
-static STATE_KIND: nostr::Kind = Kind::Custom(30618);
+static STATE_KIND: nostr_0_37_0::Kind = Kind::Custom(30618);
 
 fn get_nostr_remote_url() -> Result<String> {
     let repo_event = generate_repo_ref_event();
@@ -100,7 +100,7 @@ fn cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
     Ok(p)
 }
 
-async fn generate_repo_with_state_event() -> Result<(nostr::Event, GitTestRepo)> {
+async fn generate_repo_with_state_event() -> Result<(nostr_0_37_0::Event, GitTestRepo)> {
     let git_repo = prep_git_repo()?;
     git_repo.create_branch("example-branch")?;
     let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string();
@@ -180,7 +180,7 @@ async fn generate_repo_with_state_event() -> Result<(nostr::Event, GitTestRepo)>
 }
 
 async fn prep_source_repo_and_events_including_proposals()
--> Result<(Vec<nostr::Event>, GitTestRepo)> {
+-> Result<(Vec<nostr_0_37_0::Event>, GitTestRepo)> {
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 

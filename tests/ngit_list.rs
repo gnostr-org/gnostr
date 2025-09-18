@@ -49,8 +49,8 @@ async fn prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(
 mod cannot_find_repo_event {
     use super::*;
     mod cli_prompts {
-        use nostr::{ToBech32, nips::nip01::Coordinate};
-        use nostr_sdk::RelayUrl;
+        use nostr_0_37_0::{ToBech32, nips::nip01::Coordinate};
+        use nostr_sdk_0_37_0::RelayUrl;
 
         use super::*;
         async fn run_async_repo_event_ref_needed(invalid_input: bool, naddr: bool) -> Result<()> {
@@ -88,7 +88,7 @@ mod cannot_find_repo_event {
                 if naddr {
                     let mut input = p.expect_input("nostr repository")?;
                     let coordinate = Coordinate {
-                        kind: nostr::Kind::GitRepoAnnouncement,
+                        kind: nostr_0_37_0::Kind::GitRepoAnnouncement,
                         public_key: TEST_KEY_1_KEYS.public_key(),
                         identifier: repo_event.tags.identifier().unwrap().to_string(),
                         relays: vec![RelayUrl::parse("ws://localhost:8056").unwrap()],

@@ -30,8 +30,8 @@ use ngit::{
     repo_ref::{self, get_repo_config_from_yaml},
     repo_state,
 };
-use nostr::nips::nip10::Marker;
-use nostr_sdk::{
+use nostr_0_37_0::nips::nip10::Marker;
+use nostr_sdk_0_37_0::{
     Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag,
     hashes::sha1::Hash as Sha1Hash,
 };
@@ -1021,7 +1021,7 @@ async fn get_merged_status_events(
                 git_repo.get_commits_ahead_behind(&tip_of_remote_branch, &tip_of_pushed_branch)?;
 
             let commit_events = get_events_from_local_cache(git_repo.get_path()?, vec![
-                nostr::Filter::default().kind(nostr::Kind::GitPatch),
+                nostr_0_37_0::Filter::default().kind(nostr_0_37_0::Kind::GitPatch),
                 // TODO: limit by repo_ref
             ])
             .await?;
@@ -1269,14 +1269,14 @@ async fn create_merge_status(
         public_keys.insert(revision.pubkey);
     }
     sign_event(
-        EventBuilder::new(nostr::event::Kind::GitStatusApplied, String::new()).tags(
+        EventBuilder::new(nostr_0_37_0::event::Kind::GitStatusApplied, String::new()).tags(
             [
                 vec![
                     Tag::custom(
-                        nostr::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                        nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
                         vec!["git proposal merged / applied".to_string()],
                     ),
-                    Tag::from_standardized(nostr::TagStandard::Event {
+                    Tag::from_standardized(nostr_0_37_0::TagStandard::Event {
                         event_id: proposal.id,
                         relay_url: repo_ref.relays.first().cloned(),
                         marker: Some(Marker::Root),
@@ -1288,7 +1288,7 @@ async fn create_merge_status(
                 merged_patches
                     .iter()
                     .map(|merged_patch| {
-                        Tag::from_standardized(nostr::TagStandard::Event {
+                        Tag::from_standardized(nostr_0_37_0::TagStandard::Event {
                             event_id: *merged_patch,
                             relay_url: repo_ref.relays.first().cloned(),
                             marker: Some(Marker::Mention),
@@ -1298,7 +1298,7 @@ async fn create_merge_status(
                     })
                     .collect::<Vec<Tag>>(),
                 if let Some(revision) = revision {
-                    vec![Tag::from_standardized(nostr::TagStandard::Event {
+                    vec![Tag::from_standardized(nostr_0_37_0::TagStandard::Event {
                         event_id: revision.id,
                         relay_url: repo_ref.relays.first().cloned(),
                         marker: Some(Marker::Root),
@@ -1315,11 +1315,11 @@ async fn create_merge_status(
                     .map(|c| Tag::coordinate(c.clone()))
                     .collect::<Vec<Tag>>(),
                 vec![
-                    Tag::from_standardized(nostr::TagStandard::Reference(
+                    Tag::from_standardized(nostr_0_37_0::TagStandard::Reference(
                         repo_ref.root_commit.to_string(),
                     )),
                     Tag::custom(
-                        nostr::TagKind::Custom(std::borrow::Cow::Borrowed(if applied {
+                        nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed(if applied {
                             "applied-as-commits"
                         } else {
                             "merge-commit-id"
@@ -1333,7 +1333,7 @@ async fn create_merge_status(
                 merge_commits
                     .iter()
                     .map(|merge_commit| {
-                        Tag::from_standardized(nostr::TagStandard::Reference(format!(
+                        Tag::from_standardized(nostr_0_37_0::TagStandard::Reference(format!(
                             "{merge_commit}"
                         )))
                     })
@@ -1370,7 +1370,7 @@ async fn get_proposal_and_revision_root_from_patch(
         )?;
 
         get_events_from_local_cache(git_repo.get_path()?, vec![
-            nostr::Filter::default().id(proposal_or_revision_id),
+            nostr_0_37_0::Filter::default().id(proposal_or_revision_id),
         ])
         .await?
         .first()
@@ -1527,7 +1527,7 @@ impl BuildRepoState for RepoState {
     ) -> Result<RepoState> {
         let mut tags = vec![Tag::identifier(identifier.clone())];
         for (name, value) in &state {
-            tags.push(Tag::custom(nostr_sdk::TagKind::Custom(name.into()), vec![
+            tags.push(Tag::custom(nostr_sdk_0_37_0::TagKind::Custom(name.into()), vec![
                 value.clone(),
             ]));
         }

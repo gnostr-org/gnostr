@@ -3,11 +3,11 @@ use std::path::Path;
 use anyhow::{Context, Result, bail};
 use console::Style;
 use ngit::{client::send_events, git_events::generate_cover_letter_and_patch_events};
-use nostr::{
+use nostr_0_37_0::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
 };
-use nostr_sdk::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
 use crate::{
     cli::{Cli, extract_signer_cli_arguments},
@@ -357,12 +357,12 @@ fn summarise_commit_for_selection(git_repo: &Repo, commit: &Sha1Hash) -> Result<
 async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     git_repo_path: &Path,
     in_reply_to: &[String],
-) -> Result<(Option<String>, Vec<nostr::Tag>)> {
+) -> Result<(Option<String>, Vec<nostr_0_37_0::Tag>)> {
     let root_proposal_id = if let Some(first) = in_reply_to.first() {
         match event_tag_from_nip19_or_hex(first, "in-reply-to", Marker::Root, true, false)?
             .as_standardized()
         {
-            Some(nostr_sdk::TagStandard::Event {
+            Some(nostr_sdk_0_37_0::TagStandard::Event {
                 event_id,
                 relay_url: _,
                 marker: _,
@@ -370,7 +370,7 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                 uppercase: false,
             }) => {
                 let events = get_events_from_local_cache(git_repo_path, vec![
-                    nostr::Filter::new().id(*event_id),
+                    nostr_0_37_0::Filter::new().id(*event_id),
                 ])
                 .await?;
 

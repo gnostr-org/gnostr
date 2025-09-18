@@ -6,14 +6,14 @@ use ngit::{
     cli_interactor::PromptConfirmParms,
     git::nostr_url::{NostrUrlDecoded, save_nip05_to_git_config_cache},
 };
-use nostr::{
+use nostr_0_37_0::{
     FromBech32, PublicKey, ToBech32,
     nips::{
         nip01::Coordinate,
         nip05::{self},
     },
 };
-use nostr_sdk::{Kind, RelayUrl};
+use nostr_sdk_0_37_0::{Kind, RelayUrl};
 
 use crate::{
     cli::{Cli, extract_signer_cli_arguments},
@@ -27,7 +27,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, clap::Args)]
+#[derive(clap::Args, Debug)]
 pub struct SubCommandArgs {
     #[clap(short, long)]
     /// name of repository

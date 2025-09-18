@@ -157,8 +157,8 @@ mod with_relays {
                         run_test_displays_correct_name(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
                                 relay.respond_events(client_id, &subscription_id, &vec![
-                                    nostr::event::EventBuilder::metadata(
-                                        &nostr::Metadata::new().display_name("fred"),
+                                    nostr_0_37_0::event::EventBuilder::metadata(
+                                        &nostr_0_37_0::Metadata::new().display_name("fred"),
                                     )
                                     .sign_with_keys(&TEST_KEY_1_KEYS)
                                     .unwrap(),
@@ -176,7 +176,7 @@ mod with_relays {
                     async fn when_metadata_contains_only_displayname() -> Result<()> {
                         println!(
                             "displayName: {}",
-                            nostr::Metadata::new()
+                            nostr_0_37_0::Metadata::new()
                                 .custom_field("displayName", "fred")
                                 .custom
                                 .get("displayName")
@@ -184,14 +184,14 @@ mod with_relays {
                         );
                         println!(
                             "name: {}",
-                            nostr::Metadata::new().name("fred").name.unwrap()
+                            nostr_0_37_0::Metadata::new().name("fred").name.unwrap()
                         );
 
                         run_test_displays_correct_name(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
                                 relay.respond_events(client_id, &subscription_id, &vec![
-                                    nostr::event::EventBuilder::metadata(
-                                        &nostr::Metadata::new().custom_field("displayName", "fred"),
+                                    nostr_0_37_0::event::EventBuilder::metadata(
+                                        &nostr_0_37_0::Metadata::new().custom_field("displayName", "fred"),
                                     )
                                     .sign_with_keys(&TEST_KEY_1_KEYS)
                                     .unwrap(),
@@ -211,8 +211,8 @@ mod with_relays {
                         run_test_displays_fallback_to_npub(
                             Some(&|relay, client_id, subscription_id, _| -> Result<()> {
                                 relay.respond_events(client_id, &subscription_id, &vec![
-                                    nostr::event::EventBuilder::metadata(
-                                        &nostr::Metadata::new().about("other info in metadata"),
+                                    nostr_0_37_0::event::EventBuilder::metadata(
+                                        &nostr_0_37_0::Metadata::new().about("other info in metadata"),
                                     )
                                     .sign_with_keys(&TEST_KEY_1_KEYS)
                                     .unwrap(),
@@ -311,7 +311,7 @@ mod with_relays {
                 async fn when_some_relays_return_other_event_kinds() -> Result<()> {
                     run_test_displays_correct_name(
                         Some(&|relay, client_id, subscription_id, _| -> Result<()> {
-                            let event = generate_test_key_1_kind_event(nostr::Kind::TextNote);
+                            let event = generate_test_key_1_kind_event(nostr_0_37_0::Kind::TextNote);
                             relay.respond_events(client_id, &subscription_id, &vec![
                                 make_event_old_or_change_user(event, &TEST_KEY_1_KEYS, 0),
                             ])?;

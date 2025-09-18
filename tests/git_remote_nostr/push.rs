@@ -2,6 +2,8 @@ use git2::Signature;
 
 use super::*;
 
+use nostr_0_37_0::util::JsonUtil;
+
 #[tokio::test]
 #[serial]
 async fn new_branch_when_no_state_event_exists() -> Result<()> {

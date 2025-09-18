@@ -1,8 +1,8 @@
 use std::{collections::HashSet, path::Path};
 
 use anyhow::{Context, Result, bail};
-use nostr::PublicKey;
-use nostr_sdk::{Alphabet, JsonUtil, Kind, SingleLetterTag, Timestamp, ToBech32};
+use nostr_0_37_0::PublicKey;
+use nostr_sdk_0_37_0::{Alphabet, JsonUtil, Kind, SingleLetterTag, Timestamp, ToBech32};
 use serde::{self, Deserialize, Serialize};
 
 #[cfg(not(test))]
@@ -111,10 +111,10 @@ pub async fn get_user_ref_from_cache(
     public_key: &PublicKey,
 ) -> Result<UserRef> {
     let filters = vec![
-        nostr::Filter::default()
+        nostr_0_37_0::Filter::default()
             .author(*public_key)
             .kind(Kind::Metadata),
-        nostr::Filter::default()
+        nostr_0_37_0::Filter::default()
             .author(*public_key)
             .kind(Kind::RelayList),
     ];
@@ -132,17 +132,17 @@ pub async fn get_user_ref_from_cache(
 }
 
 pub fn extract_user_metadata(
-    public_key: &nostr::PublicKey,
-    events: &[nostr::Event],
+    public_key: &nostr_0_37_0::PublicKey,
+    events: &[nostr_0_37_0::Event],
 ) -> Result<UserMetadata> {
     let event = events
         .iter()
-        .filter(|e| e.kind.eq(&nostr::Kind::Metadata) && e.pubkey.eq(public_key))
+        .filter(|e| e.kind.eq(&nostr_0_37_0::Kind::Metadata) && e.pubkey.eq(public_key))
         .max_by_key(|e| e.created_at);
 
-    let metadata: Option<nostr::Metadata> = if let Some(event) = event {
+    let metadata: Option<nostr_0_37_0::Metadata> = if let Some(event) = event {
         Some(
-            nostr::Metadata::from_json(event.content.clone())
+            nostr_0_37_0::Metadata::from_json(event.content.clone())
                 .context("metadata cannot be found in kind 0 event content")?,
         )
     } else {
@@ -181,10 +181,10 @@ pub fn extract_user_metadata(
     })
 }
 
-pub fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event]) -> UserRelays {
+pub fn extract_user_relays(public_key: &nostr_0_37_0::PublicKey, events: &[nostr_0_37_0::Event]) -> UserRelays {
     let event = events
         .iter()
-        .filter(|e| e.kind.eq(&nostr::Kind::RelayList) && e.pubkey.eq(public_key))
+        .filter(|e| e.kind.eq(&nostr_0_37_0::Kind::RelayList) && e.pubkey.eq(public_key))
         .max_by_key(|e| e.created_at);
 
     UserRelays {
@@ -195,7 +195,7 @@ pub fn extract_user_relays(public_key: &nostr::PublicKey, events: &[nostr::Event
                 .filter(|t| {
                     t.as_slice().len() > 1
                         && t.kind()
-                            .eq(&nostr::TagKind::SingleLetter(SingleLetterTag::lowercase(
+                            .eq(&nostr_0_37_0::TagKind::SingleLetter(SingleLetterTag::lowercase(
                                 Alphabet::R,
                             )))
                 })
