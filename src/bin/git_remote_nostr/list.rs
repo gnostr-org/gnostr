@@ -1,44 +1,53 @@
 use core::str;
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
-use git_events::{event_to_cover_letter, get_commit_id_from_patch};
-use gnostr::{
+use ngit::{
     client,
     git::{
         self,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
     },
-    git_events,
+    git_events::event_to_cover_letter,
     login::get_curent_user,
     repo_ref,
 };
-use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 use repo_ref::RepoRef;
 
 use crate::{
+    fetch::{fetch_from_git_server, make_commits_for_proposal},
     git::Repo,
     utils::{
-        fetch_or_list_error_is_not_authentication_failure, get_open_proposals,
+        Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals,
         get_read_protocols_to_try, get_short_git_server_name, join_with_and,
-        set_protocol_preference, Direction,
+        set_protocol_preference,
     },
 };
 
 pub async fn run_list(
     git_repo: &Repo,
     repo_ref: &RepoRef,
-    decoded_nostr_url: &NostrUrlDecoded,
     for_push: bool,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
-    let nostr_state = (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
+    let nostr_state =
+        if let Ok(nostr_state) = get_state_from_cache(Some(git_repo.get_path()?), repo_ref).await {
+            Some(nostr_state)
+        } else {
+            None
+        };
 
     let term = console::Term::stderr();
 
-    let remote_states = list_from_remotes(&term, git_repo, &repo_ref.git_server, decoded_nostr_url);
+    let remote_states = list_from_remotes(
+        &term,
+        git_repo,
+        &repo_ref.git_server,
+        &repo_ref.to_nostr_git_url(&None),
+    );
 
     let mut state = if let Some(nostr_state) = nostr_state {
         for (name, value) in &nostr_state.state {
@@ -83,36 +92,13 @@ pub async fn run_list(
 
     state.retain(|k, _| !k.starts_with("refs/heads/pr/"));
 
-    let open_proposals = get_open_proposals(git_repo, repo_ref).await?;
-    let current_user = get_curent_user(git_repo)?;
-    for (_, (proposal, patches)) in open_proposals {
-        if let Ok(cl) = event_to_cover_letter(&proposal) {
-            if let Ok(mut branch_name) = cl.get_branch_name() {
-                branch_name = if let Some(public_key) = current_user {
-                    if proposal.author().eq(&public_key) {
-                        cl.branch_name.to_string()
-                    } else {
-                        branch_name
-                    }
-                } else {
-                    branch_name
-                };
-                if let Some(patch) = patches.first() {
-                    // TODO this isn't resilient because the commit id
-                    // stated may not be correct we will need to
-                    // check whether the commit id exists in the repo
-                    // or apply the proposal and each patch to
-                    // check
-                    if let Ok(commit_id) = get_commit_id_from_patch(patch) {
-                        state.insert(format!("refs/heads/{branch_name}"), commit_id);
-                    }
-                }
-            }
-        }
-    }
+    let proposals_state =
+        get_open_and_draft_proposals_state(&term, git_repo, repo_ref, &remote_states).await?;
 
-    // TODO 'for push' should we check with the git servers to see if
-    // any of them allow push from the user?
+    state.extend(proposals_state);
+
+    // TODO 'for push' should we check with the git servers to see if any of them
+    // allow push from the user?
     for (name, value) in state {
         if value.starts_with("ref: ") {
             if !for_push {
@@ -125,6 +111,69 @@ pub async fn run_list(
 
     println!();
     Ok(remote_states)
+}
+
+async fn get_open_and_draft_proposals_state(
+    term: &console::Term,
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    remote_states: &HashMap<String, HashMap<String, String>>,
+) -> Result<HashMap<String, String>> {
+    // we cannot use commit_id in the latest patch in a proposal because:
+    // 1) the `commit` tag is optional
+    // 2) if the commit tag is wrong, it will cause errors which stop clone from
+    //    working
+
+    // without trusting commit_id we must apply each patch which requires the oid of
+    // the parent so we much do a fetch
+    for (git_server_url, oids_from_git_servers) in remote_states {
+        if fetch_from_git_server(
+            git_repo,
+            &oids_from_git_servers
+                .values()
+                .filter(|v| !v.starts_with("ref: "))
+                .cloned()
+                .collect::<Vec<String>>(),
+            git_server_url,
+            &repo_ref.to_nostr_git_url(&None),
+            term,
+        )
+        .is_ok()
+        {
+            break;
+        }
+    }
+
+    let mut state = HashMap::new();
+    let open_and_draft_proposals = get_open_or_draft_proposals(git_repo, repo_ref).await?;
+    let current_user = get_curent_user(git_repo)?;
+    for (_, (proposal, patches)) in open_and_draft_proposals {
+        if let Ok(cl) = event_to_cover_letter(&proposal) {
+            if let Ok(mut branch_name) = cl.get_branch_name_with_pr_prefix_and_shorthand_id() {
+                branch_name = if let Some(public_key) = current_user {
+                    if proposal.pubkey.eq(&public_key) {
+                        format!("pr/{}", cl.branch_name_without_id_or_prefix)
+                    } else {
+                        branch_name
+                    }
+                } else {
+                    branch_name
+                };
+                match make_commits_for_proposal(git_repo, repo_ref, &patches) {
+                    Ok(tip) => {
+                        state.insert(format!("refs/heads/{branch_name}"), tip);
+                    }
+                    Err(error) => {
+                        let _ = term.write_line(
+                            format!("WARNING: failed to fetch branch {branch_name} error: {error}")
+                                .as_str(),
+                        );
+                    }
+                };
+            }
+        }
+    }
+    Ok(state)
 }
 
 pub fn list_from_remotes(
