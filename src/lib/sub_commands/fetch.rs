@@ -8,7 +8,7 @@ use crate::{
     //cli::Cli,
     client::{fetching_with_report, Client, Connect},
     git::{Repo, RepoActions},
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
 #[derive(clap::Args, Debug)]
@@ -32,7 +32,7 @@ pub async fn launch(
     let client = Client::default();
 
     let repo_coordinates = if args.repo.is_empty() {
-        get_repo_coordinates(&git_repo, &client).await?
+        get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?
     } else {
         let mut repo_coordinates = HashSet::new();
         for repo in &args.repo {

@@ -15,12 +15,12 @@ use crate::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
     client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Client, Connect,
+        fetching_with_report, get_state_from_cache, get_repo_ref_from_cache, Client, Connect,
     },
     git::{identify_ahead_behind, Repo, RepoActions},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
 #[derive(Debug, clap::Args)]
@@ -67,7 +67,7 @@ pub async fn launch(
     #[cfg(not(test))]
     let mut client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
     if !no_fetch {
         fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
@@ -241,7 +241,7 @@ pub async fn launch(
 
     send_events(
         &client,
-        git_repo_path,
+        Some(git_repo_path),
         events.clone(),
         user_ref.relays.write(),
         repo_ref.relays.clone(),
@@ -253,7 +253,7 @@ pub async fn launch(
     if root_proposal_id.is_none() {
         if let Some(event) = events.first() {
             let event_bech32 = if let Some(relay) = repo_ref.relays.first() {
-                Nip19Event::new(event.id(), vec![relay]).to_bech32()?
+                Nip19Event::new(event.id, vec![relay.to_string()]).to_bech32()?
             } else {
                 event.id.to_bech32()?
             };
@@ -382,14 +382,15 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                 relay_url: _,
                 marker: _,
                 public_key: _,
+                uppercase: _,
             }) => {
-                let events = get_events_from_cache(
+                let events = get_state_from_cache(
                     git_repo_path,
                     vec![nostr_0_37_0::Filter::new().id(*event_id)],
                 )
                 .await?;
 
-                if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {
+                if let Some(first) = events.find(|e| e.id.eq(event_id)) {
                     if event_is_patch_set_root(first) {
                         Some(event_id.to_string())
                     } else {

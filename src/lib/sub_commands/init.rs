@@ -12,7 +12,7 @@ use crate::{
     login,
     repo_ref::{
         extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml,
-        try_and_get_repo_coordinates, RepoRef,
+        try_and_get_repo_coordinates_when_remote_unknown, RepoRef,
     },
 };
 
@@ -79,7 +79,8 @@ pub async fn launch(
     #[cfg(not(test))]
     let mut client = Client::default();
 
-    let repo_coordinates = (try_and_get_repo_coordinates(&git_repo, &client, false).await).ok();
+    let repo_coordinates =
+        (try_and_get_repo_coordinates_when_remote_unknown(&git_repo, &client, false).await).ok();
 
     let repo_ref = if let Some(repo_coordinates) = repo_coordinates {
         fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;

@@ -3,7 +3,7 @@ use crate::{
     git_events::{is_event_proposal_root_for_branch, tag_value},
 };
 use anyhow::{bail, Context, Result};
-use nostr_sdk_0_34_0::PublicKey;
+use nostr_sdk_0_37_0::PublicKey;
 
 use crate::{
     //cli::Cli,
@@ -16,7 +16,7 @@ use crate::{
         generate_patch_event, get_commit_id_from_patch, get_most_recent_patch_with_ancestors,
     },
     login,
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
     sub_commands,
 };
 
@@ -61,7 +61,7 @@ pub async fn launch(
     #[cfg(not(test))]
     let mut client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
     fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
 

@@ -12,14 +12,14 @@ use nostr_sdk_0_37_0::Kind;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Client, Connect,
+        fetching_with_report, get_state_from_cache, get_repo_ref_from_cache, Client, Connect,
     },
     git::{str_to_sha1, Repo, RepoActions},
     git_events::{
         commit_msg_from_patch_oneliner, event_is_revision_root, event_to_cover_letter,
         patch_supports_commit_ids,
     },
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -36,7 +36,7 @@ pub async fn launch() -> Result<()> {
     #[cfg(not(test))]
     let client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
     fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
 
@@ -50,7 +50,7 @@ pub async fn launch() -> Result<()> {
     }
 
     let statuses: Vec<nostr_0_37_0::Event> = {
-        let mut statuses = get_events_from_cache(
+        let mut statuses = get_state_from_cache(
             git_repo_path,
             vec![nostr_0_37_0::Filter::default()
                 .kinds(status_kinds().clone())
