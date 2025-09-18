@@ -159,6 +159,8 @@ pub enum GnostrCommands {
     Tui(crate::gnostr::GnostrSubCommands),
     /// Chat sub commands
     Chat(crate::chat::ChatSubCommands),
+    /// Ngit sub command
+    Ngit(sub_commands::ngit::NgitSubCommand),
     /// Set metadata.
     /// CAUTION!
     /// This will replace your current kind 0 event.
