@@ -1,6 +1,7 @@
 use crate::sub_commands;
 use crate::sub_commands::*;
 use anyhow::{anyhow, Result};
+use anyhow::bail;
 use clap::{
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
@@ -12,6 +13,26 @@ use std::{
     fs::{self, File},
     path::PathBuf,
 };
+
+use crate::login::SignerInfo;
+
+#[derive(Subcommand, Debug)]
+pub enum AccountCommands {
+    /// login with nsec or nostr connect
+    Login(sub_commands::login::SubCommandArgs),
+    /// remove nostr account details stored in git config
+    Logout,
+    /// export nostr keys to login to other nostr clients
+    ExportKeys,
+}
+
+#[derive(clap::Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+pub struct AccountSubCommandArgs {
+    #[command(subcommand)]
+    pub account_command: AccountCommands,
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -42,13 +63,11 @@ pub struct LegitCli {
     pub password: Option<String>,
     /// disable spinner animations
     #[arg(long, action, default_value = "false")]
-    pub disable_cli_spinners: Option<bool>,
+    pub disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum LegitCommands {
-    /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::SubCommandArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
     Init(sub_commands::init::SubCommandArgs),
@@ -56,8 +75,6 @@ pub enum LegitCommands {
     Send(sub_commands::send::SubCommandArgs),
     /// list proposals; checkout, apply or download selected
     List,
-    /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
@@ -84,13 +101,11 @@ pub struct NgitCli {
     pub password: Option<String>,
     /// disable spinner animations
     #[arg(long, action, default_value = "false")]
-    pub disable_cli_spinners: Option<bool>,
+    pub disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
-    /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::SubCommandArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
     Init(sub_commands::init::SubCommandArgs),
@@ -98,8 +113,6 @@ pub enum NgitCommands {
     Send(sub_commands::send::SubCommandArgs),
     /// list proposals; checkout, apply or download selected
     List,
-    /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
@@ -189,10 +202,8 @@ pub enum GnostrCommands {
     Tui(crate::gnostr::GnostrSubCommands),
     /// Chat sub commands
     Chat(crate::chat::ChatSubCommands),
-    /// Legit sub commands
-    Legit(legit::LegitSubCommand),
     /// Ngit sub commands
-    Ngit(ngit::NgitSubCommand),
+    Ngit(ngit::NgitSubCommand),//
     /// Set metadata.
     /// CAUTION!
     /// This will replace your current kind 0 event.
@@ -273,6 +284,30 @@ pub fn get_app_config_path() -> Result<PathBuf> {
     path.push("gnostr");
     fs::create_dir_all(&path)?;
     Ok(path)
+}
+
+pub fn extract_signer_cli_arguments(args: &NgitCli) -> Result<Option<SignerInfo>> {
+    if let Some(nsec) = &args.nsec {
+        Ok(Some(SignerInfo::Nsec {
+            nsec: nsec.to_string(),
+            password: None,
+            npub: None,
+        }))
+    } else if let Some(bunker_uri) = args.bunker_uri.clone() {
+        if let Some(bunker_app_key) = args.bunker_app_key.clone() {
+            Ok(Some(SignerInfo::Bunker {
+                bunker_uri,
+                bunker_app_key,
+                npub: None,
+            }))
+        } else {
+            bail!("cli argument bunker-app-key must be supplied when bunker-uri is")
+        }
+    } else if args.bunker_app_key.is_some() {
+        bail!("cli argument bunker-uri must be supplied when bunker-app-key is")
+    } else {
+        Ok(None)
+    }
 }
 
 //#[test]

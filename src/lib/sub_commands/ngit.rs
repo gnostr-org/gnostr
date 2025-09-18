@@ -1,15 +1,18 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::cli::NgitCommands;
-use crate::sub_commands::fetch;
+use crate::cli::{NgitCli, NgitCommands};
 use crate::sub_commands::init;
 use crate::sub_commands::list;
 use crate::sub_commands::login;
 use crate::sub_commands::pull;
-use crate::sub_commands::push;
 use crate::sub_commands::send;
+
+use crate::sub_commands::init::SubCommandArgs;
+//use crate::sub_commands::login::SubCommandArgs;
+//use crate::sub_commands::send::SubCommandArgs;
+
 use clap::Args;
-use nostr_sdk_0_34_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 
 use serde::ser::StdError;
 
@@ -30,15 +33,13 @@ pub struct NgitSubCommand {
     disable_cli_spinners: bool,
 }
 
-pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
+pub async fn ngit(ngit_cli: &NgitCli, sub_command_args: &SubCommandArgs) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-        NgitCommands::Login(args) => login::launch(args).await?,
-        NgitCommands::Init(args) => init::launch(args).await?,
-        NgitCommands::Send(args) => send::launch(args, true).await?,
+        NgitCommands::Login(args) => login::launch(ngit_cli, sub_command_args).await?,
+        NgitCommands::Init(args) => init::launch(ngit_cli, sub_command_args).await?,
+        NgitCommands::Send(args) => send::launch(ngit_cli, sub_command_args, true).await?,
         NgitCommands::List => list::launch().await?,
         NgitCommands::Pull => pull::launch().await?,
-        NgitCommands::Push(args) => push::launch(args).await?,
-        NgitCommands::Fetch(args) => fetch::launch(args).await?,
     }
     Ok(())
 }

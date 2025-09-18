@@ -1,6 +1,6 @@
 use crate::git_events::is_event_proposal_root_for_branch;
 use anyhow::{bail, Context, Result};
-use nostr_sdk_0_34_0::PublicKey;
+use nostr_sdk_0_37_0::PublicKey;
 
 use crate::{
     client::{
@@ -37,7 +37,7 @@ pub async fn launch() -> Result<()> {
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
     fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {
@@ -51,7 +51,7 @@ pub async fn launch() -> Result<()> {
             .await?
             .iter()
             .find(|e| {
-                is_event_proposal_root_for_branch(e, &branch_name, &logged_in_public_key)
+                is_event_proposal_root_for_branch(e, &branch_name, logged_in_public_key.as_ref())
                     .unwrap_or(false)
             })
             .context("cannot find proposal that matches the current branch name")?
@@ -60,7 +60,7 @@ pub async fn launch() -> Result<()> {
     let commit_events = get_all_proposal_patch_events_from_cache(
         git_repo_path,
         &repo_ref,
-        &proposal_root_event.id(),
+        &proposal_root_event.id,
     )
     .await?;
 
