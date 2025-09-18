@@ -16,7 +16,7 @@ mod sub_commands;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
-pub struct Cli {
+pub struct NgitCli {
     #[command(subcommand)]
     command: Commands,
     /// nsec or hex private key
@@ -31,7 +31,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-enum Commands {
+enum NgitCommands {
     /// signal you are this repo's maintainer accepting proposals via nostr
     Init(sub_commands::init::SubCommandArgs),
     /// issue commits as a proposal

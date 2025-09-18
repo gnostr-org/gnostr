@@ -16,24 +16,6 @@ use std::{
 
 use crate::login::SignerInfo;
 
-#[derive(Subcommand, Debug)]
-pub enum AccountCommands {
-    /// login with nsec or nostr connect
-    Login(sub_commands::login::SubCommandArgs),
-    /// remove nostr account details stored in git config
-    Logout,
-    /// export nostr keys to login to other nostr clients
-    ExportKeys,
-}
-
-#[derive(clap::Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct AccountSubCommandArgs {
-    #[command(subcommand)]
-    pub account_command: AccountCommands,
-}
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -43,44 +25,6 @@ pub struct CliArgs {
     pub notify_watcher: bool,
 }
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct LegitCli {
-    #[command(subcommand)]
-    pub command: LegitCommands,
-    /// remote signer address
-    #[arg(long, global = true)]
-    pub bunker_uri: Option<String>,
-    /// remote signer app secret key
-    #[arg(long, global = true)]
-    pub bunker_app_key: Option<String>,
-    /// nsec or hex private key
-    #[arg(short, long, global = true)]
-    pub nsec: Option<String>,
-    /// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    pub password: Option<String>,
-    /// disable spinner animations
-    #[arg(long, action, default_value = "false")]
-    pub disable_cli_spinners: bool,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum LegitCommands {
-    /// signal you are this repo's maintainer accepting proposals via
-    /// nostr
-    Init(sub_commands::init::SubCommandArgs),
-    /// issue commits as a proposal
-    Send(sub_commands::send::SubCommandArgs),
-    /// list proposals; checkout, apply or download selected
-    List,
-    /// fetch and apply new proposal commits / revisions linked to
-    /// branch
-    Pull,
-    /// run with --nsec flag to change npub
-    Login(sub_commands::login::SubCommandArgs),
-}
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -106,18 +50,30 @@ pub struct NgitCli {
 
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
-    /// signal you are this repo's maintainer accepting proposals via
-    /// nostr
+    /// signal you are this repo's maintainer accepting PRs and issues via nostr
     Init(sub_commands::init::SubCommandArgs),
-    /// issue commits as a proposal
+    /// submit PR with advanced options
     Send(sub_commands::send::SubCommandArgs),
-    /// list proposals; checkout, apply or download selected
+    /// list PRs; checkout, apply or download selected
     List,
-    /// fetch and apply new proposal commits / revisions linked to
-    /// branch
-    Pull,
-    /// run with --nsec flag to change npub
+    /// login, logout or export keys
+    Account(AccountSubCommandArgs),
+}
+
+#[derive(Subcommand, Debug)]
+pub enum AccountCommands {
+    /// login with nsec or nostr connect
     Login(sub_commands::login::SubCommandArgs),
+    /// remove nostr account details stored in git config
+    Logout,
+    /// export nostr keys to login to other nostr clients
+    ExportKeys,
+}
+
+#[derive(clap::Parser, Debug)]
+pub struct AccountSubCommandArgs {
+    #[command(subcommand)]
+    pub account_command: AccountCommands,
 }
 
 /// GnostrCli application to interact with nostr
@@ -202,8 +158,6 @@ pub enum GnostrCommands {
     Tui(crate::gnostr::GnostrSubCommands),
     /// Chat sub commands
     Chat(crate::chat::ChatSubCommands),
-    /// Ngit sub commands
-    Ngit(ngit::NgitSubCommand),//
     /// Set metadata.
     /// CAUTION!
     /// This will replace your current kind 0 event.
