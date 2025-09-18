@@ -42,7 +42,7 @@ fn get_epoch_ms() -> u128 {
 }
 
 fn convert_to_u32(v: usize) -> Option<i8> {
-    if v > (std::i8::MAX as i32).try_into().unwrap() {
+   if v > (std::i8::MAX as usize) {
         None
     } else {
         Some(v as i8)

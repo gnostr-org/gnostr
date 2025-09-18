@@ -128,10 +128,10 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             )
             .await
         }
-        Some(GnostrCommands::Legit(sub_command_args)) => {
-            debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::legit::legit(sub_command_args).await
-        }
+        //Some(GnostrCommands::Legit(sub_command_args)) => {
+        //    debug!("sub_command_args:{:?}", sub_command_args);
+        //    sub_commands::legit::legit(sub_command_args).await
+        //}
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::ngit::ngit(sub_command_args).await
