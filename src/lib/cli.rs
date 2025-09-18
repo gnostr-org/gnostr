@@ -56,6 +56,7 @@ pub enum NgitCommands {
     Send(sub_commands::send::SubCommandArgs),
     /// list PRs; checkout, apply or download selected
     List,
+    Login(sub_commands::login::SubCommandArgs),
     /// login, logout or export keys
     Account(AccountSubCommandArgs),
 }
