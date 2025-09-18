@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use ngit::{
+use gnostr::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
     login::{
         SignerInfo, SignerInfoSource,
