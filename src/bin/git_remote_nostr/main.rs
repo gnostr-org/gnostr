@@ -14,11 +14,11 @@ use std::{
 use anyhow::{Context, Result, bail};
 use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
 use git::{RepoActions, nostr_url::NostrUrlDecoded};
-use ngit::{client, git, login::existing::load_existing_login};
+use gnostr::{client, git, login::existing::load_existing_login};
 use nostr_0_37_0::nips::nip01::Coordinate;
 use utils::read_line;
 
-use crate::{client::Client, git::Repo};
+use gnostr::{client::Client, git::Repo};
 
 mod fetch;
 mod list;

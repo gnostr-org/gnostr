@@ -3,6 +3,7 @@ use clap::{Parser /*, Subcommand*/};
 use gnostr::cli::*;
 use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
+use gnostr::sub_commands::ngit::NgitSubCommand;
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
 use std::env;
@@ -19,6 +20,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     env::set_var("WOBBLE", "0");
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
+
+	let mut ngit_subcommand = NgitSubCommand { command: NgitCommands::List, disable_cli_spinners: true, nsec: None, password: None };
     let app_cache = get_app_cache_path();
     if gnostr_cli_args.logging {
         let logging = setup_logging();
@@ -134,7 +137,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //}
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::ngit::ngit(sub_command_args).await
+            sub_commands::ngit::ngit(sub_command_args, &ngit_subcommand).await
         }
         Some(GnostrCommands::SetMetadata(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);

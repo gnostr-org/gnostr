@@ -21,16 +21,16 @@ use serde::ser::StdError;
 #[command(propagate_version = true)]
 pub struct NgitSubCommand {
     #[command(subcommand)]
-    command: NgitCommands,
+    pub command: NgitCommands,
     ///// nsec or hex private key
     #[arg(short, long, global = true)]
-    nsec: Option<String>,
+    pub nsec: Option<String>,
     ///// password to decrypt nsec
     #[arg(short, long, global = true)]
-    password: Option<String>,
+    pub password: Option<String>,
     ///// disable spinner animations
     #[arg(long, action)]
-    disable_cli_spinners: bool,
+    pub disable_cli_spinners: bool,
 }
 
 pub async fn ngit(ngit_cli: &NgitCli, sub_command_args: &NgitSubCommand, ) -> Result<(), Box<dyn StdError>> {
