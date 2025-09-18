@@ -137,7 +137,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //    sub_commands::legit::legit(sub_command_args).await
         //}
         Some(GnostrCommands::Ngit(sub_command_args)) => {
-            debug!("sub_command_args:{:?}", sub_command_args);
+            println!("ngit_cli:{:?}", ngit_cli);
+            println!("sub_command_args:{:?}", sub_command_args);
             sub_commands::ngit::ngit(&ngit_cli, &ngit_subcommand).await
         }
         Some(GnostrCommands::SetMetadata(sub_command_args)) => {
