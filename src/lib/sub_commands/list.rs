@@ -1,19 +1,22 @@
 use std::{io::Write, ops::Add};
 
-use anyhow::{Context, Result, bail};
 use crate::{
     client::{get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache},
     git_events::{
         get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
     },
 };
+use anyhow::{Context, Result, bail};
 use nostr_sdk_0_37_0::Kind;
+
+//#[cfg(not(test))]
+use crate::client::Client;
+//#[cfg(test)]
+//use crate::client::MockConnect;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
-    client::{
-        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
-    },
+    client::{Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache},
     git::{Repo, RepoActions, str_to_sha1},
     git_events::{
         commit_msg_from_patch_oneliner, event_is_revision_root, event_to_cover_letter,
@@ -47,11 +50,14 @@ pub async fn launch() -> Result<()> {
     }
 
     let statuses: Vec<nostr_0_37_0::Event> = {
-        let mut statuses = get_events_from_local_cache(git_repo_path, vec![
-            nostr_0_37_0::Filter::default()
-                .kinds(status_kinds().clone())
-                .events(proposals_and_revisions.iter().map(|e| e.id)),
-        ])
+        let mut statuses = get_events_from_local_cache(
+            git_repo_path,
+            vec![
+                nostr_0_37_0::Filter::default()
+                    .kinds(status_kinds().clone())
+                    .events(proposals_and_revisions.iter().map(|e| e.id)),
+            ],
+        )
         .await?;
         statuses.sort_by_key(|e| e.created_at);
         statuses.reverse();

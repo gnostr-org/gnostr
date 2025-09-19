@@ -1,7 +1,7 @@
 use crate::sub_commands;
 use crate::sub_commands::*;
-use anyhow::{anyhow, Result};
 use anyhow::bail;
+use anyhow::{Result, anyhow};
 use clap::{
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,

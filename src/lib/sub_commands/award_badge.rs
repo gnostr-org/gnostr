@@ -54,7 +54,9 @@ pub async fn award_badge(
 
     // Verify that the user trying to award the badge is actually the author of the badge definition
     if badge_definition_event.pubkey != keys.public_key() {
-        eprint!("Incorrect private key. Only the private key used for issuing the badge definition can award it to other public keys");
+        eprint!(
+            "Incorrect private key. Only the private key used for issuing the badge definition can award it to other public keys"
+        );
         exit(1)
     }
 

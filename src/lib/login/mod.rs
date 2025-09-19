@@ -5,10 +5,10 @@ use fresh::fresh_login_or_signup;
 use nostr_0_37_0::PublicKey;
 use nostr_sdk_0_37_0::{NostrSigner, Timestamp, ToBech32};
 
-#[cfg(not(test))]
+//#[cfg(not(test))]
 use crate::client::Client;
-#[cfg(test)]
-use crate::client::MockConnect;
+//#[cfg(test)]
+//use crate::client::MockConnect;
 use crate::git::{Repo, RepoActions};
 
 pub mod existing;
@@ -22,8 +22,8 @@ pub async fn login_or_signup(
     git_repo: &Option<&Repo>,
     signer_info: &Option<SignerInfo>,
     password: &Option<String>,
-    #[cfg(test)] client: Option<&MockConnect>,
-    #[cfg(not(test))] client: Option<&Client>,
+    //#[cfg(test)] client: Option<&MockConnect>,
+    /*#[cfg(not(test))]*/ client: Option<&Client>,
     fetch_profile_updates: bool,
 ) -> Result<(Arc<dyn NostrSigner>, UserRef, SignerInfoSource)> {
     let res = load_existing_login(

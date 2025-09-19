@@ -1,8 +1,8 @@
 use crate::global_rt::global_rt;
 use std::net::{IpAddr, SocketAddr};
+use trust_dns_resolver::TokioAsyncResolver;
 use trust_dns_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
 use trust_dns_resolver::proto::rr::{RData, RecordType};
-use trust_dns_resolver::TokioAsyncResolver;
 
 use std::process::Command;
 use std::str;

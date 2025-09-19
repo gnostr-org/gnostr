@@ -12,7 +12,7 @@ use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     process::{Child, Command, Stdio},
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::mpsc::{Receiver, Sender, channel},
     thread,
 };
 
@@ -133,22 +133,24 @@ impl Context {
     {
         thread::Builder::new()
             .name("child_stream_to_vec".into())
-            .spawn(move || loop {
-                let mut buf = [0u8; 2];
-                match stream.read(&mut buf) {
-                    Err(err) => {
-                        error!("{}] Error reading from stream: {}", line!(), err);
-                        break;
-                    }
-                    Ok(got) => {
-                        if got == 0 {
+            .spawn(move || {
+                loop {
+                    let mut buf = [0u8; 2];
+                    match stream.read(&mut buf) {
+                        Err(err) => {
+                            error!("{}] Error reading from stream: {}", line!(), err);
                             break;
                         }
+                        Ok(got) => {
+                            if got == 0 {
+                                break;
+                            }
 
-                        let mut vec = Vec::with_capacity(got);
-                        vec.extend_from_slice(&buf[..got]);
-                        // TODO: Fix this
-                        let _ = out.send(vec);
+                            let mut vec = Vec::with_capacity(got);
+                            vec.extend_from_slice(&buf[..got]);
+                            // TODO: Fix this
+                            let _ = out.send(vec);
+                        }
                     }
                 }
             })

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 use gnostr::cli::*;
-use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
+use gnostr::cli::{GnostrCli, GnostrCommands, get_app_cache_path, setup_logging};
 use gnostr::sub_commands;
 use gnostr::sub_commands::ngit::NgitSubCommand;
 use gnostr_asyncgit::sync::RepoPath;
@@ -20,9 +20,20 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     env::set_var("WOBBLE", "0");
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
-
-	let mut ngit_cli = NgitCli { bunker_app_key: None,bunker_uri:None, command: NgitCommands::List, disable_cli_spinners: true, nsec: None, password: None };
-	let mut ngit_subcommand = NgitSubCommand { command: NgitCommands::List, disable_cli_spinners: true, nsec: None, password: None };
+    let mut ngit_cli = NgitCli {
+        bunker_app_key: None,
+        bunker_uri: None,
+        command: NgitCommands::List,
+        disable_cli_spinners: true,
+        nsec: None,
+        password: None,
+    };
+    let mut ngit_subcommand = NgitSubCommand {
+        command: NgitCommands::List,
+        disable_cli_spinners: true,
+        nsec: None,
+        password: None,
+    };
     let app_cache = get_app_cache_path();
     if gnostr_cli_args.logging {
         let logging = setup_logging();
@@ -137,15 +148,12 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //    sub_commands::legit::legit(sub_command_args).await
         //}
         Some(GnostrCommands::Ngit(sub_command_args)) => {
-
-
-			//TODO:re-add fetch push pull
-			//move these to GnostrCli - detect and pass to ngit sub_command
-			println!("ngit_cli:{:?}", ngit_cli);
+            //TODO:re-add fetch push pull
+            //move these to GnostrCli - detect and pass to ngit sub_command
+            println!("ngit_cli:{:?}", ngit_cli);
             println!("sub_command_args:{:?}", sub_command_args);
-            
 
-			sub_commands::ngit::ngit(&ngit_cli, &ngit_subcommand).await
+            sub_commands::ngit::ngit(&ngit_cli, &ngit_subcommand).await
         }
         Some(GnostrCommands::SetMetadata(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);

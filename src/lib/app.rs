@@ -7,22 +7,21 @@ use std::{
 
 use crate::weeble::weeble_sync;
 use crate::wobble::wobble_sync;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use gnostr_asyncgit::{
-    sync::{
-        self,
-        utils::{repo_work_dir, undo_last_commit},
-        RepoPath, RepoPathRef,
-    },
     AsyncGitNotification, PushType,
+    sync::{
+        self, RepoPath, RepoPathRef,
+        utils::{repo_work_dir, undo_last_commit},
+    },
 };
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Tabs},
-    Frame,
 };
 use unicode_width::UnicodeWidthStr;
 
@@ -30,10 +29,10 @@ use crate::{
     accessors,
     cmdbar::CommandBar,
     components::{
-        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
+        CommandInfo, Component, DrawableComponent, FuzzyFinderTarget, command_pump, event_pump,
     },
     input::{Input, InputEvent, InputState},
-    keys::{key_match, KeyConfig, SharedKeyConfig},
+    keys::{KeyConfig, SharedKeyConfig, key_match},
     options::{Options, SharedOptions},
     popup_stack::PopupStack,
     popups::{

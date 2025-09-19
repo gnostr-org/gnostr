@@ -2,7 +2,7 @@ use std::env;
 use std::fs;
 use std::io::Result;
 use std::path::{Path, PathBuf};
-use std::process::{exit, Command};
+use std::process::{Command, exit};
 
 fn main() {
     let email = env::args()
@@ -252,7 +252,9 @@ fn set_file_permissions(path: &Path) -> Result<()> {
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_readonly(true); // Attempt to make it read-only for all, closest to 600
         fs::set_permissions(path, perms)?;
-        println!("  (Windows: Set file to read-only attribute. For stronger security, consider manual ACL review.)");
+        println!(
+            "  (Windows: Set file to read-only attribute. For stronger security, consider manual ACL review.)"
+        );
         Ok(())
     }
 }
@@ -284,7 +286,9 @@ fn set_public_key_permissions(path: &Path) -> Result<()> {
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_readonly(false); // Ensure it's not read-only
         fs::set_permissions(path, perms)?;
-        println!("  (Windows: Ensured public key is not read-only. Default ACLs usually allow broader read access.)");
+        println!(
+            "  (Windows: Ensured public key is not read-only. Default ACLs usually allow broader read access.)"
+        );
         Ok(())
     }
 }

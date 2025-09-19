@@ -170,7 +170,9 @@ impl EventHub {
     /// Clears the event queue and returns all the events that were in the queue.
     pub fn drain(&self) -> Vec<Event> {
         if self.rx.is_disconnected() && self.rx.is_empty() {
-            panic!("EventHub channel disconnected. Panicking because Websocket listener thread was killed.");
+            panic!(
+                "EventHub channel disconnected. Panicking because Websocket listener thread was killed."
+            );
         }
 
         self.rx.drain().collect()

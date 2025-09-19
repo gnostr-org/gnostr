@@ -2,7 +2,7 @@ use std::{fs::File, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::{Deserialize, Serialize};
-use struct_patch::{traits::Patch as PatchTrait, Patch};
+use struct_patch::{Patch, traits::Patch as PatchTrait};
 
 #[derive(Debug, PartialOrd, Clone, Copy, Serialize, Deserialize)]
 pub struct GituiKeyEvent {

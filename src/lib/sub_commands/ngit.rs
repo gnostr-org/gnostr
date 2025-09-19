@@ -1,15 +1,15 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::cli::NgitCommands;
-use crate::cli::NgitCli;
 use crate::cli::AccountCommands;
+use crate::cli::NgitCli;
+use crate::cli::NgitCommands;
 
+use crate::sub_commands::export_keys;
 use crate::sub_commands::init;
 use crate::sub_commands::list;
 use crate::sub_commands::login;
-use crate::sub_commands::send;
 use crate::sub_commands::logout;
-use crate::sub_commands::export_keys;
+use crate::sub_commands::send;
 
 use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
@@ -33,10 +33,12 @@ pub struct NgitSubCommand {
     pub disable_cli_spinners: bool,
 }
 
-pub async fn ngit(ngit_cli: &NgitCli, sub_command_args: &NgitSubCommand, ) -> Result<(), Box<dyn StdError>> {
+pub async fn ngit(
+    ngit_cli: &NgitCli,
+    sub_command_args: &NgitSubCommand,
+) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-
-    NgitCommands::Account(args) => match &args.account_command {
+        NgitCommands::Account(args) => match &args.account_command {
             AccountCommands::Login(sub_args) => login::launch(&ngit_cli, sub_args).await?,
             AccountCommands::Logout => logout::launch().await?,
             AccountCommands::ExportKeys => export_keys::launch().await?,

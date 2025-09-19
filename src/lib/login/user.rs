@@ -5,10 +5,10 @@ use nostr_0_37_0::PublicKey;
 use nostr_sdk_0_37_0::{Alphabet, JsonUtil, Kind, SingleLetterTag, Timestamp, ToBech32};
 use serde::{self, Deserialize, Serialize};
 
-#[cfg(not(test))]
+//#[cfg(not(test))]
 use crate::client::Client;
-#[cfg(test)]
-use crate::client::MockConnect;
+//#[cfg(test)]
+//use crate::client::MockConnect;
 use crate::client::{Connect, get_event_from_global_cache};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -57,8 +57,8 @@ pub struct UserRelayRef {
 
 pub async fn get_user_details(
     public_key: &PublicKey,
-    #[cfg(test)] client: Option<&MockConnect>,
-    #[cfg(not(test))] client: Option<&Client>,
+    //#[cfg(test)] client: Option<&MockConnect>,
+    /*#[cfg(not(test))]*/ client: Option<&Client>,
     git_repo_path: Option<&Path>,
     cache_only: bool,
     fetch_profile_updates: bool,

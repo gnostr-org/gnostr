@@ -10,16 +10,16 @@ use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
 use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use backtrace::Backtrace;
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
+use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
 use crossterm::{
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use gnostr_asyncgit::{
-    sync::{utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
+    sync::{RepoPath, utils::repo_work_dir},
 };
 use nostr_sdk_0_37_0::Keys;
 use ratatui::backend::CrosstermBackend;
@@ -33,8 +33,8 @@ use std::{
     panic, process,
     time::{Duration, Instant},
 };
-use tracing::{debug, trace, Level};
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+use tracing::{Level, debug, trace};
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 //use crate::{app::App, cli::process_cmdline};
 pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
@@ -206,10 +206,10 @@ pub fn set_panic_handlers() -> Result<()> {
         let backtrace = Backtrace::new();
         shutdown_terminal();
         log_eprintln!(
-			"\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
-			e,
-			backtrace
-		);
+            "\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
+            e,
+            backtrace
+        );
     }));
 
     // global threadpool

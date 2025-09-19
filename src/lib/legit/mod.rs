@@ -4,8 +4,8 @@ extern crate chrono;
 use crate::event_to_wire;
 use crate::internal;
 use crate::post;
-use chrono::offset::Utc;
 use chrono::DateTime;
+use chrono::offset::Utc;
 use gnostr_types::Event;
 use http::Uri;
 use std::process::Command;
@@ -42,7 +42,7 @@ fn get_epoch_ms() -> u128 {
 }
 
 fn convert_to_u32(v: usize) -> Option<i8> {
-   if v > (std::i8::MAX as usize) {
+    if v > (std::i8::MAX as usize) {
         None
     } else {
         Some(v as i8)

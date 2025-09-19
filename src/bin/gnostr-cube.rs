@@ -20,15 +20,15 @@ use clap::{Arg, ArgAction, Command, Parser};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 
+use gnostr::cube::CompleteConfig;
+use gnostr::cube::WrapErr;
 use gnostr::cube::chat::chat;
 use gnostr::cube::local_git::local_git_test;
 use gnostr::cube::system_command::system_command_test;
-use gnostr::cube::CompleteConfig;
-use gnostr::cube::WrapErr;
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 use std::{error::Error, io};
 
 #[derive(Parser, Debug)]

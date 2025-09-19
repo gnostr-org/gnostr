@@ -115,7 +115,7 @@ pub use zeroize::Zeroize;
 //pub use lightning;
 
 ///
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 ///
 use directories::ProjectDirs;
 
@@ -752,7 +752,9 @@ pub async fn req(
                 if sub == our_sub_id {
                     if why == Some(Why::AuthRequired) {
                         if authenticated.is_none() {
-                            eprintln!("Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)");
+                            eprintln!(
+                                "Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)"
+                            );
                             to_probe.send(Command::Exit).await?;
                             break;
                         }
