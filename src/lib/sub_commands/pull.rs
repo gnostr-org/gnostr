@@ -29,10 +29,26 @@ pub async fn launch() -> Result<()> {
         bail!("checkout a branch associated with a proposal first")
     }
 
-    //#[cfg(test)]
-    //let client: &crate::client::MockConnect = &mut Default::default();
-    //#[cfg(not(test))]
-    let client = Client::default();
+    let mut client = {
+
+        #[cfg(not(test))]
+
+        {
+
+            crate::client::Client::default()
+
+        }
+
+        #[cfg(test)]
+
+        {
+
+        <crate::client::MockConnect as std::default::Default>::default()
+
+        }
+
+    }; 
+
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
     fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
