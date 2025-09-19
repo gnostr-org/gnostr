@@ -1,4 +1,4 @@
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};

@@ -1,4 +1,4 @@
-use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
+use crate::utils::{Prefix, parse_key_or_id_to_hex_string};
 use clap::Args;
 use nostr_sdk_0_37_0::prelude::*;
 use std::str::FromStr;

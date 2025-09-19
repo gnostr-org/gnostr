@@ -3,26 +3,27 @@ pub mod kvs;
 pub mod opt;
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
-use crate::chat::msg::{Msg, MsgKind};
 use crate::chat::ChatSubCommands;
+use crate::chat::msg::{Msg, MsgKind};
 use chrono::{Local, Timelike};
 use clap::ValueEnum;
 use futures::stream::StreamExt;
 use libp2p::StreamProtocol;
 use libp2p::{
+    Multiaddr, PeerId, Swarm,
     core::transport::Transport,
     gossipsub,
     gossipsub::IdentTopic,
     identify, identity,
     kad::{
         self,
+        Config as KadConfig,
         // Kademlia, KademliaConfig, KademliaEvent,
         store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
     },
     mdns, noise, ping, rendezvous,
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, Multiaddr, PeerId, Swarm,
+    tcp, yamux,
 };
 use std::{
     env,
@@ -127,11 +128,11 @@ struct MyBehaviour {
 pub fn generate_ed25519(secret_key_seed: &[u8]) -> identity::Keypair {
     // let mut bytes = [0u8; 32];
     let mut bytes: [u8; 32] = GNOSTR_SHA256; //[
-                                             //    0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, //
-                                             //    0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76, //
-                                             //    0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, //
-                                             //    0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06, //
-                                             //];
+    //    0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, //
+    //    0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76, //
+    //    0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, //
+    //    0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06, //
+    //];
 
     bytes[31] = bytes[31] ^ secret_key_seed[31];
     for (i, byte) in bytes.iter().enumerate() {

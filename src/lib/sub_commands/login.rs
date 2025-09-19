@@ -1,14 +1,19 @@
-use anyhow::{Context, Result};
-use clap;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
     git::{get_git_config_item, remove_git_config_item},
     login::{SignerInfoSource, existing::load_existing_login},
 };
+use anyhow::{Context, Result};
+use clap;
+
+//#[cfg(not(test))]
+use crate::client::Client;
+//#[cfg(test)]
+//use crate::client::MockConnect;
 
 use crate::{
     cli::{NgitCli, extract_signer_cli_arguments},
-    client::{Client, Connect},
+    client::Connect,
     git::Repo,
     login::fresh::fresh_login_or_signup,
 };
@@ -32,9 +37,7 @@ pub async fn launch(args: &NgitCli, command_args: &SubCommandArgs) -> Result<()>
     };
 
     let git_repo_result = Repo::discover().context("failed to find a git repository");
-    let git_repo = {
-        git_repo_result.ok()
-    };
+    let git_repo = { git_repo_result.ok() };
 
     let (logged_out, log_in_locally_only) = logout(git_repo.as_ref(), command_args.local).await?;
     if logged_out || log_in_locally_only {

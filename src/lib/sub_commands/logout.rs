@@ -1,8 +1,8 @@
-use anyhow::{Context, Result};
 use crate::{
     git::remove_git_config_item,
     login::{SignerInfoSource, existing::load_existing_login},
 };
+use anyhow::{Context, Result};
 
 use crate::{
     git::Repo,
@@ -11,9 +11,7 @@ use crate::{
 
 pub async fn launch() -> Result<()> {
     let git_repo_result = Repo::discover().context("failed to find a git repository");
-    let git_repo = {
-        git_repo_result.ok()
-    };
+    let git_repo = { git_repo_result.ok() };
     logout(git_repo.as_ref()).await
 }
 

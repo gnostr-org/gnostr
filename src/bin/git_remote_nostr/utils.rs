@@ -108,11 +108,14 @@ pub async fn get_open_or_draft_proposals(
             .collect();
 
     let statuses: Vec<nostr_0_37_0::Event> = {
-        let mut statuses = get_events_from_local_cache(git_repo_path, vec![
-            nostr_0_37_0::Filter::default()
-                .kinds(status_kinds().clone())
-                .events(proposals.iter().map(|e| e.id)),
-        ])
+        let mut statuses = get_events_from_local_cache(
+            git_repo_path,
+            vec![
+                nostr_0_37_0::Filter::default()
+                    .kinds(status_kinds().clone())
+                    .events(proposals.iter().map(|e| e.id)),
+            ],
+        )
         .await?;
         statuses.sort_by_key(|e| e.created_at);
         statuses.reverse();

@@ -131,23 +131,26 @@ pub async fn generate_patch_event(
                     // code that makes it into the main branch, assuming
                     // the commit id is correct
                     Tag::from_standardized(TagStandard::Reference(commit.to_string())),
-                    Tag::custom(TagKind::Custom(std::borrow::Cow::Borrowed("alt")), vec![
-                        format!(
+                    Tag::custom(
+                        TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                        vec![format!(
                             "git patch: {}",
                             git_repo
                                 .get_commit_message_summary(commit)
                                 .unwrap_or_default()
-                        ),
-                    ]),
+                        )],
+                    ),
                 ],
                 if let Some(thread_event_id) = thread_event_id {
-                    vec![Tag::from_standardized(nostr_sdk_0_37_0::TagStandard::Event {
-                        event_id: thread_event_id,
-                        relay_url: relay_hint.clone(),
-                        marker: Some(Marker::Root),
-                        public_key: None,
-                        uppercase: false,
-                    })]
+                    vec![Tag::from_standardized(
+                        nostr_sdk_0_37_0::TagStandard::Event {
+                            event_id: thread_event_id,
+                            relay_url: relay_hint.clone(),
+                            marker: Some(Marker::Root),
+                            public_key: None,
+                            uppercase: false,
+                        },
+                    )]
                 } else if let Some(event_ref) = root_proposal_id.clone() {
                     vec![
                         Tag::hashtag("root"),
@@ -166,13 +169,15 @@ pub async fn generate_patch_event(
                 },
                 mentions.to_vec(),
                 if let Some(id) = parent_patch_event_id {
-                    vec![Tag::from_standardized(nostr_sdk_0_37_0::TagStandard::Event {
-                        event_id: id,
-                        relay_url: relay_hint.clone(),
-                        marker: Some(Marker::Reply),
-                        public_key: None,
-                        uppercase: false,
-                    })]
+                    vec![Tag::from_standardized(
+                        nostr_sdk_0_37_0::TagStandard::Event {
+                            event_id: id,
+                            relay_url: relay_hint.clone(),
+                            marker: Some(Marker::Reply),
+                            public_key: None,
+                            uppercase: false,
+                        },
+                    )]
                 } else {
                     vec![]
                 },
@@ -202,9 +207,10 @@ pub async fn generate_patch_event(
                     .collect(),
                 vec![
                     // a fallback is now in place to extract this from the patch
-                    Tag::custom(TagKind::Custom(std::borrow::Cow::Borrowed("commit")), vec![
-                        commit.to_string(),
-                    ]),
+                    Tag::custom(
+                        TagKind::Custom(std::borrow::Cow::Borrowed("commit")),
+                        vec![commit.to_string()],
+                    ),
                     // this is required as patches cannot be relied upon to include the 'base
                     // commit'
                     Tag::custom(
@@ -260,22 +266,26 @@ pub fn event_tag_from_nip19_or_hex(
         if let Ok(nip19) = Nip19::from_bech32(bech32.clone()) {
             match nip19 {
                 Nip19::Event(n) => {
-                    break Ok(Tag::from_standardized(nostr_sdk_0_37_0::TagStandard::Event {
-                        event_id: n.event_id,
-                        relay_url: n.relays.first().and_then(|url| RelayUrl::parse(url).ok()),
-                        marker: Some(marker),
-                        public_key: None,
-                        uppercase: false,
-                    }));
+                    break Ok(Tag::from_standardized(
+                        nostr_sdk_0_37_0::TagStandard::Event {
+                            event_id: n.event_id,
+                            relay_url: n.relays.first().and_then(|url| RelayUrl::parse(url).ok()),
+                            marker: Some(marker),
+                            public_key: None,
+                            uppercase: false,
+                        },
+                    ));
                 }
                 Nip19::EventId(id) => {
-                    break Ok(Tag::from_standardized(nostr_sdk_0_37_0::TagStandard::Event {
-                        event_id: id,
-                        relay_url: None,
-                        marker: Some(marker),
-                        public_key: None,
-                        uppercase: false,
-                    }));
+                    break Ok(Tag::from_standardized(
+                        nostr_sdk_0_37_0::TagStandard::Event {
+                            event_id: id,
+                            relay_url: None,
+                            marker: Some(marker),
+                            public_key: None,
+                            uppercase: false,
+                        },
+                    ));
                 }
                 Nip19::Coordinate(coordinate) => {
                     break Ok(Tag::coordinate(coordinate));
@@ -294,13 +304,15 @@ pub fn event_tag_from_nip19_or_hex(
             }
         }
         if let Ok(id) = nostr_0_37_0::EventId::from_str(&bech32) {
-            break Ok(Tag::from_standardized(nostr_sdk_0_37_0::TagStandard::Event {
-                event_id: id,
-                relay_url: None,
-                marker: Some(marker),
-                public_key: None,
-                uppercase: false,
-            }));
+            break Ok(Tag::from_standardized(
+                nostr_sdk_0_37_0::TagStandard::Event {
+                    event_id: id,
+                    relay_url: None,
+                    marker: Some(marker),
+                    public_key: None,
+                    uppercase: false,
+                },
+            ));
         }
         if prompt_for_correction {
             println!("not a valid {reference_name} event reference");

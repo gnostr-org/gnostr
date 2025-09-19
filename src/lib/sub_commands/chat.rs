@@ -6,10 +6,10 @@
 use crate::chat::create_event;
 use crate::chat::msg::*;
 //use crate::chat::p2p::evt_loop; //migrate carefully
+use crate::chat::ChatCli;
 use crate::chat::parse_json;
 use crate::chat::split_json_string;
 use crate::chat::ui;
-use crate::chat::ChatCli;
 use crate::chat::*;
 use crate::global_rt::global_rt;
 use crate::p2p::evt_loop; //migrate carefully
@@ -23,16 +23,16 @@ use chrono::Utc;
 
 use libp2p::gossipsub;
 use log;
-use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::Client;
 use nostr_sdk_0_37_0::EventBuilder;
 use nostr_sdk_0_37_0::Keys;
+use nostr_sdk_0_37_0::prelude::*;
 use serde_json;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::{error::Error, time::Duration};
-use tracing::{debug, info, Level};
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+use tracing::{Level, debug, info};
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
     run(sub_command_args).await?;

@@ -2,8 +2,8 @@
 #![allow(dead_code)]
 extern crate chrono;
 extern crate time;
-use chrono::offset::Utc;
 use chrono::DateTime;
+use chrono::offset::Utc;
 use gnostr_asyncgit::sync::commit::{padded_commit_id, serialize_commit};
 
 use gnostr::global_rt::global_rt;

@@ -381,9 +381,11 @@ mod tests {
 
     #[test]
     fn test_split_value_by_newline_string() {
-        let json_value = serde_json::json!("line1
+        let json_value = serde_json::json!(
+            "line1
 line2
-line3");
+line3"
+        );
         let result = split_value_by_newline(&json_value);
         assert!(result.is_some());
         let lines = result.unwrap();
@@ -458,14 +460,16 @@ line3");
 
     #[tokio::test]
     async fn test_parse_private_key_some_nsec() {
-        let nsec_key = "nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3".to_string();
+        let nsec_key =
+            "nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3".to_string();
         let keys = parse_private_key(Some(nsec_key), false).await.unwrap();
         assert!(keys.secret_key().is_ok());
     }
 
     #[tokio::test]
     async fn test_parse_private_key_some_hex() {
-        let hex_key = "bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4".to_string();
+        let hex_key =
+            "bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4".to_string();
         let keys = parse_private_key(Some(hex_key), false).await.unwrap();
         assert!(keys.secret_key().is_ok());
     }
@@ -515,7 +519,8 @@ line3");
         let current_millisecs = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs_f64() * 1000.0;
+            .as_secs_f64()
+            * 1000.0;
         assert!((current_millisecs - millisecs).abs() < 5000.0); // Within 5 seconds
     }
 
@@ -530,14 +535,24 @@ line3");
 
     #[test]
     fn test_strip_trailing_newline_lf() {
-        assert_eq!(strip_trailing_newline("hello
-"), "hello");
+        assert_eq!(
+            strip_trailing_newline(
+                "hello
+"
+            ),
+            "hello"
+        );
     }
 
     #[test]
     fn test_strip_trailing_newline_crlf() {
-        assert_eq!(strip_trailing_newline("hello
-"), "hello");
+        assert_eq!(
+            strip_trailing_newline(
+                "hello
+"
+            ),
+            "hello"
+        );
     }
 
     #[test]

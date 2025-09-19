@@ -91,34 +91,35 @@ impl Worker {
         debug!("self.message={}\n", self.message);
 
         let raw = format!(
-			"tree {}\n\
+            "tree {}\n\
 			parent {}\n\
 			author {} {}\n\
 			committer {} {}\n\n\
             {}/{}/{}:{}\n\n\"tree\":\"{}\",\"parent\":\"{}\",\"weeble\":\"{:04}\",\"blockheight\":\"{:06}\",\"wobble\":\"{:}\",\"bit\":\"{:02}\",\"nonce\":\"{:08x}\",\"message\":\"{:}\"",
-
             //below are in essential format
-			self.tree,
-			self.parent,
-			self.author, tstamp, //author
-			self.author, tstamp, //committer
+            self.tree,
+            self.parent,
+            self.author,
+            tstamp, //author
+            self.author,
+            tstamp, //committer
             //above are in essential format
 
-			//first element is commit subject line
-			self.weeble.trim(),
-			self.blockheight.trim(),
-			self.wobble.trim(),
-			self.message,
-
+            //first element is commit subject line
+            self.weeble.trim(),
+            self.blockheight.trim(),
+            self.wobble.trim(),
+            self.message,
             //event body
-			self.tree,
-			self.parent,
-			self.weeble.trim(),
-			self.blockheight.trim(),
-			self.wobble.trim(),
-			self.id, value,
-			self.message
-		);
+            self.tree,
+            self.parent,
+            self.weeble.trim(),
+            self.blockheight.trim(),
+            self.wobble.trim(),
+            self.id,
+            value,
+            self.message
+        );
         debug!("raw={}\n", raw);
 
         //be careful when changing - fails silently when wrong.

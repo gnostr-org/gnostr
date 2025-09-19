@@ -45,7 +45,7 @@ fn handshake<T: Write + Read>(stream: &mut T) -> Result<()> {
         None => {
             return Err(anyhow!(
                 "Incorrect data from message reader, should have been message"
-            ))
+            ));
         }
     }
 

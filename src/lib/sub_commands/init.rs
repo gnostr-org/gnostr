@@ -1,11 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{Context, Result};
-use console::{Style, Term};
 use crate::{
     cli_interactor::PromptConfirmParms,
     git::nostr_url::{NostrUrlDecoded, save_nip05_to_git_config_cache},
 };
+use anyhow::{Context, Result};
+use console::{Style, Term};
 use nostr_0_37_0::{
     FromBech32, PublicKey, ToBech32,
     nips::{
