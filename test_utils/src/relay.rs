@@ -11,8 +11,8 @@ pub type ListenerReqFunc<'a> =
 
 pub struct Relay<'a> {
     port: u16,
-    event_hub: Option<gnostr::ws::EventHub>,
-    clients: HashMap<u64, gnostr::ws::Responder>,
+    event_hub: simple_websockets::EventHub,
+    clients: HashMap<u64, simple_websockets::Responder>,
     pub events: Vec<nostr::Event>,
     pub reqs: Vec<Vec<nostr::Filter>>,
     event_listener: Option<ListenerEventFunc<'a>>,
@@ -25,13 +25,13 @@ impl<'a> Relay<'a> {
         event_listener: Option<ListenerEventFunc<'a>>,
         req_listener: Option<ListenerReqFunc<'a>>,
     ) -> Self {
-        let event_hub = gnostr::ws::launch(port)
+        let event_hub = simple_websockets::launch(port)
             .unwrap_or_else(|_| panic!("failed to listen on port {port}"));
         Self {
             port,
             events: vec![],
             reqs: vec![],
-            event_hub: Some(event_hub),
+            event_hub,
             clients: HashMap::new(),
             event_listener,
             req_listener,
@@ -52,7 +52,7 @@ impl<'a> Relay<'a> {
         }
         .as_json();
         // bail!(format!("{}", &ok_json));
-        Ok(responder.send(gnostr::ws::Message::Text(ok_json)))
+        Ok(responder.send(simple_websockets::Message::Text(ok_json)))
     }
 
     pub fn respond_eose(
@@ -62,7 +62,7 @@ impl<'a> Relay<'a> {
     ) -> Result<bool> {
         let responder = self.clients.get(&client_id).unwrap();
 
-        Ok(responder.send(gnostr::ws::Message::Text(
+        Ok(responder.send(simple_websockets::Message::Text(
             RelayMessage::EndOfStoredEvents(subscription_id).as_json(),
         )))
     }
@@ -77,7 +77,7 @@ impl<'a> Relay<'a> {
         let responder = self.clients.get(&client_id).unwrap();
 
         for event in events {
-            let res = responder.send(gnostr::ws::Message::Text(
+            let res = responder.send(simple_websockets::Message::Text(
                 RelayMessage::Event {
                     subscription_id: subscription_id.clone(),
                     event: Box::new(event.clone()),
@@ -116,38 +116,38 @@ impl<'a> Relay<'a> {
     pub async fn listen_until_close(&mut self) -> Result<()> {
         loop {
             println!("{} polling", self.port);
-            match self.event_hub.as_mut().unwrap().poll_async().await {
-                gnostr::ws::Event::Connect(client_id, responder) => {
+            match self.event_hub.poll_async().await {
+                simple_websockets::Event::Connect(client_id, responder) => {
                     // add their Responder to our `clients` map:
                     self.clients.insert(client_id, responder);
                 }
-                gnostr::ws::Event::Disconnect(client_id) => {
+                simple_websockets::Event::Disconnect(client_id) => {
                     // remove the disconnected client from the clients map:
                     println!("{} disconnected", self.port);
                     self.clients.remove(&client_id);
-                    break;
+                    // break;
                 }
-                gnostr::ws::Event::Message(client_id, message) => {
-                    println!("bla{:?}", &message);
+                simple_websockets::Event::Message(client_id, message) => {
+                    // println!("bla{:?}", &message);
 
                     println!(
                         "{} Received a message from client #{}: {:?}",
                         self.port, client_id, message
                     );
-                    if let gnostr::ws::Message::Text(s) = message.clone() {
+                    if let simple_websockets::Message::Text(s) = message.clone() {
                         if s.eq("shut me down") {
                             println!("{} recieved shut me down", self.port);
                             break;
                         }
                     }
-                    println!("{:?}", &message);
+                    // println!("{:?}", &message);
                     if let Ok(event) = get_nevent(&message) {
-                        println!("{:?}", &event);
-                        let t: Vec<nostr::Kind> = self.events.iter().map(|e| e.kind).collect();
-                        println!("before{:?}", t);
+                        // println!("{:?}", &event);
+                        // let t: Vec<nostr::Kind> = self.events.iter().map(|e| e.kind).collect();
+                        // println!("before{:?}", t);
                         self.events.push(event.clone());
-                        let t: Vec<nostr::Kind> = self.events.iter().map(|e| e.kind).collect();
-                        println!("after{:?}", t);
+                        // let t: Vec<nostr::Kind> = self.events.iter().map(|e| e.kind).collect();
+                        // println!("after{:?}", t);
 
                         if let Some(listner) = self.event_listener {
                             listner(self, client_id, event)?;
@@ -161,15 +161,15 @@ impl<'a> Relay<'a> {
                         if let Some(listner) = self.req_listener {
                             listner(self, client_id, subscription_id, filters)?;
                         } else {
-                            //self.respond_standard_req(client_id, &subscription_id, &filters)?;
-                            self.respond_eose(client_id, subscription_id)?;
+                            self.respond_standard_req(client_id, &subscription_id, &filters)?;
+                            // self.respond_eose(client_id, subscription_id)?;
                         }
                         // respond with events
                         // respond with EOSE
                     }
                     if is_nclose(&message) {
                         println!("{} recieved nostr close", self.port);
-                        break;
+                        // break;
                     }
                 }
             }
@@ -178,10 +178,6 @@ impl<'a> Relay<'a> {
             "{} stop polling. we may not be polling but the tcplistner is still listening",
             self.port
         );
-        // Explicitly take and drop the event_hub to close the underlying TCP listener
-        if let Some(event_hub) = self.event_hub.take() {
-            drop(event_hub);
-        }
         Ok(())
     }
 }
@@ -198,22 +194,21 @@ pub fn shutdown_relay(port: u64) -> Result<()> {
     Ok(())
 }
 
-fn get_nevent(message: &gnostr::ws::Message) -> Result<nostr::Event> {
-    if let gnostr::ws::Message::Text(s) = message.clone() {
+fn get_nevent(message: &simple_websockets::Message) -> Result<nostr::Event> {
+    if let simple_websockets::Message::Text(s) = message.clone() {
         let cm_result = ClientMessage::from_json(s);
         if let Ok(ClientMessage::Event(event)) = cm_result {
             let e = *event;
             return Ok(e.clone());
         }
     }
-    println!("not nostr event");
     bail!("not nostr event")
 }
 
 fn get_nreq(
-    message: &gnostr::ws::Message,
+    message: &simple_websockets::Message,
 ) -> Result<(nostr::SubscriptionId, Vec<nostr::Filter>)> {
-    if let gnostr::ws::Message::Text(s) = message.clone() {
+    if let simple_websockets::Message::Text(s) = message.clone() {
         let cm_result = ClientMessage::from_json(s);
         if let Ok(ClientMessage::Req {
             subscription_id,
@@ -223,12 +218,11 @@ fn get_nreq(
             return Ok((subscription_id, filters));
         }
     }
-    println!("not nostr event");
     bail!("not nostr event")
 }
 
-fn is_nclose(message: &gnostr::ws::Message) -> bool {
-    if let gnostr::ws::Message::Text(s) = message.clone() {
+fn is_nclose(message: &simple_websockets::Message) -> bool {
+    if let simple_websockets::Message::Text(s) = message.clone() {
         let cm_result = ClientMessage::from_json(s);
         if let Ok(ClientMessage::Close(_)) = cm_result {
             return true;

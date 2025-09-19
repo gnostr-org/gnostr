@@ -196,14 +196,11 @@ mod when_main_branch_is_uptodate {
 
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             let mut c = p.expect_choice("", vec![
                                 format!(
@@ -316,14 +313,11 @@ mod when_main_branch_is_uptodate {
 
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(0, true, None)?;
                             let mut c = p.expect_choice("", vec![
                                 format!(
@@ -439,15 +433,12 @@ mod when_main_branch_is_uptodate {
 
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("add d3.md"), // commit msg title
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("add d3.md"), // commit msg title
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(0, true, None)?;
                             let mut c = p.expect_choice("", vec![
                                 format!(
@@ -517,15 +508,12 @@ mod when_main_branch_is_uptodate {
 
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("add d3.md"), // commit msg title
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("add d3.md"), // commit msg title
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(0, true, None)?;
                             let mut c = p.expect_choice("", vec![
                                 format!(
@@ -640,14 +628,11 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             let mut c = p.expect_choice("", vec![
                                 format!(
@@ -665,24 +650,18 @@ mod when_main_branch_is_uptodate {
                             p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout proposal branch (2 ahead 0 behind 'main')"),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout proposal branch (2 ahead 0 behind 'main')"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect_end_eventually_and_print()?;
 
@@ -736,14 +715,11 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             let mut c = p.expect_choice("", vec![
                                 format!(
@@ -761,24 +737,18 @@ mod when_main_branch_is_uptodate {
                             p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout proposal branch (2 ahead 0 behind 'main')"),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout proposal branch (2 ahead 0 behind 'main')"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect(format!(
                                 "checked out proposal as 'pr/{}(",
@@ -852,24 +822,18 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout proposal branch and apply 1 appendments"),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout proposal branch and apply 1 appendments"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect("checked out proposal branch and applied 1 appendments (2 ahead 0 behind 'main')\r\n")?;
                             p.expect_end()?;
@@ -928,24 +892,18 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout proposal branch and apply 1 appendments"),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout proposal branch and apply 1 appendments"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect("checked out proposal branch and applied 1 appendments (2 ahead 0 behind 'main')\r\n")?;
                             p.expect_end()?;
@@ -1041,29 +999,21 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             p.expect_eventually("--force`\r\n")?;
 
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout local branch with unpublished changes"),
-                                    format!(
-                                        "discard unpublished changes and checkout new revision"
-                                    ),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    "back".to_string(),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout local branch with unpublished changes"),
+                                format!("discard unpublished changes and checkout new revision"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                "back".to_string(),
+                            ])?;
                             c.succeeds_with(1, true, Some(0))?;
 
                             p.expect_end_eventually_and_print()?;
@@ -1120,14 +1070,11 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             p.expect("you have an amended/rebase version the proposal that is unpublished\r\n")?;
                             p.expect("you have previously applied the latest version of the proposal (2 ahead 0 behind 'main') but your local proposal branch has amended or rebased it (2 ahead 0 behind 'main')\r\n")?;
@@ -1136,18 +1083,13 @@ mod when_main_branch_is_uptodate {
                             p.expect("  2) run `ngit list` and checkout the latest published version of this proposal\r\n")?;
                             p.expect("if you are confident in your changes consider running `ngit push --force`\r\n")?;
 
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout local branch with unpublished changes"),
-                                    format!(
-                                        "discard unpublished changes and checkout new revision"
-                                    ),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    "back".to_string(),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout local branch with unpublished changes"),
+                                format!("discard unpublished changes and checkout new revision"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                "back".to_string(),
+                            ])?;
                             c.succeeds_with(1, true, Some(1))?;
                             p.expect_end_with("checked out latest version of proposal (2 ahead 0 behind 'main'), replacing unpublished version (2 ahead 0 behind 'main')\r\n")?;
 
@@ -1225,26 +1167,20 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             p.expect(
                                 "local proposal branch exists with 1 unpublished commits on top of the most up-to-date version of the proposal (3 ahead 0 behind 'main')\r\n",
                             )?;
 
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout proposal branch with 1 unpublished commits"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout proposal branch with 1 unpublished commits"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect("checked out proposal branch with 1 unpublished commits (3 ahead 0 behind 'main')\r\n")?;
                             p.expect_end()?;
@@ -1307,26 +1243,20 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             p.expect(
                                 "local proposal branch exists with 1 unpublished commits on top of the most up-to-date version of the proposal (3 ahead 0 behind 'main')\r\n",
                             )?;
 
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout proposal branch with 1 unpublished commits"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout proposal branch with 1 unpublished commits"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect("checked out proposal branch with 1 unpublished commits (3 ahead 0 behind 'main')\r\n")?;
                             p.expect_end()?;
@@ -1409,26 +1339,20 @@ mod when_main_branch_is_uptodate {
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                             p.expect("fetching updates...\r\n")?;
                             p.expect_eventually("\r\n")?; // some updates listed here
-                            let mut c = p.expect_choice(
-                                "all proposals",
-                                vec![
-                                    format!("\"{PROPOSAL_TITLE_3}\""),
-                                    format!("\"{PROPOSAL_TITLE_2}\""),
-                                    format!("\"{PROPOSAL_TITLE_1}\""),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("all proposals", vec![
+                                format!("\"{PROPOSAL_TITLE_3}\""),
+                                format!("\"{PROPOSAL_TITLE_2}\""),
+                                format!("\"{PROPOSAL_TITLE_1}\""),
+                            ])?;
                             c.succeeds_with(2, true, None)?;
                             p.expect("updated proposal available (2 ahead 0 behind 'main'). existing version is 2 ahead 1 behind 'main'\r\n")?;
-                            let mut c = p.expect_choice(
-                                "",
-                                vec![
-                                    format!("checkout and overwrite existing proposal branch"),
-                                    format!("checkout existing outdated proposal branch"),
-                                    format!("apply to current branch with `git am`"),
-                                    format!("download to ./patches"),
-                                    format!("back"),
-                                ],
-                            )?;
+                            let mut c = p.expect_choice("", vec![
+                                format!("checkout and overwrite existing proposal branch"),
+                                format!("checkout existing outdated proposal branch"),
+                                format!("apply to current branch with `git am`"),
+                                format!("download to ./patches"),
+                                format!("back"),
+                            ])?;
                             c.succeeds_with(0, true, Some(0))?;
                             p.expect("checked out new version of proposal (2 ahead 0 behind 'main'), replacing old version (2 ahead 1 behind 'main')\r\n")?;
                             p.expect_end()?;
@@ -1482,26 +1406,20 @@ mod when_main_branch_is_uptodate {
                                 let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                                 p.expect("fetching updates...\r\n")?;
                                 p.expect_eventually("\r\n")?; // some updates listed here
-                                let mut c = p.expect_choice(
-                                    "all proposals",
-                                    vec![
-                                        format!("\"{PROPOSAL_TITLE_3}\""),
-                                        format!("\"{PROPOSAL_TITLE_2}\""),
-                                        format!("\"{PROPOSAL_TITLE_1}\""),
-                                    ],
-                                )?;
+                                let mut c = p.expect_choice("all proposals", vec![
+                                    format!("\"{PROPOSAL_TITLE_3}\""),
+                                    format!("\"{PROPOSAL_TITLE_2}\""),
+                                    format!("\"{PROPOSAL_TITLE_1}\""),
+                                ])?;
                                 c.succeeds_with(2, true, None)?;
                                 p.expect("updated proposal available (2 ahead 0 behind 'main'). existing version is 2 ahead 1 behind 'main'\r\n")?;
-                                let mut c = p.expect_choice(
-                                    "",
-                                    vec![
-                                        format!("checkout and overwrite existing proposal branch"),
-                                        format!("checkout existing outdated proposal branch"),
-                                        format!("apply to current branch with `git am`"),
-                                        format!("download to ./patches"),
-                                        format!("back"),
-                                    ],
-                                )?;
+                                let mut c = p.expect_choice("", vec![
+                                    format!("checkout and overwrite existing proposal branch"),
+                                    format!("checkout existing outdated proposal branch"),
+                                    format!("apply to current branch with `git am`"),
+                                    format!("download to ./patches"),
+                                    format!("back"),
+                                ])?;
                                 c.succeeds_with(0, true, Some(0))?;
                                 p.expect("checked out new version of proposal (2 ahead 0 behind 'main'), replacing old version (2 ahead 1 behind 'main')\r\n")?;
                                 p.expect_end()?;

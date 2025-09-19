@@ -46,6 +46,9 @@ mod without_state_announcement {
             // println!("{}", p.expect_eventually("\r\n\r\n")?);
             let res = p.expect_eventually("\r\n\r\n")?;
             p.exit()?;
+            for p in [51, 52, 53, 55, 56, 57] {
+                relay::shutdown_relay(8000 + p)?;
+            }
             assert_eq!(
                 res.split("\r\n")
                     .map(|e| e.to_string())
@@ -72,10 +75,6 @@ mod without_state_announcement {
             r57.listen_until_close(),
         );
         cli_tester_handle.join().unwrap()?;
-
-        for p in [51, 52, 53, 55, 56, 57] {
-            relay::shutdown_relay(8000 + p)?;
-        }
         Ok(())
     }
 }
@@ -127,6 +126,9 @@ mod with_state_announcement {
                 // println!("{}", p.expect_eventually("\r\n\r\n")?);
                 let res = p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
+                for p in [51, 52, 53, 55, 56, 57] {
+                    relay::shutdown_relay(8000 + p)?;
+                }
                 assert_eq!(
                     res.split("\r\n")
                         .map(|e| e.to_string())
@@ -150,10 +152,6 @@ mod with_state_announcement {
                 r57.listen_until_close(),
             );
             cli_tester_handle.join().unwrap()?;
-
-            for p in [51, 52, 53, 55, 56, 57] {
-                relay::shutdown_relay(8000 + p)?;
-            }
             Ok(())
         }
     }
@@ -220,6 +218,9 @@ mod with_state_announcement {
                 // println!("{}", p.expect_eventually("\r\n\r\n")?);
                 let res = p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
+                for p in [51, 52, 53, 55, 56, 57] {
+                    relay::shutdown_relay(8000 + p)?;
+                }
                 assert_eq!(
                     res.split("\r\n")
                         .map(|e| e.to_string())
@@ -230,8 +231,8 @@ mod with_state_announcement {
                         .collect::<HashSet<String>>(),
                     HashSet::from([
                         "@refs/heads/main HEAD".to_string(),
-                        format!("{}\\r\\n refs/heads/main", main_original_commit_id),
-                        format!("{}\\r\\n refs/heads/example-branch", example_commit_id),
+                        format!("{} refs/heads/main", main_original_commit_id),
+                        format!("{} refs/heads/example-branch", example_commit_id),
                     ]),
                 );
                 Ok(())
@@ -246,10 +247,6 @@ mod with_state_announcement {
                 r57.listen_until_close(),
             );
             cli_tester_handle.join().unwrap()?;
-
-            for p in [51, 52, 53, 55, 56, 57] {
-                relay::shutdown_relay(8000 + p)?;
-            }
             Ok(())
         }
     }
@@ -302,6 +299,9 @@ mod with_state_announcement {
                 let res = p.expect_eventually("\r\n\r\n")?;
 
                 p.exit()?;
+                for p in [51, 52, 53, 55, 56, 57] {
+                    relay::shutdown_relay(8000 + p)?;
+                }
                 Ok(res)
             });
             // launch relays
@@ -315,10 +315,6 @@ mod with_state_announcement {
             );
 
             let res = cli_tester_handle.join().unwrap()?;
-
-            for p in [51, 52, 53, 55, 56, 57] {
-                relay::shutdown_relay(8000 + p)?;
-            }
 
             let proposal_creation_repo = cli_tester_create_proposal_branches_ready_to_send()?;
 
