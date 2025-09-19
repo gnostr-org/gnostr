@@ -11,10 +11,10 @@ use super::{
     print_logged_in_as,
     user::{UserRef, get_user_details},
 };
-//#[cfg(not(test))]
+#[cfg(not(test))]
 use crate::client::Client;
-//#[cfg(test)]
-//use crate::client::MockConnect;
+#[cfg(test)]
+use crate::client::MockConnect;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptPasswordParms},
     client::fetch_public_key,
@@ -33,8 +33,8 @@ pub async fn load_existing_login(
     signer_info: &Option<SignerInfo>,
     password: &Option<String>,
     source: &Option<SignerInfoSource>,
-    //#[cfg(test)] client: Option<&MockConnect>,
-    /*#[cfg(not(test))]*/ client: Option<&Client>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
     silent: bool,
     prompt_for_password: bool,
     fetch_profile_updates: bool,

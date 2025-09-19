@@ -16,10 +16,10 @@ use super::{
     print_logged_in_as,
     user::{UserRef, get_user_details},
 };
-//#[cfg(not(test))]
+#[cfg(not(test))]
 use crate::client::Client;
-//#[cfg(test)]
-//use crate::client::MockConnect;
+#[cfg(test)]
+use crate::client::MockConnect;
 use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, Printer, PromptChoiceParms, PromptConfirmParms,
@@ -31,8 +31,8 @@ use crate::{
 
 pub async fn fresh_login_or_signup(
     git_repo: &Option<&Repo>,
-    //#[cfg(test)] client: Option<&MockConnect>,
-    /*#[cfg(not(test))]*/ client: Option<&Client>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
     signer_info: Option<SignerInfo>,
     save_local: bool,
 ) -> Result<(Arc<dyn NostrSigner>, UserRef, SignerInfoSource)> {
@@ -245,8 +245,8 @@ fn shorten_string(s: &str) -> String {
 }
 
 pub async fn get_fresh_nip46_signer(
-    //#[cfg(test)] client: Option<&MockConnect>,
-    /*#[cfg(not(test))]*/ client: Option<&Client>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
 ) -> Result<
     Option<(
         Arc<dyn NostrSigner>,
@@ -364,8 +364,8 @@ pub async fn get_fresh_nip46_signer(
 }
 
 pub fn generate_nostr_connect_app(
-    //#[cfg(test)] client: Option<&MockConnect>,
-    /*#[cfg(not(test))]*/ client: Option<&Client>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
 ) -> Result<(Keys, NostrConnectURI)> {
     let app_key = Keys::generate();
     let relays = if let Some(client) = client {
@@ -679,8 +679,8 @@ fn silently_save_to_git_config(
 }
 
 async fn signup(
-    //#[cfg(test)] client: Option<&MockConnect>,
-    /*#[cfg(not(test))]*/ client: Option<&Client>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
 ) -> Result<
     Option<(
         Arc<dyn NostrSigner>,

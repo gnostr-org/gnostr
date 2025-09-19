@@ -99,6 +99,7 @@ async fn main() -> Result<()> {
                 list_outputs = Some(list::run_list(&git_repo, &repo_ref, true).await?);
             }
             [] => {
+                client.disconnect().await?;
                 return Ok(());
             }
             _ => {
