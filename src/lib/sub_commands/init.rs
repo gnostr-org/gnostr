@@ -15,10 +15,16 @@ use nostr_0_37_0::{
 };
 use nostr_sdk_0_37_0::{Kind, RelayUrl};
 
+#[cfg(not(test))]
+use crate::client::Client;
+#[cfg(test)]
+use crate::client::MockConnect;
+
+
 use crate::{
     cli::{NgitCli, extract_signer_cli_arguments},
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
-    client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
+    client::{Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
     git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
     login,
     repo_ref::{
@@ -67,7 +73,17 @@ pub async fn launch(cli_args: &NgitCli, args: &SubCommandArgs) -> Result<()> {
     // TODO: check for empty repo
     // TODO: check for existing maintaiers file
 
-    let mut client = Client::default();
+
+    let mut client = {
+        #[cfg(not(test))]
+        {
+            crate::client::Client::default()
+        }
+        #[cfg(test)]
+        {
+        <crate::client::MockConnect as std::default::Default>::default()
+        }
+    };
 
     let repo_coordinate = (try_and_get_repo_coordinates_when_remote_unknown(&git_repo).await).ok();
 
