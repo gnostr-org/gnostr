@@ -99,7 +99,9 @@ fn install_openssl_brew() {
                 "cargo:warning=Failed to install openssl@3 via Homebrew (exit code: {}).",
                 status
             );
-            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
             println!("cargo:warning=  brew install openssl@3");
         }
         Err(e) => {
@@ -126,7 +128,9 @@ fn install_pkg_config() {
                 "cargo:warning=Failed to install pkg-config via Homebrew (exit code: {}).",
                 status
             );
-            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
             println!("cargo:warning=  brew install pkg-config");
         }
         Err(e) => {
@@ -151,7 +155,9 @@ fn install_zlib() {
                 "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
                 status
             );
-            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
             println!("cargo:warning=  brew install zlib");
         }
         Err(e) => {
@@ -296,7 +302,9 @@ fn main() {
                     println!("cargo:rustc-link-lib=dylib=crypto@3");
                 }
             } else {
-                println!("cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:");
+                println!(
+                    "cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:"
+                );
                 println!("cargo:warning=  brew install openssl@3");
                 println!("cargo:warning=  brew install pkg-config");
                 println!("cargo:warning=  brew install zlib");
@@ -362,7 +370,9 @@ fn if_linux_unknown() -> bool {
                 println!("cargo:rustc-link-lib=dylib=crypto");
             }
             _ => {
-                println!("cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly.");
+                println!(
+                    "cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly."
+                );
                 // You might choose to fail the build here if it's strictly necessary
                 // std::process::exit(1);
             }
@@ -381,7 +391,9 @@ fn linux_install_pkg_config() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "linux" {
-        println!("cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate.");
+        println!(
+            "cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate."
+        );
         println!("cargo:warning=Please ensure you have it installed.");
         println!("cargo:warning=For Debian/Ubuntu-based systems, use:");
         println!("cargo:warning=  sudo apt-get update && sudo apt-get install pkgconfig");
@@ -410,7 +422,9 @@ fn linux_install_pkg_config() {
                 );
             }
             _ => {
-                println!("cargo:warning=`pkg-config` not found in your PATH. Ensure `pkg-config` (or equivalent) is installed and accessible.");
+                println!(
+                    "cargo:warning=`pkg-config` not found in your PATH. Ensure `pkg-config` (or equivalent) is installed and accessible."
+                );
                 // You might choose to fail the build here if it's strictly necessary
                 // std::process::exit(1);
             }
@@ -427,7 +441,9 @@ fn musl_install_pkg_config() {
 
     if target == "x86_64-unknown-linux-musl" {
         println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
-        println!("cargo:warning=This build process may require `pkg-config` to locate necessary libraries.");
+        println!(
+            "cargo:warning=This build process may require `pkg-config` to locate necessary libraries."
+        );
         println!(
             "cargo:warning=Please ensure `pkg-config` is installed in your Musl-based environment."
         );
@@ -459,7 +475,9 @@ fn musl_install_pkg_config() {
                 );
             }
             _ => {
-                println!("cargo:warning=`pkg-config` not found in your PATH. Please ensure it is installed and accessible.");
+                println!(
+                    "cargo:warning=`pkg-config` not found in your PATH. Please ensure it is installed and accessible."
+                );
                 // You might choose to fail the build here if `pkg-config` is strictly necessary
                 // std::process::exit(1);
             }

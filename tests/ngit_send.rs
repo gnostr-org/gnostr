@@ -1,11 +1,10 @@
 use anyhow::Result;
 use futures::join;
-use nostr_sdk_0_34_0::Kind;
+use nostr_sdk_0_37_0::Kind;
 use serial_test::serial;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
 #[test]
-#[cfg(feature = "expensive_tests")]
 fn when_no_main_or_master_branch_return_error() -> Result<()> {
     let test_repo = GitTestRepo::new("notmain")?;
     test_repo.populate()?;
@@ -51,7 +50,6 @@ mod when_commits_behind_ask_to_proceed {
     }
 
     #[test]
-    #[cfg(feature = "expensive_tests")]
     fn asked_with_default_no() -> Result<()> {
         let test_repo = prep_test_repo()?;
 
@@ -62,7 +60,6 @@ mod when_commits_behind_ask_to_proceed {
     }
 
     #[test]
-    #[cfg(feature = "expensive_tests")]
     fn when_response_is_false_aborts() -> Result<()> {
         let test_repo = prep_test_repo()?;
 
@@ -76,7 +73,6 @@ mod when_commits_behind_ask_to_proceed {
     }
     #[test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     fn when_response_is_true_proceeds() -> Result<()> {
         let test_repo = prep_test_repo()?;
 
@@ -88,20 +84,20 @@ mod when_commits_behind_ask_to_proceed {
     }
 }
 
-fn is_cover_letter(event: &nostr_0_34_1::Event) -> bool {
+fn is_cover_letter(event: &nostr_0_37_0::Event) -> bool {
     event.kind.eq(&Kind::GitPatch)
         && event
-            .tags()
+            .tags
             .iter()
-            .any(|t| t.as_vec()[1].eq("cover-letter"))
+            .any(|t| t.as_slice()[1].eq("cover-letter"))
 }
 
-fn is_patch(event: &nostr_0_34_1::Event) -> bool {
+fn is_patch(event: &nostr_0_37_0::Event) -> bool {
     event.kind.eq(&Kind::GitPatch)
         && !event
-            .tags()
+            .tags
             .iter()
-            .any(|t| t.as_vec()[1].eq("cover-letter"))
+            .any(|t| t.as_slice()[1].eq("cover-letter"))
 }
 
 fn prep_git_repo() -> Result<GitTestRepo> {
@@ -149,7 +145,7 @@ fn expect_msgs_first(p: &mut CliTester, include_cover_letter: bool) -> Result<()
     p.expect("fe973a8 add t4.md\r\n")?;
     p.expect("232efb3 add t3.md\r\n")?;
     // sometimes there will be a 'searching for profile...' msg
-    p.expect_eventually("logged in as fred\r\n")?;
+    p.expect_eventually("logged in as fred via cli arguments\r\n")?;
     p.expect(format!(
         "posting 2 patches {} a covering letter...\r\n",
         if include_cover_letter {
@@ -240,7 +236,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
     use super::*;
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn only_1_cover_letter_event_sent_to_each_relay() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
         for relay in [&r53, &r55, &r56] {
@@ -254,7 +249,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn only_1_cover_letter_event_sent_to_user_relays() -> Result<()> {
         let (_, _, r53, r55, _) = prep_run_create_proposal(true).await?;
         for relay in [&r53, &r55] {
@@ -268,7 +262,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn only_1_cover_letter_event_sent_to_repo_relays() -> Result<()> {
         let (_, _, _, r55, r56) = prep_run_create_proposal(true).await?;
         for relay in [&r55, &r56] {
@@ -282,7 +275,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn only_1_cover_letter_event_sent_to_fallback_relays() -> Result<()> {
         let (r51, r52, _, _, _) = prep_run_create_proposal(true).await?;
         for relay in [&r51, &r52] {
@@ -296,7 +288,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn only_2_patch_kind_events_sent_to_each_relay() -> Result<()> {
         let (r51, r52, r53, r55, r56) = prep_run_create_proposal(true).await?;
         for relay in [&r51, &r52, &r53, &r55, &r56] {
@@ -307,12 +298,11 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn patch_content_contains_patch_in_email_format_with_patch_series_numbers() -> Result<()>
     {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
         for relay in [&r53, &r55, &r56] {
-            let patch_events: Vec<&nostr_0_34_1::Event> =
+            let patch_events: Vec<&nostr_0_37_0::Event> =
                 relay.events.iter().filter(|e| is_patch(e)).collect();
 
             assert_eq!(
@@ -337,7 +327,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
                     +some content\n\\ \
                     No newline at end of file\n\
                     --\n\
-                    libgit2 1.8.1\n\
+                    libgit2 1.7.2\n\
                     \n\
                     ",
             );
@@ -363,7 +353,7 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
                     +some content\n\\ \
                     No newline at end of file\n\
                     --\n\
-                    libgit2 1.8.1\n\
+                    libgit2 1.7.2\n\
                     \n\
                     ",
             );
@@ -376,20 +366,19 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn root_commit_as_r() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
 
                 assert_eq!(
                     cover_letter_event
-                        .tags()
+                        .tags
                         .iter()
-                        .find(|t| t.as_vec()[0].eq("r"))
+                        .find(|t| t.as_slice()[0].eq("r"))
                         .unwrap()
-                        .as_vec()[1],
+                        .as_slice()[1],
                     "9ee507fc4357d7ee16a5d8901bedcd103f23c17d"
                 );
             }
@@ -398,52 +387,58 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn a_tag_for_repo_event_of_each_maintainer() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-                assert!(cover_letter_event.tags().iter().any(|t| {
-                    t.as_vec()[0].eq("a")
-                        && t.as_vec()[1].eq(&format!(
-                            "{}:{TEST_KEY_1_PUBKEY_HEX}:{}",
-                            Kind::GitRepoAnnouncement,
-                            generate_repo_ref_event().identifier().unwrap()
-                        ))
-                }));
-                assert!(cover_letter_event.tags().iter().any(|t| {
-                    t.as_vec()[0].eq("a")
-                        && t.as_vec()[1].eq(&format!(
-                            "{}:{TEST_KEY_2_PUBKEY_HEX}:{}",
-                            Kind::GitRepoAnnouncement,
-                            generate_repo_ref_event().identifier().unwrap()
-                        ))
-                }));
+                assert!(
+                    cover_letter_event
+                        .tags
+                        .iter()
+                        .any(|t| t.as_slice()[0].eq("a")
+                            && t.as_slice()[1].eq(&format!(
+                                "{}:{TEST_KEY_1_PUBKEY_HEX}:{}",
+                                Kind::GitRepoAnnouncement,
+                                generate_repo_ref_event().tags.identifier().unwrap()
+                            )))
+                );
+                assert!(
+                    cover_letter_event
+                        .tags
+                        .iter()
+                        .any(|t| t.as_slice()[0].eq("a")
+                            && t.as_slice()[1].eq(&format!(
+                                "{}:{TEST_KEY_2_PUBKEY_HEX}:{}",
+                                Kind::GitRepoAnnouncement,
+                                generate_repo_ref_event().tags.identifier().unwrap()
+                            )))
+                );
             }
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn p_tags_for_maintainers() -> Result<()> {
             let event = generate_repo_ref_event();
             let maintainers = &event
-                .tags()
+                .tags
                 .iter()
-                .find(|t| t.as_vec()[0].eq(&"maintainers"))
+                .find(|t| t.as_slice()[0].eq(&"maintainers"))
                 .unwrap()
-                .as_vec()[1..];
+                .as_slice()[1..];
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
                 for m in maintainers {
-                    let cover_letter_event: &nostr_0_34_1::Event =
+                    let cover_letter_event: &nostr_0_37_0::Event =
                         relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-                    assert!(cover_letter_event
-                        .tags()
-                        .iter()
-                        .any(|t| { t.as_vec()[0].eq("p") && t.as_vec()[1].eq(m) }));
+                    assert!(
+                        cover_letter_event
+                            .tags
+                            .iter()
+                            .any(|t| { t.as_slice()[0].eq("p") && t.as_slice()[1].eq(m) })
+                    );
                 }
             }
             Ok(())
@@ -451,53 +446,53 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn t_tag_cover_letter() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-                assert!(cover_letter_event
-                    .tags()
-                    .iter()
-                    .any(|t| { t.as_vec()[0].eq("t") && t.as_vec()[1].eq(&"cover-letter") }));
+                assert!(
+                    cover_letter_event.tags.iter().any(|t| {
+                        t.as_slice()[0].eq("t") && t.as_slice()[1].eq(&"cover-letter")
+                    })
+                );
             }
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn t_tag_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-                assert!(cover_letter_event
-                    .tags()
-                    .iter()
-                    .any(|t| { t.as_vec()[0].eq("t") && t.as_vec()[1].eq(&"root") }));
+                assert!(
+                    cover_letter_event
+                        .tags
+                        .iter()
+                        .any(|t| { t.as_slice()[0].eq("t") && t.as_slice()[1].eq(&"root") })
+                );
             }
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn cover_letter_tags_branch_name() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
 
                 // branch-name tag
                 assert_eq!(
                     cover_letter_event
-                        .tags()
+                        .tags
                         .iter()
-                        .find(|t| t.as_vec()[0].eq("branch-name"))
+                        .find(|t| t.as_slice()[0].eq("branch-name"))
                         .unwrap()
-                        .as_vec()[1],
+                        .as_slice()[1],
                     "feature"
                 );
             }
@@ -506,21 +501,20 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn cover_letter_tags_alt() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
 
                 // branch-name tag
                 assert_eq!(
                     cover_letter_event
-                        .tags()
+                        .tags
                         .iter()
-                        .find(|t| t.as_vec()[0].eq("alt"))
+                        .find(|t| t.as_slice()[0].eq("alt"))
                         .unwrap()
-                        .as_vec()[1],
+                        .as_slice()[1],
                     "git patch cover letter: exampletitle"
                 );
             }
@@ -531,31 +525,33 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
     mod patch_tags {
         use super::*;
 
-        async fn prep() -> Result<nostr_0_34_1::Event> {
+        async fn prep() -> Result<nostr_0_37_0::Event> {
             let (_, _, r53, _, _) = prep_run_create_proposal(true).await?;
             Ok(r53.events.iter().find(|e| is_patch(e)).unwrap().clone())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn commit_and_commit_r() -> Result<()> {
             static COMMIT_ID: &str = "232efb37ebc67692c9e9ff58b83c0d3d63971a0a";
             let most_recent_patch = prep().await?;
-            assert!(most_recent_patch
-                .tags
-                .iter()
-                .any(|t| t.as_vec()[0].eq("r") && t.as_vec()[1].eq(COMMIT_ID)));
-            assert!(most_recent_patch
-                .tags
-                .iter()
-                .any(|t| t.as_vec()[0].eq("commit") && t.as_vec()[1].eq(COMMIT_ID)));
+            assert!(
+                most_recent_patch
+                    .tags
+                    .iter()
+                    .any(|t| t.as_slice()[0].eq("r") && t.as_slice()[1].eq(COMMIT_ID))
+            );
+            assert!(
+                most_recent_patch
+                    .tags
+                    .iter()
+                    .any(|t| t.as_slice()[0].eq("commit") && t.as_slice()[1].eq(COMMIT_ID))
+            );
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn parent_commit() -> Result<()> {
             // commit parent 'r' and 'parent-commit' tag
             static COMMIT_PARENT_ID: &str = "431b84edc0d2fa118d63faa3c2db9c73d630a5ae";
@@ -564,9 +560,9 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
                 most_recent_patch
                     .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("parent-commit"))
+                    .find(|t| t.as_slice()[0].eq("parent-commit"))
                     .unwrap()
-                    .as_vec()[1],
+                    .as_slice()[1],
                 COMMIT_PARENT_ID,
             );
             Ok(())
@@ -574,54 +570,51 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn root_commit_as_r() -> Result<()> {
-            assert!(prep().await?.tags.iter().any(|t| {
-                t.as_vec()[0].eq("r")
-                    && t.as_vec()[1].eq("9ee507fc4357d7ee16a5d8901bedcd103f23c17d")
-            }));
+            assert!(prep().await?.tags.iter().any(|t| t.as_slice()[0].eq("r")
+                && t.as_slice()[1].eq("9ee507fc4357d7ee16a5d8901bedcd103f23c17d")));
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn p_tags_for_maintainers() -> Result<()> {
             let event = generate_repo_ref_event();
             let maintainers = &event
-                .tags()
+                .tags
                 .iter()
-                .find(|t| t.as_vec()[0].eq(&"maintainers"))
+                .find(|t| t.as_slice()[0].eq(&"maintainers"))
                 .unwrap()
-                .as_vec()[1..];
+                .as_slice()[1..];
             for m in maintainers {
-                assert!(prep()
-                    .await?
-                    .tags()
-                    .iter()
-                    .any(|t| { t.as_vec()[0].eq("p") && t.as_vec()[1].eq(m) }));
+                assert!(
+                    prep()
+                        .await?
+                        .tags
+                        .iter()
+                        .any(|t| { t.as_slice()[0].eq("p") && t.as_slice()[1].eq(m) })
+                );
             }
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn a_tag_for_repo_event_of_each_maintainer() -> Result<()> {
             assert!(prep().await?.tags.iter().any(|t| {
-                t.as_vec()[0].eq("a")
-                    && t.as_vec()[1].eq(&format!(
+                t.as_slice()[0].eq("a")
+                    && t.as_slice()[1].eq(&format!(
                         "{}:{TEST_KEY_1_PUBKEY_HEX}:{}",
                         Kind::GitRepoAnnouncement,
-                        generate_repo_ref_event().identifier().unwrap()
+                        generate_repo_ref_event().tags.identifier().unwrap()
                     ))
             }));
             assert!(prep().await?.tags.iter().any(|t| {
-                t.as_vec()[0].eq("a")
-                    && t.as_vec()[1].eq(&format!(
+                t.as_slice()[0].eq("a")
+                    && t.as_slice()[1].eq(&format!(
                         "{}:{TEST_KEY_2_PUBKEY_HEX}:{}",
                         Kind::GitRepoAnnouncement,
-                        generate_repo_ref_event().identifier().unwrap()
+                        generate_repo_ref_event().tags.identifier().unwrap()
                     ))
             }));
             Ok(())
@@ -629,16 +622,15 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn description_with_commit_message() -> Result<()> {
             assert_eq!(
                 prep()
                     .await?
                     .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("description"))
+                    .find(|t| t.as_slice()[0].eq("description"))
                     .unwrap()
-                    .as_vec()[1],
+                    .as_slice()[1],
                 "add t3.md"
             );
             Ok(())
@@ -646,16 +638,15 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn commit_author() -> Result<()> {
             assert_eq!(
                 prep()
                     .await?
                     .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("author"))
+                    .find(|t| t.as_slice()[0].eq("author"))
                     .unwrap()
-                    .as_vec(),
+                    .as_slice(),
                 vec!["author", "Joe Bloggs", "joe.bloggs@pm.me", "0", "0"],
             );
             Ok(())
@@ -663,16 +654,15 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn commit_committer() -> Result<()> {
             assert_eq!(
                 prep()
                     .await?
                     .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("committer"))
+                    .find(|t| t.as_slice()[0].eq("committer"))
                     .unwrap()
-                    .as_vec(),
+                    .as_slice(),
                 vec!["committer", "Joe Bloggs", "joe.bloggs@pm.me", "0", "0"],
             );
             Ok(())
@@ -680,16 +670,15 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn alt() -> Result<()> {
             assert_eq!(
                 prep()
                     .await?
                     .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("alt"))
+                    .find(|t| t.as_slice()[0].eq("alt"))
                     .unwrap()
-                    .as_vec(),
+                    .as_slice(),
                 vec!["alt", "git patch: add t3.md"],
             );
             Ok(())
@@ -697,11 +686,10 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn patch_tags_cover_letter_event_as_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
-                let patch_events: Vec<&nostr_0_34_1::Event> =
+                let patch_events: Vec<&nostr_0_37_0::Event> =
                     relay.events.iter().filter(|e| is_patch(e)).collect();
 
                 let most_recent_patch = patch_events[0];
@@ -711,12 +699,14 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
                     .tags
                     .iter()
                     .find(|t| {
-                        t.as_vec()[0].eq("e") && t.as_vec().len().eq(&4) && t.as_vec()[3].eq("root")
+                        t.as_slice()[0].eq("e")
+                            && t.as_slice().len().eq(&4)
+                            && t.as_slice()[3].eq("root")
                     })
                     .unwrap();
 
                 assert_eq!(
-                    root_event_tag.as_vec()[1],
+                    root_event_tag.as_slice()[1],
                     cover_letter_event.id.to_string()
                 );
             }
@@ -725,7 +715,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn second_patch_tags_first_with_reply() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal(true).await?;
             for relay in [&r53, &r55, &r56] {
@@ -733,16 +722,16 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
                     .events
                     .iter()
                     .filter(|e| is_patch(e))
-                    .collect::<Vec<&nostr_0_34_1::Event>>();
+                    .collect::<Vec<&nostr_0_37_0::Event>>();
                 assert_eq!(
                     patch_events[1]
-                        .tags()
+                        .tags
                         .iter()
-                        .find(|t| t.as_vec()[0].eq("e")
-                            && t.as_vec().len().eq(&4)
-                            && t.as_vec()[3].eq("reply"))
+                        .find(|t| t.as_slice()[0].eq("e")
+                            && t.as_slice().len().eq(&4)
+                            && t.as_slice()[3].eq("reply"))
                         .unwrap()
-                        .as_vec()[1],
+                        .as_slice()[1],
                     patch_events[0].id.to_string(),
                 );
             }
@@ -751,13 +740,14 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn no_t_root_tag() -> Result<()> {
-            assert!(!prep()
-                .await?
-                .tags
-                .iter()
-                .any(|t| t.as_vec()[0].eq("t") && t.as_vec()[1].eq("root")));
+            assert!(
+                !prep()
+                    .await?
+                    .tags
+                    .iter()
+                    .any(|t| t.as_slice()[0].eq("t") && t.as_slice()[1].eq("root"))
+            );
             Ok(())
         }
     }
@@ -766,7 +756,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn check_cli_output() -> Result<()> {
             let git_repo = prep_git_repo()?;
 
@@ -847,7 +836,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
             #[tokio::test]
             #[serial]
-            #[cfg(feature = "expensive_tests")]
             async fn only_first_rejected_event_sent_to_relay() -> Result<()> {
                 let git_repo = prep_git_repo()?;
 
@@ -922,7 +910,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 
             #[tokio::test]
             #[serial]
-            #[cfg(feature = "expensive_tests")]
             async fn cli_show_rejection_with_comment() -> Result<()> {
                 let git_repo = prep_git_repo()?;
 
@@ -1017,7 +1004,6 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn check_cli_output() -> Result<()> {
             let git_repo = prep_git_repo()?;
 
@@ -1093,7 +1079,6 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn no_cover_letter_event() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(false).await?;
         for relay in [&r53, &r55, &r56] {
@@ -1107,7 +1092,6 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn two_patch_events() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(false).await?;
         for relay in [&r53, &r55, &r56] {
@@ -1118,7 +1102,6 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     // TODO check this is the ancestor
     async fn first_patch_with_root_t_tag() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(false).await?;
@@ -1127,25 +1110,28 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
                 .events
                 .iter()
                 .filter(|e| is_patch(e))
-                .collect::<Vec<&nostr_0_34_1::Event>>();
+                .collect::<Vec<&nostr_0_37_0::Event>>();
 
             // first patch tagged as root
-            assert!(patch_events[0]
-                .tags()
-                .iter()
-                .any(|t| t.as_vec()[0].eq("t") && t.as_vec()[1].eq("root")));
+            assert!(
+                patch_events[0]
+                    .tags
+                    .iter()
+                    .any(|t| t.as_slice()[0].eq("t") && t.as_slice()[1].eq("root"))
+            );
             // second patch not tagged as root
-            assert!(!patch_events[1]
-                .tags()
-                .iter()
-                .any(|t| t.as_vec()[0].eq("t") && t.as_vec()[1].eq("root")));
+            assert!(
+                !patch_events[1]
+                    .tags
+                    .iter()
+                    .any(|t| t.as_slice()[0].eq("t") && t.as_slice()[1].eq("root"))
+            );
         }
         Ok(())
     }
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn root_patch_tags_branch_name() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(false).await?;
         for relay in [&r53, &r55, &r56] {
@@ -1153,16 +1139,16 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
                 .events
                 .iter()
                 .filter(|e| is_patch(e))
-                .collect::<Vec<&nostr_0_34_1::Event>>();
+                .collect::<Vec<&nostr_0_37_0::Event>>();
 
             // branch-name tag
             assert_eq!(
                 patch_events[0]
-                    .tags()
+                    .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("branch-name"))
+                    .find(|t| t.as_slice()[0].eq("branch-name"))
                     .unwrap()
-                    .as_vec()[1],
+                    .as_slice()[1],
                 "feature"
             );
         }
@@ -1171,7 +1157,6 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn second_patch_lists_first_as_root() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal(false).await?;
         for relay in [&r53, &r55, &r56] {
@@ -1179,17 +1164,17 @@ mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_c
                 .events
                 .iter()
                 .filter(|e| is_patch(e))
-                .collect::<Vec<&nostr_0_34_1::Event>>();
+                .collect::<Vec<&nostr_0_37_0::Event>>();
 
             assert_eq!(
                 patch_events[1]
-                    .tags()
+                    .tags
                     .iter()
-                    .find(|t| t.as_vec()[0].eq("e")
-                        && t.as_vec().len().eq(&4)
-                        && t.as_vec()[3].eq("root"))
+                    .find(|t| t.as_slice()[0].eq("e")
+                        && t.as_slice().len().eq(&4)
+                        && t.as_slice()[3].eq("root"))
                     .unwrap()
-                    .as_vec()[1],
+                    .as_slice()[1],
                 patch_events[0].id.to_string(),
             );
         }
@@ -1230,7 +1215,7 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
         p.expect("fe973a8 add t4.md\r\n")?;
         p.expect("232efb3 add t3.md\r\n")?;
         p.expect("searching for profile...\r\n")?;
-        p.expect("logged in as fred\r\n")?;
+        p.expect("logged in as fred via cli arguments\r\n")?;
         p.expect("posting 2 patches without a covering letter...\r\n")?;
         Ok(())
     }
@@ -1304,7 +1289,6 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn check_cli_output() -> Result<()> {
             let git_repo = prep_git_repo()?;
 
@@ -1379,7 +1363,6 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn two_patch_events_sent() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
@@ -1391,7 +1374,7 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
 
 mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_letter_details_specified {
 
-    use nostr_0_34_1::ToBech32;
+    use nostr_0_37_0::ToBech32;
 
     use super::*;
 
@@ -1425,7 +1408,8 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
         p.expect("creating proposal from 2 commits:\r\n")?;
         p.expect("fe973a8 add t4.md\r\n")?;
         p.expect("232efb3 add t3.md\r\n")?;
-        p.expect("logged in as fred\r\n")?;
+        p.expect("searching for profile updates...\r\n")?;
+        p.expect_after_whitespace("logged in as fred via cli arguments\r\n")?;
         p.expect(format!(
             "posting 2 patches {} a covering letter...\r\n",
             if include_cover_letter {
@@ -1506,7 +1490,6 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn check_cli_output() -> Result<()> {
             let git_repo = prep_git_repo()?;
 
@@ -1584,55 +1567,55 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn t_tag_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-                assert!(cover_letter_event
-                    .tags()
-                    .iter()
-                    .any(|t| { t.as_vec()[0].eq("t") && t.as_vec()[1].eq(&"root") }));
+                assert!(
+                    cover_letter_event
+                        .tags
+                        .iter()
+                        .any(|t| { t.as_slice()[0].eq("t") && t.as_slice()[1].eq(&"root") })
+                );
             }
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn t_tag_revision_root() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-                assert!(cover_letter_event
-                    .tags()
-                    .iter()
-                    .any(|t| { t.as_vec()[0].eq("t") && t.as_vec()[1].eq(&"revision-root") }));
+                assert!(
+                    cover_letter_event.tags.iter().any(|t| {
+                        t.as_slice()[0].eq("t") && t.as_slice()[1].eq(&"revision-root")
+                    })
+                );
             }
             Ok(())
         }
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn e_tag_in_reply_to_event_as_reply() -> Result<()> {
             let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
             for relay in [&r53, &r55, &r56] {
-                let cover_letter_event: &nostr_0_34_1::Event =
+                let cover_letter_event: &nostr_0_37_0::Event =
                     relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
                 assert_eq!(
                     cover_letter_event
-                        .tags()
+                        .tags
                         .iter()
                         .find(|t| {
-                            t.as_vec()[0].eq("e")
-                                && t.as_vec().len().eq(&4)
-                                && t.as_vec()[3].eq("reply")
+                            t.as_slice()[0].eq("e")
+                                && t.as_slice().len().eq(&4)
+                                && t.as_slice()[3].eq("reply")
                         })
                         .unwrap()
-                        .as_vec()[1],
+                        .as_slice()[1],
                     // id of state nevent
                     "431e58eb8e1b4e20292d1d5bbe81d5cfb042e1bc165de32eddfdd52245a4cce4",
                 );
@@ -1643,11 +1626,10 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn patch_tags_cover_letter_event_as_root() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let patch_events: Vec<&nostr_0_34_1::Event> =
+            let patch_events: Vec<&nostr_0_37_0::Event> =
                 relay.events.iter().filter(|e| is_patch(e)).collect();
 
             let cover_letter_event = relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
@@ -1658,12 +1640,12 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
                         .tags
                         .iter()
                         .find(|t| {
-                            t.as_vec()[0].eq("e")
-                                && t.as_vec().len().eq(&4)
-                                && t.as_vec()[3].eq("root")
+                            t.as_slice()[0].eq("e")
+                                && t.as_slice().len().eq(&4)
+                                && t.as_slice()[3].eq("root")
                         })
                         .unwrap()
-                        .as_vec()[1],
+                        .as_slice()[1],
                     cover_letter_event.id.to_string()
                 );
             }
@@ -1673,11 +1655,10 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
 }
 
 mod in_reply_to_mentions_issue {
-    use nostr_0_34_1::{serde_json, ToBech32};
+    use nostr_0_37_0::ToBech32;
 
     use super::*;
-
-    pub fn get_pretend_issue_event() -> nostr_0_34_1::Event {
+    pub fn get_pretend_issue_event() -> nostr_0_37_0::Event {
         serde_json::from_str(r#"{"created_at":1709286372,"content":"please provide feedback\nthis is an example ngit issue to demonstrate gitworkshop.dev.\n\nplease provide feedback with in reply to this issue or by creating a new issue.","tags":[["r","26689f97810fc656c7134c76e2a37d33b2e40ce7"],["a","30617:a008def15796fba9a0d6fab04e8fd57089285d9fd505da5a83fe8aad57a3564d:ngit","wss://relay.damus.io","root"],["p","a008def15796fba9a0d6fab04e8fd57089285d9fd505da5a83fe8aad57a3564d"]],"kind":1621,"pubkey":"a008def15796fba9a0d6fab04e8fd57089285d9fd505da5a83fe8aad57a3564d","id":"e944765d625ae7323d080da0df069c726a0e5490a17b452f854d85e18f781588","sig":"a1af9e89a35f1f7ef93e3de33986bd86cb7c4d7d9abb233c0c6405f32b5788171e47f84551afe8515b3107d12f03472721ea784b8791ff3f25e66a3169a54c20"}"#).unwrap()
     }
 
@@ -1769,16 +1750,15 @@ mod in_reply_to_mentions_issue {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn issue_event_mentioned_in_tagged_cover_letter() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let cover_letter_event: &nostr_0_34_1::Event =
+            let cover_letter_event: &nostr_0_37_0::Event =
                 relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-            assert!(cover_letter_event.tags().iter().any(|t| {
-                t.as_vec()[0].eq("e")
-                    && t.as_vec()[1].eq(&get_pretend_issue_event().id.to_hex())
-                    && t.as_vec()[3].eq(&"mention")
+            assert!(cover_letter_event.tags.iter().any(|t| {
+                t.as_slice()[0].eq("e")
+                    && t.as_slice()[1].eq(&get_pretend_issue_event().id.to_hex())
+                    && t.as_slice()[3].eq(&"mention")
             }));
         }
         Ok(())
@@ -1786,16 +1766,17 @@ mod in_reply_to_mentions_issue {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn isnt_tagged_as_revision() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let cover_letter_event: &nostr_0_34_1::Event =
+            let cover_letter_event: &nostr_0_37_0::Event =
                 relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-            assert!(!cover_letter_event
-                .tags()
-                .iter()
-                .any(|t| { t.as_vec()[0].eq("t") && t.as_vec()[1].eq(&"revision-root") }));
+            assert!(
+                !cover_letter_event
+                    .tags
+                    .iter()
+                    .any(|t| { t.as_slice()[0].eq("t") && t.as_slice()[1].eq(&"revision-root") })
+            );
         }
         Ok(())
     }
@@ -1892,24 +1873,23 @@ mod in_reply_to_mentions_npub_and_nprofile_which_get_mentioned_in_proposal_root 
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn npub_and_nprofile_mentioned_in_tagged_cover_letter() -> Result<()> {
         let (_, _, r53, r55, r56) = prep_run_create_proposal().await?;
         for relay in [&r53, &r55, &r56] {
-            let cover_letter_event: &nostr_0_34_1::Event =
+            let cover_letter_event: &nostr_0_37_0::Event =
                 relay.events.iter().find(|e| is_cover_letter(e)).unwrap();
-            assert!(cover_letter_event.tags().iter().any(|t| {
-                t.as_vec()[0].eq("p")
-                    && t.as_vec()[1].eq(&nostr_0_34_1::Keys::parse(
+            assert!(cover_letter_event.tags.iter().any(|t| {
+                t.as_slice()[0].eq("p")
+                    && t.as_slice()[1].eq(&nostr_0_37_0::Keys::parse(
                         "nsec1q3c5xnsm5m4wgsrhwnz04p0d5mevkryyggqgdpa9jwulpq9gldhswgtxvq",
                     )
                     .unwrap()
                     .public_key()
                     .to_hex())
             }));
-            assert!(cover_letter_event.tags().iter().any(|t| {
-                t.as_vec()[0].eq("p")
-                    && t.as_vec()[1].eq(&nostr_0_34_1::Keys::parse(
+            assert!(cover_letter_event.tags.iter().any(|t| {
+                t.as_slice()[0].eq("p")
+                    && t.as_slice()[1].eq(&nostr_0_37_0::Keys::parse(
                         "nsec1nx5ulvcndhcuu8k6q8fenw50l6y75sec7pj8vr0r68l6a44w3lqspvj02k",
                     )
                     .unwrap()
