@@ -5,6 +5,7 @@ use gnostr::cli::{GnostrCli, GnostrCommands, get_app_cache_path, setup_logging};
 use gnostr::sub_commands;
 use gnostr::sub_commands::ngit::NgitSubCommand;
 use gnostr_asyncgit::sync::RepoPath;
+use gnostr::sub_commands::init::SubCommandArgs;
 use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, trace};
@@ -28,7 +29,13 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         nsec: None,
         password: None,
     };
+	let clone_url: Vec<String> = vec![String::from("https://github.com/gnostr-org/gnostr.git")];
+	let relays: Vec<String> = vec![String::from("wss://relay.damus.io")];
+	let other_maintainers: Vec<String> = vec![String::from("")];
+	let web: Vec<String> = vec![String::from("https://github.com/gnostr-org/gnostr/")];
+	let init_subcommand_args = crate::sub_commands::init::SubCommandArgs {clone_url: clone_url, description: None, earliest_unique_commit: None, identifier: None, other_maintainers:other_maintainers, relays:relays, title: None, web: web};
     let mut ngit_subcommand = NgitSubCommand {
+        //command: NgitCommands::Init(init_subcommand_args),
         command: NgitCommands::List,
         disable_cli_spinners: true,
         nsec: None,
