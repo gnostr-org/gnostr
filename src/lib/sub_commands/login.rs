@@ -33,7 +33,26 @@ pub async fn launch(args: &NgitCli, command_args: &SubCommandArgs) -> Result<()>
     let client = if command_args.offline {
         None
     } else {
-        Some(Client::default())
+
+
+    
+         #[cfg(not(test))]
+    
+         {
+    
+             Some(crate::client::Client::default())
+    
+         }
+    
+         #[cfg(test)]
+    
+         {
+    
+         Some(<crate::client::MockConnect as std::default::Default>::default())
+    
+         }
+    
+    
     };
 
     let git_repo_result = Repo::discover().context("failed to find a git repository");
