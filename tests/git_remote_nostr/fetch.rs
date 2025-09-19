@@ -49,9 +49,6 @@ async fn fetch_downloads_speficied_commits_from_git_server() -> Result<()> {
         assert!(git_repo.git_repo.find_commit(vnext_commit_id).is_ok());
 
         p.exit()?;
-        for p in [51, 52, 53, 55, 56, 57] {
-            relay::shutdown_relay(8000 + p)?;
-        }
         Ok(())
     });
     // launch relays
@@ -64,6 +61,10 @@ async fn fetch_downloads_speficied_commits_from_git_server() -> Result<()> {
         r57.listen_until_close(),
     );
     cli_tester_handle.join().unwrap()?;
+
+    for p in [51, 52, 53, 55, 56, 57] {
+        relay::shutdown_relay(8000 + p)?;
+    };
     Ok(())
 }
 
@@ -118,9 +119,6 @@ mod when_first_git_server_fails_ {
             assert!(git_repo.git_repo.find_commit(main_commit_id).is_ok());
 
             p.exit()?;
-            for p in [51, 52, 53, 55, 56, 57] {
-                relay::shutdown_relay(8000 + p)?;
-            }
             Ok(())
         });
         // launch relays
@@ -133,6 +131,10 @@ mod when_first_git_server_fails_ {
             r57.listen_until_close(),
         );
         cli_tester_handle.join().unwrap()?;
+
+        for p in [51, 52, 53, 55, 56, 57] {
+            relay::shutdown_relay(8000 + p)?;
+        }
         Ok(())
     }
 }
@@ -168,10 +170,6 @@ async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result
         // expect no errors
         p.expect_after_whitespace("\r\n")?;
         p.exit()?;
-        for p in [51, 52, 53, 55, 56, 57] {
-            relay::shutdown_relay(8000 + p)?;
-        }
-
         assert!(git_repo.git_repo.find_commit(proposal_tip).is_ok());
 
         Ok(())
@@ -187,6 +185,10 @@ async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result
     );
 
     cli_tester_handle.join().unwrap()?;
+
+    for p in [51, 52, 53, 55, 56, 57] {
+        relay::shutdown_relay(8000 + p)?;
+    };
 
     Ok(())
 }

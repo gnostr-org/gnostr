@@ -60,10 +60,6 @@ mod two_branches_in_batch_one_added_one_updated {
             p.send_line("")?;
             p.expect_eventually("\r\n\r\n")?;
             p.exit()?;
-            for p in [51, 52, 53, 55, 56, 57] {
-                relay::shutdown_relay(8000 + p)?;
-            }
-
             assert_eq!(
                 source_git_repo.get_tip_of_local_branch("main")?,
                 main_commit_id
@@ -86,6 +82,10 @@ mod two_branches_in_batch_one_added_one_updated {
             r57.listen_until_close(),
         );
         cli_tester_handle.join().unwrap()?;
+
+        for p in [51, 52, 53, 55, 56, 57] {
+            relay::shutdown_relay(8000 + p)?;
+        }
         Ok(())
     }
 
