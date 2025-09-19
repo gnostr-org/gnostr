@@ -154,6 +154,8 @@ async fn generate_repo_with_state_event() -> Result<(nostr_0_37_0::Event, GitTes
         relay::shutdown_relay(8000 + p)?;
     }
 
+
+
     let state_event = r56
         .events
         .iter()
@@ -222,6 +224,8 @@ async fn prep_source_repo_and_events_including_proposals()
         relay::shutdown_relay(8000 + p)?;
     }
 
+
+
     Ok((r55.events, source_git_repo))
 }
 
@@ -270,6 +274,10 @@ mod initially_runs_fetch {
             r57.listen_until_close(),
         );
         cli_tester_handle.join().unwrap()?;
+
+    for p in [51, 52, 53, 55, 56, 57] {
+        relay::shutdown_relay(8000 + p)?;
+    }
 
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;

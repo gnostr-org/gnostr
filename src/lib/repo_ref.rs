@@ -12,8 +12,15 @@ use nostr_0_37_0::{FromBech32, PublicKey, Tag, TagStandard, ToBech32, nips::nip0
 use nostr_sdk_0_37_0::{Kind, NostrSigner, RelayUrl, Timestamp};
 use serde::{Deserialize, Serialize};
 
-//#[cfg(not(test))]
+#[cfg(not(test))]
+
 use crate::client::Client;
+
+#[cfg(test)]
+
+use crate::client::MockConnect;
+
+
 use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms, PromptInputParms,
@@ -44,9 +51,7 @@ pub struct RepoRef {
 impl TryFrom<(nostr_0_37_0::Event, Option<PublicKey>)> for RepoRef {
     type Error = anyhow::Error;
 
-    fn try_from(
-        (event, trusted_maintainer): (nostr_0_37_0::Event, Option<PublicKey>),
-    ) -> Result<Self> {
+    fn try_from((event, trusted_maintainer): (nostr_0_37_0::Event, Option<PublicKey>)) -> Result<Self> {
         // TODO: turn trusted maintainer into NostrUrlDecoded
         if !event.kind.eq(&Kind::GitRepoAnnouncement) {
             bail!("incorrect kind");
@@ -136,66 +141,61 @@ impl TryFrom<(nostr_0_37_0::Event, Option<PublicKey>)> for RepoRef {
 impl RepoRef {
     pub async fn to_event(&self, signer: &Arc<dyn NostrSigner>) -> Result<nostr_0_37_0::Event> {
         sign_event(
-            nostr_sdk_0_37_0::EventBuilder::new(nostr_0_37_0::event::Kind::GitRepoAnnouncement, "")
-                .tags(
-                    [
-                        vec![
-                            Tag::identifier(if self.identifier.to_string().is_empty() {
-                                // fiatjaf thought a random string. its not in the draft nip.
-                                // thread_rng()
-                                //     .sample_iter(&Alphanumeric)
-                                //     .take(15)
-                                //     .map(char::from)
-                                //     .collect()
+            nostr_sdk_0_37_0::EventBuilder::new(nostr_0_37_0::event::Kind::GitRepoAnnouncement, "").tags(
+                [
+                    vec![
+                        Tag::identifier(if self.identifier.to_string().is_empty() {
+                            // fiatjaf thought a random string. its not in the draft nip.
+                            // thread_rng()
+                            //     .sample_iter(&Alphanumeric)
+                            //     .take(15)
+                            //     .map(char::from)
+                            //     .collect()
 
-                                // an identifier based on first commit is better so that users dont
-                                // accidentally create two seperate identifiers for the same repo
-                                // there is a hesitancy to use the commit id
-                                // in another conversaion with fiatjaf he suggested the first 6
-                                // character of the commit id
-                                // here we are using 7 which is the standard for shorthand commit id
-                                self.root_commit.to_string()[..7].to_string()
-                            } else {
-                                self.identifier.to_string()
-                            }),
-                            Tag::custom(
-                                nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("r")),
-                                vec![self.root_commit.to_string(), "euc".to_string()],
-                            ),
-                            Tag::from_standardized(TagStandard::Name(self.name.clone())),
-                            Tag::from_standardized(TagStandard::Description(
-                                self.description.clone(),
-                            )),
-                            Tag::custom(
-                                nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
-                                self.git_server.clone(),
-                            ),
-                            Tag::custom(
-                                nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
-                                self.web.clone(),
-                            ),
-                            Tag::custom(
-                                nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
-                                self.relays.iter().map(|r| r.to_string()),
-                            ),
-                            Tag::custom(
-                                nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed(
-                                    "maintainers",
-                                )),
-                                self.maintainers
-                                    .iter()
-                                    .map(std::string::ToString::to_string)
-                                    .collect::<Vec<String>>(),
-                            ),
-                            Tag::custom(
-                                nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
-                                vec![format!("git repository: {}", self.name.clone())],
-                            ),
-                        ],
-                        // code languages and hashtags
-                    ]
-                    .concat(),
-                ),
+                            // an identifier based on first commit is better so that users dont
+                            // accidentally create two seperate identifiers for the same repo
+                            // there is a hesitancy to use the commit id
+                            // in another conversaion with fiatjaf he suggested the first 6
+                            // character of the commit id
+                            // here we are using 7 which is the standard for shorthand commit id
+                            self.root_commit.to_string()[..7].to_string()
+                        } else {
+                            self.identifier.to_string()
+                        }),
+                        Tag::custom(
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("r")),
+                            vec![self.root_commit.to_string(), "euc".to_string()],
+                        ),
+                        Tag::from_standardized(TagStandard::Name(self.name.clone())),
+                        Tag::from_standardized(TagStandard::Description(self.description.clone())),
+                        Tag::custom(
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
+                            self.git_server.clone(),
+                        ),
+                        Tag::custom(
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("web")),
+                            self.web.clone(),
+                        ),
+                        Tag::custom(
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
+                            self.relays.iter().map(|r| r.to_string()),
+                        ),
+                        Tag::custom(
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
+                            self.maintainers
+                                .iter()
+                                .map(std::string::ToString::to_string)
+                                .collect::<Vec<String>>(),
+                        ),
+                        Tag::custom(
+                            nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                            vec![format!("git repository: {}", self.name.clone())],
+                        ),
+                    ],
+                    // code languages and hashtags
+                ]
+                .concat(),
+            ),
             signer,
         )
         .await
@@ -269,8 +269,8 @@ impl RepoRef {
 
 pub async fn get_repo_coordinates_when_remote_unknown(
     git_repo: &Repo,
-    //#[cfg(test)] client: &crate::client::MockConnect,
-    /*#[cfg(not(test))]*/ client: &Client,
+    #[cfg(test)] client: &crate::client::MockConnect,
+    #[cfg(not(test))] client: &Client,
 ) -> Result<Coordinate> {
     if let Ok(c) = try_and_get_repo_coordinates_when_remote_unknown(git_repo).await {
         Ok(c)
@@ -391,8 +391,8 @@ async fn get_repo_coordinates_from_maintainers_yaml(git_repo: &Repo) -> Result<C
 
 async fn get_repo_coordinate_from_user_prompt(
     git_repo: &Repo,
-    //#[cfg(test)] client: &crate::client::MockConnect,
-    /*[cfg(not(test))]*/ client: &Client,
+    #[cfg(test)] client: &crate::client::MockConnect,
+    #[cfg(not(test))] client: &Client,
 ) -> Result<Coordinate> {
     // TODO: present list of events filter by root_commit
     // TODO: fallback to search based on identifier
@@ -530,14 +530,11 @@ pub fn save_repo_config_to_yaml(
                 .context("failed to convert public key into npub")?,
         );
     }
-    serde_yaml::to_writer(
-        file,
-        &RepoConfigYaml {
-            identifier: Some(identifier),
-            maintainers: maintainers_npubs,
-            relays,
-        },
-    )
+    serde_yaml::to_writer(file, &RepoConfigYaml {
+        identifier: Some(identifier),
+        maintainers: maintainers_npubs,
+        relays,
+    })
     .context("failed to write maintainers to maintainers.yaml file serde_yaml")
 }
 

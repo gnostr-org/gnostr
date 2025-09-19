@@ -1,25 +1,22 @@
 use std::path::Path;
 
-use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use anyhow::{Context, Result, bail};
 use console::Style;
+use gnostr::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use nostr_0_37_0::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
 };
 use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
-#[cfg(not(test))]
-use crate::client::Client;
-#[cfg(test)]
-use crate::client::MockConnect;
-
 use crate::{
-    cli::{NgitCli, extract_signer_cli_arguments},
+    cli::{Cli, extract_signer_cli_arguments},
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
-    client::{Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache},
+    client::{
+        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
+    },
     git::{Repo, RepoActions, identify_ahead_behind},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,
@@ -47,7 +44,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &NgitCli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
     let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
@@ -55,16 +52,7 @@ pub async fn launch(cli_args: &NgitCli, args: &SubCommandArgs, no_fetch: bool) -
         .get_main_or_master_branch()
         .context("the default branches (main or master) do not exist")?;
 
-    let mut client = {
-        #[cfg(not(test))]
-        {
-            crate::client::Client::default()
-        }
-        #[cfg(test)]
-        {
-            <crate::client::MockConnect as std::default::Default>::default()
-        }
-    };
+    let mut client = Client::default();
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
@@ -381,10 +369,9 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                 public_key: _,
                 uppercase: false,
             }) => {
-                let events = get_events_from_local_cache(
-                    git_repo_path,
-                    vec![nostr_0_37_0::Filter::new().id(*event_id)],
-                )
+                let events = get_events_from_local_cache(git_repo_path, vec![
+                    nostr_0_37_0::Filter::new().id(*event_id),
+                ])
                 .await?;
 
                 if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {

@@ -94,6 +94,25 @@ pub use http::Uri;
 pub use lazy_static::lazy_static;
 ///
 use log::debug;
+///
+use anyhow::{Result, anyhow};
+///
+use directories::ProjectDirs;
+
+pub fn get_dirs() -> Result<ProjectDirs> {
+    // Attempt to get dirs with "org.gnostr.gnostr"
+    if let Some(dirs) = ProjectDirs::from("org", "gnostr", "gnostr") {
+        return Ok(dirs);
+    }
+
+    // Fallback to "ngit" if the first attempt fails
+    let ngit_dirs = ProjectDirs::from("", "", "ngit")
+        .ok_or_else(|| anyhow!("Failed to find a suitable home directory for both 'gnostr' and 'ngit'"))?;
+
+    Ok(ngit_dirs)
+}
+
+
 // pub //use nostr_types::RelayMessageV5;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
 pub use gnostr_types::{
@@ -115,20 +134,7 @@ pub use zeroize::Zeroize;
 //pub use lightning;
 
 ///
-use anyhow::{Result, anyhow};
-///
-use directories::ProjectDirs;
-
-///
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-///
-pub fn get_dirs() -> Result<ProjectDirs> {
-    //maintain compat with ngit
-    ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
-        "should find operating system home directories with rust-directories crate"
-    ))
-}
 
 ///
 type Ws =
