@@ -1530,11 +1530,9 @@ pub struct FetchRequest {
     user_relays_for_profiles: HashSet<RelayUrl>,
 }
 
-pub async fn fetching_with_report(
+pub async fn fetching_with_report<C: Connect>(
     git_repo_path: &Path,
-    //#[cfg(test)] client: &crate::client::MockConnect,
-    /*#[cfg(not(test))]*/
-    client: &Client,
+    client: &C,
     trusted_maintainer_coordinate: &Coordinate,
 ) -> Result<FetchReport> {
     let term = console::Term::stderr();
@@ -1662,10 +1660,8 @@ pub async fn get_event_from_cache_by_id(git_repo: &Repo, event_id: &EventId) -> 
 
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::too_many_lines)]
-pub async fn send_events(
-    //#[cfg(test)] client: &crate::client::MockConnect,
-    /*#[cfg(not(test))]*/
-    client: &Client,
+pub async fn send_events<C: Connect + Send + Sync>(
+    client: &C,
     git_repo_path: Option<&Path>,
     events: Vec<nostr_0_37_0::Event>,
     my_write_relays: Vec<String>,
