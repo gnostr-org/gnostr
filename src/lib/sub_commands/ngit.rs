@@ -12,7 +12,7 @@ use crate::sub_commands::logout;
 use crate::sub_commands::send;
 
 use clap::Args;
-use nostr_sdk_0_34_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 
 use serde::ser::StdError;
 
@@ -44,7 +44,6 @@ pub async fn ngit(
             AccountCommands::ExportKeys => export_keys::launch().await?,
         },
 
-        //NgitCommands::Login(args) => login::launch(ngit_cli, &args).await?,
         NgitCommands::Init(args) => init::launch(ngit_cli, &args).await?,
         NgitCommands::Send(args) => send::launch(ngit_cli, &args, true).await?,
         NgitCommands::List => list::launch().await?,
