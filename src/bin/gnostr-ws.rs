@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 fn main() {
     // listen for WebSockets on port 8080:
-    let event_hub = gnostr::ws::launch(443)
-        .expect("failed to listen on port 443");
+    let event_hub = gnostr::ws::launch(8080)
+        .expect("failed to listen on port 8080");
     // map between client ids and the client's `Responder`:
     let mut clients: HashMap<u64, Responder> = HashMap::new();
 
