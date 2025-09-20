@@ -3,6 +3,7 @@
 
 use anyhow::Result;
 use crate::chat::*;
+use crate::client::*;
 use nostr_sdk_0_37_0::Keys;
 //use nostr_sdk_0_37_0::prelude::*;
 use serde::ser::StdError;
