@@ -5,7 +5,7 @@ use gnostr::cli::{GnostrCli, GnostrCommands, get_app_cache_path, setup_logging};
 use gnostr::sub_commands;
 use gnostr::sub_commands::ngit::NgitSubCommand;
 use gnostr_asyncgit::sync::RepoPath;
-use gnostr::sub_commands::init::SubCommandArgs;
+//use gnostr::sub_commands::init::SubCommandArgs;
 use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, trace};
@@ -21,27 +21,6 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     env::set_var("WOBBLE", "0");
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
-    let mut ngit_cli = NgitCli {
-        bunker_app_key: None,
-        bunker_uri: None,
-        command: NgitCommands::List,
-        disable_cli_spinners: true,
-        nsec: None,
-        password: None,
-    };
-	let clone_url: Vec<String> = vec![String::from("https://github.com/gnostr-org/gnostr.git")];
-	let relays: Vec<String> = vec![String::from("wss://relay.damus.io")];
-	let other_maintainers: Vec<String> = vec![String::from("")];
-	let web: Vec<String> = vec![String::from("https://github.com/gnostr-org/gnostr/")];
-	let init_subcommand_args = crate::sub_commands::init::SubCommandArgs {clone_url: clone_url, description: None, earliest_unique_commit: None, identifier: None, other_maintainers:other_maintainers, relays:relays, title: None, web: web};
-    let mut ngit_subcommand = NgitSubCommand {
-        //command: NgitCommands::Init(init_subcommand_args),
-        command: NgitCommands::List,
-        disable_cli_spinners: true,
-        nsec: None,
-        password: None,
-    };
-    let app_cache = get_app_cache_path();
     if gnostr_cli_args.logging {
         let logging = setup_logging();
         trace!("{:?}", logging);
@@ -57,9 +36,14 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     } else {
         LevelFilter::OFF
     };
+    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    let app_cache = get_app_cache_path();
+    trace!("{:?}", app_cache);
+
     let env_args: Vec<String> = env::args().collect();
     for arg in &env_args {
-        debug!("40:arg={:?}", arg);
+        debug!("43:arg={:?}", arg);
     }
 
     if env_args.contains(&String::from("--gitdir")) {
@@ -84,39 +68,22 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         Some(value) => {
             debug!("63:The --gitdir value is: {}", value);
             let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
-            debug!("main:73:repo_path={:?}", repo_path);
+            debug!("main:68:repo_path={:?}", repo_path);
             // Convert the RepoPath to an OsStr reference
             let path_os_str = repo_path.as_path().as_os_str();
-
             // Now set the environment variable
             env::set_var("GNOSTR_GITDIR", path_os_str);
         }
-        None => debug!("72:The --gitdir argument was not found or has no value."),
+        None => debug!("74:The --gitdir argument was not found or has no value."),
     }
 
-    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    trace!("{:?}", app_cache);
-
-    //if gnostr_cli_args.gitdir.is_some() {
-    //    // Assuming 'args' and 'gitdir' are correctly defined elsewhere
-    //    let repo_path: RepoPath = gnostr_cli_args.gitdir.clone().expect("");
-    //    debug!("main:73:repo_path={:?}", repo_path);
-    //    // Convert the RepoPath to an OsStr reference
-    //    let path_os_str = repo_path.as_path().as_os_str();
-
-    //    // Now set the environment variable
-    //    env::set_var("GNOSTR_GITDIR", path_os_str);
-
-    //    debug!("main:80:{:?}", gnostr_cli_args.gitdir.clone().expect(""));
-    //    //env::set_var("GNOSTR_GITDIR", args.gitdir.clone().expect(""));
-    //    debug!("82:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
-    //    //replace gnostr tui --gitdir
-    //    //std::process::exit(0);
-    //}
     if gnostr_cli_args.workdir.is_some() {}
     if gnostr_cli_args.directory.is_some() {}
-    if gnostr_cli_args.hash.is_some() {
+
+    //gnostr --hash <string>
+    //gnostr --hash <string>
+    //gnostr --hash <string>
+	if gnostr_cli_args.hash.is_some() {
         //not none
         if let Some(input_string) = gnostr_cli_args.hash {
             let mut hasher = Sha256::new();
@@ -133,6 +100,36 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             gnostr_cli_args.nsec = format!("{:x}", result).into();
         }
     }
+
+    //ngit_cli
+    //ngit_cli
+    //ngit_cli
+    let mut ngit_cli = NgitCli {
+        bunker_app_key: None,
+        bunker_uri: None,
+        command: NgitCommands::List,
+        disable_cli_spinners: true,
+        nsec: None,
+        password: None,
+    };
+    let clone_url: Vec<String> = vec![String::from("https://github.com/gnostr-org/gnostr.git")];
+    let relays: Vec<String> = vec![String::from("wss://relay.damus.io")];
+    let other_maintainers: Vec<String> = vec![String::from("")];
+    let web: Vec<String> = vec![String::from("https://github.com/gnostr-org/gnostr/")];
+    let init_subcommand_args = crate::sub_commands::init::SubCommandArgs {clone_url: clone_url, description: None, earliest_unique_commit: None, identifier: None, other_maintainers:other_maintainers, relays:relays, title: None, web: web};
+    let mut ngit_subcommand = NgitSubCommand {
+        //command: NgitCommands::Init(init_subcommand_args),
+        command: NgitCommands::List,
+        disable_cli_spinners: true,
+        nsec: None,
+        password: None,
+    };
+    //ngit_cli
+    //ngit_cli
+    //ngit_cli
+
+
+
 
     // Post event
     match &gnostr_cli_args.command {
@@ -155,6 +152,9 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //    sub_commands::legit::legit(sub_command_args).await
         //}
         Some(GnostrCommands::Ngit(sub_command_args)) => {
+
+
+
             //TODO:re-add fetch push pull
             //move these to GnostrCli - detect and pass to ngit sub_command
             println!("ngit_cli:{:?}", ngit_cli);
