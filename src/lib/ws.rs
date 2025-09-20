@@ -200,38 +200,10 @@ impl EventHub {
     }
 }
 
-
-//pub fn is_port_available(port: u16) -> bool {
-//    match TcpListener::bind(("127.0.0.1", port)) {
-//        Ok(_) => true, // Successfully bound, so the port is available
-//        Err(_) => false, // Binding failed, port is likely in use
-//    }
-//}
-
-use std::net::TcpListener as std_tcp_listener;
-//use tokio::net::TcpListener;
-//use tokio::runtime::Runtime;
-pub fn is_port_available(port: u16) -> bool {
- //   let rt = Runtime::new().expect("Failed to create Tokio runtime");
-    /*rt.block_on(*/
-	//async {
-        match std_tcp_listener::bind(("127.0.0.1", port))/*.await*/ {
-            Ok(_) => true,
-            Err(_) => false,
-        }
-    //}//)
-}
-
 /// Start listening for websocket connections on `port`.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
 pub fn launch(port: u16) -> Result<EventHub, Error> {
-	let mut port = port.clone();
-	while !is_port_available(port.clone()) {
-
-		port = port+1;
-
-	}
     let address = format!("0.0.0.0:{}", port);
     let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
     return launch_from_listener(listener);
@@ -276,9 +248,8 @@ fn start_runtime(
             let tokio_listener = TcpListener::from_std(listener).unwrap();
             let mut current_id: u64 = 0;
             loop {
-				println!("current_id={}", current_id.clone());
-                if current_id == 0 {
-                    println!("stopping listening on port {}", current_id);
+                if current_id == 15 {
+                    println!("stopping listening on port");
                     break Ok(());
                 }
                 match tokio_listener.accept().await {
@@ -303,19 +274,9 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
     // channel for the `Responder` to send things to this websocket
     let (resp_tx, resp_rx) = flume::unbounded();
 
-	println!("handle_Connection resp_tx:{:?}", resp_tx);
-	println!("handle_Connection id:{}", id);
-	if Some(Event::Connect(id, Responder::new(resp_tx.clone(), id))).is_some() {
-
     event_tx
         .send(Event::Connect(id, Responder::new(resp_tx, id)))
         .expect("Parent thread is dead");
-
-
-	}
-    //event_tx
-    //    .send(Event::Connect(id, Responder::new(resp_tx, id)))
-    //    .expect("Parent thread is dead");
 
     // future that waits for commands from the `Responder`
     let responder_events = async move {
