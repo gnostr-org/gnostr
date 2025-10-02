@@ -5,9 +5,6 @@ mod stateful_paragraph;
 pub mod style;
 mod syntax_text;
 
-pub mod solarized_dark;
-pub mod solarized_light;
-
 use filetreelist::MoveSelection;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 pub use scrollbar::{draw_scrollbar, Orientation};

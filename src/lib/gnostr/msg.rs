@@ -2,7 +2,6 @@ use std::fmt::Display;
 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use crate::ui::solarized_light;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     format!(
@@ -59,22 +58,22 @@ impl Msg {
         self.content[0] = content;
         self
     }
-    pub fn wrap_text(mut self, text: &Msg, max_width: usize) -> Self {
-            for line in text.content.bytes() {
+    pub fn wrap_text(mut self, text: Msg, max_width: usize) -> Self {
+        //	for line in text.content.bytes() {
 
-            line
-                .flat_map(|line| {
-                    line.chars()
-                        .collect::<Vec<char>>()
-                        .chunks(max_width)
-                        .map(|chunk| chunk.iter().collect::<String>())
-                        .collect::<Vec<String>>()
-                })
-                .collect()
-        }
+        //    line
+        //        .flat_map(|line| {
+        //            line.chars()
+        //                .collect::<Vec<char>>()
+        //                .chunks(max_width)
+        //                .map(|chunk| chunk.iter().collect::<String>())
+        //                .collect::<Vec<String>>()
+        //        })
+        //        .collect()
+        //}
+        //	//return line
 
-            text.content = line;
-            text
+        self
     }
 }
 
@@ -84,26 +83,14 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
         use ratatui::text::{Line, Span};
         use MsgKind::*;
 
-        pub const YELLOW: Color = Color::Rgb(181, 137, 0);
-        pub const ORANGE: Color = Color::Rgb(203, 75, 22);
-        pub const RED: Color = Color::Rgb(220, 50, 47);
-        pub const MAGENTA: Color = Color::Rgb(211, 54, 130);
-        pub const VIOLET: Color = Color::Rgb(108, 113, 196);
-        pub const BLUE: Color = Color::Rgb(38, 139, 210);
-        pub const CYAN: Color = Color::Rgb(42, 161, 152);
-        pub const GREEN: Color = Color::Rgb(133, 153, 0);
-
-
         fn gen_color_by_hash(s: &str) -> Color {
-            static LIGHT_COLORS: [Color; 8] = [
-            YELLOW,
-            ORANGE,
-            RED,
-            MAGENTA,
-            VIOLET,
-            BLUE,
-            CYAN,
-            GREEN,
+            static LIGHT_COLORS: [Color; 5] = [
+                Color::LightMagenta,
+                Color::LightGreen,
+                Color::LightYellow,
+                Color::LightBlue,
+                Color::LightCyan,
+                // Color::White,
             ];
             let h = s.bytes().fold(0, |acc, b| acc ^ b as usize);
             LIGHT_COLORS[h % LIGHT_COLORS.len()]
@@ -113,8 +100,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             Join | Leave | System => Line::from(Span::styled(
                 m.to_string(),
                 Style::default()
-                    .fg(/*gen_color_by_hash(&m.kind)*/YELLOW)
-                    .bg(/*gen_color_by_hash(&m.kind)*/ORANGE)
+                    .fg(Color::DarkGray)
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {

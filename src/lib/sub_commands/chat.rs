@@ -5,14 +5,13 @@
 
 use crate::chat::create_event;
 use crate::chat::msg::*;
-//use crate::chat::p2p::evt_loop; //migrate carefully
+use crate::chat::p2p::evt_loop;
 use crate::chat::parse_json;
 use crate::chat::split_json_string;
 use crate::chat::ui;
 use crate::chat::ChatCli;
 use crate::chat::*;
 use crate::global_rt::global_rt;
-use crate::p2p::evt_loop; //migrate carefully
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
 use git2::{ObjectType, Repository};
@@ -68,6 +67,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdEr
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
         .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
+        //
         .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
 
     //    let subscriber = Registry::default()

@@ -18,8 +18,6 @@ pub mod clipboard;
 pub mod cmdbar;
 ///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
 pub mod components;
-///  <https://docs.rs/gnostr/latest/gnostr/cube/index.html>
-pub mod cube;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
@@ -240,13 +238,9 @@ pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
     ))
 }
 
-/// pub fn get_blockheight_sync() -> Result<String, &'static str>
-pub fn get_blockheight_sync() -> Result<String, &'static str> {
+/// pub fn get_blockheight() -> Result<String, &'static str>
+pub fn get_blockheight() -> Result<String, &'static str> {
     Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
-}
-/// pub async fn get_blockheight_async() -> Result<String, &'static str>
-pub async fn get_blockheight_async() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight_async().await))
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
@@ -365,7 +359,6 @@ pub use blockhash::blockhash;
 /// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
 pub mod blockheight;
 pub use blockheight::blockheight;
-pub use blockheight::blockheight_async;
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
