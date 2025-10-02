@@ -10,7 +10,7 @@ pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
             .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string()),
     )
 });
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub enum MsgKind {
     #[default]
     Chat,
@@ -97,10 +97,25 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
         }
 
         match m.kind {
-            Join | Leave | System => Line::from(Span::styled(
+            //System
+            System => Line::from(Span::styled(
                 m.to_string(),
                 Style::default()
-                    .fg(Color::DarkGray)
+                    .fg(Color::Red)
+                    .add_modifier(Modifier::ITALIC),
+            )),
+            //Join
+            Join => Line::from(Span::styled(
+                m.to_string(),
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::ITALIC),
+            )),
+            //Leave
+            Leave => Line::from(Span::styled(
+                m.to_string(),
+                Style::default()
+                    .fg(Color::Yellow)
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {
@@ -282,8 +297,8 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
 impl Display for Msg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.kind {
-            MsgKind::Join => write!(f, "{} join", self.from),
-            MsgKind::Leave => write!(f, "{} left", self.from),
+            MsgKind::Join => write!(f, "{} joined!", self.from),
+            MsgKind::Leave => write!(f, "{} left!", self.from),
             MsgKind::Chat => write!(f, "{}: {}", self.from, self.content[0]),
             MsgKind::System => write!(f, "[System] {}", self.content[0]),
             MsgKind::Raw => write!(f, "{}", self.content[0]),
