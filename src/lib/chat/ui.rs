@@ -1,6 +1,5 @@
-use crate::ui::solarized_dark;
-use crate::ui::solarized_light;
-
+/// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
+//use crate::ui::event::Event;
 //use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
 use ratatui::prelude::*;
 use ratatui::{
@@ -153,8 +152,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
-                            let m =
-                                msg::Msg::default().set_content(app.input.value().to_owned(), 0);
+                            let m = msg::Msg::default().set_content(app.input.value().to_owned(), 0);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);

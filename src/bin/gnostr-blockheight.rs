@@ -134,7 +134,7 @@ use futures::executor::block_on;
 ///
 /// async fn print_blockheight()
 ///
-/// let blockheight = gnostr::get_blockheight_sync();
+/// let blockheight = gnostr::get_blockheight();
 ///
 /// print!("{}",blockheight.unwrap());
 async fn print_blockheight() {
@@ -151,7 +151,7 @@ async fn print_blockheight() {
     #[cfg(debug_assertions)]
     println!("start_millis: {}", start_millis);
 
-    let blockheight = gnostr::get_blockheight_sync();
+    let blockheight = gnostr::get_blockheight();
     print!("{}", blockheight.unwrap());
 
     #[cfg(debug_assertions)]

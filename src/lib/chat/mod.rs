@@ -1,20 +1,6 @@
-use crate::{get_blockheight_async, get_weeble_async, get_wobble_async};
-use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
-use git2::{Commit, ObjectType, Oid, Repository};
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
-use nostr_sdk_0_37_0::prelude::*;
-//use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
-//use sha2::Digest;
-//use tokio::time::Duration;
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::fmt::Write;
 use std::{error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
@@ -23,12 +9,25 @@ use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::fmt::Write;
+
+use anyhow::{anyhow, Result};
+use git2::{Commit, ObjectType, Oid, Repository};
+use nostr_sdk_0_37_0::prelude::*;
+//use nostr_sdk_0_37_0::EventBuilder;
+use serde::{Deserialize, Serialize};
+use serde_json;
+use serde_json::{Result as SerdeJsonResult, Value};
+use sha2::Digest;
+//use tokio::time::Duration;
+
+pub mod p2p;
+pub mod ui;
+pub use p2p::evt_loop;
 pub mod msg;
 pub use msg::*;
-pub mod p2p;
-pub use p2p::evt_loop;
-pub mod ui;
-pub mod tests;
 
 //const TITLE: &str = include_str!("./title.txt");
 
@@ -85,10 +84,18 @@ pub async fn create_event(
 
     let opts = Options::new().gossip(true);
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
-    for relay in BOOTSTRAP_RELAYS.to_vec() {
-        debug!("{}", relay);
-        client.add_discovery_relay(relay).await.expect("");
-    }
+
+    client.add_discovery_relay("wss://relay.damus.io").await?;
+    client.add_discovery_relay("wss://purplepag.es").await?;
+    client
+        .add_discovery_relay("ws://oxtrdevav64z64yb7x6rjg4ntzqjhedm5b5zjqulugknhzr46ny2qbad.onion")
+        .await?;
+
+    // add some relays
+    // TODO get_relay_list here
+    client.add_relay("wss://relay.damus.io").await?;
+    client.add_relay("wss://e.nos.lol").await?;
+    client.add_relay("wss://nos.lol").await?;
 
     // Connect to the relays.
     client.connect().await;
@@ -595,11 +602,8 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         //create nostr client with commit based keys
         //let client = Client::new(keys);
         let client = Client::new(padded_keys.clone());
-
-        for relay in BOOTSTRAP_RELAYS.to_vec() {
-            debug!("{}", relay);
-            client.add_relay(relay).await.expect("");
-        }
+        client.add_relay("wss://relay.damus.io").await.expect("");
+        client.add_relay("wss://e.nos.lol").await.expect("");
         client.connect().await;
 
         //build git gnostr event
@@ -729,11 +733,6 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
                 .set_kind(MsgKind::GitCommitTime),
         );
     }
-    app.add_message(
-        Msg::default()
-            .set_content("additional RAW message value".to_string(), 0)
-            .set_kind(MsgKind::Raw),
-    );
 
     let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
     //info!("keys.secret_key():\n{:?}", keys.secret_key());
