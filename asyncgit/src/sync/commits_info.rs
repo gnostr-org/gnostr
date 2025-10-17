@@ -8,6 +8,26 @@ use super::RepoPath;
 use crate::{error::Result, sync::repository::repo};
 
 /// identifies a single commit
+impl serde::Serialize for CommitId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.0.to_string())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for CommitId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let oid = Oid::from_str(&s).map_err(serde::de::Error::custom)?;
+        Ok(CommitId(oid))
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct CommitId(Oid);
 
