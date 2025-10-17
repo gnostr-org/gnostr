@@ -55,8 +55,14 @@ cargo-bench:
 cargo-test:
   @make cargo-test
 
+cargo-test-workspace:
+  @make cargo-test-workspace
+
 cargo-test-nightly:
   @make cargo-test-nightly
+
+cargo-test-nightly-workspace:
+  @make cargo-test-nightly-workspace
 
 cargo-report:
   @make cargo-report
