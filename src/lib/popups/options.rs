@@ -22,7 +22,7 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum AppOption {
     StatusShowUntracked,
     DiffIgnoreWhitespaces,
