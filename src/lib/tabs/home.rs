@@ -98,6 +98,13 @@ impl Chatlog {
     }
 
     ///
+    pub fn handle_internal_event(&mut self, event: InternalEvent) {
+        if let InternalEvent::ChatMessage(msg) = event {
+            self.list.handle_internal_event(InternalEvent::ChatMessage(msg));
+        }
+    }
+
+    ///
     pub fn any_work_pending(&self) -> bool {
         self.git_log.is_pending()
             || self.is_search_pending()

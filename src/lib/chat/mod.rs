@@ -22,6 +22,7 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use crate::queue::InternalEvent;
 
 pub mod msg;
 pub use msg::*;
@@ -759,8 +760,8 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     //        .set_kind(MsgKind::GitCommitHeader),
     //);
 
-    let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<Msg>(100);
-    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<Msg>(100);
+    let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
 
     // let input_loop_fut = input_loop(input_tx);
     let input_tx_clone = input_tx.clone();
@@ -770,7 +771,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         let value = value.clone();
         global_rt().spawn(async move {
             debug!("sent: {:?}", m);
-            value.send(m).await.unwrap();
+            value.send(InternalEvent::ChatMessage(m)).await.unwrap();
         });
     });
 
@@ -792,9 +793,13 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     // recv from peer
     let mut tui_msg_adder = app.add_msg_fn();
     global_rt().spawn(async move {
-        while let Some(m) = peer_rx.recv().await {
-            debug!("recv: {:?}", m);
-            tui_msg_adder(m);
+        while let Some(event) = peer_rx.recv().await {
+            debug!("recv: {:?}", event);
+            if let InternalEvent::ChatMessage(m) = event {
+                tui_msg_adder(m);
+            } else {
+                debug!("Received non-chat message event: {:?}", event);
+            }
         }
     });
 
@@ -803,7 +808,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     global_rt().spawn(async move {
         tokio::time::sleep(Duration::from_millis(1000)).await;
         input_tx_clone
-            .send(Msg::default().set_kind(MsgKind::Join))
+            .send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Join)))
             .await
             .unwrap();
     });
@@ -812,7 +817,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     // say goodbye
     // input_tx.blocking_send(Msg::default().set_kind(MsgKind::Leave))?;
-    let _ = input_tx.send(Msg::default().set_kind(MsgKind::Leave));
+    let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
     std::thread::sleep(Duration::from_millis(500));
 
     Ok(())
