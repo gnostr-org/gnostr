@@ -82,7 +82,10 @@ pub enum AppTabs {
 }
 
 ///
+#[derive(Debug)]
 pub enum InternalEvent {
+    ///
+    ChatMessage(crate::chat::msg::Msg),
     ///
     ConfirmAction(Action),
     ///

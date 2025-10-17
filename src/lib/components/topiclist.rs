@@ -27,6 +27,7 @@ pub enum InputMode {
 use super::utils::logitems::{ItemBatch, LogEntry};
 use super::CommandText;
 use crate::utils::truncate_chars;
+use crate::chat::msg::Msg;
 use crate::{
     app::Environment,
     components::{
@@ -997,6 +998,15 @@ impl TopicList {
         }
         Vec::new()
     }
+    pub fn handle_internal_event(&mut self, event: InternalEvent) {
+        if let InternalEvent::ChatMessage(msg) = event {
+            if let Some(history) = self.chat_histories.get_mut(&msg.commit_id) {
+                history.push(msg.to_string());
+            } else {
+                self.chat_histories.insert(msg.commit_id, vec![msg.to_string()]);
+            }
+        }
+    }
 }
 
 impl DrawableComponent for TopicList {
@@ -1179,8 +1189,11 @@ impl Component for TopicList {
                 InputMode::Editing => match k.code {
                     crossterm::event::KeyCode::Enter => {
                         if let Some(entry) = self.selected_entry() {
-                            let history = self.chat_histories.entry(entry.id).or_default();
-                            history.push(self.input.value().to_string());
+                            let msg = Msg::default()
+                                .set_content(self.input.value().to_string(), 0)
+                                .set_kind(crate::chat::msg::MsgKind::Chat)
+                                .set_commit_id(entry.id);
+                            self.queue.push(InternalEvent::ChatMessage(msg));
                         }
                         self.input.reset();
                         true

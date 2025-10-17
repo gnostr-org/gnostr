@@ -764,6 +764,10 @@ impl App {
                 flags.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
             }
             InternalEvent::Update(u) => flags.insert(u),
+            InternalEvent::ChatMessage(msg) => {
+                self.chat_tab.handle_internal_event(InternalEvent::ChatMessage(msg));
+                flags.insert(NeedsUpdate::ALL);
+            }
             //
             InternalEvent::OpenCommit => self.commit_popup.show()?,
             //

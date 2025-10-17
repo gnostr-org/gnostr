@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use git2::Oid;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     format!(
@@ -32,10 +33,14 @@ pub enum MsgKind {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+use gnostr_asyncgit::sync::CommitId;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Msg {
     pub from: String,
     pub content: Vec<String>,
     pub kind: MsgKind,
+    pub commit_id: CommitId,
 }
 
 impl Default for Msg {
@@ -44,6 +49,7 @@ impl Default for Msg {
             from: USER_NAME.clone(),
             content: vec!["".to_string(), "".to_string()],
             kind: MsgKind::Chat,
+            commit_id: CommitId::new(Oid::zero()),
         }
     }
 }
@@ -54,11 +60,17 @@ impl Msg {
         self
     }
 
-    pub fn set_content(mut self, content: String, int: usize) -> Self {
+    pub fn set_content(mut self, content: String, _int: usize) -> Self {
         self.content[0] = content;
         self
     }
-    pub fn wrap_text(mut self, text: Msg, max_width: usize) -> Self {
+
+    pub fn set_commit_id(mut self, commit_id: CommitId) -> Self {
+        self.commit_id = commit_id;
+        self
+    }
+
+    pub fn wrap_text(mut self, _text: Msg, _max_width: usize) -> Self {
         //	for line in text.content.bytes() {
 
         //    line
