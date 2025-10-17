@@ -334,6 +334,7 @@ pub fn joe_signature() -> Signature<'static> {
 mod tests {
 
 	use super::*;
+	use std::fs;
 
 	#[test]
 	fn methods_do_not_throw() -> Result<()> {
@@ -344,6 +345,111 @@ mod tests {
 		repo.checkout("feature")?;
 		fs::write(repo.dir.join("t3.md"), "some content")?;
 		repo.stage_and_commit("add t3.md")?;
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_git_test_repo_new() -> Result<()> {
+		let repo_main = GitTestRepo::new("main")?;
+		assert!(repo_main.dir.exists());
+		assert!(repo_main.git_repo.is_empty()?);
+		assert_eq!(repo_main.get_checked_out_branch_name()?, "main");
+
+		let repo_dev = GitTestRepo::new("development")?;
+		assert!(repo_dev.dir.exists());
+		assert!(repo_dev.git_repo.is_empty()?);
+		assert_eq!(repo_dev.get_checked_out_branch_name()?, "development");
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_git_test_repo_duplicate() -> Result<()> {
+		let original_repo = GitTestRepo::new("main")?;
+		original_repo.populate()?;
+		fs::write(original_repo.dir.join("test.txt"), "original content")?;
+		original_repo.stage_and_commit("add test.txt")?;
+
+		let duplicated_repo = GitTestRepo::duplicate(&original_repo)?;
+		assert!(duplicated_repo.dir.exists());
+		assert_ne!(original_repo.dir, duplicated_repo.dir);
+
+		let original_content = fs::read_to_string(original_repo.dir.join("test.txt"))?;
+		let duplicated_content = fs::read_to_string(duplicated_repo.dir.join("test.txt"))?;
+		assert_eq!(original_content, duplicated_content);
+		assert_eq!(original_repo.git_repo.head()?.peel_to_commit()?.id(), duplicated_repo.git_repo.head()?.peel_to_commit()?.id());
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_git_test_repo_clone_repo() -> Result<()> {
+		let original_repo = GitTestRepo::new("main")?;
+		original_repo.populate()?;
+		fs::write(original_repo.dir.join("test.txt"), "original content")?;
+		original_repo.stage_and_commit("add test.txt")?;
+
+		let cloned_repo = GitTestRepo::clone_repo(&original_repo)?;
+		assert!(cloned_repo.dir.exists());
+		assert_ne!(original_repo.dir, cloned_repo.dir);
+
+		let original_content = fs::read_to_string(original_repo.dir.join("test.txt"))?;
+		let cloned_content = fs::read_to_string(cloned_repo.dir.join("test.txt"))?;
+		assert_eq!(original_content, cloned_content);
+		assert_eq!(original_repo.git_repo.head()?.peel_to_commit()?.id(), cloned_repo.git_repo.head()?.peel_to_commit()?.id());
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_get_local_branch_names() -> Result<()> {
+		let repo = GitTestRepo::new("main")?;
+		repo.initial_commit()?;
+		let mut branches = repo.get_local_branch_names()?;
+		branches.sort();
+		assert_eq!(branches, vec!["main"]);
+
+		repo.create_branch("feature1")?;
+		repo.create_branch("feature2")?;
+		let mut branches = repo.get_local_branch_names()?;
+		branches.sort();
+		assert_eq!(branches, vec!["feature1", "feature2", "main"]);
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_get_checked_out_branch_name() -> Result<()> {
+		let repo = GitTestRepo::new("main")?;
+		repo.initial_commit()?;
+		assert_eq!(repo.get_checked_out_branch_name()?, "main");
+
+		repo.create_branch("feature")?;
+		repo.checkout("feature")?;
+		assert_eq!(repo.get_checked_out_branch_name()?, "feature");
+
+		// Test detached HEAD (more complex to set up, might skip for now or add a specific helper)
+		// For now, assume it always returns a branch name as per current usage.
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_get_tip_of_local_branch() -> Result<()> {
+		let repo = GitTestRepo::new("main")?;
+		let commit_oid = repo.populate()?;
+		assert_eq!(repo.get_tip_of_local_branch("main")?, commit_oid);
+
+		repo.create_branch("feature")?;
+		repo.checkout("feature")?;
+		let feature_commit_oid = repo.stage_and_commit("feature commit")?;
+		assert_eq!(repo.get_tip_of_local_branch("feature")?, feature_commit_oid);
+
+		// Test non-existent branch
+		let result = repo.get_tip_of_local_branch("non-existent-branch");
+		assert!(result.is_err());
+		assert!(result.unwrap_err().to_string().contains("cannot find branch non-existent-branch"));
 
 		Ok(())
 	}
