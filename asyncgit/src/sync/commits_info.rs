@@ -9,7 +9,7 @@ use crate::{error::Result, sync::repository::repo};
 
 /// identifies a single commit
 impl serde::Serialize for CommitId {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -18,7 +18,7 @@ impl serde::Serialize for CommitId {
 }
 
 impl<'de> serde::Deserialize<'de> for CommitId {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
