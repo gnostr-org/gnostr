@@ -67,6 +67,7 @@ pub struct TopicList {
     // Chat input fields
     pub input: Input,
     pub input_mode: InputMode,
+    pub chat_history: Vec<String>,
 }
 
 impl TopicList {
@@ -101,6 +102,7 @@ impl TopicList {
             title: title.into(),
             input: Input::default(),
             input_mode: InputMode::Normal,
+            chat_history: Vec::new(),
         }
     }
 
@@ -419,7 +421,7 @@ impl TopicList {
 
     fn update_scroll_speed(&mut self) {
         const REPEATED_SCROLL_THRESHOLD_MILLIS: u128 = 300;
-        const SCROLL_SPEED_START: f32 = 0.1_f32;
+        const SCROLL_SPEED_START: f32 = 1.0_f32;
         const SCROLL_SPEED_MAX: f32 = 10_f32;
         const SCROLL_SPEED_MULTIPLIER: f32 = 1.05_f32;
 
@@ -979,6 +981,16 @@ impl TopicList {
 
         txt
     }
+
+    fn get_chat_history_text(&self, height: usize) -> Vec<Line<'_>> {
+        self.chat_history
+            .iter()
+            .rev()
+            .take(height)
+            .rev()
+            .map(|s| Line::from(s.as_str()))
+            .collect()
+    }
 }
 
 impl DrawableComponent for TopicList {
@@ -1077,6 +1089,19 @@ impl DrawableComponent for TopicList {
             left_chunks[1],
         );
 
+        let chat_history_height = left_chunks[2].height as usize;
+        f.render_widget(
+            Paragraph::new(self.get_chat_history_text(chat_history_height))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Chat History")
+                        .border_style(self.theme.block(false)),
+                )
+                .alignment(Alignment::Left),
+            left_chunks[2],
+        );
+
         // Chat input
         let width = left_chunks[3].width.max(3) - 3; // keep 2 for borders and 1 for cursor
         let scroll = self.input.visual_scroll(width as usize);
@@ -1148,6 +1173,7 @@ impl Component for TopicList {
                 InputMode::Editing => match k.code {
                     crossterm::event::KeyCode::Enter => {
                         // For now, just clear the input
+                        self.chat_history.push(self.input.value().to_string());
                         self.input.reset();
                         true
                     }
