@@ -14,6 +14,15 @@ use ratatui::{
 };
 use std::env;
 use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
+use tui_input::backend::crossterm::EventHandler;
+use tui_input::Input;
+
+#[derive(Default)]
+pub enum InputMode {
+    Normal,
+    #[default]
+    Editing,
+}
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::utils::truncate_chars;
@@ -55,6 +64,9 @@ pub struct TopicList {
     theme: SharedTheme,
     queue: Queue,
     key_config: SharedKeyConfig,
+    // Chat input fields
+    pub input: Input,
+    pub input_mode: InputMode,
 }
 
 impl TopicList {
@@ -87,6 +99,8 @@ impl TopicList {
             queue: env.queue.clone(),
             key_config: env.key_config.clone(),
             title: title.into(),
+            input: Input::default(),
+            input_mode: InputMode::Normal,
         }
     }
 
@@ -982,6 +996,7 @@ impl DrawableComponent for TopicList {
                     Constraint::Length(3),       //help and tools height
                     Constraint::Length(3),       //timer
                     Constraint::Percentage(100), //table
+                    Constraint::Length(3),       //chat input
                 ]
                 .as_ref(),
             )
@@ -1020,15 +1035,7 @@ impl DrawableComponent for TopicList {
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
         );
-        //let more_text = format!(
-        //    " {} {}/{} ",
-        //    self.title,
-        //    self.commits.len().saturating_sub(self.selection),
-        //    self.commits.len(),
-        //);
 
-        //render commit info in topiclist
-        //
         f.render_widget(
             Paragraph::new(
                 self.get_topic_text(topic_height_in_lines, (current_size.0 + 10) as usize),
@@ -1039,9 +1046,7 @@ impl DrawableComponent for TopicList {
                     .title(Span::styled(
                         format!(
                             "self.get_topic_text:pubkey--->{:>}<---",
-                            //"{}",
                             title.as_str().to_owned(),
-                            //more_text.as_str()
                         ),
                         self.theme.title(true),
                     ))
@@ -1050,7 +1055,7 @@ impl DrawableComponent for TopicList {
             .alignment(Alignment::Left),
             left_chunks[0],
         );
-        //TODO nip-0034 git stuff display
+
         f.render_widget(
             Paragraph::new(self.get_detail_text(
                 10_usize * topic_height_in_lines,
@@ -1059,13 +1064,10 @@ impl DrawableComponent for TopicList {
             .block(
                 Block::default()
                     .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
-                    //.borders(Borders::ALL)
                     .title(Span::styled(
                         format!(
                             "1032:more_detail--->{:>}<---",
-                            //"{}",
                             title.as_str().to_owned(),
-                            //more_text.as_str()
                         ),
                         self.theme.title(true),
                     ))
@@ -1074,37 +1076,28 @@ impl DrawableComponent for TopicList {
             .alignment(Alignment::Left),
             left_chunks[1],
         );
-        //TODO p2p/nostr chat box
-        f.render_widget(
-            Paragraph::new(
-                self.get_chat_text(current_size.0 as usize, (current_size.0 + 10) as usize),
-            )
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(Span::styled(
-                        format!(
-                            "1052:self.get_chat_text:chat widget--->{:>}",
-                            title.as_str().to_owned(),
-                            //more_text.as_str()
-                        ),
-                        self.theme.title(true),
-                    ))
-                    .border_style(self.theme.block(true)),
-            )
-            .alignment(Alignment::Left),
-            left_chunks[2], //constrain to half width
-        );
 
-        //draw_scrollbar(
-        //    f,
-        //    area,
-        //    &self.theme,
-        //    self.commits.len(),
-        //    self.selection,
-        //    Orientation::Vertical,
-        //);
-        //
+        // Chat input
+        let width = left_chunks[3].width.max(3) - 3; // keep 2 for borders and 1 for cursor
+        let scroll = self.input.visual_scroll(width as usize);
+        let input = Paragraph::new(self.input.value())
+            .style(match self.input_mode {
+                InputMode::Normal => Style::default(),
+                InputMode::Editing => Style::default().fg(ratatui::style::Color::Cyan),
+            })
+            .scroll((0, scroll as u16))
+            .block(Block::default().borders(Borders::ALL).title("Input"));
+        f.render_widget(input, left_chunks[3]);
+
+        match self.input_mode {
+            InputMode::Normal => {}
+            InputMode::Editing => {
+                f.set_cursor(
+                    left_chunks[3].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                    left_chunks[3].y + 1,
+                )
+            }
+        }
         Ok(())
     }
 }
@@ -1112,106 +1105,62 @@ impl DrawableComponent for TopicList {
 impl Component for TopicList {
     fn event(&mut self, ev: &crossterm::event::Event) -> Result<EventState> {
         if let crossterm::event::Event::Key(k) = ev {
-            let selection_changed = if key_match(k, self.key_config.keys.move_up) {
-                //
-                //
-                //
-                //
-                self.move_selection(ScrollType::Up)?
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.move_down) {
-                //
-                //
-                //
-                //
-                self.move_selection(ScrollType::Down)?
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.shift_up)
-                || key_match(k, self.key_config.keys.home)
+            if k.code == crossterm::event::KeyCode::Char('c')
+                && k.modifiers.contains(crossterm::event::KeyModifiers::CONTROL)
             {
-                //
-                //
-                //
-                //
-                self.move_selection(ScrollType::Home)?
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.shift_down)
-                || key_match(k, self.key_config.keys.end)
-            {
-                //
-                //
-                //
-                //
-                self.move_selection(ScrollType::End)?
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.page_up) {
-                //
-                //
-                //
-                //
-                self.move_selection(ScrollType::PageUp)?
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.page_down) {
-                //
-                //
-                //
-                //
-                self.move_selection(ScrollType::PageDown)?
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.log_mark_commit) {
-                //
-                //
-                //
-                //
-                self.mark();
-                true
-                //
-                //
-                //
-                //
-            } else if key_match(k, self.key_config.keys.log_checkout_commit) {
-                //
-                self.checkout();
-                true
-            } else if key_match(k, self.key_config.keys.log_comment_commit) {
-                //
-                //
-                //
-                //
-                self.comment();
-                true
-                //
-                //
-                //
-                //
-            } else {
-                //
-                //
-                //
-                //
-                false
-                //
-                //
-                //
-                //
+                return Ok(EventState::Consumed);
+            }
+
+            let selection_changed = match self.input_mode {
+                InputMode::Normal => {
+                    if key_match(k, self.key_config.keys.move_up) {
+                        self.move_selection(ScrollType::Up)?
+                    } else if key_match(k, self.key_config.keys.move_down) {
+                        self.move_selection(ScrollType::Down)?
+                    } else if key_match(k, self.key_config.keys.shift_up)
+                        || key_match(k, self.key_config.keys.home)
+                    {
+                        self.move_selection(ScrollType::Home)?
+                    } else if key_match(k, self.key_config.keys.shift_down)
+                        || key_match(k, self.key_config.keys.end)
+                    {
+                        self.move_selection(ScrollType::End)?
+                    } else if key_match(k, self.key_config.keys.page_up) {
+                        self.move_selection(ScrollType::PageUp)?
+                    } else if key_match(k, self.key_config.keys.page_down) {
+                        self.move_selection(ScrollType::PageDown)?
+                    } else if key_match(k, self.key_config.keys.log_mark_commit) {
+                        self.mark();
+                        true
+                    } else if key_match(k, self.key_config.keys.log_checkout_commit) {
+                        self.checkout();
+                        true
+                    } else if key_match(k, self.key_config.keys.log_comment_commit) {
+                        self.comment();
+                        true
+                    } else if key_match(k, self.key_config.keys.enter) {
+                        self.input_mode = InputMode::Editing;
+                        false
+                    } else {
+                        false
+                    }
+                }
+                InputMode::Editing => match k.code {
+                    crossterm::event::KeyCode::Enter => {
+                        // For now, just clear the input
+                        self.input.reset();
+                        true
+                    }
+                    crossterm::event::KeyCode::Esc => {
+                        self.input_mode = InputMode::Normal;
+                        self.input.reset();
+                        true
+                    }
+                    _ => {
+                        self.input.handle_event(ev);
+                        true
+                    }
+                },
             };
             return Ok(selection_changed.into());
         }
