@@ -1,8 +1,8 @@
-use std::fmt::Display;
-
+use git2::Oid;
+use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use git2::Oid;
+use std::fmt::Display;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     format!(
@@ -31,9 +31,6 @@ pub enum MsgKind {
     GitCommitBody,
     GitCommitTime,
 }
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-use gnostr_asyncgit::sync::CommitId;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Msg {
