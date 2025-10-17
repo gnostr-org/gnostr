@@ -67,7 +67,7 @@ pub struct TopicList {
     // Chat input fields
     pub input: Input,
     pub input_mode: InputMode,
-    pub chat_history: Vec<String>,
+    pub chat_histories: BTreeMap<CommitId, Vec<String>>,
 }
 
 impl TopicList {
@@ -102,7 +102,7 @@ impl TopicList {
             title: title.into(),
             input: Input::default(),
             input_mode: InputMode::Normal,
-            chat_history: Vec::new(),
+            chat_histories: BTreeMap::new(),
         }
     }
 
@@ -983,13 +983,18 @@ impl TopicList {
     }
 
     fn get_chat_history_text(&self, height: usize) -> Vec<Line<'_>> {
-        self.chat_history
-            .iter()
-            .rev()
-            .take(height)
-            .rev()
-            .map(|s| Line::from(s.as_str()))
-            .collect()
+        if let Some(entry) = self.selected_entry() {
+            if let Some(history) = self.chat_histories.get(&entry.id) {
+                return history
+                    .iter()
+                    .rev()
+                    .take(height)
+                    .rev()
+                    .map(|s| Line::from(s.as_str()))
+                    .collect();
+            }
+        }
+        Vec::new()
     }
 }
 
@@ -1172,8 +1177,10 @@ impl Component for TopicList {
                 }
                 InputMode::Editing => match k.code {
                     crossterm::event::KeyCode::Enter => {
-                        // For now, just clear the input
-                        self.chat_history.push(self.input.value().to_string());
+                        if let Some(entry) = self.selected_entry() {
+                            let history = self.chat_histories.entry(entry.id).or_default();
+                            history.push(self.input.value().to_string());
+                        }
                         self.input.reset();
                         true
                     }
