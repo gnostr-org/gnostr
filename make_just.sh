@@ -124,10 +124,18 @@ cargo-test: 	### 	cargo-test
 	@. \$(HOME)/.cargo/env
 	#@cargo test
 	cargo test
+cargo-test-workspace: 	### 	cargo-test-workspace
+	@. \$(HOME)/.cargo/env
+	#@cargo test
+	cargo test --workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. \$(HOME)/.cargo/env
 	#@cargo test
 	cargo +nightly test
+cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
+	@. \$(HOME)/.cargo/env
+	#@cargo test
+	cargo +nightly test --workspace
 cargo-report: 	### 	cargo-report
 	@. \$(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1

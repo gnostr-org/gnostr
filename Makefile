@@ -81,10 +81,18 @@ cargo-test: 	### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
 	cargo test
+cargo-test-workspace: 	### 	cargo-test-workspace
+	@. $(HOME)/.cargo/env
+	#@cargo test
+	cargo test --workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. $(HOME)/.cargo/env
 	#@cargo test
 	cargo +nightly test
+cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
+	@. $(HOME)/.cargo/env
+	#@cargo test
+	cargo +nightly test --workspace
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1
@@ -150,7 +158,7 @@ docker-tui: 	### 	gnostr tui in a docker container
 docker-chat: 	### 	gnostr chat in a docker container
 	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
 docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
+	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/randymcmillan:/Users/randymcmillan gnostr:latest
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
