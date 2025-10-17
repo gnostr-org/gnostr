@@ -179,7 +179,7 @@ pub enum EventState {
     NotConsumed,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum FuzzyFinderTarget {
     Branches,
     Files,

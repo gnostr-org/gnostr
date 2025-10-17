@@ -17,6 +17,7 @@ use crate::{
 
 bitflags! {
     /// flags defining what part of the app need to update
+    #[derive(Debug)]
     pub struct NeedsUpdate: u32 {
         /// app::update
         const ALL = 0b001;
@@ -30,12 +31,14 @@ bitflags! {
 }
 
 /// data of item that is supposed to be reset
+#[derive(Debug)]
 pub struct ResetItem {
     /// path to the item (folder/file)
     pub path: String,
 }
 
 ///
+#[derive(Debug)]
 pub enum Action {
     Reset(ResetItem),
     ResetHunk(String, u64),
@@ -72,6 +75,7 @@ pub enum StackablePopupOpen {
     CompareCommits(InspectCommitOpen),
 }
 
+#[derive(Debug)]
 pub enum AppTabs {
     Chat,
     Status,
