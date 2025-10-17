@@ -25,6 +25,7 @@ pub enum InputMode {
 }
 
 use super::utils::logitems::{ItemBatch, LogEntry};
+use super::CommandText;
 use crate::utils::truncate_chars;
 use crate::{
     app::Environment,
@@ -1202,17 +1203,43 @@ impl Component for TopicList {
     }
 
     fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
-        out.push(CommandInfo::new(
-            strings::commands::scroll(&self.key_config),
-            self.selected_entry().is_some(),
-            true,
-        ));
-        out.push(CommandInfo::new(
-            strings::commands::commit_list_mark(&self.key_config, self.selected_entry_marked()),
-            true,
-            true,
-        ));
-        CommandBlocking::PassingOn
+        match self.input_mode {
+            InputMode::Normal => {
+                out.push(CommandInfo::new(
+                    strings::commands::scroll(&self.key_config),
+                    self.selected_entry().is_some(),
+                    true,
+                ));
+                out.push(CommandInfo::new(
+                    strings::commands::commit_list_mark(
+                        &self.key_config,
+                        self.selected_entry_marked(),
+                    ),
+                    true,
+                    true,
+                ));
+                out.push(CommandInfo::new(
+                    CommandText::new("Chat: [Enter]".to_string(), "", ""),
+                    true,
+                    true,
+                ));
+                CommandBlocking::PassingOn
+            }
+            InputMode::Editing => {
+                out.clear();
+                out.push(CommandInfo::new(
+                    CommandText::new("Submit: [Enter]".to_string(), "", ""),
+                    true,
+                    true,
+                ));
+                out.push(CommandInfo::new(
+                    CommandText::new("Cancel: [Esc]".to_string(), "", ""),
+                    true,
+                    true,
+                ));
+                CommandBlocking::Blocking
+            }
+        }
     }
 }
 
