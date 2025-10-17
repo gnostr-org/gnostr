@@ -113,8 +113,8 @@ dep-graph: 	### 	dep-graph
 	@cargo depgraph --depth 1 | dot -Tpng > graph.png
 
 gnostr-chat: 	## 	gnostr-chat
-	cargo install --path . --bin gnostr
-	gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
+	cargo b --bin gnostr
+	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
 	cargo install --bin gnostr-fetch-by-id --path .
