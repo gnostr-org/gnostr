@@ -13,12 +13,23 @@ use crate::ssh::State;
 use log::{debug, error};
 use tokio::sync::Mutex;
 use toml::Table;
+use std::net::TcpListener;
 
 mod keys;
 use self::keys::server_keys;
 
 mod commands;
 mod messages;
+
+fn is_port_available(port: u16) -> anyhow::Result<()> {
+    match TcpListener::bind(("127.0.0.1", port)) {
+        Ok(listener) => {
+            drop(listener);
+            Ok(())
+        }
+        Err(e) => Err(anyhow::anyhow!("Port {} is not available: {}", port, e)),
+    }
+}
 
 pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
     debug!("start_server");
@@ -39,6 +50,7 @@ pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
     };
 
     let port = state.lock().await.server_config.port;
+    is_port_available(port)?;
     debug!(
         "russh::server::run({:?}, (\"0.0.0.0\", {}), sh)",
         config, port
