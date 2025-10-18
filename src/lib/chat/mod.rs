@@ -31,7 +31,7 @@ pub use p2p::evt_loop;
 pub mod ui;
 pub mod tests;
 
-//const TITLE: &str = include_str!("./title.txt");
+const TITLE: &str = include_str!("./title.txt");
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SerializableCommit {
@@ -619,19 +619,27 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     let mut app = ui::App::default();
 
     //TODO
-    //for line in TITLE.lines() {
-    //    app.add_message(
-    //        Msg::default()
-    //            .set_content(line.to_string())
-    //            .set_kind(MsgKind::Raw),
-    //    );
-    //}
+    for line in TITLE.lines() {
+        app.add_message(
+            Msg::default()
+                .set_content(line.to_string(), 80 as usize)
+                .set_kind(MsgKind::Raw),
+        );
+    }
 
     //TODO construct git commit message header
 
     let serialized_commit = serialize_commit(&commit)?;
     let value: Value = parse_json(&serialized_commit.clone())?;
     //info!("value:\n{}", value);
+    let pretty_json = serde_json::to_string_pretty(&value)?;
+    for line in pretty_json.lines() {
+        app.add_message(
+            Msg::default()
+                .set_content(line.to_string(), 80 as usize)
+                .set_kind(MsgKind::Raw),
+        );
+    }
 
     // Accessing object elements.
     if let Some(id) = value.get("id") {
