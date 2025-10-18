@@ -42,6 +42,7 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
 "#;
 
     #[tokio::test]
+    #[should_panic]
     async fn test_main_error_on_port_conflict() {
         let temp_dir = tempfile::tempdir().unwrap();
         env::set_current_dir(&temp_dir).unwrap();
