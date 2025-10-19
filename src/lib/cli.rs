@@ -159,19 +159,19 @@ pub struct GnostrCli {
     pub difficulty_target: u8,
 
     /// Enable info logging
-    #[clap(long, default_value = "false")]
+    #[clap(long, default_value = "false", conflicts_with = "logging")]
     pub info: bool,
 
     /// Enable debug logging
-    #[clap(long, default_value = "false")]
+    #[clap(long, default_value = "false", conflicts_with = "logging")]
     pub debug: bool,
 
     /// Enable trace logging
-    #[clap(long, default_value = "false")]
+    #[clap(long, default_value = "false", conflicts_with = "logging")]
     pub trace: bool,
 
     /// Enable warn logging
-    #[clap(long, default_value = "false")]
+    #[clap(long, default_value = "false", conflicts_with = "logging")]
     pub warn: bool,
 
     /// Generate bugreport
@@ -179,7 +179,7 @@ pub struct GnostrCli {
     pub bugreport: bool,
 
     /// Enable logging
-    #[clap(long, default_value = "false")]
+    #[clap(long, default_value = "false", conflicts_with = "info", conflicts_with = "debug", conflicts_with = "trace", conflicts_with = "warn")]
     pub logging: bool,
 }
 
