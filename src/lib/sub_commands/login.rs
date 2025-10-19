@@ -8,21 +8,21 @@ use crate::{
     login,
 };
 
-#[derive(clap::Args, Debug)]
-pub struct SubCommandArgs {
+#[derive(clap::Args, Debug, Clone)]
+pub struct LoginArgs {
     /// don't fetch user metadata and relay list from relays
     #[arg(long, action)]
-    offline: bool,
-    disable_cli_spinners: Option<bool>,
-    password: Option<String>,
-    nsec: Option<String>,
-    bunker_app_key: Option<String>,
-    bunker_uri: Option<String>,
+    pub offline: bool,
+    pub disable_cli_spinners: Option<bool>,
+    pub password: Option<String>,
+    pub nsec: Option<String>,
+    pub bunker_app_key: Option<String>,
+    pub bunker_uri: Option<String>,
 }
 
 pub async fn launch(
     //args: &Cli,
-    args: &SubCommandArgs,
+    args: &LoginArgs,
 ) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
     if args.offline {

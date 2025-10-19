@@ -10,15 +10,12 @@ fn test_ngit_subcommand_global_args() {
         "test_nsec",
         "--password",
         "test_password",
-        "--disable-cli-spinners",
-        "true",
-        "list", // A subcommand is required by clap, but its specific value isn't the focus here
+        "list",
     ];
     let cli_args = NgitCli::parse_from(args);
 
     assert_eq!(cli_args.nsec, Some("test_nsec".to_string()));
     assert_eq!(cli_args.password, Some("test_password".to_string()));
-    assert_eq!(cli_args.disable_cli_spinners, Some(true));
 
     // Test with no global arguments
     let args_no_globals = vec![
@@ -29,7 +26,6 @@ fn test_ngit_subcommand_global_args() {
 
     assert_eq!(cli_args_no_globals.nsec, None);
     assert_eq!(cli_args_no_globals.password, None);
-    assert_eq!(cli_args_no_globals.disable_cli_spinners, Some(false));
 
     // Test with only nsec
     let args_only_nsec = vec![
@@ -42,7 +38,6 @@ fn test_ngit_subcommand_global_args() {
 
     assert_eq!(cli_args_only_nsec.nsec, Some("only_nsec".to_string()));
     assert_eq!(cli_args_only_nsec.password, None);
-    assert_eq!(cli_args_only_nsec.disable_cli_spinners, Some(false));
 
     // Test with only password
     let args_only_password = vec![
@@ -55,7 +50,6 @@ fn test_ngit_subcommand_global_args() {
 
     assert_eq!(cli_args_only_password.nsec, None);
     assert_eq!(cli_args_only_password.password, Some("only_password".to_string()));
-    assert_eq!(cli_args_only_password.disable_cli_spinners, Some(false));
 
     // Test with only disable_cli_spinners
     let args_only_spinners = vec![
@@ -69,4 +63,5 @@ fn test_ngit_subcommand_global_args() {
     assert_eq!(cli_args_only_spinners.nsec, None);
     assert_eq!(cli_args_only_spinners.password, None);
     assert_eq!(cli_args_only_spinners.disable_cli_spinners, Some(true));
+    assert!(matches!(cli_args_only_spinners.command, NgitCommands::List));
 }

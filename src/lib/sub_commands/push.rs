@@ -20,22 +20,22 @@ use crate::{
     sub_commands,
 };
 
-#[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+#[derive(Debug, clap::Args, Clone)]
+pub struct PushArgs {
     #[arg(long, action)]
     /// send proposal revision from checked out proposal branch
-    force: bool,
-    disable_cli_spinners: bool,
-    password: Option<String>,
-    nsec: Option<String>,
-    bunker_app_key: Option<String>,
-    bunker_uri: Option<String>,
+    pub force: bool,
+    pub disable_cli_spinners: bool,
+    pub password: Option<String>,
+    pub nsec: Option<String>,
+    pub bunker_app_key: Option<String>,
+    pub bunker_uri: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch(
     //cli_args: &Cli,
-    args: &SubCommandArgs,
+    args: &PushArgs,
 ) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
@@ -126,7 +126,7 @@ pub async fn launch(
         println!("preparing to force push proposal revision...");
         sub_commands::send::launch(
             //args,
-            &sub_commands::send::SubCommandArgs {
+            &sub_commands::send::SendArgs {
                 // if not ahead of master prompt, otherwise assume
                 // proposal revision is all commits ahead
                 since_or_range: if let Ok((_, _, ahead, _)) =
