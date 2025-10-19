@@ -17,52 +17,52 @@ use crate::{
 };
 
 #[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+pub struct InitArgs {
     #[clap(short, long)]
     /// name of repository
-    title: Option<String>,
+    pub title: Option<String>,
     #[clap(short, long)]
     /// optional description
-    description: Option<String>,
+    pub description: Option<String>,
     #[clap(long)]
     /// git server url users can clone from
-    clone_url: Vec<String>,
+    pub clone_url: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// homepage
-    web: Vec<String>,
+    pub web: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// relays contributors push patches and comments to
-    relays: Vec<String>,
+    pub relays: Vec<String>,
     #[clap(short, long, value_parser, num_args = 1..)]
     /// npubs of other maintainers
-    other_maintainers: Vec<String>,
+    pub other_maintainers: Vec<String>,
     #[clap(long)]
     /// usually root commit but will be more recent commit for forks
-    earliest_unique_commit: Option<String>,
+    pub earliest_unique_commit: Option<String>,
     #[clap(short, long)]
     /// shortname with no spaces or special characters
-    identifier: Option<String>,
+    pub identifier: Option<String>,
     #[clap(long)]
     /// shortname with no spaces or special characters
-    disable_cli_spinners: bool,
+    pub disable_cli_spinners: bool,
     #[clap(long)]
     /// shortname with no spaces or special characters
-    password: Option<String>,
+    pub password: Option<String>,
     #[clap(long)]
     /// shortname with no spaces or special characters
-    nsec: Option<String>,
+    pub nsec: Option<String>,
     #[clap(long)]
     /// shortname with no spaces or special characters
-    bunker_app_key: Option<String>,
+    pub bunker_app_key: Option<String>,
     #[clap(long)]
     /// shortname with no spaces or special characters
-    bunker_uri: Option<String>,
+    pub bunker_uri: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch(
     //cli_args: &Cli,
-    args: &SubCommandArgs,
+    args: &InitArgs,
 ) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
     let git_repo_path = git_repo.get_path()?;

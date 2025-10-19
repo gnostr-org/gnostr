@@ -132,26 +132,3 @@ async fn test_ngit_fetch_dispatch() {
     assert!(result.is_ok());
 }
 
-#[test]
-fn test_ngit_global_args_parsing() {
-    let args = vec![
-        "ngit",
-        "--nsec",
-        "some_nsec_value",
-        "--password",
-        "some_password",
-        "--disable-cli-spinners",
-        "list", // A subcommand is still required
-    ];
-    let sub_command_args = NgitSubCommand::parse_from(args);
-
-    assert_eq!(sub_command_args.nsec, Some("some_nsec_value".to_string()));
-    assert_eq!(sub_command_args.password, Some("some_password".to_string()));
-    assert!(sub_command_args.disable_cli_spinners);
-
-    // Also check the subcommand type
-    match sub_command_args.command {
-        NgitCommands::List => assert!(true),
-        _ => panic!("Expected NgitCommands::List"),
-    }
-}

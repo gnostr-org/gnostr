@@ -48,21 +48,21 @@ pub struct LegitCli {
 #[derive(Subcommand, Debug)]
 pub enum LegitCommands {
     /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::SubCommandArgs),
+    Fetch(sub_commands::fetch::FetchArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(sub_commands::init::SubCommandArgs),
+    Init(sub_commands::init::InitArgs),
     /// issue commits as a proposal
-    Send(sub_commands::send::SubCommandArgs),
+    Send(sub_commands::send::SendArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
+    Push(sub_commands::push::PushArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(sub_commands::login::SubCommandArgs),
+    Login(sub_commands::login::LoginArgs),
 }
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -90,21 +90,21 @@ pub struct NgitCli {
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
     /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::SubCommandArgs),
+    Fetch(sub_commands::fetch::FetchArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(sub_commands::init::SubCommandArgs),
+    Init(sub_commands::init::InitArgs),
     /// issue commits as a proposal
-    Send(sub_commands::send::SubCommandArgs),
+    Send(sub_commands::send::SendArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(sub_commands::push::SubCommandArgs),
+    Push(sub_commands::push::PushArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(sub_commands::login::SubCommandArgs),
+    Login(sub_commands::login::LoginArgs),
 }
 
 /// GnostrCli application to interact with nostr
