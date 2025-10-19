@@ -63,100 +63,165 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_ngit_login_command() {
-        let args = LoginArgs {
-            nsec: None,
-            password: None,
-            offline: false,
-            disable_cli_spinners: Some(true),
-            bunker_app_key: None,
-            bunker_uri: None,
-        };
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::Login(args));
-        let result = ngit(&sub_command).await;
-        // We expect an error here because the actual login::launch would try to connect to relays
-        // and likely fail without proper setup. The goal is to ensure it *tries* to call login::launch.
-        // A more robust test would involve mocking, but for a dispatcher, this confirms the call path.
-        assert!(result.is_err());
+    async fn test_ngit_login_command() -> Result<(), Box<dyn StdError>> {
+        let git_repo = crate::test_utils::git::GitTestRepo::new("main")?;
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &git_repo.dir,
+            vec![
+                "login",
+                "--disable-cli-spinners",
+            ],
+        );
+
+        p.expect_password("nsec or hex private key")?
+            .succeeds_with(crate::test_utils::TEST_KEY_1_NSEC)?;
+        p.expect_password("password to decrypt nsec")?
+            .succeeds_with(crate::test_utils::TEST_PASSWORD)?;
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ngit_init_command() {
-        let args = InitArgs {
-            title: None,
-            description: None,
-            clone_url: vec![],
-            web: vec![],
-            relays: vec![],
-            other_maintainers: vec![],
-            earliest_unique_commit: None,
-            identifier: None,
-            disable_cli_spinners: true,
-            password: None,
-            nsec: None,
-            bunker_app_key: None,
-            bunker_uri: None,
-        };
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::Init(args));
-        let result = ngit(&sub_command).await;
-        assert!(result.is_err()); // init::launch also likely fails without proper setup
+    async fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
+        let git_repo = crate::test_utils::git::GitTestRepo::new("main")?;
+        git_repo.initial_commit()?;
+
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &git_repo.dir,
+            vec![
+                "init",
+                "--disable-cli-spinners",
+                "--nsec",
+                crate::test_utils::TEST_KEY_1_NSEC,
+                "--password",
+                crate::test_utils::TEST_PASSWORD,
+            ],
+        );
+
+        p.expect_input("name")?.succeeds_with("test-repo")?;
+        p.expect_input("identifier")?.succeeds_with("test-repo")?;
+        p.expect_input("description")?.succeeds_with("A test repository")?;
+        p.expect_input("clone url (for fetch)")?.succeeds_with("https://github.com/test/test-repo.git")?;
+        p.expect_input("web")?.succeeds_with("https://test-repo.com")?;
+        p.expect_input("relays")?.succeeds_with("wss://relay.example.com")?;
+        p.expect_input("maintainers")?.succeeds_with(crate::test_utils::TEST_KEY_1_NPUB)?;
+        p.expect_input("earliest unique commit")?.succeeds_with(&git_repo.git_repo.head()?.peel_to_commit()?.id().to_string())?;
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ngit_send_command() {
-        let args = SendArgs {
-            since_or_range: "".to_string(),
-            in_reply_to: vec![],
-            no_cover_letter: true,
-            title: None,
-            description: None,
-            disable_cli_spinners: true,
-            password: None,
-            nsec: None,
-            bunker_app_key: None,
-            bunker_uri: None,
-        };
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::Send(args));
-        let result = ngit(&sub_command).await;
-        assert!(result.is_err()); // send::launch also likely fails without proper setup
+    async fn test_ngit_send_command() -> Result<(), Box<dyn StdError>> {
+        let git_repo = crate::test_utils::git::GitTestRepo::new("main")?;
+        git_repo.populate()?;
+
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &git_repo.dir,
+            vec![
+                "send",
+                "HEAD~1", // Send the last commit
+                "--no-cover-letter",
+                "--disable-cli-spinners",
+                "--nsec",
+                crate::test_utils::TEST_KEY_1_NSEC,
+                "--password",
+                crate::test_utils::TEST_PASSWORD,
+            ],
+        );
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ngit_list_command() {
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::List);
-        let result = ngit(&sub_command).await;
-        assert!(result.is_ok()); // list::launch might succeed without external dependencies
+    async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
+        let git_repo = crate::test_utils::cli_tester_create_proposals()?;
+
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &git_repo.dir,
+            vec![
+                "list",
+                "--disable-cli-spinners",
+            ],
+        );
+
+        p.expect("fetching updates...\r\n")?;
+        p.expect_eventually("\r\n")?; // Some updates listed here
+
+        let mut c = p.expect_choice("all proposals", vec![
+            format!("\"{}\"", crate::test_utils::PROPOSAL_TITLE_3),
+            format!("\"{}\"", crate::test_utils::PROPOSAL_TITLE_2),
+            format!("\"{}\"", crate::test_utils::PROPOSAL_TITLE_1),
+        ])?;
+        c.succeeds_with(0, true, None)?; // Select the first proposal (PROPOSAL_TITLE_3)
+
+        let mut c = p.expect_choice("", vec![
+            format!("create and checkout proposal branch (2 ahead 0 behind 'main')"),
+            format!("apply to current branch with `git am`"),
+            format!("download to ./patches"),
+            format!("back"),
+        ])?;
+        c.succeeds_with(3, false, Some(0))?; // Select "back"
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ngit_pull_command() {
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::Pull);
-        let result = ngit(&sub_command).await;
-        assert!(result.is_err()); // pull::launch likely fails without proper setup
+    async fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
+        let (originating_repo, test_repo) = crate::test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
+
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &test_repo.dir,
+            vec![
+                "pull",
+                "--disable-cli-spinners",
+                "--nsec",
+                crate::test_utils::TEST_KEY_1_NSEC,
+                "--password",
+                crate::test_utils::TEST_PASSWORD,
+            ],
+        );
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ngit_push_command() {
-        let args = PushArgs {
-            force: false,
-            disable_cli_spinners: true,
-            password: None,
-            nsec: None,
-            bunker_app_key: None,
-            bunker_uri: None,
-        };
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::Push(args));
-        let result = ngit(&sub_command).await;
-        assert!(result.is_err()); // push::launch likely fails without proper setup
+    async fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
+        let (originating_repo, test_repo) = crate::test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()?;
+
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &test_repo.dir,
+            vec![
+                "push",
+                "--disable-cli-spinners",
+                "--nsec",
+                crate::test_utils::TEST_KEY_1_NSEC,
+                "--password",
+                crate::test_utils::TEST_PASSWORD,
+            ],
+        );
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ngit_fetch_command() {
-        let args = FetchArgs {
-            repo: vec![],
-        };
-        let sub_command = create_dummy_ngit_subcommand(NgitCommands::Fetch(args));
-        let result = ngit(&sub_command).await;
-        assert!(result.is_err()); // fetch::launch likely fails without proper setup
+    async fn test_ngit_fetch_command() -> Result<(), Box<dyn StdError>> {
+        let git_repo = crate::test_utils::cli_tester_create_proposals()?;
+
+        let mut p = crate::test_utils::CliTester::new_from_dir(
+            &git_repo.dir,
+            vec![
+                "fetch",
+                "--disable-cli-spinners",
+            ],
+        );
+
+        p.expect_end_eventually()?;
+        Ok(())
     }
 }
