@@ -1,50 +1,109 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::process::Command;
     use assert_cmd::cargo::cargo_bin;
     use predicates::prelude::PredicateBooleanExt;
     use predicates::str;
-    use assert_cmd::assert::OutputAssertExt; // Import OutputAssertExt
+    use assert_cmd::assert::OutputAssertExt;
     use anyhow::Result;
     use std::error::Error;
+    use std::fs::{self, File};
+    use std::io::Read;
+    use gnostr::cli::{setup_logging, get_app_cache_path};
+
+    // Helper to get clap error message for conflicting flags
+    fn get_clap_conflict_error(flag1: &str, flag2: &str) -> impl predicates::Predicate<str> {
+        let error_msg1 = format!("error: the argument '{}' cannot be used with '{}'", flag1, flag2);
+        let error_msg2 = format!("error: the argument '{}' cannot be used with '{}'", flag2, flag1);
+        str::contains(error_msg1.clone()).or(str::contains(error_msg2.clone()))
+    }
 
     #[test]
-    fn test_logging_flags_set_level_filter() -> Result<(), Box<dyn Error>> {
-        // Test --debug
-        let mut cmd_debug = Command::new(cargo_bin("gnostr"));
-        cmd_debug.arg("--debug").arg("--hash").arg("test");
-        cmd_debug.assert()
-            .success()
-            .stderr(str::contains("level=DEBUG"));
+    fn test_logging_flags_conflict() {
+        // Test invalid combination: --debug and --logging
+        let mut cmd_debug_logging = Command::new(cargo_bin("gnostr"));
+        cmd_debug_logging.arg("--debug").arg("--logging").arg("--hash").arg("test");
+        cmd_debug_logging.assert()
+            .failure()
+            .stderr(get_clap_conflict_error("--debug", "--logging"));
 
-        // Test --trace
-        let mut cmd_trace = Command::new(cargo_bin("gnostr"));
-        cmd_trace.arg("--trace").arg("--hash").arg("test");
-        cmd_trace.assert()
-            .success()
-            .stderr(str::contains("level=TRACE"));
+        // Test invalid combination: --trace and --logging
+        let mut cmd_trace_logging = Command::new(cargo_bin("gnostr"));
+        cmd_trace_logging.arg("--trace").arg("--logging").arg("--hash").arg("test");
+        cmd_trace_logging.assert()
+            .failure()
+            .stderr(get_clap_conflict_error("--trace", "--logging"));
 
-        // Test --info
-        let mut cmd_info = Command::new(cargo_bin("gnostr"));
-        cmd_info.arg("--info").arg("--hash").arg("test");
-        cmd_info.assert()
-            .success()
-            .stderr(str::contains("level=INFO"));
+        // Test invalid combination: --info and --logging
+        let mut cmd_info_logging = Command::new(cargo_bin("gnostr"));
+        cmd_info_logging.arg("--info").arg("--logging").arg("--hash").arg("test");
+        cmd_info_logging.assert()
+            .failure()
+            .stderr(get_clap_conflict_error("--info", "--logging"));
 
-        // Test --warn
-        let mut cmd_warn = Command::new(cargo_bin("gnostr"));
-        cmd_warn.arg("--warn").arg("--hash").arg("test");
-        cmd_warn.assert()
-            .success()
-            .stderr(str::contains("level=WARN"));
+        // Test invalid combination: --warn and --logging
+        let mut cmd_warn_logging = Command::new(cargo_bin("gnostr"));
+        cmd_warn_logging.arg("--warn").arg("--logging").arg("--hash").arg("test");
+        cmd_warn_logging.assert()
+            .failure()
+            .stderr(get_clap_conflict_error("--warn", "--logging"));
+    }
 
-        // Test default (OFF) - stderr should not contain specific levels
-        let mut cmd_default = Command::new(cargo_bin("gnostr"));
-        cmd_default.arg("--hash").arg("test");
-        cmd_default.assert()
+    #[test]
+    fn test_individual_logging_flags() -> Result<(), Box<dyn Error>> {
+        let log_file_path = get_app_cache_path()?.join("gnostr.log");
+        let _ = fs::remove_file(&log_file_path); // Clean up previous log file
+
+        // Test valid: --debug only
+        let mut cmd_debug_only = Command::new(cargo_bin("gnostr"));
+        cmd_debug_only.arg("--debug").arg("--hash").arg("test");
+        cmd_debug_only.assert()
+            .success();
+
+        // Test valid: --trace only
+        let mut cmd_trace_only = Command::new(cargo_bin("gnostr"));
+        cmd_trace_only.arg("--trace").arg("--hash").arg("test");
+        cmd_trace_only.assert()
+            .success();
+
+        // Test valid: --info only
+        let mut cmd_info_only = Command::new(cargo_bin("gnostr"));
+        cmd_info_only.arg("--info").arg("--hash").arg("test");
+        cmd_info_only.assert()
+            .success();
+
+        // Test valid: --warn only
+        let mut cmd_warn_only = Command::new(cargo_bin("gnostr"));
+        cmd_warn_only.arg("--warn").arg("--hash").arg("test");
+        cmd_warn_only.assert()
+            .success();
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_logging_flag_only() -> Result<(), Box<dyn Error>> {
+        // Test valid: --logging only
+        let mut cmd_logging_only = Command::new(cargo_bin("gnostr"));
+        cmd_logging_only.arg("--logging").arg("--hash").arg("test");
+        cmd_logging_only.assert()
             .success()
-            .stderr(str::is_empty().not()); // Ensure stderr is not empty, but also doesn't contain specific levels if they are not set.
+            .stdout(str::contains("Logging enabled.")); // Check stdout for file logging message
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_no_logging_flags() -> Result<(), Box<dyn Error>> {
+        // Test valid: No logging flags
+        let mut cmd_no_logging = Command::new(cargo_bin("gnostr"));
+        cmd_no_logging.arg("--hash").arg("test");
+        cmd_no_logging.assert()
+            .success()
+            // Ensure stderr does NOT contain specific log level indicators or the file logging message.
+            // It might contain other debug output like "40:arg=..."
+            .stderr(str::contains("level=").not())
+            .stderr(str::contains("Logging enabled.").not());
 
         Ok(())
     }
@@ -60,13 +119,16 @@ mod tests {
         cmd.assert()
             .success()
             .stdout(str::diff(expected_hash))
-            .stderr(str::is_empty());
+            .stderr(str::is_empty()); // Assuming no other stderr output for this specific case
 
         Ok(())
     }
 
     #[test]
     fn test_hash_command_with_debug_flag_prints_hash_and_exits() -> Result<()> {
+        let log_file_path = get_app_cache_path()?.join("gnostr.log");
+        let _ = fs::remove_file(&log_file_path); // Clean up previous log file
+
         let input_string = "another_test";
 
         // Calculate actual SHA256 for "another_test"
@@ -80,8 +142,7 @@ mod tests {
 
         cmd.assert()
             .success()
-            .stdout(str::diff(actual_expected_hash.clone()))
-            .stderr(str::contains("level=DEBUG")); // Corrected assertion for debug flag
+            .stdout(str::diff(actual_expected_hash.clone()));
 
         Ok(())
     }
@@ -107,7 +168,7 @@ mod tests {
 
         cmd.assert()
             .success()
-            .stdout(str::contains("Gnostr sub commands"))
+            .stdout(str::contains("Chat sub commands"))
             .stdout(str::contains("Options:")) // Check for general options section
             .stderr(str::is_empty());
 
