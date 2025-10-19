@@ -186,7 +186,7 @@ pub struct GnostrCli {
 #[derive(Subcommand)]
 pub enum GnostrCommands {
     /// Gnostr sub commands
-    Tui(crate::gnostr::GnostrSubCommands),
+    Tui(crate::gnostr_core::GnostrSubCommands),
     /// Chat sub commands
     Chat(crate::chat::ChatSubCommands),
     /// Legit sub commands

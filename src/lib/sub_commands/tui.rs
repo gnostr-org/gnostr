@@ -4,7 +4,7 @@ use std::env;
 
 use crate::app::App;
 use crate::app::QuitState;
-use crate::gnostr::GnostrSubCommands;
+use crate::gnostr_core::GnostrSubCommands;
 use crate::input::{Input, InputEvent, InputState};
 use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
