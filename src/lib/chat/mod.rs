@@ -1,4 +1,3 @@
-use crate::{get_blockheight_async, get_weeble_async, get_wobble_async};
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
@@ -22,7 +21,6 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-use crate::queue::InternalEvent;
 
 pub mod msg;
 pub use msg::*;
