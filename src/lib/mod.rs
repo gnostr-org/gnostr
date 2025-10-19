@@ -29,7 +29,7 @@ pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
 ///  <https://docs.rs/gnostr/latest/gnostr/gnostr/index.html>
-pub mod gnostr;
+pub mod gnostr_core;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
