@@ -1,5 +1,5 @@
 use super::cube::gen_scramble;
-use super::global_rt::global_rt;
+//use super::global_rt::global_rt;
 use ordered_float::*;
 use ratatui::{
     style::{Color, Modifier, Style},
@@ -185,7 +185,7 @@ impl Times {
         sum.into_inner() / t.len() as f64
     }
 
-    pub fn iter(&self) -> TimesIterator {
+    pub fn iter(&self) -> TimesIterator<'_> {
         TimesIterator {
             curr: 0,
             times: &self.times,

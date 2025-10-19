@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use crate::cube::{
-    commands::{init_terminal, quit_terminal, reset_terminal},
+    commands::{init_terminal, /*quit_terminal,*/ reset_terminal},
     handlers::{
         config::CompleteConfig,
-        event::{Config, Event, Events, Key},
+        event::{Config, /*Event,*/ Events, Key},
     },
     //ui::draw_ui,
 };
@@ -17,7 +17,7 @@ pub async fn ui_driver(config: CompleteConfig) {
         original_hook(panic);
     }));
 
-    let mut events = Events::with_config(Config {
+    let events = Events::with_config(Config {
         exit_key: Key::Null,
         tick_rate: Duration::from_millis(config.terminal.tick_delay),
     })
