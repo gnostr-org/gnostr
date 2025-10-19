@@ -46,7 +46,6 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gnostr::test_utils;
 
     // Helper function to create a dummy NgitSubCommand
     fn create_dummy_ngit_subcommand(command: NgitCommands) -> NgitSubCommand {

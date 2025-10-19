@@ -10,9 +10,9 @@ use clap::ValueEnum;
 use futures::stream::StreamExt;
 use libp2p::StreamProtocol;
 use libp2p::{
-    core::transport::Transport,
+    //core::transport::Transport,
     gossipsub,
-    gossipsub::IdentTopic,
+    //gossipsub::IdentTopic,
     identify, identity,
     kad::{
         self,
@@ -306,8 +306,8 @@ pub async fn evt_loop(
         max_records: usize::MAX,
         max_value_bytes: usize::MAX,
     };
-    let kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
-    let kad_config = KadConfig::default();
+    let _kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
+	let _kad_config = KadConfig::new(IPFS_PROTO_NAME);
     let message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
         message.data.hash(&mut s);
@@ -331,7 +331,7 @@ pub async fn evt_loop(
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
-        .message_id_fn(message_id_fn)
+        //.message_id_fn(message_id_fn)
         .build()
         .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
 
@@ -351,7 +351,7 @@ pub async fn evt_loop(
                 max_records: usize::MAX,
                 max_value_bytes: usize::MAX,
             };
-            let mut kad_config = kad::Config::default();
+            let mut kad_config = KadConfig::new(IPFS_PROTO_NAME);
             kad_config.set_query_timeout(Duration::from_secs(120));
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
