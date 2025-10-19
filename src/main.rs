@@ -1,8 +1,8 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
-use crate::cli::*;
-use crate::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
-use crate::sub_commands;
+use gnostr::cli::*;
+use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
+use gnostr::sub_commands;
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
 use std::env;
@@ -358,7 +358,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         None => {
             {
                 //TODO handle more scenarios
-                let gnostr_subcommands = gnostr::gnostr::GnostrSubCommands::default();
+                let gnostr_subcommands = gnostr::gnostr_core::GnostrSubCommands::default();
                 let _ = sub_commands::tui::tui(gnostr_subcommands).await;
             };
             Ok(())

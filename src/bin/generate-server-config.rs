@@ -1,6 +1,6 @@
-use crate::blockheight::blockheight_sync;
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
+use gnostr::blockheight::blockheight_sync;
+use gnostr::weeble::weeble_sync;
+use gnostr::wobble::wobble_sync;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
