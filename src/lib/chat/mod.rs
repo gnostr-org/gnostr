@@ -1,8 +1,10 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
+use crate::queue::InternalEvent;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
+use libp2p::StreamProtocol;
 use nostr_sdk_0_37_0::prelude::*;
 //use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
