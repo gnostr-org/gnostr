@@ -23,8 +23,8 @@ use crate::{
     repo_ref::get_repo_coordinates,
 };
 
-#[derive(Debug, clap::Args)]
-pub struct SubCommandArgs {
+#[derive(Debug, clap::Args, Clone)]
+pub struct SendArgs {
     #[arg(default_value = "")]
     /// commits to send as proposal; like in `git format-patch` eg.
     /// HEAD~2
@@ -52,7 +52,7 @@ pub struct SubCommandArgs {
 #[allow(clippy::too_many_lines)]
 pub async fn launch(
     //cli_args: &Cli,
-    args: &SubCommandArgs,
+    args: &SendArgs,
     no_fetch: bool,
 ) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;

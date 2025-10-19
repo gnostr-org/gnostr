@@ -11,16 +11,16 @@ use crate::{
     repo_ref::get_repo_coordinates,
 };
 
-#[derive(clap::Args, Debug)]
-pub struct SubCommandArgs {
+#[derive(clap::Args, Debug, Clone)]
+pub struct FetchArgs {
     /// address pointer to repo announcement
     #[arg(long, action)]
-    repo: Vec<String>,
+    pub repo: Vec<String>,
 }
 
 pub async fn launch(
     //args: &Cli,
-    args: &SubCommandArgs,
+    args: &FetchArgs,
 ) -> Result<()> {
     let _ = args;
     let git_repo = Repo::discover().context("cannot find a git repository")?;
