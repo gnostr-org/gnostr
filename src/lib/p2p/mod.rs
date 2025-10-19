@@ -343,8 +343,8 @@ pub async fn evt_loop(
             noise::Config::new,
             yamux::Config::default,
         )?
-        .with_quic()? 
-        .with_dns()? 
+        .with_quic()
+        .with_dns()?
         .with_behaviour(|key| {
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
@@ -388,17 +388,15 @@ pub async fn evt_loop(
                     key.public().to_peer_id(),
                 )?,
             })
-        })? //?
+        })? // Removed `?` here
         .build();
 
     // subscribes to our topic
     swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
 
     // Listen on all interfaces and whatever port the OS assigns
-    swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)
-    ;
-    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)
-    ;
+    swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?) ;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?) ;
 
     debug!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
 
