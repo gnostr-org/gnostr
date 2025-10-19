@@ -46,11 +46,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sub_commands::fetch::FetchArgs;
-    use crate::sub_commands::init::InitArgs;
-    use crate::sub_commands::login::LoginArgs;
-    use crate::sub_commands::push::PushArgs;
-    use crate::sub_commands::send::SendArgs;
+    use crate::test_utils;
 
     // Helper function to create a dummy NgitSubCommand
     fn create_dummy_ngit_subcommand(command: NgitCommands) -> NgitSubCommand {
@@ -64,8 +60,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_login_command() -> Result<(), Box<dyn StdError>> {
-        let git_repo = crate::test_utils::git::GitTestRepo::new("main")?;
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let git_repo = test_utils::git::GitTestRepo::new("main")?;
+        let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
                 "login",
@@ -74,9 +70,9 @@ mod tests {
         );
 
         p.expect_password("nsec or hex private key")?
-            .succeeds_with(crate::test_utils::TEST_KEY_1_NSEC)?;
+            .succeeds_with(test_utils::TEST_KEY_1_NSEC)?;
         p.expect_password("password to decrypt nsec")?
-            .succeeds_with(crate::test_utils::TEST_PASSWORD)?;
+            .succeeds_with(test_utils::TEST_PASSWORD)?;
 
         p.expect_end_eventually()?;
         Ok(())
@@ -84,18 +80,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
-        let git_repo = crate::test_utils::git::GitTestRepo::new("main")?;
+        let git_repo = test_utils::git::GitTestRepo::new("main")?;
         git_repo.initial_commit()?;
 
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
                 "init",
                 "--disable-cli-spinners",
                 "--nsec",
-                crate::test_utils::TEST_KEY_1_NSEC,
+                test_utils::TEST_KEY_1_NSEC,
                 "--password",
-                crate::test_utils::TEST_PASSWORD,
+                test_utils::TEST_PASSWORD,
             ],
         );
 
@@ -105,7 +101,7 @@ mod tests {
         p.expect_input("clone url (for fetch)")?.succeeds_with("https://github.com/test/test-repo.git")?;
         p.expect_input("web")?.succeeds_with("https://test-repo.com")?;
         p.expect_input("relays")?.succeeds_with("wss://relay.example.com")?;
-        p.expect_input("maintainers")?.succeeds_with(crate::test_utils::TEST_KEY_1_NPUB)?;
+        p.expect_input("maintainers")?.succeeds_with(test_utils::TEST_KEY_1_NPUB)?;
         p.expect_input("earliest unique commit")?.succeeds_with(&git_repo.git_repo.head()?.peel_to_commit()?.id().to_string())?;
 
         p.expect_end_eventually()?;
@@ -114,10 +110,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_send_command() -> Result<(), Box<dyn StdError>> {
-        let git_repo = crate::test_utils::git::GitTestRepo::new("main")?;
+        let git_repo = test_utils::git::GitTestRepo::new("main")?;
         git_repo.populate()?;
 
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
                 "send",
@@ -125,9 +121,9 @@ mod tests {
                 "--no-cover-letter",
                 "--disable-cli-spinners",
                 "--nsec",
-                crate::test_utils::TEST_KEY_1_NSEC,
+                test_utils::TEST_KEY_1_NSEC,
                 "--password",
-                crate::test_utils::TEST_PASSWORD,
+                test_utils::TEST_PASSWORD,
             ],
         );
 
@@ -137,9 +133,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
-        let git_repo = crate::test_utils::cli_tester_create_proposals()?;
+        let git_repo = test_utils::cli_tester_create_proposals()?;
 
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
                 "list",
@@ -151,9 +147,9 @@ mod tests {
         p.expect_eventually("\r\n")?; // Some updates listed here
 
         let mut c = p.expect_choice("all proposals", vec![
-            format!("\"{}\"", crate::test_utils::PROPOSAL_TITLE_3),
-            format!("\"{}\"", crate::test_utils::PROPOSAL_TITLE_2),
-            format!("\"{}\"", crate::test_utils::PROPOSAL_TITLE_1),
+            format!("\"{}\"", test_utils::PROPOSAL_TITLE_3),
+            format!("\"{}\"", test_utils::PROPOSAL_TITLE_2),
+            format!("\"{}\"", test_utils::PROPOSAL_TITLE_1),
         ])?;
         c.succeeds_with(0, true, None)?; // Select the first proposal (PROPOSAL_TITLE_3)
 
@@ -171,17 +167,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
-        let (originating_repo, test_repo) = crate::test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
+        let (originating_repo, test_repo) = test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
             vec![
                 "pull",
                 "--disable-cli-spinners",
                 "--nsec",
-                crate::test_utils::TEST_KEY_1_NSEC,
+                test_utils::TEST_KEY_1_NSEC,
                 "--password",
-                crate::test_utils::TEST_PASSWORD,
+                test_utils::TEST_PASSWORD,
             ],
         );
 
@@ -191,17 +187,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
-        let (originating_repo, test_repo) = crate::test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()?;
+        let (originating_repo, test_repo) = test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()?;
 
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
             vec![
                 "push",
                 "--disable-cli-spinners",
                 "--nsec",
-                crate::test_utils::TEST_KEY_1_NSEC,
+                test_utils::TEST_KEY_1_NSEC,
                 "--password",
-                crate::test_utils::TEST_PASSWORD,
+                test_utils::TEST_PASSWORD,
             ],
         );
 
@@ -211,9 +207,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_ngit_fetch_command() -> Result<(), Box<dyn StdError>> {
-        let git_repo = crate::test_utils::cli_tester_create_proposals()?;
+        let git_repo = test_utils::cli_tester_create_proposals()?;
 
-        let mut p = crate::test_utils::CliTester::new_from_dir(
+        let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
                 "fetch",
