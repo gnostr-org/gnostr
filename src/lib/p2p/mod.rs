@@ -1,6 +1,7 @@
 pub mod handle_input;
 pub mod kvs;
 pub mod opt;
+pub mod kvs_tests;
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
 use crate::chat::msg::{Msg, MsgKind};
