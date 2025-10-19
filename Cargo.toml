@@ -53,6 +53,7 @@ regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
 trace-libgit = ["gnostr-asyncgit/trace-libgit"]
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
+nightly = []
 
 [dependencies]
 ## relay
