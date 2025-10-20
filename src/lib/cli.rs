@@ -41,8 +41,8 @@ pub struct LegitCli {
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     /// disable spinner animations
-    #[arg(long, action, default_value = "false")]
-    pub disable_cli_spinners: Option<bool>,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -83,8 +83,8 @@ pub struct NgitCli {
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     /// disable spinner animations
-    #[arg(long, action, default_value = "false")]
-    pub disable_cli_spinners: Option<bool>,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand, Debug)]

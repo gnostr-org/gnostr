@@ -146,7 +146,7 @@ pub async fn launch(
                 no_cover_letter: true,
                 bunker_app_key: None,
                 bunker_uri: None,
-                disable_cli_spinners: true,
+                disable_cli_spinners: args.disable_cli_spinners,
                 nsec: None,
                 password: None,
             },
@@ -228,7 +228,7 @@ pub async fn launch(
         patch_events,
         user_ref.relays.write(),
         repo_ref.relays.clone(),
-        !args.disable_cli_spinners,
+        args.disable_cli_spinners,
         false,
     )
     .await?;

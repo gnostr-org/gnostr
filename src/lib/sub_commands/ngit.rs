@@ -25,8 +25,7 @@ pub struct NgitSubCommand {
     ///// password to decrypt nsec
     #[arg(short, long, global = true)]
     password: Option<String>,
-    ///// disable spinner animations
-    #[arg(long, default_value_t = true)]
+    #[arg(long, action)]
     disable_cli_spinners: bool,
 }
 
@@ -143,12 +142,12 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
             vec![
+                "pull",
                 "--disable-cli-spinners",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
                 test_utils::TEST_PASSWORD,
-                "pull",
             ],
         );
 
@@ -160,12 +159,11 @@ mod tests {
     #[tokio::test]
     async fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
         let (originating_repo, test_repo) = test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()?;
-
         let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
             vec![
-                "--disable-cli-spinners",
                 "push",
+                "--disable-cli-spinners",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
@@ -174,6 +172,7 @@ mod tests {
         );
 
         p.expect_end_eventually()?;
+        p.exit()?;
         Ok(())
     }
 
