@@ -343,8 +343,8 @@ pub async fn evt_loop(
             noise::Config::new,
             yamux::Config::default,
         )?
-        .with_quic()
-        .with_dns()?
+        .with_quic() 
+        .with_dns()? 
         .with_behaviour(|key| {
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
@@ -388,7 +388,7 @@ pub async fn evt_loop(
                     key.public().to_peer_id(),
                 )?,
             })
-        })? // Removed `?` here
+        })? 
         .build();
 
     // subscribes to our topic
