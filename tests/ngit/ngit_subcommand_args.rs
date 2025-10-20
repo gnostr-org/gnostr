@@ -55,13 +55,12 @@ fn test_ngit_subcommand_global_args() {
     let args_only_spinners = vec![
         "ngit",
         "--disable-cli-spinners",
-        "true",
         "list",
     ];
     let cli_args_only_spinners = NgitCli::parse_from(args_only_spinners);
 
     assert_eq!(cli_args_only_spinners.nsec, None);
     assert_eq!(cli_args_only_spinners.password, None);
-    assert_eq!(cli_args_only_spinners.disable_cli_spinners, Some(true));
+    assert_eq!(cli_args_only_spinners.disable_cli_spinners, true);
     assert!(matches!(cli_args_only_spinners.command, NgitCommands::List));
 }

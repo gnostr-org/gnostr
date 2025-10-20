@@ -14,7 +14,7 @@ async fn test_ngit_login_dispatch() {
     let sub_command_args = NgitSubCommand {
         command: NgitCommands::Login(LoginSubCommandArgs {
             offline: false,
-            disable_cli_spinners: None,
+            disable_cli_spinners: false,
             password: None,
             nsec: None,
             bunker_app_key: None,
