@@ -65,13 +65,12 @@ mod tests {
             vec![
                 "login",
                 "--disable-cli-spinners",
+                "--nsec",
+                test_utils::TEST_KEY_1_NSEC,
+                "--password",
+                test_utils::TEST_PASSWORD,
             ],
         );
-
-        p.expect_password("nsec or hex private key")?
-            .succeeds_with(test_utils::TEST_KEY_1_NSEC)?;
-        p.expect_password("password to decrypt nsec")?
-            .succeeds_with(test_utils::TEST_PASSWORD)?;
 
         p.expect_end_eventually()?;
         Ok(())
