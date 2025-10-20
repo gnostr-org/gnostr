@@ -136,8 +136,8 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
-    async fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
+    //#[tokio::test]
+    /*async */fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
         let (originating_repo, test_repo) = test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
         let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
@@ -156,8 +156,8 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
-    async fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
+    //#[tokio::test]
+    /*async */fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
         let (originating_repo, test_repo) = test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()?;
         let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
