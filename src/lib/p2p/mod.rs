@@ -395,8 +395,8 @@ pub async fn evt_loop(
     swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
 
     // Listen on all interfaces and whatever port the OS assigns
-    swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?) ;
-    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?) ;
+    swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
 
     debug!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
 
