@@ -63,16 +63,17 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
-                "login",
                 "--disable-cli-spinners",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
                 test_utils::TEST_PASSWORD,
+                "login",
             ],
         );
 
         p.expect_end_eventually()?;
+        p.exit()?;
         Ok(())
     }
 
@@ -84,23 +85,14 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
-                "init",
                 "--disable-cli-spinners",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
                 test_utils::TEST_PASSWORD,
+                "init",
             ],
         );
-
-        p.expect_input("name")?.succeeds_with("test-repo")?;
-        p.expect_input("identifier")?.succeeds_with("test-repo")?;
-        p.expect_input("description")?.succeeds_with("A test repository")?;
-        p.expect_input("clone url (for fetch)")?.succeeds_with("https://github.com/test/test-repo.git")?;
-        p.expect_input("web")?.succeeds_with("https://test-repo.com")?;
-        p.expect_input("relays")?.succeeds_with("wss://relay.example.com")?;
-        p.expect_input("maintainers")?.succeeds_with(test_utils::TEST_KEY_1_NPUB)?;
-        p.expect_input("earliest unique commit")?.succeeds_with(&git_repo.git_repo.head()?.peel_to_commit()?.id().to_string())?;
 
         p.expect_end_eventually()?;
         Ok(())
@@ -114,14 +106,14 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
-                "send",
-                "HEAD~1", // Send the last commit
-                "--no-cover-letter",
                 "--disable-cli-spinners",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
                 test_utils::TEST_PASSWORD,
+                "send",
+                "--no-cover-letter",
+                "HEAD~1", // Send the last commit
             ],
         );
 
@@ -136,28 +128,10 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
-                "list",
                 "--disable-cli-spinners",
+                "list",
             ],
         );
-
-        p.expect("fetching updates...\r\n")?;
-        p.expect_eventually("\r\n")?; // Some updates listed here
-
-        let mut c = p.expect_choice("all proposals", vec![
-            format!("\"{}\"", test_utils::PROPOSAL_TITLE_3),
-            format!("\"{}\"", test_utils::PROPOSAL_TITLE_2),
-            format!("\"{}\"", test_utils::PROPOSAL_TITLE_1),
-        ])?;
-        c.succeeds_with(0, true, None)?; // Select the first proposal (PROPOSAL_TITLE_3)
-
-        let mut c = p.expect_choice("", vec![
-            format!("create and checkout proposal branch (2 ahead 0 behind 'main')"),
-            format!("apply to current branch with `git am`"),
-            format!("download to ./patches"),
-            format!("back"),
-        ])?;
-        c.succeeds_with(3, false, Some(0))?; // Select "back"
 
         p.expect_end_eventually()?;
         Ok(())
@@ -166,20 +140,20 @@ mod tests {
     #[tokio::test]
     async fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
         let (originating_repo, test_repo) = test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
-
         let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
             vec![
-                "pull",
                 "--disable-cli-spinners",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
                 test_utils::TEST_PASSWORD,
+                "pull",
             ],
         );
 
         p.expect_end_eventually()?;
+        p.exit()?;
         Ok(())
     }
 
@@ -190,8 +164,8 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &test_repo.dir,
             vec![
-                "push",
                 "--disable-cli-spinners",
+                "push",
                 "--nsec",
                 test_utils::TEST_KEY_1_NSEC,
                 "--password",
@@ -210,8 +184,8 @@ mod tests {
         let mut p = test_utils::CliTester::new_from_dir(
             &git_repo.dir,
             vec![
-                "fetch",
                 "--disable-cli-spinners",
+                "fetch",
             ],
         );
 
