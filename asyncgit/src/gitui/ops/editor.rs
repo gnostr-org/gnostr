@@ -18,18 +18,11 @@ impl OpTrait for Quit {
                 .map(|pending_menu| pending_menu.menu);
 
             if menu == root_menu(&state.config) {
-                if state.screens.len() == 1 {
-                    if state.config.general.confirm_quit.enabled {
-                        confirm(state, term, "Really quit? (y or n)")?;
-                    };
+                if state.config.general.confirm_quit.enabled {
+                    confirm(state, term, "Really quit? (y or n)")?;
+                };
 
-                    state.quit = true;
-                } else {
-                    state.screens.pop();
-                    if let Some(screen) = state.screens.last_mut() {
-                        screen.update()?;
-                    }
-                }
+                state.quit = true;
             } else {
                 state.close_menu();
                 return Ok(());
