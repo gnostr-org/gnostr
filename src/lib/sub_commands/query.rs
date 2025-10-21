@@ -48,97 +48,8 @@ pub struct QuerySubCommand {
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     debug!("Launching query subcommand with args: {:?}", args);
     println!("Launching query subcommand with args: {:?}", args);
-    let mut filt = serde_json::Map::new();
 
-    if let Some(authors) = &args.authors {
-        debug!("Applying authors filter: {}", authors);
-        println!("Applying authors filter: {}", authors);
-        filt.insert(
-            "authors".to_string(),
-            json!(authors.split(',').collect::<Vec<&str>>()),
-        );
-    }
-
-    if let Some(ids) = &args.ids {
-        debug!("Applying IDs filter: {}", ids);
-        println!("Applying IDs filter: {}", ids);
-        filt.insert(
-            "ids".to_string(),
-            json!(ids.split(',').collect::<Vec<&str>>()),
-        );
-    }
-
-    let mut limit_check: i32 = 0;
-    if let Some(limit) = args.limit {
-        debug!("Applying limit filter: {}", limit);
-        println!("Applying limit filter: {}", limit);
-        filt.insert("limit".to_string(), json!(limit));
-        limit_check = limit;
-    }
-
-    if let Some(generic_vec) = &args.generic {
-        if generic_vec.len() == 2 {
-            let tag = format!("#{}", generic_vec[0]);
-            let val = generic_vec[1].split(',').collect::<String>();
-            debug!("Applying generic filter: tag={} val={}", tag, val);
-            println!("Applying generic filter: tag={} val={}", tag, val);
-            filt.insert(tag, json!(val));
-        }
-    }
-
-    if let Some(hashtag) = &args.hashtag {
-        debug!("Applying hashtag filter: {}", hashtag);
-        println!("Applying hashtag filter: {}", hashtag);
-        filt.insert(
-            "#t".to_string(),
-            json!(hashtag.split(',').collect::<Vec<&str>>()),
-        );
-    }
-
-    if let Some(mentions) = &args.mentions {
-        debug!("Applying mentions filter: {}", mentions);
-        println!("Applying mentions filter: {}", mentions);
-        filt.insert(
-            "#p".to_string(),
-            json!(mentions.split(',').collect::<Vec<&str>>()),
-        );
-    }
-
-    if let Some(references) = &args.references {
-        debug!("Applying references filter: {}", references);
-        println!("Applying references filter: {}", references);
-        filt.insert(
-            "#e".to_string(),
-            json!(references.split(',').collect::<Vec<&str>>()),
-        );
-    }
-
-    if let Some(kinds) = &args.kinds {
-        debug!("Applying kinds filter: {}", kinds);
-        println!("Applying kinds filter: {}", kinds);
-        if let Ok(kind_ints) = kinds
-            .split(',')
-            .map(|s| s.parse::<i64>())
-            .collect::<Result<Vec<i64>, _>>()
-        {
-            filt.insert("kinds".to_string(), json!(kind_ints));
-        } else {
-            error!("Error parsing kinds: {}. Ensure they are integers.", kinds);
-            bail!("Error parsing kinds. Ensure they are integers.");
-        }
-    }
-
-    if let Some(search_vec) = &args.search {
-        if !search_vec.is_empty() {
-            let search_string = "search".to_string();
-            // The original bin code only used the first element of search if multiple were provided.
-            // Let's stick to that behavior.
-            let val = search_vec[0].split(',').collect::<String>();
-            debug!("Applying search filter: {}", val);
-            println!("Applying search filter: {}", val);
-            filt.insert(search_string, json!(val));
-        }
-    }
+    let (filt, limit_check) = build_filter_map(args)?;
 
     // ConfigBuilder usage from original main.
     // These values might need to be configurable or passed from the main app.
@@ -211,4 +122,256 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     debug!("Query subcommand finished successfully.");
     println!("Query subcommand finished successfully.");
     Ok(())
+}
+
+fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<String, serde_json::Value>, i32)> {
+    let mut filt = serde_json::Map::new();
+    let mut limit_check: i32 = 0;
+
+    if let Some(authors) = &args.authors {
+        debug!("Applying authors filter: {}", authors);
+        println!("Applying authors filter: {}", authors);
+        filt.insert(
+            "authors".to_string(),
+            json!(authors.split(',').collect::<Vec<&str>>()),
+        );
+    }
+
+    if let Some(ids) = &args.ids {
+        debug!("Applying IDs filter: {}", ids);
+        println!("Applying IDs filter: {}", ids);
+        filt.insert(
+            "ids".to_string(),
+            json!(ids.split(',').collect::<Vec<&str>>()),
+        );
+    }
+
+    if let Some(limit) = args.limit {
+        debug!("Applying limit filter: {}", limit);
+        println!("Applying limit filter: {}", limit);
+        filt.insert("limit".to_string(), json!(limit));
+        limit_check = limit;
+    }
+
+    if let Some(generic_vec) = &args.generic {
+        if generic_vec.len() == 2 {
+            let tag = format!("#{}", generic_vec[0]);
+            let val = generic_vec[1].clone();
+            debug!("Applying generic filter: tag={} val={}", tag, val);
+            println!("Applying generic filter: tag={} val={}", tag, val);
+            filt.insert(tag, json!(val));
+        }
+    }
+
+    if let Some(hashtag) = &args.hashtag {
+        debug!("Applying hashtag filter: {}", hashtag);
+        println!("Applying hashtag filter: {}", hashtag);
+        filt.insert(
+            "#t".to_string(),
+            json!(hashtag.split(',').collect::<Vec<&str>>()),
+        );
+    }
+
+    if let Some(mentions) = &args.mentions {
+        debug!("Applying mentions filter: {}", mentions);
+        println!("Applying mentions filter: {}", mentions);
+        filt.insert(
+            "#p".to_string(),
+            json!(mentions.split(',').collect::<Vec<&str>>()),
+        );
+    }
+
+    if let Some(references) = &args.references {
+        debug!("Applying references filter: {}", references);
+        println!("Applying references filter: {}", references);
+        filt.insert(
+            "#e".to_string(),
+            json!(references.split(',').collect::<Vec<&str>>()),
+        );
+    }
+
+    if let Some(kinds) = &args.kinds {
+        debug!("Applying kinds filter: {}", kinds);
+        println!("Applying kinds filter: {}", kinds);
+        if let Ok(kind_ints) = kinds
+            .split(',')
+            .map(|s| s.parse::<i64>())
+            .collect::<Result<Vec<i64>, _>>()
+        {
+            filt.insert("kinds".to_string(), json!(kind_ints));
+        } else {
+            error!("Error parsing kinds: {}. Ensure they are integers.", kinds);
+            bail!("Error parsing kinds. Ensure they are integers.");
+        }
+    }
+
+    if let Some(search_vec) = &args.search {
+        if !search_vec.is_empty() {
+            let search_string = "search".to_string();
+            // The original bin code only used the first element of search if multiple were provided.
+            // Let's stick to that behavior.
+            let val = search_vec[0].clone();
+            debug!("Applying search filter: {}", val);
+            println!("Applying search filter: {}", val);
+            filt.insert(search_string, json!(val));
+        }
+    }
+    Ok((filt, limit_check))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::{Parser, Subcommand};
+    use serde_json::json;
+
+    #[derive(Parser)]
+    #[clap(name = "gnostr", about = "A test CLI for gnostr")]
+    struct Cli {
+        #[clap(subcommand)]
+        command: Commands,
+    }
+
+    #[derive(Subcommand)]
+    enum Commands {
+        Query(QuerySubCommand),
+    }
+
+    // Helper function to create QuerySubCommand from args
+    fn create_query_subcommand(args: &[&str]) -> QuerySubCommand {
+        let full_args = std::iter::once("gnostr").chain(std::iter::once("query")).chain(args.iter().cloned());
+        let cli = Cli::parse_from(full_args);
+        match cli.command {
+            Commands::Query(query_subcommand) => query_subcommand,
+        }
+    }
+
+    #[test]
+    fn test_build_filter_map_default_limit() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&[]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 1); // Default limit
+        assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_authors() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--authors", "pubkey1,pubkey2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("authors").unwrap(),
+            &json!(["pubkey1", "pubkey2"])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_ids() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--ids", "id1,id2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("ids").unwrap(), &json!(["id1", "id2"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_custom_limit() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--limit", "10"]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 10);
+        assert_eq!(filt.get("limit").unwrap(), &json!(10));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_generic() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--generic", "t", "general,nostr"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("#t").unwrap(),
+            &json!("general,nostr")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_hashtag() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--hashtag", "rust,programming"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("#t").unwrap(),
+            &json!(["rust", "programming"])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_mentions() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--mentions", "mention1,mention2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("#p").unwrap(),
+            &json!(["mention1", "mention2"])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_references() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--references", "ref1,ref2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("#e").unwrap(),
+            &json!(["ref1", "ref2"])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_kinds() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--kinds", "1,2,3"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2, 3]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_invalid_kinds() {
+        let args = create_query_subcommand(&["--kinds", "1,abc,3"]);
+        let result = build_filter_map(&args);
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Error parsing kinds. Ensure they are integers."
+        );
+    }
+
+    #[test]
+    fn test_build_filter_map_with_search() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--search", "keyword1,keyword2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("search").unwrap(), &json!("keyword1,keyword2"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_launch_no_panic() {
+        // This test primarily ensures that the launch function doesn't panic
+        // with default arguments. More comprehensive tests would require mocking
+        // gnostr_query::send, which is more complex for a free function.
+        let args = create_query_subcommand(&[]);
+        let result = launch(&args).await;
+        assert!(result.is_ok());
+    }
 }
