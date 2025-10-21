@@ -40,7 +40,7 @@ pub async fn launch(
         }
         repo_coordinates
     };
-    fetching_with_report(git_repo.get_path()?, &client, &repo_coordinates).await?;
+    fetching_with_report(git_repo.get_path()?, &client, &repo_coordinates, true).await?;
     client.disconnect().await?;
     Ok(())
 }

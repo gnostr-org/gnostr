@@ -11,9 +11,10 @@ use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::FmtSubscriber;
 
 use serde::ser::StdError;
+use anyhow::anyhow; // Import the anyhow macro
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn StdError>> {
+async fn main() -> anyhow::Result<()> {
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
     env::set_var("WOBBLE", "0");
@@ -22,7 +23,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let app_cache = get_app_cache_path();
     if gnostr_cli_args.logging {
         let logging = setup_logging();
-        trace!("{:?}", logging);
+        debug!("{:?}", logging);
     };
     let level = if gnostr_cli_args.debug {
         LevelFilter::DEBUG
@@ -76,22 +77,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     trace!("{:?}", app_cache);
 
-    //if gnostr_cli_args.gitdir.is_some() {
-    //    // Assuming 'args' and 'gitdir' are correctly defined elsewhere
-    //    let repo_path: RepoPath = gnostr_cli_args.gitdir.clone().expect("");
-    //    debug!("main:73:repo_path={:?}", repo_path);
-    //    // Convert the RepoPath to an OsStr reference
-    //    let path_os_str = repo_path.as_path().as_os_str();
-
-    //    // Now set the environment variable
-    //    env::set_var("GNOSTR_GITDIR", path_os_str);
-
-    //    debug!("main:80:{:?}", gnostr_cli_args.gitdir.clone().expect(""));
-    //    //env::set_var("GNOSTR_GITDIR", args.gitdir.clone().expect(""));
-    //    debug!("82:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
-    //    //replace gnostr tui --gitdir
-    //    //std::process::exit(0);
-    //}
+    // These if statements don't return anything, which is fine as long as the match statement returns Result.
     if gnostr_cli_args.workdir.is_some() {}
     if gnostr_cli_args.directory.is_some() {}
     if gnostr_cli_args.hash.is_some() {
@@ -106,7 +92,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
             /*--debug, --trace, --info, etc...*/
             {
                 print!("{:x}", result);
-                std::process::exit(0);
+                std::process::exit(0); // Exits the program, so no need to return Ok(())
             }
             gnostr_cli_args.nsec = format!("{:x}", result).into();
         }
@@ -114,39 +100,34 @@ async fn main() -> Result<(), Box<dyn StdError>> {
 
     // Post event
     match &gnostr_cli_args.command {
-        ////
-        //Some(GnostrCommands::Tui(sub_command_args)) => {
-        //    debug!("sub_command_args:{:?}", sub_command_args);
-        //    sub_commands::tui::tui(sub_command_args).await
-        //}
-        ////
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(
-                //    &gnostr_cli_args.nsec.unwrap().to_string(),
                 &mut sub_command_args.clone(),
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in chat subcommand: {}", e))
         }
         Some(GnostrCommands::Legit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::legit::legit(sub_command_args).await
+            sub_commands::legit::legit(sub_command_args).await.map_err(|e| anyhow!("Error in legit subcommand: {}", e))
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::ngit::ngit(sub_command_args).await
+            sub_commands::ngit::ngit(sub_command_args).await.map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
+        }
+        Some(GnostrCommands::Query(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::query::launch(sub_command_args).await.map_err(|e| anyhow!("Error in query subcommand: {}", e))
         }
         Some(GnostrCommands::SetMetadata(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            {
-                sub_commands::set_metadata::set_metadata(
-                    gnostr_cli_args.nsec,
-                    gnostr_cli_args.relays,
-                    gnostr_cli_args.difficulty_target,
-                    sub_command_args,
-                )
-            }
-            .await
+            sub_commands::set_metadata::set_metadata(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in set_metadata subcommand: {}", e))
         }
         Some(GnostrCommands::Note(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -156,7 +137,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in note subcommand: {}", e))
         }
         Some(GnostrCommands::PublishContactListCsv(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -166,7 +147,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in publish_contact_list_csv subcommand: {}", e))
         }
         Some(GnostrCommands::DeleteEvent(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -176,7 +157,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in delete_event subcommand: {}", e))
         }
         Some(GnostrCommands::DeleteProfile(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -186,7 +167,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in delete_profile subcommand: {}", e))
         }
         Some(GnostrCommands::React(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -196,23 +177,23 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in react subcommand: {}", e))
         }
         Some(GnostrCommands::ListEvents(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::list_events::list_events(gnostr_cli_args.relays, sub_command_args).await
+            sub_commands::list_events::list_events(gnostr_cli_args.relays, sub_command_args).await.map_err(|e| anyhow!("Error in list_events subcommand: {}", e))
         }
         Some(GnostrCommands::GenerateKeypair(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::generate_keypair::get_new_keypair(sub_command_args).await
+            sub_commands::generate_keypair::get_new_keypair(sub_command_args).await.map_err(|e| anyhow!("Error in generate_keypair subcommand: {}", e))
         }
         Some(GnostrCommands::ConvertKey(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::convert_key::convert_key(sub_command_args).await
+            sub_commands::convert_key::convert_key(sub_command_args).await.map_err(|e| anyhow!("Error in convert_key subcommand: {}", e))
         }
         Some(GnostrCommands::Vanity(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::vanity::vanity(sub_command_args).await
+            sub_commands::vanity::vanity(sub_command_args).await.map_err(|e| anyhow!("Error in vanity subcommand: {}", e))
         }
         Some(GnostrCommands::CreatePublicChannel(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -222,7 +203,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in create_public_channel subcommand: {}", e))
         }
         Some(GnostrCommands::SetChannelMetadata(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -232,7 +213,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in set_channel_metadata subcommand: {}", e))
         }
         Some(GnostrCommands::SendChannelMessage(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -242,7 +223,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in send_channel_message subcommand: {}", e))
         }
         Some(GnostrCommands::HidePublicChannelMessage(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -252,7 +233,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in hide_public_channel_message subcommand: {}", e))
         }
         Some(GnostrCommands::MutePublicKey(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -262,16 +243,16 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in mute_publickey subcommand: {}", e))
         }
         Some(GnostrCommands::BroadcastEvents(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::broadcast_events::broadcast_events(
-                Some(gnostr_cli_args.nsec.expect("")),
+                gnostr_cli_args.nsec,
                 gnostr_cli_args.relays,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in broadcast_events subcommand: {}", e))
         }
         Some(GnostrCommands::CreateBadge(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -281,7 +262,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in create_badge subcommand: {}", e))
         }
         Some(GnostrCommands::AwardBadge(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -291,7 +272,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in award_badge subcommand: {}", e))
         }
         Some(GnostrCommands::ProfileBadges(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -301,7 +282,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in profile_badges subcommand: {}", e))
         }
         Some(GnostrCommands::CustomEvent(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -311,7 +292,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in custom_event subcommand: {}", e))
         }
         Some(GnostrCommands::SetUserStatus(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -321,47 +302,40 @@ async fn main() -> Result<(), Box<dyn StdError>> {
                 gnostr_cli_args.difficulty_target,
                 sub_command_args,
             )
-            .await
+            .await.map_err(|e| anyhow!("Error in set_user_status subcommand: {}", e))
         }
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("main:318:sub_command_args:{:?}", sub_command_args.clone());
             let mut sub_command_args_mut = sub_command_args.clone();
+            let mut result: anyhow::Result<()> = Ok(()); // Initialize result to Ok
 
+            // Check if GNOSTR_GITDIR environment variable is set
             if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
-                // This block is only entered if the env var is found and is valid.
-                debug!(
-                    "333:The GNOSTR_GITDIR environment variable is set to: {}",
-                    gitdir_env_value
-                );
-
-                if let Some(git_dir_value) = gitdir_value {
-                    // You have the value!
+                debug!("333:The GNOSTR_GITDIR environment variable is set to: {}", gitdir_env_value);
+                // Check if --gitdir argument was provided (from command line args)
+                if let Some(git_dir_value) = gitdir_value { // Assuming gitdir_value is from command line args parsing
                     debug!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
                     let gitdir_string = format!("{}", gitdir_env_value);
-                    debug!(
-                        "342:OVERRIDE!! The git directory is: {:?}",
-                        gitdir_string.clone()
-                    );
+                    debug!("342:OVERRIDE!! The git directory is: {:?}", gitdir_string.clone());
                     sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
-                    sub_commands::tui::tui(sub_command_args_mut.clone()).await
+                    // Call tui and map error, then assign to result
+                    result = sub_commands::tui::tui(sub_command_args_mut.clone()).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
                 } else {
-                    Ok({
-                        debug!("No git directory specified.");
-                    })
+                    // If gitdir_value is None, we don't override. The result remains Ok(()).
+                    result = Ok(()); // Explicitly set for clarity
                 }
             } else {
-                // This block is entered if the env var is not found.
+                // GNOSTR_GITDIR environment variable is not set.
                 debug!("354:The GNOSTR_GITDIR environment variable is not set.");
-                sub_commands::tui::tui(sub_command_args.clone()).await
+                // Call tui with original args and map error, then assign to result
+                result = sub_commands::tui::tui(sub_command_args.clone()).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
             }
+            result // Return the accumulated result
         }
         None => {
-            {
-                //TODO handle more scenarios
-                let gnostr_subcommands = gnostr::gnostr_core::GnostrSubCommands::default();
-                let _ = sub_commands::tui::tui(gnostr_subcommands).await;
-            };
-            Ok(())
+            // TODO handle more scenarios
+            // Call tui with default commands and propagate its result
+            sub_commands::tui::tui(gnostr::gnostr_core::GnostrSubCommands::default()).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
     }
 }

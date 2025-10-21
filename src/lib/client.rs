@@ -1469,18 +1469,25 @@ pub async fn fetching_with_report(
     #[cfg(test)] client: &MockConnect,
     #[cfg(not(test))] client: &Client,
     repo_coordinates: &HashSet<Coordinate>,
+    animate: bool,
 ) -> Result<FetchReport> {
     let term = console::Term::stderr();
-    term.write_line("fetching updates...")?;
+    if animate {
+        term.write_line("fetching updates...")?;
+    }
     let (relay_reports, progress_reporter) = client
         .fetch_all(git_repo_path, repo_coordinates, &HashSet::new())
         .await?;
-    if !relay_reports.iter().any(std::result::Result::is_err) {
+    if animate && !relay_reports.iter().any(std::result::Result::is_err) {
         let _ = progress_reporter.clear();
     }
     let report = consolidate_fetch_reports(relay_reports);
     if report.to_string().is_empty() {
-        println!("no updates");
+        if !animate {
+            println!("no updates");
+        }
+    } else if animate {
+        println!("updates: {report}");
     } else {
         println!("updates: {report}");
     }

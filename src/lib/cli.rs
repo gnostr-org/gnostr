@@ -1,10 +1,9 @@
-use crate::sub_commands;
-use crate::sub_commands::*;
 use anyhow::{anyhow, Result};
 use clap::{
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
 };
+use clap::ArgMatches; // Corrected import path for ArgMatches
 use gnostr_asyncgit::sync::RepoPath;
 use simplelog::{Config, LevelFilter, WriteLogger};
 use std::{
@@ -12,6 +11,38 @@ use std::{
     fs::{self, File},
     path::PathBuf,
 };
+
+// Import individual sub_commands modules directly
+use crate::sub_commands::fetch;
+use crate::sub_commands::init;
+use crate::sub_commands::send;
+use crate::sub_commands::push;
+use crate::sub_commands::login;
+use crate::sub_commands::legit;
+use crate::sub_commands::ngit;
+use crate::sub_commands::set_metadata;
+use crate::sub_commands::note;
+use crate::sub_commands::publish_contactlist_csv;
+use crate::sub_commands::delete_event;
+use crate::sub_commands::delete_profile;
+use crate::sub_commands::react;
+use crate::sub_commands::list_events;
+use crate::sub_commands::generate_keypair;
+use crate::sub_commands::convert_key;
+use crate::sub_commands::vanity;
+use crate::sub_commands::create_public_channel;
+use crate::sub_commands::set_channel_metadata;
+use crate::sub_commands::send_channel_message;
+use crate::sub_commands::hide_public_channel_message;
+use crate::sub_commands::mute_publickey;
+use crate::sub_commands::broadcast_events;
+use crate::sub_commands::create_badge;
+use crate::sub_commands::award_badge;
+use crate::sub_commands::profile_badges;
+use crate::sub_commands::custom_event;
+use crate::sub_commands::user_status;
+// Import the new QuerySubCommand struct
+use crate::sub_commands::query::QuerySubCommand;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -48,21 +79,21 @@ pub struct LegitCli {
 #[derive(Subcommand, Debug)]
 pub enum LegitCommands {
     /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::FetchArgs),
+    Fetch(fetch::FetchArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(sub_commands::init::InitArgs),
+    Init(init::InitArgs),
     /// issue commits as a proposal
-    Send(sub_commands::send::SendArgs),
+    Send(send::SendArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(sub_commands::push::PushArgs),
+    Push(push::PushArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(sub_commands::login::LoginArgs),
+    Login(login::LoginArgs),
 }
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -90,21 +121,21 @@ pub struct NgitCli {
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
     /// update cache with latest updates from nostr
-    Fetch(sub_commands::fetch::FetchArgs),
+    Fetch(fetch::FetchArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(sub_commands::init::InitArgs),
+    Init(init::InitArgs),
     /// issue commits as a proposal
-    Send(sub_commands::send::SendArgs),
+    Send(send::SendArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(sub_commands::push::PushArgs),
+    Push(push::PushArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(sub_commands::login::LoginArgs),
+    Login(login::LoginArgs),
 }
 
 /// GnostrCli application to interact with nostr
@@ -196,51 +227,53 @@ pub enum GnostrCommands {
     /// Set metadata.
     /// CAUTION!
     /// This will replace your current kind 0 event.
-    SetMetadata(sub_commands::set_metadata::SetMetadataSubCommand),
+    SetMetadata(set_metadata::SetMetadataSubCommand),
     /// Send text note
-    Note(sub_commands::note::NoteSubCommand),
+    Note(note::NoteSubCommand),
     /// Publish contacts from a CSV file
-    PublishContactListCsv(sub_commands::publish_contactlist_csv::PublishContactListCsvSubCommand),
+    PublishContactListCsv(publish_contactlist_csv::PublishContactListCsvSubCommand),
     /// Delete an event
-    DeleteEvent(sub_commands::delete_event::DeleteEventSubCommand),
+    DeleteEvent(delete_event::DeleteEventSubCommand),
     /// Delete a profile
-    DeleteProfile(sub_commands::delete_profile::DeleteProfileSubCommand),
+    DeleteProfile(delete_profile::DeleteProfileSubCommand),
     /// React to an event
-    React(sub_commands::react::ReactionSubCommand),
+    React(react::ReactionSubCommand),
     /// Get all events
-    ListEvents(sub_commands::list_events::ListEventsSubCommand),
+    ListEvents(list_events::ListEventsSubCommand),
     /// Generate a new keypair
-    GenerateKeypair(sub_commands::generate_keypair::GenerateKeypairSubCommand),
+    GenerateKeypair(generate_keypair::GenerateKeypairSubCommand),
     /// Convert key from bech32 to hex or hex to bech32
-    ConvertKey(sub_commands::convert_key::ConvertKeySubCommand),
+    ConvertKey(convert_key::ConvertKeySubCommand),
     /// Vanity public key mining
-    Vanity(sub_commands::vanity::VanitySubCommand),
+    Vanity(vanity::VanitySubCommand),
     /// Create a new public channel
-    CreatePublicChannel(sub_commands::create_public_channel::CreatePublicChannelSubCommand),
+    CreatePublicChannel(create_public_channel::CreatePublicChannelSubCommand),
     /// Update channel metadata
-    SetChannelMetadata(sub_commands::set_channel_metadata::SetChannelMetadataSubCommand),
+    SetChannelMetadata(set_channel_metadata::SetChannelMetadataSubCommand),
     /// Send a message to a public channel
-    SendChannelMessage(sub_commands::send_channel_message::SendChannelMessageSubCommand),
+    SendChannelMessage(send_channel_message::SendChannelMessageSubCommand),
     /// Hide a message in a public chat room
     HidePublicChannelMessage(
-        sub_commands::hide_public_channel_message::HidePublicChannelMessageSubCommand,
+        hide_public_channel_message::HidePublicChannelMessageSubCommand,
     ),
     /// Mute a public key
-    MutePublicKey(sub_commands::mute_publickey::MutePublickeySubCommand),
+    MutePublicKey(mute_publickey::MutePublickeySubCommand),
     /// Broadcast events from file
-    BroadcastEvents(sub_commands::broadcast_events::BroadcastEventsSubCommand),
+    BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
     /// Create a new badge
-    CreateBadge(sub_commands::create_badge::CreateBadgeSubCommand),
+    CreateBadge(create_badge::CreateBadgeSubCommand),
     /// Publish award badge event
-    AwardBadge(sub_commands::award_badge::AwardBadgeSubCommand),
+    AwardBadge(award_badge::AwardBadgeSubCommand),
     /// Set profile badges
-    ProfileBadges(sub_commands::profile_badges::ProfileBadgesSubCommand),
+    ProfileBadges(profile_badges::ProfileBadgesSubCommand),
     /// Create	custom	event	more
     /// 1	custom	event	more
     /// 2	custom	event	more
-    CustomEvent(sub_commands::custom_event::CustomEventCommand),
+    CustomEvent(custom_event::CustomEventCommand),
     /// Create a user status event
-    SetUserStatus(sub_commands::user_status::UserStatusSubCommand),
+    SetUserStatus(user_status::UserStatusSubCommand),
+    // Add the query subcommand here, using the new QuerySubCommand struct
+    Query(QuerySubCommand),
 }
 
 pub fn setup_logging() -> Result<()> {
