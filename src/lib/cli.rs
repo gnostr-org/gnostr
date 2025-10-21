@@ -41,6 +41,8 @@ use crate::sub_commands::award_badge;
 use crate::sub_commands::profile_badges;
 use crate::sub_commands::custom_event;
 use crate::sub_commands::user_status;
+// Import the new relay subcommand module
+use crate::sub_commands::relay;
 // Import the new QuerySubCommand struct
 use crate::sub_commands::query::QuerySubCommand;
 
@@ -274,6 +276,8 @@ pub enum GnostrCommands {
     CustomEvent(custom_event::CustomEventCommand),
     /// Create a user status event
     SetUserStatus(user_status::UserStatusSubCommand),
+        /// Relay sub commands
+    Relay(relay::RelaySubCommand),
     // Add the query subcommand here, using the new QuerySubCommand struct
     Query(QuerySubCommand),
 }
