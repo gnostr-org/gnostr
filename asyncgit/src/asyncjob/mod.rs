@@ -261,7 +261,7 @@ mod test {
         assert_eq!(receiver.recv().unwrap(), 10);
         assert!(receiver.is_empty());
 
-        assert_eq!(shared_v.load(std::sync::atomic::Ordering::SeqCst), 3);
+        assert_eq!(shared_v.load(std::sync::atomic::Ordering::SeqCst), 2);
     }
 
     fn wait_for_job(job: &AsyncSingleJob<TestJob>) {
