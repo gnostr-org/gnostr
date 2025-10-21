@@ -310,7 +310,7 @@ fn inside_submodule() {
         ],
     );
 
-    let _state = ctx.init_state_at_path(ctx.dir.child("test-submodule"));
+    let _state = ctx.init_state_at_path(ctx.dir.child("test-submodule"), None);
     insta::assert_snapshot!(ctx.redact_buffer());
 }
 

@@ -233,31 +233,35 @@ mod test {
 
         let mut job: AsyncSingleJob<TestJob> = AsyncSingleJob::new(sender);
 
-        let task = TestJob {
-            v: Arc::new(AtomicU32::new(1)),
-            finish: Arc::new(AtomicBool::new(false)),
+        let shared_v = Arc::new(AtomicU32::new(1));
+        let shared_finish = Arc::new(AtomicBool::new(false));
+
+        let task_template = TestJob {
+            v: Arc::clone(&shared_v),
+            finish: Arc::clone(&shared_finish),
             value_to_add: 1,
-            notification_value: 10, // Added notification value
+            notification_value: 10,
         };
 
-        assert!(job.spawn(task.clone()));
-        task.finish.store(true, Ordering::SeqCst);
-        thread::sleep(Duration::from_millis(10));
+        // First job
+        let first_task = task_template.clone();
+        assert!(job.spawn(first_task));
+        shared_finish.store(true, Ordering::SeqCst);
+        thread::sleep(Duration::from_millis(100));
 
+        // Subsequent jobs (only the last one will run)
         for _ in 0..5 {
             println!("spawn");
-            assert!(!job.spawn(task.clone()));
+            let next_task = task_template.clone();
+            assert!(!job.spawn(next_task));
         }
 
         println!("recv");
-        // Assert the received notification value
         assert_eq!(receiver.recv().unwrap(), 10);
         assert_eq!(receiver.recv().unwrap(), 10);
         assert!(receiver.is_empty());
 
-        // The initial value of v is 1. Two jobs are expected to run, each adding 1.
-        // So, the final value should be 1 (initial) + 1 (job1) + 1 (job2) = 3.
-        assert_eq!(task.v.load(std::sync::atomic::Ordering::SeqCst), 3);
+        assert_eq!(shared_v.load(std::sync::atomic::Ordering::SeqCst), 3);
     }
 
     fn wait_for_job(job: &AsyncSingleJob<TestJob>) {
