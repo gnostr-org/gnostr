@@ -246,8 +246,6 @@ mod test {
         // First job
         let first_task = task_template.clone();
         assert!(job.spawn(first_task));
-        shared_finish.store(true, Ordering::SeqCst);
-        thread::sleep(Duration::from_millis(100));
 
         // Subsequent jobs (only the last one will run)
         for _ in 0..5 {
@@ -255,6 +253,8 @@ mod test {
             let next_task = task_template.clone();
             assert!(!job.spawn(next_task));
         }
+
+        shared_finish.store(true, Ordering::SeqCst);
 
         println!("recv");
         assert_eq!(receiver.recv().unwrap(), 10);
