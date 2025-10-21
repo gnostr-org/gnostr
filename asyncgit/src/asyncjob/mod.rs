@@ -193,17 +193,16 @@ mod test {
         v: Arc<AtomicU32>,
         finish: Arc<AtomicBool>,
         value_to_add: u32,
+        notification_value: u32, // Added field
     }
 
-    type TestNotification = ();
-
     impl AsyncJob for TestJob {
-        type Notification = TestNotification;
+        type Notification = u32; // Changed from ()
         type Progress = ();
 
         fn run(
             &mut self,
-            _params: RunParams<Self::Notification, Self::Progress>,
+            params: RunParams<Self::Notification, Self::Progress>, // Use params
         ) -> Result<Self::Notification> {
             println!("[job] wait");
 
@@ -217,11 +216,14 @@ mod test {
 
             println!("[job] done sleeping");
 
+            // Send notification before adding value
+            params.send(self.notification_value)?;
+
             let res = self.v.fetch_add(self.value_to_add, Ordering::SeqCst);
 
             println!("[job] value: {res}");
 
-            Ok(())
+            Ok(self.notification_value) // Return the notification value
         }
     }
 
@@ -235,6 +237,7 @@ mod test {
             v: Arc::new(AtomicU32::new(1)),
             finish: Arc::new(AtomicBool::new(false)),
             value_to_add: 1,
+            notification_value: 10, // Added notification value
         };
 
         assert!(job.spawn(task.clone()));
@@ -247,10 +250,13 @@ mod test {
         }
 
         println!("recv");
-        receiver.recv().unwrap();
-        receiver.recv().unwrap();
+        // Assert the received notification value
+        assert_eq!(receiver.recv().unwrap(), 10);
+        assert_eq!(receiver.recv().unwrap(), 10);
         assert!(receiver.is_empty());
 
+        // The initial value of v is 1. Two jobs are expected to run, each adding 1.
+        // So, the final value should be 1 (initial) + 1 (job1) + 1 (job2) = 3.
         assert_eq!(task.v.load(std::sync::atomic::Ordering::SeqCst), 3);
     }
 
@@ -266,32 +272,43 @@ mod test {
 
         let mut job: AsyncSingleJob<TestJob> = AsyncSingleJob::new(sender);
 
-        let task = TestJob {
+        // Define the first job
+        let initial_task = TestJob {
             v: Arc::new(AtomicU32::new(1)),
             finish: Arc::new(AtomicBool::new(false)),
             value_to_add: 1,
+            notification_value: 20,
         };
 
-        assert!(job.spawn(task.clone()));
-        task.finish.store(true, Ordering::SeqCst);
-        thread::sleep(Duration::from_millis(10));
+        // Spawn the first job
+        assert!(job.spawn(initial_task.clone()));
+        initial_task.finish.store(true, Ordering::SeqCst); // Signal the first job to finish
+        thread::sleep(Duration::from_millis(10)); // Give it time to start
 
+        // Schedule subsequent jobs (these will be cancelled)
         for _ in 0..5 {
             println!("spawn");
-            assert!(!job.spawn(task.clone()));
+            // Use a new task definition for subsequent jobs, or ensure they are distinct if needed
+            // For now, cloning the initial_task definition is fine as they are meant to be cancelled.
+            assert!(!job.spawn(initial_task.clone()));
         }
 
         println!("cancel");
-        assert!(job.cancel());
+        assert!(job.cancel()); // Cancel the queued jobs
 
-        task.finish.store(true, Ordering::SeqCst);
-
+        // Wait for the first job to complete
         wait_for_job(&job);
 
         println!("recv");
-        receiver.recv().unwrap();
+        // Assert the received notification value from the first job
+        assert_eq!(receiver.recv().unwrap(), 20);
         println!("received");
 
-        assert_eq!(task.v.load(std::sync::atomic::Ordering::SeqCst), 2);
+        // Retrieve the completed job from `last`
+        let completed_job = job.take_last().expect("Should have a completed job");
+
+        // Assert the value of the completed job
+        // Initial value was 1, it should have been incremented by 1 (value_to_add)
+        assert_eq!(completed_job.v.load(std::sync::atomic::Ordering::SeqCst), 2);
     }
 }

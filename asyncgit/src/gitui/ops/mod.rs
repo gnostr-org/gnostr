@@ -98,6 +98,8 @@ pub(crate) enum Op {
     Refresh,
     Quit,
 
+    CloseScreen,
+
     #[serde(untagged)]
     OpenMenu(Menu),
     #[serde(untagged)]
@@ -107,6 +109,7 @@ pub(crate) enum Op {
 impl Op {
     pub fn implementation(self) -> Box<dyn OpTrait> {
         match self {
+            Op::CloseScreen => Box::new(editor::CloseScreenOp),
             Op::Quit => Box::new(editor::Quit),
             Op::OpenMenu(menu) => Box::new(editor::OpenMenu(menu)),
             Op::Refresh => Box::new(editor::Refresh),

@@ -8,6 +8,24 @@ use crate::{
 };
 use std::rc::Rc;
 
+pub(crate) struct CloseScreenOp;
+impl OpTrait for CloseScreenOp {
+    fn get_action(&self, _target: Option<&TargetData>) -> Option<Action> {
+        Some(Rc::new(|state, _term| {
+            if state.screens.len() > 1 {
+                state.screens.pop();
+            } else {
+                state.quit = true;
+            }
+            Ok(())
+        }))
+    }
+
+    fn display(&self, _state: &State) -> String {
+        "Close screen".into()
+    }
+}
+
 pub(crate) struct Quit;
 impl OpTrait for Quit {
     fn get_action(&self, _target: Option<&TargetData>) -> Option<Action> {
