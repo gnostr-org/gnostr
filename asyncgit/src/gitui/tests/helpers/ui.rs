@@ -1,5 +1,5 @@
 use crate::{
-    gitui::cli::Args,
+    gitui::cli::{self, Args},
     gitui::config::{self, Config},
     gitui::gitui_error::Error,
     gitui::key_parser::parse_keys,
@@ -76,14 +76,14 @@ impl TestContext {
     }
 
     pub fn init_state(&mut self) -> State {
-        self.init_state_at_path(self.dir.path().to_path_buf())
+        self.init_state_at_path(self.dir.path().to_path_buf(), None)
     }
 
-    pub fn init_state_at_path(&mut self, path: PathBuf) -> State {
+    pub fn init_state_at_path(&mut self, path: PathBuf, command: Option<cli::Commands>) -> State {
         let mut state = State::create(
             Rc::new(Repository::open(path).unwrap()),
             self.size,
-            &Args::default(),
+            &Args { command, ..Args::default() },
             Rc::clone(&self.config),
             false,
         )
