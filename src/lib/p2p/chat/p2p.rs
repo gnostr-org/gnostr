@@ -7,7 +7,7 @@ use tracing::{debug, warn};
 
 use ureq::Agent;
 
-//use crate::chat::msg::{Msg, MsgKind};
+//use crate::p2p::chat::msg::{Msg, MsgKind};
 //use crate::queue::InternalEvent;
 //use tokio::task;
 
@@ -127,7 +127,7 @@ pub async fn evt_loop(
                         .behaviour_mut().gossipsub
                         .publish(topic.clone(), serde_json::to_vec(&m)?) {
                         debug!("Publish error: {e:?}");
-                        let m = crate::chat::msg::Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(crate::chat::msg::MsgKind::System);
+                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
                         recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
                     }
                 }
@@ -137,7 +137,7 @@ pub async fn evt_loop(
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
-                        let m = crate::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::chat::msg::MsgKind::System);
+                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
                         recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
@@ -145,7 +145,7 @@ pub async fn evt_loop(
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
-                        let m = crate::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::chat::msg::MsgKind::System);
+                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
                         recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
@@ -158,20 +158,20 @@ pub async fn evt_loop(
                         "Got message: '{}' with id: {id} from peer: {peer_id}",
                         String::from_utf8_lossy(&message.data),
                     );
-                    match serde_json::from_slice::<crate::chat::msg::Msg>(&message.data) {
+                    match serde_json::from_slice::<crate::p2p::chat::msg::Msg>(&message.data) {
                         Ok(msg) => {
                             recv.send(crate::queue::InternalEvent::ChatMessage(msg)).await?;
                         },
                         Err(e) => {
                             warn!("Error deserializing message: {e:?}");
-                            let m = crate::chat::msg::Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(crate::chat::msg::MsgKind::System);
+                            let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
                             recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
                         }
                     }
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
-                    let m = crate::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::chat::msg::MsgKind::System);
+                    let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
                     recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                 }
                 _ => {}

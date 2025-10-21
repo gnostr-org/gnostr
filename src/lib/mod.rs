@@ -5,7 +5,7 @@ pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
 pub mod bug_report;
 ///  <https://docs.rs/gnostr/latest/gnostr/chat/index.html>
-pub mod chat;
+
 ///  <https://docs.rs/gnostr/latest/gnostr/cli/index.html>
 pub mod cli;
 ///  <https://docs.rs/gnostr/latest/gnostr/cli_interactor/index.html>

@@ -27,7 +27,7 @@ use std::{
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
-use crate::chat::msg;
+use crate::p2p::chat::msg;
 
 #[derive(Default)]
 pub enum InputMode {
