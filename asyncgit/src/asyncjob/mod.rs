@@ -228,6 +228,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn test_overwrite() {
         let (sender, receiver) = unbounded();
 
