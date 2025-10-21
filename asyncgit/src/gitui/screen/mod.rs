@@ -9,6 +9,7 @@ pub(crate) mod log;
 pub(crate) mod show;
 pub(crate) mod show_refs;
 pub(crate) mod status;
+pub(crate) mod gnostr;
 
 const BOTTOM_CONTEXT_LINES: usize = 2;
 
@@ -271,6 +272,10 @@ impl Screen {
     }
 
     fn move_from_unselectable(&mut self, nav_mode: NavMode) {
+        if self.line_index.is_empty() {
+            return;
+        }
+
         if !self.nav_filter(self.cursor, nav_mode) {
             self.select_previous(nav_mode);
         }
@@ -285,6 +290,10 @@ impl Screen {
 
     pub(crate) fn get_selected_item(&self) -> &Item {
         &self.items[self.line_index[self.cursor]]
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.line_index.is_empty()
     }
 
     fn line_views(&self, area: Size) -> impl Iterator<Item = LineView<'_>> {

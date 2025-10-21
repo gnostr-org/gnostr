@@ -73,11 +73,14 @@ impl State {
                     reference.clone(),
                 )?]
             }
-            None => vec![screen::status::create(
-                Rc::clone(&config),
-                Rc::clone(&repo),
-                size,
-            )?],
+            None => vec![
+                screen::status::create(
+                    Rc::clone(&config),
+                    Rc::clone(&repo),
+                    size,
+                )?,
+                screen::gnostr::create(Rc::clone(&config), size)?,
+            ],
         };
 
         let bindings = Bindings::from(&config.bindings);
@@ -241,7 +244,13 @@ impl State {
     }
 
     pub(crate) fn handle_op(&mut self, op: Op, term: &mut Term) -> Res<()> {
-        let target = self.screen().get_selected_item().target_data.as_ref();
+        let screen = self.screen();
+        let target = if screen.is_empty() {
+            None
+        } else {
+            screen.get_selected_item().target_data.as_ref()
+        };
+
         if let Some(mut action) = op.clone().implementation().get_action(target) {
             let result = Rc::get_mut(&mut action).unwrap()(self, term);
             self.handle_result(result)?;
