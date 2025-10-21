@@ -33,7 +33,7 @@ use crate::gitui::ops::Op;
 use crate::gitui::prompt;
 use crate::gitui::prompt::PromptData;
 use crate::gitui::screen;
-use crate::gitui::screen::Screen;
+use crate::gitui::screen::{Screen, ScreenType};
 use crate::gitui::term::Term;
 use crate::gitui::ui;
 
@@ -190,6 +190,8 @@ impl State {
 
                 if self.prompt.state.is_focused() {
                     self.prompt.state.handle_key_event(key);
+                } else if key.code == KeyCode::Esc && self.screen().screen_type == ScreenType::Show {
+                    self.screens.pop();
                 } else {
                     self.handle_key_input(term, key)?;
                 }

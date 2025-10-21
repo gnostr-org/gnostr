@@ -17,5 +17,6 @@ pub(crate) fn create(
         Rc::clone(&config),
         size,
         Box::new(move || log(&config, &repo, limit, rev, msg_regex.clone())),
+        super::ScreenType::Log,
     )
 }

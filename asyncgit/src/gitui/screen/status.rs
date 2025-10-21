@@ -107,6 +107,7 @@ pub(crate) fn create(config: Rc<Config>, repo: Rc<Repository>, size: Size) -> Re
 
             Ok(items)
         }),
+        super::ScreenType::Status,
     )
 }
 

@@ -11,5 +11,6 @@ pub(crate) fn create(config: Rc<Config>, size: Size) -> Res<Screen> {
             // TODO: Fetch gnostr events here
             Ok(vec![])
         }),
+        super::ScreenType::Gnostr,
     )
 }
