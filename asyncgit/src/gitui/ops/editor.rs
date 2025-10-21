@@ -292,3 +292,17 @@ impl OpTrait for HalfPageDown {
         "Half page down".into()
     }
 }
+
+pub(crate) struct TabSwitch;
+impl OpTrait for TabSwitch {
+    fn get_action(&self, _target: Option<&TargetData>) -> Option<Action> {
+        Some(Rc::new(|state, _term| {
+            state.screens.rotate_right(1);
+            Ok(())
+        }))
+    }
+
+    fn display(&self, _state: &State) -> String {
+        "Switch tab".into()
+    }
+}

@@ -38,6 +38,9 @@
 /// pub mod gitui
 pub mod gitui;
 
+/// pub mod gnostr
+pub mod gnostr;
+
 pub mod asyncjob;
 mod blame;
 mod branches;
