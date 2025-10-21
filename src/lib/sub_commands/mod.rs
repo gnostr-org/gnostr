@@ -36,3 +36,6 @@ pub mod tui;
 
 // Add the query module here
 pub mod query;
+
+// Add the relay module here
+pub mod relay;
