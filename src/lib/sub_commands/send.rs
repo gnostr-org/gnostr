@@ -70,7 +70,7 @@ pub async fn launch(
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
 
     if !no_fetch {
-        fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
+        fetching_with_report(git_repo_path, &client, &repo_coordinates, true).await?;
     }
 
     let (root_proposal_id, mention_tags) =

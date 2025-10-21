@@ -63,7 +63,7 @@ pub async fn launch(
 
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
 
-    fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
+    fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
 
     let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
 
