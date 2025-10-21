@@ -3,14 +3,14 @@
 
 //use crate::sub_commands::chat::Utc;
 
-use crate::chat::create_event;
-use crate::chat::msg::*;
-//use crate::chat::p2p::evt_loop; //migrate carefully
-use crate::chat::parse_json;
-use crate::chat::split_json_string;
-use crate::chat::ui;
-use crate::chat::ChatCli;
-use crate::chat::*;
+use crate::p2p::chat::create_event;
+use crate::p2p::chat::msg::*;
+//use crate::p2p::chat::p2p::evt_loop; //migrate carefully
+use crate::p2p::chat::parse_json;
+use crate::p2p::chat::split_json_string;
+use crate::p2p::chat::ui;
+use crate::p2p::chat::ChatCli;
+use crate::p2p::chat::*;
 use crate::global_rt::global_rt;
 use crate::p2p::evt_loop; //migrate carefully
 use anyhow::Result;
@@ -100,7 +100,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdEr
         }
     }
 
-    let chat = crate::chat::chat(sub_command_args);
+    let chat = crate::p2p::chat::chat(sub_command_args);
 
     //    //parse keys from sha256 hash
     //    let empty_hash_keys =
@@ -323,7 +323,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdEr
     //    //    );
     //    //}
     //
-    //    use crate::chat::generate_nostr_keys_from_commit_hash;
+    //    use crate::p2p::chat::generate_nostr_keys_from_commit_hash;
     //    let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
     //    //info!("keys.secret_key():\n{:?}", keys.secret_key());
     //    info!("keys.public_key():\n{}", keys.public_key());

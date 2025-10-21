@@ -221,7 +221,7 @@ pub enum GnostrCommands {
     /// Gnostr sub commands
     Tui(crate::gnostr_core::GnostrSubCommands),
     /// Chat sub commands
-    Chat(crate::chat::ChatSubCommands),
+    Chat(crate::p2p::chat::ChatSubCommands),
     /// Legit sub commands
     Legit(legit::LegitSubCommand),
     /// Ngit sub commands

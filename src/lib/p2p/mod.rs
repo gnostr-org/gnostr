@@ -1,11 +1,12 @@
 pub mod handle_input;
 pub mod kvs;
 pub mod opt;
+pub mod chat;
 
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
-use crate::chat::msg::{Msg, MsgKind};
-use crate::chat::ChatSubCommands;
+use crate::p2p::chat::msg::{Msg, MsgKind};
+use crate::p2p::chat::ChatSubCommands;
 use chrono::{Local, Timelike};
 use clap::ValueEnum;
 use futures::stream::StreamExt;

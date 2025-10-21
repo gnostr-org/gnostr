@@ -27,7 +27,7 @@ pub enum InputMode {
 use super::utils::logitems::{ItemBatch, LogEntry};
 use super::CommandText;
 use crate::utils::truncate_chars;
-use crate::chat::msg::Msg;
+use crate::p2p::chat::msg::Msg;
 use crate::{
     app::Environment,
     components::{
@@ -1191,7 +1191,7 @@ impl Component for TopicList {
                         if let Some(entry) = self.selected_entry() {
                             let msg = Msg::default()
                                 .set_content(self.input.value().to_string(), 0)
-                                .set_kind(crate::chat::msg::MsgKind::Chat)
+                                .set_kind(crate::p2p::chat::msg::MsgKind::Chat)
                                 .set_commit_id(entry.id);
                             self.queue.push(InternalEvent::ChatMessage(msg));
                         }
