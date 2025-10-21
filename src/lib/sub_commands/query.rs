@@ -47,7 +47,7 @@ pub struct QuerySubCommand {
 /// It takes the parsed command-line arguments and executes the query.
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     debug!("Launching query subcommand with args: {:?}", args);
-    println!("Launching query subcommand with args: {:?}", args);
+    debug!("Launching query subcommand with args: {:?}", args);
 
     let (filt, limit_check) = build_filter_map(args)?;
 
@@ -55,7 +55,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     // These values might need to be configurable or passed from the main app.
     // For now, using defaults similar to the original bin.
     debug!("Building gnostr_query config.");
-    println!("Building gnostr_query config.");
+    debug!("Building gnostr_query config.");
     let config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
@@ -79,15 +79,15 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     let q = json!(["REQ", "gnostr-query", filt]);
     let query_string = to_string(&q)?;
     debug!("Constructed query string: {}", query_string);
-    println!("Constructed query string: {}", query_string);
+    debug!("Constructed query string: {}", query_string);
 
     let relays = if let Some(relay_str) = &args.relay {
         debug!("Using specified relay: {}", relay_str);
-        println!("Using specified relay: {}", relay_str);
+        debug!("Using specified relay: {}", relay_str);
         vec![Url::parse(relay_str)?]
     } else {
         debug!("Using bootstrap relays.");
-        println!("Using bootstrap relays.");
+        debug!("Using bootstrap relays.");
         BOOTSTRAP_RELAYS
             .iter()
             .filter_map(|s| Url::parse(s).ok())
@@ -95,7 +95,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     };
 
     debug!("Sending query to relays: {:?}", relays);
-    println!("Sending query to relays: {:?}", relays);
+    debug!("Sending query to relays: {:?}", relays);
     // Convert the error from gnostr_query::send to anyhow::Error before propagating
     let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check)).await
         .map_err(|e| {
@@ -103,24 +103,23 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
             anyhow!("Failed to send query: {}", e)
         })?;
     debug!("Received query result.");
-    println!("Received query result.");
+    debug!("Received query result.");
 
     let mut json_result: Vec<String> = vec![];
-    print!("json_result={:?}", json_result);
-    print!("json_result.len()={:?}", json_result.len());
+    debug!("json_result={:?}", json_result);
+    debug!("json_result.len()={:?}", json_result.len());
     for element in vec_result {
-        print!("element={}", element);
+        debug!("element={}", element);
         json_result.push(element);
     }
 
     // In a library function, we should just print and return Ok(()).
     // The exit code logic is usually handled by the main binary.
     for element in json_result {
-        print!("element={}", element);
+        print!("{}", element); // output to terminal
     }
 
     debug!("Query subcommand finished successfully.");
-    println!("Query subcommand finished successfully.");
     Ok(())
 }
 
@@ -130,7 +129,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
 
     if let Some(authors) = &args.authors {
         debug!("Applying authors filter: {}", authors);
-        println!("Applying authors filter: {}", authors);
         filt.insert(
             "authors".to_string(),
             json!(authors.split(',').collect::<Vec<&str>>()),
@@ -139,7 +137,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
 
     if let Some(ids) = &args.ids {
         debug!("Applying IDs filter: {}", ids);
-        println!("Applying IDs filter: {}", ids);
         filt.insert(
             "ids".to_string(),
             json!(ids.split(',').collect::<Vec<&str>>()),
@@ -148,7 +145,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
 
     if let Some(limit) = args.limit {
         debug!("Applying limit filter: {}", limit);
-        println!("Applying limit filter: {}", limit);
         filt.insert("limit".to_string(), json!(limit));
         limit_check = limit;
     }
@@ -158,14 +154,12 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
             let tag = format!("#{}", generic_vec[0]);
             let val = generic_vec[1].clone();
             debug!("Applying generic filter: tag={} val={}", tag, val);
-            println!("Applying generic filter: tag={} val={}", tag, val);
             filt.insert(tag, json!(val));
         }
     }
 
     if let Some(hashtag) = &args.hashtag {
         debug!("Applying hashtag filter: {}", hashtag);
-        println!("Applying hashtag filter: {}", hashtag);
         filt.insert(
             "#t".to_string(),
             json!(hashtag.split(',').collect::<Vec<&str>>()),
@@ -174,7 +168,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
 
     if let Some(mentions) = &args.mentions {
         debug!("Applying mentions filter: {}", mentions);
-        println!("Applying mentions filter: {}", mentions);
         filt.insert(
             "#p".to_string(),
             json!(mentions.split(',').collect::<Vec<&str>>()),
@@ -183,7 +176,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
 
     if let Some(references) = &args.references {
         debug!("Applying references filter: {}", references);
-        println!("Applying references filter: {}", references);
         filt.insert(
             "#e".to_string(),
             json!(references.split(',').collect::<Vec<&str>>()),
@@ -192,7 +184,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
 
     if let Some(kinds) = &args.kinds {
         debug!("Applying kinds filter: {}", kinds);
-        println!("Applying kinds filter: {}", kinds);
         if let Ok(kind_ints) = kinds
             .split(',')
             .map(|s| s.parse::<i64>())
@@ -212,7 +203,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
             // Let's stick to that behavior.
             let val = search_vec[0].clone();
             debug!("Applying search filter: {}", val);
-            println!("Applying search filter: {}", val);
             filt.insert(search_string, json!(val));
         }
     }
@@ -431,7 +421,7 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
         async fn test_launch_no_panic_with_all_bootstrap_relays() {
             let base_args = create_query_subcommand(&[]);
             for relay_url in BOOTSTRAP_RELAYS.iter() {
-                println!("Testing launch with relay: {}", relay_url);
+                debug!("Testing launch with relay: {}", relay_url);
                 let result = launch_with_relay(&base_args, relay_url).await;
                 assert!(result.is_ok(), "Launch failed for relay {}: {:?}", relay_url, result.err());
             }
