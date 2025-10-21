@@ -52,5 +52,6 @@ pub(crate) fn create(
             ))
             .collect())
         }),
+        super::ScreenType::Show,
     )
 }

@@ -48,6 +48,7 @@ pub(crate) fn create(config: Rc<Config>, repo: Rc<Repository>, size: Size) -> Re
             )?)
             .collect())
         }),
+        super::ScreenType::ShowRefs,
     )
 }
 

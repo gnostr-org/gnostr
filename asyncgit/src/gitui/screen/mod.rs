@@ -20,6 +20,15 @@ pub(crate) enum NavMode {
     IncludeHunkLines,
 }
 
+#[derive(PartialEq, Eq, Debug)]
+pub(crate) enum ScreenType {
+    Status,
+    Show,
+    Gnostr,
+    Log,
+    ShowRefs,
+}
+
 pub(crate) struct Screen {
     pub(crate) size: Size,
     cursor: usize,
@@ -29,6 +38,7 @@ pub(crate) struct Screen {
     items: Vec<Item>,
     line_index: Vec<usize>,
     collapsed: HashSet<Cow<'static, str>>,
+    pub(crate) screen_type: ScreenType,
 }
 
 impl Screen {
@@ -36,6 +46,7 @@ impl Screen {
         config: Rc<Config>,
         size: Size,
         refresh_items: Box<dyn Fn() -> Res<Vec<Item>>>,
+        screen_type: ScreenType,
     ) -> Res<Self> {
         let collapsed = config
             .general
@@ -54,6 +65,7 @@ impl Screen {
             items: vec![],
             line_index: vec![],
             collapsed,
+            screen_type,
         };
 
         screen.update()?;
