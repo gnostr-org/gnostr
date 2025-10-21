@@ -332,6 +332,12 @@ async fn main() -> anyhow::Result<()> {
             }
             result // Return the accumulated result
         }
+        Some(GnostrCommands::Relay(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::relay::relay(sub_command_args.clone())
+                .await
+                .map_err(|e| anyhow!("Error in relay subcommand: {}", e))
+        }
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
