@@ -136,6 +136,8 @@ pub enum NgitCommands {
     Pull,
     /// run with --nsec flag to change npub
     Login(login::LoginArgs),
+    /// Query events from relays
+    Query(QuerySubCommand),
 }
 
 /// GnostrCli application to interact with nostr
