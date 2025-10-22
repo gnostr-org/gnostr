@@ -67,7 +67,7 @@ impl Msg {
         self
     }
 
-    pub fn wrap_text(mut self, _text: Msg, _max_width: usize) -> Self {
+    pub fn wrap_text(self, _text: Msg, _max_width: usize) -> Self {
         //	for line in text.content.bytes() {
 
         //    line
