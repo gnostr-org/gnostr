@@ -123,7 +123,7 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-weeble
-//!
+//! 
 //! async reqwest to <https://mempool.space/api/blocks/tip/height>
 use futures::executor::block_on;
 ///
@@ -184,4 +184,8 @@ fn main() {
 fn gnostr_blockhash() {
     //let future = print_blockhash(); // Nothing is printed
     //block_on(future);
+    // Minimal test: Ensure the function runs without panicking.
+    // Actual output validation would require stdout capturing or mocking.
+    let future = print_blockhash();
+    block_on(future);
 }
