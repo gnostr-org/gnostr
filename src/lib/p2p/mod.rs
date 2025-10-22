@@ -24,7 +24,7 @@ use libp2p::{
     },
     mdns, noise, ping, rendezvous,
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, Multiaddr, PeerId, Swarm,
+    tcp, yamux, Multiaddr, PeerId,
 };
 use std::{
     env,
