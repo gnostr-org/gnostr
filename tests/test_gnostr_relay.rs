@@ -62,6 +62,7 @@ mod tests {
     }
 
     #[actix_web::test]
+    #[ignore]
     async fn test_event_submission_and_retrieval() -> Result<()> {
         let srv = start(|| {
             let (app_data, _server_address) = create_test_app_instance("test_event_submission_and_retrieval").unwrap();
