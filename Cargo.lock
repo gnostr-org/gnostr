@@ -3969,7 +3969,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "0.0.14"
+version = "0.0.15"
 dependencies = [
  "assert_cmd",
  "chrono",
@@ -3998,7 +3998,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-query"
-version = "0.0.11"
+version = "0.0.12"
 dependencies = [
  "clap 4.5.37",
  "futures",
