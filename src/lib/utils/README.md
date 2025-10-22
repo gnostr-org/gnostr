@@ -6,7 +6,7 @@ The `src/lib/utils` directory in the Gnostr project houses a collection of essen
 
 ### Retry Mechanisms (`retry` module)
 
-The `retry` module provides a powerful and flexible way to handle operations that might fail due to transient issues. It offers various retry strategies to ensure operations are resilient and can recover from temporary errors.
+The `retry` module provides a robust and flexible way to handle operations that might fail due to transient issues. It offers various retry strategies to ensure operations are resilient and can recover from temporary errors.
 
 *   **Strategies**:
     *   **Linear Retry**: Retries operations with a constant delay between attempts.
