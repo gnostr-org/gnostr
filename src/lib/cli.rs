@@ -3,7 +3,7 @@ use clap::{
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
 };
-use clap::ArgMatches; // Corrected import path for ArgMatches
+ // Corrected import path for ArgMatches
 use gnostr_asyncgit::sync::RepoPath;
 use simplelog::{Config, LevelFilter, WriteLogger};
 use std::{
