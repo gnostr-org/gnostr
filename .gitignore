@@ -26,7 +26,6 @@ bits/
 cat/
 cli/
 cmake_install.cmake
-core/
 db/
 drives/
 example
