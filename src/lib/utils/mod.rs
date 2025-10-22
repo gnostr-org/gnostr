@@ -264,9 +264,16 @@ pub fn strip_trailing_newline(input: &str) -> &str {
         .unwrap_or(input)
 }
 
-fn find_available_port() -> u16 {
+pub fn find_available_port() -> u16 {
       StdTcpListener::bind("127.0.0.1:0")
           .unwrap()
+          .local_addr()
+          .unwrap()
+          .port()
+}
+pub async fn async_find_available_port() -> u16 {
+      AsyncStdTcpListener::bind("127.0.0.1:0")
+          .await.unwrap()
           .local_addr()
           .unwrap()
           .port()
