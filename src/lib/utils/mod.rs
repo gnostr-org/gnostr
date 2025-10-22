@@ -16,7 +16,6 @@ use std::path::PathBuf;
 
 use std::net::TcpListener as StdTcpListener;
 //use actix_rt::net::TcpListener as ActixRtTcpListener;
-use actix_web::rt::net::TcpListener as ActixWebTcpListener;
 use async_std::net::TcpListener as AsyncStdTcpListener;
 
 /// parse_json
