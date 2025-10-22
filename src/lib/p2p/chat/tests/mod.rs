@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod tests {
     use super::super::*; // Import items from the parent module (chat)
+    use super::super::msg::USER_NAME;
     use git2::{Repository, Signature, Time};
     use std::collections::HashMap;
     use std::fs;
@@ -9,6 +10,8 @@ mod tests {
     use serde_json::json;
     use nostr_sdk_0_37_0::SecretKey;
     //use hex;
+
+    //const DEFAULT_POW_DIFFICULTY: u8 = 4;
 
     // Helper function to create a dummy git repository for testing
     fn create_dummy_repo(path: &Path) -> Repository {

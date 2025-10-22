@@ -28,8 +28,8 @@ pub mod git;
 pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
-///  <https://docs.rs/gnostr/latest/gnostr/gnostr/index.html>
-pub mod gnostr_core;
+///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
+pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
@@ -121,6 +121,12 @@ use directories::ProjectDirs;
 
 ///
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+///
+pub const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
+
+///
+pub const DEFAULT_POW_DIFFICULTY: u8 = 4;
 
 ///
 pub fn get_dirs() -> Result<ProjectDirs> {

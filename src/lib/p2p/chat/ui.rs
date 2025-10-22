@@ -179,39 +179,21 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        // .margin(2)
-        .constraints([Constraint::Fill(5), Constraint::Length(3)].as_ref())
+        .constraints([
+            Constraint::Length(3), // Header height
+            Constraint::Fill(5),   // Messages height
+            Constraint::Length(3), // Input height
+        ].as_ref())
         .split(f.size());
 
-    let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
+    // Header Widget
+    let header_text = vec![Line::from(app.topic.as_str())];
+    let header = Paragraph::new(header_text)
+        .block(Block::default().borders(Borders::ALL).title("Topic"));
+    f.render_widget(header, chunks[0]);
 
-    let scroll = app.input.visual_scroll(width as usize);
-    let input = Paragraph::new(app.input.value())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Cyan),
-        })
-        .scroll((0, scroll as u16))
-        .block(Block::default().borders(Borders::ALL).title("Input"));
-    f.render_widget(input, chunks[1]);
-
-    match app.input_mode {
-        InputMode::Normal =>
-            // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
-            {}
-
-        InputMode::Editing => {
-            // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-            f.set_cursor(
-                // Put cursor past the end of the input text
-                chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                // Move one line down, from the border to the input line
-                chunks[1].y + 1,
-            )
-        }
-    }
-
-    let height = chunks[0].height;
+    // Messages Widget
+    let height = chunks[1].height; // Use height of the messages chunk
     let msgs = app.messages.lock().unwrap();
     let messages: Vec<ListItem> = msgs[0..app.msgs_scroll.min(msgs.len())]
         .iter()
@@ -222,5 +204,27 @@ fn ui(f: &mut Frame, app: &App) {
     let messages = List::new(messages)
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
-    f.render_widget(messages, chunks[0]);
+    f.render_widget(messages, chunks[1]);
+
+    // Input Widget
+    let width = chunks[2].width.max(3) - 3; // Use width of the input chunk
+    let scroll = app.input.visual_scroll(width as usize);
+    let input = Paragraph::new(app.input.value())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Cyan),
+        })
+        .scroll((0, scroll as u16))
+        .block(Block::default().borders(Borders::ALL).title("Input"));
+    f.render_widget(input, chunks[2]);
+
+    match app.input_mode {
+        InputMode::Normal => {}
+        InputMode::Editing => {
+            f.set_cursor(
+                chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                chunks[2].y + 1,
+            )
+        }
+    }
 }

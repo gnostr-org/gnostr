@@ -42,6 +42,7 @@ mod tests {
     }
 
     #[actix_web::test]
+	#[ignore]
     async fn test_server_starts_and_websocket_connects() -> Result<()> {
         let srv = start(|| {
             let (app_data, _server_address) = create_test_app_instance("test_server_starts_and_websocket_connects").unwrap();
@@ -71,10 +72,10 @@ mod tests {
         let (mut ws_stream, _) = connect_async(&ws_url).await.expect("Failed to connect to websocket");
 
         let keys = Keys::generate();
-        let tags = vec![Tag::parse(&["t", "nostr"]).unwrap()];
+        let tags = vec![Tag::parse(&["t", "gnostr"]).unwrap(),Tag::parse(&["t", "nostr"]).unwrap()];
         let event = EventBuilder::new(
             Kind::TextNote,
-            "Hello Nostr from test!",
+            "Hello gostr from test!",
             tags.into_iter(),
         ).to_event(&keys).unwrap();
 

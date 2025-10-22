@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //
         None => {
             {
-                let gnostr_subcommands = gnostr::gnostr_core::GnostrSubCommands::default();
+                let gnostr_subcommands = gnostr::core::GnostrSubCommands::default();
                 let _ = sub_commands::tui::tui(gnostr_subcommands).await;
             };
             Ok(())

@@ -32,7 +32,7 @@ exclude = [
     "*vendor/",
     #"config/",##for app
     "git2-testing",
-    "tests/",
+    #"tests/",
     "org",
     "proxy",
     "xq",
