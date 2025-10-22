@@ -9,10 +9,7 @@
     clippy::future_not_send
 )]
 
-use gnostr::cube::app;
-use gnostr::cube::cube;
 use gnostr::cube::global_rt;
-use gnostr::cube::system_command;
 use gnostr::cube::ui;
 
 use crate::global_rt::global_rt;
@@ -24,7 +21,6 @@ use crossterm::{
 };
 
 use gnostr::cube::chat::chat;
-use gnostr::cube::local_git::local_git_test;
 use gnostr::cube::system_command::system_command_test;
 use gnostr::cube::CompleteConfig;
 use gnostr::cube::WrapErr;
