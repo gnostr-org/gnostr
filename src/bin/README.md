@@ -466,3 +466,35 @@ This command will print the current Bitcoin block hash to standard output.
 ## Output
 
 The tool outputs the current Bitcoin block hash. In debug mode, it also provides timing information for the retrieval process.
+
+---
+
+# gnostr-relay
+
+`gnostr-relay` is a Nostr relay server application built with `actix-web`.
+
+## Features
+
+- **Nostr Relay Functionality**: Provides a Nostr relay server that can handle Nostr events.
+- **Configuration**: Loads configuration from `config/gnostr.toml`.
+- **Logging**: Initializes `tracing_subscriber` for logging server activities.
+
+## Usage
+
+```bash
+gnostr-relay
+```
+
+This command does not take any arguments.
+
+## Example
+
+```bash
+gnostr-relay
+```
+
+This command will start the Nostr relay server. It will load its configuration from `config/gnostr.toml` and begin listening for incoming Nostr connections. Server startup and shutdown messages will be logged.
+
+## Configuration
+
+`gnostr-relay` requires a `config/gnostr.toml` file for its configuration. Ensure this file is correctly set up in your project.
