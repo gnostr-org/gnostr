@@ -341,6 +341,10 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .map_err(|e| anyhow!("Error in sniper subcommand: {}", e))
         }
+        Some(GnostrCommands::Gitsh(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::gitsh::gitsh(sub_command_args).await.map_err(|e| anyhow!("Error in gitsh subcommand: {}", e))
+        }
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
