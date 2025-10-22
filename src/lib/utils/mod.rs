@@ -14,6 +14,11 @@ use ureq::Agent;
 
 use std::path::PathBuf;
 
+use std::net::TcpListener as StdTcpListener;
+//use actix_rt::net::TcpListener as ActixRtTcpListener;
+use actix_web::rt::net::TcpListener as ActixWebTcpListener;
+use async_std::net::TcpListener as AsyncStdTcpListener;
+
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
@@ -257,6 +262,14 @@ pub fn strip_trailing_newline(input: &str) -> &str {
         .strip_suffix("\r\n")
         .or(input.strip_suffix("\n"))
         .unwrap_or(input)
+}
+
+fn find_available_port() -> u16 {
+      StdTcpListener::bind("127.0.0.1:0")
+          .unwrap()
+          .local_addr()
+          .unwrap()
+          .port()
 }
 
 // Example usage (you would typically put this in a main function or a test)
