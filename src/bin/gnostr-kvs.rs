@@ -34,6 +34,8 @@ use tokio::{
 use tracing::{debug, info, trace, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
+use gnostr::p2p::generate_close_peer_id;
+
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Network {
     Kusama,
@@ -225,70 +227,6 @@ fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
     keypair
 }
 
-fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
-    let mut close_bytes = [0u8; 32];
-    close_bytes = bytes;
-
-    for (i, byte) in close_bytes.iter().enumerate() {
-        if i < 32 {
-            // Print context: the index and value (decimal and hex) of the current byte.
-            debug!("Byte i={:02} [{:3} / {:#04x}]: ", i, byte, byte);
-
-            // A `u8` has 8 bits. We iterate from 7 down to 0 to print
-            // the most significant bit (MSB) first.
-            for j in (0..8).rev() {
-                // Create a "mask" by shifting the number 1 to the left `j` times.
-                // For j=7, mask is 10000000
-                // For j=0, mask is 00000001
-                let mask = 1 << j;
-
-                // Use the bitwise AND operator `&` to check if the bit at the mask's
-                // position is set. If the result is not 0, the bit is 1.
-                if byte & mask == 0 {
-                    debug!("0");
-                } else {
-                    debug!("1");
-                }
-            }
-            // Add a newline to separate the output for each byte.
-            debug!("\n");
-        } // end if
-    }
-    let mut keypair =
-        identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
-    println!("262:{}", keypair.public().to_peer_id());
-
-    close_bytes[31] = bytes[31] ^ 0u8;
-
-    for (i, byte) in close_bytes.iter().enumerate() {
-        // Print context: the index and value (decimal and hex) of the current byte.
-        print!("265:Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
-
-        // A `u8` has 8 bits. We iterate from 7 down to 0 to print
-        // the most significant bit (MSB) first.
-        for j in (0..8).rev() {
-            // Create a "mask" by shifting the number 1 to the left `j` times.
-            // For j=7, mask is 10000000
-            // For j=0, mask is 00000001
-            let mask = 1 << j;
-
-            // Use the bitwise AND operator `&` to check if the bit at the mask's
-            // position is set. If the result is not 0, the bit is 1.
-            if byte & mask == 0 {
-                print!("0");
-            } else {
-                print!("1");
-            }
-        }
-        // Add a newline to separate the output for each byte.
-        println!();
-    }
-
-    keypair =
-        identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
-    println!("292:{}", keypair.public().to_peer_id());
-    keypair.public().to_peer_id()
-}
 
 const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
 
