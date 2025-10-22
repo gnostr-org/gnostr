@@ -1,8 +1,8 @@
-use anyhow::{anyhow, bail, Context};
+use anyhow::{anyhow, bail};
 use clap::Args;
-use gnostr_crawler::processor::{BOOTSTRAP_RELAYS, LOCALHOST_8080};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_query::ConfigBuilder;
-use log::{debug, error, info, warn};
+use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
 
