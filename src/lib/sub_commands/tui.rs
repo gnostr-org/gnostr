@@ -33,7 +33,7 @@ use std::{
     panic, process,
     time::{Duration, Instant},
 };
-use tracing::{debug, trace, Level};
+use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 //use crate::{app::App, cli::process_cmdline};
