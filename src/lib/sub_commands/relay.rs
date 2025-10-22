@@ -1,15 +1,27 @@
 use anyhow::Result;
+use gnostr_relay::App;
+use std::path::PathBuf;
+use tracing::info;
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct RelaySubCommand {
-    // Add fields for relay command arguments here
-    // For example:
-    // pub relay_url: String,
-    // pub action: String,
+    /// Path to the configuration file.
+    #[clap(short, long)]
+    pub config: Option<PathBuf>,
+
+    /// Path to the data directory.
+    #[clap(short, long)]
+    pub data: Option<PathBuf>,
+
+    /// Watch for configuration file changes.
+    #[clap(short, long)]
+    pub watch: bool,
 }
 
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
-    println!("Relay command executed with args: {:?}", args);
-    // Implement relay command logic here
+    info!("Start relay server with args: {:?}", args);
+    let app_data = App::create(args.config, args.watch, Some("NOSTR".to_owned()), args.data)?;
+    app_data.web_server()?.await?;
+    info!("Relay server shutdown");
     Ok(())
 }

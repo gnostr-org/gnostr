@@ -341,7 +341,7 @@ async fn main() -> anyhow::Result<()> {
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
-            sub_commands::tui::tui(gnostr::gnostr_core::GnostrSubCommands::default()).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
+            sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default()).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
     }
 }
