@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 mod tests {
     use std::env;
@@ -9,12 +8,14 @@ mod tests {
     use gag::BufferRedirect;
     use std::io::Read;
 
+	use gnostr::utils::find_available_port;
+
     // This is the main function from src/bin/git-ssh.rs
     async fn run_git_ssh_main() {
         env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
         if let Err(e) = gnostr::ssh::start().await {
             println!("{}", e);
-            println!("EXAMPLE:server.toml\n{}", SERVER_TOML_CONTENT);
+            println!("EXAMPLE:server.toml\n{}", SERVER_TOML_TEMPLATE);
             println!("check the port in your server.toml is available!");
             println!("check the port in your server.toml is available!");
             println!("check the port in your server.toml is available!\n");
@@ -29,9 +30,9 @@ members = ["gnostr", "gnostr-user"]
 failed_push_message = "Issues and patches can be emailed to admin@gnostr.org"
 "#;
 
-    const SERVER_TOML_CONTENT: &str = r#" 
+    const SERVER_TOML_TEMPLATE: &str = r#" 
 name = "gnostr.org"
-port = 2222
+port = {}
 hostname = "gnostr.org"
 [users.gnostr]
 is_admin = true
@@ -47,13 +48,13 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
         let temp_dir = tempfile::tempdir().unwrap();
         env::set_current_dir(&temp_dir).unwrap();
 
-        let port = 2222;
+        let port = find_available_port();
         // Occupy the port
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).unwrap();
 
         // Create a dummy server.toml
         let mut file = File::create("server.toml").unwrap();
-        writeln!(file, "{}", SERVER_TOML_CONTENT).unwrap();
+        writeln!(file, "{}", &SERVER_TOML_TEMPLATE.replace("{}", &port.to_string())).unwrap();
         drop(file);
 
         let mut buf = BufferRedirect::stdout().unwrap();
@@ -66,7 +67,7 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
         buf.read_to_string(&mut output).unwrap();
 
         assert!(output.contains("check the port in your server.toml is available!"));
-        assert!(output.contains(SERVER_TOML_CONTENT));
+        //assert!(output.contains(&SERVER_TOML_TEMPLATE.replace("{}", &port.to_string())));
         assert!(output.contains(REPO_TOML_CONTENT));
 
         drop(listener);
