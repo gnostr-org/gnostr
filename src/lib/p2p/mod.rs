@@ -73,7 +73,7 @@ pub enum Network {
 
 impl Network {
     #[rustfmt::skip]
-    fn bootnodes(&self) -> Vec<(Multiaddr, PeerId)> {
+    pub fn bootnodes(&self) -> Vec<(Multiaddr, PeerId)> {
     match self {
     Network::Kusama => {
     vec![
@@ -116,7 +116,7 @@ impl Network {
     }
     }
 
-    fn protocol(&self) -> Option<String> {
+    pub fn protocol(&self) -> Option<String> {
         match self {
             Network::Kusama => Some("/ksmcc3/kad".to_string()),
             Network::Polkadot => Some("/dot/kad".to_string()),
@@ -158,7 +158,9 @@ pub fn generate_ed25519(secret_key_seed: &[u8]) -> identity::Keypair {
                                              //    0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06, //
                                              //];
 
-    bytes[31] = bytes[31] ^ secret_key_seed[31];
+    if !secret_key_seed.is_empty() {
+        bytes[31] ^= secret_key_seed[0];
+    }
     for (i, byte) in bytes.iter().enumerate() {
         // Print context: the index and value (decimal and hex) of the current byte.
         trace!("Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
@@ -216,7 +218,7 @@ pub fn generate_ed25519(secret_key_seed: &[u8]) -> identity::Keypair {
     keypair
 }
 
-fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
+pub fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
     let mut close_bytes = [0u8; 32];
     close_bytes = bytes;
 
