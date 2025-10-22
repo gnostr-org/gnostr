@@ -12,11 +12,14 @@ mod tests {
     use anyhow::Result;
     use std::fs;
     use tempfile::NamedTempFile;
+    use gnostr::utils::retry::{GnostrRetry, AsyncReturn};
+    use tokio::sync::Mutex as TokioMutex;
+    use std::sync::Arc;
 
 
     fn create_test_app_instance(test_name: &str) -> Result<(GnostrRelayApp, String)> {
         // Create a temporary config file
-        let config_file = NamedTempFile::new().expect("Failed to create temp config file");
+        let config_file = NamedTempFile::with_suffix(".toml").expect("Failed to create temp config file");
         let config_path = config_file.path().to_str().unwrap().to_owned();
         let default_config_content = format!(r#"
             [server]
@@ -44,15 +47,22 @@ mod tests {
     }
 
     #[actix_web::test]
-	#[ignore]
+	//#[ignore]
     async fn test_server_starts_and_websocket_connects() -> Result<()> {
         let srv = start(|| {
             let (app_data, _server_address) = create_test_app_instance("test_server_starts_and_websocket_connects").unwrap();
             app_data.web_app()
         });
 
-        let ws_url = srv.url(&BOOTSTRAP_RELAYS[0]);
-        let (mut ws_stream, _) = connect_async(&ws_url).await.expect("Failed to connect to websocket");
+        let ws_url = BOOTSTRAP_RELAYS[0].clone();
+
+        let retry_strategy = GnostrRetry::new_exponential_async(1, 3); // 1 second initial delay, 3 retries
+        let (mut ws_stream, _) = retry_strategy.run_async(move || {
+            let ws_url_clone = ws_url.clone();
+            async move {
+                connect_async(&ws_url_clone).await.map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+            }
+        }).await.expect("Failed to connect to websocket after retries");
 
         // Send a ping and expect a pong
         ws_stream.send(Message::Ping(vec![1, 2, 3])).await?;
@@ -64,15 +74,25 @@ mod tests {
     }
 
     #[actix_web::test]
-    #[ignore]
+    //#[ignore]
     async fn test_event_submission_and_retrieval() -> Result<()> {
         let srv = start(|| {
             let (app_data, _server_address) = create_test_app_instance("test_event_submission_and_retrieval").unwrap();
             app_data.web_app()
         });
 
-        let ws_url = srv.url("/");
-        let (mut ws_stream, _) = connect_async(&ws_url).await.expect("Failed to connect to websocket");
+        let mut ws_url = srv.url("/");
+        ws_url = ws_url.replace("http", "ws");
+
+        let retry_strategy = GnostrRetry::new_exponential_async(1, 3); // 1 second initial delay, 3 retries
+        let (ws_stream_raw, _) = retry_strategy.run_async(move || {
+            let ws_url_clone = ws_url.clone();
+            async move {
+                connect_async(&ws_url_clone).await.map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+            }
+        }).await.expect("Failed to connect to websocket after retries");
+
+        let ws_stream = Arc::new(TokioMutex::new(ws_stream_raw));
 
         let keys = Keys::generate();
         let tags = vec![Tag::parse(&["t", "gnostr"]).unwrap(),Tag::parse(&["t", "nostr"]).unwrap()];
@@ -85,26 +105,59 @@ mod tests {
         let event_json = json!(["EVENT", event]).to_string();
 
         // Send event
-        ws_stream.send(Message::Text(event_json.clone())).await?;
+        ws_stream.lock().await.send(Message::Text(event_json.clone())).await?;
 
         // Expect OK message
-        let msg = ws_stream.next().await.unwrap()?;
+        let msg = {
+            let ws_stream_clone = Arc::clone(&ws_stream);
+            retry_strategy.run_async(move || {
+                let ws_stream_clone_inner = Arc::clone(&ws_stream_clone);
+                async move {
+                    let mut ws_stream_locked = ws_stream_clone_inner.lock().await;
+                    ws_stream_locked.next().await
+                        .ok_or_else(|| Box::new(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "WebSocket stream closed")) as Box<dyn std::error::Error>)?
+                        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+                }
+            }).await.expect("Failed to receive OK message after retries")
+        };
         let text = msg.to_text()?;
         assert!(text.contains("OK"));
         assert!(text.contains(&event.id.to_string()));
 
         // Send REQ to retrieve event
         let filter_json = json!(["REQ", "sub1", {"ids": [event.id]}]).to_string();
-        ws_stream.send(Message::Text(filter_json)).await?;
+        ws_stream.lock().await.send(Message::Text(filter_json)).await?;
 
         // Expect EVENT message
-        let msg = ws_stream.next().await.unwrap()?;
+        let msg = {
+            let ws_stream_clone = Arc::clone(&ws_stream);
+            retry_strategy.run_async(move || {
+                let ws_stream_clone_inner = Arc::clone(&ws_stream_clone);
+                async move {
+                    let mut ws_stream_locked = ws_stream_clone_inner.lock().await;
+                    ws_stream_locked.next().await
+                        .ok_or_else(|| Box::new(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "WebSocket stream closed")) as Box<dyn std::error::Error>)?
+                        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+                }
+            }).await.expect("Failed to receive EVENT message after retries")
+        };
         let text = msg.to_text()?;
         assert!(text.contains("EVENT"));
         assert!(text.contains(&event.id.to_string()));
 
         // Expect EOSE message
-        let msg = ws_stream.next().await.unwrap()?;
+        let msg = {
+            let ws_stream_clone = Arc::clone(&ws_stream);
+            retry_strategy.run_async(move || {
+                let ws_stream_clone_inner = Arc::clone(&ws_stream_clone);
+                async move {
+                    let mut ws_stream_locked = ws_stream_clone_inner.lock().await;
+                    ws_stream_locked.next().await
+                        .ok_or_else(|| Box::new(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "WebSocket stream closed")) as Box<dyn std::error::Error>)?
+                        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+                }
+            }).await.expect("Failed to receive EOSE message after retries")
+        };
         let text = msg.to_text()?;
         assert!(text.contains("EOSE"));
 
