@@ -4,6 +4,12 @@ TAG := v$(shell cat Cargo.toml | grep 'version = "' | head -n 1 | sed 's/version
 endif
 export TAG
 
+ifeq ($(NPROC),)
+NPROC := $(shell sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)
+endif
+export NPROC
+JFLAGS := -j$(NPROC)
+
 ifeq ($(FORCE),)
        FORCE :=-f
 endif
@@ -19,9 +25,9 @@ help:
 ## 	bin
 all: 	bin### 	all
 ##bin
-## 	cargo b --manifest-path Cargo.toml
+## 	cargo b -j $(NPROC)
 bin: 	### 	bin
-	cargo b --manifest-path Cargo.toml
+	cargo b -j $(NPROC)
 
 ##
 ##===============================================================================
@@ -30,13 +36,13 @@ cargo-help: 	### 	cargo-help
 	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 cargo-release-all: 	### 	cargo-release-all
 ## 	cargo-release-all recursively cargo build --release
-	for t in **Cargo.toml;  do echo $$t; cargo b -r -vv --manifest-path $$t; done
+	for t in **Cargo.toml;  do echo $$t; cargo b -r -j $(NPROC) -vv --manifest-path $$t; done
 cargo-clean-release: 	### 	cargo-clean-release - clean release artifacts
 ## 	cargo-clean-release 	recursively cargo clean --release
-	for t in **Cargo.toml;  do echo $$t && cargo clean --release -vv --manifest-path $$t 2>/dev/null; done
+	for t in **Cargo.toml;  do echo $$t && cargo clean -r  -j $(NPROC) -vv --manifest-path $$t 2>/dev/null; done
 cargo-publish-all: 	### 	cargo-publish-all
 ## 	cargo-publish-all 	recursively publish rust projects
-	for t in *Cargo.toml;  do echo $$t; cargo publish -vv --manifest-path $$t; done
+	for t in *Cargo.toml;  do echo $$t; cargo publish -j $(NPROC) -vv --manifest-path $$t; done
 
 cargo-install-bins:### 	cargo-install-bins
 ## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
@@ -44,61 +50,60 @@ cargo-install-bins:### 	cargo-install-bins
 ## 	*** FORCE=--force cargo install -vv $(FORCE) is used.
 ## 	*** FORCE=--force cargo install -vv $(FORCE) --path <path>
 ## 	*** to overwrite deploy cargo.io crates.
-	export RUSTFLAGS=-Awarning;  for t in $(SUBMODULES); do echo $$t; cargo install --bins --path  $$t -vv $(FORCE) 2>/dev/null || echo ""; done
-	#for t in $(SUBMODULES); do echo $$t; cargo install -vv gnostr-$$t --force || echo ""; done
+	export RUSTFLAGS=-Awarning;  for t in $(SUBMODULES); do echo $$t; cargo  -j $(NPROC) install --bins --path  $$t -vv $(FORCE) 2>/dev/null || echo ""; done
+	#for t in $(SUBMODULES); do echo $$t; cargo install -j $(NPROC) -vv gnostr-$$t --force || echo ""; done
 
 cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
-	@RUST_BACKTRACE=all cargo b $(QUIET)
+	@RUST_BACKTRACE=all cargo b -j $(NPROC) $(QUIET)
 cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
-	@cargo install --path . $(FORCE)
+	@cargo install -j $(NPROC) --path . $(FORCE)
 
 .PHONY:crawler asyncgit relay query
 crawler: 	###     crawler
-	@cargo install --path ./crawler $(FORCE)
+	@cargo install -j $(NPROC) --path ./crawler $(FORCE)
 asyncgit: 	###     asyncgit
-	@cargo install --path ./asyncgit $(FORCE)
+	@cargo  install -j $(NPROC) --path ./asyncgit $(FORCE)
 relay: 	###     relay
-	@cargo install --path ./relay $(FORCE)
+	@cargo install -j $(NPROC) --path ./relay $(FORCE)
 query: 	###     query
-	@cargo install --path ./query $(FORCE)
-
+	@cargo install -j $(NPROC) --path ./query $(FORCE)
 
 ## 	cargo-br q=true
 cargo-build-release: 	### 	cargo-build-release
 ## 	cargo-build-release q=true
 	@. $(HOME)/.cargo/env
-	@cargo b --release $(QUIET)
+	@cargo b -r -j $(NPROC) $(QUIET)
 cargo-check: 	### 	cargo-check
 	@. $(HOME)/.cargo/env
-	@cargo c
+	@cargo  c -j $(NPROC)
 cargo-bench: 	### 	cargo-bench
 	@. $(HOME)/.cargo/env
-	@cargo bench
+	@cargo bench -j $(NPROC)
 cargo-test: 	### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo test
+	cargo  test -j $(NPROC)
 cargo-test-workspace: 	### 	cargo-test-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo test --workspace
+	cargo  test -j $(NPROC) --workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo +nightly test
+	cargo  +nightly test -j $(NPROC)
 cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo +nightly test --workspace
+	cargo  +nightly test -j $(NPROC) --workspace
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
-	cargo report future-incompatibilities --id 1
+	cargo report future-incompatibilities --id 1 -j $(NPROC)
 cargo-run: 	### 	cargo-run
 	@. $(HOME)/.cargo/env
-	cargo run --bin gnostr -- -h
+	cargo run -j $(NPROC)  --bin gnostr -- -h
 
 ##===============================================================================
 cargo-dist: 	### 	make cargo-dist TAG=$(TAG)
@@ -107,22 +112,22 @@ cargo-dist: 	### 	make cargo-dist TAG=$(TAG)
 cargo-dist-build: 	### 	cargo-dist-build
 	RUSTFLAGS="--cfg tokio_unstable" cargo dist build
 cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
-	cargo dist manifest --artifacts=all
+	cargo  -j $(NPROC) dist manifest --artifacts=all
 
 dep-graph: 	### 	dep-graph
-	@cargo depgraph --depth 1 | dot -Tpng > graph.png
+	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
 
 gnostr-chat: 	## 	gnostr-chat
-	cargo b --bin gnostr
+	cargo  -j $(NPROC) b --bin gnostr
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
-	cargo install --bin gnostr-fetch-by-id --path .
+	cargo  -j $(NPROC) install --bin gnostr-fetch-by-id --path .
 	event_id=$(shell gnostr note -c test --hex | jq .id | sed "s/\"//g") && gnostr-fetch-by-id $;
 
 fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
-	cargo install --bin fetch_by_kind-and-author --path .
-	cargo install --bin fetch_by_kind_and_author --path .
+	cargo  -j $(NPROC) install --bin fetch_by_kind-and-author --path .
+	cargo  -j $(NPROC) install --bin fetch_by_kind_and_author --path .
 	fetch_by_kind_and_author wss://relay.nostr.band 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
 
 crawler-test-relays: 	### crawler-test-relays
