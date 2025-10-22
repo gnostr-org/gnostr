@@ -26,9 +26,9 @@ use gnostr::{
     login::{self, get_curent_user},
     repo_ref, repo_state,
 };
-use nostr_0_34_1::nips::nip10::Marker;
-use nostr_sdk_0_34_0::{
-    hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId, Kind, PublicKey, Tag,
+use nostr_0_34_1::{
+    hashes::sha1::Hash as Sha1Hash, nips::nip10::Marker, Event, EventBuilder, EventId, Kind,
+    PublicKey, Tag,
 };
 use nostr_signer_0_34_0::NostrSigner;
 use repo_ref::RepoRef;
@@ -966,7 +966,7 @@ async fn create_merge_status(
     }
     sign_event(
         EventBuilder::new(
-            nostr_0_34_1::event::Kind::GitStatusApplied,
+            Kind::GitStatusApplied,
             String::new(),
             [
                 vec![
