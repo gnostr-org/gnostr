@@ -45,6 +45,8 @@ use crate::sub_commands::user_status;
 use crate::sub_commands::relay;
 // Import the new QuerySubCommand struct
 use crate::sub_commands::query::QuerySubCommand;
+// Import the sniper subcommand module
+use crate::sub_commands::sniper;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -222,6 +224,8 @@ pub struct GnostrCli {
 pub enum GnostrCommands {
     /// Gnostr sub commands
     Tui(crate::core::GnostrSubCommands),
+    /// Perform actions related to sniping relays
+    Sniper(sniper::SniperArgs),
     /// Chat sub commands
     Chat(crate::p2p::chat::ChatSubCommands),
     /// Legit sub commands

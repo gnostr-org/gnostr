@@ -214,7 +214,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
             };
 
             for relay_url in BOOTSTRAP_RELAYS.iter() {
-                println!("Testing ngit query with kinds {} on relay: {}", kinds_string, relay_url);
+                println!("\nTesting ngit query with kinds {} on relay: {}\n", kinds_string, relay_url);
                 let ngit_command = NgitCommands::Query(QuerySubCommand {
                     relay: Some(relay_url.clone()),
                     ..base_query_args.clone()

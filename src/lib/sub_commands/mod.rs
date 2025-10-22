@@ -39,3 +39,5 @@ pub mod query;
 
 // Add the relay module here
 pub mod relay;
+
+pub mod sniper;

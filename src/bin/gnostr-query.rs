@@ -164,7 +164,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(0);
     } else {
         for element in json_result {
-            print!("{}", element);
+            print!("{}\n", element);
         }
     }
     debug!("gnostr-query binary finished successfully.");
