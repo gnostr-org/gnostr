@@ -3,35 +3,18 @@
 
 //use crate::sub_commands::chat::Utc;
 
-use crate::p2p::chat::create_event;
-use crate::p2p::chat::msg::*;
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
-use crate::p2p::chat::parse_json;
-use crate::p2p::chat::split_json_string;
-use crate::p2p::chat::ui;
-use crate::p2p::chat::ChatCli;
 use crate::p2p::chat::*;
-use crate::global_rt::global_rt;
-use crate::p2p::evt_loop; //migrate carefully
+ //migrate carefully
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
-use git2::{ObjectType, Repository};
-use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use serde::ser::StdError;
 
-use chrono::Utc;
 
-use libp2p::gossipsub;
-use log;
 use nostr_sdk_0_37_0::prelude::*;
-use nostr_sdk_0_37_0::Client;
-use nostr_sdk_0_37_0::EventBuilder;
 use nostr_sdk_0_37_0::Keys;
 use serde_json;
-use serde_json::Value;
-use std::collections::HashMap;
-use std::{error::Error, time::Duration};
-use tracing::{debug, info, Level};
+use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdError>> {
