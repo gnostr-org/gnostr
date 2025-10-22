@@ -338,6 +338,12 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .map_err(|e| anyhow!("Error in relay subcommand: {}", e))
         }
+        Some(GnostrCommands::Sniper(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::sniper::run_sniper(sub_command_args.clone())
+                .await
+                .map_err(|e| anyhow!("Error in sniper subcommand: {}", e))
+        }
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result

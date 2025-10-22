@@ -3,6 +3,7 @@ mod tests {
     use actix_web::App as WebApp;
     use actix_test::start;
     use gnostr_relay::App as GnostrRelayApp;
+    use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
     use nostr_0_34_1::{EventBuilder, Kind, Keys, Tag};
     use serde_json::json;
     use tokio_tungstenite::tungstenite::Message;
@@ -11,6 +12,7 @@ mod tests {
     use anyhow::Result;
     use std::fs;
     use tempfile::NamedTempFile;
+
 
     fn create_test_app_instance(test_name: &str) -> Result<(GnostrRelayApp, String)> {
         // Create a temporary config file
@@ -49,7 +51,7 @@ mod tests {
             app_data.web_app()
         });
 
-        let ws_url = srv.url("/");
+        let ws_url = srv.url(&BOOTSTRAP_RELAYS[0]);
         let (mut ws_stream, _) = connect_async(&ws_url).await.expect("Failed to connect to websocket");
 
         // Send a ping and expect a pong
