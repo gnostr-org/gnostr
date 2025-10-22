@@ -28,6 +28,7 @@ impl<'de> serde::Deserialize<'de> for CommitId {
     }
 }
 
+/// CommitId
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct CommitId(Oid);
 
