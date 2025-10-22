@@ -165,3 +165,57 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Args;
+    use clap::Parser;
+
+    #[test]
+    fn test_default_args() {
+        let args = Args::try_parse_from(&["gnostr-cube"]).unwrap();
+        assert_eq!(args.name, "user");
+        assert_eq!(args.count, 1);
+        assert_eq!(args.tui, false);
+        assert_eq!(args.chat, false);
+        assert_eq!(args.config, "");
+    }
+
+    #[test]
+    fn test_custom_args() {
+        let args = Args::try_parse_from(&[
+            "gnostr-cube",
+            "-n",
+            "Alice",
+            "-c",
+            "5",
+            "-t",
+            "--chat",
+            "--cfg",
+            "my_config.toml",
+        ]).unwrap();
+        assert_eq!(args.name, "Alice");
+        assert_eq!(args.count, 5);
+        assert_eq!(args.tui, true);
+        assert_eq!(args.chat, true);
+        assert_eq!(args.config, "my_config.toml");
+    }
+
+    #[test]
+    fn test_tui_flag() {
+        let args = Args::try_parse_from(&["gnostr-cube", "-t"]).unwrap();
+        assert_eq!(args.tui, true);
+    }
+
+    #[test]
+    fn test_chat_flag() {
+        let args = Args::try_parse_from(&["gnostr-cube", "--chat"]).unwrap();
+        assert_eq!(args.chat, true);
+    }
+
+    #[test]
+    fn test_config_argument() {
+        let args = Args::try_parse_from(&["gnostr-cube", "--cfg", "custom.toml"]).unwrap();
+        assert_eq!(args.config, "custom.toml");
+    }
+}
