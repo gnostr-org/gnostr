@@ -7,7 +7,7 @@ use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct CustomEventCommand {
-    /// Event kind
+    /// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
     ///
     #[arg(short, long)]
     kind: u16,
@@ -16,7 +16,13 @@ pub struct CustomEventCommand {
     #[arg(short, long)]
     content: Option<String>,
 
-    /// Example a-tag:
+    /// Tags are key-value pairs used to add metadata to events.
+    /// They can follow specific NIPs or be custom.
+    ///
+    /// Example of a custom tag format (e.g., for NIP-12):
+    /// "d|my-custom-tag-name"
+    ///
+    /// Example of an 'a' tag (e.g., for NIP-33 Parameterized Replaceable Events):
     /// "a|30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark|wss://nostr.oxtr.dev"
     ///
     /// Result:
