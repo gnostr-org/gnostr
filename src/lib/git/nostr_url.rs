@@ -13,6 +13,7 @@ pub enum ServerProtocol {
     Git,
     Ftp,
     Filesystem,
+    Nostr,
     #[default]
     Unspecified,
     UnauthHttps, /* used for read to enable non-interactive
@@ -29,6 +30,7 @@ impl fmt::Display for ServerProtocol {
             ServerProtocol::Ssh => write!(f, "ssh"),
             ServerProtocol::Git => write!(f, "git"),
             ServerProtocol::Filesystem => write!(f, "filesystem"),
+            ServerProtocol::Nostr => write!(f, "nostr"),
             ServerProtocol::Unspecified => write!(f, "unsepcified"),
             ServerProtocol::UnauthHttps => {
                 write!(f, "https (unauthenticated)")
@@ -48,10 +50,10 @@ impl FromStr for ServerProtocol {
         match s {
             "http" => Ok(ServerProtocol::Http),
             "https" => Ok(ServerProtocol::Https),
-            "ftp" => Ok(ServerProtocol::Ftp),
-            "ssh" => Ok(ServerProtocol::Ssh),
             "git" => Ok(ServerProtocol::Git),
+            "ftp" => Ok(ServerProtocol::Ftp),
             "filesystem" => Ok(ServerProtocol::Filesystem),
+            "nostr" => Ok(ServerProtocol::Nostr),
             "http (unauthenticated)" => Ok(ServerProtocol::UnauthHttp),
             "https (unauthenticated)" => Ok(ServerProtocol::UnauthHttps),
             _ => bail!("not listed as a server protocol"),
@@ -99,6 +101,7 @@ impl std::str::FromStr for NostrUrlDecoded {
                     "https" => Some(ServerProtocol::Https),
                     "http" => Some(ServerProtocol::Http),
                     "git" => Some(ServerProtocol::Git),
+                    "nostr" => Some(ServerProtocol::Nostr),
                     _ => None,
                 };
             } else if name == "user" {
@@ -127,6 +130,7 @@ impl std::str::FromStr for NostrUrlDecoded {
                 "https" => Some(ServerProtocol::Https),
                 "http" => Some(ServerProtocol::Http),
                 "git" => Some(ServerProtocol::Git),
+                "nostr" => Some(ServerProtocol::Nostr),
                 _ => protocol,
             };
             if protocol.is_some() {
@@ -238,6 +242,7 @@ impl FromStr for CloneUrl {
             "http" => ServerProtocol::Http,
             "git" => ServerProtocol::Git,
             "ftp" => ServerProtocol::Ftp,
+            "nostr" => ServerProtocol::Nostr,
             "unspecified" => ServerProtocol::Unspecified,
             _ => {
                 return Err(anyhow::anyhow!("Unsupported protocol: {}", url.scheme()));
@@ -309,6 +314,7 @@ impl CloneUrl {
                 ServerProtocol::Git => "git://",
                 ServerProtocol::Ftp => "ftp://",
                 ServerProtocol::Ssh => "ssh://",
+                ServerProtocol::Nostr => "nostr://",
                 ServerProtocol::Unspecified => "https://",
                 _ => bail!("unsupported protocol"),
             },
@@ -412,6 +418,10 @@ pub fn convert_clone_url_to_https(url: &str) -> Result<String> {
     // Convert git:// to https://
     else if stripped_url.starts_with("git://") {
         return Ok(stripped_url.replace("git://", "https://"));
+    }
+    // Convert nostr:// to https://
+    else if stripped_url.starts_with("nostr://") {
+        return Ok(stripped_url.replace("nostr://", "https://"));
     }
 
     // If the URL is neither HTTPS, SSH, nor git@, return an error
