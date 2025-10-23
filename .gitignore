@@ -32,7 +32,7 @@ example
 ext/
 ffi/
 get-relays/
-git/
+!src/lib/git/
 gnostr-act
 gnostr-am
 gnostr-client
