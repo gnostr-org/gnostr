@@ -13,6 +13,7 @@ pub mod legit;
 pub mod list_events;
 pub mod mute_publickey;
 pub mod ngit;
+pub mod nip34;
 pub mod note;
 pub mod profile_badges;
 pub mod publish_contactlist_csv;

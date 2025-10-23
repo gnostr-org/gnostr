@@ -48,6 +48,7 @@ use crate::sub_commands::query::QuerySubCommand;
 // Import the sniper subcommand module
 use crate::sub_commands::sniper;
 use crate::sub_commands::gitsh;
+use crate::sub_commands::nip34;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -287,6 +288,8 @@ pub enum GnostrCommands {
     Query(QuerySubCommand),
     /// Gitsh sub commands
     Gitsh(gitsh::GitshSubCommand),
+    /// NIP-34 Git related commands
+    Nip34(nip34::Nip34SubCommand),
 }
 
 pub fn setup_logging() -> Result<()> {
