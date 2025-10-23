@@ -174,4 +174,19 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn test_gitsh_command_error_output() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("gitsh");
+
+        cmd.assert()
+            .failure()
+            .stdout(str::contains("Mock SSH Start Error"))
+            .stdout(str::contains("EXAMPLE:server.toml"))
+            .stdout(str::contains("check the port in your server.toml is available!"))
+            .stdout(str::contains("EXAMPLE:repo.toml"));
+
+        Ok(())
+    }
 }
