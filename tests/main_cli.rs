@@ -178,7 +178,7 @@ mod tests {
     #[tokio::test]
     async fn test_gitsh_command_error_output() -> Result<(), Box<dyn Error>> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("gitsh");
+        cmd.arg("gitsh").arg("nostr://test_url");
 
         cmd.assert()
             .failure()

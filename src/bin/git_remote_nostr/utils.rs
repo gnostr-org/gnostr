@@ -30,6 +30,9 @@ pub fn get_short_git_server_name(git_repo: &Repo, url: &str) -> std::string::Str
     if let Ok(name) = get_remote_name_by_url(&git_repo.git_repo, url) {
         return name;
     }
+    if url.starts_with("nostr://") {
+        return "nostr".to_string();
+    }
     // Attempt to parse the URL into an UncheckedUrl first.
     if let Ok(unchecked_url) = UncheckedUrl::from_str(url) {
         // Then, try to convert the UncheckedUrl into a checked Url.
@@ -227,11 +230,14 @@ pub fn get_read_protocols_to_try(
 ) -> Vec<ServerProtocol> {
     if server_url.protocol() == ServerProtocol::Filesystem {
         vec![(ServerProtocol::Filesystem)]
+    } else if server_url.protocol() == ServerProtocol::Nostr {
+        vec![ServerProtocol::Nostr]
     } else if let Some(protocol) = &decoded_nostr_url.protocol {
         vec![protocol.clone()]
     } else {
         let mut list = if server_url.protocol() == ServerProtocol::Http {
             vec![
+                ServerProtocol::Nostr,
                 ServerProtocol::UnauthHttp,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
@@ -239,9 +245,10 @@ pub fn get_read_protocols_to_try(
                 ServerProtocol::Http,
             ]
         } else if server_url.protocol() == ServerProtocol::Ftp {
-            vec![ServerProtocol::Ftp, ServerProtocol::Ssh]
+            vec![ServerProtocol::Nostr, ServerProtocol::Ftp, ServerProtocol::Ssh]
         } else {
             vec![
+                ServerProtocol::Nostr,
                 ServerProtocol::UnauthHttps,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
@@ -267,20 +274,24 @@ pub fn get_write_protocols_to_try(
 ) -> Vec<ServerProtocol> {
     if server_url.protocol() == ServerProtocol::Filesystem {
         vec![(ServerProtocol::Filesystem)]
+    } else if server_url.protocol() == ServerProtocol::Nostr {
+        vec![ServerProtocol::Nostr]
     } else if let Some(protocol) = &decoded_nostr_url.protocol {
         vec![protocol.clone()]
     } else {
         let mut list = if server_url.protocol() == ServerProtocol::Http {
             vec![
+                ServerProtocol::Nostr,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
                 // authenticated
                 ServerProtocol::Http,
             ]
         } else if server_url.protocol() == ServerProtocol::Ftp {
-            vec![ServerProtocol::Ssh, ServerProtocol::Ftp]
+            vec![ServerProtocol::Nostr, ServerProtocol::Ssh, ServerProtocol::Ftp]
         } else {
             vec![
+                ServerProtocol::Nostr,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
                 // authenticated

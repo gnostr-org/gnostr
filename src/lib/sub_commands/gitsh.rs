@@ -22,24 +22,22 @@ use mock_ssh::start;
 pub struct GitshSubCommand {
     // This field captures the remote_url, but the start() function does not directly accept it.
     #[arg(index = 1)]
-    remote_url: String,
+    remote_url: Option<String>,
 }
 
 pub async fn gitsh(_sub_command_args: &GitshSubCommand) -> Result<(), Box<dyn std::error::Error>> {
+//#[cfg(not(test))]
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     // The start() function takes no arguments. The remote_url is available in _sub_command_args.remote_url
     // but is not directly passed to start().
-    let res = start().await; // Changed to call start() with no arguments.
+    let res = start().await;
     if let Err(e) = &res { // Use reference to res to avoid moving it
         println!("{}", e);
         println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
-        println!("check the port in your server.toml is available!");
-        println!("check the port in your server.toml is available!");
         println!("check the port in your server.toml is available!\n");
         println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
     }
-    // Fix for mismatched types: convert anyhow::Result to Result<(), Box<dyn std::error::Error>>
-    Ok(res?)
+    res.map_err(|e| e.into())
 }
 
 static REPO_TOML: &str = r###"#
