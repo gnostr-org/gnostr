@@ -7,50 +7,54 @@ use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct CustomEventCommand {
-    /// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
     ///
-    /// ## Verbose Examples:
     ///
-    /// ### NIP-01: Basic Text Note
-    /// ```bash
-    /// gnostr custom-event -k 1 -c "Hello Nostr!" -r wss://relay.example.com
-    /// ```
+    /// NIP-01: Basic Text Note
     ///
-    /// ### NIP-10: Threaded Notes (Reply)
-    /// ```bash
-    /// # Reply to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
-    /// gnostr custom-event -k 1 -c "This is a reply." -r wss://relay.example.com -t "in_reply_to|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
-    /// ```
+    /// > gnostr custom-event -k 1 -c "Hello Nostr!" -r wss://relay.example.com
+    /// 
     ///
-    /// ### NIP-25: Reactions
-    /// ```bash
-    /// # React to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' with a 👍 emoji
-    /// gnostr custom-event -k 7 -r wss://relay.example.example.com -t "reference|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" -t "+"
-    /// ```
+    /// NIP-10: Threaded Notes (Reply)
+    /// 
+    ///	Reply to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
+    /// 
+    /// > gnostr custom-event -k 1 -c "This is a reply." -r wss://relay.example.com -t "in_reply_to|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    /// 
     ///
-    /// ### NIP-33: Parameterized Replaceable Events (Profile Update)
-    /// ```bash
-    /// # Update profile name and picture using tags
-    /// gnostr custom-event -k 0 -c '{"name": "Bob", "picture": "https://example.com/bob.jpg"}' -r wss://relay.example.com -t "name|Bob" -t "picture|https://example.com/bob.jpg"
-    /// ```
+    /// NIP-25: Reactions
+    /// 
+    ///	React to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' with a 👍 emoji
+    /// 
+    /// > gnostr custom-event -k 7 -r wss://relay.example.example.com -t "reference|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" -t "+"
+    /// 
     ///
-    /// ### NIP-34: Git Collaboration - Repository Announcement
-    /// ```bash
-    /// # Announce a git repository
-    /// gnostr custom-event -k 34000 -c '{"name": "my-awesome-repo", "description": "A cool project."}' -r wss://relay.example.com -t "r|https://github.com/example/repo"
-    /// ```
+    /// - NIP-33: Parameterized Replaceable Events (Profile Update)
+    /// 
+    /// -- Update profile name and picture using tags
+    /// 
+    /// > gnostr custom-event -k 0 -c '{"name": "Bob", "picture": "https://example.com/bob.jpg"}' -r wss://relay.example.com -t "name|Bob" -t "picture|https://example.com/bob.jpg"
+    /// 
     ///
-    /// ### NIP-34: Git Collaboration - Patch Announcement
-    /// ```bash
-    /// # Announce a patch for a repository
-    /// gnostr custom-event -k 34001 -c "--- a/main.rs\n+++ b/main.rs\n@@ -1 +1 @@\n-let x = 5;\n+let x = 10;" -r wss://relay.example.com -t "r|https://github.com/example/repo" -t "patch_hash|deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" -t "branch|main"
-    /// ```
+    /// - NIP-34: Git Collaboration - Repository Announcement
+    /// 
+    /// -- Announce a git repository
+    /// 
+    /// > gnostr custom-event -k 34000 -c '{"name": "my-awesome-repo", "description": "A cool project."}' -r wss://relay.example.com -t "r|https://github.com/example/repo"
+    /// 
     ///
-    /// ### NIP-57: Lightning Zaps (Zap Request)
-    /// ```bash
-    /// # Send a zap request for 1000 sats to a recipient
-    /// gnostr custom-event -k 9735 -c '{"amount": 1000, "bolt11": "lnbc100..."}' -r wss://relay.example.com -t "p|recipient_pubkey..." -t "amount|1000"
-    /// ```
+    /// - NIP-34: Git Collaboration - Patch Announcement
+    /// 
+    /// -- Announce a patch for a repository
+    /// 
+    /// > gnostr custom-event -k 34001 -c "--- a/main.rs\n+++ b/main.rs\n@@ -1 +1 @@\n-let x = 5;\n+let x = 10;" -r wss://relay.example.com -t "r|https://github.com/example/repo" -t "patch_hash|deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" -t "branch|main"
+    /// 
+    ///
+    /// - NIP-57: Lightning Zaps (Zap Request)
+    /// 
+    /// -- Send a zap request for 1000 sats to a recipient
+    /// 
+    /// > gnostr custom-event -k 9735 -c '{"amount": 1000, "bolt11": "lnbc100..."}' -r wss://relay.example.com -t "p|recipient_pubkey..." -t "amount|1000"
+    /// 
     #[arg(short, long)]
     kind: u16,
 
@@ -68,6 +72,10 @@ pub struct CustomEventCommand {
     /// "a|30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark|wss://nostr.oxtr.dev"
     ///
     /// The format is generally `TAG_KIND|TAG_VALUE1|TAG_VALUE2|...`
+    ///
+    ///		///
+    ///
+	/// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
     #[arg(short, long, action = clap::ArgAction::Append)]
     tags: Vec<String>,
 
