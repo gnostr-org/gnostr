@@ -11,20 +11,20 @@ members = ["tree-sitter-grammar-repository"]
 
 ## [[bin]]
 ## name = "gnostr-ssh"
-## path = "../ssh/src/bin/gnostr-ssh.rs"
+## path = "ssh/src/bin/gnostr-ssh.rs"
 ## # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0"
 arc-swap = "1.7"
 askama = { version = "0.12.0", default-features = false }
-async-trait = "0.1.73"
+async-trait = "0.1.68"
 axum = { version = "0.7", default-features = false, features = [
   "query",
   "tokio",
   "http1",
 ] }
-bytes = "1.7.1"
+bytes = "1.5"
 clap = { version = "4.5.20", default-features = false, features = [
   "std",
   "cargo",
@@ -35,12 +35,12 @@ clap = { version = "4.5.20", default-features = false, features = [
 ] }
 clean-path = "0.2.1"
 colored = "2.0.0"
-comrak = { version = "0.18.0", default-features = false }
+comrak = { version = "0.28.0", default-features = false }
 const-hex = "1.12"
 const_format = "0.2"
-env_logger = "0.11"
+env_logger = "0.10.0"
 flate2 = "1.0"
-futures = "0.3.28"
+futures = "0.3"
 futures-util = "0.3"
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
@@ -52,13 +52,13 @@ gix = { version = "0.66", default-features = false, features = [
 gnostr-ssh = { version = "0.0.1", path = "../ssh" }
 httparse = "1.7"
 humantime = "2.1"
-itertools = "0.13"
+itertools = "0.13.0"
 kanal = "0.1.0-pre8"
 log = "0.4.17"
 md5 = "0.7"
 moka = { version = "0.12.0", features = ["future"] }
 path-clean = "1.0.1"
-rand = "0.8"
+rand = "0.8.5"
 rkyv = "0.8"
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 russh = { version = "0.37.1", features = ["openssl"] }
@@ -70,7 +70,7 @@ rust-ini = "0.21.1"
 #version = "0.3.28"
 
 sd-notify = "0.4.1"
-serde = { version = "1.0.209", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
 shellwords = "1.1.0"
 simdutf8 = "0.1.5"
 tar = { version = "0.4", default-features = false }
@@ -83,15 +83,15 @@ tera = "1.18.1"
 textwrap = "0.16.0"
 time = { version = "0.3", features = ["serde", "formatting"] }
 timeago = { version = "0.4.2", default-features = false }
-tokio = { version = "1.33.0", features = ["full"] }
+tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1"
 tokio-util = { version = "0.7.10", features = ["io"] }
-toml = "0.7.3"
+toml = { version = "0.7", default-features = true, features = ["parse"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "timeout"] }
 tower-layer = "0.3"
 tower-service = "0.3"
-tracing = "0.1.40"
+tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "smallvec",
