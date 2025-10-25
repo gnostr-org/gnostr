@@ -3,8 +3,7 @@ use crypto::sha1;
 use log::debug;
 use std::sync::mpsc;
 use time;
-use time::format::FormatItem; // Added import
-
+use time::format_description;
 pub struct Worker {
     id: u32,
     digest: sha1::Sha1,
@@ -58,8 +57,9 @@ impl Worker {
     }
 
     pub fn work(&mut self) {
-        let tstamp = format!("{}", self.timestamp.format(&[FormatItem::new("%s %z")]).unwrap()); // Modified line
-
+		let tstamp = format!("{}", self.timestamp.format(
+				&format_description::parse_borrowed::<2>("%s %z").unwrap()
+				).unwrap());
         let mut value = 0u32;
         loop {
             let (raw, blob) = self.generate_blob(value, &tstamp);
@@ -75,27 +75,43 @@ impl Worker {
     }
 
     fn generate_blob(&mut self, value: u32, tstamp: &str) -> (String, String) {
+		#[rustfmt::skip]
         debug!("self.message={}\n", self.message);
+		#[rustfmt::skip]
 
         debug!("self.tree={}\n", self.tree);
+		#[rustfmt::skip]
         debug!("self.parent={}\n", self.parent);
+		#[rustfmt::skip]
         debug!("self.author={}\n", self.author);
+		#[rustfmt::skip]
         debug!("self.author={}\n", self.author);
+		#[rustfmt::skip]
         //debug!("self.committer={}\n",self.committer);
+		#[rustfmt::skip]
         debug!("self.tree={}\n", self.tree);
+		#[rustfmt::skip]
         debug!("self.parent={}\n", self.parent);
+		#[rustfmt::skip]
         debug!("self.weeble.trim()={}\n", self.weeble.trim());
+		#[rustfmt::skip]
         debug!("self.blockheight.trim()={}\n", self.blockheight.trim());
+		#[rustfmt::skip]
         debug!("self.wobble.trim()={}\n", self.wobble.trim());
+		#[rustfmt::skip]
         debug!("self.id={}\n", self.id);
+		#[rustfmt::skip]
         debug!("self.value={}\n", value);
+		#[rustfmt::skip]
         debug!("self.message={}\n", self.message);
 
+		#[rustfmt::skip]
         let raw = format!(
 			"tree {}\n\
 			parent {}\n\
 			author {} {}\n\
 			committer {} {}\n\n\
+			//DO NOT FORMAT!
             {}/{}/{}:{}\n\n\"tree\":\"{}\",\"parent\":\"{}\",\"weeble\":\"{:04}\",\"blockheight\":\"{:06}\",\"wobble\":\"{:}\",\"bit\":\"{:02}\",\"nonce\":\"{:08x}\",\"message\":\"{:}\"",
 
             //below are in essential format
@@ -120,9 +136,11 @@ impl Worker {
 			self.id, value,
 			self.message
 		);
+		#[rustfmt::skip]
         debug!("raw={}\n", raw);
 
         //be careful when changing - fails silently when wrong.
+		#[rustfmt::skip]
         let blob = format!("commit {}\0{}", raw.len(), raw);
         debug!("blob={}\n", blob);
 

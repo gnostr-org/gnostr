@@ -236,7 +236,7 @@ tempfile = "3.5.0"
 tera = "1.18.1"
 textwrap = "0.16.0"
 #thiserror = "1"
-time        = "0.3"
+time = { version = "0.3", features = ["macros", "formatting"] }
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] }
 
