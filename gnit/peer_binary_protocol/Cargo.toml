@@ -1,0 +1,28 @@
+[package]
+name = "librqbit-peer-protocol"
+version = "3.4.0"
+edition = "2021"
+description = "Protocol for working with torrent peers. Used in rqbit torrent client."
+license = "Apache-2.0"
+documentation = "https://docs.rs/librqbit-peer-protocol"
+repository = "https://github.com/ikatson/rqbit"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["sha1-system"]
+sha1-system = ["bencode/sha1-system", "librqbit-core/sha1-system"]
+sha1-openssl = ["bencode/sha1-openssl", "librqbit-core/sha1-openssl"]
+sha1-rust = ["bencode/sha1-rust", "librqbit-core/sha1-rust"]
+
+[dependencies]
+serde = {version = "1", features = ["derive"]}
+bincode = "1"
+byteorder = "1"
+buffers = {path="../buffers", package="librqbit-buffers", version = "2.2.1"}
+bencode = {path = "../bencode", default-features=false, package="librqbit-bencode", version="2.2.1"}
+clone_to_owned = {path="../clone_to_owned", package="librqbit-clone-to-owned", version = "2.2.1"}
+librqbit-core = {path="../librqbit_core", version = "3.4.0"}
+bitvec = "1"
+anyhow = "1"

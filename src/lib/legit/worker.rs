@@ -2,7 +2,8 @@ use crypto::digest::Digest;
 use crypto::sha1;
 use log::debug;
 use std::sync::mpsc;
-//use time;
+use time;
+use time::format::FormatItem; // Added import
 
 pub struct Worker {
     id: u32,
@@ -15,7 +16,7 @@ pub struct Worker {
     repo: String,
     pwd_hash: String,
     message: String,
-    timestamp: time::Tm,
+    timestamp: time::OffsetDateTime, // Or time::PrimitiveDateTime if you don't need the timezone offset
     weeble: String,
     wobble: String,
     blockheight: String,
@@ -32,7 +33,7 @@ impl Worker {
         repo: String,
         pwd_hash: String,
         message: String,
-        timestamp: time::Tm,
+        timestamp: time::OffsetDateTime, // Or time::PrimitiveDateTime if you don't need the timezone offset
         weeble: String,
         wobble: String,
         blockheight: String,
@@ -57,7 +58,7 @@ impl Worker {
     }
 
     pub fn work(&mut self) {
-        let tstamp = format!("{}", self.timestamp.strftime("%s %z").unwrap());
+        let tstamp = format!("{}", self.timestamp.format(&[FormatItem::new("%s %z")]).unwrap()); // Modified line
 
         let mut value = 0u32;
         loop {
