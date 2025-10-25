@@ -42,8 +42,8 @@ env_logger = "0.10.0"
 sd-notify = "0.4.1"
 
 [[bin]]
-name = "gnostr-ssh"
-path = "src/bin/gnostr-ssh.rs"
+name = "gnostr_ssh"
+path = "src/bin/gnostr_ssh.rs"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
