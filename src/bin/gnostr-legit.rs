@@ -22,7 +22,8 @@ use std::error::Error;
 use std::io::Result;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use time::{get_time, now};
+use std::time::Instant;
+use time::OffsetDateTime;
 //use std::mem::size_of;
 use argparse::{ArgumentParser, Store};
 use git2::*;
@@ -94,7 +95,7 @@ async fn main() -> Result<()> {
     debug!("Debugging disabled");
     example();
 
-    let start = get_time();
+	let start = Instant::now();
     let epoch = get_epoch_ms();
     println!("epoch:{}", epoch.clone());
     let system_time = SystemTime::now();
@@ -144,7 +145,7 @@ async fn main() -> Result<()> {
         //message: count.to_string(),
         //repo:    ".".to_string(),
         repo: repo.path().display().to_string(),
-        timestamp: time::now(),
+		timestamp: OffsetDateTime::now_utc(),
     };
 
     parse_args_or_exit(&mut opts);

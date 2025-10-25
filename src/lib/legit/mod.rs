@@ -99,7 +99,7 @@ fn cli() -> io::Result<()> {
     //println!("Debugging disabled");
     example();
 
-    let start = time::get_time();
+    let start = time::OffsetDateTime::now_utc();
     let epoch = get_epoch_ms();
     //println!("{}", epoch);
     let system_time = SystemTime::now();
@@ -373,7 +373,7 @@ fn cli() -> io::Result<()> {
         //message: count.to_string(),
         //repo:    ".".to_string(),
         repo: path.as_path().display().to_string(),
-        timestamp: time::now(),
+        timestamp: time::OffsetDateTime::now_utc(),
     };
 
     parse_args_or_exit(&mut opts);
@@ -472,7 +472,7 @@ fn cli() -> io::Result<()> {
     //
     //
     //
-    let duration = time::get_time() - start;
+    let duration = time::OffsetDateTime::now_utc() - start;
     //println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
     println!("{}", gnostr_event);
     Ok(())

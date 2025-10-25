@@ -18,7 +18,7 @@ pub struct Options {
     pub message: String,
     pub pwd_hash: String,
     pub repo: String,
-    pub timestamp: time::Tm,
+    pub timestamp: time::OffsetDateTime, // Or time::PrimitiveDateTime if you don't need the timezone offset
 }
 
 pub struct Gitminer {
