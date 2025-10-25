@@ -99,14 +99,14 @@ bwrap = { version = "1.3", features = ["use_std"] }
 bytesize = { version = "1.3", default-features = false }
 chacha20poly1305 = "0.10.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-clap = { version = "4.3.19", features = ["derive", "env", "cargo"] }
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 clean-path = "0.2.1"
 clipboard = "0.5.0"
 color-eyre = "0.6.2"
 
 colored = "2.0.0"
 colorful = "0.2"
-comrak = "0.18.0"
+comrak = "0.28.0"
 console = "0.15.7"
 crossbeam-channel = "0.5"
 crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
@@ -167,7 +167,7 @@ libp2p = { version = "0.54.1", features = [
   "yamux"
 ] }
 
-log = "0.4"
+log = "0.4.17"
 ordered-float = "3.4.0"
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 
@@ -236,7 +236,7 @@ tempfile = "3.5.0"
 tera = "1.18.1"
 textwrap = "0.16.0"
 #thiserror = "1"
-time        = "0.1.42"
+time        = "0.3"
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] }
 

@@ -1625,6 +1625,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "caseless"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b6fd507454086c8edfd769ca6ada439193cdb209c7681712ef6275cccbfe5d8"
+dependencies = [
+ "unicode-normalization",
+]
+
+[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2001,11 +2010,13 @@ dependencies = [
 
 [[package]]
 name = "comrak"
-version = "0.18.0"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "482aa5695bca086022be453c700a40c02893f1ba7098a2c88351de55341ae894"
+checksum = "c93ab3577cca16b4a1d80a88c2e0cd8b6e969e51696f0bbb0d1dcb0157109832"
 dependencies = [
+ "caseless",
  "clap 4.5.37",
+ "derive_builder",
  "entities",
  "memchr",
  "once_cell",
@@ -3881,7 +3892,7 @@ dependencies = [
  "test_utils",
  "textwrap 0.16.2",
  "thiserror 1.0.69",
- "time 0.1.45",
+ "time 0.3.41",
  "tokio",
  "tokio-tungstenite 0.21.0",
  "toml 0.7.8",
