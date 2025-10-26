@@ -13,20 +13,15 @@ fn main() -> Result<()> {
     let wobble = String::from_utf8_lossy(&wobble_output).trim().to_string();
 
     let args: Vec<String> = std::env::args().collect();
-    let mut tag_name = if args.len() > 1 {
-        format!("v{}.{}.{}-{}",
-            if weeble.is_empty() { "0" } else { &weeble },
-            if blockheight.is_empty() { "0" } else { &blockheight },
-            if wobble.is_empty() { "0" } else { &wobble },
-            args[1],
-        )
-    } else {
-        format!("v{}.{}.{}",
-            if weeble.is_empty() { "0" } else { &weeble },
-            if blockheight.is_empty() { "0" } else { &blockheight },
-            if wobble.is_empty() { "0" } else { &wobble }
-        )
-    };
+    let mut tag_name = format!("v{}.{}.{}",
+        if weeble.is_empty() { "0" } else { &weeble },
+        if blockheight.is_empty() { "0" } else { &blockheight },
+        if wobble.is_empty() { "0" } else { &wobble }
+    );
+
+    if args.len() > 1 {
+        tag_name = format!("{}-{}", tag_name, args[1]);
+    }
 
     println!("Creating tag: {}", tag_name);
     let output = Command::new("git").arg("tag").arg(&tag_name).output()?;
@@ -112,7 +107,7 @@ mod tests {
         Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-wobble")).output().unwrap();
 
         let suffix = "beta";
-        let expected_tag_name = format!("v{}-1.2.3", suffix);
+        let expected_tag_name = format!("v1.2.3-{}", suffix);
 
         let result = Command::new(std::env::current_exe().unwrap())
             .arg("gnostr-git-tag-version")
