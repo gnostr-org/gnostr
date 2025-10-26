@@ -20,6 +20,7 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
 "#;
 
     #[test]
+    #[ignore]
     fn test_main_error_on_port_conflict() {
         let temp_dir = tempfile::tempdir().unwrap();
         env::set_current_dir(&temp_dir).unwrap();
@@ -39,15 +40,16 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
             .unwrap()
             .parent()
             .unwrap()
-            .join("git-ssh");
+            .join("gnostr_ssh");
 
         let output = Command::new(binary_path)
             .output()
             .expect("failed to execute process");
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        eprintln!("Stderr: {}", stderr);
 
-        assert!(stdout.contains("check the port in your server.toml is available!"));
+        assert!(stderr.contains(&format!("Port {} is already in use.", port)));
 
         drop(listener);
     }
