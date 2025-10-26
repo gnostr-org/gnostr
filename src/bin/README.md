@@ -367,6 +367,46 @@ The tool outputs the retrieved Nostr events in JSON format to standard output. I
 
 ---
 
+# gnostr-git-tag-version
+
+`gnostr-git-tag-version` is a command-line tool that creates a Git tag based on the "WEEBLE WOBBLE" decentralized timestamping method, optionally with a custom suffix.
+
+## Features
+
+- **WEEBLE WOBBLE Tagging**: Generates a Git tag in the format `v<weeble>.<blockheight>.<wobble>`.
+- **Optional Suffix**: Allows adding a custom suffix to the generated tag (e.g., `v1.2.3-beta`).
+- **Bitcoin Timestamping**: Utilizes `gnostr-weeble`, `gnostr-blockheight`, and `gnostr-wobble` to incorporate Bitcoin block data into the tag name.
+
+## Usage
+
+```bash
+gnostr-git-tag-version [suffix]
+```
+
+### Arguments
+
+- `[suffix]`: Optional. A string to append to the generated version tag (e.g., `beta`, `rc1`).
+
+## Example
+
+```bash
+# Create a version tag without a suffix
+gnostr-git-tag-version
+
+# Example output: Creating tag: v123.789123.456
+
+# Create a version tag with a suffix
+gnostr-git-tag-version beta
+
+# Example output: Creating tag: v123.789123.456-beta
+```
+
+## Output
+
+The tool prints the name of the created tag and then lists all tags that contain the `weeble` component of the newly created tag. Error messages are printed to `stderr` if the tag creation fails.
+
+---
+
 # gnostr-genssh
 
 `gnostr-genssh` is a utility for generating SSH keys and setting appropriate file permissions, with specific handling for different operating systems.
