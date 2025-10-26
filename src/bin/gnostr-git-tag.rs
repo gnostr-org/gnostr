@@ -78,7 +78,7 @@ mod tests {
         let dir = setup_test_repo();
         let repo_path = dir.path();
 
-        std::env::set_var("PATH", format!("{}:{{}}", std::env::var("PATH").unwrap(), repo_path.display()));
+        std::env::set_var("PATH", format!("{}:{}", std::env::var("PATH").unwrap(), repo_path.display()));
         fs::write(repo_path.join("gnostr-weeble"), "#!/bin/bash\necho 1").unwrap();
         fs::write(repo_path.join("gnostr-blockheight"), "#!/bin/bash\necho 1").unwrap();
         fs::write(repo_path.join("gnostr-wobble"), "#!/bin/bash\necho 1").unwrap();
@@ -113,7 +113,7 @@ mod tests {
         let dir = setup_test_repo();
         let repo_path = dir.path();
 
-        std::env::set_var("PATH", format!("{}:{{}}", std::env::var("PATH").unwrap(), repo_path.display()));
+        std::env::set_var("PATH", format!("{}:{}", std::env::var("PATH").unwrap(), repo_path.display()));
         fs::write(repo_path.join("gnostr-weeble"), "#!/bin/bash\necho 1").unwrap();
         fs::write(repo_path.join("gnostr-blockheight"), "#!/bin/bash\necho 1").unwrap();
         fs::write(repo_path.join("gnostr-wobble"), "#!/bin/bash\necho 1").unwrap();
@@ -127,7 +127,7 @@ mod tests {
         let parent_head = String::from_utf8_lossy(&parent_head_output).trim().to_string();
 
         let suffix = "release";
-        let expected_tag_name = format!("1/1/1/{}/{}-{{}}", parent_head, current_head, suffix);
+        let expected_tag_name = format!("1/1/1/{}/{}-{}", parent_head, current_head, suffix);
 
         let result = Command::new(std::env::current_exe().unwrap())
             .arg("gnostr-git-tag")

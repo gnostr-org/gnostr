@@ -124,7 +124,7 @@ mod tests {
         let parent_head = String::from_utf8_lossy(&parent_head_output).trim().to_string();
 
         let suffix = "review";
-        let expected_tag_name = format!("pr/1/2/3/{}/{}-{{}}", parent_head, current_head, suffix);
+        let expected_tag_name = format!("pr/1/2/3/{}/{}-{}", parent_head, current_head, suffix);
 
         let result = Command::new(std::env::current_exe().unwrap())
             .arg("gnostr-git-tag-pr")
