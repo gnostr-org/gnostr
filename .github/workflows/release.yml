@@ -79,8 +79,10 @@ jobs:
       - id: plan
         run: |
           make cargo-dist
-          #dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --allow-dirty --output-format=json > plan-dist-manifest.json
-          #echo "dist ran successfully"
+          # The tag-flag is defined in the outputs section of this job.
+          # It will be empty if this is a pull_request.
+          dist plan ${{ steps.plan.outputs.tag-flag }} --allow-dirty --output-format=json > plan-dist-manifest.json
+          echo "dist plan ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
