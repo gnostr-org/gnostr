@@ -39,6 +39,7 @@ struct Args {
 
 async fn start(port: u16, config: PathBuf, repo_config: PathBuf) -> anyhow::Result<()> {
     if is_port_in_use(port).await {
+        eprintln!("Error: Port {} is already in use.", port);
         return Err(anyhow!("Port {} is already in use.", port));
     }
 
