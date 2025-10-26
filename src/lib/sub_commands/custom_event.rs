@@ -73,6 +73,64 @@ pub struct CustomEventCommand {
     ///
     /// The format is generally `TAG_KIND|TAG_VALUE1|TAG_VALUE2|...`
     ///
+    /// - NIP-34: Git Collaboration - Repository Announcement
+    ///
+    /// -- Announce a git repository
+    ///
+    /// > gnostr custom-event -k 30617 -c '{"name": "my-awesome-repo", "description": "A cool project for demonstrating NIP-34."}' --tags "d|my-awesome-repo" --tags "name|My Awesome Repo" --tags "description|A cool project for demonstrating NIP-34." --tags "web|https://example.com/my-awesome-repo" --tags "clone|https://github.com/example/my-awesome-repo.git" --tags "relays|wss://relay.example.com" --tags "r|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" --tags "maintainers|pubkey1..." --tags "t|personal-fork" --tags "example-repo"
+    ///
+    /// - NIP-34: Repository State Announcement
+    ///
+    /// -- Announce the current state of branches and tags for a repository.
+    ///
+    /// > gnostr custom-event -k 30618 --tags "d|my-awesome-repo" --tags "refs/heads/main|ref: refs/heads/main" --tags "refs/tags/v1.0.0|ref: refs/tags/v1.0.0" --tags "HEAD|ref: refs/heads/main"
+    ///
+    /// - NIP-34: Patch Announcement (Kind 1617)
+    ///
+    /// -- Announce a patch for a repository.
+    ///
+    /// > gnostr custom-event -k 1617 --content "--- a/src/main.rs\n+++ b/src/main.rs\n@@ -1 +1 @@\n-let x = 5;\n+let x = 10;" --tags "a|30617:my-awesome-repo" --tags "r|wss://relay.example.com" --tags "p|recipient_pubkey..." --tags "t|root" --tags "commit|deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" --tags "parent-commit|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    ///
+    /// - NIP-34: Pull Request Announcement (Kind 1618)
+    ///
+    /// -- Announce a pull request.
+    ///
+    /// > gnostr custom-event -k 1618 --content "" --tags "a|30617:my-awesome-repo" --tags "r|wss://relay.example.com" --tags "p|recipient_pubkey..." --tags "subject|Implement new feature X" --tags "t|feature" --tags "t|enhancement" --tags "c|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" --tags "clone|https://github.com/example/my-awesome-repo.git" --tags "branch-name|feature/new-x" --tags "merge-base|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456780"
+    ///
+    /// - NIP-34: Pull Request Update (Kind 1619)
+    ///
+    /// -- Update an existing pull request.
+    ///
+    /// > gnostr custom-event -k 1619 --content "" --tags "a|30617:my-awesome-repo" --tags "r|wss://relay.example.com" --tags "p|recipient_pubkey..." --tags "E|pr_event_id_of_the_pr_tip_being_updated" --tags "c|fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210" --tags "clone|https://github.com/example/my-awesome-repo.git" --tags "merge-base|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456780"
+    ///
+    /// - NIP-34: Issue Announcement (Kind 1621)
+    ///
+    /// -- Announce an issue.
+    ///
+    /// > gnostr custom-event -k 1621 --content "The login button is not working on the staging environment. It returns a 500 error." --tags "a|30617:my-awesome-repo" --tags "p|recipient_pubkey..." --tags "subject|Login button returns 500 error" --tags "t|bug" --tags "t|staging"
+    ///
+    /// - NIP-34: Status Events (Kinds 1630-1633)
+    ///
+    /// -- Update the status of another event (e.g., a patch, PR, or issue).
+    ///
+    /// Kind 1630 (Open):
+    /// > gnostr custom-event -k 1630 --tags "e|issue_event_id|root" --tags "a|30617:my-awesome-repo"
+    ///
+    /// Kind 1631 (Applied/Merged/Resolved):
+    /// > gnostr custom-event -k 1631 --tags "e|patch_event_id|root" --tags "a|30617:my-awesome-repo" --tags "applied-as-commits|commit1_hash,commit2_hash" --tags "r|wss://relay.example.com"
+    ///
+    /// Kind 1632 (Closed):
+    /// > gnostr custom-event -k 1632 --tags "e|pr_event_id|root" --tags "a|30617:my-awesome-repo"
+    ///
+    /// Kind 1633 (Draft):
+    /// > gnostr custom-event -k 1633 --tags "e|patch_event_id|root" --tags "a|30617:my-awesome-repo"
+    ///
+    /// - NIP-34: User Grasp List (Kind 10317)
+    ///
+    /// -- List preferred "grasp servers" for NIP-34 activities.
+    ///
+    /// > gnostr custom-event -k 10317 --tags "g|wss://grasp.example.com" --tags "g|wss://another-grasp.example.com"
+    ///
     ///		///
     ///
 	/// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
