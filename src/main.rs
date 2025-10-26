@@ -77,14 +77,22 @@ async fn main() -> anyhow::Result<()> {
     // These if statements don't return anything, which is fine as long as the match statement returns Result.
     if gnostr_cli_args.workdir.is_some() {}
     if gnostr_cli_args.directory.is_some() {}
-    if let Some(input_string) = gnostr_cli_args.hash {
-        let mut hasher = Sha256::new();
-        hasher.update(input_string.as_bytes());
-        let result = hasher.finalize();
-        // Print the SHA256 hash in hexadecimal format
-        print!("{:x}", result);
-        // Exit the program after printing the hash
-        std::process::exit(0);
+    if gnostr_cli_args.hash.is_some() {
+        //not none
+        if let Some(input_string) = gnostr_cli_args.hash {
+            let mut hasher = Sha256::new();
+            hasher.update(input_string.as_bytes());
+            let result = hasher.finalize();
+            //Usage: gnostr --hash <string>
+            //Usage: gnostr --debug --hash <string>
+            if env_args.len() >= 3 && env_args.len() <= 4
+            /*--debug, --trace, --info, etc...*/
+            {
+                print!("{:x}", result);
+                std::process::exit(0); // Exits the program, so no need to return Ok(())
+            }
+            gnostr_cli_args.nsec = format!("{:x}", result).into();
+        }
     }
 
     // Post event
