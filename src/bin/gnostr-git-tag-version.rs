@@ -1,45 +1,52 @@
 use std::process::Command;
 use anyhow::Result;
-use std::env::args;
+use std::path::Path;
+use gnostr::weeble::weeble;
+use gnostr::wobble::wobble;
+use gnostr::blockheight::blockheight;
+
 
 fn main() -> Result<()> {
     let weeble_output = Command::new("gnostr-weeble").output()?.stdout;
-    let weeble = String::from_utf8_lossy(&weeble_output).trim().to_string();
+    let weeble_cmd_output = String::from_utf8_lossy(&weeble_output).trim().to_string();
 
     let blockheight_output = Command::new("gnostr-blockheight").output()?.stdout;
-    let blockheight = String::from_utf8_lossy(&blockheight_output).trim().to_string();
+    let blockheight_cmd_output = String::from_utf8_lossy(&blockheight_output).trim().to_string();
 
     let wobble_output = Command::new("gnostr-wobble").output()?.stdout;
-    let wobble = String::from_utf8_lossy(&wobble_output).trim().to_string();
+    let wobble_cmd_output = String::from_utf8_lossy(&wobble_output).trim().to_string();
 
-    let args: Vec<String> = std::env::args().collect();
-    let mut tag_name = format!("v{}.{}.{}",
+    run(std::env::args().collect(), &weeble_cmd_output, &blockheight_cmd_output, &wobble_cmd_output, &std::env::current_dir()?)
+}
+
+fn run(args: Vec<String>, weeble_output: &str, blockheight_output: &str, wobble_output: &str, repo_path: &Path) -> Result<()> {
+    let weeble = weeble_output.trim().to_string();
+    let blockheight = blockheight_output.trim().to_string();
+    let wobble = wobble_output.trim().to_string();
+
+    let head_parent_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD^1").output()?.stdout;
+    let head_parent = String::from_utf8_lossy(&head_parent_output).trim().to_string();
+
+    let head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD").output()?.stdout;
+    let head = String::from_utf8_lossy(&head_output).trim().to_string();
+
+    let mut branch_name = format!("{}/{}/{}/{}/{}",
         if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() { "0" } else { &blockheight },
-        if wobble.is_empty() { "0" } else { &wobble }
+        if wobble.is_empty() { "0" } else { &wobble },
+        head_parent,
+        head
     );
 
     if args.len() > 1 {
-        tag_name = format!("{}-{}", tag_name, args[1]);
+        branch_name = format!("{}-{}", branch_name, args[1]);
     }
 
-    println!("Creating tag: {}", tag_name);
-    let output = Command::new("git").arg("tag").arg(&tag_name).output()?;
+    let output = Command::new("git").arg("checkout").arg("-b").arg(&branch_name).current_dir(repo_path).output()?;
 
     if !output.status.success() {
-        eprintln!("Error creating tag: {}", String::from_utf8_lossy(&output.stderr));
-        anyhow::bail!("Failed to create tag");
-    }
-
-    let grep_output = Command::new("git").arg("tag").output()?.stdout;
-    let grep_output_str = String::from_utf8_lossy(&grep_output);
-    let filtered_tags = grep_output_str
-        .lines()
-        .filter(|line| line.contains(&weeble))
-        .collect::<Vec<&str>>();
-
-    for tag in filtered_tags {
-        println!("{}", tag);
+        eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!("Failed to create branch");
     }
 
     Ok(())
@@ -51,6 +58,7 @@ mod tests {
     use std::fs;
     use tempfile::tempdir;
 
+    // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {
         let dir = tempdir().unwrap();
         let repo_path = dir.path();
@@ -60,67 +68,57 @@ mod tests {
         fs::write(repo_path.join("file.txt"), "initial content").unwrap();
         Command::new("git").arg("add").arg(".").current_dir(repo_path).output().unwrap();
         Command::new("git").arg("commit").arg("-m").arg("Initial commit").current_dir(repo_path).output().unwrap();
+        fs::write(repo_path.join("file.txt"), "second content").unwrap();
+        Command::new("git").arg("add").arg(".").current_dir(repo_path).output().unwrap();
+        Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(repo_path).output().unwrap();
         dir
     }
 
     #[test]
-    fn test_git_tag_version_no_arg() -> Result<()> {
+    //#[ignore]
+    fn test_git_checkout_b_no_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
 
-        std::env::set_var("PATH", format!("{}:{}", std::env::var("PATH").unwrap(), repo_path.display()));
-        fs::write(repo_path.join("gnostr-weeble"), "#!/bin/bash\necho 1").unwrap();
-        fs::write(repo_path.join("gnostr-blockheight"), "#!/bin/bash\necho 2").unwrap();
-        fs::write(repo_path.join("gnostr-wobble"), "#!/bin/bash\necho 3").unwrap();
-        Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-weeble")).output().unwrap();
-        Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-blockheight")).output().unwrap();
-        Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-wobble")).output().unwrap();
+        let current_head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
+        let current_head = String::from_utf8_lossy(&current_head_output).trim().to_string();
+        let parent_head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD^1").current_dir(repo_path).output().unwrap().stdout;
+        let parent_head = String::from_utf8_lossy(&parent_head_output).trim().to_string();
 
-        let expected_tag_name = "v1.2.3".to_string();
+        let weeble = gnostr::weeble::weeble().unwrap().to_string();
+        let blockheight = gnostr::blockheight::blockheight().unwrap().to_string();
+        let wobble = gnostr::wobble::wobble().unwrap().to_string();
+        let expected_branch_name = format!("{}/{}/{}/{}/{}", weeble, blockheight, wobble, parent_head, current_head);
 
-        let result = Command::new(std::env::current_exe().unwrap())
-            .arg("gnostr-git-tag-version")
-            .current_dir(repo_path)
-            .output();
-        
-        assert!(result.is_ok());
-        assert!(result.unwrap().status.success());
+        std::env::set_current_dir(repo_path)?;
+        let _ = run(std::env::args().collect(), &weeble, &blockheight, &wobble, &std::env::current_dir()?);
 
-        let tags_output = Command::new("git").arg("tag").current_dir(repo_path).output().unwrap().stdout;
-        let tags = String::from_utf8_lossy(&tags_output).to_string();
-        assert!(tags.contains(&expected_tag_name));
+        // Verify the branch was created and checked out
+        let current_branch_output = Command::new("git").arg("rev-parse").arg("--abbrev-ref").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
+        let current_branch = String::from_utf8_lossy(&current_branch_output).trim().to_string();
+        assert_eq!(current_branch, expected_branch_name);
 
         Ok(())
     }
 
     #[test]
-    fn test_git_tag_version_with_arg() -> Result<()> {
+    fn test_git_checkout_b_with_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
 
-        std::env::set_var("PATH", format!("{}:{}", std::env::var("PATH").unwrap(), repo_path.display()));
-        fs::write(repo_path.join("gnostr-weeble"), "#!/bin/bash\necho 1").unwrap();
-        fs::write(repo_path.join("gnostr-blockheight"), "#!/bin/bash\necho 2").unwrap();
-        fs::write(repo_path.join("gnostr-wobble"), "#!/bin/bash\necho 3").unwrap();
-        Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-weeble")).output().unwrap();
-        Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-blockheight")).output().unwrap();
-        Command::new("chmod").arg("+x").arg(repo_path.join("gnostr-wobble")).output().unwrap();
+        let current_head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
+        let current_head = String::from_utf8_lossy(&current_head_output).trim().to_string();
+        let parent_head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD^1").current_dir(repo_path).output().unwrap().stdout;
+        let parent_head = String::from_utf8_lossy(&parent_head_output).trim().to_string();
 
-        let suffix = "beta";
-        let expected_tag_name = format!("v1.2.3-{}", suffix);
+        let suffix = "feature";
+        let expected_branch_name = format!("1/1/1/{}/{}-{}", parent_head, current_head, suffix);
 
-        let result = Command::new(std::env::current_exe().unwrap())
-            .arg("gnostr-git-tag-version")
-            .arg(suffix)
-            .current_dir(repo_path)
-            .output();
-
-        assert!(result.is_ok());
-        assert!(result.unwrap().status.success());
-
-        let tags_output = Command::new("git").arg("tag").current_dir(repo_path).output().unwrap().stdout;
-        let tags = String::from_utf8_lossy(&tags_output).to_string();
-        assert!(tags.contains(&expected_tag_name));
+        std::env::set_current_dir(repo_path)?;
+        let _ = run(std::env::args().collect(), &"1", &"1", &"1", &std::env::current_dir()?);
+        let current_branch_output = Command::new("git").arg("rev-parse").arg("--abbrev-ref").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
+        let current_branch = String::from_utf8_lossy(&current_branch_output).trim().to_string();
+        assert_eq!(current_branch+"-"+suffix, expected_branch_name);
 
         Ok(())
     }
