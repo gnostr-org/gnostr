@@ -110,9 +110,9 @@ cargo-dist: 	### 	make cargo-dist TAG=$(TAG)
 	
 	@dist host --steps=create --tag=$(TAG) --allow-dirty --output-format=json > plan-dist-manifest.json
 cargo-dist-build: 	### 	cargo-dist-build
-	RUSTFLAGS="--cfg tokio_unstable" cargo dist build
-cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
-	cargo  -j $(NPROC) dist manifest --artifacts=all
+	RUSTFLAGS="--cfg tokio_unstable" dist build --allow-dirty
+cargo-dist-manifest: 	### 	dist manifest --artifacts=all
+	dist manifest --artifacts=all
 
 dep-graph: 	### 	dep-graph
 	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
@@ -163,7 +163,7 @@ docker-tui: 	### 	gnostr tui in a docker container
 docker-chat: 	### 	gnostr chat in a docker container
 	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
 docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/randymcmillan:/Users/randymcmillan gnostr:latest
+	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

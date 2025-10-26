@@ -153,9 +153,9 @@ cargo-dist: 	### 	make cargo-dist TAG=\$(TAG)
 	$(shell echo $TAG)
 	@dist host --steps=create --tag=\$(TAG) --allow-dirty --output-format=json > plan-dist-manifest.json
 cargo-dist-build: 	### 	cargo-dist-build
-	RUSTFLAGS="--cfg tokio_unstable" cargo dist build
-cargo-dist-manifest: 	### 	cargo dist manifest --artifacts=all
-	cargo  -j \$(NPROC) dist manifest --artifacts=all
+	RUSTFLAGS="--cfg tokio_unstable" dist build --allow-dirty
+cargo-dist-manifest: 	### 	dist manifest --artifacts=all
+	dist manifest --artifacts=all
 
 dep-graph: 	### 	dep-graph
 	@cargo  -j \$(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
