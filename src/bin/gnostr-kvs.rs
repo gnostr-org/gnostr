@@ -35,6 +35,7 @@ use tracing::{debug, info, trace, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 use gnostr::p2p::generate_close_peer_id;
+use gnostr::GNOSTR_SHA256;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Network {
@@ -226,14 +227,6 @@ fn generate_ed25519(secret_key_seed: u8) -> identity::Keypair {
     generate_close_peer_id(bytes.clone(), 32usize);
     keypair
 }
-
-
-const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
-
-const GNOSTR_SHA256: [u8; 32] = [
-    0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,
-    0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, 0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06,
-];
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
