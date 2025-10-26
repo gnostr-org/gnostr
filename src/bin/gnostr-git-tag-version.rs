@@ -15,10 +15,10 @@ fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
     let mut tag_name = if args.len() > 1 {
         format!("v{}-{}.{}.{}",
-            args[1],
             if weeble.is_empty() { "0" } else { &weeble },
             if blockheight.is_empty() { "0" } else { &blockheight },
-            if wobble.is_empty() { "0" } else { &wobble }
+            if wobble.is_empty() { "0" } else { &wobble },
+            args[1],
         )
     } else {
         format!("v{}.{}.{}",
