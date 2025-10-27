@@ -62,7 +62,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
         Some(LegitCommands::Mine) | None => {
 
-            command::run_legit_command().map_err(|e| Box::new(e) as Box<dyn StdError>)?;
+            command::run_legit_command(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
     Ok(())

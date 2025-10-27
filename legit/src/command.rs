@@ -17,23 +17,18 @@ use git2::*;
 use sha2::{Sha256, Digest};
 use pad::{PadStr, Alignment};
 
-use super::{worker, gitminer, repo};
+use super::{worker, gitminer};
 
 fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
 }
 
-pub fn run_legit_command() -> io::Result<()> {
+pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
 
     let start = SystemTime::now();
     let system_time = SystemTime::now();
 
-    let datetime: DateTime<Utc> = system_time.into();
-
-    let state = repo::state();
-    
-    let repo_root = std::env::args().nth(1).unwrap_or(".".to_string());
-    let repo = Repository::open(repo_root.as_str()).expect("Couldn't open repository");
+    let repo = Repository::open(&opts.repo).expect("Couldn't open repository");
     
     if repo.state() != RepositoryState::Clean {
         let repo_state =
@@ -116,7 +111,7 @@ pub fn run_legit_command() -> io::Result<()> {
         timestamp: SystemTime::now(),
     };
 
-    parse_args_or_exit(&mut opts);
+    //parse_args_or_exit(&mut opts);
 
     let mut miner = match Gitminer::new(opts) {
         Ok(m)  => m,
@@ -184,20 +179,4 @@ pub fn run_legit_command() -> io::Result<()> {
 
 }
 
-fn parse_args_or_exit(opts: &mut gitminer::Options) {
-    let mut ap = ArgumentParser::new();
-    ap.set_description("Generate git commit sha with a custom prefix");
 
-    ap.refer(&mut opts.target)
-        .add_option(&["-p", "--prefix"], Store, "Desired commit prefix (required)");
-
-    ap.refer(&mut opts.threads)
-        .add_option(&["-t", "--threads"], Store, "Number of worker threads to use (default 8)");
-
-    ap.refer(&mut opts.message)
-        .add_option(&["-m", "--message"], Store, "Commit message to use (required)");
-        
-    ap.refer(&mut opts.repo).add_argument("repository-path", Store, "Path to your git repository");
-
-    ap.parse_args_or_exit();
-}
