@@ -63,7 +63,7 @@ pub struct CliArgs {
 #[command(propagate_version = true)]
 pub struct LegitCli {
     #[command(subcommand)]
-    pub command: LegitCommands,
+    pub command: Option<LegitCommands>,
     /// remote signer address
     #[arg(long, global = true)]
     pub bunker_uri: Option<String>,

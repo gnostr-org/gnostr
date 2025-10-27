@@ -19,7 +19,7 @@ use gnostr_legit::command;
 #[command(propagate_version = true)]
 pub struct LegitSubCommand {
     #[command(subcommand)]
-    command: LegitCommands,
+    command: Option<LegitCommands>,
     ///// nsec or hex private key
     #[arg(short, long, global = true)]
     nsec: Option<String>,
@@ -39,14 +39,14 @@ pub struct LegitSubCommand {
 
 pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-        LegitCommands::Login(args) => login::launch(&args).await?,
-        LegitCommands::Init(args) => init::launch(&args).await?,
-        LegitCommands::Send(args) => send::launch(&args, true).await?,
-        LegitCommands::List => list::launch().await?,
-        LegitCommands::Pull => pull::launch().await?,
-        LegitCommands::Push(args) => push::launch(&args).await?,
-        LegitCommands::Fetch(args) => fetch::launch(&args).await?,
-        LegitCommands::Mine => command::run_legit_command().map_err(|e| Box::new(e) as Box<dyn StdError>)?,
+        Some(LegitCommands::Login(args)) => login::launch(&args).await?,
+        Some(LegitCommands::Init(args)) => init::launch(&args).await?,
+        Some(LegitCommands::Send(args)) => send::launch(&args, true).await?,
+        Some(LegitCommands::List) => list::launch().await?,
+        Some(LegitCommands::Pull) => pull::launch().await?,
+        Some(LegitCommands::Push(args)) => push::launch(&args).await?,
+        Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
+        Some(LegitCommands::Mine) | None => command::run_legit_command().map_err(|e| Box::new(e) as Box<dyn StdError>)?,
     }
     Ok(())
 }
