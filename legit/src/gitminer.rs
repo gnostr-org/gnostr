@@ -9,6 +9,7 @@ use super::worker::Worker;
 use std::process;
 use std::time::SystemTime;
 
+#[derive(Clone)]
 pub struct Options {
     pub threads:   u32,
     pub target:    String,
