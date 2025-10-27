@@ -1,9 +1,9 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
-use std::io::{Result, self};
+use std::io::{Result};
 
-use gnostr_legit::command;
+mod command;
 
 fn main() -> io::Result<()> {
     command::run_legit_command()
