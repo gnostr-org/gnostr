@@ -7,13 +7,14 @@ use std::thread;
 use git2::*;
 use super::worker::Worker;
 use std::process;
+use std::time::SystemTime;
 
 pub struct Options {
     pub threads:   u32,
     pub target:    String,
     pub message:   String,
     pub repo:      String,
-    pub timestamp: time::Tm
+    pub timestamp: SystemTime
 }
 
 pub struct Gitminer {

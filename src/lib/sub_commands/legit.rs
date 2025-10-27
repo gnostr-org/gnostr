@@ -11,10 +11,11 @@ use crate::sub_commands::send;
 use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
 
+
+
 use serde::ser::StdError;
 use gnostr_legit::command;
-use gnostr_legit::gitminer;
-use time::{get_time, now};
+
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -37,7 +38,7 @@ pub struct LegitSubCommand {
     #[arg(long, global = true)]
     pow: Option<String>,
     /// Desired commit prefix
-    #[arg(short, long)]
+    #[arg(long)]
     prefix: String,
     /// Number of worker threads to use
     #[arg(short, long)]
@@ -60,19 +61,8 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Push(args)) => push::launch(&args).await?,
         Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
         Some(LegitCommands::Mine) | None => {
-            let repo_path = sub_command_args.repository_path.clone().unwrap_or(".".to_string());
-            let prefix = sub_command_args.prefix.clone();
-            let threads = sub_command_args.threads.unwrap_or(8) as u32;
-            let message = sub_command_args.message.clone();
 
-            let opts = gitminer::Options {
-                threads,
-                target: prefix,
-                message,
-                repo: repo_path,
-                timestamp: now(),
-            };
-            command::run_legit(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
+            command::run_legit_command().map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
     Ok(())
