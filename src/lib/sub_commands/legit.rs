@@ -10,6 +10,7 @@ use crate::sub_commands::push;
 use crate::sub_commands::send;
 use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
+use std::time::SystemTime;
 
 
 
@@ -61,7 +62,13 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Push(args)) => push::launch(&args).await?,
         Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
         Some(LegitCommands::Mine) | None => {
-
+            let opts = gnostr_legit::gitminer::Options {
+                threads: sub_command_args.threads.unwrap_or(1) as u32,
+                target: sub_command_args.prefix.clone(),
+                message: sub_command_args.message.clone(),
+                repo: sub_command_args.repository_path.clone().unwrap_or(".".to_string()),
+                timestamp: SystemTime::now(),
+            };
             command::run_legit_command(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
