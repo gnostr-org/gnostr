@@ -65,7 +65,11 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
             let opts = gnostr_legit::gitminer::Options {
                 threads: sub_command_args.threads.unwrap_or(1) as u32,
                 target: sub_command_args.prefix.clone(),
-                message: sub_command_args.message.clone(),
+                message: if sub_command_args.message.is_empty() {
+                    "gnostr-legit-test".to_string()
+                } else {
+                    sub_command_args.message.clone()
+                },
                 repo: sub_command_args.repository_path.clone().unwrap_or(".".to_string()),
                 timestamp: SystemTime::now(),
             };
