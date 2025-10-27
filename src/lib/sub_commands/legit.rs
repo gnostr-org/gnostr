@@ -39,13 +39,13 @@ pub struct LegitSubCommand {
     #[arg(long, global = true)]
     pow: Option<String>,
     /// Desired commit prefix
-    #[arg(long)]
-    prefix: String,
+    #[arg(long, default_value = "000")]
+    prefix: Option<String>,
     /// Number of worker threads to use
-    #[arg(short, long)]
-    threads: Option<usize>,
+    #[arg(short, long, default_value_t = 1)]
+    threads: usize,
     /// Commit message to use
-    #[arg(short, long)]
+    #[arg(short, long, default_value = "gnostr-legit commit")]
     message: String,
     ///// disable spinner animations
     #[arg(long, action)]
@@ -63,8 +63,8 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
         Some(LegitCommands::Mine) | None => {
             let opts = gnostr_legit::gitminer::Options {
-                threads: sub_command_args.threads.unwrap_or(1) as u32,
-                target: sub_command_args.prefix.clone(),
+                threads: sub_command_args.threads as u32,
+                target: sub_command_args.prefix.clone().unwrap_or_default(),
                 message: if sub_command_args.message.is_empty() {
                     "gnostr-legit-test".to_string()
                 } else {
