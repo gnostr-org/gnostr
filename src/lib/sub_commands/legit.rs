@@ -12,6 +12,7 @@ use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
 
 use serde::ser::StdError;
+use gnostr_legit::command;
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -45,6 +46,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         LegitCommands::Pull => pull::launch().await?,
         LegitCommands::Push(args) => push::launch(&args).await?,
         LegitCommands::Fetch(args) => fetch::launch(&args).await?,
+        LegitCommands::Mine => command::run_legit_command().map_err(|e| Box::new(e) as Box<dyn StdError>)?,
     }
     Ok(())
 }
