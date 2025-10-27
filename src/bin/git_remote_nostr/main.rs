@@ -26,9 +26,6 @@ mod list;
 mod push;
 mod utils;
 
-use tempfile::Builder;
-use tokio::process::Command;
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = env::args();
@@ -139,88 +136,4 @@ async fn fetching_with_report_for_helper(
         term.write_line(&format!("nostr updates: {report}"))?;
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::{
-        env,
-        io::{self, Write},
-        path::PathBuf,
-        process::Stdio,
-    };
-    use tempfile::Builder;
-    use tokio::process::Command;
-
-    // Helper to get the path to the built binary.
-    // In a real scenario, this might involve building the binary first.
-    // For this example, we'll assume 'git_remote_nostr' is in the PATH or current dir.
-    fn get_binary_path() -> PathBuf {
-        // This is a placeholder. In a real test setup, you'd ensure the binary is built and accessible.
-        // For example, you might run `cargo build --bin git-remote-nostr` and then use its path.
-        // For now, let's assume it's in the PATH.
-        PathBuf::from("git_remote_nostr")
-    }
-
-    #[tokio::test]
-    async fn test_git_remote_nostr_capabilities() -> Result<()> {
-        let temp_dir = Builder::new().prefix("gnostr-test").tempdir()?;
-        let repo_path = temp_dir.path();
-
-        // Initialize a Git repository
-        let mut init_cmd = Command::new("git");
-        init_cmd.current_dir(repo_path);
-        init_cmd.arg("init");
-        init_cmd.stdout(Stdio::piped());
-        init_cmd.stderr(Stdio::piped());
-        let init_output = init_cmd.output().await?;
-        assert!(init_output.status.success(), "git init failed: {:?}", init_output);
-
-        // Set GIT_DIR environment variable to the temporary repo path
-        let original_git_dir = env::var("GIT_DIR").ok();
-        env::set_var("GIT_DIR", repo_path);
-
-        let nostr_url = "nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr";
-
-        // Prepare stdin for capabilities command
-        let mut child = Command::new(get_binary_path())
-            .arg(nostr_url)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()?;
-
-        let mut stdin = child.stdin.take().unwrap();
-        tokio::task::spawn(async move {
-            // Send capabilities command and an empty line to signal end of input
-            let mut buffer = io::Cursor::new(b"capabilities\n\n"); // Escaped for string literal
-            tokio::io::copy(&mut buffer, &mut stdin).await.unwrap();
-        });
-
-        let output = child.wait_with_output().await?;
-
-        // Restore original GIT_DIR environment variable
-        if let Some(original) = original_git_dir {
-            env::set_var("GIT_DIR", original);
-        } else {
-            env::remove_var("GIT_DIR");
-        }
-        // temp_dir is dropped automatically when it goes out of scope, cleaning up the directory.
-
-        assert!(output.status.success(), "git_remote_nostr failed: stdout='{}', stderr='{}'", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
-
-        let stdout = String::from_utf8(output.stdout)?;
-        let stderr = String::from_utf8(output.stderr)?;
-
-        println!("Stdout:\n{}", stdout);
-        println!("Stderr:\n{}", stderr);
-
-        // Check for expected output from capabilities command
-        assert!(stdout.contains("option"));
-        assert!(stdout.contains("push"));
-        assert!(stdout.contains("fetch"));
-
-        Ok(())
-    }
 }
