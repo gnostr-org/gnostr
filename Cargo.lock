@@ -4012,8 +4012,10 @@ dependencies = [
 name = "gnostr-legit"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "argparse",
  "chrono",
+ "clap 4.5.37",
  "git2",
  "pad",
  "rust-crypto",

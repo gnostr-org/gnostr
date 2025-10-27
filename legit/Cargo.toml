@@ -27,6 +27,8 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 sha2 = "0.10.7"
 pad = "0.1.6"
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+anyhow = "1.0.75"
 
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
