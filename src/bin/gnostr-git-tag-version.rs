@@ -76,12 +76,10 @@ mod tests {
         let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
         let expected_tag_name = format!("v{}.{}.{}", weeble.clone(), blockheight.clone(), wobble.clone());
-
-		println!("expected_tag_name={}", expected_tag_name);
+        println!("expected_tag_name={}", expected_tag_name);
 
         let _ = run(vec![], &weeble, &blockheight, &wobble);
 
-        // Verify the branch was created and checked out
         let current_tag_output = Command::new("git").arg("describe").arg("--tags").output().unwrap().stdout;
         let current_tag = String::from_utf8_lossy(&current_tag_output).trim().to_string();
         assert_eq!(current_tag, expected_tag_name);
@@ -103,9 +101,10 @@ mod tests {
 
         let suffix = "test_suffix";
         std::env::set_current_dir(repo_path)?;
-        let _ = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble);
 
         let expected_tag_name = format!("v{}.{}.{}-{}", weeble, blockheight, wobble, suffix);
+        println!("expected_tag_name={}", expected_tag_name);
+        let _ = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble);
 
         // Verify the tag was created
         let tag_list_output = Command::new("git").arg("tag").arg("-l").arg(&expected_tag_name).output().unwrap().stdout;
