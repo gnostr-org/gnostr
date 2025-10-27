@@ -23,7 +23,7 @@ use gnostr::{
     },
     repo_ref::RepoRef,
 };
-use nostr_sdk::{Event, EventId, Kind, PublicKey, Url};
+use nostr_sdk_0_34_0::{Event, EventId, Kind, PublicKey, Url};
 
 pub fn get_short_git_server_name(git_repo: &Repo, url: &str) -> std::string::String {
     if let Ok(name) = get_remote_name_by_url(&git_repo.git_repo, url) {
