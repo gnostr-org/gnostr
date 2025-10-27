@@ -4018,7 +4018,7 @@ dependencies = [
  "pad",
  "rust-crypto",
  "sha2 0.10.9",
- "time 0.1.45",
+ "time 0.3.41",
 ]
 
 [[package]]
