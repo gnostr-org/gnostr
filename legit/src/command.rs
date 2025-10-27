@@ -113,7 +113,7 @@ pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
 
     //parse_args_or_exit(&mut opts);
 
-    let mut miner = match Gitminer::new(opts) {
+    let mut miner = match Gitminer::new(opts.clone()) {
         Ok(m)  => m,
         Err(e) => { panic!("Failed to start git miner: {}", e); }
     };
@@ -175,6 +175,7 @@ pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
     
     let duration = SystemTime::now().duration_since(start).expect("Time went backwards");
     println!("{}", gnostr_test);
+    println!("Commit message: {}", opts.message);
     Ok(())
 
 }
