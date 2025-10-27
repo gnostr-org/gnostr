@@ -66,6 +66,8 @@ pub mod string_utils;
 pub mod strings;
 ///  <https://docs.rs/gnostr/latest/gnostr/sub_commands/index.html>
 pub mod sub_commands;
+#[cfg(test)]
+pub mod legit_mocks;
 ///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>

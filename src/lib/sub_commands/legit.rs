@@ -1,21 +1,47 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
+#![cfg_attr(not(test), warn(clippy::pedantic))]
+#![cfg_attr(not(test), warn(clippy::expect_used))]
 use crate::cli::LegitCommands;
+#[cfg(not(test))]
 use crate::sub_commands::fetch;
+#[cfg(not(test))]
 use crate::sub_commands::init;
+#[cfg(not(test))]
 use crate::sub_commands::list;
+#[cfg(not(test))]
 use crate::sub_commands::login;
+#[cfg(not(test))]
 use crate::sub_commands::pull;
+#[cfg(not(test))]
 use crate::sub_commands::push;
+#[cfg(not(test))]
 use crate::sub_commands::send;
 use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
 use std::time::SystemTime;
 
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::fetch;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::init;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::list;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::login;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::pull;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::push;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::send;
 
 
 use serde::ser::StdError;
+#[cfg(not(test))]
 use gnostr_legit::command;
+#[cfg(test)]
+use crate::sub_commands::legit_mocks::gnostr_legit;
 
 
 #[derive(Args, Debug)]
@@ -73,7 +99,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                 repo: sub_command_args.repository_path.clone().unwrap_or(".".to_string()),
                 timestamp: SystemTime::now(),
             };
-            command::run_legit_command(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
+            gnostr_legit::command::run_legit_command(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
     Ok(())
