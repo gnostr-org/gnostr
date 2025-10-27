@@ -113,7 +113,7 @@ pub fn run_legit_command() -> io::Result<()> {
         target:  "00000".to_string(),
         message: message,
         repo:    path.as_path().display().to_string(),
-        timestamp: time::now(),
+        timestamp: SystemTime::now(),
     };
 
     parse_args_or_exit(&mut opts);

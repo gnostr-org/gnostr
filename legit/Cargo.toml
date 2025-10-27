@@ -22,7 +22,7 @@ categories = ["command-line-utilities"]
 rust-crypto = "0.2.36"
 git2        = "0.18.3"
 argparse    = "0.2.2"
-time        = "0.1.42"
+time = { version = "0.3", features = ["macros", "formatting"] }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 sha2 = "0.10.7"
