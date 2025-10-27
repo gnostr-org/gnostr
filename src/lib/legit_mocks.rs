@@ -77,10 +77,10 @@ pub mod fetch {
 }
 
 // Mock for gnostr_legit::command
-pub mod gnostr_legit {
+pub mod mock_gnostr_legit {
     pub mod command {
         use super::super::*;
-        use gnostr_legit::gitminer::Options; // Use the actual struct
+        use mock_gnostr_legit::gitminer::Options; // Use the actual struct
         pub fn run_legit_command(_opts: Options) -> Result<(), Box<dyn StdError>> {
             MINE_CALLED.store(true, Ordering::SeqCst);
             Ok(())
@@ -88,7 +88,7 @@ pub mod gnostr_legit {
     }
     // Re-export gitminer::Options if needed by the main code or other mocks
     pub mod gitminer {
-        pub use gnostr_legit::gitminer::Options;
+        pub use mock_gnostr_legit::gitminer::Options;
     }
 }
 

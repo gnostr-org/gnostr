@@ -7,6 +7,15 @@ use std::time::SystemTime;
 use gnostr::cli::LegitCommands;
 use gnostr::sub_commands::legit::{legit, LegitSubCommand};
 
+static LOGIN_CALLED: AtomicBool = AtomicBool::new(false);
+static INIT_CALLED: AtomicBool = AtomicBool::new(false);
+static SEND_CALLED: AtomicBool = AtomicBool::new(false);
+static LIST_CALLED: AtomicBool = AtomicBool::new(false);
+static PULL_CALLED: AtomicBool = AtomicBool::new(false);
+static PUSH_CALLED: AtomicBool = AtomicBool::new(false);
+static FETCH_CALLED: AtomicBool = AtomicBool::new(false);
+static MINE_CALLED: AtomicBool = AtomicBool::new(false);
+
 // Mock implementations of the launch functions
 mod login {
     use super::*;
@@ -54,10 +63,10 @@ mod fetch {
 }
 
 // Mock for gnostr_legit::command
-mod gnostr_legit {
+mod mock_gnostr_legit {
     pub mod command {
         use super::super::*;
-        use gnostr_legit::gitminer::Options;
+        use mock_gnostr_legit::gitminer::Options;
         pub fn run_legit_command(_opts: Options) -> Result<(), Box<dyn StdError>> {
             MINE_CALLED.store(true, Ordering::SeqCst);
             Ok(())
@@ -65,7 +74,7 @@ mod gnostr_legit {
     }
     // Re-export gitminer::Options if needed by the main code or other mocks
     pub mod gitminer {
-        pub use gnostr_legit::gitminer::Options;
+        pub use mock_gnostr_legit::gitminer::Options;
     }
 }
 
