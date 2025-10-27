@@ -175,7 +175,6 @@ pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
     
     let duration = SystemTime::now().duration_since(start).expect("Time went backwards");
     println!("{}", gnostr_test);
-    println!("Commit message: {}", opts.message);
     Ok(())
 
 }
