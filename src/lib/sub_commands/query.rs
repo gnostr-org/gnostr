@@ -39,7 +39,7 @@ pub struct QuerySubCommand {
     #[arg(num_args = 1.., long)]
     pub search: Option<Vec<String>>,
     /// Specify a relay URL to connect to.
-    #[arg(long, default_value = "wss://relay.damus.io")]
+    #[arg(long, short, default_value = "wss://relay.damus.io")]
     pub relay: Option<String>,
 }
 
