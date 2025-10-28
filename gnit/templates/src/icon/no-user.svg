@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Written by Treer (gitlab.com/Treer) -->
+
+<svg
+   version="1.1"
+   width="600"
+   height="600"
+   fill="white"
+   id="svg562"
+   sodipodi:docname="no-user.svg"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview564"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="1.7116667"
+     inkscape:cx="248.00389"
+     inkscape:cy="291.82084"
+     inkscape:window-width="3440"
+     inkscape:window-height="1388"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg562" />
+  <title
+     id="title549">Abstract user icon</title>
+  <defs
+     id="defs554">
+    <clipPath
+       id="circular-border">
+      <circle
+         cx="300"
+         cy="300"
+         r="250"
+         id="circle551" />
+    </clipPath>
+  </defs>
+  <rect
+     style="fill:#1a1a1a;fill-opacity:1;stroke:#000000;stroke-width:0"
+     id="rect2537"
+     width="600"
+     height="600"
+     x="4.9909852e-07"
+     y="4.9906225e-07" />
+  <circle
+     cx="300"
+     cy="230"
+     r="100"
+     id="circle558" />
+  <circle
+     cx="300"
+     cy="550"
+     clip-path="url(#circular-border)"
+     id="circle560"
+     r="190" />
+  <metadata
+     id="metadata4117">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Abstract user icon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
