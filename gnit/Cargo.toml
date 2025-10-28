@@ -9,10 +9,9 @@ license = "WTFPL"
 [workspace]
 members = ["tree-sitter-grammar-repository"]
 
-## [[bin]]
-## name = "gnostr-ssh"
-## path = "ssh/src/bin/gnostr-ssh.rs"
-## # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "gnostr_gnit"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0"
