@@ -262,7 +262,7 @@ pub async fn get_blockheight_async() -> Result<String, &'static str> {
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    Ok(format!("{}", blockhash().unwrap().to_string()))
+    Ok(format!("{}", blockhash().unwrap_or(0_f64).to_string()))
 }
 
 /// pub fn hash_list()
