@@ -183,7 +183,7 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - run: |
-          cargo test -vv
+          cargo test
         #if: matrix.os == 'macos-latest'
 
       - run: |
