@@ -8,6 +8,7 @@ use git2::*;
 use super::worker::Worker;
 use std::process;
 
+#[derive(Clone)]
 pub struct Options {
     pub threads:   u32,
     pub target:    String,

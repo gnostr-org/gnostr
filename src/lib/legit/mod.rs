@@ -26,6 +26,7 @@ use std::{io, thread};
 
 use std::path::PathBuf; //for get_current_dir
 
+pub mod command;
 pub mod gitminer;
 pub mod repo;
 pub mod worker;

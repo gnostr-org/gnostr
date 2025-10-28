@@ -12,7 +12,7 @@ use std::thread;
 use std::convert::TryInto;
 
 use clap::Parser;
-use gnostr_legit::{command, gitminer};
+use gnostr::legit::{command, gitminer};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -62,7 +62,7 @@ fn main() -> io::Result<()> {
         target: args.prefix,
         message: message,
         repo: path.as_path().display().to_string(),
-        timestamp: SystemTime::now(),
+        timestamp: SystemTime::now().into(),
     };
 
     command::run_legit_command(opts)
