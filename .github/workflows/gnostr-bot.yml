@@ -176,10 +176,10 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT) && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }}
+            gnostr query -i $EVENT -r ${{ env.DAMUS }} && echo && \
+            gnostr query -i $EVENT -r ${{ env.NOS }} && echo
         if: matrix.os == 'macos-latest'
 
       - run: |
