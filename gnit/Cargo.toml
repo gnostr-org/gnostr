@@ -48,7 +48,8 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-gnostr-ssh = { version = "0.0.1", path = "../ssh" }
+gnostr-ssh = { version = "1912.921106.461013", path = "../ssh" }
+
 httparse = "1.7"
 humantime = "2.1"
 itertools = "0.13.0"
