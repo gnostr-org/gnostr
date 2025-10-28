@@ -69,27 +69,30 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Restore rustup
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
           key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Restore cargo
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-cargo-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Restore target
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-target-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             target
@@ -112,27 +115,31 @@ jobs:
 
       - run: cargo-binstall --no-confirm gnostr
 
-      - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
-        if: matrix.os == 'ubuntu-latest'
+      #- run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
+      #  if: matrix.os == 'ubuntu-latest'
 
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
-      - run: |
-          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-          brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os == 'ubuntu-latest'
+      #- run: |
+      #    test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+      #    test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      #    echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+      #    brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      #  if: matrix.os == 'ubuntu-latest'
 
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
       - run: brew tap nostorg/nostr || true
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'macos-latest'
@@ -335,25 +342,28 @@ jobs:
             echo "http://nostr.band/$NOTE"
 
       - name: Save rustup
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-rustup-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
           key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
       - name: Save cargo
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-cargo-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
       - name: Save target
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-target-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             target
