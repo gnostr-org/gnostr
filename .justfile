@@ -85,6 +85,9 @@ dep-graph:
 gnostr-chat:
   @make gnostr-chat
 
+gnostr-gnit:
+  @make gnostr-gnit
+
 fetch-by-id:
   @make fetch-by-id
 
