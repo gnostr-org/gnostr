@@ -184,6 +184,7 @@ jobs:
 
       - run: |
           cargo test
+          cargo test -- --ignored || true
         #if: matrix.os == 'macos-latest'
 
       - run: |
