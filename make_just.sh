@@ -165,8 +165,8 @@ gnostr-chat: 	## 	gnostr-chat
 	cargo run --bin gnostr -- chat --topic gnostr --name "\$(shell gnostr-weeble)/\$(shell gnostr-blockheight)/\$(shell gnostr-wobble):\$(USER)"
 
 gnostr-gnit: 	## 	gnostr-gnit
-	cargo  b -j \$(NPROC) --bin gnostr-gnit --manifest-path ./gnit/Cargo.toml
-	cargo run --bin gnostr-gnit --manifest-path ./gnit/Cargo.toml
+	cargo  b -j \$(NPROC) --bin gnostr_gnit --manifest-path ./gnit/Cargo.toml
+	cargo run --bin gnostr_gnit --manifest-path ./gnit/Cargo.toml
 
 fetch-by-id: 	### 	fetch-by-id
 	cargo  -j \$(NPROC) install --bin gnostr-fetch-by-id --path .
