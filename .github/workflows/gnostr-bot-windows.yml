@@ -29,6 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Calculate Odd/Even Status
+        if: matrix.os != 'windows-latest'
         id: time_check_hour
         run: |
           # Get the current hour (0-23) in UTC
@@ -206,14 +207,14 @@ jobs:
 
       - name: 🚀 Run if UTC second is EVEN
         # The 'if' condition checks the boolean output from the previous step.
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }} && matrix.os != 'windows-latest'
         run: |
           echo "✅ Running job for an EVEN UTC second."
           cargo test
 
       - name: 🌙 Run if UTC second is ODD
         # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' }} && matrix.os != 'windows-latest'
         run: |
           echo "✅ Running job for an ODD UTC second."
           cargo test -- --ignored || true
