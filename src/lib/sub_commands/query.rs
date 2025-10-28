@@ -13,7 +13,7 @@ pub struct QuerySubCommand {
     #[arg(long)]
     pub authors: Option<String>,
     /// Filter by event IDs (comma-separated).
-    #[arg(long)]
+    #[arg(long, short)]
     pub ids: Option<String>,
     /// Maximum number of events to return.
     #[arg(long, default_value = "1")]
