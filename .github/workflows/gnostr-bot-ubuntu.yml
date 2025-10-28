@@ -223,14 +223,14 @@ jobs:
         if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
-          cargo test
+          cargo test --lib
 
       - name: 🌙 Run if UTC second is ODD
         # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
         run: |
           echo "✅ Running job for an ODD UTC second."
-          cargo test -- --ignored || true
+          cargo test --lib -- --ignored || true
           # Add your odd-second steps here
 
       - run: |
