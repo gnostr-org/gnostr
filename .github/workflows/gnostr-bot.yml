@@ -96,6 +96,13 @@ jobs:
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os != 'windows-latest'
 
+      - run: |
+          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+          brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+        if: matrix.os == 'ubuntu-latest'
+
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: matrix.os != 'windows-latest'
 
@@ -107,13 +114,6 @@ jobs:
 
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'macos-latest'
-
-      - run: |
-          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-          brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os == 'ubuntu-latest'
 
       - run: gnostr --help
 
