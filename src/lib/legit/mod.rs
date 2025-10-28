@@ -367,7 +367,7 @@ fn cli() -> io::Result<()> {
         //gnostr:##:nonce
         //part of the gnostr protocol
         //src/worker.rs adds the nonce
-        pwd_hash: pwd_hash.clone(),
+        //pwd_hash: pwd_hash.clone(),
         message: pwd,
         //message: message,
         //message: count.to_string(),

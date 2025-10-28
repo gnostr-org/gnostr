@@ -23,27 +23,17 @@ use gnostr::{
     },
     repo_ref::RepoRef,
 };
-use nostr_0_34_1::{Event, EventId, Kind, PublicKey, UncheckedUrl};
-use nostr_0_34_1::types::Url;
+use nostr_sdk_0_34_0::{Event, EventId, Kind, PublicKey, Url};
 
 pub fn get_short_git_server_name(git_repo: &Repo, url: &str) -> std::string::String {
     if let Ok(name) = get_remote_name_by_url(&git_repo.git_repo, url) {
         return name;
     }
-    if url.starts_with("nostr://") {
-        return "nostr".to_string();
-    }
-    // Attempt to parse the URL into an UncheckedUrl first.
-    if let Ok(unchecked_url) = UncheckedUrl::from_str(url) {
-        // Then, try to convert the UncheckedUrl into a checked Url.
-        if let Ok(checked_url) = Url::try_from(unchecked_url) {
-            // If successful, extract the domain from the checked Url.
-            if let Some(domain) = checked_url.domain() {
-                return domain.to_string();
-            }
+    if let Ok(url) = Url::parse(url) {
+        if let Some(domain) = url.domain() {
+            return domain.to_string();
         }
     }
-    // Fallback to the original URL string if domain extraction fails.
     url.to_string()
 }
 
@@ -230,14 +220,11 @@ pub fn get_read_protocols_to_try(
 ) -> Vec<ServerProtocol> {
     if server_url.protocol() == ServerProtocol::Filesystem {
         vec![(ServerProtocol::Filesystem)]
-    } else if server_url.protocol() == ServerProtocol::Nostr {
-        vec![ServerProtocol::Nostr]
     } else if let Some(protocol) = &decoded_nostr_url.protocol {
         vec![protocol.clone()]
     } else {
         let mut list = if server_url.protocol() == ServerProtocol::Http {
             vec![
-                ServerProtocol::Nostr,
                 ServerProtocol::UnauthHttp,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
@@ -245,10 +232,9 @@ pub fn get_read_protocols_to_try(
                 ServerProtocol::Http,
             ]
         } else if server_url.protocol() == ServerProtocol::Ftp {
-            vec![ServerProtocol::Nostr, ServerProtocol::Ftp, ServerProtocol::Ssh]
+            vec![ServerProtocol::Ftp, ServerProtocol::Ssh]
         } else {
             vec![
-                ServerProtocol::Nostr,
                 ServerProtocol::UnauthHttps,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
@@ -274,24 +260,20 @@ pub fn get_write_protocols_to_try(
 ) -> Vec<ServerProtocol> {
     if server_url.protocol() == ServerProtocol::Filesystem {
         vec![(ServerProtocol::Filesystem)]
-    } else if server_url.protocol() == ServerProtocol::Nostr {
-        vec![ServerProtocol::Nostr]
     } else if let Some(protocol) = &decoded_nostr_url.protocol {
         vec![protocol.clone()]
     } else {
         let mut list = if server_url.protocol() == ServerProtocol::Http {
             vec![
-                ServerProtocol::Nostr,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
                 // authenticated
                 ServerProtocol::Http,
             ]
         } else if server_url.protocol() == ServerProtocol::Ftp {
-            vec![ServerProtocol::Nostr, ServerProtocol::Ssh, ServerProtocol::Ftp]
+            vec![ServerProtocol::Ssh, ServerProtocol::Ftp]
         } else {
             vec![
-                ServerProtocol::Nostr,
                 ServerProtocol::Ssh,
                 // note: list and fetch stop here if ssh was
                 // authenticated

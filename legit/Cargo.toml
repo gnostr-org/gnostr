@@ -1,0 +1,35 @@
+[package]
+name    = "gnostr-legit"
+
+[lib]
+name = "gnostr_legit"
+path = "src/lib.rs"
+version = "0.0.0"
+authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
+edition = "2021"
+rust-version = "1.61.0"
+description = "gnostr blob manager and pow miner"
+documentation = "https://legit.gnostr.org"
+readme = "README.md"
+homepage = "https://legit.gnostr.org/"
+repository = "https://github.com/gnostr-org/gnostr-legit.git"
+license = "MIT OR Apache-2.0"
+keywords = ["git", "pow", "proof-of-work", "gnostr", "nostr"]
+categories = ["command-line-utilities"]
+
+
+[dependencies]
+rust-crypto = "0.2.36"
+git2        = "0.18.3"
+argparse    = "0.2.2"
+time = { version = "0.3", features = ["macros", "formatting"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+sha2 = "0.10.7"
+pad = "0.1.6"
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+anyhow = "1.0.75"
+
+[build-dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+#crypto      = "0.4.0"

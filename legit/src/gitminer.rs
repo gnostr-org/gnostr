@@ -7,13 +7,15 @@ use std::thread;
 use git2::*;
 use super::worker::Worker;
 use std::process;
+use std::time::SystemTime;
 
+#[derive(Clone)]
 pub struct Options {
     pub threads:   u32,
     pub target:    String,
     pub message:   String,
     pub repo:      String,
-    pub timestamp: time::OffsetDateTime, 
+    pub timestamp: SystemTime
 }
 
 pub struct Gitminer {
@@ -67,8 +69,7 @@ impl Gitminer {
         let (_, blob, hash) = rx.recv().unwrap();
 
         //potential timing issue?
-        let write_reflog = self.write_reflog(&hash, &blob);
-        let write_blob = self.write_reflog(&hash, &blob);
+        let _write_reflog = self.write_reflog(&hash, &blob);
 
         match self.write_commit(&hash, &blob) {
             Ok(_)  => Ok(hash),
@@ -138,7 +139,7 @@ impl Gitminer {
         Ok(())
     }//end write_commit
 
-    fn write_reflog(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+    fn write_reflog(&self, hash: &String, _blob: &String) -> Result<(), &'static str> {
 
     //REF:
     //gnostr-git reflog --format='wss://{RELAY}/{REPO}/%C(auto)%H/%<|(17)%gd:commit:%s'
@@ -174,7 +175,7 @@ impl Gitminer {
         Ok(())
     }//end write_reflog
 
-    fn write_blob(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+    fn _write_blob(&self, hash: &String, _blob: &String) -> Result<(), &'static str> {
         //write the blob
         Command::new("sh")
             .arg("-c")
@@ -221,21 +222,21 @@ impl Gitminer {
         Ok(format!("{}", relays))
     }
 
-    fn revparse_0(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+    fn _revparse_0(repo: &mut git2::Repository) -> Result<String, &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
         let head   = repo.revparse_single("HEAD").unwrap();
         let head_2 = format!("{}", head.id());
 
-        Ok((head_2))
+        Ok(head_2)
     }
-    fn revparse_1(repo: &mut git2::Repository) -> Result<(String), &'static str> {
+    fn _revparse_1(repo: &mut git2::Repository) -> Result<String, &'static str> {
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
         let head   = repo.revparse_single("HEAD~1").unwrap();
         let head_1 = format!("{}", head.id());
 
-        Ok((head_1))
+        Ok(head_1)
     }
 
     fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
