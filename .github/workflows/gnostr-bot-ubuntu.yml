@@ -213,6 +213,13 @@ jobs:
 
       - name: 🚀 Run if UTC second is EVEN
         # The 'if' condition checks the boolean output from the previous step.
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        run: |
+          echo "✅ Running job for an EVEN UTC second."
+          cargo clean
+
+      - name: 🚀 Run if UTC second is EVEN
+        # The 'if' condition checks the boolean output from the previous step.
         if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
