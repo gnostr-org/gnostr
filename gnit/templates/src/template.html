@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="theme-color" content="#0f0f0f"/>
+		<meta http-equiv="Content-Security-Policy"
+			content="default-src 'none'; manifest-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self' fonts.googleapis.com; img-src http: https: data:; media-src *; font-src 'self' fonts.gstatic.com; child-src 'none';" />
+		<title>Yo, Sup <h1>Hello {{user}}!</h1>¬</title>
+		<link rel="manifest" href="/pwa/manifest.json"/>
+		<link rel="icon" href="/icon/icon.svg" type="image/svg+xml"/>
+		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
+		<link rel="stylesheet" href="/css/vars.css?v=1">
+		<link rel="stylesheet" href="/css/utils.css?v=1">
+		<link rel="stylesheet" href="/css/styles.css?v=13">
+		<link rel="stylesheet" href="/css/responsive.css?v=10">
+		<script defer src="/js/util.js?v=5"></script>
+		<script defer src="/js/ui/safe-html.js?v=1"></script>
+		<script defer src="/js/ui/util.js?v=8"></script>
+		<script defer src="/js/ui/render.js?v=15"></script>
+		<script defer src="/js/ui/state.js?v=1"></script>
+		<script defer src="/js/ui/fmt.js?v=1"></script>
+		<script defer src="/js/ui/profile.js?v=1"></script>
+		<script defer src="/js/ui/settings.js?v=1"></script>
+		<script defer src="/js/ui/dm.js?v=1"></script>
+		<script defer src="/js/nostr.js?v=7"></script>
+		<script defer src="/js/core.js?v=1"></script>
+		<script defer src="/js/model.js?v=1"></script>
+		<script defer src="/js/contacts.js?v=1"></script>
+		<script defer src="/js/event.js?v=1"></script>
+		<script defer src="/js/lib.js?v=1"></script>
+		<script defer src="/js/main.js?v=1"></script>
+	</head>
+	<body>
+		<div id="container-busy">
+			<div class="loader" title="Loading...">
+				<img class="dark-invert" src="/icon/loader-fragment.svg"/>
+			</div>
+		</div>
+		<div id="container-welcome" class="hide">
+			<div class="hero-box">
+				<div class="padded">
+					<h1>
+						Yo, Sup? <h1>Hello {{user}}!</h1>¬
+						<img class="icon svg" src="/icon/logo-inverted.svg"/>
+					</h1>
+					<p>A minimal experience for Nostr.</p>
+					<p>Please access with a nos2x compatible browser.</p>
+				</div>
+			</div>
+		</div>
+
+		<div id="container-app" class="hide">
+		
+		<div id="container">
+			<div class="flex-fill vertical-hide"></div>
+			<nav id="nav" class="nav full flex-noshrink vertical-hide">
+				<div>
+					<div id="app-icon-logo">
+						<img class="icon svg" title="Damus" src="/icon/logo-inverted.svg"/>
+					</div>
+					<button action="open-view" data-view="friends" class="nav icon" 
+						title="Home">
+						<img class="icon svg inactive" src="/icon/home.svg"/>
+						<img class="icon svg active" src="/icon/home-active.svg"/>
+					</button>
+					<button action="open-view" data-view="dm" class="nav icon" 
+						title="Direct Messages">
+						<img class="icon svg inactive" src="/icon/messages.svg"/>
+						<img class="icon svg active" src="/icon/messages-active.svg"/>
+						<div class="new-notifications hide" role="dm"></div>
+					</button>
+					<button action="open-view" data-view="notifications"
+						class="nav icon" title="Notifications">
+						<img class="icon svg inactive" src="/icon/notifications.svg"/>
+						<img class="icon svg active" src="/icon/notifications-active.svg"/>
+						<div class="new-notifications hide" role="activity"></div>
+					</button>
+					<button action="open-view" data-view="settings" 
+						title="Settings" class="nav icon">
+						<img class="icon svg inactive" src="/icon/settings.svg"/>
+						<img class="icon svg active" src="/icon/settings-active.svg"/>
+					</button>
+					<button action="new-note" title="New Note" class="nav icon new-note">
+						<img class="icon svg invert" src="/icon/new-note.svg"/>
+					</button>
+				</div>
+			</nav>
+
+			<div id="view">
+					<header>
+						<label>Home</label>
+						<div id="header-tools">
+							<button class="action small hide"
+							disabled action="mark-all-read">
+								Mark All Read
+							</button>
+							<img class="pfp hide" role="their-pfp" data-pubkey=""
+							src="/icon/no-user.svg"/>
+							<img class="pfp hide" role="my-pfp" data-pubkey=""
+							src="/icon/no-user.svg"/>
+						</div>
+					</header>
+					<div id="profile-info" role="profile-info" class="bottom-border hide">
+						<div class="profile-banner" name="profile-banner"></div>
+						<div class="flex">
+							<img name="profile-image" class="pfp jumbo hide"/>
+							<label name="profile-nip05"></label>
+							<div class="profile-tools">
+								<button class="icon link hide"
+								name="profile-website" action="open-link">
+									<img class="icon svg" src="/icon/profile-website.svg"/>
+								</button>
+								<button class="icon link hide" 
+								title="Copy Lightning Address"
+								name="profile-lud06" action="open-lud06">
+									<img class="icon svg" src="/icon/profile-zap.svg"/>
+								</button>
+								<button class="icon" name="message-user"
+								title="Directly Message">
+									<img class="icon svg" src="/icon/message-user.svg"/>
+								</button>
+								<button class="icon" name="copy-pk"
+								data-pk="" title="Copy Public Key">
+									<img class="icon svg" src="/icon/pubkey.svg"/></button>
+								
+								<button class="action" name="follow-user" 
+								data-pk="">Follow</button>
+								<button class="action" name="edit-profile"
+								title="Update Profile">
+									Update	
+								</button>
+							</div>
+						</div>
+						<div>
+							<p name="profile-about"></p>
+						</div>
+					</div>
+					<div class="loading-events">
+						<div class="loader" title="Loading...">
+							<img class="dark-invert" src="/icon/loader-fragment.svg"/>
+						</div>
+					</div>
+					<div id="show-new" class="show-new bottom-border hide">
+						<button action="show-timeline-new">
+							Show New (<span role="count">0</span>)</button>
+					</div>
+					<div id="dms" class="hide">
+					</div>
+					<div id="timeline" class="events"></div>
+					<div id="show-more" class="show-more">
+						<button action="show-timeline-more">Show More</button>
+					</div>
+					<div id="settings" class="hide">
+						<section>
+							<header>
+								<label>Relays</label>
+								<button id="add-relay" class="btn-text">
+									<img class="svg icon small" src="/icon/add-relay.svg"/>
+								</button>
+							</header>
+							<table id="relay-list" class="row">
+								<thead>
+									<tr>
+										<td>Address</td>
+										<td>Option</td>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+						</section>
+						<section>
+							<header><label>Info</label></header>
+							<p>
+							<a href="https://git.sr.ht/~tomtom/damus">Source Code</a> 
+							<a href="https://todo.sr.ht/~tomtom/damus-web-issues">Bug Tracker</a> 
+							<a href="mailto:thomas.c.mathews@gmail.com">Email Me</a> 
+							</p>
+						</section>
+					</div>
+					<footer>
+						<div id="dm-post" class="hide">
+							<textarea class="post-input dm" name="message"></textarea>
+							<div class="post-tools">
+								<button name="send-dm" class="action">Send</button>
+							</div>
+						</div>
+						<nav class="nav mobile">
+							<button action="open-view" data-view="friends" class="icon" 
+								title="Home">
+								<img class="icon svg inactive" src="/icon/home.svg"/>
+								<img class="icon svg active" src="/icon/home-active.svg"/>
+							</button>
+							<button action="open-view" data-view="dm" class="icon" 
+								title="Direct Messages">
+								<img class="icon svg inactive" src="/icon/messages.svg"/>
+								<img class="icon svg active" src="/icon/messages-active.svg"/>
+								<div class="new-notifications hide" role="dm"></div>
+							</button>
+							<button action="open-view" data-view="notifications"
+								class="icon" title="Notifications">
+								<img class="icon svg inactive" src="/icon/notifications.svg"/>
+								<img class="icon svg active" src="/icon/notifications-active.svg"/>
+								<div class="new-notifications hide" role="activity"></div>
+							</button>
+							<button action="open-view" data-view="settings" 
+								title="Settings" class="icon">
+								<img class="icon svg inactive" src="/icon/settings.svg"/>
+								<img class="icon svg active" src="/icon/settings-active.svg"/>
+							</button>
+							<button id="new-note-mobile" action="new-note" 
+								title="New Note" class="nav icon new-note">
+								<img class="icon svg invert" src="/icon/new-note.svg"/>
+							</button>
+						</nav>
+					</footer>
+			</div>
+			<div class="flex-fill vertical-hide"></div>
+		</div>
+		</div>
+
+		<dialog id="media-preview" action="close-media">
+			<img action="close-media" src=""/>
+			<!-- TODO add loader to media preview -->
+		</dialog>
+		<dialog id="reply-modal">
+			<div class="container">
+				<header>
+					<label>Reply To</label>
+					<button class="icon" action="close-modal">
+						<img class="icon svg" src="/icon/close-modal.svg"/>
+					</button>
+				</header>
+				<div id="replying-to"></div>
+				<div id="replybox">
+					<textarea id="reply-content" class="post-input"
+						placeholder="Reply..."></textarea>
+					<div class="post-tools new">
+						<button class="action" name="send">Send</button>
+					</div>
+					<div class="post-tools reply">
+						<button class="action" name="reply-all" data-all="1">Reply All</button>
+						<button class="action" name="reply">Reply</button>
+					</div>
+				</div>
+			</div>
+		</dialog>
+		<dialog id="profile-editor">
+			<div class="container">
+				<header>
+					<label>Update Profile</label>
+					<button class="icon" action="close-modal">
+						<img class="icon svg" src="/icon/close-modal.svg"/>
+					</button>
+				</header>
+				<div>
+					<input type="text" class="block w100" name="name" placeholder="Name"/>
+					<input type="text" class="block w100" name="display_name" placeholder="Display Name"/>
+					<input type="text" class="block w100" name="picture" placeholder="Picture URL"/>
+					<input type="text" class="block w100" name="banner" placeholder="Banner URL"/>
+					<input type="text" class="block w100" name="website" placeholder="Website"/>
+					<input type="text" class="block w100" name="lud06" placeholder="lud06"/>
+					<input type="text" class="block w100" name="nip05" placeholder="nip05"/>
+					<textarea name="about" class="block w100" placeholder="A bit about you."></textarea>
+					<button class="action float-right" action="open-profile-editor">
+						Update
+					</button>
+				</div>
+			</div>
+		</dialog>
+		<dialog id="event-details">
+			<div class="container">
+				<header>
+					<label>Event Details</label>
+					<button class="icon modal-floating-close-btn" action="close-modal">
+						<img class="icon svg" src="/icon/close-modal.svg"/>
+					</button>
+				</header>
+				<div class="max-content">
+					<pre><code></code></pre>
+				</div>
+			</div>
+		</dialog>
+
+		</div>
+	</body>
+</html>

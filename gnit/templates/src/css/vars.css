@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;800&display=swap');
+
+:root {
+	/* Colors */
+	--clrBg:           #fff;
+	--clrPanel:        #f9f9f9;
+	--clrBorder:       #f2f2f2;
+	--clrBtn:          #202020;
+	--clrText:         #202020;
+	--clrTextLight:    #868686;
+	--clrTextLighter:  #abb4ca;
+	--clrHeart:        #ff5050;
+	--clrWarn:         #fbc560;
+	--clrLink:         blue;
+	--clrLinkVisited:  purple;
+	--clrNotification: #0058ff;
+	--clrChatBlue:     #0058ff; 
+	
+	/* TODO I don't like these and simply did it for dark mode. To rename. */
+	--clrEvMsg:       #f4f4f4; 
+	--clrTextEvMsg:   #444;
+	--clrBgAction:    #171717;
+	--clrTextAction:  white;
+
+	/* Font Sizes */
+	--fsSmall:    12px;
+	--fsReduced:  14px;
+	--fsNormal:   16px;
+	--fsEnlarged: 18px;
+	--fsLarge:    22px;
+
+	/* Font Families */
+	--ffDefault: "Noto Sans", sans-serif;
+
+	/* Z Layers */
+	--zDefault: 0;
+	--zPFP:     1;
+	--zHeader:  2;
+	--zGlobal:  3;
+	--zModal:   4;
+
+	/* Icon */
+	--iconSize: 24px;
+	--iconSizeSmall: 15px;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--clrBg: #0f0f0f;
+		--clrText: #fff;
+		--clrPanel: #1f1f1f;
+		--clrBorder: #282828;
+		--clrLink: #fb5151;
+		--clrLinkVisited: #f77;
+		--clrEvMsg: #353535;
+		--clrTextEvMsg: white;
+		--clrBgAction: white;
+		--clrTextAction: #1f1f1f;
+	}
+}

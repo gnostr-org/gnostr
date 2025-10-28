@@ -1,0 +1,44 @@
+@media (max-width: 840px){
+	/* Utility */
+	.vertical-hide {
+		display: none !important;
+	}
+
+	/* Application Framework */
+	#view {
+		flex: 1;
+		width: initial;
+		border-right: none;
+	}
+	.nav.mobile {
+		display: flex;
+	}
+	#content header > label {
+	    padding: 12px;
+	}
+	.nav.mobile .new-note {
+		position: fixed;
+		height: initial;
+		bottom: 88px;
+		right: 20px;
+		z-index: var(--zGlobal);
+		padding: 24px;
+	}
+
+	/* Event */
+	.pfp { /* TODO sync up with userpic */
+		width: 44px;
+		height: 44px;
+	}
+
+	dialog:modal {
+		width: initial;
+		padding: 10px;
+	}
+
+	.modal-content {
+		margin-top: 0;
+		border-radius: 0;
+		height: 100%;
+	}
+}
