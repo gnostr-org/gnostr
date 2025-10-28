@@ -1,0 +1,54 @@
+name: Check UTC Hour Odd/Even
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # run 30th minute
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  check_time:
+    runs-on: ubuntu-latest
+    
+    # 1. Get the current UTC hour and DETERMINE if it's even
+    steps:
+      - name: Calculate Odd/Even Status
+        id: time_check
+        run: |
+          # Get the current hour (0-23) in UTC
+          CURRENT_HOUR=$(date -u +%H)
+          echo "Current UTC Hour is $CURRENT_HOUR"
+
+          # Use a shell arithmetic expression to check for evenness (remainder of division by 2 is 0)
+          # '0' is even, '1' is odd.
+          if (( CURRENT_HOUR % 2 == 0 )); then
+            IS_EVEN="true"
+            STATUS="EVEN"
+          else
+            IS_EVEN="false"
+            STATUS="ODD"
+          fi
+
+          echo "The hour is $STATUS"
+
+          # Set a boolean output for the subsequent steps to consume
+          echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Run if UTC Hour is EVEN
+        # The 'if' condition checks the boolean output from the previous step.
+        if: ${{ steps.time_check.outputs.is_even == 'true' }}
+        run: |
+          echo "✅ Running job for an EVEN UTC hour."
+          # Add your even-hour steps here
+
+      - name: 🌙 Run if UTC Hour is ODD
+        # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
+        if: ${{ steps.time_check.outputs.is_even != 'true' }}
+        run: |
+          echo "✅ Running job for an ODD UTC hour."
+          # Add your odd-hour steps here
