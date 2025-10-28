@@ -204,6 +204,7 @@ ratatui = { version = "0.28", default-features = false, features = [
     'serde',
 ] }
 rayon-core = "1.12"
+rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 ron = "0.8"
 rpassword = "7.2"
@@ -283,7 +284,7 @@ env_logger = "0.11"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
-rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
+#rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 serial_test = "2.0.0"
 structopt = "0.3.26"
 #tempfile = "3"
