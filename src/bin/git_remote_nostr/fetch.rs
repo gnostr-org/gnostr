@@ -1,36 +1,37 @@
 use core::str;
 use std::{
+    collections::HashMap,
     io::Stdin,
     sync::{Arc, Mutex},
     time::Instant,
 };
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
-use gnostr::{
+use ngit::{
+    cli_interactor::count_lines_per_msg_vec,
     git::{
+        Repo, RepoActions,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
         utils::check_ssh_keys,
-        Repo, RepoActions,
     },
     git_events::tag_value,
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr_0_34_1::nips::nip19;
-use nostr_0_34_1::ToBech32;
+use nostr_0_37_0::nips::nip19;
+use nostr_sdk_0_37_0::{Event, ToBech32};
 
 use crate::utils::{
-    count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
-    find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch, get_open_proposals,
-    get_read_protocols_to_try, join_with_and, set_protocol_preference, Direction,
+    Direction, fetch_or_list_error_is_not_authentication_failure,
+    find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch,
+    get_open_or_draft_proposals, get_read_protocols_to_try, join_with_and, set_protocol_preference,
 };
 
 pub async fn run_fetch(
     git_repo: &Repo,
     repo_ref: &RepoRef,
-    decoded_nostr_url: &NostrUrlDecoded,
     stdin: &Stdin,
     oid: &str,
     refstr: &str,
@@ -52,7 +53,7 @@ pub async fn run_fetch(
             git_repo,
             &oids_from_git_servers,
             git_server_url,
-            decoded_nostr_url,
+            &repo_ref.to_nostr_git_url(&None),
             &term,
         ) {
             errors.push(error);
@@ -78,65 +79,99 @@ pub async fn run_fetch(
 
     fetch_batch.retain(|refstr, _| refstr.contains("refs/heads/pr/"));
 
-    if !fetch_batch.is_empty() {
-        let open_proposals = get_open_proposals(git_repo, repo_ref).await?;
-
-        let current_user = get_curent_user(git_repo)?;
-
-        for (refstr, oid) in fetch_batch {
-            if let Some((_, (_, patches))) =
-                find_proposal_and_patches_by_branch_name(&refstr, &open_proposals, &current_user)
-            {
-                if !git_repo.does_commit_exist(&oid)? {
-                    let mut patches_ancestor_first = patches.clone();
-                    patches_ancestor_first.reverse();
-                    if git_repo.does_commit_exist(&tag_value(
-                        patches_ancestor_first.first().unwrap(),
-                        "parent-commit",
-                    )?)? {
-                        for patch in &patches_ancestor_first {
-                            if let Err(error) = git_repo.create_commit_from_patch(patch) {
-                                term.write_line(
-                                    format!(
-                                        "WARNING: cannot create branch for {refstr}, error: {error} for patch {}",
-                                        nip19::Nip19Event {
-                                            event_id: patch.id(),
-                                            author: Some(patch.author()),
-                                            kind: Some(patch.kind()),
-                                            relays: if let Some(relay) = repo_ref.relays.first() {
-                                                vec![relay.to_string()]
-                                            } else { vec![]},
-                                        }.to_bech32().unwrap_or_default()
-                                    )
-                                    .as_str(),
-                                )?;
-                                break;
-                            }
-                        }
-                    } else {
-                        term.write_line(
-                            format!("WARNING: cannot find parent commit for {refstr}").as_str(),
-                        )?;
-                    }
-                }
-            } else {
-                term.write_line(format!("WARNING: cannot find proposal for {refstr}").as_str())?;
-            }
-        }
-    }
-
+    fetch_open_or_draft_proposals(git_repo, &term, repo_ref, &fetch_batch).await?;
     term.flush()?;
     println!();
     Ok(())
 }
 
-fn fetch_from_git_server(
+pub fn make_commits_for_proposal(
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    patches_ancestor_last: &[Event],
+) -> Result<String> {
+    let patches_ancestor_first: Vec<&Event> = patches_ancestor_last.iter().rev().collect();
+    let mut tip_commit_id = if let Ok(parent_commit) = tag_value(
+        patches_ancestor_first
+            .first()
+            .context("proposal should have at least one patch")?,
+        "parent-commit",
+    ) {
+        parent_commit
+    } else {
+        // TODO choose most recent commit on master before patch timestamp so it doesnt
+        // constantly get rebased
+        let (_, hash) = git_repo.get_main_or_master_branch()?;
+        hash.to_string()
+    };
+
+    for patch in &patches_ancestor_first {
+        let commit_id = git_repo
+            .create_commit_from_patch(patch, Some(tip_commit_id.clone()))
+            .context(format!(
+                "failed to create commit for patch {}",
+                nip19::Nip19Event {
+                    event_id: patch.id,
+                    author: Some(patch.pubkey),
+                    kind: Some(patch.kind),
+                    relays: if let Some(relay) = repo_ref.relays.first() {
+                        vec![relay.to_string()]
+                    } else {
+                        vec![]
+                    },
+                }
+                .to_bech32()
+                .unwrap_or_default()
+            ))?;
+        tip_commit_id = commit_id.to_string();
+    }
+    Ok(tip_commit_id)
+}
+
+async fn fetch_open_or_draft_proposals(
+    git_repo: &Repo,
+    term: &console::Term,
+    repo_ref: &RepoRef,
+    proposal_refs: &HashMap<String, String>,
+) -> Result<()> {
+    if !proposal_refs.is_empty() {
+        let open_and_draft_proposals = get_open_or_draft_proposals(git_repo, repo_ref).await?;
+
+        let current_user = get_curent_user(git_repo)?;
+
+        for refstr in proposal_refs.keys() {
+            if let Some((_, (_, patches))) = find_proposal_and_patches_by_branch_name(
+                refstr,
+                &open_and_draft_proposals,
+                current_user.as_ref(),
+            ) {
+                if let Err(error) = make_commits_for_proposal(git_repo, repo_ref, patches) {
+                    term.write_line(
+                        format!("WARNING: failed to create branch for {refstr}, error: {error}",)
+                            .as_str(),
+                    )?;
+                    break;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn fetch_from_git_server(
     git_repo: &Repo,
     oids: &[String],
     git_server_url: &str,
     decoded_nostr_url: &NostrUrlDecoded,
     term: &console::Term,
 ) -> Result<()> {
+    let already_have_oids = oids
+        .iter()
+        .all(|oid| git_repo.does_commit_exist(oid).is_ok_and(|outcome| outcome));
+    if already_have_oids {
+        return Ok(());
+    }
+
     let server_url = git_server_url.parse::<CloneUrl>()?;
 
     let protocols_to_attempt = get_read_protocols_to_try(git_repo, &server_url, decoded_nostr_url);
@@ -200,7 +235,7 @@ fn fetch_from_git_server(
 fn report_on_transfer_progress(
     progress_stats: &Progress<'_>,
     start_time: &Instant,
-    end_time: &Option<Instant>,
+    end_time: Option<&Instant>,
 ) -> Vec<String> {
     let mut report = vec![];
     let total = progress_stats.total_objects() as f64;
@@ -209,8 +244,7 @@ fn report_on_transfer_progress(
     }
     let received = progress_stats.received_objects() as f64;
     let percentage = ((received / total) * 100.0)
-        // always round down because 100% complete is misleading when
-        // its not complete
+        // always round down because 100% complete is misleading when its not complete
         .floor();
 
     let received_bytes = progress_stats.received_bytes() as f64;
@@ -246,8 +280,7 @@ fn report_on_transfer_progress(
         let indexed_deltas = progress_stats.indexed_deltas() as f64;
         let total_deltas = progress_stats.total_deltas() as f64;
         let percentage = ((indexed_deltas / total_deltas) * 100.0)
-            // always round down because 100% complete is misleading
-            // when its not complete
+            // always round down because 100% complete is misleading when its not complete
             .floor();
         if total_deltas > 0.0 {
             report.push(format!(
@@ -315,8 +348,7 @@ impl<'a> FetchReporter<'a> {
                 let existing_lines = self.count_all_existing_lines();
                 let msg = data.to_string();
                 if let Some(last) = self.remote_msgs.last() {
-                    // if previous line begins with x but doesnt
-                    // finish with y then its part of the
+                    // if previous line begins with x but doesnt finish with y then its part of the
                     // same msg
                     if (last.starts_with("Enume") && !last.ends_with(", done."))
                         || ((last.starts_with("Compre") || last.starts_with("Count"))
@@ -324,8 +356,8 @@ impl<'a> FetchReporter<'a> {
                     {
                         let last = self.remote_msgs.pop().unwrap();
                         self.remote_msgs.push(format!("{last}{msg}"));
-                    // if previous msg contains % and its not 100%
-                    // then it should be overwritten
+                    // if previous msg contains % and its not 100% then it
+                    // should be overwritten
                     } else if (last.contains('%') && !last.contains("100%"))
                         // but also if the next message is identical with "", done." appended
                         || last == &msg.replace(", done.", "")
@@ -347,15 +379,17 @@ impl<'a> FetchReporter<'a> {
             self.start_time = Some(Instant::now());
         }
         let existing_lines = self.just_count_transfer_progress();
-        let updated =
-            report_on_transfer_progress(progress_stats, &self.start_time.unwrap(), &self.end_time);
+        let updated = report_on_transfer_progress(
+            progress_stats,
+            &self.start_time.unwrap(),
+            self.end_time.as_ref(),
+        );
         if self.transfer_progress_msgs.len() <= updated.len() {
             if self.end_time.is_none() && updated.first().is_some_and(|f| f.contains("100%")) {
                 self.end_time = Some(Instant::now());
             }
-            // once "Resolving Deltas" is complete, deltas get reset
-            // to 0 and it stops reporting on it so we want to keep
-            // the old report
+            // once "Resolving Deltas" is complete, deltas get reset to 0 and it stops
+            // reporting on it so we want to keep the old report
             self.transfer_progress_msgs = updated;
         }
         self.just_write_transfer_progress(existing_lines);

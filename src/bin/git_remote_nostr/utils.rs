@@ -6,16 +6,16 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use git2::Repository;
-use gnostr::{
+use ngit::{
     client::{
-        get_all_proposal_patch_events_from_cache, get_events_from_cache,
+        get_all_proposal_patch_events_from_cache, get_events_from_local_cache,
         get_proposals_and_revisions_from_cache,
     },
     git::{
-        nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
         Repo, RepoActions,
+        nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
     },
     git_events::{
         event_is_revision_root, get_most_recent_patch_with_ancestors,
@@ -23,7 +23,7 @@ use gnostr::{
     },
     repo_ref::RepoRef,
 };
-use nostr_sdk_0_34_0::{Event, EventId, Kind, PublicKey, Url};
+use nostr_sdk_0_37_0::{Event, EventId, Kind, PublicKey, Url};
 
 pub fn get_short_git_server_name(git_repo: &Repo, url: &str) -> std::string::String {
     if let Ok(name) = get_remote_name_by_url(&git_repo.git_repo, url) {
@@ -94,12 +94,12 @@ pub fn read_line<'a>(stdin: &io::Stdin, line: &'a mut String) -> io::Result<Vec<
     Ok(tokens)
 }
 
-pub async fn get_open_proposals(
+pub async fn get_open_or_draft_proposals(
     git_repo: &Repo,
     repo_ref: &RepoRef,
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
-    let proposals: Vec<nostr_0_34_1::Event> =
+    let proposals: Vec<nostr_0_37_0::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
@@ -107,37 +107,36 @@ pub async fn get_open_proposals(
             .cloned()
             .collect();
 
-    let statuses: Vec<nostr_0_34_1::Event> = {
-        let mut statuses = get_events_from_cache(
-            git_repo_path,
-            vec![nostr_0_34_1::Filter::default()
+    let statuses: Vec<nostr_0_37_0::Event> = {
+        let mut statuses = get_events_from_local_cache(git_repo_path, vec![
+            nostr_0_37_0::Filter::default()
                 .kinds(status_kinds().clone())
-                .events(proposals.iter().map(nostr_0_34_1::Event::id))],
-        )
+                .events(proposals.iter().map(|e| e.id)),
+        ])
         .await?;
         statuses.sort_by_key(|e| e.created_at);
         statuses.reverse();
         statuses
     };
-    let mut open_proposals = HashMap::new();
+    let mut open_or_draft_proposals = HashMap::new();
 
     for proposal in proposals {
         let status = if let Some(e) = statuses
             .iter()
             .filter(|e| {
-                status_kinds().contains(&e.kind())
-                    && e.tags()
-                        .iter()
-                        .any(|t| t.as_vec()[1].eq(&proposal.id.to_string()))
+                status_kinds().contains(&e.kind)
+                    && e.tags.iter().any(|t| {
+                        t.as_slice().len() > 1 && t.as_slice()[1].eq(&proposal.id.to_string())
+                    })
             })
-            .collect::<Vec<&nostr_0_34_1::Event>>()
+            .collect::<Vec<&nostr_0_37_0::Event>>()
             .first()
         {
-            e.kind()
+            e.kind
         } else {
             Kind::GitStatusOpen
         };
-        if status.eq(&Kind::GitStatusOpen) {
+        if [Kind::GitStatusOpen, Kind::GitStatusDraft].contains(&status) {
             if let Ok(commits_events) =
                 get_all_proposal_patch_events_from_cache(git_repo_path, repo_ref, &proposal.id)
                     .await
@@ -145,13 +144,13 @@ pub async fn get_open_proposals(
                 if let Ok(most_recent_proposal_patch_chain) =
                     get_most_recent_patch_with_ancestors(commits_events.clone())
                 {
-                    open_proposals
-                        .insert(proposal.id(), (proposal, most_recent_proposal_patch_chain));
+                    open_or_draft_proposals
+                        .insert(proposal.id, (proposal, most_recent_proposal_patch_chain));
                 }
             }
         }
     }
-    Ok(open_proposals)
+    Ok(open_or_draft_proposals)
 }
 
 pub async fn get_all_proposals(
@@ -159,7 +158,7 @@ pub async fn get_all_proposals(
     repo_ref: &RepoRef,
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
-    let proposals: Vec<nostr_0_34_1::Event> =
+    let proposals: Vec<nostr_0_37_0::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
@@ -176,7 +175,7 @@ pub async fn get_all_proposals(
             if let Ok(most_recent_proposal_patch_chain) =
                 get_most_recent_patch_with_ancestors(commits_events.clone())
             {
-                all_proposals.insert(proposal.id(), (proposal, most_recent_proposal_patch_chain));
+                all_proposals.insert(proposal.id, (proposal, most_recent_proposal_patch_chain));
             }
         }
     }
@@ -185,10 +184,10 @@ pub async fn get_all_proposals(
 
 pub fn find_proposal_and_patches_by_branch_name<'a>(
     refstr: &'a str,
-    open_proposals: &'a HashMap<EventId, (Event, Vec<Event>)>,
-    current_user: &Option<PublicKey>,
+    proposals: &'a HashMap<EventId, (Event, Vec<Event>)>,
+    current_user: Option<&PublicKey>,
 ) -> Option<(&'a EventId, &'a (Event, Vec<Event>))> {
-    open_proposals.iter().find(|(_, (proposal, _))| {
+    proposals.iter().find(|(_, (proposal, _))| {
         is_event_proposal_root_for_branch(proposal, refstr, current_user).unwrap_or(false)
     })
 }
@@ -227,8 +226,7 @@ pub fn get_read_protocols_to_try(
             vec![
                 ServerProtocol::UnauthHttp,
                 ServerProtocol::Ssh,
-                // note: list and fetch stop here if ssh was
-                // authenticated
+                // note: list and fetch stop here if ssh was authenticated
                 ServerProtocol::Http,
             ]
         } else if server_url.protocol() == ServerProtocol::Ftp {
@@ -237,8 +235,7 @@ pub fn get_read_protocols_to_try(
             vec![
                 ServerProtocol::UnauthHttps,
                 ServerProtocol::Ssh,
-                // note: list and fetch stop here if ssh was
-                // authenticated
+                // note: list and fetch stop here if ssh was authenticated
                 ServerProtocol::Https,
             ]
         };
@@ -266,8 +263,7 @@ pub fn get_write_protocols_to_try(
         let mut list = if server_url.protocol() == ServerProtocol::Http {
             vec![
                 ServerProtocol::Ssh,
-                // note: list and fetch stop here if ssh was
-                // authenticated
+                // note: list and fetch stop here if ssh was authenticated
                 ServerProtocol::Http,
             ]
         } else if server_url.protocol() == ServerProtocol::Ftp {
@@ -275,8 +271,7 @@ pub fn get_write_protocols_to_try(
         } else {
             vec![
                 ServerProtocol::Ssh,
-                // note: list and fetch stop here if ssh was
-                // authenticated
+                // note: list and fetch stop here if ssh was authenticated
                 ServerProtocol::Https,
             ]
         };
@@ -384,21 +379,6 @@ pub fn error_might_be_authentication_related(error: &anyhow::Error) -> bool {
         }
     }
     false
-}
-
-fn count_lines_per_msg(width: u16, msg: &str, prefix_len: usize) -> usize {
-    if width == 0 {
-        return 1;
-    }
-    // ((msg_len+prefix) / width).ceil() implemented using Integer
-    // Arithmetic
-    ((msg.chars().count() + prefix_len) + (width - 1) as usize) / width as usize
-}
-
-pub fn count_lines_per_msg_vec(width: u16, msgs: &[String], prefix_len: usize) -> usize {
-    msgs.iter()
-        .map(|msg| count_lines_per_msg(width, msg, prefix_len))
-        .sum()
 }
 
 #[cfg(test)]
