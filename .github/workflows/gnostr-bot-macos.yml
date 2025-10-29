@@ -116,7 +116,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: matrix.os != 'windows-latest'
+        if: runner.os == 'macos'
 
       - run: |
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
@@ -126,16 +126,16 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: matrix.os != 'windows-latest'
+        if: runner.os == 'macos'
 
       - run: brew tap nostorg/nostr || true
-        if: matrix.os != 'windows-latest'
+        if: runner.os == 'macos'
 
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os != 'windows-latest'
+        if: runner.os == 'macos'
 
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macos'
 
       - run: gnostr --help
 
@@ -225,6 +225,7 @@ jobs:
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
+        if: ${{ !env.ACT }}
         with:
           job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
           per_page: 50 # input matrix size here if it is larger than 30

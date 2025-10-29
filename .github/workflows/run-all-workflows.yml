@@ -1,0 +1,101 @@
+name: Run All Workflows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  dispatch_ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch ci.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-ci-workflow
+
+  dispatch_get_time:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch get_time.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-get-time-workflow
+
+  dispatch_ghcr_io:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch ghcr.io.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-ghcr-io-workflow
+
+  dispatch_gnostr_bot_macos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch gnostr-bot-macos.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-gnostr-bot-macos-workflow
+
+  dispatch_gnostr_bot_ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch gnostr-bot-ubuntu.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-gnostr-bot-ubuntu-workflow
+
+  dispatch_gnostr_bot_windows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch gnostr-bot-windows.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-gnostr-bot-windows-workflow
+
+  dispatch_gnostr_chat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch gnostr-chat.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-gnostr-chat-workflow
+
+  dispatch_gnostr_relay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch gnostr-relay.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-gnostr-relay-workflow
+
+  dispatch_matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch matrix.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-matrix-workflow
+
+  # Note: release.yml is typically triggered by git tags, not workflow_dispatch.
+  # Dispatching it directly might not have the intended effect unless its triggers are also modified.
+  dispatch_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch release.yml
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: run-release-workflow

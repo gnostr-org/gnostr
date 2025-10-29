@@ -183,6 +183,7 @@ jobs:
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
+        if: ${{ !env.ACT }}
         with:
           job_name: "gnostr-relay (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
           per_page: 50 # input matrix size here if it is larger than 30
