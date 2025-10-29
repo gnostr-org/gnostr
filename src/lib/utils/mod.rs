@@ -2,7 +2,7 @@ pub mod pwd;
 pub mod retry;
 
 use log::{debug, error};
-use nostr_sdk_0_32_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 use std::env;

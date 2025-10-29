@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use nostr_0_34_1::{nips::nip01::Coordinate, FromBech32, PublicKey, ToBech32};
-use nostr_sdk_0_34_0::Kind;
+use nostr_0_37_1::{nips::nip01::Coordinate, FromBech32, PublicKey, ToBech32};
+use nostr_sdk_0_37_0::Kind;
 
 use crate::{
     //cli::Cli,
