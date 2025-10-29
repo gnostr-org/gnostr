@@ -61,16 +61,16 @@ jobs:
           sudo rm -rf ~/.cache/*
 
       - name: Use Bash for all subsequent steps
-         shell: bash
-         run: |
-           echo GNOSTR=${{ env.GNOSTR }}
-           echo MEMPOOL=${{ env.MEMPOOL }}
-           echo POW=${{ env.POW }}
-           echo DAMUS=${{ env.DAMUS }}
-           echo NOS=${{ env.NOS }}
-         env:
-           MEMPOOL: "mempool"
-           MEMPOOL_SPACE: "mempool-space"
+        shell: bash
+        run: |
+          echo GNOSTR=${{ env.GNOSTR }}
+          echo MEMPOOL=${{ env.MEMPOOL }}
+          echo POW=${{ env.POW }}
+          echo DAMUS=${{ env.DAMUS }}
+          echo NOS=${{ env.NOS }}
+        env:
+          MEMPOOL: "mempool"
+          MEMPOOL_SPACE: "mempool-space"
 
       - uses: cargo-bins/cargo-binstall@main
       - uses: styfle/cancel-workflow-action@0.11.0
