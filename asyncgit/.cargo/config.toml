@@ -1,0 +1,3 @@
+# .cargo/config.toml
+[build]
+target-dir = '../.gnostr'
