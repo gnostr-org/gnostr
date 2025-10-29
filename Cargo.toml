@@ -1,19 +1,15 @@
 [package]
 name = "gnostr"
-version = "1912.921277.23006"
+version = "1.6.0"
 edition = "2021"
-description = "gnostr:a git+nostr workflow utility"
-authors = [
-    "gnostr <admin@gnostr.org>",
-    "0xtr <oxtrr@protonmail.com>",
-    "TODO <add_more@gnostr.org>",
-]
+description = "nostr plugin for git"
+authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
 readme = "README.md"
-homepage = "https://github.com/gnostr-org/gnostr"
-repository = "https://github.com/gnostr-org/gnostr"
+homepage = "https://gitworkshop.dev/r/naddr1qqzxuemfwsqs6amnwvaz7tmwdaejumr0dspzpgqgmmc409hm4xsdd74sf68a2uyf9pwel4g9mfdg8l5244t6x4jdqvzqqqrhnym0k2qj"
+repository = "https://codeberg.org/DanConwayDev/ngit-cli"
 license = "MIT"
-keywords = ["gnostr", "tool", "nostr"]
-categories = ["command-line-utilities"]
+keywords = ["nostr", "git"]
+categories = ["command-line-utilities","development-tools"]
 build = "build.rs"
 
 exclude = [
@@ -39,20 +35,20 @@ exclude = [
     #"test_utils",
 ]
 
-[lib]
-name = "gnostr"
-path = "src/lib/mod.rs"
+#[lib]
+#name = "gnostr"
+#path = "src/lib/mod.rs"
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
-expensive_tests = [] #nostr
-ghemoji = ["gh-emoji"]
+#default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
+#expensive_tests = [] #nostr
+#ghemoji = ["gh-emoji"]
 # regex-* features are mutually exclusive.
-regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
-regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
-timing = ["scopetime/enabled"]
-trace-libgit = ["gnostr-asyncgit/trace-libgit"]
-vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
+#regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
+#regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
+#timing = ["scopetime/enabled"]
+#trace-libgit = ["gnostr-asyncgit/trace-libgit"]
+#vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
 nightly = []
 
 [dependencies]
@@ -68,6 +64,16 @@ config = { version = "0.14.0", features = [
     "json",
 ], default-features = false }
 duration-str = { version = "0.11.2", default-features = false }
+##gitui
+#anyhow = "1.0"
+#gnostr-asyncgit = { path = "asyncgit", version = "1912.921274.23285", default-features = false }
+#gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
+#gnostr-query = { version = "1912.921276.230652", path = "query" }
+#gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
+#gnostr-types = { version = "0.7.6", path = "types" }
+#gnostr_qr = { version = "0.0.7", path = "qr" }
+#gnostr-legit = { path = "./legit", version = "0.0.0" }
+
 hex = "0.4.3"
 metrics = "0.23.0"
 notify = "6.1.1"
@@ -78,15 +84,6 @@ parking_lot = "0.12.3"
 thiserror = "1.0.63"
 tracing = "0.1.40"
 bytes = "1.7.1"
-
-## nostr
-nostr_sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
-nostr_0_37_0 = { package = "nostr", version = "0.37.0", features = ["nip05", "nip49"] }                               
-nostr-connect = "0.37.0"
-nostr-database = "0.37.0"
-nostr-lmdb = "0.37.0"                                                                                                              
-nostr-db = { version = "0.4.5", features = ["search"] }
-#tracing-subscriber = "0.3.18"
 
 anyhow = "1.0.75"
 argparse    = "0.2.2"
@@ -106,7 +103,7 @@ bwrap = { version = "1.3", features = ["use_std"] }
 bytesize = { version = "1.3", default-features = false }
 chacha20poly1305 = "0.10.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+#clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 clean-path = "0.2.1"
 clipboard = "0.5.0"
 color-eyre = "0.6.2"
@@ -114,6 +111,7 @@ color-eyre = "0.6.2"
 colored = "2.0.0"
 colorful = "0.2"
 comrak = "0.28.0"
+clap = { version = "4.3.19", features = ["derive"] }
 console = "0.15.7"
 crossbeam-channel = "0.5"
 crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
@@ -124,7 +122,7 @@ directories = "5.0.1"
 dirs = "5.0.1"
 easy-cast = "0.5"
 env_logger = "0.11"
-filetreelist = { path = "./filetreelist", version = "0.5" }
+#filetreelist = { path = "./filetreelist", version = "0.5" }
 
 flume = "0.10"
 futures = "0.3.28"
@@ -134,26 +132,16 @@ futures-util = "0.3"
 fuzzy-matcher = "0.3"
 getopts = "0.2.21"
 gh-emoji = { version = "1.0", optional = true }
-git2 = "^0.18" ## asyncgit ^0.19
-
-##gitui
-#anyhow = "1.0"
-gnostr-asyncgit = { path = "asyncgit", version = "1912.921274.23285", default-features = false }
-gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
-gnostr-query = { version = "1912.921276.230652", path = "query" }
-gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
-gnostr-types = { version = "0.7.6", path = "types" }
-gnostr_qr = { version = "0.0.7", path = "qr" }
-#gnostr-legit = { path = "./legit", version = "0.0.0" }
-
 #hex = "0.4"
 hostname = "0.3.1"
 http = "1.1"
 indexmap = "2"
+git2 = "0.18.3"
+
+##gitui
 indicatif = "0.17.7"
 itertools = "0.13"
 k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
-#indicatif = "0.17.7"
 keyring = "2.0.5"
 lazy_static = "1.4"
 libp2p = { version = "0.54.1", features = [
@@ -175,35 +163,16 @@ libp2p = { version = "0.54.1", features = [
   "tokio",
   "yamux"
 ] }
-
 log = "0.4.17"
+#ordered-float = "3.4.0"
+nostr_0_37_0 = { package = "nostr", version = "0.37.0", features = ["nip05", "nip49"] }
+nostr-connect = "0.37.0"
+nostr-database = "0.37.0"
+nostr-lmdb = "0.37.0"
+nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
+
 ordered-float = "3.4.0"
-nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
-
-nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
-nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
-nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
-
-nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
-
-nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
-
-nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
-
-nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
-
-#notify = "6.1"
-notify-debouncer-mini = "0.4"
-num-bigint = "0.4.6"
-
-#num_cpus = "1.16.0"
-once_cell = "1.21.3"
-pad = "0.1.6"
-#once_cell = "1"
-# pin until upgrading this does not introduce a duplicate dependency
-parking_lot_core = "=0.9.9"
 passwords = "3.1.13"
-qrcode = { version = "0.14.1", default-features = false }
 rand = "0.8"
 rand_core = "0.6"
 ratatui = { version = "0.28", default-features = false, features = [
@@ -219,11 +188,14 @@ russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
 scopeguard = "1.2"
-scopetime = { path = "./scopetime", version = "0.1" }
+#scopetime = { path = "./scopetime", version = "0.1" }
+qrcode = { version = "0.14.1", default-features = false }
 scrypt = "0.11.0"
 secp256k1 = { version = "0.31.0", features = ["hashes"] }
-serde = { version = "1.0.203", features = ["derive", "rc"] }
-serde_json = "1.0.117"
+#serde = { version = "1.0.203", features = ["derive", "rc"] }
+#serde_json = "1.0.117"
+serde = { version = "1.0.181", features = ["derive"] }
+serde_json = "1.0.105"
 serde_yaml = "0.9.27"
 serial_test = "2.0.0"
 sha2 = "0.10.8"
@@ -234,18 +206,19 @@ simple_logger = "4.1"
 simplelog = { version = "0.12", default-features = false }
 struct-patch = "0.4"
 structopt = "0.3.26"
-syntect = { version = "5.2", default-features = false, features = [
-    "parsing",
-    "default-syntaxes",
-    "default-themes",
-    "html",
-] }
+#syntect = { version = "5.2", default-features = false, features = [
+#    "parsing",
+#    "default-syntaxes",
+#    "default-themes",
+#    "html",
+#] }
 temp-env = "0.3.6"
 tempfile = "3.5.0"
 tera = "1.18.1"
 textwrap = "0.16.0"
 #thiserror = "1"
 time = { version = "0.3", features = ["macros", "formatting"] }
+#tokio = { version = "1.40.0", features = ["full"] }
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] }
 
@@ -253,12 +226,13 @@ toml = "0.7.3"
 #tracing = { version = "0.1.38", default-features = false }
 tracing-core = "0.1.33"
 
+#tracing-subscriber = "0.3.18"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 trust-dns-resolver = "0.23" # Use the latest version
 tui-input = "0.10.1"
 tui-textarea = "0.6"
 tungstenite = { version = "0.21", features = [ "rustls-tls-webpki-roots" ] }
-two-face = { version = "0.4.0", default-features = false }
+#two-face = { version = "0.4.0", default-features = false }
 unicode-segmentation = "1.12"
 unicode-truncate = "1.0"
 unicode-width = "0.1"
@@ -279,6 +253,7 @@ cross = { version = "0.2.5", features = ["dev"] }
 actix-rt = "2.10.0"
 actix-test = "0.1.5"
 anyhow = "1.0.86"
+#assert_cmd = "2.0.12"
 assert_cmd = "2.0.17"
 futures-util = "0.3.30"
 gag = "1.0.0"
@@ -287,10 +262,12 @@ temp-env = "0.3.6"
 tempfile = "3.12.0"
 tracing-subscriber = "0.3.18"
 env_logger = "0.11"
+duplicate = "1.0.0"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 #rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
+once_cell = "1.18.0"
 serial_test = "2.0.0"
 structopt = "0.3.26"
 #tempfile = "3"
@@ -311,3 +288,20 @@ url = "2.2.2"
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+[workspace]
+members = [
+    "test_utils",
+]
+
+[lib]
+name = "gnostr"
+path = "src/lib/mod.rs"
+
+#[[bin]]
+#name = "ngit"
+#path = "src/bin/ngit/main.rs"
+#
+#[[bin]]
+#name = "git-remote-nostr"
+#path = "src/bin/git_remote_nostr/main.rs"

@@ -1,8 +1,11 @@
+use git2::Signature;
+
 use super::*;
+
+use nostr_0_37_0::util::JsonUtil;
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
 async fn new_branch_when_no_state_event_exists() -> Result<()> {
     generate_repo_with_state_event().await?;
     Ok(())
@@ -13,7 +16,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn updates_branch_on_git_server() -> Result<()> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
@@ -29,14 +31,11 @@ mod two_branches_in_batch_one_added_one_updated {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -92,7 +91,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn remote_refs_updated_in_local_git() -> Result<()> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
@@ -108,14 +106,11 @@ mod two_branches_in_batch_one_added_one_updated {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -182,7 +177,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn prints_git_helper_ok_respose() -> Result<()> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
@@ -198,14 +192,11 @@ mod two_branches_in_batch_one_added_one_updated {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -228,7 +219,8 @@ mod two_branches_in_batch_one_added_one_updated {
             p.send_line("push refs/heads/main:refs/heads/main")?;
             p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
             p.send_line("")?;
-            p.expect("ok refs/heads/main\r\n")?;
+            p.expect_eventually("ok ")?;
+            p.expect("refs/heads/main\r\n")?;
             p.expect("ok refs/heads/vnext\r\n")?;
             p.expect_eventually("\r\n\r\n")?;
             p.exit()?;
@@ -252,9 +244,8 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
-    async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event(
-    ) -> Result<()> {
+    async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event()
+    -> Result<()> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
@@ -269,14 +260,11 @@ mod two_branches_in_batch_one_added_one_updated {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -314,12 +302,12 @@ mod two_branches_in_batch_one_added_one_updated {
         let state_event = r56
             .events
             .iter()
-            .find(|e| e.kind().eq(&STATE_KIND))
+            .find(|e| e.kind.eq(&STATE_KIND))
             .context("state event not created")?;
 
         assert_eq!(
-            state_event.identifier(),
-            generate_repo_ref_event().identifier(),
+            state_event.tags.identifier(),
+            generate_repo_ref_event().tags.identifier(),
         );
         // println!("{:#?}", state_event);
         assert_eq!(
@@ -327,7 +315,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 .tags
                 .iter()
                 .filter(|t| t.kind().to_string().as_str().ne("d"))
-                .map(|t| t.as_vec().to_vec())
+                .map(|t| t.as_slice().to_vec())
                 .collect::<HashSet<Vec<String>>>(),
             HashSet::from([
                 vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
@@ -340,7 +328,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn existing_state_event_published_in_nostr_state_event() -> Result<()> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -357,16 +344,13 @@ mod two_branches_in_batch_one_added_one_updated {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
             state_event.clone(),
         ];
 
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -435,7 +419,7 @@ mod two_branches_in_batch_one_added_one_updated {
         let state_event = r56
             .events
             .iter()
-            .find(|e| e.kind().eq(&STATE_KIND))
+            .find(|e| e.kind.eq(&STATE_KIND))
             .context("state event not created")?;
 
         // println!("{:#?}", state_event);
@@ -444,7 +428,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 .tags
                 .iter()
                 .filter(|t| t.kind().to_string().as_str().ne("d"))
-                .map(|t| t.as_vec().to_vec())
+                .map(|t| t.as_slice().to_vec())
                 .collect::<HashSet<Vec<String>>>(),
             HashSet::from([
                 vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
@@ -465,7 +449,6 @@ mod delete_one_branch {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn deletes_branch_on_git_server() -> Result<()> {
         let git_repo = prep_git_repo()?;
 
@@ -479,14 +462,11 @@ mod delete_one_branch {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -517,10 +497,12 @@ mod delete_one_branch {
                 relay::shutdown_relay(8000 + p)?;
             }
 
-            assert!(source_git_repo
-                .git_repo
-                .find_reference("refs/heads/vnext")
-                .is_err());
+            assert!(
+                source_git_repo
+                    .git_repo
+                    .find_reference("refs/heads/vnext")
+                    .is_err()
+            );
             Ok(())
         });
         // launch relays
@@ -538,7 +520,6 @@ mod delete_one_branch {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn remote_refs_updated_in_local_git() -> Result<()> {
         let git_repo = prep_git_repo()?;
 
@@ -556,14 +537,11 @@ mod delete_one_branch {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -593,10 +571,12 @@ mod delete_one_branch {
             for p in [51, 52, 53, 55, 56, 57] {
                 relay::shutdown_relay(8000 + p)?;
             }
-            assert!(git_repo
-                .git_repo
-                .find_reference("refs/remotes/nostr/vnext")
-                .is_err());
+            assert!(
+                git_repo
+                    .git_repo
+                    .find_reference("refs/remotes/nostr/vnext")
+                    .is_err()
+            );
             Ok(())
         });
         // launch relays
@@ -614,7 +594,6 @@ mod delete_one_branch {
 
     #[tokio::test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
     async fn prints_git_helper_ok_respose() -> Result<()> {
         let git_repo = prep_git_repo()?;
 
@@ -632,14 +611,11 @@ mod delete_one_branch {
         let events = vec![
             generate_test_key_1_metadata_event("fred"),
             generate_test_key_1_relay_list_event(),
-            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                .dir
-                .to_str()
-                .unwrap()
-                .to_string()]),
+            generate_repo_ref_event_with_git_server(vec![
+                source_git_repo.dir.to_str().unwrap().to_string(),
+            ]),
         ];
-        // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-        // (57)
+        // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
         let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
             Relay::new(8051, None, None),
             Relay::new(8052, None, None),
@@ -655,7 +631,8 @@ mod delete_one_branch {
             let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
             p.send_line("push :refs/heads/vnext")?;
             p.send_line("")?;
-            p.expect("ok refs/heads/vnext\r\n")?;
+            p.expect_eventually("ok ")?;
+            p.expect("refs/heads/vnext\r\n")?;
             p.expect_eventually("\r\n\r\n")?;
             p.exit()?;
             for p in [51, 52, 53, 55, 56, 57] {
@@ -681,7 +658,6 @@ mod delete_one_branch {
 
         #[tokio::test]
         #[serial]
-        #[cfg(feature = "expensive_tests")]
         async fn state_event_updated_and_branch_deleted_and_ok_printed() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -691,16 +667,13 @@ mod delete_one_branch {
             let events = vec![
                 generate_test_key_1_metadata_event("fred"),
                 generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![source_git_repo
-                    .dir
-                    .to_str()
-                    .unwrap()
-                    .to_string()]),
+                generate_repo_ref_event_with_git_server(vec![
+                    source_git_repo.dir.to_str().unwrap().to_string(),
+                ]),
                 state_event.clone(),
             ];
 
-            // fallback (51,52) user write (53, 55) repo (55, 56)
-            // blaster (57)
+            // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
                 Relay::new(8051, None, None),
                 Relay::new(8052, None, None),
@@ -717,7 +690,8 @@ mod delete_one_branch {
                     cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                 p.send_line("push :refs/heads/example-branch")?;
                 p.send_line("")?;
-                p.expect("ok refs/heads/example-branch\r\n")?;
+                p.expect_eventually("ok ")?;
+                p.expect("refs/heads/example-branch\r\n")?;
                 p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
@@ -740,7 +714,7 @@ mod delete_one_branch {
             let state_event = r56
                 .events
                 .iter()
-                .find(|e| e.kind().eq(&STATE_KIND))
+                .find(|e| e.kind.eq(&STATE_KIND))
                 .context("state event not created")?;
 
             // println!("{:#?}", state_event);
@@ -749,7 +723,7 @@ mod delete_one_branch {
                     .tags
                     .iter()
                     .filter(|t| t.kind().to_string().as_str().ne("d"))
-                    .map(|t| t.as_vec().to_vec())
+                    .map(|t| t.as_slice().to_vec())
                     .collect::<HashSet<Vec<String>>>(),
                 HashSet::from([
                     vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
@@ -764,7 +738,6 @@ mod delete_one_branch {
 
             #[tokio::test]
             #[serial]
-            #[cfg(feature = "expensive_tests")]
             async fn existing_state_event_updated_and_ok_printed() -> Result<()> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -781,16 +754,13 @@ mod delete_one_branch {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                     state_event.clone(),
                 ];
 
-                // fallback (51,52) user write (53, 55) repo (55, 56)
-                // blaster (57)
+                // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
                 let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
                     Relay::new(8051, None, None),
                     Relay::new(8052, None, None),
@@ -807,7 +777,8 @@ mod delete_one_branch {
                         cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push :refs/heads/example-branch")?;
                     p.send_line("")?;
-                    p.expect("ok refs/heads/example-branch\r\n")?;
+                    p.expect_eventually("ok ")?;
+                    p.expect("refs/heads/example-branch\r\n")?;
                     p.expect_eventually("\r\n")?;
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
@@ -830,7 +801,7 @@ mod delete_one_branch {
                 let state_event = r56
                     .events
                     .iter()
-                    .find(|e| e.kind().eq(&STATE_KIND))
+                    .find(|e| e.kind.eq(&STATE_KIND))
                     .context("state event not created")?;
 
                 // println!("{:#?}", state_event);
@@ -839,7 +810,7 @@ mod delete_one_branch {
                         .tags
                         .iter()
                         .filter(|t| t.kind().to_string().as_str().ne("d"))
-                        .map(|t| t.as_vec().to_vec())
+                        .map(|t| t.as_slice().to_vec())
                         .collect::<HashSet<Vec<String>>>(),
                     HashSet::from([
                         vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
@@ -854,7 +825,6 @@ mod delete_one_branch {
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
 async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let second_source_git_repo = GitTestRepo::duplicate(&source_git_repo)?;
@@ -892,7 +862,8 @@ async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
         let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
         p.send_line("push refs/heads/main:refs/heads/main")?;
         p.send_line("")?;
-        p.expect("ok refs/heads/main\r\n")?;
+        p.expect_eventually("ok ")?;
+        p.expect("refs/heads/main\r\n")?;
         p.expect_eventually("\r\n\r\n")?;
         p.exit()?;
         for p in [51, 52, 53, 55, 56, 57] {
@@ -927,9 +898,8 @@ async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
-async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<()> {
-    //
+async fn proposal_three_way_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<()>
+{
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -957,10 +927,12 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
         std::fs::write(git_repo.dir.join("new.md"), "some content")?;
         git_repo.stage_and_commit("new.md")?;
 
-        CliTester::new_git_with_remote_helper_from_dir(
-            &git_repo.dir,
-            ["merge", &branch_name, "-m", "proposal merge commit message"],
-        )
+        CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, [
+            "merge",
+            &branch_name,
+            "-m",
+            "proposal merge commit message",
+        ])
         .expect_end_eventually_and_print()?;
 
         let oid = git_repo.get_tip_of_local_branch("main")?;
@@ -969,7 +941,7 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
         cli_expect_nostr_fetch(&mut p)?;
         p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
         p.expect("list: connecting...\r\n")?;
-        p.expect_after_whitespace("merge commit ")?;
+        p.expect_eventually("merge commit ")?;
         // shorthand merge commit id appears in this gap
         p.expect_eventually(": create nostr proposal status event\r\n")?;
         // status updates printed here
@@ -992,11 +964,14 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
         r57.listen_until_close(),
     );
 
-    let (output, oid) = cli_tester_handle.join().unwrap()?;
+    let (output, merge_oid) = cli_tester_handle.join().unwrap()?;
 
     assert_eq!(
         output,
-        format!("   431b84e..{}  main -> main\r\n", &oid.to_string()[..7])
+        format!(
+            "   431b84e..{}  main -> main\r\n",
+            &merge_oid.to_string()[..7]
+        )
     );
 
     let new_events = r55
@@ -1010,69 +985,70 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
 
     assert_eq!(new_events.len(), 2, "{new_events:?}");
 
-    let proposal = r55
+    let proposal_cover_letter_event = r55
         .events
         .iter()
         .find(|e| {
-            e.tags()
+            e.tags
                 .iter()
-                .find(|t| t.as_vec()[0].eq("branch-name"))
-                .is_some_and(|t| t.as_vec()[1].eq(FEATURE_BRANCH_NAME_1))
+                .find(|t| t.as_slice()[0].eq("branch-name"))
+                .is_some_and(|t| t.as_slice()[1].eq(FEATURE_BRANCH_NAME_1))
         })
         .unwrap();
 
     let merge_status = new_events
         .iter()
-        .find(|e| e.kind().eq(&Kind::GitStatusApplied))
+        .find(|e| e.kind.eq(&Kind::GitStatusApplied))
         .unwrap();
 
     assert_eq!(
-        oid.to_string(),
+        vec!["merge-commit-id".to_string(), merge_oid.to_string()],
         merge_status
             .tags
             .iter()
-            .find(|t| t.as_vec()[0].eq("merge-commit-id"))
+            .find(|t| t.as_slice()[0].eq("merge-commit-id"))
             .unwrap()
-            .as_vec()[1],
-        "status sets correct merge-commit-id tag"
+            .clone()
+            .to_vec(),
+        "status sets correct merge-commit-id tag {merge_status:?}"
     );
 
     let proposal_tip = r55
         .events
         .iter()
         .filter(|e| {
-            e.tags()
+            e.tags
                 .iter()
-                .any(|t| t.as_vec()[1].eq(&proposal.id().to_string()))
-                && e.kind().eq(&Kind::GitPatch)
+                .any(|t| t.as_slice()[1].eq(&proposal_cover_letter_event.id.to_string()))
+                && e.kind.eq(&Kind::GitPatch)
         })
         .last()
         .unwrap();
 
     assert_eq!(
-        proposal_tip.id().to_string(),
+        proposal_tip.id.to_string(),
         merge_status
             .tags
             .iter()
-            .find(|t| t.as_vec().len().eq(&4) && t.as_vec()[3].eq("mention"))
+            .find(|t| t.as_slice().len().eq(&4) && t.as_slice()[3].eq("mention"))
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "status mentions proposal tip event \r\nmerge status:\r\n{}\r\nproposal tip:\r\n{}",
         merge_status.as_json(),
         proposal_tip.as_json(),
     );
 
     assert_eq!(
-        proposal.id().to_string(),
+        proposal_cover_letter_event.id.to_string(),
         merge_status
             .tags
             .iter()
             .find(|t| t.is_root())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "status tags proposal id as root \r\nmerge status:\r\n{}\r\nproposal:\r\n{}",
         merge_status.as_json(),
-        proposal.as_json(),
+        proposal_cover_letter_event.as_json(),
     );
 
     Ok(())
@@ -1080,7 +1056,360 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
+async fn proposal_fast_forward_merge_commits_pushed_to_main_leads_to_status_event_issued()
+-> Result<()> {
+    //
+    let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
+    let source_path = source_git_repo.dir.to_str().unwrap().to_string();
+
+    let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
+        Relay::new(8051, None, None),
+        Relay::new(8052, None, None),
+        Relay::new(8053, None, None),
+        Relay::new(8055, None, None),
+        Relay::new(8056, None, None),
+        Relay::new(8057, None, None),
+    );
+    r51.events = events.clone();
+    r55.events = events.clone();
+
+    #[allow(clippy::mutable_key_type)]
+    let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
+
+    let cli_tester_handle = std::thread::spawn(move || -> Result<(String, Oid)> {
+        let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
+
+        let git_repo = clone_git_repo_with_nostr_url()?;
+        git_repo.checkout_remote_branch(&branch_name)?;
+        git_repo.checkout("refs/heads/main")?;
+
+        CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, [
+            "merge",
+            &branch_name,
+            "-m",
+            "proposal merge commit message",
+        ])
+        .expect_end_eventually_and_print()?;
+
+        let oid = git_repo.get_tip_of_local_branch("main")?;
+
+        let mut p = CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
+        cli_expect_nostr_fetch(&mut p)?;
+        p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
+        p.expect("list: connecting...\r\n")?;
+        p.expect_eventually(format!(
+            "fast-forward merge: create nostr proposal status event for {branch_name}\r\n"
+        ))?;
+        // status updates printed here
+        p.expect_eventually(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
+        let output = p.expect_end_eventually()?;
+
+        for p in [51, 52, 53, 55, 56, 57] {
+            relay::shutdown_relay(8000 + p)?;
+        }
+
+        Ok((output, oid))
+    });
+    // launch relays
+    let _ = join!(
+        r51.listen_until_close(),
+        r52.listen_until_close(),
+        r53.listen_until_close(),
+        r55.listen_until_close(),
+        r56.listen_until_close(),
+        r57.listen_until_close(),
+    );
+
+    let (output, tip_oid) = cli_tester_handle.join().unwrap()?;
+
+    assert_eq!(
+        output,
+        format!(
+            "   431b84e..{}  main -> main\r\n",
+            &tip_oid.to_string()[..7]
+        )
+    );
+
+    let new_events = r55
+        .events
+        .iter()
+        .cloned()
+        .collect::<HashSet<Event>>()
+        .difference(&before)
+        .cloned()
+        .collect::<Vec<Event>>();
+
+    assert_eq!(new_events.len(), 2, "{new_events:?}");
+
+    let proposal_cover_letter_event = r55
+        .events
+        .iter()
+        .find(|e| {
+            e.tags
+                .iter()
+                .find(|t| t.as_slice()[0].eq("branch-name"))
+                .is_some_and(|t| t.as_slice()[1].eq(FEATURE_BRANCH_NAME_1))
+        })
+        .unwrap();
+
+    let proposal_patches: Vec<&Event> = r55
+        .events
+        .iter()
+        .filter(|e| {
+            e.kind == Kind::GitPatch
+                && e.tags
+                    .iter()
+                    .any(|t| t.as_slice()[1].eq(&proposal_cover_letter_event.id.to_string()))
+        })
+        .collect();
+
+    let merge_status = new_events
+        .iter()
+        .find(|e| e.kind.eq(&Kind::GitStatusApplied))
+        .unwrap();
+
+    let patch_commit_ids_parents_first = proposal_patches
+        .iter()
+        .map(|e| {
+            e.tags
+                .iter()
+                .find(|t| t.as_slice()[0].eq("commit"))
+                .unwrap()
+                .as_slice()[1]
+                .to_string()
+        })
+        .collect::<Vec<String>>();
+
+    assert_eq!(
+        // HashSet::<String>::from_iter(vec![
+        //     "merge-commit-id".to_string(),
+        //     "6bd4f54bdf6a9ef2ec09e88e7a8d05376b0c1ff4".to_string(),
+        //     "f1d302586abad23c259ebd684c2bba233f9ed3d1".to_string(),
+        // ]),
+        HashSet::from_iter(
+            [
+                vec!["merge-commit-id".to_string()],
+                patch_commit_ids_parents_first
+            ]
+            .concat()
+            .iter()
+            .cloned()
+        ),
+        HashSet::<String>::from_iter(
+            merge_status
+                .tags
+                .iter()
+                .find(|t| t.as_slice()[0].eq("merge-commit-id"))
+                .unwrap()
+                .clone()
+                .to_vec()
+                .iter()
+                .cloned()
+        ),
+        "status sets correct merge-commit-id tag {merge_status:?}"
+    );
+    for patch_id in proposal_patches
+        .iter()
+        .map(|e| e.id.to_string())
+        .collect::<Vec<String>>()
+    {
+        assert!(
+            merge_status.tags.iter().any(|t| t.as_slice().len().eq(&4)
+                && t.as_slice()[1] == patch_id
+                && t.as_slice()[3].eq("mention")),
+            "merge status doesnt mention proposal patch {patch_id}  \r\nmerge status:\r\n{}",
+            merge_status.as_json(),
+        );
+    }
+
+    assert_eq!(
+        proposal_cover_letter_event.id.to_string(),
+        merge_status
+            .tags
+            .iter()
+            .find(|t| t.is_root())
+            .unwrap()
+            .as_slice()[1],
+        "status tags proposal id as root \r\nmerge status:\r\n{}\r\nproposal:\r\n{}",
+        merge_status.as_json(),
+        proposal_cover_letter_event.as_json(),
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn proposal_commits_applied_and_pushed_to_main_leads_to_status_event_issued() -> Result<()> {
+    //
+    let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
+    let source_path = source_git_repo.dir.to_str().unwrap().to_string();
+    let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
+        Relay::new(8051, None, None),
+        Relay::new(8052, None, None),
+        Relay::new(8053, None, None),
+        Relay::new(8055, None, None),
+        Relay::new(8056, None, None),
+        Relay::new(8057, None, None),
+    );
+    r51.events = events.clone();
+    r55.events = events.clone();
+
+    #[allow(clippy::mutable_key_type)]
+    let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
+
+    let cli_tester_handle = std::thread::spawn(move || -> Result<(String, Oid, Oid)> {
+        let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
+
+        let git_repo = clone_git_repo_with_nostr_url()?;
+        create_and_populate_branch(
+            &git_repo,
+            "tmptmp",
+            "a",
+            false,
+            Some(&Signature::now("Different User", "other.user@nostr.com")?),
+        )?;
+        let applied_proposal_tip = git_repo.get_tip_of_local_branch("tmptmp")?;
+
+        git_repo.git_repo.branch(
+            "main",
+            &git_repo.git_repo.find_commit(applied_proposal_tip)?,
+            true,
+        )?;
+        let main_oid = git_repo.checkout("refs/heads/main")?;
+        assert_eq!(applied_proposal_tip, main_oid);
+
+        let mut p = CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
+        cli_expect_nostr_fetch(&mut p)?;
+        p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
+        p.expect("list: connecting...\r\n")?;
+        p.expect_eventually(format!(
+            "applied commits from proposal: create nostr proposal status event for {branch_name}\r\n" ))?;
+        // status updates printed here
+        p.expect_eventually(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
+        let output = p.expect_end_eventually()?;
+
+        for p in [51, 52, 53, 55, 56, 57] {
+            relay::shutdown_relay(8000 + p)?;
+        }
+
+        let first_applied_commit_oid = git_repo
+            .git_repo
+            .find_commit(applied_proposal_tip)?
+            .parent(0)?
+            .id();
+        Ok((output, first_applied_commit_oid, applied_proposal_tip))
+    });
+    // launch relays
+    let _ = join!(
+        r51.listen_until_close(),
+        r52.listen_until_close(),
+        r53.listen_until_close(),
+        r55.listen_until_close(),
+        r56.listen_until_close(),
+        r57.listen_until_close(),
+    );
+
+    let (output, first_oid, tip_oid) = cli_tester_handle.join().unwrap()?;
+
+    assert_eq!(
+        output,
+        format!(
+            "   431b84e..{}  main -> main\r\n",
+            &tip_oid.to_string()[..7]
+        )
+    );
+
+    let new_events = r55
+        .events
+        .iter()
+        .cloned()
+        .collect::<HashSet<Event>>()
+        .difference(&before)
+        .cloned()
+        .collect::<Vec<Event>>();
+
+    assert_eq!(new_events.len(), 2, "{new_events:?}");
+
+    let proposal_cover_letter_event = r55
+        .events
+        .iter()
+        .find(|e| {
+            e.tags
+                .iter()
+                .find(|t| t.as_slice()[0].eq("branch-name"))
+                .is_some_and(|t| t.as_slice()[1].eq(FEATURE_BRANCH_NAME_1))
+        })
+        .unwrap();
+
+    let proposal_patches: Vec<&Event> = r55
+        .events
+        .iter()
+        .filter(|e| {
+            e.kind == Kind::GitPatch
+                && e.tags
+                    .iter()
+                    .any(|t| t.as_slice()[1].eq(&proposal_cover_letter_event.id.to_string()))
+        })
+        .collect();
+
+    let merge_status = new_events
+        .iter()
+        .find(|e| e.kind.eq(&Kind::GitStatusApplied))
+        .unwrap();
+
+    assert_eq!(
+        HashSet::<String>::from_iter(vec![
+            "applied-as-commits".to_string(),
+            first_oid.to_string(),
+            tip_oid.to_string(),
+        ]),
+        HashSet::<String>::from_iter(
+            merge_status
+                .tags
+                .iter()
+                .find(|t| t.as_slice()[0].eq("applied-as-commits"))
+                .unwrap()
+                .clone()
+                .to_vec()
+                .iter()
+                .cloned(),
+        ),
+        "status sets correct applied-as-commits tag {merge_status:?}"
+    );
+
+    for patch_id in proposal_patches
+        .iter()
+        .map(|e| e.id.to_string())
+        .collect::<Vec<String>>()
+    {
+        assert!(
+            merge_status.tags.iter().any(|t| t.as_slice().len().eq(&4)
+                && t.as_slice()[1] == patch_id
+                && t.as_slice()[3].eq("mention")),
+            "merge status doesnt mention proposal patch {patch_id}  \r\nmerge status:\r\n{}",
+            merge_status.as_json(),
+        );
+    }
+
+    assert_eq!(
+        proposal_cover_letter_event.id.to_string(),
+        merge_status
+            .tags
+            .iter()
+            .find(|t| t.is_root())
+            .unwrap()
+            .as_slice()[1],
+        "status tags proposal id as root \r\nmerge status:\r\n{}\r\nproposal:\r\n{}",
+        merge_status.as_json(),
+        proposal_cover_letter_event.as_json(),
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
 async fn push_2_commits_to_existing_proposal() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1115,7 +1444,7 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
         cli_expect_nostr_fetch(&mut p)?;
         p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
         p.expect("list: connecting...\r\n\r\r\r")?;
-        p.expect(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
+        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
 
         for p in [51, 52, 53, 55, 56, 57] {
@@ -1138,7 +1467,7 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
 
     assert_eq!(
         output,
-        format!("   eb5d678..7de5e41  {branch_name} -> {branch_name}\r\n").as_str(),
+        format!("   2d1b467..9d83ff4  {branch_name} -> {branch_name}\r\n").as_str(),
     );
 
     let new_events = r55
@@ -1171,32 +1500,32 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
         .events
         .iter()
         .find(|e| {
-            e.tags()
+            e.tags
                 .iter()
-                .find(|t| t.as_vec()[0].eq("branch-name"))
-                .is_some_and(|t| t.as_vec()[1].eq(FEATURE_BRANCH_NAME_1))
+                .find(|t| t.as_slice()[0].eq("branch-name"))
+                .is_some_and(|t| t.as_slice()[1].eq(FEATURE_BRANCH_NAME_1))
         })
         .unwrap();
 
     assert_eq!(
-        proposal.id().to_string(),
+        proposal.id.to_string(),
         first_new_patch
             .tags
             .iter()
             .find(|t| t.is_root())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "first patch sets proposal id as root"
     );
 
     assert_eq!(
-        first_new_patch.id().to_string(),
+        first_new_patch.id.to_string(),
         second_new_patch
             .tags
             .iter()
             .find(|t| t.is_reply())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "second new patch replies to the first new patch"
     );
 
@@ -1204,21 +1533,21 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
         .events
         .iter()
         .find(|e| {
-            e.tags()
+            e.tags
                 .iter()
-                .any(|t| t.as_vec()[1].eq(&proposal.id().to_string()))
+                .any(|t| t.as_slice()[1].eq(&proposal.id.to_string()))
                 && e.content.contains("[PATCH 2/2]")
         })
         .unwrap();
 
     assert_eq!(
-        previous_proposal_tip_event.id().to_string(),
+        previous_proposal_tip_event.id.to_string(),
         first_new_patch
             .tags
             .iter()
             .find(|t| t.is_reply())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "first patch replies to the previous tip of proposal"
     );
 
@@ -1227,7 +1556,6 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
 async fn force_push_creates_proposal_revision() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1271,7 +1599,7 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
         cli_expect_nostr_fetch(&mut p)?;
         p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
         p.expect("list: connecting...\r\n")?;
-        p.expect_after_whitespace(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
+        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
 
         for p in [51, 52, 53, 55, 56, 57] {
@@ -1294,7 +1622,7 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
 
     assert_eq!(
         output,
-        format!(" + eb5d678...8a296c8 {branch_name} -> {branch_name} (forced update)\r\n").as_str(),
+        format!(" + 2d1b467...ead85e0 {branch_name} -> {branch_name} (forced update)\r\n").as_str(),
     );
 
     let new_events = r55
@@ -1311,26 +1639,26 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
         .events
         .iter()
         .find(|e| {
-            e.tags()
+            e.tags
                 .iter()
-                .find(|t| t.as_vec()[0].eq("branch-name"))
-                .is_some_and(|t| t.as_vec()[1].eq(FEATURE_BRANCH_NAME_1))
+                .find(|t| t.as_slice()[0].eq("branch-name"))
+                .is_some_and(|t| t.as_slice()[1].eq(FEATURE_BRANCH_NAME_1))
         })
         .unwrap();
 
     let revision_root_patch = new_events
         .iter()
-        .find(|e| e.tags().iter().any(|t| t.as_vec()[1].eq("revision-root")))
+        .find(|e| e.tags.iter().any(|t| t.as_slice()[1].eq("revision-root")))
         .unwrap();
 
     assert_eq!(
-        proposal.id().to_string(),
+        proposal.id.to_string(),
         revision_root_patch
             .tags
             .iter()
             .find(|t| t.is_reply())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "revision root patch replies to original proposal"
     );
 
@@ -1357,24 +1685,24 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
     );
 
     assert_eq!(
-        revision_root_patch.id().to_string(),
+        revision_root_patch.id.to_string(),
         second_patch
             .tags
             .iter()
             .find(|t| t.is_root())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "second patch sets revision id as root"
     );
 
     assert_eq!(
-        second_patch.id().to_string(),
+        second_patch.id.to_string(),
         third_patch
             .tags
             .iter()
             .find(|t| t.is_reply())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "third patch replies to the second new patch"
     );
 
@@ -1383,7 +1711,6 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "expensive_tests")]
 async fn push_new_pr_branch_creates_proposal() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1415,14 +1742,16 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
         std::fs::write(git_repo.dir.join("new2.md"), "some content")?;
         git_repo.stage_and_commit("new2.md")?;
 
-        let mut p = CliTester::new_git_with_remote_helper_from_dir(
-            &git_repo.dir,
-            ["push", "-u", "origin", branch_name],
-        );
+        let mut p = CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, [
+            "push",
+            "-u",
+            "origin",
+            branch_name,
+        ]);
         cli_expect_nostr_fetch(&mut p)?;
         p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
         p.expect("list: connecting...\r\n\r\r\r")?;
-        p.expect(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
+        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
 
         for p in [51, 52, 53, 55, 56, 57] {
@@ -1460,7 +1789,7 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
 
     let proposal = new_events
         .iter()
-        .find(|e| e.tags().iter().any(|t| t.as_vec()[1].eq("root")))
+        .find(|e| e.tags.iter().any(|t| t.as_slice()[1].eq("root")))
         .unwrap();
 
     assert!(
@@ -1475,11 +1804,11 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
 
     assert_eq!(
         proposal
-            .tags()
+            .tags
             .iter()
-            .find(|t| t.as_vec()[0].eq("branch-name"))
+            .find(|t| t.as_slice()[0].eq("branch-name"))
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         branch_name.replace("pr/", ""),
     );
 
@@ -1494,13 +1823,13 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
     );
 
     assert_eq!(
-        proposal.id().to_string(),
+        proposal.id.to_string(),
         second_patch
             .tags
             .iter()
             .find(|t| t.is_root())
             .unwrap()
-            .as_vec()[1],
+            .as_slice()[1],
         "second patch sets proposal id as root"
     );
 
