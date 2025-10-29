@@ -59,6 +59,7 @@ jobs:
           sudo apt-get autoclean
           sudo rm -rf /tmp/*
           sudo rm -rf ~/.cache/*
+          sudo du -sh * .[!.]* | sort -hr | head -n 10 || true
 
       - name: Use Bash for all subsequent steps
         shell: bash
