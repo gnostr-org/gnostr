@@ -51,7 +51,7 @@ jobs:
           echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
 
       - name: Cleanup disk space
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
           sudo rm -rf /usr/local/lib/android
           docker system prune -af
@@ -80,7 +80,7 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Restore rustup
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
         #if: ${{ !env.ACT }}
@@ -90,7 +90,7 @@ jobs:
           key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Restore cargo
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         id: cache-cargo-restore
         uses: actions/cache/restore@v3
         #if: ${{ !env.ACT }}
@@ -99,15 +99,15 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
-      #- name: Restore target
-      #  if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
-      #  id: cache-target-restore
-      #  uses: actions/cache/restore@v3
-      #  #if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      - name: Restore target
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        #if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - uses: actions/checkout@v3
         with:
@@ -116,15 +116,16 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'false'
 
-      - run: printenv || true
+
 
       - run: rustup default ${{ matrix.rustup }}
 
       - run: cargo search gnostr --limit 100
 
-      - run: cargo install cargo-binstall@main || true
+
 
       - run: cargo-binstall --no-confirm gnostr
+        if: matrix.os == 'ubuntu-latest'
 
       #- run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
       #  if: matrix.os == 'ubuntu-latest'
@@ -140,17 +141,12 @@ jobs:
       #    brew install gnostr-org/gnostr-org/gnostr && gnostr --help
       #  if: matrix.os == 'ubuntu-latest'
 
-      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+      - name: Tap Homebrew repositories
         if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
-
-      - run: brew tap nostorg/nostr || true
-        if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
-
-      - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
+        run: |
+          brew tap gnostr-org/homebrew-gnostr-org || true
+          brew tap nostorg/nostr || true
+          brew tap randymcmillan/homebrew-randymcmillan || true
 
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'macos-latest'
@@ -224,27 +220,26 @@ jobs:
 
       - name: 🚀 EVEN cargo clean
         # The 'if' condition checks the boolean output from the previous step.
-        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
           cargo clean
 
       - name: 🚀 EVEN cargo test
         # The 'if' condition checks the boolean output from the previous step.
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
           cargo test
 
       - name: 🌙 ODD cargo test -- --ignored || true
         # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
         run: |
           echo "✅ Running job for an ODD UTC second."
           cargo test -- --ignored || true
 
-      - run: |
-          printenv
+
 
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
@@ -359,7 +354,7 @@ jobs:
             echo "http://nostr.band/$NOTE"
 
       - name: Save rustup
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         id: cache-rustup-save
         uses: actions/cache/save@v3
         #if: ${{ !env.ACT }}
@@ -369,7 +364,7 @@ jobs:
           key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
 
       - name: Save cargo
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         id: cache-cargo-save
         uses: actions/cache/save@v3
         #if: ${{ !env.ACT }}
@@ -378,12 +373,12 @@ jobs:
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
 
-      #- name: Save target
-      #  if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
-      #  id: cache-target-save
-      #  uses: actions/cache/save@v3
-      #  #if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+      - name: Save target
+        if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        #if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
