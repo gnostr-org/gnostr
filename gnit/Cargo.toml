@@ -44,7 +44,7 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-gnostr-grammar = { version = "0.0.1", path = "grammar" }
+tree-sitter-grammar-repository = { package = "gnostr-grammar", version = "0.0.1", path = "grammar" }
 gnostr-ssh = { version = "0.0.1", path = "../ssh" }
 httparse = "1.7"
 humantime = "2.1"
