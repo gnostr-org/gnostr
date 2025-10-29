@@ -50,17 +50,27 @@ jobs:
           # Set a boolean output for the subsequent steps to consume
           echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
 
-      - name: Use Bash for all subsequent steps
-        shell: bash
+      - name: Cleanup disk space
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          echo GNOSTR=${{ env.GNOSTR }}
-          echo MEMPOOL=${{ env.MEMPOOL }}
-          echo POW=${{ env.POW }}
-          echo DAMUS=${{ env.DAMUS }}
-          echo NOS=${{ env.NOS }}
-        env:
-          MEMPOOL: "mempool"
-          MEMPOOL_SPACE: "mempool-space"
+          sudo rm -rf /usr/local/lib/android
+          docker system prune -af
+          sudo apt-get clean
+          sudo apt-get autoclean
+          sudo rm -rf /tmp/*
+          sudo rm -rf ~/.cache/*
+
+      - name: Use Bash for all subsequent steps
+         shell: bash
+         run: |
+           echo GNOSTR=${{ env.GNOSTR }}
+           echo MEMPOOL=${{ env.MEMPOOL }}
+           echo POW=${{ env.POW }}
+           echo DAMUS=${{ env.DAMUS }}
+           echo NOS=${{ env.NOS }}
+         env:
+           MEMPOOL: "mempool"
+           MEMPOOL_SPACE: "mempool-space"
 
       - uses: cargo-bins/cargo-binstall@main
       - uses: styfle/cancel-workflow-action@0.11.0
@@ -88,19 +98,19 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
-      - name: Restore target
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
-        id: cache-target-restore
-        uses: actions/cache/restore@v3
-        #if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      #- name: Restore target
+      #  if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+      #  id: cache-target-restore
+      #  uses: actions/cache/restore@v3
+      #  #if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      target
+      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          #submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
           fetch-tags: 'false'
@@ -211,27 +221,26 @@ jobs:
             gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
         if: matrix.os == 'macos-latest'
 
-      - name: 🚀 Run if UTC second is EVEN
+      - name: 🚀 EVEN cargo clean
         # The 'if' condition checks the boolean output from the previous step.
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
           cargo clean
 
-      - name: 🚀 Run if UTC second is EVEN
+      - name: 🚀 EVEN cargo test
         # The 'if' condition checks the boolean output from the previous step.
         if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
           cargo test
 
-      - name: 🌙 Run if UTC second is ODD
+      - name: 🌙 ODD cargo test -- --ignored || true
         # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
         run: |
           echo "✅ Running job for an ODD UTC second."
           cargo test -- --ignored || true
-          # Add your odd-second steps here
 
       - run: |
           printenv
@@ -357,6 +366,7 @@ jobs:
           path: |
             ~/.rustup
           key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+
       - name: Save cargo
         if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         id: cache-cargo-save
@@ -366,12 +376,13 @@ jobs:
           path: |
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
-      - name: Save target
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
-        id: cache-target-save
-        uses: actions/cache/save@v3
-        #if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+
+      #- name: Save target
+      #  if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+      #  id: cache-target-save
+      #  uses: actions/cache/save@v3
+      #  #if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      target
+      #    key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
