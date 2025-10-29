@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "gnostr-ssh"
-version = "0.0.1"
+version = "1912.921277.22959"
 description = "A self-hosted Git server that's easy to set up, use, and maintain."
 homepage = "https://github.com/gnostr-org/gnostr.git"
 repository = "https://github.com/gnostr-org/gnostr.git"

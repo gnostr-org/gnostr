@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1912.921034.558464"
+version = "1912.921274.232772"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -131,9 +131,10 @@ git2 = "^0.18" ## asyncgit ^0.19
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { path = "asyncgit", version = "0.0.7", default-features = false }
-gnostr-crawler = { version = "0.0.15", path = "crawler" }
-gnostr-query = { version = "0.0.12", path = "query" }
+gnostr-asyncgit = { path = "asyncgit", version = "1912.921274.23285", default-features = false }
+gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
+gnostr-query = { version = "1912.921276.230652", path = "query" }
+gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
 gnostr-types = { version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
 #gnostr-legit = { path = "./legit", version = "0.0.0" }
@@ -260,7 +261,6 @@ url = "2.5.0"
 urlencoding = "2.1.3"
 which = "6.0"
 zeroize = "1.6.0"
-gnostr-relay = { version = "0.0.6", path = "relay", features = ["search"] }
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
