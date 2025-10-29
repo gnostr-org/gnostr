@@ -24,7 +24,7 @@ pub struct SubCommandArgs {
     offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &NgitCli, command_args: &SubCommandArgs) -> Result<()> {
     let client = if command_args.offline {
         None
     } else {
