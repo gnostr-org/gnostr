@@ -7,7 +7,7 @@ authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
 
 [workspace]
-members = ["tree-sitter-grammar-repository"]
+members = ["grammar"]
 
 [dependencies]
 anyhow = "1.0"
@@ -44,6 +44,7 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
+gnostr-grammar = { version = "0.0.1", path = "grammar" }
 gnostr-ssh = { version = "0.0.1", path = "../ssh" }
 httparse = "1.7"
 humantime = "2.1"
@@ -93,7 +94,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "parking_lot",
   "fmt",
 ] }
-tree-sitter-grammar-repository = { path = "./tree-sitter-grammar-repository" }
+#tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "./grammar" }
 tree-sitter-highlight = "0.23"
 unix_mode = "0.1"
 uuid = { version = "1.7", features = ["v4"] }
