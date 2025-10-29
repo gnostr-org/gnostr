@@ -78,6 +78,13 @@ parking_lot = "0.12.3"
 thiserror = "1.0.63"
 tracing = "0.1.40"
 bytes = "1.7.1"
+
+## nostr
+nostr_sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
+nostr_0_37_0 = { package = "nostr", version = "0.37.0", features = ["nip05", "nip49"] }                               
+nostr-connect = "0.37.0"
+nostr-database = "0.37.0"
+nostr-lmdb = "0.37.0"                                                                                                              
 nostr-db = { version = "0.4.5", features = ["search"] }
 #tracing-subscriber = "0.3.18"
 
@@ -177,8 +184,6 @@ nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
-nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
-
 nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
 
 nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
@@ -198,6 +203,7 @@ pad = "0.1.6"
 # pin until upgrading this does not introduce a duplicate dependency
 parking_lot_core = "=0.9.9"
 passwords = "3.1.13"
+qrcode = { version = "0.14.1", default-features = false }
 rand = "0.8"
 rand_core = "0.6"
 ratatui = { version = "0.28", default-features = false, features = [

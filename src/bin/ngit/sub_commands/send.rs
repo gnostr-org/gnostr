@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use console::Style;
-use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
+use ngit::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use nostr_0_37_0::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},

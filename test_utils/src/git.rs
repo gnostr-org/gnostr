@@ -47,15 +47,31 @@ impl GitTestRepo {
 		let path = current_dir()?
 			.join(format!("tmpgit-{}", rand::random::<u64>()));
 		let git_repo = git2::Repository::init_opts(
-			&path,
-			RepositoryInitOptions::new()
-				.initial_head(main_branch_name)
-				.mkpath(true),
+		    &path,
+		    RepositoryInitOptions::new().mkpath(true),
 		)?;
-		// Make sure we have standard diffs for the tests so that
-		// user-level config does not make them fail.
-		git_repo.config()?.set_bool("diff.mnemonicPrefix", false)?;
-		Ok(Self {
+		
+		// Create an initial empty commit and branch
+		{
+		    let signature = git2::Signature::now("test", "test@example.com")?;
+		    let mut index = git_repo.index()?;
+		    let tree_id = index.write_tree()?;
+		    let tree = git_repo.find_tree(tree_id)?;
+		    let commit_oid = git_repo.commit(
+		        None, // No HEAD reference initially
+		        &signature,
+		        &signature,
+		        "initial commit",
+		        &tree,
+		        &[],
+		    )?;
+		    // Create the branch and set HEAD
+		    let mut branch = git_repo.branch(main_branch_name, &git_repo.find_commit(commit_oid)?, false)?;
+		    git_repo.set_head(&format!("refs/heads/{}", branch.name().unwrap().expect("Branch name should not be None")))?
+		}				            
+				                    // Make sure we have standard diffs for the tests so that
+				                    // user-level config does not make them fail.
+				                    git_repo.config()?.set_bool("diff.mnemonicPrefix", false)?;		Ok(Self {
 			dir: path,
 			git_repo,
 			delete_dir_on_drop: true,
@@ -353,12 +369,12 @@ mod tests {
 	fn test_git_test_repo_new() -> Result<()> {
 		let repo_main = GitTestRepo::new("main")?;
 		assert!(repo_main.dir.exists());
-		assert!(repo_main.git_repo.is_empty()?);
+
 		assert_eq!(repo_main.get_checked_out_branch_name()?, "main");
 
 		let repo_dev = GitTestRepo::new("development")?;
 		assert!(repo_dev.dir.exists());
-		assert!(repo_dev.git_repo.is_empty()?);
+
 		assert_eq!(repo_dev.get_checked_out_branch_name()?, "development");
 
 		Ok(())
