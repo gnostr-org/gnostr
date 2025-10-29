@@ -44,7 +44,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
+pub async fn launch(cli_args: &NgitCli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
     let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
