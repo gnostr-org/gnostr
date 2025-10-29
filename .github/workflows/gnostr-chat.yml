@@ -1,5 +1,5 @@
 ---
-name: gnostr-chat.yml
+name: Gnostr Chat
 
 # Controls when the action will run.
 on:
