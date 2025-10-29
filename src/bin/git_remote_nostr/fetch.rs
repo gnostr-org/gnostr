@@ -9,7 +9,7 @@ use std::{
 use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
-use gnostr::{
+use ngit::{
     cli_interactor::count_lines_per_msg_vec,
     git::{
         Repo, RepoActions,

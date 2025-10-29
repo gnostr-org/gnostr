@@ -16,7 +16,7 @@ use nostr_0_37_0::{
 use nostr_sdk_0_37_0::{Kind, RelayUrl};
 
 use crate::{
-    cli::{Cli, extract_signer_cli_arguments},
+    cli::{NgitCli, extract_signer_cli_arguments},
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
     client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
     git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},

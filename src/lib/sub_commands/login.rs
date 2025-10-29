@@ -7,7 +7,7 @@ use crate::{
 };
 
 use crate::{
-    cli::{Cli, extract_signer_cli_arguments},
+    cli::{NgitCli, extract_signer_cli_arguments},
     client::{Client, Connect},
     git::Repo,
     login::fresh::fresh_login_or_signup,

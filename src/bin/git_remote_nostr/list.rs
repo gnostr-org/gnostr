@@ -5,7 +5,7 @@ use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
-use gnostr::{
+use ngit::{
     client,
     git::{
         self,
