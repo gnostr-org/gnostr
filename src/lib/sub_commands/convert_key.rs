@@ -1,6 +1,6 @@
 use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 use std::str::FromStr;
 
 #[derive(Args, Debug)]

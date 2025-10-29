@@ -1,4 +1,4 @@
-use nostr_sdk_0_34_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 use std::{rc::Rc, slice::Iter};
 
 use chrono::{DateTime, Duration, Local, Utc};

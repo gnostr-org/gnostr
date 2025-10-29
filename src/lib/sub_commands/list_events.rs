@@ -1,6 +1,6 @@
 use crate::utils::create_client;
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 use std::{str::FromStr, time::Duration};
 use tracing::debug;
 

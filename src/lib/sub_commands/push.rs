@@ -3,7 +3,7 @@ use crate::{
     git_events::{is_event_proposal_root_for_branch, tag_value},
 };
 use anyhow::{bail, Context, Result};
-use nostr_sdk_0_34_0::PublicKey;
+use nostr_sdk_0_37_0::PublicKey;
 
 use crate::{
     //cli::Cli,
@@ -198,7 +198,7 @@ pub async fn launch(
     )
     .await?;
 
-    let mut patch_events: Vec<nostr_0_34_1::Event> = vec![];
+    let mut patch_events: Vec<nostr_0_37_0::Event> = vec![];
     for commit in &ahead {
         patch_events.push(
             generate_patch_event(
@@ -208,7 +208,7 @@ pub async fn launch(
                 Some(proposal_root_event.id),
                 &signer,
                 &repo_ref,
-                patch_events.last().map(nostr_0_34_1::Event::id),
+                patch_events.last().map(nostr_0_37_0::Event::id),
                 None,
                 None,
                 &None,

@@ -171,6 +171,9 @@ nostr-database = "0.37.0"
 nostr-lmdb = "0.37.0"
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
 
+
+nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
+
 ordered-float = "3.4.0"
 passwords = "3.1.13"
 rand = "0.8"

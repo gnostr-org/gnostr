@@ -2,7 +2,7 @@ use crate::utils::{create_client, parse_private_key};
 use clap::Args;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
-use nostr_sdk_0_32_0::prelude::*;
+use nostr_sdk_0_37_0::prelude::*;
 
 #[derive(Args, Debug)]
 pub struct BroadcastEventsSubCommand {
