@@ -123,8 +123,6 @@ jobs:
 
       - run: cargo search gnostr --limit 100
 
-      - run: cargo install cargo-binstall@main || true
-
       - run: cargo-binstall --no-confirm gnostr
 
       #- run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
