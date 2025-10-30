@@ -8,8 +8,57 @@ mod tests {
     use anyhow::Result;
     use std::error::Error;
     use std::fs::{self, File};
-    use std::io::Read;
+    use std::io::Write;
+    use std::path::{Path, PathBuf};
+    use std::env;
     use gnostr::cli::{setup_logging, get_app_cache_path};
+    use git2::{Repository, Signature};
+    use tempfile::TempDir;
+
+    // Helper function to set up a temporary git repository for testing.
+    fn setup_test_repo() -> (TempDir, Repository) {
+        let tmp_dir = TempDir::new().unwrap();
+        let repo_path = tmp_dir.path();
+        let repo = Repository::init(repo_path).unwrap();
+
+        // Configure user name and email
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test User").unwrap();
+        config.set_str("user.email", "test@example.com").unwrap();
+        config.set_str("gnostr.relays", "wss://relay.example.com").unwrap();
+
+        // Create an initial commit
+        {
+            let signature = Signature::now("Test User", "test@example.com").unwrap();
+            let tree_id = {
+                let mut index = repo.index().unwrap();
+                // Create a dummy file to have a non-empty initial commit
+                let file_path = repo_path.join("README.md");
+                File::create(&file_path)
+                    .unwrap()
+                    .write_all(b"Initial commit")
+                    .unwrap();
+                index.add_path(Path::new("README.md")).unwrap();
+                let oid = index.write_tree().unwrap();
+                repo.find_tree(oid).unwrap().id()
+            };
+            let tree = repo.find_tree(tree_id).unwrap();
+            repo.commit(
+                Some("HEAD"),
+                &signature,
+                &signature,
+                "Initial commit",
+                &tree,
+                &[],
+            )
+            .unwrap();
+
+            // Ensure the working directory is clean after the initial commit
+            repo.reset(repo.head().unwrap().peel_to_commit().unwrap().as_object(), git2::ResetType::Hard, None).unwrap();
+        }
+
+        (tmp_dir, repo)
+    }
 
     // Helper to get clap error message for conflicting flags
     fn get_clap_conflict_error(flag1: &str, flag2: &str) -> impl predicates::Predicate<str> {
@@ -176,7 +225,70 @@ mod tests {
     }
 
     #[tokio::test]
-	#[ignore]
+    async fn test_legit_mine_default_command() -> Result<(), Box<dyn Error>> {
+        let (_tmp_dir, repo) = setup_test_repo();
+        let repo_path = repo.path().to_str().unwrap().to_string();
+
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("legit").arg("--repo").arg(&repo_path).arg("--message").arg("Test mine commit").arg("--pow").arg("0");
+
+        cmd.assert()
+            .success()
+            .stdout(str::contains("Mined commit hash:"));
+
+        // Verify that .gnostr directories and files were created
+        let repo_path_buf = PathBuf::from(&repo_path);
+        assert!(repo_path_buf.join(".gnostr").exists());
+        assert!(repo_path_buf.join(".gnostr/blobs").exists());
+        assert!(repo_path_buf.join(".gnostr/reflog").exists());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_main_with_gitdir_env_var() -> Result<(), Box<dyn Error>> {
+        let (_tmp_dir, repo) = setup_test_repo();
+        let repo_path = repo.path().to_str().unwrap().to_string();
+
+        // Set the GNOSTR_GITDIR environment variable
+        env::set_var("GNOSTR_GITDIR", &repo_path);
+
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("tui"); // TUI is the default if no other subcommand is given, but we explicitly call it here
+
+        // We expect it to succeed, but the actual TUI interaction is hard to test in a CLI test.
+        // We can check for some debug output if --debug is enabled.
+        cmd.arg("--debug");
+
+        cmd.assert()
+            .success()
+            .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path)));
+
+        // Unset the environment variable to avoid affecting other tests
+        env::remove_var("GNOSTR_GITDIR");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_main_with_gitdir_cli_arg() -> Result<(), Box<dyn Error>> {
+        let (_tmp_dir, repo) = setup_test_repo();
+        let repo_path = repo.path().to_str().unwrap().to_string();
+
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--gitdir").arg(&repo_path).arg("tui");
+
+        cmd.arg("--debug");
+
+        cmd.assert()
+            .success()
+            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: {:?}", repo_path)));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore]
     async fn test_gitsh_command_error_output() -> Result<(), Box<dyn Error>> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("gitsh").arg("nostr://test_url");
