@@ -12,12 +12,14 @@ use std::convert::TryInto;
 use std::any::type_name;
 use std::{io, thread};
 use argparse::{ArgumentParser,Store};
-use super::gitminer::Gitminer;
+use gnostr_legit::gitminer::Gitminer;
 use git2::*;
 use sha2::{Sha256, Digest};
 use pad::{PadStr, Alignment};
+use time::OffsetDateTime;
+use time::macros::datetime;
 
-use super::{worker, gitminer};
+use gnostr_legit::{gitminer, repo, worker};
 
 fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
@@ -108,7 +110,7 @@ pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
         target:  "00000".to_string(),
         message: message,
         repo:    path.as_path().display().to_string(),
-        timestamp: SystemTime::now().into(),
+        timestamp: ::time::at(OffsetDateTime::now_local().unwrap().unix_timestamp()),
     };
 
     //parse_args_or_exit(&mut opts);

@@ -1,7 +1,8 @@
 use std::sync::mpsc;
 use crypto::digest::Digest;
 use crypto::sha1;
-use time;
+//use time::OffsetDateTime;
+use time::Tm;
 
 pub struct Worker {
     id:      u32,
@@ -12,7 +13,7 @@ pub struct Worker {
     parent:  String,
     author:  String,
     message: String,
-    timestamp: time::Tm
+    timestamp: Tm,
 }
 
 impl Worker {
@@ -22,7 +23,7 @@ impl Worker {
                parent:    String,
                author:    String,
                message:   String,
-               timestamp: time::Tm,
+               timestamp: Tm,
                tx:        mpsc::Sender<(u32, String, String)>) -> Worker {
         Worker {
             id:        id,
@@ -37,8 +38,18 @@ impl Worker {
         }
     }
 
+
     pub fn work(&mut self) {
         let tstamp = format!("{}", self.timestamp.strftime("%s %z").unwrap());
+    //fixme //git commit reference
+    //fixme //commit 59ace1e689ca44f7708a30d709c44756c8ab6145 (HEAD -> 0/921511/0/8a19db5e53/f8b0ee121b)
+    //fixme //Author: randymcmillan <randymcmillan@protonmail.com>
+    //fixme //Date:   Thu Oct 30 14:27:24 2025 -0400
+    //fixme //
+    //fixme //    gnostr/legit:know working version
+
+    //pub fn work(&mut self) {        fixme //not a unix timestamp
+        //let tstamp = format!("{} {}", self.timestamp.unix_timestamp(), self.timestamp.offset());
 
         let mut value  = 0u32;
         loop {

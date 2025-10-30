@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 use crate::cli::LegitCommands;
+use gnostr_legit::{gitminer, repo, worker};
 use crate::sub_commands::fetch;
 use crate::sub_commands::init;
 use crate::sub_commands::list;
@@ -13,6 +14,7 @@ use nostr_sdk_0_34_0::prelude::*;
 use serde::ser::StdError;
 use std::time::SystemTime;
 use crate::legit::command;
+use ::time::OffsetDateTime;
 
 
 #[derive(Args, Debug)]
@@ -30,7 +32,7 @@ pub struct LegitSubCommand {
     #[arg(short, long, global = true)]
     password: Option<String>,
     ///// nsec or hex private key
-    #[arg(short, long, global = true)]
+    #[arg(long, global = true)]
     repo: Option<String>,
     ///// password to decrypt nsec
     #[arg(long, global = true)]
@@ -59,7 +61,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Push(args)) => push::launch(&args).await?,
         Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
         Some(LegitCommands::Mine) | None => {
-            let opts = crate::legit::gitminer::Options {
+            let opts = gitminer::Options {
                 threads: sub_command_args.threads as u32,
                 target: sub_command_args.prefix.clone().unwrap_or_default(),
                 message: if sub_command_args.message.is_empty() {
@@ -68,7 +70,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                     sub_command_args.message.clone()
                 },
                 repo: sub_command_args.repository_path.clone().unwrap_or(".".to_string()),
-                timestamp: SystemTime::now().into(),
+                timestamp: OffsetDateTime::now_local().unwrap(),
             };
             command::run_legit_command(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
