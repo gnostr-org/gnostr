@@ -88,8 +88,11 @@ fn test_gitminer_new_fail_no_repo() {
 
 #[test]
 fn test_mine_commit_success() {
+    println!("Setting up test repository...");
     let (repo_path_str, repo) = setup_test_repo();
     let repo_path_str = repo.path().to_str().unwrap().to_string();
+    println!("Test repository path: {}", repo_path_str);
+
     let opts = Options {
         threads: 1,
         target: "0".to_string(),
@@ -98,24 +101,36 @@ fn test_mine_commit_success() {
         timestamp: OffsetDateTime::now_utc(),
     };
 
+    println!("Initializing Gitminer with options: {:?}", opts);
     let mut miner = Gitminer::new(opts).unwrap();
+    println!("Mining commit...");
     let commit_hash_result = miner.mine();
 
     assert!(commit_hash_result.is_ok());
     let commit_hash = commit_hash_result.unwrap();
+    println!("Mined commit hash: {}", commit_hash);
 
     assert!(commit_hash.starts_with("0"));
+    println!("Verified commit hash starts with '0'.");
 
     // Verify the commit exists in the repo
     let oid = Oid::from_str(&commit_hash).unwrap();
     let commit = repo.find_commit(oid).unwrap();
     assert_eq!(commit.message().unwrap().lines().next().unwrap(), "Mined commit");
+    println!("Verified commit message: '{}'", commit.message().unwrap().lines().next().unwrap());
 
     // Verify that .gnostr directories and files were created
     let repo_path = Path::new(&repo_path_str);
+    println!("Verifying .gnostr directory existence...");
     assert!(repo_path.join(".gnostr").exists());
+    println!("  .gnostr exists.");
     assert!(repo_path.join(".gnostr/blobs").exists());
+    println!("  .gnostr/blobs exists.");
     assert!(repo_path.join(".gnostr/reflog").exists());
+    println!("  .gnostr/reflog exists.");
     assert!(repo_path.join(".gnostr/blobs").join(&commit_hash).exists());
+    println!("  .gnostr/blobs/{} exists.", commit_hash);
     assert!(repo_path.join(".gnostr/reflog").join(&commit_hash).exists());
+    println!("  .gnostr/reflog/{} exists.", commit_hash);
+    println!("All .gnostr directories and files verified successfully.");
 }
