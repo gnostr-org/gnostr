@@ -160,7 +160,7 @@ jobs:
         shell: bash
         run: |
           gnostr -d ${{ env.POW }} \
-          -r ${{ env.DAMUS }} \
+          --relays ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
           set-metadata \
           -n gnostr-bot \
