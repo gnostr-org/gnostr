@@ -24,7 +24,7 @@ on:
 jobs:
   github-workspace:
     name: github-workspace
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
@@ -33,9 +33,8 @@ jobs:
       - name: Print github workspace
         run: |
           printenv
-
-  cargo-check:
-    name: cargo-check
+  build_and_test:
+    name: cargo build --release --all-features
     runs-on: ubuntu-latest
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
@@ -49,23 +48,9 @@ jobs:
       - run: |
           rustup default stable
           source "$HOME/.cargo/env"
-          make
-          make cargo-check
+          # make
+          cargo build --release --all-features
 
-  cargo-build:
-    name: cargo-build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
-        with:
-          access_token: ${{ github.token }}
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: |
-          rustup default stable
-          source "$HOME/.cargo/env"
-          make
-          make cargo-build
+      - name: git log
+        run: |
+          git log
