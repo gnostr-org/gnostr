@@ -1,7 +1,8 @@
-name: gnostr-chat.yml
+---
+name: Gnostr Chat
 
 # Controls when the action will run.
-on: true # Controls when the action will run.
+on:
   schedule: # run 30th minute
     - cron: '*/30 * * * *'
   push:
@@ -13,6 +14,7 @@ on: true # Controls when the action will run.
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   gnostr-chat:
+    name: Gnostr Chat
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -46,7 +48,7 @@ jobs:
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
-        if: ${{ env.ACT == 'false' }}
+        if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
@@ -55,7 +57,7 @@ jobs:
       - name: Restore cargo
         id: cache-cargo-restore
         uses: actions/cache/restore@v3
-        if: ${{ env.ACT == 'false' }}
+        if: ${{ !env.ACT }}
         with:
           path: |
             ~/.cargo
@@ -64,11 +66,23 @@ jobs:
       - name: Restore target
         id: cache-target-restore
         uses: actions/cache/restore@v3
-        if: ${{ env.ACT == 'false' }}
+        if: ${{ !env.ACT }}
         with:
           path: |
             target
           key: ${{ runner.os }}-target-${{ matrix.rustup }}
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
+          # If not specified, it defaults to 'stable'. 
+          # It can also read the version from a 'rust-toolchain.toml' file if present.
+          toolchain: stable 
+          # Comma-separated list of additional components to install.
+          components: clippy, rustfmt
+          # Automatically configure smart caching (recommended for speed)
+          cache: true
 
       - uses: cargo-bins/cargo-binstall@main
       - uses: actions/checkout@v3
@@ -144,27 +158,76 @@ jobs:
       - run: |
           make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true
 
-      - name: Save rustup
-        id: cache-rustup-save
-        uses: actions/cache/save@v3
-        if: ${{ env.ACT == 'false' }}
+  tui:
+    name: TUI Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
-          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
-      - name: Save cargo
-        id: cache-cargo-save
-        uses: actions/cache/save@v3
-        if: ${{ env.ACT == 'false' }}
+          key: ${{ runner.os }}-rustup-stable
+
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
         with:
           path: |
             ~/.cargo
-          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
-      - name: Save target
-        id: cache-target-save
-        uses: actions/cache/save@v3
-        if: ${{ env.ACT == 'false' }}
+          key: ${{ runner.os }}-cargo-stable
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
         with:
           path: |
             target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+          key: ${{ runner.os }}-target-stable
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+          cache: true
+      - run: cargo build --bin gnostr
+      - name: Run gnostr tui
+        run: |
+          ./target/debug/gnostr tui &
+          sleep 10
+          pkill -f gnostr
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key || format('{0}-rustup-{1}', runner.os, 'stable') }}
+
+      - name: Save cargo
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key || format('{0}-cargo-{1}', runner.os, 'stable') }}
+
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
+

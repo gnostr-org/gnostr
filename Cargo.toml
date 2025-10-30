@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1912.921034.558464"
+version = "1912.921277.23006"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -131,11 +131,13 @@ git2 = "^0.18" ## asyncgit ^0.19
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { path = "asyncgit", version = "0.0.7", default-features = false }
-gnostr-crawler = { version = "0.0.15", path = "crawler" }
-gnostr-query = { version = "0.0.12", path = "query" }
+gnostr-asyncgit = { path = "asyncgit", version = "1912.921274.23285", default-features = false }
+gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
+gnostr-query = { version = "1912.921276.230652", path = "query" }
+gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
 gnostr-types = { version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
+#gnostr-legit = { path = "./legit", version = "0.0.0" }
 
 #hex = "0.4"
 hostname = "0.3.1"
@@ -203,6 +205,7 @@ ratatui = { version = "0.28", default-features = false, features = [
     'serde',
 ] }
 rayon-core = "1.12"
+rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 ron = "0.8"
 rpassword = "7.2"
@@ -258,7 +261,6 @@ url = "2.5.0"
 urlencoding = "2.1.3"
 which = "6.0"
 zeroize = "1.6.0"
-gnostr-relay = { version = "0.0.6", path = "relay", features = ["search"] }
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
@@ -266,6 +268,7 @@ sd-notify = "0.4.1"
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 cross = { version = "0.2.5", features = ["dev"] }
+sccache = "0.12.0"
 
 [dev-dependencies]
 actix-rt = "2.10.0"
@@ -282,7 +285,7 @@ env_logger = "0.11"
 mockall = "0.11.4"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
-rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
+#rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 serial_test = "2.0.0"
 structopt = "0.3.26"
 #tempfile = "3"
@@ -298,6 +301,7 @@ test_utils = { path = "test_utils" }
 tokio = { version = "1", features = ["full"] } # Required for async operations
 tungstenite = { version = "0.21.0", features = ["native-tls"] }
 url = "2.2.2"
+sccache = "0.12.0"
 
 # The profile that 'dist' will build with
 [profile.dist]

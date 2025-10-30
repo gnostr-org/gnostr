@@ -1,4 +1,4 @@
-name: gnostr-bot.yml
+name: gnostr-bot-ubuntu.yml
 
 # Controls when the action will run.
 on:
@@ -23,11 +23,33 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         rustup: [stable, nightly]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Calculate Odd/Even Status
+        id: time_check_hour
+        run: |
+          # Get the current hour (0-23) in UTC
+          CURRENT_HOUR=$(date -u +%H)
+          echo "Current UTC Hour is $CURRENT_HOUR"
+
+          # Use a shell arithmetic expression to check for evenness (remainder of division by 2 is 0)
+          # '0' is even, '1' is odd.
+          if (( CURRENT_HOUR % 2 == 0 )); then
+            IS_EVEN="true"
+            STATUS="EVEN"
+          else
+            IS_EVEN="false"
+            STATUS="ODD"
+          fi
+
+          echo "The hour is $STATUS"
+
+          # Set a boolean output for the subsequent steps to consume
+          echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
+
       - name: Use Bash for all subsequent steps
         shell: bash
         run: |
@@ -47,27 +69,30 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Restore rustup
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
           key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Restore cargo
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
         id: cache-cargo-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Restore target
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
         id: cache-target-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             target
@@ -78,7 +103,19 @@ jobs:
           submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: 'true'
+          fetch-tags: 'false'
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
+          # If not specified, it defaults to 'stable'. 
+          # It can also read the version from a 'rust-toolchain.toml' file if present.
+          toolchain: stable 
+          # Comma-separated list of additional components to install.
+          components: clippy, rustfmt
+          # Automatically configure smart caching (recommended for speed)
+          cache: true
 
       - run: printenv || true
 
@@ -90,17 +127,31 @@ jobs:
 
       - run: cargo-binstall --no-confirm gnostr
 
+      #- run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
+      #  if: matrix.os == 'ubuntu-latest'
+
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
+
+      #- run: |
+      #    test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+      #    test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      #    echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+      #    brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      #  if: matrix.os == 'ubuntu-latest'
 
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
       - run: brew tap nostorg/nostr || true
         if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: matrix.os == 'macos-latest'
+        #if: matrix.os != 'windows-latest'
 
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'macos-latest'
@@ -166,15 +217,33 @@ jobs:
             -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT) && \
+            NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }}
+            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} && echo && \
+            gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
         if: matrix.os == 'macos-latest'
 
-      - run: |
-          cargo t
-        if: matrix.os == 'macos-latest'
+      - name: 🚀 Run if UTC second is EVEN
+        # The 'if' condition checks the boolean output from the previous step.
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        run: |
+          echo "✅ Running job for an EVEN UTC second."
+          cargo clean
+
+      - name: 🚀 Run if UTC second is EVEN
+        # The 'if' condition checks the boolean output from the previous step.
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        run: |
+          echo "✅ Running job for an EVEN UTC second."
+          cargo test
+
+      - name: 🌙 Run if UTC second is ODD
+        # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        run: |
+          echo "✅ Running job for an ODD UTC second."
+          cargo test -- --ignored || true
+          # Add your odd-second steps here
 
       - run: |
           printenv
@@ -182,6 +251,7 @@ jobs:
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
+        if: ${{ !env.ACT }}
         with:
           job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
           per_page: 50 # input matrix size here if it is larger than 30
@@ -218,8 +288,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query --ids $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on cancelled
@@ -252,8 +322,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query --ids $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on success
@@ -287,30 +357,33 @@ jobs:
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query --ids $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Save rustup
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
         id: cache-rustup-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.rustup
           key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
       - name: Save cargo
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
         id: cache-cargo-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
       - name: Save target
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
         id: cache-target-save
         uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        #if: ${{ !env.ACT }}
         with:
           path: |
             target

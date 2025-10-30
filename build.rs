@@ -1,6 +1,16 @@
 use std::env;
 use std::process::Command;
 
+fn check_sscache() {
+    if Command::new("sscache").arg("--version").output().is_ok() {
+        println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
+        env::set_var("RUSTC_WRAPPER", "sscache");
+        println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
+    } else {
+        println!("cargo:warning=sscache not found, continuing without it.");
+    }
+}
+
 fn check_brew() -> bool {
     Command::new("brew")
         .arg("--version")
@@ -186,6 +196,7 @@ fn get_git_hash() -> String {
 }
 
 fn main() {
+    check_sscache();
     // Tell Cargo to rerun this build script only if the Git HEAD or index changes
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/index");

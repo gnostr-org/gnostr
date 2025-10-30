@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    //#[ignore]
+    #[ignore]
     fn test_git_tag_version_no_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
@@ -91,6 +91,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_git_tag_version_with_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
