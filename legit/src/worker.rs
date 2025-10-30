@@ -40,24 +40,21 @@ impl Worker {
 
 
     pub fn work(&mut self) {
+        println!("[Worker {}] Starting work...", self.id);
         let format = format_description::parse("[unix_timestamp] [offset_hour sign:mandatory][offset_minute]").unwrap();
         let tstamp = self.timestamp.format(&format).unwrap();
-    //fixme //git commit reference
-    //fixme //commit 59ace1e689ca44f7708a30d709c44756c8ab6145 (HEAD -> 0/921511/0/8a19db5e53/f8b0ee121b)
-    //fixme //Author: randymcmillan <randymcmillan@protonmail.com>
-    //fixme //Date:   Thu Oct 30 14:27:24 2025 -0400
-    //fixme //
-    //fixme //    gnostr/legit:know working version
-
-    //pub fn work(&mut self) {        fixme //not a unix timestamp
-        //let tstamp = format!("{} {}", self.timestamp.unix_timestamp(), self.timestamp.offset());
+        println!("[Worker {}] Generated timestamp: {}", self.id, tstamp);
 
         let mut value  = 0u32;
         loop {
+            if value % 100000 == 0 {
+                println!("[Worker {}] Current iteration value: {}", self.id, value);
+            }
             let (raw, blob) = self.generate_blob(value, &tstamp);
             let result = self.calculate(&blob);
 
             if result.starts_with(&self.target) {
+                println!("[Worker {}] Target hash found! Hash: {}, Value: {}", self.id, result, value);
                 self.tx.send((self.id, raw, result)).unwrap();
                 break;
             }
