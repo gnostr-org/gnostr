@@ -7,8 +7,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io;
-#[cfg(not(windows))]
-use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
+
 
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
@@ -85,30 +84,19 @@ fn move_gnostr_gnit_key() -> io::Result<()> {
 
 // --- Helper function for setting file permissions ---
 fn set_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
-    // Detect specific operating systems
-    #[cfg(target_os = "macos")]
+    #[cfg(unix)] // Applies to macOS and Linux
     {
-        println!("Running on macOS!");
-        // macOS-specific code here
+        use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_mode(mode);
         fs::set_permissions(path, perms)
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(windows)]
     {
-        println!("Running on Linux!");
-        // Linux-specific code here
-        let mut perms = fs::metadata(path)?.permissions();
-        perms.set_mode(mode);
-        fs::set_permissions(path, perms)
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        println!("Running on Windows!");
-        // Windows-specific code here
-        return Ok(());
+        // On Windows, `ssh-keygen` is expected to handle appropriate permissions.
+        // Direct `set_mode` for Unix-style permissions is not applicable.
+        Ok(())
     }
 }
 
@@ -312,20 +300,25 @@ fn main() -> io::Result<()> {
         let public_key_file = ssh_dir.join(key_type);
         if public_key_file.exists() {
             let pubkey_file_name = "gnostr-gnit-key.pub";
+            #[cfg(unix)]
             let output = Command::new("cat")
+                .arg(ssh_dir.join(pubkey_file_name))
+                .output();
+
+            #[cfg(windows)]
+            let output = Command::new("type")
                 .arg(ssh_dir.join(pubkey_file_name))
                 .output();
 
             match output {
                 Ok(output) => {
                     if output.status.success() {
-                        let capture_output = &output.clone().stdout;
-                        gnostr_gnit_pubkey = (&String::from_utf8_lossy(&capture_output))
-                            .to_string()
-                            .replace("\"\"", "");
-                        println!("gnostr-gnit-key.pub:\n{:?}", output.stdout);
+                        gnostr_gnit_pubkey = String::from_utf8_lossy(&output.stdout)
+                            .trim()
+                            .to_string();
+                        println!("gnostr-gnit-key.pub:\n{}", gnostr_gnit_pubkey);
                     } else {
-                        eprintln!("Error: gnostr-gnit-pubkey not found.");
+                        eprintln!("Error: Failed to read public key.");
                         eprintln!("Stdout: {}", String::from_utf8_lossy(&output.stdout));
                         eprintln!("Stderr: {}", String::from_utf8_lossy(&output.stderr));
                         exit(1);
@@ -333,7 +326,7 @@ fn main() -> io::Result<()> {
                 }
                 Err(e) => {
                     eprintln!(
-                        "Error: Could not execute ssh-keygen. Is it installed and in your PATH? {}",
+                        "Error: Could not execute command to read public key. Is it installed and in your PATH? {}",
                         e
                     );
                     exit(1);
@@ -379,7 +372,7 @@ fn main() -> io::Result<()> {
         User {
             is_admin: true,
             can_create_repos: true,
-            public_key: gnostr_gnit_pubkey.clone().to_string().replace("\"\"", ""),
+            public_key: gnostr_gnit_pubkey.clone(),
         },
     );
 
@@ -388,7 +381,7 @@ fn main() -> io::Result<()> {
         User {
             is_admin: false, // Explicitly set to false as it's not an admin
             can_create_repos: true,
-            public_key: gnostr_gnit_pubkey.clone().to_string().replace("\"", ""),
+            public_key: gnostr_gnit_pubkey.clone(),
         },
     );
 

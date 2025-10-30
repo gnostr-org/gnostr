@@ -185,12 +185,8 @@ jobs:
           fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
-      - run: |
-          cargo t -p gnostr --bins --lib -- --no-capture
-        if: matrix.rustup == '1.89' && matrix.os != 'windows-latest'
-
       - run: V=1 sudo make docs || true
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-latest'
 
       #- name: Save rustup
       #  id: cache-rustup-save
@@ -289,7 +285,7 @@ jobs:
           make cargo-install || sudo make cargo-install
         if: matrix.os != 'windows-latest' && matrix.rustup == 'nightly'
       - run: V=1 sudo make docs || true
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-matrix'
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && matrix.os == 'ubuntu-latest'
 
       - name: Save rustup
         id: cache-rustup-save

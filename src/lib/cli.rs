@@ -63,7 +63,7 @@ pub struct CliArgs {
 #[command(propagate_version = true)]
 pub struct LegitCli {
     #[command(subcommand)]
-    pub command: LegitCommands,
+    pub command: Option<LegitCommands>,
     /// remote signer address
     #[arg(long, global = true)]
     pub bunker_uri: Option<String>,
@@ -99,6 +99,8 @@ pub enum LegitCommands {
     Pull,
     /// run with --nsec flag to change npub
     Login(login::LoginArgs),
+    /// Mine a git commit with a given prefix
+    Mine,
 }
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

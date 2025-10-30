@@ -8,7 +8,9 @@ jobs:
     timeout-minutes: 8
     steps:
     - uses: actions/checkout@v3
+      if: ${{ !env.ACT }}
     - uses: cachix/install-nix-action@v22
+      if: ${{ !env.ACT }}
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - run: nix develop --command cargo clippy

@@ -39,7 +39,7 @@ fn run(args: Vec<String>, weeble_output: &str, blockheight_output: &str, wobble_
     );
 
     if args.len() > 1 {
-        branch_name = format!("pr/{}-{}", branch_name, args[1]);
+        branch_name = format!("{}-{}", branch_name, args[1]);
     }
 
     let output = Command::new("git").arg("checkout").arg("-b").arg(&branch_name).current_dir(repo_path).output()?;
@@ -91,7 +91,8 @@ mod tests {
         let expected_branch_name = format!("pr/{}/{}/{}/{}/{}", weeble, blockheight, wobble, parent_head, current_head);
 
         std::env::set_current_dir(repo_path)?;
-        let _ = run(std::env::args().collect(), &weeble, &blockheight, &wobble, &std::env::current_dir()?);
+        let args_vector: Vec<String> = vec![String::from("")];
+        let _ = run(args_vector, &weeble, &blockheight, &wobble, &std::env::current_dir()?);
 
         // Verify the branch was created and checked out
         let current_branch_output = Command::new("git").arg("rev-parse").arg("--abbrev-ref").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
@@ -114,10 +115,9 @@ mod tests {
         let suffix = "feature";
         let expected_branch_name = format!("pr/1/1/1/{}/{}-{}", parent_head, current_head, suffix);
 
-        //println!("{}", expected_branch_name);
-
         std::env::set_current_dir(repo_path)?;
-        let _ = run(std::env::args().collect(), &"1", &"1", &"1", &std::env::current_dir()?);
+        let args_vector: Vec<String> = vec![String::from("test_arg")];
+        let _ = run(args_vector, &"1", &"1", &"1", &std::env::current_dir()?);
         let current_branch_output = Command::new("git").arg("rev-parse").arg("--abbrev-ref").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
         let current_branch = String::from_utf8_lossy(&current_branch_output).trim().to_string();
         assert_eq!(current_branch+"-"+suffix, expected_branch_name);
