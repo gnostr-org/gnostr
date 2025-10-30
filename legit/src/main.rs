@@ -1,11 +1,7 @@
 #![allow(unused)]
 #![allow(dead_code)]
-extern crate chrono;
-use chrono::offset::Utc;
-use chrono::DateTime;
-use std::time::{SystemTime, Instant};
+use std::time::Instant;
 use std::convert::TryInto;
-use std::any::type_name;
 //use std::mem::size_of;
 use std::{io, thread};
 use argparse::{ArgumentParser,Store};
@@ -16,10 +12,6 @@ use crypto::sha2::Sha256;
 mod worker;
 mod gitminer;
 mod repo;
-
-fn type_of<T>(_: T) -> &'static str {
-    type_name::<T>()
-}
 
 //fn convert_to_u32(v: usize) -> Option<i8> {
 //    if v > (std::i8::MAX as i32).try_into().unwrap() {
@@ -32,16 +24,14 @@ fn type_of<T>(_: T) -> &'static str {
 fn main() -> io::Result<()> {
 
     let start = Instant::now();
-    let system_time = SystemTime::now();
-    let datetime: DateTime<Utc> = system_time.into();
     //println!("{}", datetime.format("%d/%m/%Y %T"));
-    let state = repo::state();
+    let _state = repo::state();
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
     //println!("{}={}", type_of(count), (count as i32));
     //println!("{}={}", type_of(count), (count as i64));
-    let mut sha256 = Sha256::new();
+    let _sha256 = Sha256::new();
     //sha256.input_str(count);
     //let ip_address_hash: String = format!("{:X}", sha256.finalize());
 
