@@ -1,3 +1,4 @@
+use std::process;
 use std::io::Write;
 use std::fs::File;
 use std::path::Path;
@@ -6,8 +7,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 // use git2::*;
 use super::worker::Worker;
-use std::process;
-use time::Tm;
+use time_0_3::OffsetDateTime;
 
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -15,7 +15,7 @@ pub struct Options {
     pub target:    String,
     pub message:   String,
     pub repo:      String,
-    pub timestamp: Tm,//time::OffsetDateTime,
+    pub timestamp: OffsetDateTime,
 }
 
 pub struct Gitminer {

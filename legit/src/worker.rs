@@ -1,8 +1,8 @@
 use std::sync::mpsc;
 use crypto::digest::Digest;
 use crypto::sha1;
-//use time::OffsetDateTime;
-use time::Tm;
+use time_0_3::OffsetDateTime;
+use time_0_3::format_description;
 
 pub struct Worker {
     id:      u32,
@@ -13,7 +13,7 @@ pub struct Worker {
     parent:  String,
     author:  String,
     message: String,
-    timestamp: Tm,
+    timestamp: OffsetDateTime,
 }
 
 impl Worker {
@@ -23,7 +23,7 @@ impl Worker {
                parent:    String,
                author:    String,
                message:   String,
-               timestamp: Tm,
+               timestamp: OffsetDateTime,
                tx:        mpsc::Sender<(u32, String, String)>) -> Worker {
         Worker {
             id:        id,
@@ -40,7 +40,8 @@ impl Worker {
 
 
     pub fn work(&mut self) {
-        let tstamp = format!("{}", self.timestamp.strftime("%s %z").unwrap());
+        let format = format_description::parse("[unix_timestamp] [offset_hour sign:mandatory][offset_minute]").unwrap();
+        let tstamp = self.timestamp.format(&format).unwrap();
     //fixme //git commit reference
     //fixme //commit 59ace1e689ca44f7708a30d709c44756c8ab6145 (HEAD -> 0/921511/0/8a19db5e53/f8b0ee121b)
     //fixme //Author: randymcmillan <randymcmillan@protonmail.com>
