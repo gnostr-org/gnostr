@@ -3,7 +3,7 @@
 extern crate chrono;
 use chrono::offset::Utc;
 use chrono::DateTime;
-use std::time::SystemTime;
+use std::time::{SystemTime, Instant};
 use std::convert::TryInto;
 use std::any::type_name;
 //use std::mem::size_of;
@@ -31,7 +31,7 @@ fn type_of<T>(_: T) -> &'static str {
 
 fn main() -> io::Result<()> {
 
-    let start = time::get_time();
+    let start = Instant::now();
     let system_time = SystemTime::now();
     let datetime: DateTime<Utc> = system_time.into();
     //println!("{}", datetime.format("%d/%m/%Y %T"));
@@ -52,7 +52,7 @@ fn main() -> io::Result<()> {
         message: "default commit message".to_string(),
         //message: count.to_string(),
         repo:    ".".to_string(),
-        timestamp: time::now()
+        timestamp: time_0_3::OffsetDateTime::now_utc()
     };
 
     parse_args_or_exit(&mut opts);
@@ -67,8 +67,8 @@ fn main() -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
-    let duration = time::get_time() - start;
-    println!("Success! Generated commit {} in {} seconds", hash, duration.num_seconds());
+    let duration = start.elapsed();
+    println!("Success! Generated commit {} in {} seconds", hash, duration.as_secs());
     Ok(())
 }
 
