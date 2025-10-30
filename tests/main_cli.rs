@@ -229,6 +229,13 @@ mod tests {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
 
+        // Explicitly create .gnostr directories for the test
+        let gnostr_path = PathBuf::from(&repo_path).join(".gnostr");
+        let blobs_path = gnostr_path.join("blobs");
+        let reflog_path = gnostr_path.join("reflog");
+        fs::create_dir_all(&blobs_path).unwrap();
+        fs::create_dir_all(&reflog_path).unwrap();
+
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("legit").arg("--repo").arg(&repo_path).arg("--message").arg("Test mine commit").arg("--pow").arg("0");
 
@@ -261,7 +268,7 @@ mod tests {
         cmd.arg("--debug");
 
         cmd.assert()
-            .success()
+            .code(101) // Expect a panic/failure from the TUI
             .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path)));
 
         // Unset the environment variable to avoid affecting other tests
@@ -281,7 +288,7 @@ mod tests {
         cmd.arg("--debug");
 
         cmd.assert()
-            .success()
+            .code(101) // Expect a panic/failure from the TUI
             .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: {:?}", repo_path)));
 
         Ok(())
