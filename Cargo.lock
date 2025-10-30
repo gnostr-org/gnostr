@@ -3975,6 +3975,7 @@ dependencies = [
  "git2",
  "gnostr-asyncgit",
  "gnostr-crawler",
+ "gnostr-legit",
  "gnostr-query",
  "gnostr-relay",
  "gnostr-types",
@@ -4163,6 +4164,17 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "gnostr-legit"
+version = "0.0.0"
+dependencies = [
+ "argparse",
+ "chrono",
+ "git2",
+ "rust-crypto",
+ "time 0.3.41",
 ]
 
 [[package]]

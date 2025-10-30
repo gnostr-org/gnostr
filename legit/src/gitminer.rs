@@ -4,22 +4,46 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc::channel;
 use std::thread;
-use git2::*;
+// use git2::*;
 use super::worker::Worker;
 use std::process;
+use time::Tm;
 
+#[derive(Clone, Debug)]
 pub struct Options {
     pub threads:   u32,
     pub target:    String,
     pub message:   String,
     pub repo:      String,
-    pub timestamp: time::Tm,
+    pub timestamp: Tm,//time::OffsetDateTime,
 }
 
 pub struct Gitminer {
     opts:   Options,
     repo:   git2::Repository,
     author: String
+}
+
+impl std::fmt::Debug for Gitminer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Gitminer")
+            .field("opts", &self.opts)
+            .field("repo_path", &self.repo.path())
+            .field("author", &self.author)
+            .finish()
+    }
+}
+
+impl Clone for Gitminer {
+    fn clone(&self) -> Self {
+        let repo = git2::Repository::open(&self.opts.repo)
+            .expect("Failed to open repository during clone");
+        Self {
+            opts: self.opts.clone(),
+            repo,
+            author: self.author.clone(),
+        }
+    }
 }
 
 
