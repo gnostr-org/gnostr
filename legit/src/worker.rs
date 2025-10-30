@@ -1,10 +1,7 @@
 use std::sync::mpsc;
 use crypto::digest::Digest;
 use crypto::sha1;
-
-use std::time::SystemTime;
-use chrono::offset::Utc;
-use chrono::DateTime;
+use time;
 
 pub struct Worker {
     id:      u32,
@@ -15,7 +12,7 @@ pub struct Worker {
     parent:  String,
     author:  String,
     message: String,
-    timestamp: SystemTime
+    timestamp: time::Tm
 }
 
 impl Worker {
@@ -25,7 +22,7 @@ impl Worker {
                parent:    String,
                author:    String,
                message:   String,
-               timestamp: SystemTime,
+               timestamp: time::Tm,
                tx:        mpsc::Sender<(u32, String, String)>) -> Worker {
         Worker {
             id:        id,
@@ -41,7 +38,7 @@ impl Worker {
     }
 
     pub fn work(&mut self) {
-        let tstamp = format!("{}", DateTime::<Utc>::from(self.timestamp).format("%s %z"));
+        let tstamp = format!("{}", self.timestamp.strftime("%s %z").unwrap());
 
         let mut value  = 0u32;
         loop {
@@ -62,15 +59,14 @@ impl Worker {
                            parent {}\n\
                            author {} {}\n\
                            committer {} {}\n\n\
-						   {}\n\n{:02}:{:08x}",
+                           {}\n{:02}-{:08x}",
                           self.tree,
                           self.parent,
                           self.author, tstamp,
                           self.author, tstamp,
                           self.message,
                           self.id,
-                          value
-						  );
+                          value);
         let blob = format!("commit {}\0{}", raw.len(), raw);
 
         (raw, blob)

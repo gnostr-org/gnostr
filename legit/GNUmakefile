@@ -34,26 +34,6 @@ PROJECT_NAME							:= $(project)
 endif
 export PROJECT_NAME
 
-ifeq ($(reuse),true)
-REUSE                                   :=-r
-else
-REUSE                                   :=	
-endif
-export REUSE
-ifeq ($(bind),true)
-BIND                                   :=-b
-else
-BIND                                   :=      
-endif
-export BIND
-ifneq ($(job),)
-JOB                                     :=-j $(job)
-else
-JOB                                   :=	
-endif
-export JOB
-
-
 ifeq ($(port),)
 PORT									:= 0
 else
@@ -140,7 +120,7 @@ export HOMEBREW_NO_ENV_HINTS
 
 .PHONY: init
 init:
-	@awk 'BEGIN {FS = ":.*?##"} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .PHONY: help
 help:## 	verbose help
@@ -211,8 +191,9 @@ branch: docs touch-time touch-block-time## 	branch
 touch-time: remove## 	touch-time
 	@echo $(TIME) $(shell git rev-parse HEAD) > TIME
 
-commit: touch-time git-add## 	commit
-	#@./automate.sh
+.PHONY: automate
+automate: touch-time git-add## 	automate
+	@./automate.sh
 	@test legit && legit . -p 00000 -m "$(shell date +%s):make automate"
 
 .PHONY: docs
@@ -230,9 +211,11 @@ docs: touch-time git-add## 	docs
 
 .PHONY: legit
 .ONESHELL:
-install:legit-install
 legit:## 	legit
-	@$(MAKE) -f legit.mk
+
+	@. make-legit.sh
+	$(MAKE) cargo-build
+	$(MAKE) cargo-install
 tag:
 	@git tag $(OS)-$(OS_VERSION)-$(ARCH)-$(shell date +%s)
 	@git push -f --tags
@@ -255,9 +238,7 @@ success:
 cargo:## 	
 	$(MAKE) -f cargo.mk
 -include cargo.mk
-act:## 	
-	$(MAKE) -f act.mk
--include act.mk
 -include legit.mk
+-include act.mk
 # vim: set noexpandtab:
 # vim: set setfiletype make
