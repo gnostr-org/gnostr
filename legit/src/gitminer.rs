@@ -70,6 +70,9 @@ impl Gitminer {
             Err(e)   => { return Err(e); }
         };
 
+        Gitminer::ensure_gnostr_dirs_exist(self.repo.path())?;
+
+
         let (tx, rx) = channel();
 
         for i in 0..self.opts.threads {
@@ -105,6 +108,24 @@ impl Gitminer {
             .ok()
             .expect(&format!("Failed to write temporary file {}", &tmpfile));
 
+        // Write the blob to .gnostr/blobs/<commit_hash>
+        let gnostr_blob_path = Path::new(&self.opts.repo).join(".gnostr/blobs").join(hash);
+        let mut gnostr_blob_file = File::create(&gnostr_blob_path)
+            .ok()
+            .expect(&format!("Failed to create .gnostr blob file {}", &gnostr_blob_path.display()));
+        gnostr_blob_file.write_all(blob.as_bytes())
+            .ok()
+            .expect(&format!("Failed to write .gnostr blob file {}", &gnostr_blob_path.display()));
+
+        // Write the blob to .gnostr/reflog/<commit_hash>
+        let gnostr_reflog_path = Path::new(&self.opts.repo).join(".gnostr/reflog").join(hash);
+        let mut gnostr_reflog_file = File::create(&gnostr_reflog_path)
+            .ok()
+            .expect(&format!("Failed to create .gnostr reflog file {}", &gnostr_reflog_path.display()));
+        gnostr_reflog_file.write_all(blob.as_bytes())
+            .ok()
+            .expect(&format!("Failed to write .gnostr reflog file {}", &gnostr_reflog_path.display()));
+
         Command::new("sh")
             .arg("-c")
             .arg(format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash))
@@ -133,6 +154,26 @@ impl Gitminer {
         };
 
         Ok(format!("{} <{}>", name, email))
+    }
+
+    fn ensure_gnostr_dirs_exist(repo_path: &Path) -> Result<(), &'static str> {
+        let gnostr_path = repo_path.join(".gnostr");
+        let blobs_path = gnostr_path.join("blobs");
+        let reflog_path = gnostr_path.join("reflog");
+
+        if !gnostr_path.exists() {
+            std::fs::create_dir_all(&gnostr_path)
+                .map_err(|_| "Failed to create .gnostr directory")?;
+        }
+        if !blobs_path.exists() {
+            std::fs::create_dir_all(&blobs_path)
+                .map_err(|_| "Failed to create .gnostr/blobs directory")?;
+        }
+        if !reflog_path.exists() {
+            std::fs::create_dir_all(&reflog_path)
+                .map_err(|_| "Failed to create .gnostr/reflog directory")?;
+        }
+        Ok(())
     }
 
     fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
