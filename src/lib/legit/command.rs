@@ -25,7 +25,7 @@ fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
 }
 
-pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
+pub fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
 
     let start = SystemTime::now();
     let system_time = SystemTime::now();
@@ -37,20 +37,6 @@ pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
             if cfg!(target_os = "windows") {
             Command::new("cmd")
                     .args(["/C", "git status"])
-                    .output()
-                    .expect("failed to execute process")
-            } else
-            if cfg!(target_os = "macos"){
-            Command::new("sh")
-                    .arg("-c")
-                    .arg("gnostr-git diff")
-                    .output()
-                    .expect("failed to execute process")
-            } else
-            if cfg!(target_os = "linux"){
-            Command::new("sh")
-                    .arg("-c")
-                    .arg("gnostr-git diff")
                     .output()
                     .expect("failed to execute process")
             } else {
@@ -66,54 +52,26 @@ pub fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
         .unwrap();
     }
 
-    let count = thread::available_parallelism()?.get();
-    assert!(count >= 1_usize);
+    if opts.message.is_empty() {
+        let output =
+            if cfg!(target_os = "windows") {
+            Command::new("cmd")
+                    .args(["/C", "git status"])
+                    .output()
+                    .expect("failed to execute process")
+            } else {
+            Command::new("sh")
+                    .arg("-c")
+                    .arg("git diff")
+                    .output()
+                    .expect("failed to execute process")
+            };
 
-    let now = SystemTime::now();
-
-    let output =
-        if cfg!(target_os = "windows") {
-        Command::new("cmd")
-                .args(["/C", "git status"])
-                .output()
-                .expect("failed to execute process")
-        } else
-        if cfg!(target_os = "macos"){
-        Command::new("sh")
-                .arg("-c")
-                .arg("git diff")
-                .output()
-                .expect("failed to execute process")
-        } else
-        if cfg!(target_os = "linux"){
-        Command::new("sh")
-                .arg("-c")
-                .arg("git diff")
-                .output()
-                .expect("failed to execute process")
-        } else {
-        Command::new("sh")
-                .arg("-c")
-                .arg("git diff")
-                .output()
-                .expect("failed to execute process")
-        };
-
-    let message = String::from_utf8(output.stdout)
-    .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-    .unwrap();
-
-    let path = env::current_dir()?;
-
-    let mut opts = gitminer::Options{
-        threads: count.try_into().unwrap(),
-        target:  "00000".to_string(),
-        message: message,
-        repo:    path.as_path().display().to_string(),
-        timestamp: ::time::at(OffsetDateTime::now_local().unwrap().unix_timestamp()),
-    };
-
-    //parse_args_or_exit(&mut opts);
+        let message = String::from_utf8(output.stdout)
+        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+        .unwrap();
+        opts.message = message;
+    }
 
     let mut miner = match Gitminer::new(opts.clone()) {
         Ok(m)  => m,

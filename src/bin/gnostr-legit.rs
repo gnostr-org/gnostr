@@ -12,7 +12,8 @@ use std::thread;
 use std::convert::TryInto;
 
 use clap::Parser;
-use gnostr::legit::{command, gitminer};
+use gnostr::legit::command;
+use gnostr_legit::gitminer;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
