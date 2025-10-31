@@ -134,6 +134,7 @@ impl<W: Write> StreamSession<W> {
     ///
     /// ```
     /// use test_utils::session::{spawn, ReadUntil};
+    /// use test_utils::error::Error;
     ///
     /// # fn main() {
     ///     # || -> Result<(), Error> {
@@ -177,6 +178,7 @@ impl DerefMut for PtySession {
 /// ```
 ///
 /// use test_utils::session::spawn;
+/// use test_utils::error;
 ///
 /// # fn main() {
 ///     # || -> Result<(), Error> {
@@ -298,6 +300,7 @@ impl PtyReplSession {
     ///
     /// ```
     /// use test_utils::session::spawn_bash;
+    /// use test_utils::error::Error;
     ///
     /// # fn main() {
     ///     # || -> Result<(), Error> {
