@@ -1110,7 +1110,7 @@ where
 	S: AsRef<std::ffi::OsStr>,
 {
 	let mut cmd = std::process::Command::new(
-		assert_cmd::cargo::cargo_bin("ngit"),
+		assert_cmd::cargo::cargo_bin!("ngit"),
 	);
 	cmd.env("NGITTEST", "TRUE");
 	cmd.env("RUST_BACKTRACE", "0");
@@ -1132,7 +1132,7 @@ where
 	S: AsRef<std::ffi::OsStr>,
 {
 	let mut cmd = std::process::Command::new(
-		assert_cmd::cargo::cargo_bin("ngit"),
+		assert_cmd::cargo::cargo_bin!("ngit"),
 	);
 	cmd.env("NGITTEST", "TRUE");
 	cmd.env("RUST_BACKTRACE", "0");
@@ -1151,7 +1151,7 @@ pub fn remote_helper_rexpect_with_from_dir(
 	timeout_ms: u64,
 ) -> Result<PtySession, crate::error::Error> {
 	let mut cmd = std::process::Command::new(
-		assert_cmd::cargo::cargo_bin("git-remote-nostr"),
+		assert_cmd::cargo::cargo_bin!("git-remote-nostr"),
 	);
 	cmd.env("NGITTEST", "TRUE");
 	cmd.env("GIT_DIR", dir);
@@ -1197,7 +1197,7 @@ where
 		}
 	}
 	std::fs::copy(
-		assert_cmd::cargo::cargo_bin("git-remote-nostr"),
+		assert_cmd::cargo::cargo_bin!("git-remote-nostr"),
 		git_exec_dir.join("git-remote-nostr"),
 	)?;
 
