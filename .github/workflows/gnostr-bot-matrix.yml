@@ -1,4 +1,4 @@
-name: gnostr-bot-macos.yml
+name: gnostr-bot-matrix
 
 # Controls when the action will run.
 on:
@@ -23,7 +23,7 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         rustup: [stable, nightly]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -87,9 +87,9 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Restore target
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }} && ${{ !env.ACT }}
         id: cache-target-restore
         uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
         with:
           path: |
             target
@@ -102,21 +102,26 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'false'
 
-      - run: printenv || true
+      - run: |
+          printenv || true
 
-      - run: rustup default ${{ matrix.rustup }}
+      - run: |
+          rustup default ${{ matrix.rustup }}
 
-      - run: cargo search gnostr --limit 100
+      - run: |
+          cargo search gnostr --limit 100
 
-      - run: cargo install cargo-binstall@main || true
+      - run: |
+          cargo install cargo-binstall@main || true
 
-      - run: cargo-binstall --force --no-confirm gnostr
+      - run: |
+          cargo-binstall --force --no-confirm gnostr
 
-      - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
+      - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git sccache"
         if: matrix.os == 'ubuntu-latest'
 
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: runner.os == 'macos'
+        if: runner.os != 'windows'
 
       - run: |
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
@@ -137,11 +142,14 @@ jobs:
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: runner.os == 'macos'
 
-      - run: gnostr --help
+      - run: |
+          gnostr -V
+          gnostr --help
 
       - name: create set-metadata kind 0
         shell: bash
         run: |
+          gnostr -V
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
@@ -164,17 +172,19 @@ jobs:
           -t "$(gnostr-wobble)" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
-        if: matrix.os == 'macos-latest'
+        #if: matrix.os == 'macos-latest'
 
       - name: gnostr ngit compatibility
         shell: bash
         run: |
+          gnostr -V
           gnostr ngit --nsec $(gnostr --hash "") fetch
-        if: matrix.os == 'macos-latest'
+        #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
         shell: bash
         run: |
+          gnostr -V
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
@@ -202,22 +212,27 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr query --ids $EVENT --relay ${{ env.DAMUS }} && echo && \
             gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
-        if: matrix.os == 'macos-latest'
+        #if: matrix.os == 'macos-latest'
 
-      - name: 🚀 Run if UTC second is EVEN
-        # The 'if' condition checks the boolean output from the previous step.
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
-        run: |
-          echo "✅ Running job for an EVEN UTC second."
-          cargo test
-
-      - name: 🌙 Run if UTC second is ODD
-        # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
+      - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
         run: |
-          echo "✅ Running job for an ODD UTC second."
-          cargo test -- --ignored || true
-          # Add your odd-second steps here
+          cargo clean && echo "✅" || echo "❌"
+
+      - name: 🚀 UTC EVEN cargo build
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        run: |
+          cargo build && echo "✅" || echo "❌"
+
+      - name: 🚀 UTC EVEN cargo test
+        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        run: |
+          cargo test && echo "✅" || echo "❌"
+
+      - name: 🌙 UTC second is ODD
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        run: |
+          cargo test -- --ignored && echo "✅" || echo "❌"
 
       - run: |
           printenv
