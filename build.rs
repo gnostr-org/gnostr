@@ -7,7 +7,7 @@ fn check_sscache() {
         env::set_var("RUSTC_WRAPPER", "sscache");
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
     } else {
-        println!("cargo:warning=sscache not found, continuing without it.");
+        println!("cargo:warning=sscache not found - trying to install.");
         install_sccache();
     }
 }
