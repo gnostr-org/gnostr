@@ -236,7 +236,7 @@ jobs:
         #if: matrix.os == 'macos-latest'
 
       - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' }} && runner.os != 'windows'
         run: |
           cargo clean && echo "✅" || echo "❌"
 
