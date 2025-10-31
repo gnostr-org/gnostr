@@ -126,7 +126,7 @@ jobs:
 
       - run: cargo-binstall --force --no-confirm gnostr
 
-      #- run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
+      - run: /bin/bash -c "sudo apt-get install build-essential curl procps file git sccache"
       #  if: matrix.os == 'ubuntu-latest'
 
       #- run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
