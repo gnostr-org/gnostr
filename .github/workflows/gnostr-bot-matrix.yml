@@ -107,7 +107,7 @@ jobs:
             target
           key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
           set-safe-directory: 'true'
