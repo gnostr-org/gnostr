@@ -55,7 +55,7 @@ impl Worker {
 
             if result.starts_with(&self.target) {
                 println!("[Worker {}] Target hash found! Hash: {}, Value: {}", self.id, result, value);
-                self.tx.send((self.id, raw, result)).unwrap();
+                let _ = self.tx.send((self.id, raw, result));
                 break;
             }
 
