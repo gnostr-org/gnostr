@@ -282,12 +282,23 @@ impl GitTestRepo {
 	}
 
 	pub fn get_checked_out_branch_name(&self) -> Result<String> {
-		Ok(self
-			.git_repo
-			.head()?
-			.shorthand()
-			.context("an object without a shorthand is checked out")?
-			.to_string())
+		match self.git_repo.head() {
+			Ok(head) => Ok(head
+				.shorthand()
+				.context("an object without a shorthand is checked out")?
+				.to_string()),
+			Err(e) if e.code() == git2::ErrorCode::UnbornBranch => {
+				let head_path = self.git_repo.path().join("HEAD");
+				let head_content = fs::read_to_string(head_path)
+					.context("failed to read .git/HEAD")?;
+				// content is "ref: refs/heads/main\n"
+				let branch_name = head_content
+					.trim_start_matches("ref: refs/heads/")
+					.trim();
+				Ok(branch_name.to_string())
+			}
+			Err(e) => Err(e.into()),
+		}
 	}
 
 	pub fn get_tip_of_local_branch(
@@ -353,12 +364,18 @@ mod tests {
 	fn test_git_test_repo_new() -> Result<()> {
 		let repo_main = GitTestRepo::new("main")?;
 		assert!(repo_main.dir.exists());
-		assert!(repo_main.git_repo.is_empty()?);
+		assert_eq!(
+			repo_main.git_repo.head().err().unwrap().code(),
+			git2::ErrorCode::UnbornBranch
+		);
 		assert_eq!(repo_main.get_checked_out_branch_name()?, "main");
 
 		let repo_dev = GitTestRepo::new("development")?;
 		assert!(repo_dev.dir.exists());
-		assert!(repo_dev.git_repo.is_empty()?);
+		assert_eq!(
+			repo_dev.git_repo.head().err().unwrap().code(),
+			git2::ErrorCode::UnbornBranch
+		);
 		assert_eq!(repo_dev.get_checked_out_branch_name()?, "development");
 
 		Ok(())
