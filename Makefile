@@ -61,6 +61,9 @@ cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install -j $(NPROC) --path . $(FORCE)
 
+cargo-sort: 	cargo-sort
+	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
+
 .PHONY:crawler asyncgit relay query
 crawler: 	###     crawler
 	@cargo install -j $(NPROC) --path ./crawler $(FORCE)
@@ -163,7 +166,7 @@ docker-tui: 	### 	gnostr tui in a docker container
 docker-chat: 	### 	gnostr chat in a docker container
 	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
 docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
+	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/randymcmillan:/Users/randymcmillan gnostr:latest
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

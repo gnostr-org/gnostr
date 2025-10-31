@@ -104,6 +104,9 @@ cargo-install: 	crawler asyncgit 	###         cargo install --path . \$(FORCE)
 	@. \$(HOME)/.cargo/env
 	@cargo install -j \$(NPROC) --path . \$(FORCE)
 
+cargo-sort: 	cargo-sort
+	for cargo_toml in \$(shell ls */Cargo.toml); do cargo sort -n \$(cargo_toml);done
+
 .PHONY:crawler asyncgit relay query
 crawler: 	###     crawler
 	@cargo install -j \$(NPROC) --path ./crawler \$(FORCE)

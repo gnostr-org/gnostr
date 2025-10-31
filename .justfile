@@ -31,6 +31,9 @@ cargo-build:
 cargo-install:
   @make cargo-install
 
+cargo-sort:
+  @make cargo-sort
+
 crawler:
   @make crawler
 
