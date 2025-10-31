@@ -238,7 +238,7 @@ jobs:
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }} && runner.os != 'windows'
         run: |
-          cargo clean && echo "✅" || echo "❌" || true ## NOTE "cargo clean fails on windows sscache?"
+          cargo clean && echo "✅" || echo "❌" ## || true
 
       - name: 🚀 UTC EVEN cargo build
         if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
