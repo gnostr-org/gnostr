@@ -89,7 +89,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Restore target
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' && !env.ACT }}
+        if: ${{ steps.time_check_second.outputs.is_even != 'true' && !env.ACT }}
         id: cache-target-restore
         uses: actions/cache/restore@v3
         #if: ${{ !env.ACT }}
@@ -130,9 +130,9 @@ jobs:
       #- run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
       #  if: matrix.os == 'ubuntu-latest'
 
-      - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
+      #- run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      #  if: matrix.os == 'macos-latest'
+      #  #if: matrix.os != 'windows-latest'
 
       #- run: |
       #    test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
@@ -141,20 +141,20 @@ jobs:
       #    brew install gnostr-org/gnostr-org/gnostr && gnostr --help
       #  if: matrix.os == 'ubuntu-latest'
 
-      - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
+      #- run: brew tap gnostr-org/homebrew-gnostr-org || true
+      #  if: matrix.os == 'macos-latest'
+      #  #if: matrix.os != 'windows-latest'
 
-      - run: brew tap nostorg/nostr || true
-        if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
+      #- run: brew tap nostorg/nostr || true
+      #  if: matrix.os == 'macos-latest'
+      #  #if: matrix.os != 'windows-latest'
 
-      - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os == 'macos-latest'
-        #if: matrix.os != 'windows-latest'
+      #- run: brew tap randymcmillan/homebrew-randymcmillan || true
+      #  if: matrix.os == 'macos-latest'
+      #  #if: matrix.os != 'windows-latest'
 
-      - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os == 'macos-latest'
+      #- run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      #  if: matrix.os == 'macos-latest'
 
       - run: gnostr --help
 
@@ -183,7 +183,7 @@ jobs:
           -t "$(gnostr-wobble)" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
-        if: matrix.os == 'macos-latest'
+        #if: matrix.os == 'macos-latest'
 
       - name: gnostr ngit compatibility
         shell: bash
@@ -221,29 +221,28 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr query --ids $EVENT --relay ${{ env.DAMUS }} && echo && \
             gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
-        if: matrix.os == 'macos-latest'
+        #if: matrix.os == 'macos-latest'
 
       - name: 🚀 Run if UTC second is EVEN
         # The 'if' condition checks the boolean output from the previous step.
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        #if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
-          cargo clean
+          cargo build -j8
 
       - name: 🚀 Run if UTC second is EVEN
         # The 'if' condition checks the boolean output from the previous step.
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           echo "✅ Running job for an EVEN UTC second."
-          cargo test
+          cargo test -j8
 
       - name: 🌙 Run if UTC second is ODD
         # The 'if' condition checks if the boolean output is NOT true (i.e., it's false).
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
         run: |
           echo "✅ Running job for an ODD UTC second."
-          cargo test -- --ignored || true
-          # Add your odd-second steps here
+          cargo test -j8 -- --ignored || true
 
       - run: |
           printenv
