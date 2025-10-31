@@ -278,7 +278,9 @@ pub struct PtyReplSession {
 
 impl PtyReplSession {
     pub fn wait_for_prompt(&mut self) -> Result<String, Error> {
-        self.pty_session.exp_string(&self.prompt)
+        Ok(strip_ansi_escapes::strip_str(
+            self.pty_session.exp_string(&self.prompt)?,
+        ))
     }
 
     /// Send cmd to repl and:
@@ -538,7 +540,7 @@ mod tests {
         p.send_line("cd /tmp/")?;
         p.wait_for_prompt()?;
         p.send_line("pwd")?;
-        assert_eq!("/tmp\r\n", p.wait_for_prompt()?.trim());
+        assert_eq!("/tmp\r\n", p.wait_for_prompt()?);
         Ok(())
     }
 
