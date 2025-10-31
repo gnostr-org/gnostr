@@ -160,6 +160,7 @@ impl PtyProcess {
     ///
     /// use nix::sys::wait::WaitStatus;
     /// use std::process::Command;
+    /// use test_utils::process::PtyProcess;
     ///
     /// # fn main() {
     /// let cmd = Command::new("/path/to/myprog");

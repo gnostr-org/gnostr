@@ -225,6 +225,9 @@ impl NBReader {
     /// ```
     /// # use std::io::Cursor;
     /// use super::*;
+    /// use test_utils::session::ReadUntil;
+    /// use test_utils::reader::NBReader;
+    ///
     /// // instead of a Cursor you would put your process output or file here
     /// let f = Cursor::new("Hello, miss!\n\
     ///                         What do you mean: 'miss'?");
