@@ -29,6 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Calculate Odd/Even Status
+        shell: bash
         id: time_check_hour
         run: |
           # Get the current hour (0-23) in UTC
