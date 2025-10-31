@@ -40,6 +40,7 @@ fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Resu
         eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("Failed to create branch");
     }
+    print!("{}", tag_name);
 
     Ok(())
 }
