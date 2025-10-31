@@ -138,6 +138,9 @@ jobs:
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os != 'windows'
 
+      - run: scoop install sccache || winget install Mozilla.sccache
+        if: runner.os == 'windows'
+
       - run: |
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
