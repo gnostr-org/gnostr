@@ -8,6 +8,7 @@ fn check_sscache() {
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
     } else {
         println!("cargo:warning=sscache not found, continuing without it.");
+        install_sccache();
     }
 }
 
@@ -17,6 +18,131 @@ fn check_brew() -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn install_sccache() {
+    // Check if the target is a Linux environment.
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    if target_os == "linux" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Linux OS. Attempting to install sccache.");
+
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y sscache; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y sccache; else echo 'Neither apt-get nor yum found. Please install sccache manually.'; fi; fi")
+            .output();
+
+        match output {
+            Ok(output) => {
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                    // Exit the build process with an error
+                    panic!("Failed to install required Linux dependencies.");
+                } else {
+                    println!("cargo:warning=Successfully installed xcb dependencies.");
+                }
+            }
+            Err(e) => {
+                println!(
+                    "cargo:warning=Failed to run dependency installation command: {}",
+                    e
+                );
+                // Exit the build process with an error
+                panic!("Failed to run dependency installation command.");
+            }
+        }
+    }
+    if target_os == "macos" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
+
+        // We use a shell command to first check if 'brew' is installed,
+        // and then run the installation command.
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("if command -v brew >/dev/null 2>&1; then brew install sccache; else echo 'Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.'; exit 1; fi")
+            .output();
+
+        match output {
+            Ok(output) => {
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                    // Exit the build process with a panick, since the build cannot continue.
+                    panic!("Failed to install required macOS dependencies.");
+                } else {
+                    println!("cargo:warning=Successfully installed sccache dependency.");
+                }
+            }
+            Err(e) => {
+                println!("cargo:warning=Failed to run Homebrew command: {}", e);
+                // Exit the build process with a panick.
+                panic!("Failed to run Homebrew command.");
+            }
+        }
+    }
+    if target_os == "windows" {
+        println!("cargo:warning=Detected Windows. Trying to install sccache.");
+        install_windows_dependency("sccache", "scoop install sccache");
+        println!("cargo:rerun-if-changed=build.rs");
+
+        println!("cargo:warning=Detected Windows. No XCB libraries are required for this build.");
+    }
+}
+fn install_windows_dependency(name: &str, install_command: &str) {
+    // Check if the dependency is already installed using the Windows 'where' command.
+    let check_command = format!("where.exe {} >nul 2>nul", name);
+    
+    // Command::new("cmd") is the standard way to run shell commands on Windows.
+    let output = Command::new("cmd")
+        .arg("/C")
+        .arg(&check_command)
+        .status();
+
+    match output {
+        Ok(status) => {
+            if status.success() {
+                println!("cargo:warning=Dependency '{}' already found.", name);
+                return;
+            }
+        }
+        Err(e) => {
+            // A non-zero exit from the 'where.exe' check is expected if the command isn't found,
+            // but a generic error here means 'cmd' itself couldn't run.
+            println!("cargo:warning=Failed to check for '{}': {}", name, e);
+        }
+    }
+
+    // Dependency not found (or check failed), proceed with installation.
+    println!("cargo:warning=Attempting to install dependency '{}' using: {}", name, install_command);
+
+    let output = Command::new("cmd")
+        .arg("/C") // Run the command string and then terminate
+        .arg(install_command)
+        .output();
+
+    match output {
+        Ok(output) => {
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                
+                println!("cargo:warning=Failed to install {}: {}", name, stderr);
+                println!("cargo:warning=Stdout: {}", stdout);
+                
+                // Exit the build process with a panick, since the build cannot continue.
+                panic!("Failed to install required Windows dependency: {}. Ensure Scoop or Winget is installed and on your PATH.", name);
+            } else {
+                println!("cargo:warning=Successfully installed {} dependency.", name);
+            }
+        }
+        Err(e) => {
+            println!("cargo:warning=Failed to run installation command for {}: {}", name, e);
+            // Exit the build process with a panick.
+            panic!("Failed to run installation command for {}.", name);
+        }
+    }
 }
 
 fn install_xcb_deps() {
@@ -196,7 +322,11 @@ fn get_git_hash() -> String {
 }
 
 fn main() {
-    check_sscache();
+    if env::var("RUSTC_WRAPPER").is_ok() {
+        println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
+    } else {
+        check_sscache();
+    }
     // Tell Cargo to rerun this build script only if the Git HEAD or index changes
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/index");
