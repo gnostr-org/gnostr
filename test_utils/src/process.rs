@@ -30,7 +30,7 @@ use std::{thread, time};
 /// # #![allow(unused_mut)]
 /// # #![allow(unused_variables)]
 ///
-/// use crate::process::PtyProcess;
+/// use test_utils::process::PtyProcess;
 /// use std::process::Command;
 /// use std::fs::File;
 /// use std::io::{BufReader, LineWriter};
