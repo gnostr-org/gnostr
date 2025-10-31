@@ -6,6 +6,9 @@ edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
 
+[package.metadata.deb]
+section = "web"
+
 [workspace]
 members = ["grammar"]
 
@@ -44,7 +47,6 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-tree-sitter-grammar-repository = { package = "gnostr-grammar", version = "1912.921277.22946", path = "grammar" }
 gnostr-ssh = { version = "1912.921277.22959", path = "../ssh" }
 httparse = "1.7"
 humantime = "2.1"
@@ -94,6 +96,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "parking_lot",
   "fmt",
 ] }
+tree-sitter-grammar-repository = { package = "gnostr-grammar", version = "1912.921277.22946", path = "grammar" }
 #tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "./grammar" }
 tree-sitter-highlight = "0.23"
 unix_mode = "0.1"
@@ -110,6 +113,3 @@ yoke = { version = "0.7.1", features = ["derive"] }
 [build-dependencies]
 anyhow = "1.0"
 rsass = "0.28.0"
-
-[package.metadata.deb]
-section = "web"

@@ -20,16 +20,23 @@ license = "MIT"
 name = "gnostr_ssh_lib"
 path = "src/lib.rs"
 
+[[bin]]
+name = "gnostr_ssh"
+path = "src/bin/gnostr_ssh.rs"
+
 [dependencies] # These are the dependencies for the library
 anyhow = "1.0.70"
 async-trait = "0.1.68"
+clap = { version = "4.5.20", features = ["derive"] }
 clean-path = "0.2.1"
 colored = "2.0.0"
 comrak = "0.18.0"
+env_logger = "0.10.0"
 futures = "0.3.28"
 log = "0.4.17"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
+sd-notify = "0.4.1"
 serde = { version = "1.0.159", features = ["derive"] }
 shellwords = "1.1.0"
 tempfile = "3.5.0"
@@ -37,13 +44,6 @@ tera = "1.18.1"
 textwrap = "0.16.0"
 tokio = { version = "1.27.0", features = ["full"] }
 toml = "0.7.3"
-clap = { version = "4.5.20", features = ["derive"] }
-env_logger = "0.10.0"
-sd-notify = "0.4.1"
-
-[[bin]]
-name = "gnostr_ssh"
-path = "src/bin/gnostr_ssh.rs"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

@@ -8,16 +8,16 @@ version = "0.0.7"
 edition = "2021"
 license = "MIT"
 
-[[bin]]
-name = "gnostr-qr"
-source = "src/bin/gnostr-qr.rs"
-doc = true
-
 [package.metadata.wix]
 upgrade-guid = "6B5B281A-A1CD-403C-9722-22776599DF63"
 path-guid = "112568BC-3A65-41EB-84F4-210F26CBAAEB"
 license = false
 eula = false
+
+[[bin]]
+name = "gnostr-qr"
+source = "src/bin/gnostr-qr.rs"
+doc = true
 
 [dependencies]
 hex = "0.4.3"
