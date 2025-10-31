@@ -48,13 +48,50 @@ name = "gnostr-xq"
 path = "src/bin/main.rs"
 required-features = ["build-binary"]
 
-[[bench]]
-name = "prelude"
-harness = false
-
 [features]
 default = ["build-binary"]
 build-binary = ["anyhow", "clap", "clap-verbosity-flag", "simplelog", "serde_yaml"]
+
+[dependencies]
+anyhow = { version = "1.0.56", optional = true }
+base64 = "0.13.0"
+cast = "0.3.0"
+clap = { version = "4.0.0", features = ["derive"], optional = true }
+clap-verbosity-flag = { version = "2.0.0", optional = true }
+
+colored_json = "3.1.0"
+derive_more = "0.99.17"
+html-escape = "0.2.9"
+imbl = "1.0.1"
+is-terminal = "0.4.7"
+itertools = "0.10.3"
+log = "0.4.14"
+num = "0.4.0"
+num-derive = "0.3.3"
+num-traits = "0.2.14"
+onig = { version = "6.3.1", default-features = false }
+ordered-float = "2.10.0"
+phf = { version = "0.10.1", features = ["macros"] }
+serde = "1.0.136"
+serde_json = "1.0.79"
+serde_yaml = { version = "0.8.23", optional = true }
+shell-escape = "0.1.5"
+simplelog = { version = "0.12.0", optional = true }
+sized-chunks = "0.6.5"
+thiserror = "1.0.30"
+time = { version = "0.3.7", features = ["local-offset"] }
+time-fmt = "0.3.4"
+time-tz = { version = "0.5.2", features = ["system", "posix-tz"] }
+urlencoding = "2.1.0"
+xq-lang = { package = "gnostr-xq-lang", path = "./crates/lang", version = "0.0.1" }
+
+[dev-dependencies]
+criterion = "0.3.5"
+trycmd = "0.13.3"
+
+[[bench]]
+name = "prelude"
+harness = false
 
 [profile.release]
 strip = "symbols"
@@ -68,41 +105,4 @@ opt-level = 3
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-[dependencies]
-xq-lang = { package = "gnostr-xq-lang", path = "./crates/lang", version = "0.0.1" }
-thiserror = "1.0.30"
-log = "0.4.14"
-imbl = "1.0.1"
-sized-chunks = "0.6.5"
-num = "0.4.0"
-num-traits = "0.2.14"
-num-derive = "0.3.3"
-ordered-float = "2.10.0"
-cast = "0.3.0"
-itertools = "0.10.3"
-serde = "1.0.136"
-derive_more = "0.99.17"
-phf = { version = "0.10.1", features = ["macros"] }
-serde_json = "1.0.79"
-html-escape = "0.2.9"
-shell-escape = "0.1.5"
-urlencoding = "2.1.0"
-base64 = "0.13.0"
-time = { version = "0.3.7", features = ["local-offset"] }
-time-fmt = "0.3.4"
-time-tz = { version = "0.5.2", features = ["system", "posix-tz"] }
-onig = { version = "6.3.1", default-features = false }
-
-colored_json = "3.1.0"
-clap = { version = "4.0.0", features = ["derive"], optional = true }
-clap-verbosity-flag = { version = "2.0.0", optional = true }
-anyhow = { version = "1.0.56", optional = true }
-simplelog = { version = "0.12.0", optional = true }
-serde_yaml = { version = "0.8.23", optional = true }
-is-terminal = "0.4.7"
-
-[dev-dependencies]
-criterion = "0.3.5"
-trycmd = "0.13.3"
 

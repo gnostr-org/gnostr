@@ -58,27 +58,10 @@ nightly = []
 [dependencies]
 ## relay
 actix = "0.13.5"
-actix-http = "3.9.0"
 actix-cors = "0.7.0"
+actix-http = "3.9.0"
 actix-web = "4.9.0"
 actix-web-actors = "4.3.1"
-bytestring = "1.3.1"
-config = { version = "0.14.0", features = [
-    "toml",
-    "json",
-], default-features = false }
-duration-str = { version = "0.11.2", default-features = false }
-hex = "0.4.3"
-metrics = "0.23.0"
-notify = "6.1.1"
-num_cpus = "1.16.0"
-parking_lot = "0.12.3"
-#serde = { version = "1.0.209", features = ["derive"] }
-#serde_json = "1.0.127"
-thiserror = "1.0.63"
-tracing = "0.1.40"
-bytes = "1.7.1"
-nostr-db = { version = "0.4.5", features = ["search"] }
 #tracing-subscriber = "0.3.18"
 
 anyhow = "1.0.75"
@@ -96,7 +79,9 @@ bitcoin_hashes = "0.14.0"
 bitflags = "2.9.0"
 bugreport = "0.5"
 bwrap = { version = "1.3", features = ["use_std"] }
+bytes = "1.7.1"
 bytesize = { version = "1.3", default-features = false }
+bytestring = "1.3.1"
 chacha20poly1305 = "0.10.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
@@ -107,6 +92,10 @@ color-eyre = "0.6.2"
 colored = "2.0.0"
 colorful = "0.2"
 comrak = "0.28.0"
+config = { version = "0.14.0", features = [
+    "toml",
+    "json",
+], default-features = false }
 console = "0.15.7"
 crossbeam-channel = "0.5"
 crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
@@ -115,6 +104,7 @@ ctrlc = { version = "3.2", features = ["termination"] }
 dialoguer = "0.10.4"
 directories = "5.0.1"
 dirs = "5.0.1"
+duration-str = { version = "0.11.2", default-features = false }
 easy-cast = "0.5"
 env_logger = "0.11"
 filetreelist = { path = "./filetreelist", version = "0.5" }
@@ -133,11 +123,12 @@ git2 = "^0.18" ## asyncgit ^0.19
 #anyhow = "1.0"
 gnostr-asyncgit = { path = "asyncgit", version = "1912.921274.23285", default-features = false }
 gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
+gnostr-legit = { path = "./legit", version = "1911.921558.782146" }
 gnostr-query = { version = "1912.921276.230652", path = "query" }
 gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
 gnostr-types = { version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
-gnostr-legit = { path = "./legit", version = "1911.921558.782146" }
+hex = "0.4.3"
 
 #hex = "0.4"
 hostname = "0.3.1"
@@ -170,8 +161,9 @@ libp2p = { version = "0.54.1", features = [
 ] }
 
 log = "0.4.17"
-ordered-float = "3.4.0"
+metrics = "0.23.0"
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
+nostr-db = { version = "0.4.5", features = ["search"] }
 
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
@@ -186,14 +178,18 @@ nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
+notify = "6.1.1"
 
 #notify = "6.1"
 notify-debouncer-mini = "0.4"
 num-bigint = "0.4.6"
+num_cpus = "1.16.0"
 
 #num_cpus = "1.16.0"
 once_cell = "1.21.3"
+ordered-float = "3.4.0"
 pad = "0.1.6"
+parking_lot = "0.12.3"
 #once_cell = "1"
 # pin until upgrading this does not introduce a duplicate dependency
 parking_lot_core = "=0.9.9"
@@ -205,8 +201,8 @@ ratatui = { version = "0.28", default-features = false, features = [
     'serde',
 ] }
 rayon-core = "1.12"
-rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 ron = "0.8"
 rpassword = "7.2"
 russh = { version = "0.37.1", features = ["openssl"] }
@@ -238,12 +234,16 @@ temp-env = "0.3.6"
 tempfile = "3.5.0"
 tera = "1.18.1"
 textwrap = "0.16.0"
+#serde = { version = "1.0.209", features = ["derive"] }
+#serde_json = "1.0.127"
+thiserror = "1.0.63"
 #thiserror = "1"
 time = { version = "0.3", features = ["macros", "formatting"] }
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] }
 
 toml = "0.7.3"
+tracing = "0.1.40"
 #tracing = { version = "0.1.38", default-features = false }
 tracing-core = "0.1.33"
 
@@ -275,35 +275,35 @@ actix-rt = "2.10.0"
 actix-test = "0.1.5"
 anyhow = "1.0.86"
 assert_cmd = "2.0.17"
+env_logger = "0.11"
 futures-util = "0.3.30"
 gag = "1.0.0"
-predicates = "3.1.3"
-temp-env = "0.3.6"
-tempfile = "3.12.0"
-tracing-subscriber = "0.3.18"
-env_logger = "0.11"
+git2 = "0.18.3"
 mockall = "0.11.4"
+predicates = "3.1.3"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+sccache = "0.12.0"
 #rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 serial_test = "2.0.0"
 structopt = "0.3.26"
-git2 = "0.18.3"
-time = "0.3.36"
+temp-env = "0.3.6"
+tempfile = "3.12.0"
 #tempfile = "3"
 ###
 ###
 ###
 ###
 test_utils = { path = "test_utils" }
+time = "0.3.36"
 ###
 ###
 ###
 ###
 tokio = { version = "1", features = ["full"] } # Required for async operations
+tracing-subscriber = "0.3.18"
 tungstenite = { version = "0.21.0", features = ["native-tls"] }
 url = "2.2.2"
-sccache = "0.12.0"
 
 # The profile that 'dist' will build with
 [profile.dist]

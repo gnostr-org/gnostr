@@ -4170,6 +4170,7 @@ dependencies = [
 name = "gnostr-legit"
 version = "1911.921558.782146"
 dependencies = [
+ "argparse",
  "chrono",
  "clap 4.5.37",
  "env_logger 0.10.2",
