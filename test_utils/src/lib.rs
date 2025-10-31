@@ -1149,7 +1149,7 @@ pub fn remote_helper_rexpect_with_from_dir(
 	dir: &PathBuf,
 	nostr_remote_url: &str,
 	timeout_ms: u64,
-) -> Result<PtySession, rexpect::error::Error> {
+) -> Result<PtySession, crate::error::Error> {
 	let mut cmd = std::process::Command::new(
 		assert_cmd::cargo::cargo_bin("git-remote-nostr"),
 	);
@@ -1159,7 +1159,7 @@ pub fn remote_helper_rexpect_with_from_dir(
 	cmd.current_dir(dir);
 	cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
 	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	rexpect::session::spawn_with_options(cmd, Options {
+	crate::session::spawn_with_options(cmd, Options {
 		timeout_ms: Some(timeout_ms),
 		strip_ansi_escape_codes: true,
 	})
@@ -1208,7 +1208,7 @@ where
 	cmd.current_dir(dir);
 	cmd.args(args);
 	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	rexpect::session::spawn_with_options(cmd, Options {
+	crate::session::spawn_with_options(cmd, Options {
 		timeout_ms: Some(timeout_ms),
 		strip_ansi_escape_codes: true,
 	})

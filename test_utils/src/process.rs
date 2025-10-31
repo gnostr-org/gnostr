@@ -30,7 +30,7 @@ use std::{thread, time};
 /// # #![allow(unused_mut)]
 /// # #![allow(unused_variables)]
 ///
-/// use rexpect::process::PtyProcess;
+/// use crate::process::PtyProcess;
 /// use std::process::Command;
 /// use std::fs::File;
 /// use std::io::{BufReader, LineWriter};
@@ -158,7 +158,7 @@ impl PtyProcess {
     /// # Example
     /// ```rust,no_run
     ///
-    /// use rexpect::process::{self, wait::WaitStatus};
+    /// use crate::process::{self, wait::WaitStatus};
     /// use std::process::Command;
     ///
     /// # fn main() {

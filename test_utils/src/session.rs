@@ -133,8 +133,8 @@ impl<W: Write> StreamSession<W> {
     /// # Example:
     ///
     /// ```
-    /// use rexpect::{spawn, ReadUntil};
-    /// # use rexpect::error::Error;
+    /// use crate::{spawn, ReadUntil};
+    /// # use crate::error::Error;
     ///
     /// # fn main() {
     ///     # || -> Result<(), Error> {
@@ -177,8 +177,8 @@ impl DerefMut for PtySession {
 ///
 /// ```
 ///
-/// use rexpect::spawn;
-/// # use rexpect::error::Error;
+/// use crate::spawn;
+/// # use crate::error::Error;
 ///
 /// # fn main() {
 ///     # || -> Result<(), Error> {
@@ -297,8 +297,8 @@ impl PtyReplSession {
     /// # Example:
     ///
     /// ```
-    /// use rexpect::spawn_bash;
-    /// # use rexpect::error::Error;
+    /// use crate::spawn_bash;
+    /// # use crate::error::Error;
     ///
     /// # fn main() {
     ///     # || -> Result<(), Error> {
