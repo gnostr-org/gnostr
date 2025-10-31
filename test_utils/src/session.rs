@@ -538,7 +538,7 @@ mod tests {
         p.send_line("cd /tmp/")?;
         p.wait_for_prompt()?;
         p.send_line("pwd")?;
-        assert_eq!("/tmp\r\n", p.wait_for_prompt()?);
+        assert_eq!("/tmp\r\n", p.wait_for_prompt()?.trim());
         Ok(())
     }
 
