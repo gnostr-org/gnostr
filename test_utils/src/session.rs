@@ -133,8 +133,7 @@ impl<W: Write> StreamSession<W> {
     /// # Example:
     ///
     /// ```
-    /// use super::{spawn, ReadUntil};
-    /// # use crate::error::Error;
+    /// use crate::session::{spawn, ReadUntil};
     ///
     /// # fn main() {
     ///     # || -> Result<(), Error> {

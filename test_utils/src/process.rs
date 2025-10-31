@@ -158,12 +158,12 @@ impl PtyProcess {
     /// # Example
     /// ```rust,no_run
     ///
-    /// use super::{self, wait::WaitStatus};
+    /// use nix::sys::wait::WaitStatus;
     /// use std::process::Command;
     ///
     /// # fn main() {
     /// let cmd = Command::new("/path/to/myprog");
-    /// let process = process::PtyProcess::new(cmd).expect("could not execute myprog");
+    /// let process = PtyProcess::new(cmd).expect("could not execute myprog");
     /// while let Some(WaitStatus::StillAlive) = process.status() {
     ///     // do something
     /// }

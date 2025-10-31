@@ -224,8 +224,7 @@ impl NBReader {
     ///
     /// ```
     /// # use std::io::Cursor;
-    /// use super::{NBReader, ReadUntil, Regex, Options};
-    /// use crate::error::Error;
+    /// use super::*;
     /// // instead of a Cursor you would put your process output or file here
     /// let f = Cursor::new("Hello, miss!\n\
     ///                         What do you mean: 'miss'?");
