@@ -14,12 +14,16 @@ use nostr_database::{NostrDatabase, Order};
 use nostr_sdk::{Client, NostrSigner, TagStandard, serde_json};
 use nostr_sqlite::SQLiteDatabase;
 use once_cell::sync::Lazy;
-use rexpect::session::{Options, PtySession};
+use crate::session::{Options, PtySession};
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
 pub mod git;
 pub mod relay;
+pub mod error;
+pub mod process;
+pub mod reader;
+pub mod session;
 
 pub static TEST_KEY_1_NSEC: &str =
 	"nsec1ppsg5sm2aexq06juxmu9evtutr6jkwkhp98exxxvwamhru9lyx9s3rwseq";
@@ -1100,7 +1104,7 @@ fn sanatize(s: String) -> String {
 pub fn rexpect_with<I, S>(
 	args: I,
 	timeout_ms: u64,
-) -> Result<PtySession, rexpect::error::Error>
+) -> Result<PtySession, crate::error::Error>
 where
 	I: IntoIterator<Item = S>,
 	S: AsRef<std::ffi::OsStr>,
@@ -1112,7 +1116,7 @@ where
 	cmd.env("RUST_BACKTRACE", "0");
 	cmd.args(args);
 	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	rexpect::session::spawn_with_options(cmd, Options {
+	crate::session::spawn_with_options(cmd, Options {
 		timeout_ms: Some(timeout_ms),
 		strip_ansi_escape_codes: true,
 	})
@@ -1122,7 +1126,7 @@ pub fn rexpect_with_from_dir<I, S>(
 	dir: &PathBuf,
 	args: I,
 	timeout_ms: u64,
-) -> Result<PtySession, rexpect::error::Error>
+) -> Result<PtySession, crate::error::Error>
 where
 	I: IntoIterator<Item = S>,
 	S: AsRef<std::ffi::OsStr>,
@@ -1135,7 +1139,7 @@ where
 	cmd.current_dir(dir);
 	cmd.args(args);
 	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	rexpect::session::spawn_with_options(cmd, Options {
+	crate::session::spawn_with_options(cmd, Options {
 		timeout_ms: Some(timeout_ms),
 		strip_ansi_escape_codes: true,
 	})
