@@ -138,7 +138,10 @@ jobs:
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os != 'windows'
 
-      - run: scoop install sccache || winget install Mozilla.sccache
+      - name: scoop || winget install sccache
+        shell: bash
+        run: |
+          scoop install sccache || winget install Mozilla.sccache
         if: runner.os == 'windows'
 
       - run: |
