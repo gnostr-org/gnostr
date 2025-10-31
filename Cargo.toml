@@ -137,7 +137,7 @@ gnostr-query = { version = "1912.921276.230652", path = "query" }
 gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
 gnostr-types = { version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
-gnostr-legit = { path = "./legit", version = "0.0.0" }
+gnostr-legit = { path = "./legit", version = "1911.921558.782146" }
 
 #hex = "0.4"
 hostname = "0.3.1"
