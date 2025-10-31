@@ -1,5 +1,7 @@
 #![allow(unused)]
 #![allow(dead_code)]
+#[macro_use] extern crate log;
+extern crate env_logger;
 use std::time::Instant;
 use std::convert::TryInto;
 //use std::mem::size_of;
@@ -22,6 +24,8 @@ mod repo;
 //}
 
 fn main() -> io::Result<()> {
+    env_logger::init();
+    info!("Starting gnostr-legit");
 
     let start = Instant::now();
     //println!("{}", datetime.format("%d/%m/%Y %T"));

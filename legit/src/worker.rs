@@ -40,21 +40,21 @@ impl Worker {
 
 
     pub fn work(&mut self) {
-        println!("[Worker {}] Starting work...", self.id);
+        info!("[Worker {}] Starting work...", self.id);
         let format = format_description::parse("[unix_timestamp] [offset_hour sign:mandatory][offset_minute]").unwrap();
         let tstamp = self.timestamp.format(&format).unwrap();
-        println!("[Worker {}] Generated timestamp: {}", self.id, tstamp);
+        debug!("[Worker {}] Generated timestamp: {}", self.id, tstamp);
 
         let mut value  = 0u32;
         loop {
             if value % 100000 == 0 {
-                println!("[Worker {}] Current iteration value: {}", self.id, value);
+                debug!("[Worker {}] Current iteration value: {}", self.id, value);
             }
             let (raw, blob) = self.generate_blob(value, &tstamp);
             let result = self.calculate(&blob);
 
             if result.starts_with(&self.target) {
-                println!("[Worker {}] Target hash found! Hash: {}, Value: {}", self.id, result, value);
+                info!("[Worker {}] Target hash found! Hash: {}, Value: {}", self.id, result, value);
                 let _ = self.tx.send((self.id, raw, result));
                 break;
             }
