@@ -187,8 +187,8 @@ jobs:
       - name: gnostr ngit compatibility
         shell: bash
         run: |
+          gnostr -V
           gnostr ngit --nsec $(gnostr --hash "") fetch
-        if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
         shell: bash
