@@ -158,7 +158,7 @@ impl PtyProcess {
     /// # Example
     /// ```rust,no_run
     ///
-    /// use crate::process::{self, wait::WaitStatus};
+    /// use super::{self, wait::WaitStatus};
     /// use std::process::Command;
     ///
     /// # fn main() {
