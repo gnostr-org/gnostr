@@ -18,4 +18,3 @@
 linker = "aarch64-elf-gcc"
 [build]
 rustc-wrapper = "sccache"
-#target-dir = '.gnostr'
