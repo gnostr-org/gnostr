@@ -110,7 +110,7 @@ impl Gitminer {
 
         match self.write_commit(&hash, &blob) {
             Ok(_)  => {
-                println!("Mined commit hash: {}", hash);
+                print!("Mined commit hash: {}", hash);
                 Ok(hash)
             },
             Err(e) => {
