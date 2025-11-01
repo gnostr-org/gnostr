@@ -272,98 +272,191 @@ pub struct CliTester {
 }
 
 impl CliTester {
+
 	pub fn expect_input(
+
 		&mut self,
+
 		prompt: &str,
-	) -> Result<CliTesterInputPrompt> {
+
+	) -> Result<CliTesterInputPrompt<'_>> {
+
 		let mut i = CliTesterInputPrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 		};
+
 		i.prompt(false).context("initial input prompt")?;
+
 		Ok(i)
+
 	}
+
+
 
 	pub fn expect_input_eventually(
+
 		&mut self,
+
 		prompt: &str,
-	) -> Result<CliTesterInputPrompt> {
+
+	) -> Result<CliTesterInputPrompt<'_>> {
+
 		let mut i = CliTesterInputPrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 		};
+
 		i.prompt(true).context("initial input prompt")?;
+
 		Ok(i)
+
 	}
+
+
 
 	pub fn expect_password(
+
 		&mut self,
+
 		prompt: &str,
-	) -> Result<CliTesterPasswordPrompt> {
+
+	) -> Result<CliTesterPasswordPrompt<'_>> {
+
 		let mut i = CliTesterPasswordPrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 			confirmation_prompt: "".to_string(),
+
 		};
+
 		i.prompt().context("initial password prompt")?;
+
 		Ok(i)
+
 	}
+
+
 
 	pub fn expect_confirm(
+
 		&mut self,
+
 		prompt: &str,
+
 		default: Option<bool>,
-	) -> Result<CliTesterConfirmPrompt> {
+
+	) -> Result<CliTesterConfirmPrompt<'_>> {
+
 		let mut i = CliTesterConfirmPrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 			default,
+
 		};
+
 		i.prompt(false, default).context("initial confirm prompt")?;
+
 		Ok(i)
+
 	}
+
+
 
 	pub fn expect_confirm_eventually(
+
 		&mut self,
+
 		prompt: &str,
+
 		default: Option<bool>,
-	) -> Result<CliTesterConfirmPrompt> {
+
+	) -> Result<CliTesterConfirmPrompt<'_>> {
+
 		let mut i = CliTesterConfirmPrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 			default,
+
 		};
+
 		i.prompt(true, default).context("initial confirm prompt")?;
+
 		Ok(i)
+
 	}
+
+
 
 	pub fn expect_choice(
+
 		&mut self,
+
 		prompt: &str,
+
 		choices: Vec<String>,
-	) -> Result<CliTesterChoicePrompt> {
+
+	) -> Result<CliTesterChoicePrompt<'_>> {
+
 		let mut i = CliTesterChoicePrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 			choices,
+
 		};
+
 		i.prompt(false).context("initial confirm prompt")?;
+
 		Ok(i)
+
 	}
 
+
+
 	pub fn expect_multi_select(
+
 		&mut self,
+
 		prompt: &str,
+
 		choices: Vec<String>,
-	) -> Result<CliTesterMultiSelectPrompt> {
+
+	) -> Result<CliTesterMultiSelectPrompt<'_>> {
+
 		let mut i = CliTesterMultiSelectPrompt {
+
 			tester: self,
+
 			prompt: prompt.to_string(),
+
 			choices,
+
 		};
+
 		i.prompt(false).context("initial confirm prompt")?;
+
 		Ok(i)
+
 	}
+
 }
 
 pub struct CliTesterInputPrompt<'a> {

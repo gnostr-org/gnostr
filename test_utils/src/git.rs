@@ -236,8 +236,7 @@ impl GitTestRepo {
 		Ok(oid)
 	}
 
-	pub fn create_branch(&self, branch_name: &str) -> Result<Branch> {
-		self.git_repo
+	    pub fn create_branch(&self, branch_name: &str) -> Result<Branch<'_>> {		self.git_repo
 			.branch(
 				branch_name,
 				&self.git_repo.head()?.peel_to_commit()?,
