@@ -178,10 +178,10 @@ impl DerefMut for PtySession {
 /// ```
 ///
 /// use test_utils::session::spawn;
-/// use test_utils::error;
+/// use test_utils::error::Error;
 ///
 /// # fn main() {
-///     # || -> Result<(), Error> {
+///     # || -> Result<(), test_utils::error::Error> {
 /// let mut s = spawn("cat", Some(1000))?;
 /// s.send_line("hello, polly!")?;
 /// let line = s.read_line()?;
