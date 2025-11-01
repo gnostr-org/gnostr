@@ -18,3 +18,5 @@
 linker = "aarch64-elf-gcc"
 [build]
 rustc-wrapper = "sccache"
+#rustflags = ["-Clink-arg=-fuse-ld=lld", "-Ctarget-cpu=native"]
+rustflags = ["-Ctarget-cpu=native"]
