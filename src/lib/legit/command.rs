@@ -110,8 +110,17 @@ pub fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
-    Ok(())
-
+    // Call gnostr_legit_event after GitMiner has finished.
+    match global_rt().block_on(gnostr_legit_event()) {
+        Ok(_) => {
+            info!("gnostr_legit_event initiated successfully.");
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("Error executing gnostr_legit_event: {}", e);
+            Err(io::Error::new(io::ErrorKind::Other, e.to_string()))
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
