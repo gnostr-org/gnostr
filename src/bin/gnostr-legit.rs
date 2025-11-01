@@ -28,7 +28,7 @@ struct Args {
 
     /// Commit message
     #[arg(short, long)]
-    message: Option<String>,
+    message: Option<Vec<String>>,
 }
 
 fn main() -> io::Result<()> {
@@ -51,9 +51,9 @@ fn main() -> io::Result<()> {
                 .output()
                 .expect("failed to execute process")
         };
-        String::from_utf8(output.stdout)
+        [String::from_utf8(output.stdout)
             .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-            .unwrap()
+            .unwrap()].to_vec()
     };
 
     let count = thread::available_parallelism()?.get();
