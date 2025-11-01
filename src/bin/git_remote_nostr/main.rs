@@ -9,13 +9,14 @@ use std::{
     collections::HashSet,
     env, io,
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
-use anyhow::{Context, Result, bail};
-use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
-use git::{RepoActions, nostr_url::NostrUrlDecoded};
-use ngit::{client, git, login::existing::load_existing_login};
-use nostr_0_37_0::nips::nip01::Coordinate;
+use anyhow::{bail, Context, Result};
+use client::{consolidate_fetch_reports, get_repo_ref_from_cache, Connect};
+use git::{nostr_url::NostrUrlDecoded, RepoActions};
+use gnostr::{client, git};
+use nostr_0_34_1::nips::nip01::Coordinate;
 use utils::read_line;
 
 use crate::{client::Client, git::Repo};
@@ -27,36 +28,31 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let Some((decoded_nostr_url, git_repo)) = process_args().await? else {
-        return Ok(());
+    let args = env::args();
+    let args = args.skip(1).take(2).collect::<Vec<_>>();
+
+    let ([_, nostr_remote_url] | [nostr_remote_url]) = args.as_slice() else {
+        bail!("invalid arguments - no url");
     };
-
-    let git_repo_path = git_repo.get_path()?;
-
-    let mut client = Client::default();
-
-    if let Ok((signer, _, _)) = load_existing_login(
-        &Some(&git_repo),
-        &None,
-        &None,
-        &None,
-        None,
-        true,
-        false,
-        false,
-    )
-    .await
-    {
-        // signer for to respond to relay auth request
-        client.set_signer(signer).await;
+    if env::args().nth(1).as_deref() == Some("--version") {
+        const VERSION: &str = env!("CARGO_PKG_VERSION");
+        println!("v{VERSION}");
+        return Ok(());
     }
 
-    fetching_with_report_for_helper(git_repo_path, &client, &decoded_nostr_url.coordinate).await?;
+    let git_repo = Repo::from_path(&PathBuf::from(
+        std::env::var("GIT_DIR").context("git should set GIT_DIR when remote helper is called")?,
+    ))?;
+    let git_repo_path = git_repo.get_path()?;
 
-    let mut repo_ref =
-        get_repo_ref_from_cache(Some(git_repo_path), &decoded_nostr_url.coordinate).await?;
+    let client = Client::default();
 
-    repo_ref.set_nostr_git_url(decoded_nostr_url.clone());
+    let decoded_nostr_url =
+        NostrUrlDecoded::from_str(nostr_remote_url).context("invalid nostr url")?;
+
+    fetching_with_report_for_helper(git_repo_path, &client, &decoded_nostr_url.coordinates).await?;
+
+    let repo_ref = get_repo_ref_from_cache(git_repo_path, &decoded_nostr_url.coordinates).await?;
 
     let stdin = io::stdin();
     let mut line = String::new();
@@ -79,12 +75,21 @@ async fn main() -> Result<()> {
                 println!("unsupported");
             }
             ["fetch", oid, refstr] => {
-                fetch::run_fetch(&git_repo, &repo_ref, &stdin, oid, refstr).await?;
+                fetch::run_fetch(
+                    &git_repo,
+                    &repo_ref,
+                    &decoded_nostr_url,
+                    &stdin,
+                    oid,
+                    refstr,
+                )
+                .await?;
             }
             ["push", refspec] => {
                 push::run_push(
                     &git_repo,
                     &repo_ref,
+                    &decoded_nostr_url,
                     &stdin,
                     refspec,
                     &client,
@@ -93,10 +98,12 @@ async fn main() -> Result<()> {
                 .await?;
             }
             ["list"] => {
-                list_outputs = Some(list::run_list(&git_repo, &repo_ref, false).await?);
+                list_outputs =
+                    Some(list::run_list(&git_repo, &repo_ref, &decoded_nostr_url, false).await?);
             }
             ["list", "for-push"] => {
-                list_outputs = Some(list::run_list(&git_repo, &repo_ref, true).await?);
+                list_outputs =
+                    Some(list::run_list(&git_repo, &repo_ref, &decoded_nostr_url, true).await?);
             }
             [] => {
                 return Ok(());
@@ -108,56 +115,15 @@ async fn main() -> Result<()> {
     }
 }
 
-async fn process_args() -> Result<Option<(NostrUrlDecoded, Repo)>> {
-    let args = env::args();
-    let args = args.skip(1).take(2).collect::<Vec<_>>();
-
-    if env::args().nth(1).as_deref() == Some("--version") {
-        const VERSION: &str = env!("CARGO_PKG_VERSION");
-        println!("v{VERSION}");
-        return Ok(None);
-    }
-
-    let ([_, nostr_remote_url] | [nostr_remote_url]) = args.as_slice() else {
-        println!("nostr plugin for git");
-        println!("Usage:");
-        println!(
-            " - clone a nostr repository, or add as a remote, by using the url format nostr://pub123/identifier"
-        );
-        println!(
-            " - remote branches beginning with `pr/` are open PRs from contributors; `ngit list` can be used to view all PRs"
-        );
-        println!(
-            " - to open a PR, push a branch with the prefix `pr/` or use `ngit send` for advanced options"
-        );
-        println!("- publish a repository to nostr with `ngit init`");
-        return Ok(None);
-    };
-
-    let git_repo = Repo::from_path(&PathBuf::from(
-        std::env::var("GIT_DIR").context("git should set GIT_DIR when remote helper is called")?,
-    ))?;
-
-    let decoded_nostr_url = NostrUrlDecoded::parse_and_resolve(nostr_remote_url, &Some(&git_repo))
-        .await
-        .context("invalid nostr url")?;
-
-    Ok(Some((decoded_nostr_url, git_repo)))
-}
-
 async fn fetching_with_report_for_helper(
     git_repo_path: &Path,
     client: &Client,
-    trusted_maintainer_coordinate: &Coordinate,
+    repo_coordinates: &HashSet<Coordinate>,
 ) -> Result<()> {
     let term = console::Term::stderr();
     term.write_line("nostr: fetching...")?;
     let (relay_reports, progress_reporter) = client
-        .fetch_all(
-            Some(git_repo_path),
-            Some(trusted_maintainer_coordinate),
-            &HashSet::new(),
-        )
+        .fetch_all(git_repo_path, repo_coordinates, &HashSet::new())
         .await?;
     if !relay_reports.iter().any(std::result::Result::is_err) {
         let _ = progress_reporter.clear();
