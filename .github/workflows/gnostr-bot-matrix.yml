@@ -247,13 +247,13 @@ jobs:
         run: |
           cargo clean && echo "✅" || echo "❌" ## || true
 
-      - name: 🚀 UTC EVEN cargo build
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+      - name: 🚀 cargo build
+        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           cargo build && echo "✅" || echo "❌"
 
-      - name: 🚀 UTC EVEN cargo test
-        if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+      - name: 🚀 cargo test
+        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           cargo test && echo "✅" || echo "❌"
 
