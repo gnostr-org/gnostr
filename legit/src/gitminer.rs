@@ -13,7 +13,7 @@ use time_0_3::OffsetDateTime;
 pub struct Options {
     pub threads:   u32,
     pub target:    String,
-    pub message:   String,
+    pub message:   Vec<String>,
     pub repo:      String,
     pub timestamp: OffsetDateTime,
 }
@@ -88,7 +88,7 @@ impl Gitminer {
         for i in 0..self.opts.threads {
             let target = self.opts.target.clone();
             let author = self.author.clone();
-            let msg    = self.opts.message.clone();
+            let msg    = self.opts.message[0].clone();
             let wtx    = tx.clone();
             let ts     = self.opts.timestamp.clone();
             let (wtree, wparent) = (tree.clone(), parent.clone());
@@ -103,7 +103,10 @@ impl Gitminer {
         info!("Received hash {} from a worker.", hash);
 
         match self.write_commit(&hash, &blob) {
-            Ok(_)  => Ok(hash),
+            Ok(_)  => {
+                println!("Mined commit hash: {}", hash);
+                Ok(hash)
+            },
             Err(e) => {
                 error!("Failed to write commit: {}", e);
                 Err(e)

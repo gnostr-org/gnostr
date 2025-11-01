@@ -45,7 +45,7 @@ pub struct LegitSubCommand {
     threads: usize,
     /// Commit message to use
     #[arg(short, long)]
-    message: Option<String>,
+    message: Option<Vec<String>>,
     ///// disable spinner animations
     #[arg(long, action)]
     disable_cli_spinners: bool,
