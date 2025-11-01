@@ -117,10 +117,10 @@ mod tests {
 
     #[test]
     fn test_try_from_multiple_events_latest_is_used() {
-        let tags1 = vec![Tag::new(["refs/heads/main", "old_oid"])];
+        let tags1 = vec![Tag::parse(&["refs/heads/main", "old_oid"]).unwrap()];
         let event1 = create_test_event("test_repo", tags1, 1);
 
-        let tags2 = vec![Tag::new(["refs/heads/main", "new_oid"])];
+        let tags2 = vec![Tag::parse(&["refs/heads/main", "new_oid"]).unwrap()];
         let event2 = create_test_event("test_repo", tags2, 2);
 
         let repo_state = RepoState::try_from(vec![event1, event2]).unwrap();

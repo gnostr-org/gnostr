@@ -777,7 +777,7 @@ relays:
 "#;
             fs::write(&maintainers_yaml_path, yaml_content).unwrap();
 
-            let mock_repo = Repo::new(repo_path.to_path_buf()).unwrap();
+            let mock_repo = Repo::from_path(&repo_path.to_path_buf()).unwrap();
             let config = get_repo_config_from_yaml(&mock_repo).unwrap();
 
             assert_eq!(config.identifier, Some("my-repo-id".to_string()));
