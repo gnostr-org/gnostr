@@ -194,8 +194,8 @@ impl Gitminer {
     }
 
     fn ensure_gnostr_dirs_exist(repo_root_path: &Path) -> Result<(), &'static str> {
-        debug!("Ensuring .gnostr directories exist in: {}", repo_path.display());
-        let gnostr_path = repo_path.join(".gnostr");
+        debug!("Ensuring .gnostr directories exist in: {}", repo_root_path.display());
+        let gnostr_path = repo_root_path.join(".gnostr");
         let blobs_path = gnostr_path.join("blobs");
         let reflog_path = gnostr_path.join("reflog");
 
