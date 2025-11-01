@@ -70,11 +70,11 @@ pub async fn launch(
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
 
     if !no_fetch {
-        fetching_with_report(git_repo_path, &client, &repo_coordinates, true).await?;
+        fetching_with_report(&git_repo_path, &client, &repo_coordinates, true).await?;
     }
 
     let (root_proposal_id, mention_tags) =
-        get_root_proposal_id_and_mentions_from_in_reply_to(git_repo.get_path()?, &args.in_reply_to)
+        get_root_proposal_id_and_mentions_from_in_reply_to(&git_repo.get_path()?, &args.in_reply_to)
             .await?;
 
     if let Some(root_ref) = args.in_reply_to.first() {
@@ -202,7 +202,7 @@ pub async fn launch(
 
     client.set_signer(signer.clone()).await;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(&git_repo_path, &repo_coordinates).await?;
 
     // oldest first
     commits.reverse();
@@ -241,7 +241,7 @@ pub async fn launch(
 
     send_events(
         &client,
-        git_repo_path,
+        &git_repo_path,
         events.clone(),
         user_ref.relays.write(),
         repo_ref.relays.clone(),

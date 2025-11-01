@@ -100,7 +100,7 @@ pub async fn get_open_proposals(
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
     let proposals: Vec<nostr_0_34_1::Event> =
-        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
+        get_proposals_and_revisions_from_cache(&git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
             .filter(|e| !event_is_revision_root(e))
@@ -109,7 +109,7 @@ pub async fn get_open_proposals(
 
     let statuses: Vec<nostr_0_34_1::Event> = {
         let mut statuses = get_events_from_cache(
-            git_repo_path,
+            &git_repo_path,
             vec![nostr_0_34_1::Filter::default()
                 .kinds(status_kinds().clone())
                 .events(proposals.iter().map(nostr_0_34_1::Event::id))],
@@ -139,7 +139,7 @@ pub async fn get_open_proposals(
         };
         if status.eq(&Kind::GitStatusOpen) {
             if let Ok(commits_events) =
-                get_all_proposal_patch_events_from_cache(git_repo_path, repo_ref, &proposal.id)
+                get_all_proposal_patch_events_from_cache(&git_repo_path, repo_ref, &proposal.id)
                     .await
             {
                 if let Ok(most_recent_proposal_patch_chain) =
@@ -160,7 +160,7 @@ pub async fn get_all_proposals(
 ) -> Result<HashMap<EventId, (Event, Vec<Event>)>> {
     let git_repo_path = git_repo.get_path()?;
     let proposals: Vec<nostr_0_34_1::Event> =
-        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
+        get_proposals_and_revisions_from_cache(&git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
             .filter(|e| !event_is_revision_root(e))
@@ -171,7 +171,7 @@ pub async fn get_all_proposals(
 
     for proposal in proposals {
         if let Ok(commits_events) =
-            get_all_proposal_patch_events_from_cache(git_repo_path, repo_ref, &proposal.id).await
+            get_all_proposal_patch_events_from_cache(&git_repo_path, repo_ref, &proposal.id).await
         {
             if let Ok(most_recent_proposal_patch_chain) =
                 get_most_recent_patch_with_ancestors(commits_events.clone())

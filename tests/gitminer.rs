@@ -54,7 +54,7 @@ fn test_gitminer_new_ok() {
     let opts = Options {
         threads: 1,
         target: "00".to_string(),
-        message: "Test commit".to_string(),
+        message: ["Test commit".to_string()].to_vec(),
         repo: repo.path().to_str().unwrap().to_string(),
         timestamp: OffsetDateTime::now_utc(),
     };
@@ -75,7 +75,7 @@ fn test_gitminer_new_fail_no_repo() {
     let opts = Options {
         threads: 1,
         target: "00".to_string(),
-        message: "Test commit".to_string(),
+        message: ["Test commit".to_string()].to_vec(),
         repo: repo_path.to_str().unwrap().to_string(),
         timestamp: OffsetDateTime::now_utc(),
     };
@@ -96,7 +96,7 @@ fn test_mine_commit_success() {
     let opts = Options {
         threads: 1,
         target: "0".to_string(),
-        message: "Mined commit".to_string(),
+        message: ["Mined commit".to_string()].to_vec(),
         repo: repo_path_str.clone(),
         timestamp: OffsetDateTime::now_utc(),
     };

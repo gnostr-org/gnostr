@@ -283,8 +283,7 @@ mockall = "0.11.4"
 predicates = "3.1.3"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
-sccache = "0.12.0"
-#rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
+rexpect = { git = "https://github.com/rust-cli/rexpect.git", rev = "9eb61dd" }
 serial_test = "2.0.0"
 structopt = "0.3.26"
 temp-env = "0.3.6"

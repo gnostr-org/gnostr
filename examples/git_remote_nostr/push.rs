@@ -77,7 +77,7 @@ pub async fn run_push(
         _ => list_from_remotes(&term, git_repo, &repo_ref.git_server, decoded_nostr_url),
     };
 
-    let nostr_state = get_state_from_cache(git_repo.get_path()?, repo_ref).await;
+    let nostr_state = get_state_from_cache(&git_repo.get_path()?, repo_ref).await;
 
     let existing_state = {
         // if no state events - create from first git server listed
@@ -299,7 +299,7 @@ pub async fn run_push(
     if !events.is_empty() {
         send_events(
             client,
-            git_repo.get_path()?,
+            &git_repo.get_path()?,
             events,
             user_ref.relays.write(),
             repo_ref.relays.clone(),
@@ -897,7 +897,7 @@ async fn get_merged_status_events(
                     for parent in commit.parents() {
                         // lookup parent id
                         let commit_events = get_events_from_cache(
-                            git_repo.get_path()?,
+                            &git_repo.get_path()?,
                             vec![nostr_0_34_1::Filter::default()
                                 .kind(nostr_0_34_1::Kind::GitPatch)
                                 .reference(parent.id().to_string())],
@@ -1045,7 +1045,7 @@ async fn get_proposal_and_revision_root_from_patch(
         )?;
 
         get_events_from_cache(
-            git_repo.get_path()?,
+            &git_repo.get_path()?,
             vec![nostr_0_34_1::Filter::default().id(proposal_or_revision_id)],
         )
         .await?

@@ -50,9 +50,9 @@ async fn main() -> Result<()> {
     let decoded_nostr_url =
         NostrUrlDecoded::from_str(nostr_remote_url).context("invalid nostr url")?;
 
-    fetching_with_report_for_helper(git_repo_path, &client, &decoded_nostr_url.coordinates).await?;
+    fetching_with_report_for_helper(&git_repo_path, &client, &decoded_nostr_url.coordinates).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &decoded_nostr_url.coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(&git_repo_path, &decoded_nostr_url.coordinates).await?;
 
     let stdin = io::stdin();
     let mut line = String::new();

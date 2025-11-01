@@ -75,7 +75,7 @@ pub async fn launch(
         };
 
     let proposal_root_event =
-        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
+        get_proposals_and_revisions_from_cache(&git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
             .find(|e| {
@@ -86,7 +86,7 @@ pub async fn launch(
             .clone();
 
     let commit_events = get_all_proposal_patch_events_from_cache(
-        git_repo_path,
+        &git_repo_path,
         &repo_ref,
         &proposal_root_event.id(),
     )
@@ -224,7 +224,7 @@ pub async fn launch(
 
     send_events(
         &client,
-        git_repo_path,
+        &git_repo_path,
         patch_events,
         user_ref.relays.write(),
         repo_ref.relays.clone(),
