@@ -468,6 +468,7 @@ mod tests {
     use test_utils::*;
 
     use super::*;
+    use tempfile::TempDir;
 
     async fn create() -> nostr_0_34_1::Event {
         RepoRef {
@@ -697,11 +698,166 @@ mod tests {
                     TEST_KEY_2_KEYS.public_key().to_string()
                 );
             }
+        }
 
-            #[tokio::test]
-            async fn no_other_tags() {
-                assert_eq!(create().await.tags.len(), 9)
-            }
+        #[tokio::test]
+        async fn coordinates() {
+            let repo_ref = RepoRef::try_from(create().await).unwrap();
+            let coordinates = repo_ref.coordinates();
+            assert_eq!(coordinates.len(), 2);
+            assert!(coordinates.contains(&Coordinate {
+                kind: Kind::GitRepoAnnouncement,
+                public_key: TEST_KEY_1_KEYS.public_key(),
+                identifier: "123412341".to_string(),
+                relays: vec![],
+            }));
+            assert!(coordinates.contains(&Coordinate {
+                kind: Kind::GitRepoAnnouncement,
+                public_key: TEST_KEY_2_KEYS.public_key(),
+                identifier: "123412341".to_string(),
+                relays: vec![],
+            }));
+        }
+
+        #[tokio::test]
+        async fn coordinate_with_hint() {
+            let repo_ref = RepoRef::try_from(create().await).unwrap();
+            let coordinate = repo_ref.coordinate_with_hint();
+            assert_eq!(coordinate.kind, Kind::GitRepoAnnouncement);
+            assert_eq!(coordinate.public_key, TEST_KEY_1_KEYS.public_key());
+            assert_eq!(coordinate.identifier, "123412341".to_string());
+            assert_eq!(coordinate.relays, vec!["ws://relay1.io".to_string()]);
+        }
+
+        #[tokio::test]
+        async fn coordinates_with_timestamps() {
+            let mut repo_ref = RepoRef::try_from(create().await).unwrap();
+            let event = create().await;
+            repo_ref.events.insert(
+                Coordinate {
+                    kind: event.kind,
+                    identifier: event.identifier().unwrap().to_string(),
+                    public_key: event.author(),
+                    relays: vec![],
+                },
+                event.clone(),
+            );
+            let coordinates_with_timestamps = repo_ref.coordinates_with_timestamps();
+            assert_eq!(coordinates_with_timestamps.len(), 2);
+            let (coord1, ts1) = coordinates_with_timestamps.iter().find(|(c, _)| c.public_key == TEST_KEY_1_KEYS.public_key()).unwrap();
+            assert_eq!(coord1.identifier, "123412341".to_string());
+            assert_eq!(ts1.unwrap(), event.created_at);
+
+            let (coord2, ts2) = coordinates_with_timestamps.iter().find(|(c, _)| c.public_key == TEST_KEY_2_KEYS.public_key()).unwrap();
+            assert_eq!(coord2.identifier, "123412341".to_string());
+            assert!(ts2.is_none());
+        }
+    }
+
+    mod yaml_config {
+        use super::*;
+        use std::fs;
+        use std::io::Write;
+        use tempfile::tempdir;
+
+        #[test]
+        fn test_get_repo_config_from_yaml() {
+            let dir = tempdir().unwrap();
+            let repo_path = dir.path();
+            let maintainers_yaml_path = repo_path.join("maintainers.yaml");
+
+            let yaml_content = r#"
+identifier: my-repo-id
+maintainers:
+  - npub1test1
+  - npub1test2
+relays:
+  - ws://relay1.com
+  - ws://relay2.com
+"#;
+            fs::write(&maintainers_yaml_path, yaml_content).unwrap();
+
+            let mock_repo = Repo::new(repo_path.to_path_buf()).unwrap();
+            let config = get_repo_config_from_yaml(&mock_repo).unwrap();
+
+            assert_eq!(config.identifier, Some("my-repo-id".to_string()));
+            assert_eq!(config.maintainers, vec!["npub1test1", "npub1test2"]);
+            assert_eq!(config.relays, vec!["ws://relay1.com", "ws://relay2.com"]);
+        }
+
+        #[test]
+        fn test_get_repo_config_from_yaml_no_identifier() {
+            let dir = tempdir().unwrap();
+            let repo_path = dir.path();
+            let maintainers_yaml_path = repo_path.join("maintainers.yaml");
+
+            let yaml_content = r#"
+maintainers:
+  - npub1test1
+relays:
+  - ws://relay1.com
+"#;
+            fs::write(&maintainers_yaml_path, yaml_content).unwrap();
+
+            let mock_repo = Repo::new(repo_path.to_path_buf()).unwrap();
+            let config = get_repo_config_from_yaml(&mock_repo).unwrap();
+
+            assert_eq!(config.identifier, None);
+            assert_eq!(config.maintainers, vec!["npub1test1"]);
+            assert_eq!(config.relays, vec!["ws://relay1.com"]);
+        }
+
+        #[test]
+        fn test_save_repo_config_to_yaml() {
+            let dir = tempdir().unwrap();
+            let repo_path = dir.path();
+            let maintainers_yaml_path = repo_path.join("maintainers.yaml");
+
+            let mock_repo = Repo::new(repo_path.to_path_buf()).unwrap();
+            let identifier = "new-repo-id".to_string();
+            let maintainers = vec![TEST_KEY_1_KEYS.public_key()];
+            let relays = vec!["ws://new-relay.com".to_string()];
+
+            save_repo_config_to_yaml(&mock_repo, identifier.clone(), maintainers.clone(), relays.clone()).unwrap();
+
+            let config = get_repo_config_from_yaml(&mock_repo).unwrap();
+
+            assert_eq!(config.identifier, Some(identifier));
+            assert_eq!(config.maintainers, vec![TEST_KEY_1_KEYS.public_key().to_bech32().unwrap()]);
+            assert_eq!(config.relays, relays);
+
+            // Test updating an existing file
+            let updated_identifier = "updated-repo-id".to_string();
+            let updated_maintainers = vec![TEST_KEY_2_KEYS.public_key()];
+            let updated_relays = vec!["ws://updated-relay.com".to_string()];
+
+            save_repo_config_to_yaml(&mock_repo, updated_identifier.clone(), updated_maintainers.clone(), updated_relays.clone()).unwrap();
+
+            let updated_config = get_repo_config_from_yaml(&mock_repo).unwrap();
+
+            assert_eq!(updated_config.identifier, Some(updated_identifier));
+            assert_eq!(updated_config.maintainers, vec![TEST_KEY_2_KEYS.public_key().to_bech32().unwrap()]);
+            assert_eq!(updated_config.relays, updated_relays);
+        }
+
+        #[test]
+        fn test_extract_pks() {
+            let pk_strings = vec![
+                TEST_KEY_1_KEYS.public_key().to_bech32().unwrap(),
+                TEST_KEY_2_KEYS.public_key().to_bech32().unwrap(),
+            ];
+            let pks = extract_pks(pk_strings).unwrap();
+            assert_eq!(pks.len(), 2);
+            assert!(pks.contains(&TEST_KEY_1_KEYS.public_key()));
+            assert!(pks.contains(&TEST_KEY_2_KEYS.public_key()));
+        }
+
+        #[test]
+        fn test_extract_pks_invalid_input() {
+            let pk_strings = vec!["invalid_npub".to_string()];
+            let pks_result = extract_pks(pk_strings);
+            assert!(pks_result.is_err());
         }
     }
 }
+

@@ -4020,7 +4020,6 @@ dependencies = [
  "ratatui 0.28.1",
  "rayon-core",
  "reqwest 0.11.27",
- "rexpect",
  "ron",
  "rpassword",
  "russh",
@@ -9290,18 +9289,6 @@ name = "resolv-conf"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7c8f7f733062b66dc1c63f9db168ac0b97a9210e247fa90fdc9ad08f51b302"
-
-[[package]]
-name = "rexpect"
-version = "0.5.0"
-source = "git+https://github.com/rust-cli/rexpect.git?rev=9eb61dd#9eb61dd444f25307639367ac7e1a49d5a1915d55"
-dependencies = [
- "comma",
- "nix 0.27.1",
- "regex",
- "tempfile",
- "thiserror 1.0.69",
-]
 
 [[package]]
 name = "rfc6979"

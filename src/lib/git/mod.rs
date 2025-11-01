@@ -33,6 +33,7 @@ impl Repo {
 // pub type CommitId = [u8; 7];
 // pub type Sha1 = [u8; 20];
 
+#[cfg_attr(test, mockall::automock)]
 pub trait RepoActions {
     fn get_path(&self) -> Result<&Path>;
     fn get_origin_url(&self) -> Result<String>;
