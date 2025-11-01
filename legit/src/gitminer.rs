@@ -79,7 +79,7 @@ impl Gitminer {
         };
         debug!("Tree: {}, Parent: {}", tree, parent);
 
-        Gitminer::ensure_gnostr_dirs_exist(self.repo.path())?;
+        Gitminer::ensure_gnostr_dirs_exist(Path::new(&self.opts.repo))?;
         debug!(".gnostr directories ensured to exist.");
 
 
@@ -193,7 +193,7 @@ impl Gitminer {
         Ok(format!("{} <{}>", name, email))
     }
 
-    fn ensure_gnostr_dirs_exist(repo_path: &Path) -> Result<(), &'static str> {
+    fn ensure_gnostr_dirs_exist(repo_root_path: &Path) -> Result<(), &'static str> {
         debug!("Ensuring .gnostr directories exist in: {}", repo_path.display());
         let gnostr_path = repo_path.join(".gnostr");
         let blobs_path = gnostr_path.join("blobs");
