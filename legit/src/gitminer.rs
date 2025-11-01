@@ -88,7 +88,13 @@ impl Gitminer {
         for i in 0..self.opts.threads {
             let target = self.opts.target.clone();
             let author = self.author.clone();
-            let msg    = self.opts.message[0].clone();
+            let msg = if self.opts.message.len() > 1 {
+                format!("{}
+
+{}", self.opts.message[0], self.opts.message[1..].join("\n"))
+            } else {
+                self.opts.message[0].clone()
+            };
             let wtx    = tx.clone();
             let ts     = self.opts.timestamp.clone();
             let (wtree, wparent) = (tree.clone(), parent.clone());
