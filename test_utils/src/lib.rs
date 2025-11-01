@@ -1203,7 +1203,7 @@ where
 	S: AsRef<std::ffi::OsStr>,
 {
 	let mut cmd = std::process::Command::new(
-		std::env::var("CARGO_BIN_EXE_ngit").unwrap(),
+		std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
 	);
 	cmd.env("NGITTEST", "TRUE");
 	cmd.env("RUST_BACKTRACE", "0");
@@ -1225,7 +1225,7 @@ where
 	S: AsRef<std::ffi::OsStr>,
 {
 	let mut cmd = std::process::Command::new(
-		std::env::var("CARGO_BIN_EXE_ngit").unwrap(),
+		std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
 	);
 	cmd.env("NGITTEST", "TRUE");
 	cmd.env("RUST_BACKTRACE", "0");
@@ -1244,7 +1244,7 @@ pub fn remote_helper_rexpect_with_from_dir(
 	timeout_ms: u64,
 ) -> Result<PtySession, crate::error::Error> {
 	let mut cmd = std::process::Command::new(
-		std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap(),
+		std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
 	);
 	cmd.env("NGITTEST", "TRUE");
 	cmd.env("GIT_DIR", dir);
@@ -1290,7 +1290,7 @@ where
 		}
 	}
 	std::fs::copy(
-		std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap(),
+		std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
 		git_exec_dir.join("git-remote-nostr"),
 	)?;
 

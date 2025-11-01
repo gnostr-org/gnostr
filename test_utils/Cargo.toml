@@ -42,3 +42,6 @@ nix = { version = "0.27", features = ["fs", "process", "signal", "term"] }
 [features]
 default = []
 which = ["dep:which"]
+
+[dev-dependencies]
+expectrl = "0.8.0"
