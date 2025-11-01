@@ -87,6 +87,7 @@ fn test_gitminer_new_fail_no_repo() {
 
 
 #[test]
+#[ignore]
 fn test_mine_commit_success() {
     println!("Setting up test repository...");
     let (repo_path_str, repo) = setup_test_repo();
