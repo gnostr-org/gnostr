@@ -130,6 +130,6 @@ docker-chat:
 docker-shared:
   @make docker-shared
 
-gh-act-run-all-workflows:
-  @make gh-act-run-all-workflows
+gh-act-run-all:
+  @make gh-act-run-all
 
