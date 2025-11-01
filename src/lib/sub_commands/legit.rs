@@ -68,7 +68,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                 repo: sub_command_args.repository_path.clone().unwrap_or(".".to_string()),
                 timestamp: OffsetDateTime::now_local().unwrap(),
             };
-            command::run_legit_command(opts).map_err(|e| Box::new(e) as Box<dyn StdError>)?;
+            command::run_legit_command(opts).await.map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
     Ok(())

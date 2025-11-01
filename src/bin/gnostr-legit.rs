@@ -31,7 +31,8 @@ struct Args {
     message: Option<Vec<String>>,
 }
 
-fn main() -> io::Result<()> {
+#[tokio::main]
+async fn main() -> io::Result<()> {
     let args = Args::parse();
 
     let path = env::current_dir()?;
@@ -66,5 +67,5 @@ fn main() -> io::Result<()> {
         timestamp: SystemTime::now().into(),
     };
 
-    command::run_legit_command(opts)
+    command::run_legit_command(opts).await
 }

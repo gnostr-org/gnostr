@@ -52,7 +52,7 @@ fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
 }
 
-pub fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
+pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
 
     let start = SystemTime::now();
     let system_time = SystemTime::now();
@@ -110,14 +110,17 @@ pub fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         Err(e) => { panic!("Failed to generate commit: {}", e); }
     };
 
-    // Call gnostr_legit_event after GitMiner has finished.
-    match global_rt().block_on(gnostr_legit_event()) {
+    // Initiate gnostr_legit_event after GitMiner has finished.
+    // gnostr_legit_event itself spawns tasks on the global runtime.
+    // We don't need to block_on it here, as it manages its own runtime tasks.
+    match gnostr_legit_event().await {
         Ok(_) => {
             info!("gnostr_legit_event initiated successfully.");
             Ok(())
         }
         Err(e) => {
-            eprintln!("Error executing gnostr_legit_event: {}", e);
+            eprintln!("Error initiating gnostr_legit_event: {}", e);
+            // Convert the error to an io::Error.
             Err(io::Error::new(io::ErrorKind::Other, e.to_string()))
         }
     }
