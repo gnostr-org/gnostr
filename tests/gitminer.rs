@@ -124,13 +124,13 @@ fn test_mine_commit_success() {
     println!("Verifying .gnostr directory existence...");
     assert!(repo_path.join(".gnostr").exists());
     println!("  .gnostr exists.");
-    assert!(repo_path.join(".gnostr/blobs").exists());
-    println!("  .gnostr/blobs exists.");
-    assert!(repo_path.join(".gnostr/reflog").exists());
-    println!("  .gnostr/reflog exists.");
-    assert!(repo_path.join(".gnostr/blobs").join(&commit_hash).exists());
-    println!("  .gnostr/blobs/{} exists.", commit_hash);
-    assert!(repo_path.join(".gnostr/reflog").join(&commit_hash).exists());
-    println!("  .gnostr/reflog/{} exists.", commit_hash);
+    assert!(repo_path.join(".gnostr/legit/blobs").exists());
+    println!("  .gnostr/legit/blobs exists.");
+    assert!(repo_path.join(".gnostr/legit/reflog").exists());
+    println!("  .gnostr/legit/reflog exists.");
+    assert!(repo_path.join(".gnostr/legit/blobs").join(&commit_hash).exists());
+    println!("  .gnostr/legit/blobs/{} exists.", commit_hash);
+    assert!(repo_path.join(".gnostr/legit/reflog").join(&commit_hash).exists());
+    println!("  .gnostr/legit/reflog/{} exists.", commit_hash);
     println!("All .gnostr directories and files verified successfully.");
 }

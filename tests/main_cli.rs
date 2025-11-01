@@ -231,8 +231,8 @@ mod tests {
 
         // Explicitly create .gnostr directories for the test
         let gnostr_path = PathBuf::from(&repo_path).join(".gnostr");
-        let blobs_path = gnostr_path.join("blobs");
-        let reflog_path = gnostr_path.join("reflog");
+        let blobs_path = gnostr_path.join("legit/blobs");
+        let reflog_path = gnostr_path.join("legit/reflog");
         fs::create_dir_all(&blobs_path).unwrap();
         fs::create_dir_all(&reflog_path).unwrap();
 
@@ -246,8 +246,8 @@ mod tests {
         // Verify that .gnostr directories and files were created
         let repo_path_buf = PathBuf::from(&repo_path);
         assert!(repo_path_buf.join(".gnostr").exists());
-        assert!(repo_path_buf.join(".gnostr/blobs").exists());
-        assert!(repo_path_buf.join(".gnostr/reflog").exists());
+        assert!(repo_path_buf.join(".gnostr/legit/blobs").exists());
+        assert!(repo_path_buf.join(".gnostr/legit/reflog").exists());
 
         Ok(())
     }
