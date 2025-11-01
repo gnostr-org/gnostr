@@ -150,14 +150,18 @@ impl Gitminer {
 
         let command_str = format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash);
         debug!("Executing git command: {}", command_str);
-        Command::new("sh")
+        let output = Command::new("sh")
             .arg("-c")
-            .arg(command_str)
+            .arg(&command_str)
             .output()
-            .ok()
-            .expect("Failed to generate commit");
-        info!("Commit {} generated and reset.", hash);
+            .map_err(|_| "Failed to execute git command")?;
 
+        if !output.status.success() {
+            eprintln!("Failed git command: {}", command_str);
+            error!("Git command failed: {:?}", output);
+            return Err("Git command failed");
+        }
+        info!("Git command executed successfully.");
         Ok(())
     }
 
