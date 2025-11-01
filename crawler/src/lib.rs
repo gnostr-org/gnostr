@@ -26,6 +26,7 @@ use crate::processor::Processor;
 use crate::processor::APP_SECRET_KEY;
 use crate::relay_manager::RelayManager;
 
+#[allow(unused_imports)]
 use crate::processor::LOCALHOST_8080;
 use crate::processor::BOOTSTRAP_RELAYS;
 use crate::processor::BOOTSTRAP_RELAY0;
