@@ -136,7 +136,7 @@ impl Gitminer {
         debug!("Temporary file {} written.", tmpfile);
 
         // Write the blob to .gnostr/blobs/<commit_hash>
-        let gnostr_blob_path = Path::new(&self.opts.repo).join(".gnostr/blobs").join(hash);
+        let gnostr_blob_path = Path::new(&self.opts.repo).join(".gnostr/legit/blobs").join(hash);
         debug!("Creating .gnostr blob file: {}", gnostr_blob_path.display());
         let mut gnostr_blob_file = File::create(&gnostr_blob_path)
             .ok()
@@ -147,7 +147,7 @@ impl Gitminer {
         debug!(".gnostr blob file {} written.", gnostr_blob_path.display());
 
         // Write the blob to .gnostr/reflog/<commit_hash>
-        let gnostr_reflog_path = Path::new(&self.opts.repo).join(".gnostr/reflog").join(hash);
+        let gnostr_reflog_path = Path::new(&self.opts.repo).join(".gnostr/legit/reflog").join(hash);
         debug!("Creating .gnostr reflog file: {}", gnostr_reflog_path.display());
         let mut gnostr_reflog_file = File::create(&gnostr_reflog_path)
             .ok()
@@ -209,8 +209,8 @@ impl Gitminer {
     fn ensure_gnostr_dirs_exist(repo_root_path: &Path) -> Result<(), &'static str> {
         debug!("Ensuring .gnostr directories exist in: {}", repo_root_path.display());
         let gnostr_path = repo_root_path.join(".gnostr");
-        let blobs_path = gnostr_path.join("blobs");
-        let reflog_path = gnostr_path.join("reflog");
+        let blobs_path = gnostr_path.join("legit/blobs");
+        let reflog_path = gnostr_path.join("legit/reflog");
 
         if !gnostr_path.exists() {
             debug!("Creating .gnostr directory: {}", gnostr_path.display());
