@@ -257,7 +257,7 @@ pub async fn create_event(
         .await?;
 
     for event in events.into_iter() {
-        info!("{}", event.as_json());
+        println!("{}", event.as_json());
     }
 
     // another filter
@@ -399,7 +399,7 @@ pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
         let signed_event = create_event(empty_hash_keys, custom_tags, &"gnostr-legit:event").await;
-        debug!("signed_event:\n{:?}", signed_event);
+        println!("signed_event:\n{:?}", signed_event);
     });
 
     //initialize git repo
