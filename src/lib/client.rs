@@ -1581,7 +1581,7 @@ pub async fn get_all_proposal_patch_events_from_cache(
 
 pub async fn get_event_from_cache_by_id(git_repo: &Repo, event_id: &EventId) -> Result<Event> {
     Ok(get_events_from_cache(
-        git_repo.get_path()?,
+        &git_repo.get_path()?,
         vec![nostr_0_34_1::Filter::default().id(*event_id)],
     )
     .await?

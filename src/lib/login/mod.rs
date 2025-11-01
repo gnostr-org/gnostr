@@ -64,7 +64,7 @@ pub async fn launch(
                             .unwrap_or("unknown ncryptsec".to_string()),
                     ) {
                         if let Ok(user_ref) =
-                            get_user_details(&public_key, client, git_repo.get_path()?, silent)
+                            get_user_details(&public_key, client, &git_repo.get_path()?, silent)
                                 .await
                         {
                             user_ref.metadata.name
@@ -100,7 +100,7 @@ pub async fn launch(
                 .await
                 .context("cannot get public key from signer")?,
             client,
-            git_repo.get_path()?,
+            &git_repo.get_path()?,
             silent,
         )
         .await?;
@@ -409,7 +409,7 @@ async fn fresh_login(
         signer.public_key().await?
     };
     // lookup profile
-    let user_ref = get_user_details(&public_key, client, git_repo.get_path()?, false).await?;
+    let user_ref = get_user_details(&public_key, client, &git_repo.get_path()?, false).await?;
     print_logged_in_as(&user_ref, client.is_none())?;
     Ok((signer, user_ref))
 }

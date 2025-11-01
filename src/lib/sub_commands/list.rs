@@ -38,12 +38,12 @@ pub async fn launch() -> Result<()> {
 
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
 
-    fetching_with_report(git_repo_path, &client, &repo_coordinates, true).await?;
+    fetching_with_report(&git_repo_path, &client, &repo_coordinates, true).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(&git_repo_path, &repo_coordinates).await?;
 
     let proposals_and_revisions: Vec<nostr_0_34_1::Event> =
-        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates()).await?;
+        get_proposals_and_revisions_from_cache(&git_repo_path, repo_ref.coordinates()).await?;
     if proposals_and_revisions.is_empty() {
         println!("no proposals found... create one? try `ngit send`");
         return Ok(());
@@ -51,7 +51,7 @@ pub async fn launch() -> Result<()> {
 
     let statuses: Vec<nostr_0_34_1::Event> = {
         let mut statuses = get_events_from_cache(
-            git_repo_path,
+            &git_repo_path,
             vec![nostr_0_34_1::Filter::default()
                 .kinds(status_kinds().clone())
                 .events(proposals_and_revisions.iter().map(nostr_0_34_1::Event::id))],
@@ -183,7 +183,7 @@ pub async fn launch() -> Result<()> {
             .context("cannot extract proposal details from proposal root event")?;
 
         let commits_events: Vec<nostr_0_34_1::Event> = get_all_proposal_patch_events_from_cache(
-            git_repo_path,
+            &git_repo_path,
             &repo_ref,
             &proposals_for_status[selected_index].id(),
         )

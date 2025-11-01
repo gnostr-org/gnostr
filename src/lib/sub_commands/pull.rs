@@ -35,9 +35,9 @@ pub async fn launch() -> Result<()> {
     let client = Client::default();
 
     let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
-    fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
+    fetching_with_report(&git_repo_path, &client, &repo_coordinates, false).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(&git_repo_path, &repo_coordinates).await?;
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {
@@ -47,7 +47,7 @@ pub async fn launch() -> Result<()> {
         };
 
     let proposal_root_event =
-        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
+        get_proposals_and_revisions_from_cache(&git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
             .find(|e| {
@@ -58,7 +58,7 @@ pub async fn launch() -> Result<()> {
             .clone();
 
     let commit_events = get_all_proposal_patch_events_from_cache(
-        git_repo_path,
+        &git_repo_path,
         &repo_ref,
         &proposal_root_event.id(),
     )

@@ -1,6 +1,6 @@
 use std::{
     env::current_dir,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use anyhow::{bail, Context, Result};
@@ -35,7 +35,7 @@ impl Repo {
 
 #[cfg_attr(test, mockall::automock)]
 pub trait RepoActions {
-    fn get_path<'a>(&'a self) -> Result<&'a Path>;
+    fn get_path(&self) -> Result<PathBuf>;
     fn get_origin_url(&self) -> Result<String>;
     fn get_remote_branch_names(&self) -> Result<Vec<String>>;
     fn get_local_branch_names(&self) -> Result<Vec<String>>;
@@ -89,11 +89,13 @@ pub trait RepoActions {
 }
 
 impl RepoActions for Repo {
-    fn get_path(&self) -> Result<&Path> {
-        self.git_repo
+    fn get_path(&self) -> Result<PathBuf> {
+        Ok(self
+            .git_repo
             .path()
             .parent()
-            .context("cannot find repositiory path as .git has  no parent")
+            .context("cannot find repositiory path as .git has  no parent")?
+            .to_path_buf())
     }
 
     fn get_origin_url(&self) -> Result<String> {

@@ -331,10 +331,10 @@ async fn get_repo_coordinates_from_maintainers_yaml(
                 .reference(git_repo.get_root_commit()?.to_string())
                 .authors(maintainers.clone());
             let mut events =
-                get_events_from_cache(git_repo.get_path()?, vec![filter.clone()]).await?;
+                get_events_from_cache(&git_repo.get_path()?, vec![filter.clone()]).await?;
             if events.is_empty() {
                 events =
-                    get_event_from_global_cache(git_repo.get_path()?, vec![filter.clone()]).await?;
+                    get_event_from_global_cache(&git_repo.get_path()?, vec![filter.clone()]).await?;
             }
             if events.is_empty() {
                 println!(

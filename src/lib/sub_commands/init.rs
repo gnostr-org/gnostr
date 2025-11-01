@@ -82,8 +82,8 @@ pub async fn launch(
     let repo_coordinates = (try_and_get_repo_coordinates(&git_repo, &client, false).await).ok();
 
     let repo_ref = if let Some(repo_coordinates) = repo_coordinates {
-        fetching_with_report(git_repo_path, &client, &repo_coordinates, true).await?;
-        Some(get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?)
+        fetching_with_report(&git_repo_path, &client, &repo_coordinates, true).await?;
+        Some(get_repo_ref_from_cache(&git_repo_path, &repo_coordinates).await?)
     } else {
         None
     };
@@ -339,7 +339,7 @@ pub async fn launch(
 
     send_events(
         &client,
-        git_repo_path,
+        &git_repo_path,
         vec![repo_event],
         user_ref.relays.write(),
         relays.clone(),
