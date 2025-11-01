@@ -46,7 +46,9 @@ mod tests {
     use std::str::FromStr;
 
     const TEST_KEY_1_HEX: &str = "7a4c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c";
-    const TEST_KEY_1_KEYS: Keys = Keys::from_str(TEST_KEY_1_HEX).unwrap();
+    lazy_static! {
+        static ref TEST_KEY_1_KEYS: Keys = Keys::from_str(TEST_KEY_1_HEX).unwrap();
+    }
 
     fn create_test_event(
         identifier: &str,

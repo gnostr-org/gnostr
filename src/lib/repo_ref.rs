@@ -799,7 +799,7 @@ relays:
 "#;
             fs::write(&maintainers_yaml_path, yaml_content).unwrap();
 
-            let mock_repo = Repo::new(repo_path.to_path_buf()).unwrap();
+            let mock_repo = Repo::from_path(&repo_path.to_path_buf()).unwrap();
             let config = get_repo_config_from_yaml(&mock_repo).unwrap();
 
             assert_eq!(config.identifier, None);
@@ -813,7 +813,7 @@ relays:
             let repo_path = dir.path();
             let maintainers_yaml_path = repo_path.join("maintainers.yaml");
 
-            let mock_repo = Repo::new(repo_path.to_path_buf()).unwrap();
+            let mock_repo = Repo::from_path(&repo_path.to_path_buf()).unwrap();
             let identifier = "new-repo-id".to_string();
             let maintainers = vec![TEST_KEY_1_KEYS.public_key()];
             let relays = vec!["ws://new-relay.com".to_string()];
