@@ -1,18 +1,28 @@
 //! Start a process via pty
 
 use crate::error::Error;
+#[cfg(unix)]
 use nix;
+#[cfg(unix)]
 use nix::fcntl::{open, OFlag};
+#[cfg(unix)]
 use nix::libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+#[cfg(unix)]
 use nix::pty::{grantpt, posix_openpt, unlockpt, PtyMaster};
+#[cfg(unix)]
 pub use nix::sys::{signal, wait};
+#[cfg(unix)]
 use nix::sys::{stat, termios};
+#[cfg(unix)]
 use nix::unistd::{close, dup, dup2, fork, setsid, ForkResult, Pid};
+#[cfg(unix)]
+use std::os::unix::io::{AsRawFd, FromRawFd};
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
+
 use std;
 use std::fs::File;
 use std::io;
-use std::os::unix::io::{AsRawFd, FromRawFd};
-use std::os::unix::process::CommandExt;
 use std::process::Command;
 use std::{thread, time};
 
@@ -34,7 +44,9 @@ use std::{thread, time};
 /// use std::process::Command;
 /// use std::fs::File;
 /// use std::io::{BufReader, LineWriter};
+/// #[cfg(unix)]
 /// use std::os::unix::io::{FromRawFd, AsRawFd};
+/// #[cfg(unix)]
 /// use nix::unistd::dup;
 ///
 /// # fn main() {
@@ -157,7 +169,7 @@ impl PtyProcess {
     ///
     /// # Example
     /// ```rust,no_run
-    ///
+    /// #[cfg(unix)]
     /// use nix::sys::wait::WaitStatus;
     /// use std::process::Command;
     /// use test_utils::process::PtyProcess;
@@ -240,6 +252,7 @@ impl Drop for PtyProcess {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
     use nix::sys::{signal, wait};
     use std::io::{BufRead, BufReader, LineWriter, Write};
 
