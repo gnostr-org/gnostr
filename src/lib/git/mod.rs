@@ -33,15 +33,14 @@ impl Repo {
 // pub type CommitId = [u8; 7];
 // pub type Sha1 = [u8; 20];
 
-#[cfg_attr(test, mockall::automock)]
 pub trait RepoActions {
-    fn get_path(&self) -> Result<&Path>;
+    fn get_path<'a>(&'a self) -> Result<&'a Path>;
     fn get_origin_url(&self) -> Result<String>;
     fn get_remote_branch_names(&self) -> Result<Vec<String>>;
     fn get_local_branch_names(&self) -> Result<Vec<String>>;
-    fn get_origin_main_or_master_branch(&self) -> Result<(&str, Sha1Hash)>;
-    fn get_local_main_or_master_branch(&self) -> Result<(&str, Sha1Hash)>;
-    fn get_main_or_master_branch(&self) -> Result<(&str, Sha1Hash)>;
+    fn get_origin_main_or_master_branch<'a>(&'a self) -> Result<(&'a str, Sha1Hash)>;
+    fn get_local_main_or_master_branch<'a>(&'a self) -> Result<(&'a str, Sha1Hash)>;
+    fn get_main_or_master_branch<'a>(&'a self) -> Result<(&'a str, Sha1Hash)>;
     fn get_checked_out_branch_name(&self) -> Result<String>;
     fn get_tip_of_branch(&self, branch_name: &str) -> Result<Sha1Hash>;
     fn get_commit_or_tip_of_reference(&self, reference: &str) -> Result<Sha1Hash>;
