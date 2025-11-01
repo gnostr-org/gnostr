@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use git2::Oid;
+use lazy_static::lazy_static;
 
 pub struct RepoState {
     pub identifier: String,
@@ -63,7 +64,7 @@ mod tests {
             "",
             initial_tags,
         )
-        .created_at(Timestamp::from_u64(created_at))
+        .custom_created_at(Timestamp::from(created_at))
         .to_event(&TEST_KEY_1_KEYS)
         .unwrap()
     }
@@ -135,7 +136,7 @@ mod tests {
 
     #[test]
     fn test_try_from_no_identifier() {
-        let event = EventBuilder::new(nostr_0_34_1::Kind::Custom(30303), "", &[])
+        let event = EventBuilder::new(nostr_0_34_1::Kind::Custom(30303), "", vec![])
             .to_event(&TEST_KEY_1_KEYS)
             .unwrap();
         let result = RepoState::try_from(vec![event]);
