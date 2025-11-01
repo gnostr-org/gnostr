@@ -168,7 +168,7 @@ docker-chat: 	### 	gnostr chat in a docker container
 docker-shared: 	### 	docker container with volumes
 	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
 
-gh-act-run-all-workflows: 	### 	gh-act-run-all-workflows
+gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act
 	gh act -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
 
