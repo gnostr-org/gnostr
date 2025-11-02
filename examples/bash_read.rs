@@ -1,5 +1,7 @@
 use expectrl::{session::Session, Expect, Regex};
 use std::process::Command;
+use std::io::BufRead;
+use std::str;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut p = Session::spawn(Command::new("bash"))?;
@@ -21,9 +23,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     p.expect(Regex(".*"))?; // go sure `wc` is really done
     println!(
         "/etc/passwd has {} lines, {} words, {} chars",
-        lines.get(0).unwrap().as_str(),
-        words.get(0).unwrap().as_str(),
-        bytes.get(0).unwrap().as_str()
+        std::str::from_utf8(lines.get(0).unwrap())?,
+        std::str::from_utf8(words.get(0).unwrap())?,
+        std::str::from_utf8(bytes.get(0).unwrap())?
     );
 
     // case 3: read while program is still executing
@@ -32,8 +34,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for _ in 0..5 {
         // times out if one ping takes longer than 2s
         let duration = p.expect(Regex("[0-9. ]+ ms"))?;
-        println!("Roundtrip time: {}", duration.get(0).unwrap().as_str());
+        println!("Roundtrip time: {}", std::str::from_utf8(duration.get(0).unwrap())?);
     }
-    p.send_control('c')?;
+    p.send_line("\x03")?;
     Ok(())
 }
