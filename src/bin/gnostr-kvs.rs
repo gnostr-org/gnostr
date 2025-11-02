@@ -1,4 +1,3 @@
-extern crate gnostr;
 #![doc = include_str!("../../README.md")]
 use std::error::Error;
 
