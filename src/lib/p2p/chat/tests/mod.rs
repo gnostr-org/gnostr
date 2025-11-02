@@ -23,6 +23,9 @@ mod tests {
             let mut index = repo.index().unwrap();
             let oid = index.write_tree().unwrap();
             let signature = Signature::new("Test User", "test@example.com", &Time::new(123456789, 0)).unwrap();
+            let tree_builder = repo.treebuilder(None).unwrap();
+            let tree_oid = tree_builder.write().unwrap();
+            let tree = repo.find_tree(tree_oid).unwrap();
             repo.commit(
                 Some("HEAD"),
                 &signature,
@@ -76,7 +79,7 @@ mod tests {
         let commit_hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
         let keys = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
         let expected_private_key_hex = format!("{:0>64}", commit_hash);
-        let secret_key_str = keys.secret_key().wrap().to_string(); // Use wrap() to get SecretKey, then to_string()
+        let secret_key_str = keys.secret_key().wrap().to_string();
         assert_eq!(secret_key_str, expected_private_key_hex);
 
         let short_commit_hash = "12345";
@@ -324,9 +327,9 @@ More details here.".to_string(), "some value".to_string()],
         
         let mut found_tags = HashMap::new();
         for tag in event.tags.iter() {
-            if let Some(name) = tag.as_str() {
+                if let Some(name) = tag.to_vec().get(0).map(|s| *s) {
                  // Collect all values associated with a tag name
-                for value in tag.values() {
+                for value in tag.to_vec().iter().skip(1) {
                     found_tags.entry(name.to_string()).or_insert_with(Vec::new).push(value.to_string());
                 }
             }

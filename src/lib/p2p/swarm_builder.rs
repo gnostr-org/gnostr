@@ -64,7 +64,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                 max_records: usize::MAX,
                 max_value_bytes: usize::MAX,
             };
-            let mut kad_config = KadConfig::new();
+            let mut kad_config = KadConfig::new(IPFS_PROTO_NAME.clone());
             kad_config.set_query_timeout(Duration::from_secs(120));
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
