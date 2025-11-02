@@ -8,7 +8,6 @@ mod tests {
     use std::collections::HashMap;
     use std::path::Path;
     use serde_json::json;
-use yansi::Paint;
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
     use nostr_sdk_0_37_0::Event; // Import Event
@@ -79,13 +78,13 @@ use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
         let commit_hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
         let keys = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
         let expected_private_key_hex = format!("{:0>64}", commit_hash);
-        let secret_key_str = yansi::Paint::new(keys.secret_key()).wrap().to_string();
+        let secret_key_str = keys.secret_key().display_secret_key_as_hex();
         assert_eq!(secret_key_str, expected_private_key_hex);
 
         let short_commit_hash = "12345";
         let keys_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
         let expected_private_key_hex_short = format!("{:0>64}", short_commit_hash);
-        let secret_key_str_short = yansi::Paint::new(keys_short.secret_key()).wrap().to_string();
+        let secret_key_str_short = keys_short.secret_key().display_secret_key_as_hex();
         assert_eq!(secret_key_str_short, expected_private_key_hex_short);
     }
 
