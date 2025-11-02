@@ -14,7 +14,8 @@ use nostr_database::{NostrDatabase, Order};
 use nostr_sdk::{Client, NostrSigner, TagStandard, serde_json};
 use nostr_sqlite::SQLiteDatabase;
 use once_cell::sync::Lazy;
-use expectrl::{spawn_command, Session, Regex, Error as ExpectrlError};
+use expectrl::{session::{Session, OsSession}, Expect, Regex, Eof, Error as ExpectrlError};
+use std::io::Write;
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
@@ -265,7 +266,7 @@ pub fn get_pretend_proposal_root_event() -> nostr::Event {
 /// 3. provides flexability to swap dialoguer with another cli
 ///    interaction tool
 pub struct CliTester {
-	expectrl_session: expectrl::OsSession,
+	expectrl_session: OsSession,
 	formatter: ColorfulTheme,
 }
 
@@ -919,15 +920,13 @@ impl CliTester {
 	where
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
-	{
-		let mut cmd = std::process::Command::new(
-			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
-		);
-		cmd.env("NGITTEST", "TRUE");
-		cmd.env("RUST_BACKTRACE", "0");
-		cmd.args(args);
-		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
-		session.set_expect_timeout(Some(Duration::from_millis(4000)));
+	        let mut cmd = std::process::Command::new(
+            std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
+        );
+        cmd.env("NGITTEST", "TRUE");
+        cmd.env("RUST_BACKTRACE", "0");
+        cmd.args(args);
+        let mut session = Session::spawn(cmd).expect("expectrl to spawn new process");
 		Self {
 			expectrl_session: session,
 			formatter: ColorfulTheme::default(),
@@ -938,15 +937,7 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
 	{
-		        let mut cmd = std::process::Command::new(
-		            std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
-		        );
-		        cmd.env("NGITTEST", "TRUE");
-		        cmd.env("RUST_BACKTRACE", "0");
-		        cmd.current_dir(dir);
-		        cmd.args(args);
-		        let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
-		        session.set_expect_timeout(Some(Duration::from_millis(4000)));
+		        let mut session = Session::spawn(cmd).expect("expectrl to spawn new process");		        session.set_expect_timeout(Some(Duration::from_millis(4000)));
 		        Self {
 		            expectrl_session: session,
 		            formatter: ColorfulTheme::default(),
@@ -960,16 +951,15 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
 	{
-		let mut cmd = std::process::Command::new(
-			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
-		);
-		cmd.env("NGITTEST", "TRUE");
-		cmd.env("RUST_BACKTRACE", "0");
-		cmd.current_dir(dir);
-		cmd.args(args);
-		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
-		session.set_expect_timeout(Some(Duration::from_millis(timeout_ms)));
-		Self {
+		        let mut cmd = std::process::Command::new(
+		            std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
+		        );
+		        cmd.env("NGITTEST", "TRUE");
+		        cmd.env("RUST_BACKTRACE", "0");
+		        cmd.current_dir(dir);
+		        cmd.args(args);
+		        let mut session = Session::spawn(cmd).expect("expectrl to spawn new process");
+		        session.set_expect_timeout(Some(Duration::from_millis(timeout_ms)));		Self {
 			expectrl_session: session,
 			formatter: ColorfulTheme::default(),
 		}
@@ -979,16 +969,7 @@ impl CliTester {
 		dir: &PathBuf,
 		nostr_remote_url: &str,
 	) -> Self {
-		let mut cmd = std::process::Command::new(
-			std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
-		);
-		cmd.env("NGITTEST", "TRUE");
-		cmd.env("GIT_DIR", dir);
-		cmd.env("RUST_BACKTRACE", "0");
-		cmd.current_dir(dir);
-		        cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
-				let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
-				session.set_expect_timeout(Some(Duration::from_millis(4000)));
+		let mut session = Session::spawn(cmd).expect("expectrl to spawn new process");				session.set_expect_timeout(Some(Duration::from_millis(4000)));
 				Self {
 					expectrl_session: session,
 					formatter: ColorfulTheme::default(),
@@ -1029,14 +1010,7 @@ impl CliTester {
 			git_exec_dir.join("git-remote-nostr"),
 		).expect("copy git-remote-nostr");
 
-		let mut cmd = std::process::Command::new("git");
-		cmd.env("GIT_EXEC_PATH", git_exec_dir);
-		cmd.env("NGITTEST", "TRUE");
-		cmd.env("RUST_BACKTRACE", "0");
-		cmd.current_dir(dir);
-		cmd.args(args);
-		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
-		session.set_expect_timeout(Some(Duration::from_millis(4000)));
+		let mut session = Session::spawn(cmd).expect("expectrl to spawn new process");		session.set_expect_timeout(Some(Duration::from_millis(4000)));
 		Self {
 			expectrl_session: session,
 			formatter: ColorfulTheme::default(),
@@ -1048,31 +1022,31 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr> + std::fmt::Debug,
 	{
-		self.expectrl_session
-			.exit()
-			.expect("process to exit");
-		let mut cmd = std::process::Command::new(
-			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
-		);
-		cmd.env("NGITTEST", "TRUE");
-		cmd.env("RUST_BACKTRACE", "0");
-		cmd.args(args);
-		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");	
+		        self.expectrl_session
+		            .close()
+		            .expect("process to close");
+		        self.expectrl_session
+		            .wait()
+		            .expect("process to exit");let mut session = Session::spawn(cmd).expect("expectrl to spawn new process");
 		session.set_expect_timeout(Some(Duration::from_millis(4000)));
 		self.expectrl_session = session;
 		self
 	}
 
 	pub fn exit(&mut self) -> Result<()> {
-		match self
-			.expectrl_session
-			.exit()
-			.context("expect proccess to exit")
-		{
-			Ok(_) => Ok(()),
-			Err(e) => Err(e),
-		}
-	}
+		        match self
+		            .expectrl_session
+		            .close()
+		            .context("expect process to close")
+		        {
+		            Ok(_) => {
+		                self.expectrl_session
+		                    .wait()
+		                    .context("expect process to exit")?;
+		                Ok(())
+		            }
+		            Err(e) => Err(e),
+		        }	}
 
 	fn exp_string(&mut self, message: &str) -> Result<String> {
 		match self
@@ -1160,11 +1134,10 @@ impl CliTester {
 	}
 
 	fn exp_eof(&mut self) -> Result<String> {
-		match self
-			.expectrl_session
-			.expect_eof()
-			.context("expected end but got timed out")
-		{
+		        match self
+		            .expectrl_session
+		            .expect(Eof)
+		            .context("expected end but got timed out")		{
 			Ok(before) => Ok(before.to_string()),
 			Err(e) => {
 				for p in [51, 52, 53, 55, 56, 57] {
@@ -1176,19 +1149,19 @@ impl CliTester {
 	}
 
 	pub fn expect_end(&mut self) -> Result<()> {
-		let before = self
-			.exp_eof()
-			.context("expected immediate end but got timed out")?;
-		ensure!(
-			before.is_empty(),
-			format!(
-				"expected immediate end but got '{}' first.",
-				before.replace('\n', "\\n").replace('\r', "\\r"),
-			),
-		);
-		Ok(())
-	}
-
+		        let before = self
+		            .expectrl_session
+		            .expect(Eof)
+		            .context("expected immediate end but got timed out")?;
+		        ensure!(
+		            before.is_empty(),
+		            format!(
+		                "expected immediate end but got '{}' first.",
+		                before.replace('\n', "\\n").replace('\r', "\\r"),
+		            ),
+		        );
+		        Ok(())
+		    }
 	pub fn expect_end_with(&mut self, message: &str) -> Result<()> {
 		let before = self
 			.exp_eof()
