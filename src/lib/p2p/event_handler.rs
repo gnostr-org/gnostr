@@ -21,7 +21,7 @@ pub async fn handle_swarm_event(swarm: &mut libp2p::Swarm<super::behaviour::Beha
             match result {
                 kad::QueryResult::GetRecord(Ok(kad::GetRecordOk::FoundRecord(kad::PeerRecord { record, .. }))) => {
                     println!(
-                        "{{\"key\":{{:?}},\"value\":{{:?}}}}",
+                        "{{\"key\":{:?},\"value\":{:?}}}",
                         std::str::from_utf8(record.key.as_ref()).unwrap_or("invalid utf8"),
                         std::str::from_utf8(&record.value).unwrap_or("invalid utf8"),
                     );
@@ -31,7 +31,7 @@ pub async fn handle_swarm_event(swarm: &mut libp2p::Swarm<super::behaviour::Beha
                 }
                 kad::QueryResult::PutRecord(Ok(kad::PutRecordOk { key })) => {
                     debug!(
-                        "Successfully PUT record for key: {{:?}}",
+                        "Successfully PUT record for key: {:?}",
                         std::str::from_utf8(key.as_ref())
                     );
                 }
@@ -40,7 +40,7 @@ pub async fn handle_swarm_event(swarm: &mut libp2p::Swarm<super::behaviour::Beha
                 }
                 kad::QueryResult::StartProviding(Ok(kad::AddProviderOk { key, .. })) => {
                     debug!(
-                        "Successfully started PROVIDING key: {{:?}}",
+                        "Successfully started PROVIDING key: {:?}",
                         std::str::from_utf8(key.as_ref())
                     );
                 }
@@ -60,7 +60,7 @@ pub async fn handle_swarm_event(swarm: &mut libp2p::Swarm<super::behaviour::Beha
                     let topic_str = message.topic.to_string();
                     let message_text = String::from_utf8_lossy(&message.data);
                     println!(
-                        "Received message: '{}' on topic '{}' from peer: {{:?}}",
+                        "Received message: '{}' on topic '{}' from peer: {:?}",
                         message_text,
                         topic_str,
                         propagation_source
@@ -68,20 +68,20 @@ pub async fn handle_swarm_event(swarm: &mut libp2p::Swarm<super::behaviour::Beha
                 }
                 gossipsub::Event::Subscribed { peer_id, topic } => {
                     warn!(
-                        "Peer {{:?}} subscribed to topic '{}'",
+                        "Peer {:?} subscribed to topic '{}'",
                         peer_id,
                         topic.to_string()
                     );
                 }
                 gossipsub::Event::Unsubscribed { peer_id, topic } => {
                     warn!(
-                        "Peer {{:?}} unsubscribed from topic '{}'",
+                        "Peer {:?} unsubscribed from topic '{}'",
                         peer_id,
                         topic.to_string()
                     );
                 }
                 gossipsub::Event::GossipsubNotSupported { peer_id } => {
-                    debug!("Peer {{:?}} does not support Gossipsub", peer_id);
+                    debug!("Peer {:?} does not support Gossipsub", peer_id);
                 }
             }
         }
