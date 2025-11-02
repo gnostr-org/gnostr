@@ -137,10 +137,7 @@ pub async fn create_event(
             TagKind::Custom(Cow::from("gnostr")),
             "1".chars(),
         ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "".chars(),
-        ));
+;
 
     //send from send_event_builder
     let output = client.send_event_builder(builder).await?;
@@ -263,13 +260,22 @@ pub fn value_to_string(value: &Value) -> String {
         Value::Number(n) => n.to_string(),
         Value::String(s) => s.clone(),
         Value::Array(arr) => {
-            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
+            let elements: Vec<String> = arr
+                .iter()
+                .map(|v| match v {
+                    Value::String(s) => format!("\"{}\"", s),
+                    _ => value_to_string(v),
+                })
+                .collect();
             format!("[{}]", elements.join(", "))
         }
         Value::Object(obj) => {
             let pairs: Vec<String> = obj
                 .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
+                .map(|(k, v)| match v {
+                    Value::String(s) => format!("\"{}\": \"{}\"", k, s),
+                    _ => format!("\"{}\": {}", k, value_to_string(v)),
+                })
                 .collect();
             format!("{{{}}}", pairs.join(", "))
         }
