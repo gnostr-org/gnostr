@@ -55,12 +55,11 @@ mod tests {
         Command::new("git").arg("init").current_dir(_repo_path).output().unwrap();
         Command::new("git").arg("config").arg("user.email").arg("test@example.com").current_dir(_repo_path).output().unwrap();
         Command::new("git").arg("config").arg("user.name").arg("Test User").current_dir(_repo_path).output().unwrap();
-        fs::write(_repo_path.join("file.txt"), "initial content").unwrap();
-        Command::new("git").arg("add").arg(".").current_dir(repo_path).output().unwrap();
-        Command::new("git").arg("commit").arg("-m").arg("Initial commit").current_dir(repo_path).output().unwrap();
-        fs::write(repo_path.join("file.txt"), "second content").unwrap();
-        Command::new("git").arg("add").arg(".").current_dir(repo_path).output().unwrap();
-        Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(repo_path).output().unwrap();
+        Command::new("git").arg("add").arg(".").current_dir(_repo_path).output().unwrap();
+        Command::new("git").arg("commit").arg("-m").arg("Initial commit").current_dir(_repo_path).output().unwrap();
+        fs::write(_repo_path.join("file.txt"), "second content").unwrap();
+        Command::new("git").arg("add").arg(".").current_dir(_repo_path).output().unwrap();
+        Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(_repo_path).output().unwrap();
         dir
     }
 
