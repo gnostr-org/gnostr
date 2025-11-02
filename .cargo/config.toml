@@ -6,11 +6,6 @@
 ## branch = "auto-release-port"
 ## replace-with = "vendored-sources"
 ## 
-## [source."git+https://github.com/rust-cli/rexpect.git?rev=9eb61dd"]
-## git = "https://github.com/rust-cli/rexpect.git"
-## rev = "9eb61dd"
-## replace-with = "vendored-sources"
-## 
 ## [source.vendored-sources]
 ## directory = "vendor"
 # .cargo/config.toml

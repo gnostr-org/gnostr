@@ -1,18 +1,18 @@
-use rexpect::error::Error;
-use rexpect::spawn;
+use expectrl::{session::Session, Expect, Regex};
+use std::process::Command;
 
-fn main() -> Result<(), Error> {
-    let mut p = spawn("ftp speedtest.tele2.net", Some(2000))?;
-    p.exp_regex("Name \\(.*\\):")?;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut p = Session::spawn(Command::new("ftp").arg("speedtest.tele2.net"))?;
+    p.expect(Regex("Name \\(.*\\):"))?;
     p.send_line("anonymous")?;
-    p.exp_string("Password")?;
+    p.expect("Password")?;
     p.send_line("test")?;
-    p.exp_string("ftp>")?;
+    p.expect("ftp>")?;
     p.send_line("cd upload")?;
-    p.exp_string("successfully changed.\r\nftp>")?;
+    p.expect("successfully changed.\r\nftp>")?;
     p.send_line("pwd")?;
-    p.exp_regex("[0-9]+ \"/upload\"")?;
+    p.expect(Regex("[0-9]+ \"/upload\""))?;
     p.send_line("exit")?;
-    p.exp_eof()?;
+    p.expect(expectrl::Eof)?;
     Ok(())
 }

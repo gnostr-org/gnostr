@@ -1,33 +1,38 @@
-use rexpect::error::Error;
-use rexpect::spawn_bash;
+use expectrl::{session::Session, Expect, Regex};
+use std::process::Command;
 
-fn main() -> Result<(), Error> {
-    let mut p = spawn_bash(Some(2000))?;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut p = Session::spawn(Command::new("bash"))?;
+    p.expect(Regex(".*"))?;
 
     // case 1: wait until program is done
     p.send_line("hostname")?;
-    let hostname = p.read_line()?;
-    p.wait_for_prompt()?; // go sure `hostname` is really done
+    let mut hostname = String::new();
+    p.read_line(&mut hostname)?;
+    p.expect(Regex(".*"))?; // go sure `hostname` is really done
     println!("Current hostname: {}", hostname);
 
     // case 2: wait until done, only extract a few infos
     p.send_line("wc /etc/passwd")?;
-    // `exp_regex` returns both string-before-match and match itself, discard first
-    let (_, lines) = p.exp_regex("[0-9]+")?;
-    let (_, words) = p.exp_regex("[0-9]+")?;
-    let (_, bytes) = p.exp_regex("[0-9]+")?;
-    p.wait_for_prompt()?; // go sure `wc` is really done
+    // `expect` returns the matched string
+    let lines = p.expect(Regex("[0-9]+"))?;
+    let words = p.expect(Regex("[0-9]+"))?;
+    let bytes = p.expect(Regex("[0-9]+"))?;
+    p.expect(Regex(".*"))?; // go sure `wc` is really done
     println!(
         "/etc/passwd has {} lines, {} words, {} chars",
-        lines, words, bytes
+        lines.get(0).unwrap().as_str(),
+        words.get(0).unwrap().as_str(),
+        bytes.get(0).unwrap().as_str()
     );
 
     // case 3: read while program is still executing
-    p.execute("ping 8.8.8.8", "bytes of data")?; // returns when it sees "bytes of data" in output
+    p.send_line("ping 8.8.8.8")?;
+    p.expect("bytes of data")?; // returns when it sees "bytes of data" in output
     for _ in 0..5 {
         // times out if one ping takes longer than 2s
-        let (_, duration) = p.exp_regex("[0-9. ]+ ms")?;
-        println!("Roundtrip time: {}", duration);
+        let duration = p.expect(Regex("[0-9. ]+ ms"))?;
+        println!("Roundtrip time: {}", duration.get(0).unwrap().as_str());
     }
     p.send_control('c')?;
     Ok(())

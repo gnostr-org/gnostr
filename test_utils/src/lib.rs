@@ -14,16 +14,14 @@ use nostr_database::{NostrDatabase, Order};
 use nostr_sdk::{Client, NostrSigner, TagStandard, serde_json};
 use nostr_sqlite::SQLiteDatabase;
 use once_cell::sync::Lazy;
-use crate::session::{Options, PtySession};
+use expectrl::{spawn_command, Session, Regex, Error as ExpectrlError};
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
 pub mod git;
 pub mod relay;
 pub mod error;
-pub mod process;
 pub mod reader;
-pub mod session;
 
 pub static TEST_KEY_1_NSEC: &str =
 	"nsec1ppsg5sm2aexq06juxmu9evtutr6jkwkhp98exxxvwamhru9lyx9s3rwseq";
@@ -258,16 +256,16 @@ pub fn get_pretend_proposal_root_event() -> nostr::Event {
 	serde_json::from_str(r#"{"id":"431e58eb8e1b4e20292d1d5bbe81d5cfb042e1bc165de32eddfdd52245a4cce4","pubkey":"f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768","created_at":1721404213,"kind":1617,"tags":[["a","30617:ba882566eff14f3baa976103998c452d27fe95b65a796a6a9f92628bced76fe5:9ee507fc4357d7ee16a5d8901bedcd103f23c17d-consider-it-random"],["a","30617:f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768:9ee507fc4357d7ee16a5d8901bedcd103f23c17d-consider-it-random"],["r","9ee507fc4357d7ee16a5d8901bedcd103f23c17d"],["t","cover-letter"],["alt","git patch cover letter: exampletitle"],["t","root"],["e","8cb75aa4cda10a3a0f3242dc49d36159d30b3185bf63414cf6ce17f5c14a73b1","","mention"],["branch-name","feature"],["p","ba882566eff14f3baa976103998c452d27fe95b65a796a6a9f92628bced76fe5"],["p","f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768"]],"content":"From fe973a840fba2a8ab37dd505c154854a69a6505c Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/2] exampletitle\n\nexampledescription","sig":"37d5b2338bf9fd9d598e6494ae88af9a8dbd52330cfe9d025ee55e35e2f3f55e931ba039d9f7fed8e6fc40206e47619a24f730f8eddc2a07ccfb3988a5005170"}"#).unwrap()
 }
 
-/// wrapper for a cli testing tool - currently wraps rexpect and
+/// wrapper for a cli testing tool - currently wraps expectrl and
 /// dialoguer
 ///
 /// 1. allow more accurate articulation of expected behaviour
-/// 2. provide flexibility to swap rexpect for a tool that better maps
+/// 2. provide flexibility to swap expectrl for a tool that better maps
 ///    to expected behaviour
 /// 3. provides flexability to swap dialoguer with another cli
 ///    interaction tool
 pub struct CliTester {
-	rexpect_session: PtySession,
+	expectrl_session: expectrl::OsSession,
 	formatter: ColorfulTheme,
 }
 
@@ -922,9 +920,16 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
 	{
+		let mut cmd = std::process::Command::new(
+			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
+		);
+		cmd.env("NGITTEST", "TRUE");
+		cmd.env("RUST_BACKTRACE", "0");
+		cmd.args(args);
+		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
+		session.set_expect_timeout(Some(Duration::from_millis(4000)));
 		Self {
-			rexpect_session: rexpect_with(args, 4000)
-				.expect("rexpect to spawn new process"),
+			expectrl_session: session,
 			formatter: ColorfulTheme::default(),
 		}
 	}
@@ -933,12 +938,19 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
 	{
-		Self {
-			rexpect_session: rexpect_with_from_dir(dir, args, 4000)
-				.expect("rexpect to spawn new process"),
-			formatter: ColorfulTheme::default(),
-		}
-	}
+		        let mut cmd = std::process::Command::new(
+		            std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
+		        );
+		        cmd.env("NGITTEST", "TRUE");
+		        cmd.env("RUST_BACKTRACE", "0");
+		        cmd.current_dir(dir);
+		        cmd.args(args);
+		        let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
+		        session.set_expect_timeout(Some(Duration::from_millis(4000)));
+		        Self {
+		            expectrl_session: session,
+		            formatter: ColorfulTheme::default(),
+		        }	}
 	pub fn new_with_timeout_from_dir<I, S>(
 		timeout_ms: u64,
 		dir: &PathBuf,
@@ -948,11 +960,17 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
 	{
+		let mut cmd = std::process::Command::new(
+			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
+		);
+		cmd.env("NGITTEST", "TRUE");
+		cmd.env("RUST_BACKTRACE", "0");
+		cmd.current_dir(dir);
+		cmd.args(args);
+		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
+		session.set_expect_timeout(Some(Duration::from_millis(timeout_ms)));
 		Self {
-			rexpect_session: rexpect_with_from_dir(
-				dir, args, timeout_ms,
-			)
-			.expect("rexpect to spawn new process"),
+			expectrl_session: session,
 			formatter: ColorfulTheme::default(),
 		}
 	}
@@ -961,16 +979,20 @@ impl CliTester {
 		dir: &PathBuf,
 		nostr_remote_url: &str,
 	) -> Self {
-		Self {
-			rexpect_session: remote_helper_rexpect_with_from_dir(
-				dir,
-				nostr_remote_url,
-				4000,
-			)
-			.expect("rexpect to spawn new process"),
-			formatter: ColorfulTheme::default(),
-		}
-	}
+		let mut cmd = std::process::Command::new(
+			std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
+		);
+		cmd.env("NGITTEST", "TRUE");
+		cmd.env("GIT_DIR", dir);
+		cmd.env("RUST_BACKTRACE", "0");
+		cmd.current_dir(dir);
+		        cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
+				let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
+				session.set_expect_timeout(Some(Duration::from_millis(4000)));
+				Self {
+					expectrl_session: session,
+					formatter: ColorfulTheme::default(),
+				}	}
 
 	pub fn new_git_with_remote_helper_from_dir<I, S>(
 		dir: &PathBuf,
@@ -980,12 +1002,43 @@ impl CliTester {
 		I: IntoIterator<Item = S>,
 		S: AsRef<OsStr>,
 	{
-		Self {
-			rexpect_session:
-				git_with_remote_helper_rexpect_with_from_dir(
-					dir, args, 4000,
+		let git_exec_dir =
+			dir.parent().unwrap().join("tmpgit-git-exec-path");
+		if !git_exec_dir.exists() {
+			std::fs::create_dir_all(&git_exec_dir).expect("create git_exec_dir");
+			let src = PathBuf::from(
+				String::from_utf8_lossy(
+					&std::process::Command::new("git")
+						.arg("--exec-path")
+						.output().expect("git --exec-path output")
+						.stdout,
 				)
-				.expect("rexpect to spawn new process"),
+				.trim()
+				.to_string(),
+			);
+			for entry in (std::fs::read_dir(src).expect("read_dir src")).flatten() {
+				let src_path = entry.path();
+				if let Some(name) = src_path.file_name() {
+					let _ =
+						std::fs::copy(&src_path, git_exec_dir.join(name)).expect("copy git executable");
+				}
+			}
+		}
+		std::fs::copy(
+			std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
+			git_exec_dir.join("git-remote-nostr"),
+		).expect("copy git-remote-nostr");
+
+		let mut cmd = std::process::Command::new("git");
+		cmd.env("GIT_EXEC_PATH", git_exec_dir);
+		cmd.env("NGITTEST", "TRUE");
+		cmd.env("RUST_BACKTRACE", "0");
+		cmd.current_dir(dir);
+		cmd.args(args);
+		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");
+		session.set_expect_timeout(Some(Duration::from_millis(4000)));
+		Self {
+			expectrl_session: session,
 			formatter: ColorfulTheme::default(),
 		}
 	}
@@ -993,21 +1046,26 @@ impl CliTester {
 	pub fn restart_with<I, S>(&mut self, args: I) -> &mut Self
 	where
 		I: IntoIterator<Item = S>,
-		S: AsRef<OsStr>,
+		S: AsRef<OsStr> + std::fmt::Debug,
 	{
-		self.rexpect_session
-			.process
+		self.expectrl_session
 			.exit()
 			.expect("process to exit");
-		self.rexpect_session = rexpect_with(args, 4000)
-			.expect("rexpect to spawn new process");
+		let mut cmd = std::process::Command::new(
+			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
+		);
+		cmd.env("NGITTEST", "TRUE");
+		cmd.env("RUST_BACKTRACE", "0");
+		cmd.args(args);
+		let mut session = spawn_command(cmd).expect("expectrl to spawn new process");	
+		session.set_expect_timeout(Some(Duration::from_millis(4000)));
+		self.expectrl_session = session;
 		self
 	}
 
 	pub fn exit(&mut self) -> Result<()> {
 		match self
-			.rexpect_session
-			.process
+			.expectrl_session
 			.exit()
 			.context("expect proccess to exit")
 		{
@@ -1018,16 +1076,16 @@ impl CliTester {
 
 	fn exp_string(&mut self, message: &str) -> Result<String> {
 		match self
-			.rexpect_session
-			.exp_string(message)
+			.expectrl_session
+			.expect(message)
 			.context("expected immediate end but got timed out")
 		{
-			Ok(before) => Ok(before),
+			Ok(before) => Ok(before.to_string()),
 			Err(e) => {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
-				Err(e)
+				Err(anyhow::Error::new(e))
 			}
 		}
 	}
@@ -1103,16 +1161,16 @@ impl CliTester {
 
 	fn exp_eof(&mut self) -> Result<String> {
 		match self
-			.rexpect_session
-			.exp_eof()
+			.expectrl_session
+			.expect_eof()
 			.context("expected end but got timed out")
 		{
-			Ok(before) => Ok(before),
+			Ok(before) => Ok(before.to_string()),
 			Err(e) => {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
-				Err(e)
+				Err(anyhow::Error::new(e))
 			}
 		}
 	}
@@ -1170,143 +1228,30 @@ impl CliTester {
 	}
 
 	pub fn send_line(&mut self, line: &str) -> Result<()> {
-		self.rexpect_session
+		self.expectrl_session
 			.send_line(line)
 			.context("send_line failed")?;
 		Ok(())
 	}
 
 	fn send(&mut self, s: &str) -> Result<()> {
-		self.rexpect_session.send(s).context("send failed")?;
-		self.rexpect_session.flush()?;
+		self.expectrl_session.send(s).context("send failed")?;
+		self.expectrl_session.flush().context("flush failed")?;
 		Ok(())
 	}
 }
 
-/// sanatize unicode string for rexpect
+/// sanatize unicode string
 fn sanatize(s: String) -> String {
-	// remove ansi codes as they don't work with rexpect
+	// remove ansi codes
 	strip_str(s)
-		// sanatize unicode rexpect issue 105 is resolved https://github.com/rust-cli/rexpect/issues/105
 		.as_bytes()
 		.iter()
 		.map(|c| *c as char)
 		.collect::<String>()
 }
 
-pub fn rexpect_with<I, S>(
-	args: I,
-	timeout_ms: u64,
-) -> Result<PtySession, crate::error::Error>
-where
-	I: IntoIterator<Item = S>,
-	S: AsRef<std::ffi::OsStr>,
-{
-	let mut cmd = std::process::Command::new(
-		std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
-	);
-	cmd.env("NGITTEST", "TRUE");
-	cmd.env("RUST_BACKTRACE", "0");
-	cmd.args(args);
-	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	crate::session::spawn_with_options(cmd, Options {
-		timeout_ms: Some(timeout_ms),
-		strip_ansi_escape_codes: true,
-	})
-}
 
-pub fn rexpect_with_from_dir<I, S>(
-	dir: &PathBuf,
-	args: I,
-	timeout_ms: u64,
-) -> Result<PtySession, crate::error::Error>
-where
-	I: IntoIterator<Item = S>,
-	S: AsRef<std::ffi::OsStr>,
-{
-	let mut cmd = std::process::Command::new(
-		std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
-	);
-	cmd.env("NGITTEST", "TRUE");
-	cmd.env("RUST_BACKTRACE", "0");
-	cmd.current_dir(dir);
-	cmd.args(args);
-	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	crate::session::spawn_with_options(cmd, Options {
-		timeout_ms: Some(timeout_ms),
-		strip_ansi_escape_codes: true,
-	})
-}
-
-pub fn remote_helper_rexpect_with_from_dir(
-	dir: &PathBuf,
-	nostr_remote_url: &str,
-	timeout_ms: u64,
-) -> Result<PtySession, crate::error::Error> {
-	let mut cmd = std::process::Command::new(
-		std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
-	);
-	cmd.env("NGITTEST", "TRUE");
-	cmd.env("GIT_DIR", dir);
-	cmd.env("RUST_BACKTRACE", "0");
-	cmd.current_dir(dir);
-	cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
-	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	crate::session::spawn_with_options(cmd, Options {
-		timeout_ms: Some(timeout_ms),
-		strip_ansi_escape_codes: true,
-	})
-}
-
-pub fn git_with_remote_helper_rexpect_with_from_dir<I, S>(
-	dir: &PathBuf,
-	args: I,
-	timeout_ms: u64,
-) -> Result<PtySession>
-where
-	I: IntoIterator<Item = S>,
-	S: AsRef<std::ffi::OsStr>,
-{
-	let git_exec_dir =
-		dir.parent().unwrap().join("tmpgit-git-exec-path");
-	if !git_exec_dir.exists() {
-		std::fs::create_dir_all(&git_exec_dir)?;
-		let src = PathBuf::from(
-			String::from_utf8_lossy(
-				&std::process::Command::new("git")
-					.arg("--exec-path")
-					.output()?
-					.stdout,
-			)
-			.trim()
-			.to_string(),
-		);
-		for entry in (std::fs::read_dir(src)?).flatten() {
-			let src_path = entry.path();
-			if let Some(name) = src_path.file_name() {
-				let _ =
-					std::fs::copy(&src_path, git_exec_dir.join(name));
-			}
-		}
-	}
-	std::fs::copy(
-		std::env::var("CARGO_BIN_EXE_git-remote-nostr").unwrap_or("git-remote-nostr".to_string()),
-		git_exec_dir.join("git-remote-nostr"),
-	)?;
-
-	let mut cmd = std::process::Command::new("git");
-	cmd.env("GIT_EXEC_PATH", git_exec_dir);
-	cmd.env("NGITTEST", "TRUE");
-	cmd.env("RUST_BACKTRACE", "0");
-	cmd.current_dir(dir);
-	cmd.args(args);
-	// using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-	crate::session::spawn_with_options(cmd, Options {
-		timeout_ms: Some(timeout_ms),
-		strip_ansi_escape_codes: true,
-	})
-	.context("spawning failed")
-}
 
 /** copied from client.rs */
 async fn get_local_cache_database(

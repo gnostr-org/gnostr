@@ -1,30 +1,58 @@
 //! An example how you would test your own repl
 
-use rexpect::error::Error;
-use rexpect::session::PtyReplSession;
-use rexpect::spawn;
+use expectrl::{session::Session, Expect};
+use std::process::Command;
 
-fn ed_session() -> Result<PtyReplSession, Error> {
-    let mut ed = PtyReplSession {
-        // for `echo_on` you need to figure that out by trial and error.
-        // For bash and python repl it is false
-        echo_on: false,
-
-        // used for `wait_for_prompt()`
-        prompt: "> ".to_string(),
-        pty_session: spawn("/bin/ed -p '> '", Some(2000))?,
-        // command which is sent when the instance of this struct is dropped
-        // in the below example this is not needed, but if you don't explicitly
-        // exit a REPL then rexpect tries to send a SIGTERM and depending on the repl
-        // this does not end the repl and would end up in an error
-        quit_command: Some("Q".to_string()),
-    };
-    ed.wait_for_prompt()?;
-    Ok(ed)
+struct EdSession {
+    session: Session,
+    prompt: String,
+    quit_command: Option<String>,
 }
 
-fn main() -> Result<(), Error> {
-    let mut ed = ed_session()?;
+impl EdSession {
+    fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let mut session = Session::spawn(Command::new("/bin/ed").arg("-p").arg("> "))?;
+        session.expect("> ")?;
+        Ok(EdSession {
+            session,
+            prompt: "> ".to_string(),
+            quit_command: Some("Q".to_string()),
+        })
+    }
+
+    fn wait_for_prompt(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.session.expect(self.prompt.as_str())?;
+        Ok(())
+    }
+
+    fn send_line(&mut self, line: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.session.send_line(line)?;
+        Ok(())
+    }
+
+    fn exp_string(&mut self, s: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.session.expect(s)?;
+        Ok(())
+    }
+
+    fn exp_eof(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.session.expect(expectrl::Eof)?;
+        Ok(())
+    }
+}
+
+impl Drop for EdSession {
+    fn drop(&mut self) {
+        if let Some(ref cmd) = self.quit_command {
+            self.session
+                .send_line(cmd)
+                .expect(&format!("could not run `{}` on child process", cmd));
+        }
+    }
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut ed = EdSession::new()?;
     ed.send_line("a")?;
     ed.send_line("ed is the best editor evar")?;
     ed.send_line(".")?;

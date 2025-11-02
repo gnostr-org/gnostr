@@ -22,8 +22,6 @@ pub enum Error {
     #[error("The provided program name is empty.")]
     EmptyProgramName,
 
-    #[error(transparent)]
-    Nix(#[from] nix::Error),
 
     #[error(transparent)]
     Io(#[from] std::io::Error),

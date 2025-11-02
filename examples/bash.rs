@@ -1,19 +1,23 @@
-use rexpect::error::Error;
-use rexpect::spawn_bash;
+use expectrl::{session::Session, Expect, Regex};
+use std::process::Command;
 
-fn main() -> Result<(), Error> {
-    let mut p = spawn_bash(Some(1000))?;
-    p.execute("ping 8.8.8.8", "bytes")?;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut p = Session::spawn(Command::new("bash"))?;
+    p.expect(Regex(".*"))?;
+    p.send_line("ping 8.8.8.8")?;
+    p.expect("bytes")?;
     p.send_control('z')?;
-    p.wait_for_prompt()?;
+    p.expect(Regex(".*"))?;
     // bash writes 'ping 8.8.8.8' to stdout again to state which job was put into background
-    p.execute("bg", "ping 8.8.8.8")?;
-    p.wait_for_prompt()?;
+    p.send_line("bg")?;
+    p.expect("ping 8.8.8.8")?;
+    p.expect(Regex(".*"))?;
     p.send_line("sleep 0.5")?;
-    p.wait_for_prompt()?;
+    p.expect(Regex(".*"))?;
     // bash writes 'ping 8.8.8.8' to stdout again to state which job was put into foreground
-    p.execute("fg", "ping 8.8.8.8")?;
+    p.send_line("fg")?;
+    p.expect("ping 8.8.8.8")?;
     p.send_control('c')?;
-    p.exp_string("packet loss")?;
+    p.expect("packet loss")?;
     Ok(())
 }
