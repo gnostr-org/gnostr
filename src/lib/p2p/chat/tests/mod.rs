@@ -8,9 +8,9 @@ mod tests {
     use std::collections::HashMap;
     use std::path::Path;
     use serde_json::json;
-    use nostr_sdk_0_37_0::prelude::*;
-    use nostr_sdk_0_37_0::Keys; // Import Keys directly
-    use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
+use yansi::Paint;
+use nostr_sdk_0_37_0::prelude::*;
+use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
     use nostr_sdk_0_37_0::Event; // Import Event
     use nostr_sdk_0_37_0::Kind; // Import Kind
     use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
@@ -79,13 +79,13 @@ mod tests {
         let commit_hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
         let keys = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
         let expected_private_key_hex = format!("{:0>64}", commit_hash);
-        let secret_key_str = keys.secret_key().wrap().to_string();
+        let secret_key_str = yansi::Paint::new(keys.secret_key()).wrap().to_string();
         assert_eq!(secret_key_str, expected_private_key_hex);
 
         let short_commit_hash = "12345";
         let keys_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
         let expected_private_key_hex_short = format!("{:0>64}", short_commit_hash);
-        let secret_key_str_short = keys_short.secret_key().wrap().to_string();
+        let secret_key_str_short = yansi::Paint::new(keys_short.secret_key()).wrap().to_string();
         assert_eq!(secret_key_str_short, expected_private_key_hex_short);
     }
 
@@ -327,9 +327,9 @@ More details here.".to_string(), "some value".to_string()],
         
         let mut found_tags = HashMap::new();
         for tag in event.tags.iter() {
-                if let Some(name) = tag.to_vec().get(0).map(|s| *s) {
+                if let Some(name) = tag.clone().to_vec().get(0).map(|s| s.clone()) {
                  // Collect all values associated with a tag name
-                for value in tag.to_vec().iter().skip(1) {
+                for value in tag.clone().to_vec().iter().skip(1) {
                     found_tags.entry(name.to_string()).or_insert_with(Vec::new).push(value.to_string());
                 }
             }
