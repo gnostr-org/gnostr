@@ -12,6 +12,11 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::env;
     use gnostr::cli::get_app_cache_path;
+
+    //integrate use asyncgit repo actions
+    //integrate use asyncgit repo actions
+    //integrate use asyncgit repo actions
+    use gnostr_asyncgit::sync::RepoPath;
     use git2::{Repository, Signature};
     use tempfile::TempDir;
 
@@ -269,7 +274,7 @@ mod tests {
 
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
-            .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path)));
+            .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path.clone())));
 
         // Unset the environment variable to avoid affecting other tests
         env::remove_var("GNOSTR_GITDIR");
@@ -289,7 +294,7 @@ mod tests {
 
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
-            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: {:?}", repo_path)));
+            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: {:?}", RepoPath::from(repo_path.as_str()))));
 
         Ok(())
     }
