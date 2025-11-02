@@ -12,6 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("/etc/passwd");
     let mut p = Session::spawn(cmd)?;
     match p.wait() {
+        Ok(Some(0)) => println!("cat exited with code 0, all good!"),
         _ => println!("cat exited with code >0, or it was killed"),
     }
 
@@ -22,9 +23,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(Some(0)) => println!("cat succeeded"),
         Ok(Some(c)) => {
             println!("Cat failed with exit code {}", c);
-            let mut output = String::new();
+            let mut output = Vec::new();
             p.read_to_end(&mut output)?;
-            println!("Output (stdout and stderr): {}", output);
+            println!("Output (stdout and stderr): {}", String::from_utf8_lossy(&output));
         }
         // for other possible return types of wait()
         // see here: https://doc.rust-lang.org/std/process/struct.ExitStatus.html
