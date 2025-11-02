@@ -4017,6 +4017,7 @@ dependencies = [
  "mockall",
  "nostr 0.32.1",
  "nostr 0.34.1",
+ "nostr 0.37.0",
  "nostr-database 0.34.0",
  "nostr-db",
  "nostr-sdk 0.19.1",
