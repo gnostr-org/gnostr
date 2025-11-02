@@ -35,13 +35,4 @@ simple-websockets = { git = "https://github.com/DanConwayDev/simple-websockets",
 strip-ansi-escapes = "0.2.0"
 tokio = "1.33.0"
 tungstenite = "0.20.1"
-
-[target.'cfg(unix)'.dependencies]
-nix = { version = "0.27", features = ["fs", "process", "signal", "term"] }
-
-[features]
-default = []
-which = ["dep:which"]
-
-[dev-dependencies]
 expectrl = "0.8.0"
