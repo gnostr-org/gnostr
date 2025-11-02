@@ -1,23 +1,34 @@
 use futures::stream::StreamExt;
-use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
+use libp2p::{
+    gossipsub,
+    identify, identity,
+    kad::{self, store::{MemoryStore, MemoryStoreConfig}, Config as KadConfig},
+    mdns, noise, ping, rendezvous,
+    request_response::{self, ProtocolSupport, ResponseChannel},
+    swarm::{NetworkBehaviour, SwarmEvent},
+    tcp, yamux, PeerId, StreamProtocol,
+};
 use std::error::Error;
 use std::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use ureq::Agent;
 
-//use crate::p2p::chat::msg::{Msg, MsgKind};
-//use crate::queue::InternalEvent;
-//use tokio::task;
+use crate::p2p::chat::msg::{Msg, MsgKind};
+use crate::p2p::chat::ChatSubCommands;
+use crate::p2p::kvs::{FileRequest, FileResponse};
+use crate::p2p::network_config::IPFS_PROTO_NAME;
+use crate::queue::InternalEvent;
 
-//const TOPIC: &str = "gnostr";
-/// MyBehaviour
-// We create a custom network behaviour that combines Gossipsub and Mdns.
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
+    pub identify: identify::Behaviour,
+    pub kademlia: kad::Behaviour<kad::store::MemoryStore>,
+    pub ping: ping::Behaviour,
+    pub request_response: request_response::cbor::Behaviour<FileRequest, FileResponse>,
 }
 
 /// async_prompt
@@ -103,7 +114,35 @@ pub async fn evt_loop(
                 libp2p::mdns::Config::default(),
                 key.public().to_peer_id(),
             )?;
-            Ok(MyBehaviour { gossipsub, mdns })
+
+            let identify = identify::Behaviour::new(identify::Config::new(
+                "/ipfs/id/1.0.0".to_string(),
+                key.public(),
+            ));
+
+            let kademlia = kad::Behaviour::new(
+                key.public().to_peer_id(),
+                kad::store::MemoryStore::new(key.public().to_peer_id()),
+            );
+
+            let ping = ping::Behaviour::new(ping::Config::new());
+
+            let request_response = request_response::cbor::Behaviour::new(
+                [(
+                    StreamProtocol::new("/file-exchange/1"),
+                    ProtocolSupport::Full,
+                )],
+                request_response::Config::default(),
+            );
+
+            Ok(MyBehaviour {
+                gossipsub,
+                mdns,
+                identify,
+                kademlia,
+                ping,
+                request_response,
+            })
         })?
         .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
@@ -133,7 +172,7 @@ pub async fn evt_loop(
                 }
             }
             event = swarm.select_next_some() => match event {
-                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
+                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
@@ -141,7 +180,7 @@ pub async fn evt_loop(
                         recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
-                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
+                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
@@ -149,7 +188,7 @@ pub async fn evt_loop(
                         recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
-                SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
+                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
                     message,
