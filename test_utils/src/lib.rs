@@ -1074,20 +1074,19 @@ impl CliTester {
 	}
 
 	fn exp_string(&mut self, message: &str) -> Result<String> {
-		match self
-			.expectrl_session
-			.expect(message)
-			.context("expected immediate end but got timed out")
-		{
-			Ok(before) => Ok(std::str::from_utf8(before.get(0).unwrap_or(b"")).unwrap_or("").to_string()),
-			Err(e) => {
-				for p in [51, 52, 53, 55, 56, 57] {
-					let _ = relay::shutdown_relay(8000 + p);
-				}
-				Err(anyhow::Error::new(e))
-			}
-		}
-	}
+		        match self
+		            .expectrl_session
+		            .expect(message)
+		            .context("expected immediate end but got timed out")
+		        {
+		            Ok(before) => Ok(std::str::from_utf8(before.get(0).unwrap_or(b"")).unwrap_or("").to_string()),
+		            Err(e) => {
+		                for p in [51, 52, 53, 55, 56, 57] {
+		                    let _ = relay::shutdown_relay(8000 + p);
+		                }
+		                Err(e)
+		            }
+		        }	}
 
 	/// returns what came before expected message
 	pub fn expect_eventually<S>(
