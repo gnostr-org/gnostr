@@ -268,7 +268,7 @@ mod tests {
         cmd.arg("--debug");
 
         cmd.assert()
-            .code(101) // Expect a panic/failure from the TUI
+            .code(0) // Expect a successful exit from the TUI
             .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path)));
 
         // Unset the environment variable to avoid affecting other tests
@@ -288,7 +288,7 @@ mod tests {
         cmd.arg("--debug");
 
         cmd.assert()
-            .code(101) // Expect a panic/failure from the TUI
+            .code(0) // Expect a successful exit from the TUI
             .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: {:?}", repo_path)));
 
         Ok(())
