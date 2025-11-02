@@ -1,25 +1,21 @@
+extern crate gnostr;
 #![doc = include_str!("../../README.md")]
-use std::{
-    error::Error,
-    hash::{DefaultHasher, Hash, Hasher},
-    str,
-    str::FromStr,
-    time::Duration,
-};
+use std::error::Error;
 
 use clap::Parser;
 use futures::stream::StreamExt;
-use libp2p::{gossipsub::IdentTopic, identity, swarm::SwarmEvent, Multiaddr, PeerId};
+use libp2p::{gossipsub::IdentTopic, identity, kad, swarm::SwarmEvent, Multiaddr, PeerId};
 use tokio::{
     io::{self, AsyncBufReadExt},
     select,
 };
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, info, warn};
 
+use gnostr::p2p::args::Args;
 use gnostr::p2p::command_handler::handle_input_line;
 use gnostr::p2p::event_handler::handle_swarm_event;
 use gnostr::p2p::git_publisher::run_git_publisher;
-use gnostr::p2p::network_config::{Network, IPFS_BOOTNODES};
+use gnostr::p2p::network_config::{IPFS_BOOTNODES};
 use gnostr::p2p::swarm_builder;
 use gnostr::p2p::utils::{generate_ed25519, init_subscriber};
 
@@ -27,7 +23,7 @@ use gnostr::p2p::utils::{generate_ed25519, init_subscriber};
 async fn main() -> Result<(), Box<dyn Error>> {
     let _ = init_subscriber();
     let args = Args::parse();
-    warn!("args={{:?}}", args);
+    warn!("args={:?}", args);
 
     if let Some(ref peer) = args.peer {}
     if let Some(ref multiaddr) = args.multiaddr {}
@@ -42,7 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let keypair: identity::Keypair = generate_ed25519(args.secret.clone());
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
-    warn!("Local PeerId: {{}}", peer_id);
+    warn!("Local PeerId: {}", peer_id);
 
     let mut swarm = swarm_builder::build_swarm(keypair)?;
 
@@ -79,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to listen on address");
     info!("Starting initial git repository scan and data publishing...");
     if let Err(e) = run_git_publisher(&args, &mut swarm).await {
-        warn!("Error during initial git processing: {{}}", e);
+        warn!("Error during initial git processing: {}", e);
     }
     debug!("Initial data publishing complete.");
 
@@ -99,5 +95,3 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 }
-
-use gnostr::p2p::args::Args;
