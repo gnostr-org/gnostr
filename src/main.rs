@@ -308,10 +308,10 @@ async fn main() -> anyhow::Result<()> {
 
             // Check if GNOSTR_GITDIR environment variable is set
             if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
-                debug!("333:The GNOSTR_GITDIR environment variable is set to: {}", gitdir_env_value);
+                eprintln!("333:The GNOSTR_GITDIR environment variable is set to: {}", gitdir_env_value);
                 // Check if --gitdir argument was provided (from command line args)
                 if let Some(git_dir_value) = gitdir_value { // Assuming gitdir_value is from command line args parsing
-                    debug!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
+                    eprintln!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
                     let gitdir_string = format!("{}", gitdir_env_value);
                     debug!("342:OVERRIDE!! The git directory is: {:?}", gitdir_string.clone());
                     sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
