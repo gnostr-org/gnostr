@@ -1,7 +1,9 @@
 
 #[cfg(test)]
 mod tests {
-    use gnostr::p2p::{Network, generate_ed25519, generate_close_peer_id};
+    use gnostr::p2p::network_config::{Network};
+    use gnostr::p2p::utils::{generate_ed25519};
+    use gnostr::p2p::generate_close_peer_id;
     use libp2p::{Multiaddr, PeerId};
     use std::str::FromStr;
 
@@ -68,7 +70,7 @@ mod tests {
     #[test]
 	#[ignore]
     fn test_generate_ed25519_valid_keypair() {
-        let keypair = generate_ed25519(&[0]);
+        let keypair = generate_ed25519(Some(0));
         // A simple check to ensure a keypair is generated.
         // More rigorous tests would involve checking public key derivation, etc.
         assert!(!keypair.public().to_peer_id().to_base58().is_empty());
@@ -77,8 +79,8 @@ mod tests {
     #[test]
 	#[ignore]
     fn test_generate_ed25519_different_seeds_different_keypairs() {
-        let keypair1 = generate_ed25519(&[0]);
-        let keypair2 = generate_ed25519(&[1]);
+        let keypair1 = generate_ed25519(Some(0));
+        let keypair2 = generate_ed25519(Some(1));
         assert_ne!(keypair1.public().to_peer_id(), keypair2.public().to_peer_id());
     }
 
