@@ -4091,6 +4091,7 @@ dependencies = [
  "url",
  "urlencoding",
  "which 6.0.3",
+ "yansi",
  "zeroize",
 ]
 
