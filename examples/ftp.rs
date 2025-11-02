@@ -2,7 +2,13 @@ use expectrl::{session::Session, Expect, Regex};
 use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let p = Session::spawn(Command::new("ftp").arg("speedtest.tele2.net"))?;
+    let mut command_builder = Command::new("ftp");
+    command_builder.arg("speedtest.tele2.net");
+
+    let cmd = command_builder; // (Or maybe Command::new(...).arg(...).into())
+
+    let mut p = Session::spawn(cmd)?;
+
     p.expect(Regex("Name \\(.*\\):"))?;
     p.send_line("anonymous")?;
     p.expect("Password")?;

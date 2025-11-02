@@ -9,7 +9,18 @@ struct EdSession {
 
 impl EdSession {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut session = Session::spawn((Command::new("/bin/ed").arg("-p").arg("> ")))?;
+let mut command_to_run = Command::new("/bin/ed"); 
+    
+    // 2. Use the chaining methods to configure the command.
+    //    These methods return &mut Command, but 'command_to_run' is the owner.
+    command_to_run.arg("-p");
+    command_to_run.arg("> "); 
+    
+    // 3. Pass the *owned* variable (command_to_run) to Session::spawn().
+    //    The variable is moved (transferred ownership) here.
+    let mut session = Session::spawn(command_to_run)?;
+
+
         session.expect("> ")?;
         Ok(EdSession {
             session,
