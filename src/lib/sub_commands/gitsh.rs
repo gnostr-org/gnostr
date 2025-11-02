@@ -1,4 +1,4 @@
-use clap::{Arg, Parser};
+use clap::Parser;
 use env_logger::Env;
 
 #[cfg(not(test))]

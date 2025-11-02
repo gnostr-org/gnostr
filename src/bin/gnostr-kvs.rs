@@ -13,7 +13,7 @@ use futures::stream::StreamExt;
 use git2::{Commit, DiffFormat, ObjectType, Repository};
 use libp2p::StreamProtocol;
 use libp2p::{
-    core::transport::Transport,
+
     gossipsub,
     gossipsub::IdentTopic,
     identify, identity,

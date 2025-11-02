@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 use crate::cli::LegitCommands;
-use gnostr_legit::{gitminer, repo, worker};
+use gnostr_legit::gitminer;
 use crate::sub_commands::fetch;
 use crate::sub_commands::init;
 use crate::sub_commands::list;
@@ -12,7 +12,7 @@ use crate::sub_commands::send;
 use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
 use serde::ser::StdError;
-use std::time::SystemTime;
+
 use crate::legit::command;
 use ::time::OffsetDateTime;
 

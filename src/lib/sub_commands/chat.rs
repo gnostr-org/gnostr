@@ -7,13 +7,13 @@
 use crate::p2p::chat::*;
  //migrate carefully
 use anyhow::Result;
-use clap::{Parser /*, Subcommand*/};
+use clap::{/* Subcommand */};
 use serde::ser::StdError;
 
 
-use nostr_sdk_0_37_0::prelude::*;
+
 use nostr_sdk_0_37_0::Keys;
-use serde_json;
+
 use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 

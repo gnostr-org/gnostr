@@ -16,8 +16,7 @@ use std::{
     thread,
 };
 
-#[cfg(not(target_os = "windows"))]
-use std::os::unix::fs::PermissionsExt;
+
 
 type IoOut = Receiver<Vec<u8>>;
 

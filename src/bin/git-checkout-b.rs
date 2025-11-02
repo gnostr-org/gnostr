@@ -1,9 +1,7 @@
 use std::process::Command;
 use anyhow::Result;
 use std::path::Path;
-use gnostr::weeble::weeble;
-use gnostr::wobble::wobble;
-use gnostr::blockheight::blockheight;
+
 
 
 fn main() -> Result<()> {
