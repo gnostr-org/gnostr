@@ -5,9 +5,9 @@ use tracing::debug;
 
 use super::behaviour::Behaviour;
 use super::git_integration::{get_commit_diff_as_bytes, get_commit_id_of_tag};
-use crate::Args;
+use crate::p2p::args::Args;
 
-pub async fn run_git_publisher(args: &crate::Args, swarm: &mut libp2p::Swarm<Behaviour>) -> Result<(), Box<dyn Error>> {
+pub async fn run_git_publisher(args: &Args, swarm: &mut libp2p::Swarm<Behaviour>) -> Result<(), Box<dyn Error>> {
     let path = args.flag_git_dir.as_ref().map_or(".", |s| &s[..]);
     let repo = Repository::discover(path)?;
     if let Ok(tag_names) = repo.tag_names(None) {
