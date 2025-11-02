@@ -1,4 +1,4 @@
-use expectrl::{session::Session, Expect, Regex, process::unix::{UnixProcess, PtyStream}};
+use expectrl::{session::Session, Expect, process::unix::{UnixProcess, PtyStream}};
 use std::process::Command;
 
 struct EdSession {

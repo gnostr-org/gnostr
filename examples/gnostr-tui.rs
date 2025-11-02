@@ -1,10 +1,8 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
-use gnostr::cli::*;
 use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use gnostr_asyncgit::sync::RepoPath;
-use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, trace};
 use tracing_core::metadata::LevelFilter;
@@ -17,7 +15,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
     env::set_var("WOBBLE", "0");
-    let mut args: GnostrCli = GnostrCli::parse();
+    let args: GnostrCli = GnostrCli::parse();
 
     let app_cache = get_app_cache_path();
     if args.logging {
