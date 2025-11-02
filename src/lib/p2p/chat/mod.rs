@@ -83,193 +83,197 @@ pub async fn create_event(
     let signed_event = create_event_with_custom_tags(&keys, content, custom_tags).await?;
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
-        // for relay in BOOTSTRAP_RELAYS.to_vec() {
+            let opts = Options::new().gossip(true);
 
-        //     debug!("{}", relay);
+            let client = Client::builder().signer(keys.clone()).opts(opts).build();
 
-        //     client.add_discovery_relay(relay).await.expect("");
+            for relay in BOOTSTRAP_RELAYS.to_vec() {
 
-        // }
+                debug!("{}", relay);
 
-    
+                client.add_discovery_relay(relay).await.expect("");
 
-        // // Connect to the relays.
+            }
 
-        // client.connect().await;
+        
 
-    
+            // Connect to the relays.
 
-        // // client.send_event - signed_event
+            client.connect().await;
 
-        // client.send_event(signed_event.clone()).await?;
+        
 
-    
+            // client.send_event - signed_event
 
-        // info!("{}", serde_json::to_string_pretty(&signed_event)?);
+            client.send_event(signed_event.clone()).await?;
 
-        // info!("signed_event sent:\n{:?}", signed_event);
+        
 
-    
+            info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
-        // // Publish a text note
+            info!("signed_event sent:\n{:?}", signed_event);
 
-        // let pubkey = keys.public_key();
+        
 
-    
+            // Publish a text note
 
-        // info!("pubkey={}", keys.public_key());
+            let pubkey = keys.public_key();
 
-        // let builder = EventBuilder::text_note(format!("Hello Worlds {}", pubkey))
+        
 
-        //     .tag(Tag::public_key(pubkey))
+            info!("pubkey={}", keys.public_key());
 
-        //     .tag(Tag::custom(
+            let builder = EventBuilder::text_note(format!("Hello Worlds {}", pubkey))
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                .tag(Tag::public_key(pubkey))
 
-        //         "1 2 3 4 11 22 33 44".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2 3 4 11 22 33 44".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1 2 3 4 11 22 33".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2 3 4 11 22 33".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1 2 3 4 11 22".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2 3 4 11 22".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1 2 3 4 11".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2 3 4 11".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1 2 3 4".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2 3 4".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1 2 3".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2 3".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1 2".chars(),
+                .tag(Tag::custom(
 
-        //     ))
+                    TagKind::Custom(Cow::from("gnostr")),
 
-        //     .tag(Tag::custom(
+                    "1 2".chars(),
 
-        //         TagKind::Custom(Cow::from("gnostr")),
+                ))
 
-        //         "1".chars(),
+                .tag(Tag::custom(
 
-        //     ));
+                    TagKind::Custom(Cow::from("gnostr")),
 
-    
+                    "1".chars(),
 
-        // //send from send_event_builder
+                ));
 
-        // let output = client.send_event_builder(builder).await?;
+        
 
-        // info!("Event ID: {}", output.to_bech32()?);
+            //send from send_event_builder
 
-    
+            let output = client.send_event_builder(builder).await?;
 
-        // info!("Sent to:");
+            info!("Event ID: {}", output.to_bech32()?);
 
-        // for url in output.success.into_iter() {
+        
 
-        //     info!("- {url}");
+            info!("Sent to:");
 
-        // }
+            for url in output.success.into_iter() {
 
-    
+                info!("- {url}");
 
-        // info!("Not sent to:");
+            }
 
-        // for (url, reason) in output.failed.into_iter() {
+        
 
-        //     info!("- {url}: {reason:?}");
+            info!("Not sent to:");
 
-        // }
+            for (url, reason) in output.failed.into_iter() {
 
-    
+                info!("- {url}: {reason:?}");
 
-        // // Get events
+            }
 
-        // let filter_one = Filter::new().author(pubkey).kind(Kind::TextNote).limit(10);
+        
 
-        // let events = client
+            // Get events
 
-        //     .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
+            let filter_one = Filter::new().author(pubkey).kind(Kind::TextNote).limit(10);
 
-        //     .await?;
+            let events = client
 
-    
+                .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
 
-        // for event in events.into_iter() {
+                .await?;
 
-        //     info!("{}", event.as_json());
+        
 
-        // }
+            for event in events.into_iter() {
 
-    
+                info!("{}", event.as_json());
 
-        // // another filter
+            }
 
-        // let test_author_pubkey =
+        
 
-        //     PublicKey::parse("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet")?;
+            // another filter
 
-    
+            let test_author_pubkey =
 
-        // info!("test_author_pubkey={}", test_author_pubkey);
+                PublicKey::parse("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet")?;
 
-    
+        
 
-        // let filter_test_author = Filter::new()
+            info!("test_author_pubkey={}", test_author_pubkey);
 
-        //     .author(test_author_pubkey)
+        
 
-        //     .kind(Kind::TextNote)
+            let filter_test_author = Filter::new()
 
-        //     .limit(10);
+                .author(test_author_pubkey)
 
-        // let events = client
+                .kind(Kind::TextNote)
 
-        //     .fetch_events(vec![filter_test_author], Some(Duration::from_secs(10)))
+                .limit(10);
 
-        //     .await?;
+            let events = client
 
-    
+                .fetch_events(vec![filter_test_author], Some(Duration::from_secs(10)))
 
-        // for event in events.into_iter() {
+                .await?;
 
-        //     info!("test_author:\n\n{}", event.as_json());
+        
 
-        // }
+            for event in events.into_iter() {
+
+                info!("test_author:\n\n{}", event.as_json());
+
+            }
 
     Ok(())
 }
