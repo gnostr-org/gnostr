@@ -7,7 +7,7 @@
 use crate::p2p::chat::*;
  //migrate carefully
 use anyhow::Result;
-use clap::{/* Subcommand */};
+
 use serde::ser::StdError;
 
 
