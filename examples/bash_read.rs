@@ -1,7 +1,7 @@
 use expectrl::{session::Session, Expect, Regex};
 use std::process::Command;
 use std::io::BufRead;
-use std::str;
+
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut p = Session::spawn(Command::new("bash"))?;

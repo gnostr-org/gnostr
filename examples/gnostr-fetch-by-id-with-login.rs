@@ -1,5 +1,5 @@
 use gnostr::{Command, Probe};
-use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
+use gnostr_types::{Filter, IdHex, RelayMessage};
 use std::env;
 
 #[tokio::main]
@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signer = gnostr::load_signer()?;
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
-    let (to_main, mut from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
+    let (to_main, from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
     let join_handle = tokio::spawn(async move {
         let mut probe = Probe::new(from_main, to_main);
         if let Err(e) = probe.connect_and_listen(&relay_url.clone()).await {

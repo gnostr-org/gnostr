@@ -6,7 +6,6 @@ use anyhow::Result;
 use clap::Parser;
 use gnostr::cli::{NgitCli as Cli, NgitCommands as Commands};
 use gnostr::sub_commands;
-use gnostr::sub_commands::query;
 
 #[tokio::main]
 async fn main() -> Result<()> {
