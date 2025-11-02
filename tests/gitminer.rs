@@ -1,6 +1,6 @@
 use gnostr_legit::gitminer::{Gitminer, Options};
 use git2::{Repository, Signature, Oid};
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;

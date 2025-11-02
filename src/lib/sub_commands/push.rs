@@ -9,7 +9,7 @@ use crate::{
     //cli::Cli,
     client::{
         fetching_with_report, get_all_proposal_patch_events_from_cache,
-        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache, Client, Connect,
+        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache, Connect,
     },
     git::{identify_ahead_behind, str_to_sha1, Repo, RepoActions},
     git_events::{
@@ -57,7 +57,7 @@ pub async fn launch(
     }
 
     #[cfg(test)]
-    let mut client: &mut crate::client::MockConnect = &mut Default::default();
+    let client: &mut crate::client::MockConnect = &mut Default::default();
     #[cfg(not(test))]
     let mut client = Client::default();
 

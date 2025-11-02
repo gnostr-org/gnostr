@@ -1,4 +1,3 @@
-use super::*;
 
 #[tokio::test]
 #[serial]
@@ -71,7 +70,7 @@ async fn fetch_downloads_specified_commits_from_git_server() -> Result<()> {
 }
 
 mod when_first_git_server_fails_ {
-    use super::*;
+    
 
     #[tokio::test]
     #[serial]

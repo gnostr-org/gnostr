@@ -1,4 +1,3 @@
-use super::*;
 
 #[tokio::test]
 #[serial]
@@ -9,7 +8,7 @@ async fn new_branch_when_no_state_event_exists() -> Result<()> {
 }
 mod two_branches_in_batch_one_added_one_updated {
 
-    use super::*;
+    
 
     #[tokio::test]
     #[serial]
@@ -461,7 +460,7 @@ mod two_branches_in_batch_one_added_one_updated {
 }
 mod delete_one_branch {
 
-    use super::*;
+    
 
     #[tokio::test]
     #[serial]
@@ -677,7 +676,7 @@ mod delete_one_branch {
     }
 
     mod when_existing_state_event {
-        use super::*;
+        
 
         #[tokio::test]
         #[serial]
@@ -760,7 +759,7 @@ mod delete_one_branch {
         }
 
         mod already_deleted_on_git_server {
-            use super::*;
+            
 
             #[tokio::test]
             #[serial]

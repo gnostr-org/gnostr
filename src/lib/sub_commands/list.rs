@@ -12,7 +12,7 @@ use nostr_sdk_0_34_0::Kind;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Client, Connect,
+        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect,
     },
     git::{str_to_sha1, Repo, RepoActions},
     git_events::{

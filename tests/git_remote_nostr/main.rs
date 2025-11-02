@@ -2,11 +2,9 @@ use std::{collections::HashSet, env::current_dir};
 
 use anyhow::{Context, Result};
 use futures::join;
-use git2::Oid;
 use nostr_0_34_1::nips::nip01::Coordinate;
-use nostr_sdk_0_34_0::{secp256k1::rand, Event, JsonUtil, Kind, ToBech32};
+use nostr_sdk_0_34_0::{secp256k1::rand, Kind, ToBech32};
 use relay::Relay;
-use serial_test::serial;
 use test_utils::{git::GitTestRepo, *};
 
 mod fetch;

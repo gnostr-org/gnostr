@@ -11,7 +11,7 @@ mod tests {
     use std::io::Write;
     use std::path::{Path, PathBuf};
     use std::env;
-    use gnostr::cli::{setup_logging, get_app_cache_path};
+    use gnostr::cli::get_app_cache_path;
     use git2::{Repository, Signature};
     use tempfile::TempDir;
 

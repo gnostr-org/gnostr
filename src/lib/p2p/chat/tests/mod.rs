@@ -5,8 +5,8 @@ mod tests {
     use super::super::*; // Import items from the parent module (chat)
     use super::super::msg::USER_NAME;
     use git2::{Repository, Signature, Time};
-    use std::collections::HashMap;
-    use std::fs;
+    
+    
     use std::path::Path;
     use serde_json::json;
     use nostr_sdk_0_37_0::SecretKey;
