@@ -21,7 +21,7 @@ mod tests {
     #[test]
     fn test_get_dirs() {
         setup();
-        let project_dirs = get_dirs().unwrap();
+        let _project_dirs = get_dirs().unwrap();
     }
 
     // These tests rely on external API calls, which can be flaky.

@@ -37,7 +37,7 @@ mod when_commits_behind_ask_to_proceed {
         Ok(test_repo)
     }
 
-    fn expect_confirm_prompt(p: &mut CliTester) -> Result<CliTesterConfirmPrompt> {
+    fn expect_confirm_prompt(p: &mut CliTester) -> Result<CliTesterConfirmPrompt<'_, '_>> {
         p.expect("fetching updates...\r\n")?;
         p.expect_eventually("\r\n")?; // may be 'no updates' or some updates
         p.expect("creating proposal from 2 commits:\r\n")?;
