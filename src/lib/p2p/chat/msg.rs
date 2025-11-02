@@ -340,7 +340,7 @@ impl Display for Msg {
                 write!(f, "{{\"msg\": \"{}\"}} {}", self.content[0], self.content[1])
             }
             MsgKind::GitCommitTime => {
-                write!(f, "[GitCommitTime] {}:{}", self.from, self.content[0])
+                write!(f, "{{\"time\": \"{}\"}} {}", self.content[0], self.content[1])
             }
         }
     }
