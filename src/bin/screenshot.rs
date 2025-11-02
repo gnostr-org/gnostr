@@ -182,7 +182,7 @@ fn macos() {
                 }
             }
 
-            let set_result = alt_ctx
+            let _set_result = alt_ctx
                 .set_contents(format!(
                     "formatted! {}",
                     clipboard_input_1.clone().to_string()

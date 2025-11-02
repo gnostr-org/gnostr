@@ -65,7 +65,7 @@ pub fn dns_resolver() -> Result<Vec<IpAddr>, Box<dyn std::error::Error>> {
             //println!("No TXT records found for o-o.myaddr.l.google.com.");
         } else {
             //println!("TXT Records for o-o.myaddr.l.google.com:");
-            for txt in txt_records {
+            for _txt in txt_records {
                 //println!("96:\n\n{}\n\n", txt);
             }
         }
@@ -83,7 +83,7 @@ pub fn dns_resolver() -> Result<Vec<IpAddr>, Box<dyn std::error::Error>> {
             //println!("No IP addresses found for www.example.com.");
         } else {
             //println!("IP Addresses for www.example.com:");
-            for address in &addresses {
+            for _address in &addresses {
                 //println!("114:\n\n{}\n\n", address);
                 // Note: Asserting specific IPs for www.example.com is brittle
                 // as they can change. The previous example's assertion was incorrect.

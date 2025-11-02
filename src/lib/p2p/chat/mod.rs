@@ -603,7 +603,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         client.connect().await;
 
         //build git gnostr event
-        let builder = EventBuilder::text_note(serialized_commit.clone());
+        let _builder = EventBuilder::text_note(serialized_commit.clone());
 
         //send git gnostr event
         //let output = client.send_event_builder(builder).await.expect("");

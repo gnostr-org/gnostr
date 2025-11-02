@@ -42,7 +42,7 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
     let bodies = stream::iter(relays)
         .map(|url| {
             let client = &client;
-            let nip_lower = args.nip_lower; // Capture nip_lower from args
+            let _nip_lower = args.nip_lower; // Capture nip_lower from args
             async move {
                 let resp = client
                     .get(url.replace("wss://", "https://"))
