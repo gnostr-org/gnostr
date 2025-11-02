@@ -446,6 +446,6 @@ pub enum Event {
 
 // Simple file exchange protocol
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-struct FileRequest(String);
+pub struct FileRequest(String);
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FileResponse(Vec<u8>);
