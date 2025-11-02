@@ -14,7 +14,7 @@ use nostr_database::{NostrDatabase, Order};
 use nostr_sdk::{Client, NostrSigner, TagStandard, serde_json};
 use nostr_sqlite::SQLiteDatabase;
 use once_cell::sync::Lazy;
-use expectrl::{session::{Session, OsSession}, Expect, Regex, Eof, Error as ExpectrlError};
+use expectrl::{session::{Session, OsSession}, Expect, Eof};
 use std::io::Write;
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
@@ -1050,10 +1050,8 @@ impl CliTester {
 		S: AsRef<OsStr> + std::fmt::Debug,
 	{
 		self.expectrl_session
-			.close()
-			.expect("process to close");
-		self.expectrl_session
-			.wait()
+			.expect(Eof)
+			.map(|_| ())
 			.expect("process to exit");
 		let mut cmd = std::process::Command::new(
 			std::env::var("CARGO_BIN_EXE_ngit").unwrap_or("ngit".to_string()),
@@ -1068,19 +1066,11 @@ impl CliTester {
 	}
 
 	pub fn exit(&mut self) -> Result<()> {
-		match self
-			.expectrl_session
-			.close()
-			.context("expect process to close")
-		{
-			Ok(_) => {
-				self.expectrl_session
-					.wait()
-					.context("expect process to exit")?;
-				Ok(())
-			}
-			Err(e) => Err(e),
-		}
+		self.expectrl_session
+			.expect(Eof)
+			.map(|_| ())
+			.context("expect process to exit")?;
+		Ok(())
 	}
 
 	fn exp_string(&mut self, message: &str) -> Result<String> {
@@ -1089,12 +1079,12 @@ impl CliTester {
 			.expect(message)
 			.context("expected immediate end but got timed out")
 		{
-			Ok(before) => Ok(before.to_string()),
+			Ok(before) => Ok(std::str::from_utf8(before.get(0).unwrap_or(b"")).unwrap_or("").to_string()),
 			Err(e) => {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
-				Err(anyhow::Error::new(e))
+				Err(anyhow::Error::new(e.into()))
 			}
 		}
 	}
@@ -1174,12 +1164,12 @@ impl CliTester {
 			.expect(Eof)
 			.context("expected end but got timed out")
 		{
-			Ok(before) => Ok(before.to_string()),
+			Ok(before) => Ok(before.get(0).unwrap_or("").to_string()),
 			Err(e) => {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
-				Err(anyhow::Error::new(e))
+				Err(anyhow::Error::new(e.into()))
 			}
 		}
 	}
@@ -1189,11 +1179,12 @@ impl CliTester {
 			.expectrl_session
 			.expect(Eof)
 			.context("expected immediate end but got timed out")?;
+		let before_string = before.get(0).unwrap_or("").to_string();
 		ensure!(
-			before.is_empty(),
+			before_string.is_empty(),
 			format!(
 				"expected immediate end but got '{}' first.",
-				before.replace('\n', "\\n").replace('\r', "\\r"),
+				before_string.replace('\n', "\\n").replace('\r', "\\r"),
 			),
 		);
 		Ok(())
