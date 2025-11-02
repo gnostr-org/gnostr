@@ -1168,7 +1168,7 @@ impl CliTester {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
-				Err(anyhow::Error::new(e))
+				Err(e.into())
 			}
 		}
 	}
