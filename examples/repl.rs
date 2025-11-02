@@ -1,17 +1,15 @@
-//! An example how you would test your own repl
-
-use expectrl::{session::Session, Expect};
+use expectrl::{session::Session, Expect, Regex, process::UnixProcess, PtyStream};
 use std::process::Command;
 
 struct EdSession {
-    session: Session,
+    session: Session<UnixProcess, PtyStream>,
     prompt: String,
     quit_command: Option<String>,
 }
 
 impl EdSession {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut session = Session::spawn(Command::new("/bin/ed").arg("-p").arg("> "))?;
+        let mut session = Session::spawn(Command::new("/bin/ed").arg("-p").arg("> ").clone())?;
         session.expect("> ")?;
         Ok(EdSession {
             session,
