@@ -106,8 +106,7 @@ fn handle_input(app: &mut App) -> Result<bool, Box<dyn Error>> {
 fn render_default<B: Backend>(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(33), Constraint::Min(100)].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let left_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -147,7 +146,7 @@ fn render_help<B: Backend>(f: &mut Frame) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(100)].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let paragraph = Paragraph::new(HELP_TEXT)
         .block(Block::default().title(" > ").borders(Borders::ALL))

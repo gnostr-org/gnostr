@@ -601,17 +601,17 @@ impl DrawableComponent for TextInputComponent {
             let area = if self.embed {
                 rect
             } else if self.input_type == InputType::Multiline {
-                let area = ui::centered_rect(60, 20, f.size());
-                ui::rect_inside(Size::new(10, 3), f.size().into(), area)
+                let area = ui::centered_rect(60, 20, f.area());
+                ui::rect_inside(Size::new(10, 3), f.area().into(), area)
             } else {
-                let area = ui::centered_rect(60, 1, f.size());
+                let area = ui::centered_rect(60, 1, f.area());
 
-                ui::rect_inside(Size::new(10, 3), Size::new(f.size().width, 3), area)
+                ui::rect_inside(Size::new(10, 3), Size::new(f.area().width, 3), area)
             };
 
             f.render_widget(Clear, area);
 
-            f.render_widget(ta.widget(), area);
+            f.render_widget(&ta, area);
 
             if self.show_char_count {
                 self.draw_char_count(f, area);
