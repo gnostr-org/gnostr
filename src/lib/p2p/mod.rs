@@ -8,6 +8,7 @@ pub mod utils;
 pub mod git_integration;
 pub mod git_publisher;
 pub mod swarm_builder;
+pub mod args;
 
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
