@@ -1084,7 +1084,7 @@ impl CliTester {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
-				Err(anyhow::Error::new(e))
+				Err(anyhow::Error::new(e.into()))
 			}
 		}
 	}
@@ -1164,7 +1164,7 @@ impl CliTester {
 			.expect(Eof)
 			.context("expected end but got timed out")
 		{
-			            Ok(before) => Ok(before.get(0).unwrap_or(b"").to_string()),			Err(e) => {
+			            Ok(before) => Ok(std::str::from_utf8(before.get(0).unwrap_or(b"")).unwrap_or("").to_string()),			Err(e) => {
 				for p in [51, 52, 53, 55, 56, 57] {
 					let _ = relay::shutdown_relay(8000 + p);
 				}
@@ -1178,7 +1178,7 @@ impl CliTester {
 			.expectrl_session
 			.expect(Eof)
 			.context("expected immediate end but got timed out")?;
-		        let before_string = before.get(0).unwrap_or(b"").to_string();		ensure!(
+		        let before_string = std::str::from_utf8(before.get(0).unwrap_or(b"")).unwrap_or("").to_string();		ensure!(
 			before_string.is_empty(),
 			format!(
 				"expected immediate end but got '{}' first.",
