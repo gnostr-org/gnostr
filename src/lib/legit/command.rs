@@ -104,6 +104,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         Ok(m)  => m,
         Err(e) => { panic!("Failed to start git miner: {}", e); }
     };
+    debug!("Gitminer options: {:?}", opts);
 
     let hash = match miner.mine() {
         Ok(s)  => s,
