@@ -184,7 +184,7 @@ fn ui(f: &mut Frame, app: &App) {
             Constraint::Fill(5),   // Messages height
             Constraint::Length(3), // Input height
         ].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     // Header Widget
     let header_text = vec![Line::from(app.topic.as_str())];
@@ -221,10 +221,10 @@ fn ui(f: &mut Frame, app: &App) {
     match app.input_mode {
         InputMode::Normal => {}
         InputMode::Editing => {
-            f.set_cursor(
+            f.set_cursor_position((
                 chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                 chunks[2].y + 1,
-            )
+            ))
         }
     }
 }

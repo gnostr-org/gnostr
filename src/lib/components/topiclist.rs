@@ -1133,10 +1133,10 @@ impl DrawableComponent for TopicList {
         match self.input_mode {
             InputMode::Normal => {}
             InputMode::Editing => {
-                f.set_cursor(
+                f.set_cursor_position((
                     left_chunks[3].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                     left_chunks[3].y + 1,
-                )
+                ))
             }
         }
         Ok(())
