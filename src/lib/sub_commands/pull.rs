@@ -6,6 +6,7 @@ use crate::{
     client::{
         fetching_with_report, get_all_proposal_patch_events_from_cache,
         get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
+        Client
     },
     git::{str_to_sha1, Repo, RepoActions},
     git_events::{get_commit_id_from_patch, get_most_recent_patch_with_ancestors, tag_value},

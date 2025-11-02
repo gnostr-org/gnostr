@@ -1,6 +1,6 @@
 use std::path::Path;
 //use crate::client::Client;
-use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
+use crate::{client::{send_events, Client}, git_events::generate_cover_letter_and_patch_events};
 use anyhow::{bail, Context, Result};
 use console::Style;
 use nostr_0_34_1::{

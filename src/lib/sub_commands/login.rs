@@ -3,7 +3,7 @@ use clap;
 
 use crate::{
     //cli::Cli,
-    client::Connect,
+    client::{Client, Connect},
     git::Repo,
     login,
 };

@@ -1,5 +1,5 @@
 use crate::{
-    client::send_events,
+    client::{send_events, Client},
     git_events::{is_event_proposal_root_for_branch, tag_value},
 };
 use anyhow::{bail, Context, Result};

@@ -7,7 +7,7 @@ use nostr_sdk_0_34_0::Kind;
 use crate::{
     //cli::Cli,
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
-    client::{fetching_with_report, get_repo_ref_from_cache, send_events, Connect},
+    client::{fetching_with_report, get_repo_ref_from_cache, send_events, Client, Connect},
     git::{nostr_url::convert_clone_url_to_https, Repo, RepoActions},
     login,
     repo_ref::{
