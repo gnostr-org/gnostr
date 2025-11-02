@@ -26,15 +26,13 @@ use libp2p::{
         Config as KadConfig,
     },
     mdns, noise, ping, rendezvous,
-    swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, Multiaddr, PeerId,
+    swarm::SwarmEvent,
+    tcp, yamux, PeerId,
 };
 use std::{
     env,
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
-    str,
-    str::FromStr,
     thread,
 };
 use tokio::time::Duration;

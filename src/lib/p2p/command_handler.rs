@@ -1,4 +1,4 @@
-use libp2p::{gossipsub, kad, kad::store::MemoryStore};
+use libp2p::{gossipsub, kad};
 use tracing::debug;
 
 pub async fn handle_input_line(swarm: &mut libp2p::Swarm<super::behaviour::Behaviour>, line: String) {

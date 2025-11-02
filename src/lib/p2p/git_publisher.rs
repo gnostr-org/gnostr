@@ -1,6 +1,6 @@
 use std::error::Error;
 use git2::Repository;
-use libp2p::{gossipsub, kad, PeerId};
+use libp2p::{gossipsub, kad};
 use tracing::debug;
 
 use super::behaviour::Behaviour;

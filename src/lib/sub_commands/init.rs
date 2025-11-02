@@ -7,7 +7,7 @@ use nostr_sdk_0_34_0::Kind;
 use crate::{
     //cli::Cli,
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
-    client::{fetching_with_report, get_repo_ref_from_cache, send_events, Client, Connect},
+    client::{fetching_with_report, get_repo_ref_from_cache, send_events, Connect},
     git::{nostr_url::convert_clone_url_to_https, Repo, RepoActions},
     login,
     repo_ref::{
@@ -75,7 +75,7 @@ pub async fn launch(
     // TODO: check for existing maintaiers file
 
     #[cfg(test)]
-    let mut client: &mut crate::client::MockConnect = &mut Default::default();
+    let client: &mut crate::client::MockConnect = &mut Default::default();
     #[cfg(not(test))]
     let mut client = Client::default();
 

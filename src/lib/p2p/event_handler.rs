@@ -1,4 +1,3 @@
-use std::str;
 use libp2p::{gossipsub, kad, mdns, swarm::SwarmEvent};
 use tracing::{debug, info, trace, warn};
 use super::behaviour::BehaviourEvent;

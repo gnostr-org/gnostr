@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use actix_web::App as WebApp;
+    
     use actix_test::start;
     use gnostr_relay::App as GnostrRelayApp;
     use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
@@ -12,7 +12,7 @@ mod tests {
     use anyhow::Result;
     use std::fs;
     use tempfile::NamedTempFile;
-    use gnostr::utils::retry::{GnostrRetry, AsyncReturn};
+    use gnostr::utils::retry::GnostrRetry;
     use tokio::sync::Mutex as TokioMutex;
     use std::sync::Arc;
 

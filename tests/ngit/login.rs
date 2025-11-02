@@ -1,6 +1,5 @@
 use anyhow::Result;
 use git::GitTestRepo;
-use serial_test::serial;
 use test_utils::*;
 
 static EXPECTED_NSEC_PROMPT: &str = "login with nostr address / nsec";
@@ -166,7 +165,7 @@ mod with_relays {
                 }
 
                 mod poorly_quality_metadata_event {
-                    use super::*;
+                    
 
                     #[tokio::test]
                     #[serial]
@@ -863,9 +862,9 @@ mod with_relays {
 /// using the offline flag simplifies the test. relay interaction is
 /// tested seperately
 mod with_offline_flag {
-    use super::*;
+    
     mod when_first_time_login {
-        use super::*;
+        
 
         #[test]
         #[cfg(feature = "expensive_tests")]
@@ -923,7 +922,7 @@ mod with_offline_flag {
         }
 
         mod when_invalid_nsec {
-            use super::*;
+            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -965,7 +964,7 @@ mod with_offline_flag {
     }
 
     mod when_called_with_nsec_parameter_only {
-        use super::*;
+        
 
         #[test]
         #[cfg(feature = "expensive_tests")]
@@ -1003,7 +1002,7 @@ mod with_offline_flag {
         }
 
         mod when_logging_in_as_different_nsec {
-            use super::*;
+            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -1036,7 +1035,7 @@ mod with_offline_flag {
     }
 
     mod when_called_with_nsec_and_password_parameter {
-        use super::*;
+        
 
         #[test]
         #[cfg(feature = "expensive_tests")]
@@ -1077,7 +1076,7 @@ mod with_offline_flag {
         }
 
         mod when_logging_in_as_different_nsec {
-            use super::*;
+            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -1101,7 +1100,7 @@ mod with_offline_flag {
         }
 
         mod when_provided_with_new_password {
-            use super::*;
+            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -1152,7 +1151,7 @@ mod with_offline_flag {
     }
 
     mod when_weak_password {
-        use super::*;
+        
 
         #[test]
         #[cfg(feature = "expensive_tests")]

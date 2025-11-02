@@ -3,7 +3,7 @@ use std::error::Error;
 
 use clap::Parser;
 use futures::stream::StreamExt;
-use libp2p::{gossipsub::IdentTopic, identity, kad, swarm::SwarmEvent, Multiaddr, PeerId};
+use libp2p::{gossipsub::IdentTopic, identity, kad, Multiaddr, PeerId};
 use tokio::{
     io::{self, AsyncBufReadExt},
     select,

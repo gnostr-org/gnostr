@@ -1,7 +1,5 @@
 use anyhow::Result;
-use nostr_sdk_0_34_0::Kind;
-use serial_test::serial;
-use test_utils::{git::GitTestRepo, *};
+use test_utils::*;
 
 fn expect_msgs_first(p: &mut CliTester) -> Result<()> {
     p.expect("searching for profile...\r\n")?;
@@ -50,13 +48,13 @@ fn get_cli_args() -> Vec<&'static str> {
 }
 
 mod when_repo_not_previously_claimed {
-    use super::*;
+    
 
     mod when_repo_relays_specified_as_arguments {
-        use futures::join;
-        use test_utils::relay::Relay;
+        
+        
 
-        use super::*;
+        
 
         #[cfg(feature = "expensive_tests")]
         fn prep_git_repo() -> Result<GitTestRepo> {
@@ -131,7 +129,7 @@ mod when_repo_not_previously_claimed {
 
         mod sent_to_correct_relays {
 
-            use super::*;
+            
 
             #[tokio::test]
             #[serial]
@@ -204,9 +202,9 @@ mod when_repo_not_previously_claimed {
         }
 
         mod yaml_file {
-            use std::{fs, io::Read};
+            
 
-            use super::*;
+            
 
             #[cfg(feature = "expensive_tests")]
             async fn async_run_test() -> Result<()> {
@@ -288,9 +286,9 @@ mod when_repo_not_previously_claimed {
                 async_run_test().await
             }
             mod updates_existing_with_missing_identifier {
-                use std::io::Write;
+                
 
-                use super::*;
+                
                 #[cfg(feature = "expensive_tests")]
                 async fn async_run_test() -> Result<()> {
                     let git_repo = prep_git_repo()?;
@@ -387,10 +385,10 @@ mod when_repo_not_previously_claimed {
 
         mod git_config_updated {
 
-            use nostr_0_34_1::nips::nip01::Coordinate;
-            use nostr_sdk_0_34_0::ToBech32;
+            
+            
 
-            use super::*;
+            
 
             #[cfg(feature = "expensive_tests")]
             async fn async_run_test() -> Result<()> {
@@ -469,7 +467,7 @@ mod when_repo_not_previously_claimed {
         }
 
         mod tags_as_specified_in_args {
-            use super::*;
+            
 
             #[tokio::test]
             #[serial]
@@ -661,7 +659,7 @@ mod when_repo_not_previously_claimed {
         }
 
         mod cli_ouput {
-            use super::*;
+            
 
             #[tokio::test]
             #[serial]

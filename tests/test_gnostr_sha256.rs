@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
     use assert_cmd::Command;
-    use std::process::Command as StdCommand;
+    
 
     #[test]
     fn test_gnostr_sha256_basic() {

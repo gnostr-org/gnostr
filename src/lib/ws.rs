@@ -330,7 +330,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
+    
     use tokio_tungstenite::MaybeTlsStream;
     use tokio::net::TcpStream;
     use futures_util::StreamExt;

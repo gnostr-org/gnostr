@@ -3,11 +3,10 @@ mod tests {
     use gnostr::{
         get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
         get_relays_offline, get_relays_online, get_relays_paid, get_relays_public,
-        get_weeble_sync, get_wobble_sync, url_to_host_and_uri, Config, Event, EventKind, Id,
-        IdHex, KeySigner, PreEvent, Unixtime, run, search, print_event, Signer,
+        get_weeble_sync, get_wobble_sync, Config,
     };
-    use std::io::{self, Cursor, Write};
-    use std::process;
+    
+    
     use std::sync::Once;
 
     static INIT: Once = Once::new();

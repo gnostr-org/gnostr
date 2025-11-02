@@ -15,7 +15,7 @@ use crate::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
     client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Client, Connect,
+        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect,
     },
     git::{identify_ahead_behind, Repo, RepoActions},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
