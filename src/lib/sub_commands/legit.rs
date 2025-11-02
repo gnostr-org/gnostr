@@ -65,7 +65,8 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                 threads: sub_command_args.threads as u32,
                 target: sub_command_args.prefix.clone().unwrap_or_default(),
                 message: sub_command_args.message.clone().unwrap_or_default(),
-                repo: sub_command_args.repository_path.clone().unwrap_or(".".to_string()),
+                repo: sub_command_args.repo.clone().unwrap_or(sub_command_args.repository_path.clone().unwrap_or(".".to_string())),
+
                 timestamp: OffsetDateTime::now_local().unwrap(),
             };
             command::run_legit_command(opts).await.map_err(|e| Box::new(e) as Box<dyn StdError>)?;
