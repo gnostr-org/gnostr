@@ -56,7 +56,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     // For now, using defaults similar to the original bin.
     debug!("Building gnostr_query config.");
     debug!("Building gnostr_query config.");
-    let config = ConfigBuilder::new()
+    let _config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
         .use_tls(true)

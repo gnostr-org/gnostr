@@ -24,10 +24,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     warn!("args={:?}", args);
 
-    if let Some(ref peer) = args.peer {}
-    if let Some(ref multiaddr) = args.multiaddr {}
-    if let Some(ref network) = args.network {}
-    if let Some(ref secret) = args.secret {}
+    if let Some(ref _peer) = args.peer {}
+    if let Some(ref _multiaddr) = args.multiaddr {}
+    if let Some(ref _network) = args.network {}
+    if let Some(ref _secret) = args.secret {}
 
     if let Some(true) = Some(args.peer.is_some()) {}
     if let Some(true) = Some(args.multiaddr.is_some()) {}
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
     }
 
-    let bootstrap_node: Multiaddr = "/dnsaddr/bootstrap.libp2p.io"
+    let _bootstrap_node: Multiaddr = "/dnsaddr/bootstrap.libp2p.io"
         .parse()
         .expect("Hardcoded bootstrap address should be valid");
     for peer in &IPFS_BOOTNODES {

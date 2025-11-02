@@ -1,18 +1,20 @@
-
 #[cfg(test)]
 mod tests {
 
     use super::super::*; // Import items from the parent module (chat)
     use super::super::msg::USER_NAME;
-    use git2::{Repository, Signature, Time};
+    use git2::{Commit, Signature, Time};
     
-    
+    use std::collections::HashMap;
     use std::path::Path;
     use serde_json::json;
-    use nostr_sdk_0_37_0::SecretKey;
-    //use hex;
+    use nostr_sdk_0_37_0::prelude::*;
+    use nostr_sdk_0_37_0::Keys; // Import Keys directly
+    use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
+    use nostr_sdk_0_37_0::Event; // Import Event
+    use nostr_sdk_0_37_0::Kind; // Import Kind
+    use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
 
-    //const DEFAULT_POW_DIFFICULTY: u8 = 4;
 
     // Helper function to create a dummy git repository for testing
     fn create_dummy_repo(path: &Path) -> Repository {
@@ -20,7 +22,6 @@ mod tests {
         {
             let mut index = repo.index().unwrap();
             let oid = index.write_tree().unwrap();
-            let tree = repo.find_tree(oid).unwrap();
             let signature = Signature::new("Test User", "test@example.com", &Time::new(123456789, 0)).unwrap();
             repo.commit(
                 Some("HEAD"),
@@ -75,16 +76,14 @@ mod tests {
         let commit_hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
         let keys = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
         let expected_private_key_hex = format!("{:0>64}", commit_hash);
-        let secret_key_option: Option<SecretKey> = Some(keys.secret_key().clone());
-        let secret_key = secret_key_option.expect("Secret key should exist");
-        // assert_eq!(secret_key.to_string(), expected_private_key_hex);
+        let secret_key_str = keys.secret_key().wrap().to_string(); // Use wrap() to get SecretKey, then to_string()
+        assert_eq!(secret_key_str, expected_private_key_hex);
 
         let short_commit_hash = "12345";
         let keys_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
         let expected_private_key_hex_short = format!("{:0>64}", short_commit_hash);
-        let secret_key_option_short: Option<SecretKey> = Some(keys_short.secret_key().clone());
-        let secret_key_short = secret_key_option_short.expect("Secret key should exist for short hash");
-        // assert_eq!(secret_key_short.to_string(), expected_private_key_hex_short);
+        let secret_key_str_short = keys_short.secret_key().wrap().to_string();
+        assert_eq!(secret_key_str_short, expected_private_key_hex_short);
     }
 
     #[test]
@@ -112,10 +111,6 @@ line3");
         let lines_single = split_value_by_newline(&value_single_line).unwrap();
         assert_eq!(lines_single, vec!["single line"]);
 
-        //let value_empty_string = json!(r"");
-        //let lines_empty = split_value_by_newline(&value_empty_string).unwrap();
-        //assert_eq!(lines_empty, vec![""]);
-
         let value_not_string = json!(123);
         assert!(split_value_by_newline(&value_not_string).is_none());
     }
@@ -126,8 +121,8 @@ line3");
         assert_eq!(value_to_string(&json!(true)), "true");
         assert_eq!(value_to_string(&json!(123)), "123");
         assert_eq!(value_to_string(&json!("hello")), "hello");
-        assert_eq!(value_to_string(&json!([1, "two", true])), r#"[1, two, true]"#);
-        assert_eq!(value_to_string(&json!({"a": 1, "b": "two"})), r#"{"a": 1, "b": two}"#);
+        assert_eq!(value_to_string(&json!([1, "two", true])), r#"[1, "two", true]"#);
+        assert_eq!(value_to_string(&json!({"a": 1, "b": "two"})), r#"{"a": 1, "b": "two"}"#);
     }
 
     #[test]
@@ -140,7 +135,7 @@ line3");
         let parts_no_sep = split_json_string(&value_no_separator, ",");
         assert_eq!(parts_no_sep, vec!["singleword"]);
 
-        let value_empty_string = json!("");
+        let value_empty_string = json!("") ;
         let parts_empty = split_json_string(&value_empty_string, ",");
         assert_eq!(parts_empty, vec![""]);
 
@@ -166,14 +161,210 @@ line3");
     }
 
     #[test]
-    fn test_msg_display_trait() {
-        let msg_chat = Msg::default().set_content("test chat".to_string(), 0);
-        assert_eq!(format!("{}", msg_chat), format!("{}: test chat", *USER_NAME));
+    fn test_msg_display_trait_basic_kinds() {
+        // Test Chat messages
+        let msg_chat_self = Msg::default().set_content("hello".to_string(), 0);
+        assert_eq!(format!("{}", msg_chat_self), format!("{}: hello", *USER_NAME));
 
+        // To truly test right-aligned, we'd need to mock USER_NAME to be different from the sender.
+        // For now, we assume it's tested implicitly by the logic.
+
+        // Test Join
         let msg_join = Msg::default().set_kind(MsgKind::Join);
         assert_eq!(format!("{}", msg_join), format!("{} joined!", *USER_NAME));
 
-        let msg_system = Msg::default().set_content("system message".to_string(), 0).set_kind(MsgKind::System);
-        assert_eq!(format!("{}", msg_system), "[System] system message");
+        // Test Leave
+        let msg_leave = Msg::default().set_kind(MsgKind::Leave);
+        assert_eq!(format!("{}", msg_leave), format!("{} left!", *USER_NAME));
+
+        // Test System
+        let msg_system = Msg::default().set_content("system info".to_string(), 0).set_kind(MsgKind::System);
+        assert_eq!(format!("{}", msg_system), "[System] system info");
+        
+        // Test Raw
+        let msg_raw = Msg::default().set_content("raw data".to_string(), 0).set_kind(MsgKind::Raw);
+        assert_eq!(format!("{}", msg_raw), "raw data");
+
+        // Test Command
+        let msg_command = Msg::default().set_content("command payload".to_string(), 0).set_kind(MsgKind::Command);
+        assert_eq!(format!("{}", msg_command), format!("[Command] {}:command payload", *USER_NAME));
     }
+    
+    #[test]
+    fn test_msg_display_trait_git_kinds() {
+        let mock_sender = "test_user";
+        
+        // GitCommitId
+        let msg_commit_id = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["commit123".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitId,
+            ..Msg::default()
+        };
+        // The `gen_color_by_hash` will produce a color, but we focus on the string format.
+        // Format is `"{{"commit": "{}"}}"` + content[1]
+        assert_eq!(format!("{}", msg_commit_id), format!("{{\"commit\": \"{}\"}} some value", msg_commit_id.content[0]));
+
+        // GitCommitTree
+        let msg_commit_tree = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["tree456".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitTree,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_tree), format!("{{\"tree\": \"{}\"}} some value", msg_commit_tree.content[0]));
+
+        // GitCommitParent
+        let msg_commit_parent = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["parent789".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitParent,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_parent), format!("{{\"parent\": \"{}\"}} some value", msg_commit_parent.content[0]));
+
+        // GitCommitAuthor
+        let msg_commit_author = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["Author Name Example".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitAuthor,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_author), format!("{{\"Author\": \"{}\"}} some value", msg_commit_author.content[0]));
+        
+        // GitCommitName
+        let msg_commit_name = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["Committer Name Example".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitName,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_name), format!("{{\"name\": \"{}\"}} some value", msg_commit_name.content[0]));
+
+        // GitCommitEmail
+        let msg_commit_email = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["committer@example.com".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitEmail,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_email), format!("{{\"email\": \"{}\"}} some value", msg_commit_email.content[0]));
+
+        // GitCommitTime
+        let msg_commit_time = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["1678886400".to_string(), "some value".to_string()], // Example Unix timestamp
+            kind: MsgKind::GitCommitTime,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_time), format!("{{\"time\": \"{}\"}} some value", msg_commit_time.content[0]));
+
+        // GitCommitHeader
+        let msg_commit_header = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["Subject: Example commit
+".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitHeader,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_header), format!("{{\"header\": \"{}\"}} some value", msg_commit_header.content[0]));
+
+        // GitCommitBody
+        let msg_commit_body = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["This is the body of the commit message.
+
+More details here.".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitBody,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_body), format!("{{\"body\": \"{}\"}} some value", msg_commit_body.content[0]));
+        
+        // GitCommitMessagePart (used for parts of the message)
+        let msg_commit_message_part = Msg {
+            from: mock_sender.to_string(),
+            content: vec!["message part".to_string(), "some value".to_string()],
+            kind: MsgKind::GitCommitMessagePart,
+            ..Msg::default()
+        };
+        assert_eq!(format!("{}", msg_commit_message_part), format!("{{\"msg\": \"{}\"}} some value", msg_commit_message_part.content[0]));
+    }
+    
+    #[test]
+    fn test_create_event_with_custom_tags() {
+        // Use a well-known private key for deterministic testing
+        let sk_hex = "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Example private key
+        let keys = Keys::parse(sk_hex).unwrap();
+        let pubkey = keys.public_key();
+
+        let content = "Test event content";
+        let mut custom_tags = HashMap::new();
+        custom_tags.insert("tag1".to_string(), vec!["value1".to_string()]);
+        custom_tags.insert("tag2".to_string(), vec!["value2a".to_string(), "value2b".to_string()]); // Note: Nostr tags are usually single values per tag name in this context
+
+        // Create event asynchronously
+        let event_result = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            create_event_with_custom_tags(&keys, content, custom_tags).await
+        });
+
+        assert!(event_result.is_ok());
+        let event: Event = event_result.unwrap();
+
+        assert_eq!(event.content, content);
+        assert_eq!(event.pubkey, pubkey);
+        assert_eq!(event.kind, Kind::TextNote); // Default kind used by EventBuilder::new
+        
+        // Check tags. Note: EventBuilder might format tags differently or only take the first value.
+        // We expect tags to be present and have the correct names.
+        // Let's check for the presence of tag names and their values.
+        // The `create_event_with_custom_tags` implementation uses `Tag::parse` and `Tag::custom`.
+        // `Tag::parse` expects a `&[&str]` where first element is tag name, second is value.
+        // `Tag::custom` is similar.
+        // The provided `custom_tags` HashMap has `Vec<String>` for values. The implementation pops the first value.
+        
+        let mut found_tags = HashMap::new();
+        for tag in event.tags.iter() {
+            if let Some(name) = tag.as_str() {
+                 // Collect all values associated with a tag name
+                for value in tag.values() {
+                    found_tags.entry(name.to_string()).or_insert_with(Vec::new).push(value.to_string());
+                }
+            }
+        }
+
+        // Verify tags as per the implementation's handling of HashMap<String, Vec<String>>
+        // The current implementation `Tag::parse([&tag_name, &tag_values[0]]).unwrap()` suggests only the first value is used.
+        assert_eq!(found_tags.get("tag1").map(|v| v[0].clone()), Some("value1".to_string()));
+        assert_eq!(found_tags.get("tag2").map(|v| v[0].clone()), Some("value2a".to_string()));
+        assert_eq!(found_tags.len(), 2); // Ensure no extra tags were added unintentionally
+    }
+
+    #[test]
+    fn test_create_event_defaults() {
+        // Test create_event without custom tags, using default values
+        let sk_hex = "2a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Another example key
+        let keys = Keys::parse(sk_hex).unwrap();
+        let pubkey = keys.public_key();
+        let content = "Default event test";
+        let custom_tags = HashMap::new(); // Empty tags
+
+        let event_result = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            create_event(keys, custom_tags, content).await
+        });
+
+        assert!(event_result.is_ok());
+        // The `create_event` function itself returns Result<()>, it doesn't return the event.
+        // However, `create_event_with_custom_tags` is called internally.
+        // We need to check the side effects or the internal calls if possible.
+        // For now, we assume that if it doesn't error, the internal call was made.
+        // To properly test `create_event`, we might need to refactor it to return the event or use mocking.
+        // As per the current structure, `create_event` doesn't return the Event, so we can only assert it doesn't return an error.
+        // The logs within `create_event` would show if the event was sent, but that's not testable here.
+        // Let's focus on the fact that it executes without error.
+        
+        // If we wanted to test event generation, we'd need `create_event` to return the event.
+        // For now, we only assert that it completes.
+    }
+
+    // Add more tests for different `MsgKind` scenarios if needed
 }
