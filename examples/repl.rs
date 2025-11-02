@@ -1,4 +1,4 @@
-use expectrl::{session::Session, Expect, Regex, process::UnixProcess, PtyStream};
+use expectrl::{session::Session, Expect, Regex, process::unix::{UnixProcess, PtyStream}};
 use std::process::Command;
 
 struct EdSession {
@@ -9,7 +9,7 @@ struct EdSession {
 
 impl EdSession {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut session = Session::spawn(Command::new("/bin/ed").arg("-p").arg("> ").clone())?;
+        let mut session = Session::spawn((Command::new("/bin/ed").arg("-p").arg("> ")).clone())?;
         session.expect("> ")?;
         Ok(EdSession {
             session,
