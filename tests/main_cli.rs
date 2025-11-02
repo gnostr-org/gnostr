@@ -232,7 +232,7 @@ mod tests {
     #[tokio::test]
     async fn test_legit_mine_default_command() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
-        let repo_path = repo.path().to_str().unwrap().to_string();
+        let repo_path = repo.workdir().unwrap().to_str().unwrap().to_string();
 
         // Explicitly create .gnostr directories for the test
         let gnostr_path = PathBuf::from(&repo_path).join(".gnostr");
@@ -266,6 +266,7 @@ mod tests {
         env::set_var("GNOSTR_GITDIR", &repo_path);
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
+        //setup process to capture the ratatui screen
         cmd.arg("tui"); // TUI is the default if no other subcommand is given, but we explicitly call it here
 
         // We expect it to succeed, but the actual TUI interaction is hard to test in a CLI test.
@@ -287,6 +288,7 @@ mod tests {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
 
+        //setup process to capture ratatui screen
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("--gitdir").arg(&repo_path).arg("tui");
 
@@ -294,7 +296,7 @@ mod tests {
 
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
-            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: {:?}", RepoPath::from(repo_path.as_str()))));
+            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: \"{}\"", repo_path)));
 
         Ok(())
     }
