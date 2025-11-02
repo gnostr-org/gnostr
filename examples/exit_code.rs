@@ -1,6 +1,7 @@
 use expectrl::session::Session;
 use std::process::Command;
 use std::io::Read;
+use expectrl::process::Process;
 
 /// The following code emits:
 /// cat exited with code 0, all good!
@@ -14,7 +15,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => println!("cat exited with code >0, or it was killed"),
     }
 
-    let mut p = Session::spawn(Command::new("cat").arg("/this/does/not/exist"))?;
+    let mut cmd2 = Command::new("cat");
+    cmd2.arg("/this/does/not/exist");
+    let mut p = Session::spawn(cmd2)?;
     match p.wait() {
         Ok(Some(0)) => println!("cat succeeded"),
         Ok(Some(c)) => {
