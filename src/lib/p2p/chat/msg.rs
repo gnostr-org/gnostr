@@ -331,13 +331,13 @@ impl Display for Msg {
                 write!(f, "{{\"email\": \"{}\"}} {}", self.content[0], self.content[1])
             }
             MsgKind::GitCommitName => {
-                write!(f, "[GitCommitName] {}:{}", self.from, self.content[0])
+                write!(f, "{{\"name\": \"{}\"}} {}", self.content[0], self.content[1])
             }
             MsgKind::GitCommitBody => {
-                write!(f, "[GitCommitBody] {}:{}", self.from, self.content[0])
+                write!(f, "{{\"body\": \"{}\"}} {}", self.content[0], self.content[1])
             }
             MsgKind::GitCommitMessagePart => {
-                write!(f, "[GitCommitBody] {}:{}", self.from, self.content[0])
+                write!(f, "{{\"msg\": \"{}\"}} {}", self.content[0], self.content[1])
             }
             MsgKind::GitCommitTime => {
                 write!(f, "[GitCommitTime] {}:{}", self.from, self.content[0])
