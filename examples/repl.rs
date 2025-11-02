@@ -9,7 +9,7 @@ struct EdSession {
 
 impl EdSession {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut session = Session::spawn((Command::new("/bin/ed").arg("-p").arg("> ")).clone())?;
+        let mut session = Session::spawn((Command::new("/bin/ed").arg("-p").arg("> ")))?;
         session.expect("> ")?;
         Ok(EdSession {
             session,
