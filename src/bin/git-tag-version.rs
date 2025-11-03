@@ -27,7 +27,7 @@ fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Resu
         if wobble.is_empty() { "0" } else { &wobble },
     );
 
-    if args.len() > 0 {
+    if !args.is_empty() {
         tag_name = format!("{}-{}", tag_name, args[0]);
     }
 
