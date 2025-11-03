@@ -100,16 +100,10 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         opts.message = [message.to_string()].to_vec();
     }
 
-    let mut miner = match Gitminer::new(opts.clone()) {
-        Ok(m)  => m,
-        Err(e) => { panic!("Failed to start git miner: {}", e); }
-    };
+    let mut miner = Gitminer::new(opts.clone()).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to start git miner: {}", e)))?;
     debug!("Gitminer options: {:?}", opts);
 
-    let hash = match miner.mine() {
-        Ok(s)  => s,
-        Err(e) => { panic!("Failed to generate commit: {}", e); }
-    };
+    let hash = miner.mine().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to generate commit: {}", e)))?;
 
     // Initiate gnostr_legit_event after GitMiner has finished.
     // gnostr_legit_event itself spawns tasks on the global runtime.
@@ -152,7 +146,7 @@ pub async fn create_event_with_custom_tags(
     keys: &Keys,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> Result<Event> {
+) -> Result<(Event, UnsignedEvent)> {
     let mut builder = EventBuilder::new(Kind::TextNote, content);
 
     for (tag_name, tag_values) in custom_tags {
@@ -164,9 +158,47 @@ pub async fn create_event_with_custom_tags(
     }
 
     let unsigned_event = builder.build(keys.public_key()); // Build the unsigned event
-    let signed_event = unsigned_event.sign(keys); // Sign the event
+    let signed_event = unsigned_event.clone().sign(keys); // Sign the event
+    Ok((signed_event.await?, unsigned_event))
+}
+
+pub async fn create_unsigned_event(
+    keys: &Keys,
+    content: &str,
+    custom_tags: HashMap<String, Vec<String>>,
+) -> Result<UnsignedEvent> {
+    let mut builder = EventBuilder::new(Kind::TextNote, content);
+
+    for (tag_name, tag_values) in custom_tags {
+        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
+        builder = builder.tag(tag);
+    }
+
+    let unsigned_event = builder.build(keys.public_key());
+    Ok(unsigned_event)
+}
+
+// GEMINI implement nip-34 kinds
+
+
+pub async fn create_kind_event(
+    keys: &Keys,
+    kind: u16,
+    content: &str,
+    custom_tags: HashMap<String, Vec<String>>,
+) -> Result<Event> {
+    let mut builder = EventBuilder::new(Kind::Custom(kind), content);
+
+    for (tag_name, tag_values) in custom_tags {
+        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
+        builder = builder.tag(tag);
+    }
+
+    let unsigned_event = builder.build(keys.public_key());
+    let signed_event = unsigned_event.sign(keys);
     Ok(signed_event.await?)
 }
+
 
 pub async fn create_event(
     keys: Keys,
@@ -175,7 +207,7 @@ pub async fn create_event(
 ) -> Result<()> {
     //let content = "Hello, Nostr with custom tags!";
 
-    let signed_event = create_event_with_custom_tags(&keys, content, custom_tags).await?;
+    let (signed_event, _unsigned_event) = create_event_with_custom_tags(&keys, content, custom_tags).await?;
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
     let opts = Options::new().gossip(true);
