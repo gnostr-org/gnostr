@@ -54,7 +54,7 @@ impl SystemCommand {
         }
     }
 
-    fn execute_and_get_stderr(&self) -> Result<String, Error> {
+    fn _execute_and_get_stderr(&self) -> Result<String, Error> {
         let output = self.execute()?;
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stderr).trim().to_string())
@@ -70,7 +70,7 @@ impl SystemCommand {
         }
     }
 
-    fn execute_and_check_status(&self) -> Result<bool, Error> {
+    fn _execute_and_check_status(&self) -> Result<bool, Error> {
         let output = self.execute()?;
         Ok(output.status.success())
     }
