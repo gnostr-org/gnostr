@@ -24,7 +24,7 @@ use std::{error::Error, time::Duration};
 use tokio::{io as TokioIo, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
 //use tracing::debug;
-use tracing::{debug, info};
+use tracing::{debug, info, error};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
@@ -157,7 +157,7 @@ pub async fn create_event_with_custom_tags(
         builder = builder.tag(tag);
     }
 
-    let unsigned_event = builder.build(keys.public_key()); // Build the unsigned event
+    let unsigned_event = builder.build(keys.public_key().clone()); // Build the unsigned event
     let signed_event = unsigned_event.clone().sign(keys); // Sign the event
     Ok((signed_event.await?, unsigned_event))
 }
@@ -442,6 +442,8 @@ pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
 
     //read top commit
     let commit = obj.peel_to_commit()?;
+    let serialized_commit = serialize_commit(&commit)?;
+    debug!("Serialized commit:\n{}", serialized_commit.clone());
     let commit_id = commit.id().to_string();
     //some info wrangling
     debug!("commit_id:\n{}", commit_id);
@@ -454,6 +456,7 @@ pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
 
     //parse keys from sha256 hash
     let padded_keys = Keys::parse(padded_commit_id).unwrap();
+    let serialized_commit_for_kind_event = serialized_commit.clone();
 
     //create a HashMap of custom_tags
     //used to insert commit tags
@@ -467,9 +470,13 @@ pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
 
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event =
-            create_event(padded_keys.clone(), custom_tags, &"gnostr-legit:event").await;
-        info!("signed_event:\n{:?}", signed_event);
+        if let Err(e) = create_event(padded_keys.clone(), custom_tags, &"gnostr-legit:event").await {
+            error!("Failed to create event: {}", e);
+        }
+
+        if let Err(e) = create_kind_event(&padded_keys, 1_u16, &serialized_commit_for_kind_event, HashMap::new()).await {
+            error!("Failed to create kind event: {}", e);
+        }
     });
 
     //TODO config metadata
