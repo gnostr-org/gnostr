@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 extern crate chrono;
 
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::{anyhow};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
 use crate::queue::InternalEvent;
@@ -158,15 +158,15 @@ pub async fn create_event_with_custom_tags(
     }
 
     let unsigned_event = builder.build(keys.public_key().clone()); // Build the unsigned event
-    let signed_event = unsigned_event.clone().sign(keys); // Sign the event
-    Ok((signed_event.await?, unsigned_event))
+    let signed_event = unsigned_event.clone().sign(keys).await.map_err(|e| anyhow!("Failed to sign event: {}", e))?;
+    Ok((signed_event, unsigned_event))
 }
 
 pub async fn create_unsigned_event(
     keys: &Keys,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> Result<UnsignedEvent> {
+) -> anyhow::Result<UnsignedEvent> {
     let mut builder = EventBuilder::new(Kind::TextNote, content);
 
     for (tag_name, tag_values) in custom_tags {
@@ -183,7 +183,7 @@ pub async fn create_kind_event(
     kind: u16,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> Result<Event> {
+) -> anyhow::Result<Event> {
     let mut builder = EventBuilder::new(Kind::Custom(kind), content);
 
     for (tag_name, tag_values) in custom_tags {
@@ -193,7 +193,7 @@ pub async fn create_kind_event(
 
     let unsigned_event = builder.build(keys.public_key());
     let signed_event = unsigned_event.sign(keys);
-    Ok(signed_event.await?)
+    Ok((signed_event.await?, unsigned_event))
 }
 
 
@@ -475,7 +475,7 @@ pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
         }
 
         if let Err(e) = create_kind_event(&padded_keys, 1_u16, &serialized_commit_for_kind_event, HashMap::new()).await {
-            error!("Failed to create kind event: {}", e);
+            error!("Failed to create kind event: {:?}", e);
         }
     });
 
