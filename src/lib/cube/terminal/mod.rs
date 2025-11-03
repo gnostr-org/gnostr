@@ -17,7 +17,7 @@ pub async fn ui_driver(config: CompleteConfig) {
         original_hook(panic);
     }));
 
-    let events = Events::with_config(Config {
+    let _events = Events::with_config(Config {
         exit_key: Key::Null,
         tick_rate: Duration::from_millis(config.terminal.tick_delay),
     })
