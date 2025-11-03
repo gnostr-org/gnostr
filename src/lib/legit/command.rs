@@ -178,9 +178,6 @@ pub async fn create_unsigned_event(
     Ok(unsigned_event)
 }
 
-// GEMINI implement nip-34 kinds
-
-
 pub async fn create_kind_event(
     keys: &Keys,
     kind: u16,
