@@ -75,8 +75,8 @@ async fn main() -> anyhow::Result<()> {
     trace!("{:?}", app_cache);
 
     // These if statements don't return anything, which is fine as long as the match statement returns Result.
-    if gnostr_cli_args.workdir.is_some() {}
-    if gnostr_cli_args.directory.is_some() {}
+    // if gnostr_cli_args.workdir.is_some() {};
+    // if gnostr_cli_args.directory.is_some() {};
     if gnostr_cli_args.hash.is_some() {
         //not none
         if let Some(input_string) = gnostr_cli_args.hash {
@@ -304,7 +304,7 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("main:318:sub_command_args:{:?}", sub_command_args.clone());
             let mut sub_command_args_mut = sub_command_args.clone();
-            let mut result: anyhow::Result<()> = Ok(()); // Initialize result to Ok
+            let result: anyhow::Result<()>;// = Ok(()); // Initialize result to Ok
 
             // Check if GNOSTR_GITDIR environment variable is set
             if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
@@ -312,7 +312,7 @@ async fn main() -> anyhow::Result<()> {
                 // Check if --gitdir argument was provided (from command line args)
                 if let Some(git_dir_value) = gitdir_value { // Assuming gitdir_value is from command line args parsing
                     eprintln!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
-                    let gitdir_string = format!("{}", gitdir_env_value);
+                    let gitdir_string = gitdir_env_value.to_string();
                     debug!("342:OVERRIDE!! The git directory is: {:?}", gitdir_string.clone());
                     sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
                     // Call tui and map error, then assign to result
