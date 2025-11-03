@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 extern crate chrono;
 
-use anyhow::{anyhow};
+use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
 use crate::queue::InternalEvent;
@@ -183,7 +183,7 @@ pub async fn create_kind_event(
     kind: u16,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> anyhow::Result<Event> {
+) -> anyhow::Result<(Event, UnsignedEvent)> {
     let mut builder = EventBuilder::new(Kind::Custom(kind), content);
 
     for (tag_name, tag_values) in custom_tags {
@@ -192,7 +192,7 @@ pub async fn create_kind_event(
     }
 
     let unsigned_event = builder.build(keys.public_key());
-    let signed_event = unsigned_event.sign(keys);
+    let signed_event = unsigned_event.clone().sign(keys);
     Ok((signed_event.await?, unsigned_event))
 }
 
