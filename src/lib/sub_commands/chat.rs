@@ -83,7 +83,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn StdEr
         }
     }
 
-    let chat = crate::p2p::chat::chat(sub_command_args);
+    let _chat = crate::p2p::chat::chat(sub_command_args);
 
     //    //parse keys from sha256 hash
     //    let empty_hash_keys =

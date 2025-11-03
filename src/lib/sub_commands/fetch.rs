@@ -24,7 +24,7 @@ pub async fn launch(
 ) -> Result<()> {
     let _ = args;
     let git_repo = Repo::discover().context("cannot find a git repository")?;
-    let client = Client::default();
+    let _client = Client::default();
 
     #[cfg(test)]
     let client: &crate::client::MockConnect = &mut Default::default();

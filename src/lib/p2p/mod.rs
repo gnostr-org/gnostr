@@ -126,7 +126,7 @@ pub async fn evt_loop(
     };
     let _kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
 	let _kad_config = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
-    let message_id_fn = |message: &gossipsub::Message| {
+    let _message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
         message.data.hash(&mut s);
         info!("message:\n{0:?}", message);

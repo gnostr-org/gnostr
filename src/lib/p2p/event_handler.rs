@@ -53,7 +53,7 @@ pub async fn handle_swarm_event(swarm: &mut libp2p::Swarm<super::behaviour::Beha
             match event {
                 gossipsub::Event::Message {
                     propagation_source,
-                    message_id,
+                    message_id: _,
                     message,
                 } => {
                     let topic_str = message.topic.to_string();

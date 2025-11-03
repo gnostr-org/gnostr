@@ -58,7 +58,7 @@ mod tests {
         Command::new("git").arg("add").arg(".").current_dir(_repo_path).output().unwrap();
         Command::new("git").arg("commit").arg("-m").arg("Initial commit").current_dir(_repo_path).output().unwrap();
         fs::write(_repo_path.join("file.txt"), "second content").unwrap();
-        Command::new("git").arg("add").arg(".").current_dir(repo_path).output().unwrap();
+        Command::new("git").arg("add").arg(".").current_dir(_repo_path).output().unwrap();
         Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(_repo_path).output().unwrap();
         dir
     }
@@ -67,7 +67,7 @@ mod tests {
     #[ignore]
     fn test_git_tag_version_no_arg() -> Result<()> {
         let dir = setup_test_repo();
-        let repo_path = dir.path();
+        let _repo_path = dir.path();
 
         let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
         let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
@@ -91,14 +91,14 @@ mod tests {
     #[ignore]
     fn test_git_tag_version_with_arg() -> Result<()> {
         let dir = setup_test_repo();
-        let repo_path = dir.path();
+        let _repo_path = dir.path();
 
         let weeble = gnostr::weeble::weeble().unwrap().to_string();
         let blockheight = gnostr::blockheight::blockheight().unwrap().to_string();
         let wobble = gnostr::wobble::wobble().unwrap().to_string();
 
         let suffix = "test_suffix";
-        std::env::set_current_dir(repo_path)?;
+        std::env::set_current_dir(_repo_path)?;
 
         let expected_tag_name = format!("{}.{}.{}-{}", weeble, blockheight, wobble, suffix);
         println!("expected_tag_name={}", expected_tag_name);
