@@ -62,7 +62,7 @@ async fn main() -> io::Result<()> {
     let opts = gitminer::Options {
         threads: count.try_into().unwrap(),
         target: args.prefix,
-        message: message,
+        message,
         repo: path.as_path().display().to_string(),
         timestamp: SystemTime::now().into(),
     };

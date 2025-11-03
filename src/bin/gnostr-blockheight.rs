@@ -137,6 +137,9 @@ use futures::executor::block_on;
 /// let blockheight = gnostr::get_blockheight_sync();
 ///
 /// print!("{}",blockheight.unwrap());
+
+use log::debug;
+
 async fn print_blockheight() {
     #[cfg(debug_assertions)]
     let start = std::time::SystemTime::now()
@@ -149,7 +152,7 @@ async fn print_blockheight() {
     #[cfg(debug_assertions)]
     let start_millis = seconds * 1000 + start_subsec_millis;
     #[cfg(debug_assertions)]
-    println!("start_millis: {}", start_millis);
+    debug!("start_millis: {}", start_millis);
 
     let blockheight = gnostr::get_blockheight_sync();
     print!("{}", blockheight.unwrap());
@@ -165,9 +168,9 @@ async fn print_blockheight() {
     #[cfg(debug_assertions)]
     let stop_millis = seconds * 1000 + stop_subsec_millis;
     #[cfg(debug_assertions)]
-    println!("\nstop_millis: {}", stop_millis);
+    debug!("\nstop_millis: {}", stop_millis);
     #[cfg(debug_assertions)]
-    println!("\ndelta_millis: {}", stop_millis - start_millis);
+    debug!("\ndelta_millis: {}", stop_millis - start_millis);
 }
 
 /// fn main()
