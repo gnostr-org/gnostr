@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if let Some(true) = Some(args.network.is_some()) {}
     if let Some(true) = Some(args.secret.is_some()) {}
 
-    let keypair: identity::Keypair = generate_ed25519(args.secret.clone());
+    let keypair: identity::Keypair = generate_ed25519(args.secret);
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);

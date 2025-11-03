@@ -67,7 +67,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 println!("global_rt async task! {}", &args.clone());
             })
             .await;
-        println!("global_rt_result={:?}!", global_rt_result);
+        println!("global_rt_result={global_rt_result:?}!");
     }
 
     let cmd = Command::new("gnostr-chat")
@@ -113,7 +113,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if let Some(c) = matches.get_one::<bool>("tui") {
         if matches.get_flag("tui") {
             println!("Value for --tui: {c}");
-            assert_eq!(matches.get_flag("tui"), true);
+            assert!(matches.get_flag("tui"));
         }
     }
     if let Some(c) = matches.get_one::<bool>("chat") {
@@ -127,12 +127,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .await;
             println!("global_rt_result={:?}", global_rt_result?);
             println!("Value for --chat: {c}");
-            assert_eq!(matches.get_flag("tui"), true);
+            assert!(matches.get_flag("tui"));
         }
     }
     color_eyre::install().unwrap();
 
-    let config = CompleteConfig::new()
+    let _config = CompleteConfig::new()
         .wrap_err("Configuration error.")
         .unwrap();
 
@@ -156,7 +156,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     terminal.show_cursor()?;
 
     if let Err(err) = res {
-        eprintln!("{:?}", err)
+        eprintln!("{err:?}");
     }
 
     Ok(())

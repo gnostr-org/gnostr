@@ -182,10 +182,10 @@ fn macos() {
                 }
             }
 
-            let _set_result = alt_ctx
+            alt_ctx
                 .set_contents(format!(
                     "formatted! {}",
-                    clipboard_input_1.clone().to_string()
+                    clipboard_input_1.clone()
                 ))
                 .expect("set_result failed!");
 
