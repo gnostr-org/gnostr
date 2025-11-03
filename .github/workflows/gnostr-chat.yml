@@ -137,26 +137,32 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://nostr.band/$NOTE
       - run: |
-          gnostr chat --name github-ci-node1 --topic gnostr-chat & \
-            sleep 60 || true & \
-          gnostr chat --name github-ci-node2 --topic gnostr-chat & \
-            sleep 60 || true & \
-          gnostr chat --name github-ci-node3 --topic gnostr-chat & \
-            sleep 60 || true & \
-          gnostr chat --name github-ci-node4 --topic gnostr-chat & \
-            sleep 60 || true & \
-          gnostr chat --name github-ci-node5 --topic gnostr-chat & \
-            sleep 60 || true &
-      - run: |
-          gnostr chat --name github-ci-node1 & sleep 60 || true & \
-          gnostr chat --name github-ci-node2 & sleep 60 || true
-      - run: |
-          make gnostr-chat & sleep 60 && pkill -f make  || true
-      - run: |
-          gnostr chat --name github-ci-node3 & sleep 60 || true & \
-          gnostr chat --name github-ci-node4 & sleep 60 || true
-      - run: |
-          make gnostr-chat & sleep 60 && pkill -f make && pkill -f gnostr || true
+          gnostr chat --name listener --topic gnostr-test-topic > listener_output.log 2>&1 &
+          LISTENER_PID=$!
+          echo "Listener PID: $LISTENER_PID"
+          sleep 5 # Give listener time to start
+
+          MESSAGE="Hello from github-ci-sender at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --message "$MESSAGE"
+
+          sleep 5 # Give message time to propagate
+
+          echo "Checking listener output..."
+          cat listener_output.log
+          grep -q "$MESSAGE" listener_output.log
+          if [ $? -eq 0 ]; then
+            echo "Test passed: Message received by listener."
+          else
+            echo "Test failed: Message not found in listener output."
+            exit 1
+          fi
+          kill $LISTENER_PID || true # Clean up listener process
+
+
+
+
+
+
 
   tui:
     name: TUI Test
