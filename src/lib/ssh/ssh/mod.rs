@@ -73,8 +73,8 @@ impl server::Server for Server {
             state: self.state.clone(),
             user: None,
             username: None,
-            welcome_message: None,
-            extra: None,
+            _welcome_message: None,
+            _extra: None,
         }
     }
 }
@@ -84,8 +84,8 @@ struct Handler {
     state: Arc<Mutex<State>>,
     user: Option<ServerUser>,
     username: Option<String>,
-    welcome_message: Option<Table>,
-    extra: Option<Table>,
+    _welcome_message: Option<Table>,
+    _extra: Option<Table>,
 }
 
 impl Handler {
