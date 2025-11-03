@@ -23,7 +23,8 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [/*macos-latest, ubuntu-latest, */windows-latest]
+        #os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [windows-latest]
         rustup: [stable, nightly]
       fail-fast: true
     runs-on: ${{ matrix.os }}
