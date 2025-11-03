@@ -60,7 +60,7 @@ mod tests {
         Command::new("git").arg("commit").arg("-m").arg("Initial commit").current_dir(repo_path).output().unwrap();
         fs::write(repo_path.join("file.txt"), "second content").unwrap();
         Command::new("git").arg("add").arg(".").current_dir(repo_path).output().unwrap();
-        Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(repo_path).output().unwrap();
+        Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(_repo_path).output().unwrap();
         dir
     }
 
