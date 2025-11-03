@@ -14,7 +14,7 @@ linker = "aarch64-elf-gcc"
 
 [target.'cfg(target_os = "windows")']
 rustflags = [
-    "-C", "link-arg=/STACK:4000000", "-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native"
+    "-C", "link-arg=/STACK:4000000", "-Adead_code", "-Aunused_variable", "-Awarnings", "-Ctarget-cpu=native"
 ]
 
 # Settings for Unix-like systems (Linux, macOS) would go here:
