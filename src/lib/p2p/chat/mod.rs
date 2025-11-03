@@ -12,7 +12,7 @@ use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 //use sha2::Digest;
 //use tokio::time::Duration;
-use std::borrow::Cow;
+
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::{error::Error, time::Duration};
