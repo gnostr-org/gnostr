@@ -132,7 +132,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
     color_eyre::install().unwrap();
 
-    let config = CompleteConfig::new()
+    let _config = CompleteConfig::new()
         .wrap_err("Configuration error.")
         .unwrap();
 
