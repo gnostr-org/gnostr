@@ -1,25 +1,25 @@
 use futures::stream::StreamExt;
 use libp2p::{
     gossipsub,
-    identify, identity,
-    kad::{self, store::{MemoryStore, MemoryStoreConfig}, Config as KadConfig},
-    mdns, noise, ping, rendezvous,
-    request_response::{self, ProtocolSupport, ResponseChannel},
+    identify,
+    kad::{self, store::{self}, Config as KadConfig},
+    mdns, noise, ping,
+    request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, PeerId, StreamProtocol,
+    tcp, yamux, StreamProtocol,
 };
 use std::error::Error;
 use std::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 use ureq::Agent;
 
-use crate::p2p::chat::msg::{Msg, MsgKind};
-use crate::p2p::chat::ChatSubCommands;
+
+
 use crate::p2p::kvs::{FileRequest, FileResponse};
-use crate::p2p::network_config::IPFS_PROTO_NAME;
-use crate::queue::InternalEvent;
+
+
 
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {
@@ -81,7 +81,7 @@ pub async fn evt_loop(
             // and use it as an ID.
             // This is used to deduplicate messages.
             //
-            let message_id_fn = |message: &gossipsub::Message| {
+            let _message_id_fn = |message: &gossipsub::Message| {
                 use std::hash::DefaultHasher;
                 use std::hash::Hash;
                 use std::hash::Hasher;

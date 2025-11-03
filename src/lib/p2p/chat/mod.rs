@@ -12,7 +12,7 @@ use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 //use sha2::Digest;
 //use tokio::time::Duration;
-use std::borrow::Cow;
+
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::{error::Error, time::Duration};
@@ -83,106 +83,7 @@ pub async fn create_event(
     let signed_event = create_event_with_custom_tags(&keys, content, custom_tags).await?;
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
-    let opts = Options::new().gossip(true);
-    let client = Client::builder().signer(keys.clone()).opts(opts).build();
-    for relay in BOOTSTRAP_RELAYS.to_vec() {
-        debug!("{}", relay);
-        client.add_discovery_relay(relay).await.expect("");
-    }
 
-    // Connect to the relays.
-    client.connect().await;
-
-    // client.send_event - signed_event
-    client.send_event(signed_event.clone()).await?;
-
-    info!("{}", serde_json::to_string_pretty(&signed_event)?);
-    info!("signed_event sent:\n{:?}", signed_event);
-
-    // Publish a text note
-    let pubkey = keys.public_key();
-
-    info!("pubkey={}", keys.public_key());
-    let builder = EventBuilder::text_note(format!("Hello Worlds {}", pubkey))
-        .tag(Tag::public_key(pubkey))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11 22 33 44".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11 22 33".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11 22".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "".chars(),
-        ));
-
-    //send from send_event_builder
-    let output = client.send_event_builder(builder).await?;
-    info!("Event ID: {}", output.to_bech32()?);
-
-    info!("Sent to:");
-    for url in output.success.into_iter() {
-        info!("- {url}");
-    }
-
-    info!("Not sent to:");
-    for (url, reason) in output.failed.into_iter() {
-        info!("- {url}: {reason:?}");
-    }
-
-    // Get events
-    let filter_one = Filter::new().author(pubkey).kind(Kind::TextNote).limit(10);
-    let events = client
-        .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
-        .await?;
-
-    for event in events.into_iter() {
-        info!("{}", event.as_json());
-    }
-
-    // another filter
-    let test_author_pubkey =
-        PublicKey::parse("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet")?;
-
-    info!("test_author_pubkey={}", test_author_pubkey);
-
-    let filter_test_author = Filter::new()
-        .author(test_author_pubkey)
-        .kind(Kind::TextNote)
-        .limit(10);
-    let events = client
-        .fetch_events(vec![filter_test_author], Some(Duration::from_secs(10)))
-        .await?;
-
-    for event in events.into_iter() {
-        info!("test_author:\n\n{}", event.as_json());
-    }
 
     Ok(())
 }
@@ -263,13 +164,22 @@ pub fn value_to_string(value: &Value) -> String {
         Value::Number(n) => n.to_string(),
         Value::String(s) => s.clone(),
         Value::Array(arr) => {
-            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
+            let elements: Vec<String> = arr
+                .iter()
+                .map(|v| match v {
+                    Value::String(s) => format!("\"{}\"", s),
+                    _ => value_to_string(v),
+                })
+                .collect();
             format!("[{}]", elements.join(", "))
         }
         Value::Object(obj) => {
             let pairs: Vec<String> = obj
                 .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
+                .map(|(k, v)| match v {
+                    Value::String(s) => format!("\"{}\": \"{}\"", k, s),
+                    _ => format!("\"{}\": {}", k, value_to_string(v)),
+                })
                 .collect();
             format!("{{{}}}", pairs.join(", "))
         }
