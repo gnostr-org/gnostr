@@ -11,7 +11,18 @@
 # .cargo/config.toml
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-elf-gcc"
+
+[target.'cfg(target_os = "windows")']
+rustflags = [
+    "-C", "link-arg=/STACK:4000000", "-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native"
+]
+
+# Settings for Unix-like systems (Linux, macOS) would go here:
+[target.'cfg(any(target_os = "linux", target_os = "macos"))']
+rustflags = [
+    "-Adead_code", "-Awarnings", "-Ctarget-cpu=native"
+]
+
 [build]
-rustc-wrapper = "sccache"
-#rustflags = ["-Clink-arg=-fuse-ld=lld", "-Ctarget-cpu=native"]
-rustflags = ["-Ctarget-cpu=native"]
+#rustc-wrapper = "sccache"
+rustflags = ["-Adead_code", "-Awarnings", "-Ctarget-cpu=native"]
