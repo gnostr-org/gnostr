@@ -318,6 +318,7 @@ incremental = false
 panic = "abort"
 
 [profile.dev]
+panic = "abort"
 debug = 0
 
 [profile.release]
