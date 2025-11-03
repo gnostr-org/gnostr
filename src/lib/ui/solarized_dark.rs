@@ -25,7 +25,7 @@ impl SolarizedDark {
     pub const GREEN: Color = Color::Rgb(133, 153, 0);
 }
 
-fn test_solarized_dark() -> Paragraph<'static> {
+fn _test_solarized_dark() -> Paragraph<'static> {
     let my_paragraph = Paragraph::new("Hello, Solarized World!").style(
         Style::default()
             .fg(SolarizedDark::BASE2)
