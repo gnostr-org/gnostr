@@ -51,8 +51,8 @@ mod tests {
     // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {
         let dir = tempdir().unwrap();
-        let repo_path = dir.path();
-        Command::new("git").arg("init").current_dir(repo_path).output().unwrap();
+        let _repo_path = dir.path();
+        Command::new("git").arg("init").current_dir(_repo_path).output().unwrap();
         Command::new("git").arg("config").arg("user.email").arg("test@example.com").current_dir(repo_path).output().unwrap();
         Command::new("git").arg("config").arg("user.name").arg("Test User").current_dir(repo_path).output().unwrap();
         fs::write(repo_path.join("file.txt"), "initial content").unwrap();
