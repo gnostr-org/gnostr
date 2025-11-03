@@ -366,7 +366,7 @@ fn main() -> io::Result<()> {
 
     let mut users = HashMap::new();
 
-    println!("{}", gnostr_gnit_pubkey.clone().to_string());
+    println!("{}", gnostr_gnit_pubkey.clone());
     users.insert(
         "gnostr".to_string(),
         User {
