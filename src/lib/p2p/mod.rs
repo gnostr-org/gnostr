@@ -10,6 +10,7 @@ pub mod git_publisher;
 pub mod swarm_builder;
 pub mod args;
 pub mod event_handler;
+//TODO pub mod lookup;
 
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
