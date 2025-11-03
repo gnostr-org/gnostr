@@ -269,9 +269,7 @@ impl Gitminer {
         for i in 0..statuses.len() {
             let status_entry = statuses.get(i).unwrap();
             if status_entry.status().intersects(m) {
-                warn!("Please stash all unstaged changes before running.");
-                //return Err("Please stash all unstaged changes before running.");
-                process::exit(1)
+                return Err("Please stash all unstaged changes before running.");
             }
         }
 
