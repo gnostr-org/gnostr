@@ -57,6 +57,7 @@ fn test_gitminer_new_ok() {
         message: ["Test commit".to_string()].to_vec(),
         repo: repo.path().to_str().unwrap().to_string(),
         timestamp: OffsetDateTime::now_utc(),
+        kind: None, // Added to fix compilation error E0063
     };
 
     let miner_result = Gitminer::new(opts);
@@ -78,6 +79,7 @@ fn test_gitminer_new_fail_no_repo() {
         message: ["Test commit".to_string()].to_vec(),
         repo: repo_path.to_str().unwrap().to_string(),
         timestamp: OffsetDateTime::now_utc(),
+        kind: None, // Added to fix compilation error E0063
     };
 
     let miner_result = Gitminer::new(opts);
@@ -100,6 +102,7 @@ fn test_mine_commit_success() {
         message: ["Mined commit".to_string()].to_vec(),
         repo: repo_path_str.clone(),
         timestamp: OffsetDateTime::now_utc(),
+        kind: None, // Added to fix compilation error E0063
     };
 
     println!("Initializing Gitminer with options: {:?}", opts);
