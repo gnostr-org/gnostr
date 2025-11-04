@@ -80,15 +80,15 @@ pub(crate) fn signature_allow_undefined_name(
 /// pub struct SerializableCommit
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SerializableCommit {
-    id: String,
-    tree: String,
-    parents: Vec<String>,
-    author_name: String,
-    author_email: String,
-    committer_name: String,
-    committer_email: String,
-    message: String,
-    time: i64,
+    pub id: String,
+    pub tree: String,
+    pub parents: Vec<String>,
+    pub author_name: String,
+    pub author_email: String,
+    pub committer_name: String,
+    pub committer_email: String,
+    pub message: String,
+    pub time: i64,
 }
 ///
 pub fn serialize_commit(commit: &Commit) -> Result<String> {
