@@ -1,7 +1,7 @@
 pub mod pwd;
 pub mod retry;
 
-use log::{debug, error};
+use log::{debug, error, info};
 use nostr_sdk_0_32_0::prelude::*;
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
@@ -276,6 +276,13 @@ pub async fn async_find_available_port() -> u16 {
           .local_addr()
           .unwrap()
           .port()
+}
+
+pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
+    let padded_commit_id = format!("{:0>64}", commit_id);
+    info!("padded_commit_id:{:?}", padded_commit_id);
+    let keys = Keys::parse(&padded_commit_id);
+    Ok(keys.unwrap())
 }
 
 // Example usage (you would typically put this in a main function or a test)
