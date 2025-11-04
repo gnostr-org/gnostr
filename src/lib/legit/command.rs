@@ -1,14 +1,4 @@
-#![allow(unused)]
-#![allow(dead_code)]
 extern crate chrono;
-
-//extern crate asyncgit;
-use gnostr_asyncgit::sync::commit::SerializableCommit;
-use gnostr_asyncgit::sync::commit::deserialize_commit;
-use gnostr_asyncgit::sync::commit::serialize_commit;
-
-use crate::utils::parse_json;
-use crate::utils::split_json_string;
 
 use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
@@ -35,6 +25,9 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info, error};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+
+use gnostr_asyncgit::sync::commit::{SerializableCommit, serialize_commit, deserialize_commit};
+use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
 
 use std::process::Command;
 use chrono::offset::Utc;
