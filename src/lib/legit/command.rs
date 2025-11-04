@@ -79,6 +79,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         .unwrap();
     }
 
+    // GEMINI we need to handle --kind flag from ../sub_commands/legit.rs 
     if opts.message.is_empty() {
         let output =
             if cfg!(target_os = "windows") {
@@ -108,7 +109,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     // Initiate gnostr_legit_event after GitMiner has finished.
     // gnostr_legit_event itself spawns tasks on the global runtime.
     // We don't need to block_on it here, as it manages its own runtime tasks.
-    match gnostr_legit_event().await {
+    match gnostr_legit_event(opts.kind).await {
         Ok(_) => {
             info!("gnostr_legit_event initiated successfully.");
             Ok(())
@@ -121,6 +122,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     }
 }
 
+// GEMINI review ../../asyncgit we want to migrate this to ../../asyncgit 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SerializableCommit {
     id: String,
@@ -134,6 +136,7 @@ pub struct SerializableCommit {
     time: i64,
 }
 
+// GEMINI review ../utils we want to migrate this to the utils modules
 pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
     let mut hex_string = String::new();
     for byte in byte_array {
@@ -223,11 +226,14 @@ pub async fn create_event(
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
     info!("signed_event sent:\n{:?}", signed_event);
 
+
+    //
+
     // Publish a text note
     let pubkey = keys.public_key();
 
     info!("pubkey={}", keys.public_key());
-    let builder = EventBuilder::text_note(format!("Hello Worlds {}", pubkey))
+    let builder = EventBuilder::text_note(format!("gnostr:legit {}", pubkey))
         .tag(Tag::public_key(pubkey))
         .tag(Tag::custom(
             TagKind::Custom(Cow::from("gnostr")),
@@ -414,7 +420,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
+pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn Error>> {
 
     // gnostr_legit_event
     let empty_hash_keys =
@@ -474,7 +480,7 @@ pub async fn gnostr_legit_event() -> Result<(), Box<dyn Error>> {
             error!("Failed to create event: {}", e);
         }
 
-        if let Err(e) = create_kind_event(&padded_keys, 1_u16, &serialized_commit_for_kind_event, HashMap::new()).await {
+        if let Err(e) = create_kind_event(&padded_keys, kind.unwrap_or(1), &serialized_commit_for_kind_event, HashMap::new()).await {
             error!("Failed to create kind event: {:?}", e);
         }
     });
