@@ -2,6 +2,9 @@
 #![allow(dead_code)]
 extern crate chrono;
 
+//extern crate asyncgit;
+use gnostr_asyncgit::sync::commit::SerializableCommit;
+
 use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
@@ -122,19 +125,6 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     }
 }
 
-// GEMINI review ../../asyncgit we want to migrate this to ../../asyncgit 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SerializableCommit {
-    id: String,
-    tree: String,
-    parents: Vec<String>,
-    author_name: String,
-    author_email: String,
-    committer_name: String,
-    committer_email: String,
-    message: String,
-    time: i64,
-}
 
 // GEMINI review ../utils we want to migrate this to the utils modules
 pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
