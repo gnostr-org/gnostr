@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
 use crate::queue::InternalEvent;
+use gnostr_asyncgit::sync::commit::SerializableCommit;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
 use nostr_sdk_0_37_0::prelude::*;
@@ -31,19 +32,6 @@ pub mod ui;
 pub mod tests;
 
 const TITLE: &str = include_str!("./title.txt");
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SerializableCommit {
-    id: String,
-    tree: String,
-    parents: Vec<String>,
-    author_name: String,
-    author_email: String,
-    committer_name: String,
-    committer_email: String,
-    message: String,
-    time: i64,
-}
 
 pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
     let mut hex_string = String::new();
