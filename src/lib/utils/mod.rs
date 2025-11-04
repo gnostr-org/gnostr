@@ -39,7 +39,7 @@ pub fn value_to_string(value: &Value) -> String {
         Value::Null => "null".to_string(),
         Value::Bool(b) => b.to_string(),
         Value::Number(n) => n.to_string(),
-        Value::String(s) => s.clone(),
+        Value::String(s) => serde_json::to_string(s).unwrap(), // Use serde_json to escape the string
         Value::Array(arr) => {
             let elements: Vec<String> = arr.iter().map(value_to_string).collect();
             format!("[{}]", elements.join(", "))
@@ -444,13 +444,13 @@ line3");
     #[test]
     fn test_value_to_string_string() {
         let value = serde_json::json!("hello");
-        assert_eq!(value_to_string(&value), "hello");
+        assert_eq!(value_to_string(&value), "\"hello\"");
     }
 
     #[test]
     fn test_value_to_string_array() {
         let value = serde_json::json!([1, "two", true]);
-        assert_eq!(value_to_string(&value), "[1, two, true]");
+        assert_eq!(value_to_string(&value), "[1, \"two\", true]");
     }
 
     #[test]
@@ -458,7 +458,7 @@ line3");
         let value = serde_json::json!({"a": 1, "b": "two"});
         // Order of keys in object might not be guaranteed, so check both possibilities
         let result = value_to_string(&value);
-        assert!(result == r#"{"a": 1, "b": two}"# || result == r#"{"b": two, "a": 1}"#);
+        assert!(result == r#"{"a": 1, "b": "two"}"# || result == r#"{"b": "two", "a": 1}"#);
     }
 
     #[test]
