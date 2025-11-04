@@ -1,4 +1,3 @@
-use std::process;
 use std::io::Write;
 use std::fs::File;
 use std::path::Path;
@@ -16,6 +15,7 @@ pub struct Options {
     pub message:   Vec<String>,
     pub repo:      String,
     pub timestamp: OffsetDateTime,
+    pub kind:      Option<u16>,
 }
 
 pub struct Gitminer {

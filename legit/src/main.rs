@@ -43,10 +43,10 @@ fn main() -> io::Result<()> {
     let mut opts = gitminer::Options{
         threads: count.try_into().unwrap(),
         target:  "000".to_string(),
-        message: "default commit message".to_string(),
-        //message: count.to_string(),
+        message: vec!["default commit message".to_string()],
         repo:    ".".to_string(),
-        timestamp: time_0_3::OffsetDateTime::now_utc()
+        timestamp: time_0_3::OffsetDateTime::now_utc(),
+        kind: None,
     };
 
     parse_args_or_exit(&mut opts);
@@ -83,7 +83,7 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
         .add_option(&["-t", "--threads"], Store, "Number of worker threads to use (default 8)");
 
     ap.refer(&mut opts.message)
-        .add_option(&["-m", "--message"], Store, "Commit message to use (required)");
+        .add_option(&["-m", "--message"], argparse::Collect, "Commit message to use (required)");
         //.required();
 
     //ap.refer(&mut opts.timestamp)
