@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
+use crate::legit::command::create_event;
 use crate::queue::InternalEvent;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
@@ -24,6 +25,9 @@ use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
+use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
+use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
+
 pub mod msg;
 pub use msg::*;
 pub mod p2p;
@@ -33,154 +37,6 @@ pub mod tests;
 
 const TITLE: &str = include_str!("./title.txt");
 
-pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
-    let mut hex_string = String::new();
-    for byte in byte_array {
-        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
-    }
-    hex_string
-}
-
-pub async fn create_event_with_custom_tags(
-    keys: &Keys,
-    content: &str,
-    custom_tags: HashMap<String, Vec<String>>,
-) -> Result<Event> {
-    let mut builder = EventBuilder::new(Kind::TextNote, content);
-
-    for (tag_name, tag_values) in custom_tags {
-        info!("tag_name={:?}", tag_name);
-        info!("tag_values={:?}", tag_values);
-        //pops &tag_values[0]
-        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
-        builder = builder.tag(tag);
-    }
-
-    let unsigned_event = builder.build(keys.public_key()); // Build the unsigned event
-    let signed_event = unsigned_event.sign(keys); // Sign the event
-    Ok(signed_event.await?)
-}
-
-pub async fn create_event(
-    keys: Keys,
-    custom_tags: HashMap<String, Vec<String>>,
-    content: &str,
-) -> Result<()> {
-    //let content = "Hello, Nostr with custom tags!";
-
-    let signed_event = create_event_with_custom_tags(&keys, content, custom_tags).await?;
-    info!("{}", serde_json::to_string_pretty(&signed_event)?);
-
-
-
-    Ok(())
-}
-
-pub fn serialize_commit(commit: &Commit) -> Result<String> {
-    let id = commit.id().to_string();
-    let tree = commit.tree_id().to_string();
-    let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
-    let author = commit.author();
-    let committer = commit.committer();
-    let message = commit
-        .message()
-        .ok_or(anyhow!("No commit message"))?
-        .to_string();
-    debug!("message:\n{:?}", message);
-    let time = commit.time().seconds();
-    debug!("time: {:?}", time);
-
-    let serializable_commit = SerializableCommit {
-        id,
-        tree,
-        parents,
-        author_name: author.name().unwrap_or_default().to_string(),
-        author_email: author.email().unwrap_or_default().to_string(),
-        committer_name: committer.name().unwrap_or_default().to_string(),
-        committer_email: committer.email().unwrap_or_default().to_string(),
-        message,
-        time,
-    };
-
-    let serialized = serde_json::to_string(&serializable_commit)?;
-    debug!("serialized_commit: {:?}", serialized);
-    Ok(serialized)
-}
-
-pub fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
-    //we serialize the commit data
-    //easier to grab the commit.id
-    let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
-    //grab the commit.id
-    let oid = Oid::from_str(&serializable_commit.id)?;
-    //oid used to search the repo
-    let commit_obj = repo.find_object(oid, Some(ObjectType::Commit))?;
-    //grab the commit
-    let commit = commit_obj.peel_to_commit()?;
-    //confirm we grabbed the correct commit
-    if commit.id().to_string() != serializable_commit.id {
-        return Err(anyhow!("Commit ID mismatch during deserialization"));
-    }
-    //return the commit
-    Ok(commit)
-}
-
-pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
-    let padded_commit_id = format!("{:0>64}", commit_id);
-    info!("padded_commit_id:{:?}", padded_commit_id);
-    let keys = Keys::parse(&padded_commit_id);
-    Ok(keys.unwrap())
-}
-
-pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
-    serde_json::from_str(json_string)
-}
-
-pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
-    if let Value::String(s) = json_value {
-        let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
-        Some(lines)
-    } else {
-        None // Return None if the Value is not a string
-    }
-}
-
-pub fn value_to_string(value: &Value) -> String {
-    match value {
-        Value::Null => "null".to_string(),
-        Value::Bool(b) => b.to_string(),
-        Value::Number(n) => n.to_string(),
-        Value::String(s) => s.clone(),
-        Value::Array(arr) => {
-            let elements: Vec<String> = arr
-                .iter()
-                .map(|v| match v {
-                    Value::String(s) => format!("\"{}\"", s),
-                    _ => value_to_string(v),
-                })
-                .collect();
-            format!("[{}]", elements.join(", "))
-        }
-        Value::Object(obj) => {
-            let pairs: Vec<String> = obj
-                .iter()
-                .map(|(k, v)| match v {
-                    Value::String(s) => format!("\"{}\": \"{}\"", k, s),
-                    _ => format!("\"{}\": {}", k, value_to_string(v)),
-                })
-                .collect();
-            format!("{{{}}}", pairs.join(", "))
-        }
-    }
-}
-
-pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
-    if let Value::String(s) = value {
-        s.split(&separator).map(|s| s.to_string()).collect()
-    } else {
-        vec![String::from("")]
-    }
-}
 
 /// Simple CLI application to interact with nostr
 #[derive(Debug, Parser)]
@@ -336,9 +192,16 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
 
     global_rt().spawn(async move {
-        //send to create_event function with &"custom content"
-        let signed_event = create_event(empty_hash_keys, custom_tags, &"gnostr-chat:event").await;
-        debug!("signed_event:\n{:?}", signed_event);
+        let client = Client::new(empty_hash_keys);
+        for relay in BOOTSTRAP_RELAYS.to_vec() {
+            debug!("{}", relay);
+            client.add_relay(relay).await.expect("");
+        }
+        client.connect().await;
+
+        let builder = EventBuilder::text_note("gnostr-chat:event");
+        let output = client.send_event_builder(builder).await.expect("");
+        debug!("Event ID: {}", output.id());
     });
 
     //initialize git repo
@@ -375,21 +238,25 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     );
 
     global_rt().spawn(async move {
-        //send to create_event function with &"custom content"
-        let signed_event =
-            create_event(padded_keys.clone(), custom_tags, &"gnostr-chat:event").await;
-        debug!("signed_event:\n{:?}", signed_event);
+        let client = Client::new(padded_keys);
+        for relay in BOOTSTRAP_RELAYS.to_vec() {
+            debug!("{}", relay);
+            client.add_relay(relay).await.expect("");
+        }
+        client.connect().await;
+
+        let builder = EventBuilder::text_note("gnostr-chat:event");
+        let output = client.send_event_builder(builder).await.expect("");
+        debug!("Event ID: {}", output.id());
     });
 
     //TODO config metadata
 
     //access some git info
-    let serialized_commit = serialize_commit(&commit)?;
-    debug!("Serialized commit:\n{}", serialized_commit.clone());
+    let serialized_commit = serialize_commit(&commit).expect("Failed to serialize commit");
 
     let binding = serialized_commit.clone();
-    let deserialized_commit = deserialize_commit(&repo, &binding)?;
-    debug!("Deserialized commit:\n{:?}", deserialized_commit);
+    let deserialized_commit = deserialize_commit(&repo, &binding).expect("Failed to deserialize commit");
 
     //access commit summary in the deserialized commit
     debug!("Original commit ID:\n{}", commit_id);
@@ -403,10 +270,7 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     }
 
     let serialized_commit = serialize_commit(&commit)?;
-    let value: Value = parse_json(&serialized_commit.clone())?;
-    //info!("value:\n{}", value);
-
-    // Accessing object elements.
+    let value: Value = parse_json(&serialized_commit.clone()).expect("Failed to parse JSON");
     if let Some(id) = value.get("id") {
         debug!("id:\n{}", id.as_str().unwrap_or(""));
     }
@@ -443,13 +307,9 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     //split the commit message into a Vec<String>
     if let Some(message) = value.get("message") {
         let parts = split_json_string(&message, "\n");
-        for part in parts {
-            debug!("\n{}", part);
+        if let Value::Number(time) = &value["time"] {
+            debug!("time:\n{}", time);
         }
-        debug!("message:\n{}", message.as_str().unwrap_or(""));
-    }
-    if let Value::Number(time) = &value["time"] {
-        debug!("time:\n{}", time);
     }
 
     // // Accessing array elements.
