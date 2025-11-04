@@ -46,6 +46,9 @@ pub struct LegitSubCommand {
     /// Commit message to use
     #[arg(short, long)]
     message: Option<Vec<String>>,
+    /// Nostr event kind to use for the git event
+    #[arg(long)]
+    kind: Option<u16>,
     ///// disable spinner animations
     #[arg(long, action)]
     disable_cli_spinners: bool,
@@ -68,6 +71,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                 repo: sub_command_args.repo.clone().unwrap_or(sub_command_args.repository_path.clone().unwrap_or(".".to_string())),
 
                 timestamp: OffsetDateTime::now_local().unwrap(),
+                kind: sub_command_args.kind,
             };
             command::run_legit_command(opts).await.map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }

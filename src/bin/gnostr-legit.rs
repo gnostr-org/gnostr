@@ -1,19 +1,19 @@
-#![allow(unused)]
-#![allow(dead_code)]
+/// #![allow(unused)]
+/// #![allow(dead_code)]
+/// 
+/// #![allow(unused)]
+/// #![allow(dead_code)]
 
-#![allow(unused)]
-#![allow(dead_code)]
-
+use clap::Parser;
+use gnostr::legit::command;
+use gnostr_legit::gitminer;
 use std::io::{Result, self};
 use std::env;
 use std::process::Command;
 use std::time::SystemTime;
 use std::thread;
 use std::convert::TryInto;
-
-use clap::Parser;
-use gnostr::legit::command;
-use gnostr_legit::gitminer;
+use time::OffsetDateTime;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -64,7 +64,8 @@ async fn main() -> io::Result<()> {
         target: args.prefix,
         message,
         repo: path.as_path().display().to_string(),
-        timestamp: SystemTime::now().into(),
+        timestamp: OffsetDateTime::now_utc(),
+        kind: None,
     };
 
     command::run_legit_command(opts).await
