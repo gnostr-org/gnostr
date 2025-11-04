@@ -4,6 +4,11 @@ extern crate chrono;
 
 //extern crate asyncgit;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
+use gnostr_asyncgit::sync::commit::deserialize_commit;
+use gnostr_asyncgit::sync::commit::serialize_commit;
+
+use crate::utils::parse_json;
+use crate::utils::split_json_string;
 
 use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
@@ -126,14 +131,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
 }
 
 
-// GEMINI review ../utils we want to migrate this to the utils modules
-pub fn byte_array_to_hex_string(byte_array: &[u8; 32]) -> String {
-    let mut hex_string = String::new();
-    for byte in byte_array {
-        write!(&mut hex_string, "{:02x}", byte).unwrap(); // Use unwrap for simplicity, handle errors in production.
-    }
-    hex_string
-}
+
 
 pub async fn create_event_with_custom_tags(
     keys: &Keys,
@@ -307,102 +305,7 @@ pub async fn create_event(
     Ok(())
 }
 
-pub fn serialize_commit(commit: &Commit) -> Result<String> {
-    let id = commit.id().to_string();
-    let tree = commit.tree_id().to_string();
-    let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
-    let author = commit.author();
-    let committer = commit.committer();
-    let message = commit
-        .message()
-        .ok_or(anyhow!("No commit message"))?
-        .to_string();
-    debug!("message:\n{:?}", message);
-    let time = commit.time().seconds();
-    debug!("time: {:?}", time);
 
-    let serializable_commit = SerializableCommit {
-        id,
-        tree,
-        parents,
-        author_name: author.name().unwrap_or_default().to_string(),
-        author_email: author.email().unwrap_or_default().to_string(),
-        committer_name: committer.name().unwrap_or_default().to_string(),
-        committer_email: committer.email().unwrap_or_default().to_string(),
-        message,
-        time,
-    };
-
-    let serialized = serde_json::to_string(&serializable_commit)?;
-    debug!("serialized_commit: {:?}", serialized);
-    Ok(serialized)
-}
-
-pub fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
-    //we serialize the commit data
-    //easier to grab the commit.id
-    let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
-    //grab the commit.id
-    let oid = Oid::from_str(&serializable_commit.id)?;
-    //oid used to search the repo
-    let commit_obj = repo.find_object(oid, Some(ObjectType::Commit))?;
-    //grab the commit
-    let commit = commit_obj.peel_to_commit()?;
-    //confirm we grabbed the correct commit
-    if commit.id().to_string() != serializable_commit.id {
-        return Err(anyhow!("Commit ID mismatch during deserialization").into());
-    }
-    //return the commit
-    Ok(commit)
-}
-
-pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
-    let padded_commit_id = format!("{:0>64}", commit_id);
-    info!("padded_commit_id:{:?}", padded_commit_id);
-    let keys = Keys::parse(&padded_commit_id);
-    Ok(keys.unwrap())
-}
-
-pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
-    serde_json::from_str(json_string)
-}
-
-pub fn split_value_by_newline(json_value: &Value) -> Option<Vec<String>> {
-    if let Value::String(s) = json_value {
-        let lines: Vec<String> = s.lines().map(|line| line.to_string()).collect();
-        Some(lines)
-    } else {
-        None // Return None if the Value is not a string
-    }
-}
-
-pub fn value_to_string(value: &Value) -> String {
-    match value {
-        Value::Null => "null".to_string(),
-        Value::Bool(b) => b.to_string(),
-        Value::Number(n) => n.to_string(),
-        Value::String(s) => s.clone(),
-        Value::Array(arr) => {
-            let elements: Vec<String> = arr.iter().map(value_to_string).collect();
-            format!("[{}]", elements.join(", "))
-        }
-        Value::Object(obj) => {
-            let pairs: Vec<String> = obj
-                .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, value_to_string(v)))
-                .collect();
-            format!("{{{}}}", pairs.join(", "))
-        }
-    }
-}
-
-pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
-    if let Value::String(s) = value {
-        s.split(&separator).map(|s| s.to_string()).collect()
-    } else {
-        vec![String::from("")]
-    }
-}
 
 //async tasks
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
