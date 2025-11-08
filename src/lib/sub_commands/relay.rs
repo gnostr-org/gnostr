@@ -1,6 +1,7 @@
 use anyhow::Result;
 use gnostr_relay::App;
 use std::path::PathBuf;
+use tokio::task::LocalSet;
 use tracing::info;
 
 #[derive(clap::Parser, Debug, Clone)]
@@ -21,7 +22,12 @@ pub struct RelaySubCommand {
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Start relay server with args: {:?}", args);
     let app_data = App::create(args.config, args.watch, Some("NOSTR".to_owned()), args.data)?;
-    app_data.web_server()?.await?;
+    let local_set = LocalSet::new();
+    let server_future = app_data.web_server()?;
+    local_set
+        .run_until(async move { server_future.await })
+        .await?;
+
     info!("Relay server shutdown");
     Ok(())
 }
