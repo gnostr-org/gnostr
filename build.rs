@@ -1,8 +1,14 @@
 use std::env;
+use std::fs;
+use std::io::Write;
+use std::path::Path;
 use std::process::Command;
 
+// try:
+// cargo build --features memory_profiling -j8
+
 fn check_sscache() {
-    if Command::new("sscache").arg("--version").output().is_ok() {
+    if Command::new("sccache").arg("--version").output().is_ok() {
         println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
         env::set_var("RUSTC_WRAPPER", "sscache");
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
@@ -93,12 +99,9 @@ fn install_sccache() {
 fn install_windows_dependency(name: &str, install_command: &str) {
     // Check if the dependency is already installed using the Windows 'where' command.
     let check_command = format!("where.exe {} >nul 2>nul", name);
-    
+
     // Command::new("cmd") is the standard way to run shell commands on Windows.
-    let output = Command::new("cmd")
-        .arg("/C")
-        .arg(&check_command)
-        .status();
+    let output = Command::new("cmd").arg("/C").arg(&check_command).status();
 
     match output {
         Ok(status) => {
@@ -115,7 +118,10 @@ fn install_windows_dependency(name: &str, install_command: &str) {
     }
 
     // Dependency not found (or check failed), proceed with installation.
-    println!("cargo:warning=Attempting to install dependency '{}' using: {}", name, install_command);
+    println!(
+        "cargo:warning=Attempting to install dependency '{}' using: {}",
+        name, install_command
+    );
 
     let output = Command::new("cmd")
         .arg("/C") // Run the command string and then terminate
@@ -127,18 +133,24 @@ fn install_windows_dependency(name: &str, install_command: &str) {
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                
+
                 println!("cargo:warning=Failed to install {}: {}", name, stderr);
                 println!("cargo:warning=Stdout: {}", stdout);
-                
+
                 // Exit the build process with a panick, since the build cannot continue.
-                panic!("Failed to install required Windows dependency: {}. Ensure Scoop or Winget is installed and on your PATH.", name);
+                panic!(
+                    "Failed to install required Windows dependency: {}. Ensure Scoop or Winget is installed and on your PATH.",
+                    name
+                );
             } else {
                 println!("cargo:warning=Successfully installed {} dependency.", name);
             }
         }
         Err(e) => {
-            println!("cargo:warning=Failed to run installation command for {}: {}", name, e);
+            println!(
+                "cargo:warning=Failed to run installation command for {}: {}",
+                name, e
+            );
             // Exit the build process with a panick.
             panic!("Failed to run installation command for {}.", name);
         }
@@ -235,7 +247,9 @@ fn install_openssl_brew() {
                 "cargo:warning=Failed to install openssl@3 via Homebrew (exit code: {}).",
                 status
             );
-            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
             println!("cargo:warning=  brew install openssl@3");
         }
         Err(e) => {
@@ -262,7 +276,9 @@ fn install_pkg_config() {
                 "cargo:warning=Failed to install pkg-config via Homebrew (exit code: {}).",
                 status
             );
-            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
             println!("cargo:warning=  brew install pkg-config");
         }
         Err(e) => {
@@ -287,7 +303,9 @@ fn install_zlib() {
                 "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
                 status
             );
-            println!("cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:");
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
             println!("cargo:warning=  brew install zlib");
         }
         Err(e) => {
@@ -322,6 +340,10 @@ fn get_git_hash() -> String {
 }
 
 fn main() {
+
+    println!("cargo:rerun-if-changed=src/empty");
+    make_empty();
+
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
     } else {
@@ -334,6 +356,8 @@ fn main() {
     // Tell Cargo to rerun this build script only if these environment variables change
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
+
+    make_empty();
 
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
@@ -437,7 +461,9 @@ fn main() {
                     println!("cargo:rustc-link-lib=dylib=crypto@3");
                 }
             } else {
-                println!("cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:");
+                println!(
+                    "cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:"
+                );
                 println!("cargo:warning=  brew install openssl@3");
                 println!("cargo:warning=  brew install pkg-config");
                 println!("cargo:warning=  brew install zlib");
@@ -503,7 +529,9 @@ fn if_linux_unknown() -> bool {
                 println!("cargo:rustc-link-lib=dylib=crypto");
             }
             _ => {
-                println!("cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly.");
+                println!(
+                    "cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly."
+                );
                 // You might choose to fail the build here if it's strictly necessary
                 // std::process::exit(1);
             }
@@ -522,7 +550,9 @@ fn linux_install_pkg_config() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "linux" {
-        println!("cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate.");
+        println!(
+            "cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate."
+        );
         println!("cargo:warning=Please ensure you have it installed.");
         println!("cargo:warning=For Debian/Ubuntu-based systems, use:");
         println!("cargo:warning=  sudo apt-get update && sudo apt-get install pkgconfig");
@@ -551,7 +581,9 @@ fn linux_install_pkg_config() {
                 );
             }
             _ => {
-                println!("cargo:warning=`pkg-config` not found in your PATH. Ensure `pkg-config` (or equivalent) is installed and accessible.");
+                println!(
+                    "cargo:warning=`pkg-config` not found in your PATH. Ensure `pkg-config` (or equivalent) is installed and accessible."
+                );
                 // You might choose to fail the build here if it's strictly necessary
                 // std::process::exit(1);
             }
@@ -568,7 +600,9 @@ fn musl_install_pkg_config() {
 
     if target == "x86_64-unknown-linux-musl" {
         println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
-        println!("cargo:warning=This build process may require `pkg-config` to locate necessary libraries.");
+        println!(
+            "cargo:warning=This build process may require `pkg-config` to locate necessary libraries."
+        );
         println!(
             "cargo:warning=Please ensure `pkg-config` is installed in your Musl-based environment."
         );
@@ -600,7 +634,9 @@ fn musl_install_pkg_config() {
                 );
             }
             _ => {
-                println!("cargo:warning=`pkg-config` not found in your PATH. Please ensure it is installed and accessible.");
+                println!(
+                    "cargo:warning=`pkg-config` not found in your PATH. Please ensure it is installed and accessible."
+                );
                 // You might choose to fail the build here if `pkg-config` is strictly necessary
                 // std::process::exit(1);
             }
@@ -616,4 +652,178 @@ fn musl_install_pkg_config() {
     }
 
     // Common build logic can go here
+}
+
+fn make_empty() {
+    let target_path = Path::new("src/empty");
+
+    // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
+    // We try to remove the path as a file first, and if that fails, we try as a directory.
+    if target_path.exists() {
+        if target_path.is_file() {
+            println!("cargo:warning=Found file at target path. Removing src/empty.");
+            if let Err(e) = fs::remove_file(target_path) {
+                panic!(
+                    "Failed to remove existing file {}: {}",
+                    target_path.display(),
+                    e
+                );
+            }
+        } else if target_path.is_dir() {
+            // If it exists as a directory, we can skip removal, as create_dir_all is idempotent,
+            // but if the goal is absolute cleanup, we use remove_dir_all.
+            // For simplicity, we let create_dir_all handle the existing directory case.
+        }
+    }
+
+    // 2. Create the directory `./src/empty` (using create_dir_all for robustness).
+    // This function creates all necessary parent directories and succeeds if the directory already exists.
+    //println!("cargo:warning=Creating directory: ./src/empty");
+    //if let Err(e) = fs::create_dir_all(target_path) {
+    //    panic!("Failed to create directory {}: {}", target_path.display(), e);
+    //}
+
+    let dir_path = Path::new("src/empty");
+    let readme_path = dir_path.join("README.md");
+
+    println!("cargo:rerun-if-changed=build.rs");
+
+    // --- 1. Remove the Directory (if it exists) ---
+    if dir_path.exists() {
+        match fs::remove_dir_all(dir_path) {
+            Ok(_) => println!(
+                "Build: Successfully removed directory: {}",
+                dir_path.display()
+            ),
+            Err(e) => {
+                panic!(
+                    "Build: Failed to remove directory {}: {}",
+                    dir_path.display(),
+                    e
+                );
+            }
+        }
+    } else {
+        println!(
+            "Build: Directory {} does not exist, skipping removal.",
+            dir_path.display()
+        );
+    }
+
+    // --- 2. Create the Directory ---
+    match fs::create_dir_all(dir_path) {
+        Ok(_) => println!(
+            "Build: Successfully created directory: {}",
+            dir_path.display()
+        ),
+        Err(e) => {
+            panic!(
+                "Build: Failed to create directory {}: {}",
+                dir_path.display(),
+                e
+            );
+        }
+    }
+
+    let content = r###"### gnostr-lfs/src/empty
+
+This directory is intentionally kept minimal and serves as a placeholder for the initial
+empty tree object in the Git repository history. The first commit creates the project's
+root using a known epoch date for historical consistency.
+
+GIT_AUTHOR_NAME=gnostr-vfs
+
+GIT_AUTHOR_EMAIL=admin@gnostr.org
+
+GIT_COMMITTER_NAME=gnostr_dev
+
+GIT_COMMITTER_EMAIL=admin@gnostr.org
+
+GIT_AUTHOR_DATE="Thu, 01 Jan 1970 00:00:00 +0000"
+
+GIT_COMMITTER_DATE="Thu, 01 Jan 1970 00:00:00 +0000"
+
+git commit --allow-empty -m "initial commit"
+
+"###;
+
+    match fs::File::create(&readme_path) {
+        Ok(mut file) => match file.write_all(content.as_bytes()) {
+            Ok(_) => println!("Build: Successfully wrote to {}", readme_path.display()),
+            Err(e) => panic!(
+                "Build: Failed to write content to {}: {}",
+                readme_path.display(),
+                e
+            ),
+        },
+        Err(e) => panic!(
+            "Build: Failed to create file {}: {}",
+            readme_path.display(),
+            e
+        ),
+    }
+
+    // --- 3. Run 'git init' inside src/empty ---
+    println!(
+        "Build: Initializing Git repository in {}",
+        dir_path.display()
+    );
+
+    let output = Command::new("git")
+        .arg("init")
+        .current_dir(dir_path) // Crucial: executes 'git init' inside the target folder
+        .output()
+        .expect("Failed to execute 'git init'");
+
+    if output.status.success() {
+        println!("Build: git init successful.");
+    } else {
+        panic!(
+            "Build: git init failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    println!("Build: Adding README.md to the index...");
+
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(dir_path)
+        .arg("add")
+        .arg(".") // Use '.' to add all files in the current directory (src/empty)
+        //.current_dir(dir_path) // Executes 'git add .' inside src/empty
+        .output()
+        .expect("Failed to execute 'git add'");
+
+    if output.status.success() {
+        println!("Build: git add successful.");
+    } else {
+        panic!(
+            "Build: git add failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    println!("Build: Adding README.md to the index...");
+
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(dir_path)
+        .arg("commit")
+        .arg("-m") // Use '.' to add all files in the current directory (src/empty)
+        .arg("READM.md") // Use '.' to add all files in the current directory (src/empty)
+        //.current_dir(dir_path) // Executes 'git add .' inside src/empty
+        .output()
+        .expect("Failed to execute 'git add'");
+
+    if output.status.success() {
+        println!("Build: git commit successful.");
+    } else {
+        panic!(
+            "Build: git add failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    // Good practice: Rerun build script if the script itself changes.
+    println!("cargo:rerun-if-changed=src/empty");
 }
