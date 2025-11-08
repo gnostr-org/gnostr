@@ -332,7 +332,7 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Relay(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::relay::relay(sub_command_args.clone())
-                .await
+                //.await
                 .map_err(|e| anyhow!("Error in relay subcommand: {}", e))
         }
         Some(GnostrCommands::Sniper(sub_command_args)) => {
