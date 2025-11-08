@@ -1,5 +1,8 @@
 use std::env;
 use std::fs;
+use std::io;
+use std::io::Error;
+use std::io::ErrorKind;
 use std::io::Write;
 use std::path::Path;
 use std::process::Command;
@@ -805,25 +808,86 @@ git commit --allow-empty -m "initial commit"
     }
     println!("Build: Adding README.md to the index...");
 
-    let output = Command::new("git")
-        .arg("-C")
-        .arg(dir_path)
-        .arg("commit")
-        .arg("-m") // Use '.' to add all files in the current directory (src/empty)
-        .arg("READM.md") // Use '.' to add all files in the current directory (src/empty)
-        //.current_dir(dir_path) // Executes 'git add .' inside src/empty
-        .output()
-        .expect("Failed to execute 'git add'");
+    //let output = Command::new("git")
+    //    .arg("-C")
+    //    .arg(dir_path)
+    //    .arg("commit")
+    //    .arg("-m") // Use '.' to add all files in the current directory (src/empty)
+    //    .arg("READM.md") // Use '.' to add all files in the current directory (src/empty)
+    //    //.current_dir(dir_path) // Executes 'git add .' inside src/empty
+    //    .output()
+    //    .expect("Failed to execute 'git add'");
 
-    if output.status.success() {
-        println!("Build: git commit successful.");
-    } else {
-        panic!(
-            "Build: git add failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
+    //if output.status.success() {
+    //    println!("Build: git commit successful.");
+    //} else {
+    //    panic!(
+    //        "Build: git add failed: {}",
+    //        String::from_utf8_lossy(&output.stderr)
+    //    );
+    //}
 
+    git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
+}
+
+fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
+    // 1. Convert Path to &str safely using .ok_or_else()
+    // This converts the Option<&str> to a Result<&str, io::Error>.
+    // If the path is invalid UTF-8 (None), it generates a custom io::Error
+    // with kind InvalidInput, which is compatible with the function's return type.
+    let dir_path_str = dir_path.to_str().ok_or_else(|| {
+        Error::new(
+            ErrorKind::InvalidInput,
+            format!("Path '{}' is not valid UTF-8", dir_path.display())
+        )
+    })?; // Now the '?' operator works, returning an io::Error on failure.
+
+    // 2. Start the command and set environment variables (as in previous answer)
+    let mut command = Command::new("git");
+
+    // Setting the environment variables:
+    command
+        .env("GIT_AUTHOR_NAME", "gnostr-vfs")
+        .env("GIT_AUTHOR_EMAIL", "admin@gnostr.org")
+        .env("GIT_COMMITTER_NAME", "gnostr_dev")
+        .env("GIT_COMMITTER_EMAIL", "admin@gnostr.org")
+        .env("GIT_AUTHOR_DATE", "Thu, 01 Jan 1970 00:00:00 +0000")
+        .env("GIT_COMMITTER_DATE", "Thu, 01 Jan 1970 00:00:00 +0000");
+
+
+    // 3. Set the arguments. Note the use of the safe dir_path_str variable.
+    command.args(&[
+        "-C", // Use -C to run the git command from the specified directory
+        dir_path_str,
+        "commit",
+        "--allow-empty",
+        "-m",
+        "initial commit",
+    ]);
+
+    println!("Executing command: git -C {} commit ...", dir_path_str);
+
+    // 4. Execute the command. The '?' handles the *process execution* I/O error.
+    let output = command.output()?;
+
+    // 5. Check command success and return Result accordingly.
+    if output.status.success() {
+        println!("\n✅ Git command successful!");
+        println!("Stdout:\n{}", String::from_utf8_lossy(&output.stdout));
+        // The success block must return the success value, which is Ok(())
+        Ok(())
+    } else {
+        println!("\n❌ Git command failed!");
+        eprintln!("Status: {}", output.status);
+        eprintln!("Stderr:\n{}", String::from_utf8_lossy(&output.stderr));
+        
+        // The failure block must return the error value, which is Err(io::Error).
+        // We create a new io::Error here to indicate the child process failed.
+        Err(Error::new(
+            ErrorKind::Other,
+            format!("'git commit' failed with status: {}", output.status)
+        ))
+    }
 }
