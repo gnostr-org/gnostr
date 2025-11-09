@@ -1,0 +1,62 @@
+@import 'colours';
+
+pre.diff {
+  @media (prefers-color-scheme: dark) {
+    color: $base0;
+  }
+}
+
+.diff-add-line::before, .diff-remove-line::before, .diff-context::before {
+  display: inline-block;
+  color: $base0;
+  background: $base3;
+
+  @media (prefers-color-scheme: dark) {
+    color: $base0;
+    background: $base03;
+  }
+
+  -webkit-user-select: none;
+}
+
+.diff-file-header {
+  font-weight: bold;
+}
+
+.diff-file-header > span > span {
+  font-weight: normal;
+}
+
+.diff-add-line {
+  background: $base3;
+  display: block;
+
+  @media (prefers-color-scheme: dark) {
+    background: $base02;
+  }
+
+  &::before {
+    content: '+ ';
+    color: $green
+  }
+}
+
+.diff-remove-line {
+  background: $base3;
+  display: block;
+
+  @media (prefers-color-scheme: dark) {
+    background: $base02;
+  }
+
+  &::before {
+    content: '- ';
+    color: $red
+  }
+}
+
+.diff-context {
+  &::before {
+    content: '  ';
+  }
+}

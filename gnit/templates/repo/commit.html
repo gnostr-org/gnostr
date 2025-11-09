@@ -1,0 +1,53 @@
+{% import "macros/link.html" as link %}
+{% extends "repo/base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="/highlight-{{ crate::HIGHLIGHT_CSS_HASH.get().unwrap() }}.css" />
+    <link rel="stylesheet" type="text/css" href="/highlight-dark-{{ crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap() }}.css" />
+{%- endblock %}
+
+{% block commit_nav_class %}active{% endblock %}
+
+{% block content %}
+<div class="table-responsive">
+<table class="commit-info">
+    <tbody>
+    <tr>
+        <th>author</th>
+        <td>{{ commit.author().name() }} &lt;{{ commit.author().email() }}&gt;</td>
+        <td>{{ commit.author().time() }}</td>
+    </tr>
+    <tr>
+        <th>committer</th>
+        <td>{{ commit.committer().name() }} &lt;{{ commit.committer().email() }}&gt;</td>
+        <td>{{ commit.committer().time() }}</td>
+    </tr>
+    <tr>
+        <th>commit</th>
+        <td colspan="2"><pre><a href="/{{ repo.display() }}/commit?id={{ commit.oid() }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ commit.oid() }}</a> <a href="/{{ repo.display() }}/patch?id={{ commit.oid() }}">[patch]</a></pre></td>
+    </tr>
+    <tr>
+        <th>tree</th>
+        <td colspan="2"><pre><a href="/{{ repo.display() }}/tree?id={{ commit.tree() }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ commit.tree() }}</a></pre></td>
+    </tr>
+    {%- for parent in commit.parents() %}
+    <tr>
+        <th>parent</th>
+        <td colspan="2"><pre><a href="/{{ repo.display() }}/commit?id={{ parent }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ parent }}</a></pre></td>
+    </tr>
+    {%- endfor %}
+    <tr>
+        <th>download</th>
+        <td colspan="2"><pre><a href="/{{ repo.display() }}/snapshot?{% if let Some(id) = id %}id={{ id }}{% else %}h={{ dl_branch }}{% endif %}">{{ id.as_deref().unwrap_or(dl_branch.as_ref()) }}.tar.gz</a></pre></td>
+    </tr>
+    </tbody>
+</table>
+</div>
+
+<h2>{{ commit.summary() }}</h2>
+<pre>{{ commit.body() }}</pre>
+
+<h3>Diff</h3>
+<pre class="diff">{{ commit.diff_stats|safe }}
+{{ commit.diff|safe }}</pre>
+{% endblock %}

@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache
+      uses: actions/cache@v4.2.0
+      with:
+        path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+        key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Setup
+      run: |
+        rustup component add llvm-tools-preview
+        cargo install cargo-deny || true
+        cargo install grcov || true
+        cargo install cargo-machete || true
+        cargo install git-cliff || true
+
+    - name: make test
+      env: 
+        CARGO_INCREMENTAL: 0
+        RUSTFLAGS: '-Cinstrument-coverage'
+        LLVM_PROFILE_FILE: 'cargo-test-%p-%m.profraw'
+      run: make test
+
+    - name: Coverage
+      run: grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/tests.lcov
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.6.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: altsem/gitu
+
+  test:
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache
+      uses: actions/cache@v4.2.0
+      with:
+        path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Test
+      run: cargo test
