@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+PORT=${1:-3333}
+if [ ! $(uname -s) = 'Darwin' ]; then
+	if grep -q Microsoft /proc/version; then
+		# Ubuntu on Windows using the Linux subsystem
+		alias open='explorer.exe';
+	else
+		alias open='xdg-open';
+	fi
+fi
+cargo install -j8 --path . --root .;
+open http://localhost:$PORT & \
+./bin/gnostr-gnit -d .gnostr/web/$PORT -b $PORT -s .

@@ -1,409 +1,355 @@
-#![forbid(unsafe_code)]
-#![deny(
-	unused_imports,
-	unused_must_use,
-	//dead_code,
-	unstable_name_collisions,
-	unused_assignments
-)]
-#![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
-#![deny(
-	clippy::unwrap_used,
-	clippy::filetype_is_file,
-	clippy::cargo,
-	clippy::unwrap_used,
-	clippy::panic,
-	clippy::match_like_matches_macro
-)]
-#![allow(clippy::module_name_repetitions)]
-#![allow(
-	clippy::multiple_crate_versions,
-	clippy::bool_to_int_with_if,
-	clippy::module_name_repetitions
-)]
-// high number of false positives on nightly (as of Oct 2022 with 1.66.0-nightly)
-#![allow(clippy::missing_const_for_fn)]
+use clap::{Parser /*, Subcommand*/};
+use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
+use gnostr::sub_commands;
+use gnostr_asyncgit::sync::RepoPath;
+use sha2::{Digest, Sha256};
+use std::env;
+use tracing::{debug, trace};
+use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::FmtSubscriber;
 
-//TODO:
-// #![deny(clippy::expect_used)]
+use anyhow::anyhow; // Import the anyhow macro
 
-mod app;
-mod args;
-mod bug_report;
-mod clipboard;
-mod cmdbar;
-mod components;
-mod input;
-mod keys;
-mod notify_mutex;
-mod options;
-mod popup_stack;
-mod queue;
-mod spinner;
-mod string_utils;
-mod strings;
-mod tabs;
-mod ui;
-mod version;
-mod watcher;
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    env::set_var("WEEBLE", "0");
+    env::set_var("BLOCKHEIGHT", "0");
+    env::set_var("WOBBLE", "0");
+    let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
-use crate::{app::App, args::process_cmdline};
-use anyhow::{bail, Result};
-use app::QuitState;
-use asyncgit::{
-	sync::{utils::repo_work_dir, RepoPath},
-	AsyncGitNotification,
-};
-use backtrace::Backtrace;
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
-use crossterm::{
-	terminal::{
-		disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
-		LeaveAlternateScreen,
-	},
-	ExecutableCommand,
-};
-use input::{Input, InputEvent, InputState};
-use keys::KeyConfig;
-use ratatui::{
-	backend::{Backend, CrosstermBackend},
-	Terminal,
-};
-use scopeguard::defer;
-use scopetime::scope_time;
-use spinner::Spinner;
-use std::{
-	cell::RefCell,
-	io::{self, Write},
-	panic, process,
-	time::{Duration, Instant},
-};
-use ui::style::Theme;
-use watcher::RepoWatcher;
+    let app_cache = get_app_cache_path();
+    if gnostr_cli_args.logging {
+        let logging = setup_logging();
+        debug!("{:?}", logging);
+    };
+    let level = if gnostr_cli_args.debug {
+        LevelFilter::DEBUG
+    } else if gnostr_cli_args.trace {
+        LevelFilter::TRACE
+    } else if gnostr_cli_args.info {
+        LevelFilter::INFO
+    } else if gnostr_cli_args.warn {
+        LevelFilter::WARN
+    } else {
+        LevelFilter::OFF
+    };
+    let env_args: Vec<String> = env::args().collect();
+    for arg in &env_args {
+        debug!("40:arg={:?}", arg);
+    }
 
-static TICK_INTERVAL: Duration = Duration::from_secs(5);
-static SPINNER_INTERVAL: Duration = Duration::from_millis(80);
+    if env_args.contains(&String::from("--gitdir")) {
+        debug!("44:The --gitdir argument was found!");
+    } else {
+        debug!("46:The --gitdir argument was not found.");
+    }
 
-///
-#[derive(Clone)]
-pub enum QueueEvent {
-	Tick,
-	Notify,
-	SpinnerUpdate,
-	AsyncEvent(AsyncNotification),
-	InputEvent(InputEvent),
-}
+    let mut gitdir_value: Option<String> = None;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SyntaxHighlightProgress {
-	Progress,
-	Done,
-}
+    for i in 0..env_args.len() {
+        if env_args[i] == "--gitdir" {
+            if i + 1 < env_args.len() {
+                // We found --gitdir and there's a next argument
+                gitdir_value = Some(env_args[i + 1].clone());
+            }
+            break; // We found what we're looking for, no need to continue the loop
+        }
+    }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AsyncAppNotification {
-	///
-	SyntaxHighlighting(SyntaxHighlightProgress),
-}
+    match gitdir_value.clone() {
+        Some(value) => {
+            debug!("63:The --gitdir value is: {}", value);
+            let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
+            debug!("main:73:repo_path={:?}", repo_path);
+            // Convert the RepoPath to an OsStr reference
+            let path_os_str = repo_path.as_path().as_os_str();
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AsyncNotification {
-	///
-	App(AsyncAppNotification),
-	///
-	Git(AsyncGitNotification),
-}
+            // Now set the environment variable
+            env::set_var("GNOSTR_GITDIR", path_os_str);
+        }
+        None => debug!("72:The --gitdir argument was not found or has no value."),
+    }
 
-#[derive(Clone, Copy, PartialEq)]
-enum Updater {
-	Ticker,
-	NotifyWatcher,
-}
+    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    trace!("{:?}", app_cache);
 
-fn main() -> Result<()> {
-	let app_start = Instant::now();
+    // These if statements don't return anything, which is fine as long as the match statement returns Result.
+    // if gnostr_cli_args.workdir.is_some() {};
+    // if gnostr_cli_args.directory.is_some() {};
+    if gnostr_cli_args.hash.is_some() {
+        //not none
+        if let Some(input_string) = gnostr_cli_args.hash {
+            let mut hasher = Sha256::new();
+            hasher.update(input_string.as_bytes());
+            let result = hasher.finalize();
+            //Usage: gnostr --hash <string>
+            //Usage: gnostr --debug --hash <string>
+            if env_args.len() >= 3 && env_args.len() <= 4
+            /*--debug, --trace, --info, etc...*/
+            {
+                print!("{:x}", result);
+                std::process::exit(0); // Exits the program, so no need to return Ok(())
+            }
+            gnostr_cli_args.nsec = format!("{:x}", result).into();
+        }
+    }
 
-	let cliargs = process_cmdline()?;
+    // Post event
+    match &gnostr_cli_args.command {
+        Some(GnostrCommands::Chat(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::chat::chat(
+                &mut sub_command_args.clone(),
+            )
+            .await.map_err(|e| anyhow!("Error in chat subcommand: {}", e))
+        }
+        Some(GnostrCommands::Legit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::legit::legit(sub_command_args).await.map_err(|e| anyhow!("Error in legit subcommand: {}", e))
+        }
+        Some(GnostrCommands::Ngit(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::ngit::ngit(sub_command_args).await.map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
+        }
+        Some(GnostrCommands::Query(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::query::launch(sub_command_args).await.map_err(|e| anyhow!("Error in query subcommand: {}", e))
+        }
+        Some(GnostrCommands::SetMetadata(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::set_metadata::set_metadata(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in set_metadata subcommand: {}", e))
+        }
+        Some(GnostrCommands::Note(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::note::broadcast_textnote(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in note subcommand: {}", e))
+        }
+        Some(GnostrCommands::PublishContactListCsv(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::publish_contactlist_csv::publish_contact_list_from_csv_file(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in publish_contact_list_csv subcommand: {}", e))
+        }
+        Some(GnostrCommands::DeleteEvent(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::delete_event::delete(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in delete_event subcommand: {}", e))
+        }
+        Some(GnostrCommands::DeleteProfile(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::delete_profile::delete(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in delete_profile subcommand: {}", e))
+        }
+        Some(GnostrCommands::React(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::react::react_to_event(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in react subcommand: {}", e))
+        }
+        Some(GnostrCommands::ListEvents(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::list_events::list_events(gnostr_cli_args.relays, sub_command_args).await.map_err(|e| anyhow!("Error in list_events subcommand: {}", e))
+        }
+        Some(GnostrCommands::GenerateKeypair(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::generate_keypair::get_new_keypair(sub_command_args).await.map_err(|e| anyhow!("Error in generate_keypair subcommand: {}", e))
+        }
+        Some(GnostrCommands::ConvertKey(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::convert_key::convert_key(sub_command_args).await.map_err(|e| anyhow!("Error in convert_key subcommand: {}", e))
+        }
+        Some(GnostrCommands::Vanity(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::vanity::vanity(sub_command_args).await.map_err(|e| anyhow!("Error in vanity subcommand: {}", e))
+        }
+        Some(GnostrCommands::CreatePublicChannel(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::create_public_channel::create_public_channel(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in create_public_channel subcommand: {}", e))
+        }
+        Some(GnostrCommands::SetChannelMetadata(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::set_channel_metadata::set_channel_metadata(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in set_channel_metadata subcommand: {}", e))
+        }
+        Some(GnostrCommands::SendChannelMessage(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::send_channel_message::send_channel_message(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in send_channel_message subcommand: {}", e))
+        }
+        Some(GnostrCommands::HidePublicChannelMessage(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::hide_public_channel_message::hide_public_channel_message(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in hide_public_channel_message subcommand: {}", e))
+        }
+        Some(GnostrCommands::MutePublicKey(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::mute_publickey::mute_publickey(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in mute_publickey subcommand: {}", e))
+        }
+        Some(GnostrCommands::BroadcastEvents(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::broadcast_events::broadcast_events(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in broadcast_events subcommand: {}", e))
+        }
+        Some(GnostrCommands::CreateBadge(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::create_badge::create_badge(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in create_badge subcommand: {}", e))
+        }
+        Some(GnostrCommands::AwardBadge(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::award_badge::award_badge(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in award_badge subcommand: {}", e))
+        }
+        Some(GnostrCommands::ProfileBadges(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::profile_badges::set_profile_badges(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in profile_badges subcommand: {}", e))
+        }
+        Some(GnostrCommands::CustomEvent(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::custom_event::create_custom_event(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in custom_event subcommand: {}", e))
+        }
+        Some(GnostrCommands::SetUserStatus(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::user_status::set_user_status(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in set_user_status subcommand: {}", e))
+        }
+        Some(GnostrCommands::Tui(sub_command_args)) => {
+            debug!("main:318:sub_command_args:{:?}", sub_command_args.clone());
+            let mut sub_command_args_mut = sub_command_args.clone();
+            let result: anyhow::Result<()>;// = Ok(()); // Initialize result to Ok
 
-	asyncgit::register_tracing_logging();
-
-	if !valid_path(&cliargs.repo_path) {
-    //TODO: gnostr-cli init
-		bail!("invalid path\nplease run gnostr-tui inside of a non-bare git repository");
-	}
-
-  //TODO: prompt to generate nostr privkey
-  //TODO: and add to git config
-
-	let key_config = KeyConfig::init()
-		.map_err(|e| eprintln!("KeyConfig loading error: {e}"))
-		.unwrap_or_default();
-	let theme = Theme::init(&cliargs.theme);
-
-	setup_terminal()?;
-	defer! {
-		shutdown_terminal();
-	}
-
-	set_panic_handlers()?;
-
-	let mut terminal = start_terminal(io::stdout())?;
-	let mut repo_path = cliargs.repo_path;
-	let input = Input::new();
-
-	let updater = if cliargs.notify_watcher {
-		Updater::NotifyWatcher
-	} else {
-		Updater::Ticker
-	};
-
-	loop {
-		let quit_state = run_app(
-			app_start,
-			repo_path.clone(),
-			theme.clone(),
-			key_config.clone(),
-			&input,
-			updater,
-			&mut terminal,
-		)?;
-
-		match quit_state {
-			QuitState::OpenSubmodule(p) => {
-				repo_path = p;
-			}
-			_ => break,
-		}
-	}
-
-	Ok(())
-}
-
-fn run_app(
-	app_start: Instant,
-	repo: RepoPath,
-	theme: Theme,
-	key_config: KeyConfig,
-	input: &Input,
-	updater: Updater,
-	terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-) -> Result<QuitState, anyhow::Error> {
-	let (tx_git, rx_git) = unbounded();
-	let (tx_app, rx_app) = unbounded();
-
-	let rx_input = input.receiver();
-
-	let (rx_ticker, rx_watcher) = match updater {
-		Updater::NotifyWatcher => {
-			let repo_watcher =
-				RepoWatcher::new(repo_work_dir(&repo)?.as_str());
-
-			(never(), repo_watcher.receiver())
-		}
-		Updater::Ticker => (tick(TICK_INTERVAL), never()),
-	};
-
-	let spinner_ticker = tick(SPINNER_INTERVAL);
-
-	let mut app = App::new(
-		RefCell::new(repo),
-		&tx_git,
-		&tx_app,
-		input.clone(),
-		theme,
-		key_config,
-	)?;
-
-	let mut spinner = Spinner::default();
-	let mut first_update = true;
-
-	log::trace!("app start: {} ms", app_start.elapsed().as_millis());
-
-	loop {
-		let event = if first_update {
-			first_update = false;
-			QueueEvent::Notify
-		} else {
-			select_event(
-				&rx_input,
-				&rx_git,
-				&rx_app,
-				&rx_ticker,
-				&rx_watcher,
-				&spinner_ticker,
-			)?
-		};
-
-		{
-			if matches!(event, QueueEvent::SpinnerUpdate) {
-				spinner.update();
-				spinner.draw(terminal)?;
-				continue;
-			}
-
-			scope_time!("loop");
-
-			match event {
-				QueueEvent::InputEvent(ev) => {
-					if matches!(
-						ev,
-						InputEvent::State(InputState::Polling)
-					) {
-						//Note: external ed closed, we need to re-hide cursor
-						terminal.hide_cursor()?;
-					}
-					app.event(ev)?;
-				}
-				QueueEvent::Tick | QueueEvent::Notify => {
-					app.update()?;
-				}
-				QueueEvent::AsyncEvent(ev) => {
-					if !matches!(
-						ev,
-						AsyncNotification::Git(
-							AsyncGitNotification::FinishUnchanged
-						)
-					) {
-						app.update_async(ev)?;
-					}
-				}
-				QueueEvent::SpinnerUpdate => unreachable!(),
-			}
-
-			draw(terminal, &app)?;
-
-			spinner.set_state(app.any_work_pending());
-			spinner.draw(terminal)?;
-
-			if app.is_quit() {
-				break;
-			}
-		}
-	}
-
-	Ok(app.quit_state())
-}
-
-fn setup_terminal() -> Result<()> {
-	enable_raw_mode()?;
-	io::stdout().execute(EnterAlternateScreen)?;
-	Ok(())
-}
-
-fn shutdown_terminal() {
-	let leave_screen =
-		io::stdout().execute(LeaveAlternateScreen).map(|_f| ());
-
-	if let Err(e) = leave_screen {
-		eprintln!("leave_screen failed:\n{e}");
-	}
-
-	let leave_raw_mode = disable_raw_mode();
-
-	if let Err(e) = leave_raw_mode {
-		eprintln!("leave_raw_mode failed:\n{e}");
-	}
-}
-
-fn draw<B: Backend>(
-	terminal: &mut Terminal<B>,
-	app: &App,
-) -> io::Result<()> {
-	if app.requires_redraw() {
-		terminal.resize(terminal.size()?)?;
-	}
-
-	terminal.draw(|f| {
-		if let Err(e) = app.draw(f) {
-			log::error!("failed to draw: {:?}", e);
-		}
-	})?;
-
-	Ok(())
-}
-
-fn valid_path(repo_path: &RepoPath) -> bool {
-	let error = asyncgit::sync::repo_open_error(repo_path);
-	if let Some(error) = &error {
-		eprintln!("repo open error: {error}");
-	}
-	error.is_none()
-}
-
-fn select_event(
-	rx_input: &Receiver<InputEvent>,
-	rx_git: &Receiver<AsyncGitNotification>,
-	rx_app: &Receiver<AsyncAppNotification>,
-	rx_ticker: &Receiver<Instant>,
-	rx_notify: &Receiver<()>,
-	rx_spinner: &Receiver<Instant>,
-) -> Result<QueueEvent> {
-	let mut sel = Select::new();
-
-	sel.recv(rx_input);
-	sel.recv(rx_git);
-	sel.recv(rx_app);
-	sel.recv(rx_ticker);
-	sel.recv(rx_notify);
-	sel.recv(rx_spinner);
-
-	let oper = sel.select();
-	let index = oper.index();
-
-	let ev = match index {
-		0 => oper.recv(rx_input).map(QueueEvent::InputEvent),
-		1 => oper.recv(rx_git).map(|e| {
-			QueueEvent::AsyncEvent(AsyncNotification::Git(e))
-		}),
-		2 => oper.recv(rx_app).map(|e| {
-			QueueEvent::AsyncEvent(AsyncNotification::App(e))
-		}),
-		3 => oper.recv(rx_ticker).map(|_| QueueEvent::Notify),
-		4 => oper.recv(rx_notify).map(|()| QueueEvent::Notify),
-		5 => oper.recv(rx_spinner).map(|_| QueueEvent::SpinnerUpdate),
-		_ => bail!("unknown select source"),
-	}?;
-
-	Ok(ev)
-}
-
-fn start_terminal<W: Write>(
-	buf: W,
-) -> io::Result<Terminal<CrosstermBackend<W>>> {
-	let backend = CrosstermBackend::new(buf);
-	let mut terminal = Terminal::new(backend)?;
-	terminal.hide_cursor()?;
-	terminal.clear()?;
-
-	Ok(terminal)
-}
-
-// do log::error! and eprintln! in one line, pass sting, error and backtrace
-macro_rules! log_eprintln {
-	($string:expr, $e:expr, $bt:expr) => {
-		log::error!($string, $e, $bt);
-		eprintln!($string, $e, $bt);
-	};
-}
-
-fn set_panic_handlers() -> Result<()> {
-	// regular panic handler
-	panic::set_hook(Box::new(|e| {
-		let backtrace = Backtrace::new();
-		log_eprintln!("panic: {:?}\ntrace:\n{:?}", e, backtrace);
-		shutdown_terminal();
-	}));
-
-	// global threadpool
-	rayon_core::ThreadPoolBuilder::new()
-		.panic_handler(|e| {
-			let backtrace = Backtrace::new();
-			log_eprintln!("panic: {:?}\ntrace:\n{:?}", e, backtrace);
-			shutdown_terminal();
-			process::abort();
-		})
-		.num_threads(4)
-		.build_global()?;
-
-	Ok(())
+            // Check if GNOSTR_GITDIR environment variable is set
+            if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
+                eprintln!("333:The GNOSTR_GITDIR environment variable is set to: {}", gitdir_env_value);
+                // Check if --gitdir argument was provided (from command line args)
+                if let Some(git_dir_value) = gitdir_value { // Assuming gitdir_value is from command line args parsing
+                    eprintln!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
+                    let gitdir_string = gitdir_env_value.to_string();
+                    debug!("342:OVERRIDE!! The git directory is: {:?}", gitdir_string.clone());
+                    sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
+                    // Call tui and map error, then assign to result
+                    result = sub_commands::tui::tui(sub_command_args_mut.clone()).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
+                } else {
+                    // If gitdir_value is None, we don't override. The result remains Ok(()).
+                    result = Ok(()); // Explicitly set for clarity
+                }
+            } else {
+                // GNOSTR_GITDIR environment variable is not set.
+                debug!("354:The GNOSTR_GITDIR environment variable is not set.");
+                // Call tui with original args and map error, then assign to result
+                result = sub_commands::tui::tui(sub_command_args.clone()).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
+            }
+            result // Return the accumulated result
+        }
+        Some(GnostrCommands::Relay(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            let local_set = tokio::task::LocalSet::new();
+            local_set.run_until(async move {
+                sub_commands::relay::relay(sub_command_args.clone()).await
+            }).await.map_err(|e| anyhow!("Error in relay subcommand: {}", e))
+        }
+        Some(GnostrCommands::Sniper(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::sniper::run_sniper(sub_command_args.clone())
+                .await
+                .map_err(|e| anyhow!("Error in sniper subcommand: {}", e))
+        }
+        Some(GnostrCommands::Gitsh(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::gitsh::gitsh(sub_command_args).await.map_err(|e| anyhow!("Error in gitsh subcommand: {}", e))
+        }
+        None => {
+            // TODO handle more scenarios
+            // Call tui with default commands and propagate its result
+            sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default()).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
+        }
+    }
 }

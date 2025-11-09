@@ -1,15 +1,15 @@
 //! asyncgit
 
-#![forbid(missing_docs)]
-#![deny(
-	unused_imports,
-	unused_must_use,
-	dead_code,
-	unstable_name_collisions,
-	unused_assignments
+#![warn(missing_docs)]
+#![warn(
+    unused_imports,
+    unused_must_use,
+    dead_code,
+    unstable_name_collisions,
+    unused_assignments
 )]
-#![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
-#![deny(
+#![warn(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
+#![warn(
 	clippy::filetype_is_file,
 	clippy::cargo,
 	clippy::unwrap_used,
@@ -20,15 +20,26 @@
 	// clippy::expect_used
 )]
 #![allow(
-	clippy::module_name_repetitions,
-	clippy::must_use_candidate,
-	clippy::missing_errors_doc
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
+    clippy::missing_errors_doc
 )]
 //TODO:
 #![allow(
-	clippy::significant_drop_tightening,
-	clippy::missing_panics_doc
+    clippy::significant_drop_tightening,
+    clippy::missing_panics_doc,
+    clippy::multiple_crate_versions,
+    clippy::needless_pass_by_ref_mut,
+    clippy::too_long_first_doc_paragraph,
+    clippy::set_contains_or_insert,
+    clippy::empty_docs
 )]
+
+/// pub mod gitui
+pub mod gitui;
+
+/// pub mod gnostr
+pub mod gnostr;
 
 pub mod asyncjob;
 mod blame;
@@ -51,90 +62,94 @@ pub mod sync;
 mod tags;
 mod treefiles;
 
-pub use crate::{
-	blame::{AsyncBlame, BlameParams},
-	branches::AsyncBranchesJob,
-	commit_files::{AsyncCommitFiles, CommitFilesParams},
-	diff::{AsyncDiff, DiffParams, DiffType},
-	error::{Error, Result},
-	fetch_job::AsyncFetchJob,
-	filter_commits::{AsyncCommitFilterJob, CommitFilterResult},
-	progress::ProgressPercent,
-	pull::{AsyncPull, FetchRequest},
-	push::{AsyncPush, PushRequest},
-	push_tags::{AsyncPushTags, PushTagsRequest},
-	remote_progress::{RemoteProgress, RemoteProgressState},
-	revlog::{AsyncLog, FetchStatus},
-	status::{AsyncStatus, StatusParams},
-	sync::{
-		diff::{DiffLine, DiffLineType, FileDiff},
-		remotes::push::PushType,
-		status::{StatusItem, StatusItemType},
-	},
-	tags::AsyncTags,
-	treefiles::AsyncTreeFilesJob,
-};
-pub use git2::message_prettify;
 use std::{
-	collections::hash_map::DefaultHasher,
-	hash::{Hash, Hasher},
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
+
+pub use git2::message_prettify;
+
+pub use crate::{
+    blame::{AsyncBlame, BlameParams},
+    branches::AsyncBranchesJob,
+    commit_files::{AsyncCommitFiles, CommitFilesParams},
+    diff::{AsyncDiff, DiffParams, DiffType},
+    error::{Error, Result},
+    fetch_job::AsyncFetchJob,
+    filter_commits::{AsyncCommitFilterJob, CommitFilterResult},
+    progress::ProgressPercent,
+    pull::{AsyncPull, FetchRequest},
+    push::{AsyncPush, PushRequest},
+    push_tags::{AsyncPushTags, PushTagsRequest},
+    remote_progress::{RemoteProgress, RemoteProgressState},
+    revlog::{AsyncLog, FetchStatus},
+    status::{AsyncStatus, StatusParams},
+    sync::{
+        diff::{DiffLine, DiffLineType, FileDiff},
+        remotes::push::PushType,
+        status::{StatusItem, StatusItemType},
+    },
+    tags::AsyncTags,
+    treefiles::AsyncTreeFilesJob,
 };
 
 /// this type is used to communicate events back through the channel
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AsyncGitNotification {
-	/// this indicates that no new state was fetched but that a async process finished
-	FinishUnchanged,
-	///
-	Status,
-	///
-	Diff,
-	///
-	Log,
-	///
-	FileLog,
-	///
-	CommitFiles,
-	///
-	Tags,
-	///
-	Push,
-	///
-	PushTags,
-	///
-	Pull,
-	///
-	Blame,
-	///
-	RemoteTags,
-	///
-	Fetch,
-	///
-	Branches,
-	///
-	TreeFiles,
-	///
-	CommitFilter,
+    /// this indicates that no new state was fetched but that a async
+    /// process finished
+    FinishUnchanged,
+    ///
+    Status,
+    ///
+    Diff,
+    ///
+    Log,
+    ///
+    FileLog,
+    ///
+    CommitFiles,
+    ///
+    Tags,
+    ///
+    Push,
+    ///
+    PushTags,
+    ///
+    Pull,
+    ///
+    Blame,
+    ///
+    RemoteTags,
+    ///
+    Fetch,
+    ///
+    Branches,
+    ///
+    TreeFiles,
+    ///
+    CommitFilter,
 }
 
-/// helper function to calculate the hash of an arbitrary type that implements the `Hash` trait
+/// helper function to calculate the hash of an arbitrary type that
+/// implements the `Hash` trait
 pub fn hash<T: Hash + ?Sized>(v: &T) -> u64 {
-	let mut hasher = DefaultHasher::new();
-	v.hash(&mut hasher);
-	hasher.finish()
+    let mut hasher = DefaultHasher::new();
+    v.hash(&mut hasher);
+    hasher.finish()
 }
 
 ///
 #[cfg(feature = "trace-libgit")]
 pub fn register_tracing_logging() -> bool {
-	fn git_trace(level: git2::TraceLevel, msg: &str) {
-		log::info!("[{:?}]: {}", level, msg);
-	}
-	git2::trace_set(git2::TraceLevel::Trace, git_trace)
+    fn git_trace(level: git2::TraceLevel, msg: &str) {
+        log::info!("[{:?}]: {}", level, msg);
+    }
+    git2::trace_set(git2::TraceLevel::Trace, git_trace)
 }
 
 ///
 #[cfg(not(feature = "trace-libgit"))]
 pub fn register_tracing_logging() -> bool {
-	true
+    true
 }

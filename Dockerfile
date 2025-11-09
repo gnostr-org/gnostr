@@ -1,21 +1,21 @@
-#FROM emscripten\/emsdk\:latest as base
-FROM rust:latest as base
-LABEL org.opencontainers.image.source="https://github.com/gnostr-org/gnostr-tui"
-LABEL org.opencontainers.image.description="gnostr-tui-docker"
-RUN touch updated
-RUN echo $(date +%s) > updated
-RUN apt-get update
-RUN apt-get install bash libssl-dev pkg-config python-is-python3 systemd -y
-RUN chmod +x /usr/bin/systemctl
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-WORKDIR /tmp
-RUN git clone --recurse-submodules -j2 --branch v0.0.2 --depth 1 https://github.com/gnostr-org/gnostr-tui.git
-WORKDIR /tmp/gnostr-tui
-#RUN . $HOME/.cargo/env && cargo build --release && cargo install --path .
-RUN install ./serve /usr/local/bin || true
-ENV PATH=$PATH:/usr/bin/systemctl
-RUN ps -p 1 -o comm=
-EXPOSE 80 6102 8080 ${PORT}
-VOLUME /src
-FROM base as gnostr-tui
-
+FROM rust:latest AS build
+EXPOSE 4000
+WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    curl \
+    gzip \
+    sudo \
+    tar \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl -L https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz \
+    | tar -xzf - \
+    --directory /usr/local/bin
+RUN cargo-binstall -V
+RUN cargo-binstall cross -y
+RUN cargo-binstall gnostr --force -y
+RUN git init
+RUN git config --global user.email "admin@gnostr.org"
+RUN git config --global user.name "admin@gnostr.org"
+RUN GIT_AUTHOR_DATE="Thu, 01 Jan 1970 00:00:00 +0000" GIT_COMMITTER_DATE="Thu, 01 Jan 1970 00:00:00 +0000" git commit --allow-empty -m 'gnostr repo'
+ENTRYPOINT ["bash"]

@@ -5,9 +5,27 @@
 //!  * `.git/hooks/`
 //!  * whatever list of paths provided as `other_paths` (in order)
 //!
-//! most basic hook is: [`hooks_pre_commit`]. see also other `hooks_*` functions.
+//! most basic hook is: [`hooks_pre_commit`]. see also other `hooks_*`
+//! functions.
 //!
-//! [`create_hook`] is useful to create git hooks from code (unittest make heavy usage of it)
+//! [`create_hook`] is useful to create git hooks from code (unittest
+//! make heavy usage of it)
+
+#![forbid(unsafe_code)]
+#![deny(
+	unused_imports,
+	unused_must_use,
+	dead_code,
+	unstable_name_collisions,
+	unused_assignments
+)]
+#![deny(clippy::all, clippy::perf, clippy::pedantic, clippy::nursery)]
+#![allow(
+	clippy::missing_errors_doc,
+	clippy::must_use_candidate,
+	clippy::module_name_repetitions
+)]
+
 mod error;
 mod hookspath;
 
@@ -15,22 +33,20 @@ use std::{
 	fs::File,
 	io::{Read, Write},
 	path::{Path, PathBuf},
-	process::Command,
 };
 
 pub use error::HooksError;
 use error::Result;
-use hookspath::HookPaths;
-
 use git2::Repository;
+use hookspath::HookPaths;
 
 pub const HOOK_POST_COMMIT: &str = "post-commit";
 pub const HOOK_PRE_COMMIT: &str = "pre-commit";
 pub const HOOK_COMMIT_MSG: &str = "commit-msg";
+pub const HOOK_PREPARE_COMMIT_MSG: &str = "prepare-commit-msg";
 
 const HOOK_COMMIT_MSG_TEMP_FILE: &str = "COMMIT_EDITMSG";
 
-///
 #[derive(Debug, PartialEq, Eq)]
 pub enum HookResult {
 	/// No hook found
@@ -55,17 +71,21 @@ pub enum HookResult {
 
 impl HookResult {
 	/// helper to check if result is ok
-	pub fn is_ok(&self) -> bool {
-		matches!(self, HookResult::Ok { .. })
+	pub const fn is_ok(&self) -> bool {
+		matches!(self, Self::Ok { .. })
 	}
 
 	/// helper to check if result was run and not rejected
-	pub fn is_not_successful(&self) -> bool {
-		matches!(self, HookResult::RunNotSuccessful { .. })
+	pub const fn is_not_successful(&self) -> bool {
+		matches!(self, Self::RunNotSuccessful { .. })
 	}
 }
 
-/// helper method to create git hooks programmatically (heavy used in unittests)
+/// helper method to create git hooks programmatically (heavy used in
+/// unittests)
+///
+/// # Panics
+/// Panics if hook could not be created
 pub fn create_hook(
 	r: &Repository,
 	hook: &str,
@@ -85,7 +105,7 @@ fn create_hook_in_path(path: &Path, hook_script: &[u8]) {
 
 	#[cfg(unix)]
 	{
-		Command::new("chmod")
+		std::process::Command::new("chmod")
 			.arg("+x")
 			.arg(path)
 			// .current_dir(path)
@@ -94,10 +114,12 @@ fn create_hook_in_path(path: &Path, hook_script: &[u8]) {
 	}
 }
 
-/// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
-/// we use the same convention as other git clients to create a temp file containing
-/// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and pass it's relative path as the only
-/// parameter to the hook script.
+// /// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
+/// we use the same convention as other git clients to create a temp
+/// file containing
+// /// the commit message at `<.git|hooksPath>/COMMIT_EDITMSG` and
+// pass it's relative path as the only /// parameter to the hook
+// script.
 pub fn hooks_commit_msg(
 	repo: &Repository,
 	other_paths: Option<&[&str]>,
@@ -152,12 +174,69 @@ pub fn hooks_post_commit(
 	hook.run_hook(&[])
 }
 
+pub enum PrepareCommitMsgSource {
+	Message,
+	Template,
+	Merge,
+	Squash,
+	Commit(git2::Oid),
+}
+
+/// this hook is documented here <https://git-scm.com/docs/githooks#_prepare_commit_msg>
+#[allow(clippy::needless_pass_by_value)]
+pub fn hooks_prepare_commit_msg(
+	repo: &Repository,
+	other_paths: Option<&[&str]>,
+	source: PrepareCommitMsgSource,
+	msg: &mut String,
+) -> Result<HookResult> {
+	let hook =
+		HookPaths::new(repo, other_paths, HOOK_PREPARE_COMMIT_MSG)?;
+
+	if !hook.found() {
+		return Ok(HookResult::NoHookFound);
+	}
+
+	let temp_file = hook.git.join(HOOK_COMMIT_MSG_TEMP_FILE);
+	File::create(&temp_file)?.write_all(msg.as_bytes())?;
+
+	let temp_file_path = temp_file.as_os_str().to_string_lossy();
+
+	let vec = vec![temp_file_path.as_ref(), match source {
+		PrepareCommitMsgSource::Message => "message",
+		PrepareCommitMsgSource::Template => "template",
+		PrepareCommitMsgSource::Merge => "merge",
+		PrepareCommitMsgSource::Squash => "squash",
+		PrepareCommitMsgSource::Commit(_) => "commit",
+	}];
+	let mut args = vec;
+
+	let id = if let PrepareCommitMsgSource::Commit(id) = &source {
+		Some(id.to_string())
+	} else {
+		None
+	};
+
+	if let Some(id) = &id {
+		args.push(id);
+	}
+
+	let res = hook.run_hook(args.as_slice())?;
+
+	// load possibly altered msg
+	msg.clear();
+	File::open(temp_file)?.read_to_string(msg)?;
+
+	Ok(res)
+}
+
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use git2_testing::{repo_init, repo_init_bare};
 	use pretty_assertions::assert_eq;
 	use tempfile::TempDir;
+
+	use super::*;
 
 	#[test]
 	fn test_smoke() {
@@ -280,9 +359,9 @@ exit 1
 			let custom_hooks_path = td.path().join(".myhooks");
 			std::fs::create_dir(dbg!(&custom_hooks_path)).unwrap();
 			create_hook_in_path(
-				dbg!(custom_hooks_path
-					.join(HOOK_PRE_COMMIT)
-					.as_path()),
+				dbg!(
+					custom_hooks_path.join(HOOK_PRE_COMMIT).as_path()
+				),
 				reject_hook,
 			);
 		}
@@ -323,9 +402,11 @@ exit 1
 			unreachable!()
 		};
 
-		assert!(stdout
-			.lines()
-			.any(|line| line.starts_with("export PATH")));
+		assert!(
+			stdout
+				.lines()
+				.any(|line| line.starts_with("export PATH"))
+		);
 	}
 
 	#[test]
@@ -479,5 +560,66 @@ exit 0
 			HookPaths::new(&repo, None, HOOK_POST_COMMIT).unwrap();
 
 		assert_eq!(hook.pwd, git_root.parent().unwrap());
+	}
+
+	#[test]
+	fn test_hooks_prep_commit_msg_success() {
+		let (_td, repo) = repo_init();
+
+		let hook = b"#!/bin/sh
+echo msg:$2 > $1
+exit 0
+        ";
+
+		create_hook(&repo, HOOK_PREPARE_COMMIT_MSG, hook);
+
+		let mut msg = String::from("test");
+		let res = hooks_prepare_commit_msg(
+			&repo,
+			None,
+			PrepareCommitMsgSource::Message,
+			&mut msg,
+		)
+		.unwrap();
+
+		assert!(matches!(res, HookResult::Ok { .. }));
+		assert_eq!(msg, String::from("msg:message\n"));
+	}
+
+	#[test]
+	fn test_hooks_prep_commit_msg_reject() {
+		let (_td, repo) = repo_init();
+
+		let hook = b"#!/bin/sh
+echo $2,$3 > $1
+echo 'rejected'
+exit 2
+        ";
+
+		create_hook(&repo, HOOK_PREPARE_COMMIT_MSG, hook);
+
+		let mut msg = String::from("test");
+		let res = hooks_prepare_commit_msg(
+			&repo,
+			None,
+			PrepareCommitMsgSource::Commit(git2::Oid::zero()),
+			&mut msg,
+		)
+		.unwrap();
+
+		let HookResult::RunNotSuccessful { code, stdout, .. } = res
+		else {
+			unreachable!()
+		};
+
+		assert_eq!(code.unwrap(), 2);
+		assert_eq!(&stdout, "rejected\n");
+
+		assert_eq!(
+			msg,
+			String::from(
+				"commit,0000000000000000000000000000000000000000\n"
+			)
+		);
 	}
 }

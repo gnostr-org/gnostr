@@ -1,379 +1,324 @@
+use git2::{build::CheckoutBuilder, Oid, Repository, StashApplyOptions, StashFlags};
+use scopetime::scope_time;
+
 use super::{CommitId, RepoPath};
 use crate::{
-	error::{Error, Result},
-	sync::repository::repo,
+    error::{Error, Result},
+    sync::repository::repo,
 };
-use git2::{
-	build::CheckoutBuilder, Oid, Repository, StashApplyOptions,
-	StashFlags,
-};
-use scopetime::scope_time;
 
 ///
 pub fn get_stashes(repo_path: &RepoPath) -> Result<Vec<CommitId>> {
-	scope_time!("get_stashes");
+    scope_time!("get_stashes");
 
-	let mut repo = repo(repo_path)?;
-	let mut list = Vec::new();
-	repo.stash_foreach(|_index, _msg, id| {
-		list.push((*id).into());
-		true
-	})?;
+    let mut repo = repo(repo_path)?;
+    let mut list = Vec::new();
+    repo.stash_foreach(|_index, _msg, id| {
+        list.push((*id).into());
+        true
+    })?;
 
-	Ok(list)
+    Ok(list)
 }
 
 ///
-pub fn stash_drop(
-	repo_path: &RepoPath,
-	stash_id: CommitId,
-) -> Result<()> {
-	scope_time!("stash_drop");
+pub fn stash_drop(repo_path: &RepoPath, stash_id: CommitId) -> Result<()> {
+    scope_time!("stash_drop");
 
-	let mut repo = repo(repo_path)?;
+    let mut repo = repo(repo_path)?;
 
-	let index = get_stash_index(&mut repo, stash_id.into())?;
+    let index = get_stash_index(&mut repo, stash_id.into())?;
 
-	repo.stash_drop(index)?;
+    repo.stash_drop(index)?;
 
-	Ok(())
+    Ok(())
 }
 
 ///
-pub fn stash_pop(
-	repo_path: &RepoPath,
-	stash_id: CommitId,
-) -> Result<()> {
-	scope_time!("stash_pop");
+pub fn stash_pop(repo_path: &RepoPath, stash_id: CommitId) -> Result<()> {
+    scope_time!("stash_pop");
 
-	let mut repo = repo(repo_path)?;
+    let mut repo = repo(repo_path)?;
 
-	let index = get_stash_index(&mut repo, stash_id.into())?;
+    let index = get_stash_index(&mut repo, stash_id.into())?;
 
-	repo.stash_pop(index, None)?;
+    repo.stash_pop(index, None)?;
 
-	Ok(())
+    Ok(())
 }
 
 ///
-pub fn stash_apply(
-	repo_path: &RepoPath,
-	stash_id: CommitId,
-	allow_conflicts: bool,
-) -> Result<()> {
-	scope_time!("stash_apply");
+pub fn stash_apply(repo_path: &RepoPath, stash_id: CommitId, allow_conflicts: bool) -> Result<()> {
+    scope_time!("stash_apply");
 
-	let mut repo = repo(repo_path)?;
+    let mut repo = repo(repo_path)?;
 
-	let index = get_stash_index(&mut repo, stash_id.get_oid())?;
+    let index = get_stash_index(&mut repo, stash_id.get_oid())?;
 
-	let mut checkout = CheckoutBuilder::new();
-	checkout.allow_conflicts(allow_conflicts);
+    let mut checkout = CheckoutBuilder::new();
+    checkout.allow_conflicts(allow_conflicts);
 
-	let mut opt = StashApplyOptions::default();
-	opt.checkout_options(checkout);
-	repo.stash_apply(index, Some(&mut opt))?;
+    let mut opt = StashApplyOptions::default();
+    opt.checkout_options(checkout);
+    repo.stash_apply(index, Some(&mut opt))?;
 
-	Ok(())
+    Ok(())
 }
 
-fn get_stash_index(
-	repo: &mut Repository,
-	stash_id: Oid,
-) -> Result<usize> {
-	let mut idx = None;
+fn get_stash_index(repo: &mut Repository, stash_id: Oid) -> Result<usize> {
+    let mut idx = None;
 
-	repo.stash_foreach(|index, _msg, id| {
-		if *id == stash_id {
-			idx = Some(index);
-			false
-		} else {
-			true
-		}
-	})?;
+    repo.stash_foreach(|index, _msg, id| {
+        if *id == stash_id {
+            idx = Some(index);
+            false
+        } else {
+            true
+        }
+    })?;
 
-	idx.ok_or_else(|| {
-		Error::Generic("stash commit not found".to_string())
-	})
+    idx.ok_or_else(|| Error::Generic("stash commit not found".to_string()))
 }
 
 ///
 pub fn stash_save(
-	repo_path: &RepoPath,
-	message: Option<&str>,
-	include_untracked: bool,
-	keep_index: bool,
+    repo_path: &RepoPath,
+    message: Option<&str>,
+    include_untracked: bool,
+    keep_index: bool,
 ) -> Result<CommitId> {
-	scope_time!("stash_save");
+    scope_time!("stash_save");
 
-	let mut repo = repo(repo_path)?;
+    let mut repo = repo(repo_path)?;
 
-	let sig = repo.signature()?;
+    let sig = repo.signature()?;
 
-	let mut options = StashFlags::DEFAULT;
+    let mut options = StashFlags::DEFAULT;
 
-	if include_untracked {
-		options.insert(StashFlags::INCLUDE_UNTRACKED);
-	}
-	if keep_index {
-		options.insert(StashFlags::KEEP_INDEX);
-	}
+    if include_untracked {
+        options.insert(StashFlags::INCLUDE_UNTRACKED);
+    }
+    if keep_index {
+        options.insert(StashFlags::KEEP_INDEX);
+    }
 
-	let id = repo.stash_save2(&sig, message, Some(options))?;
+    let id = repo.stash_save2(&sig, message, Some(options))?;
 
-	Ok(CommitId::new(id))
+    Ok(CommitId::new(id))
 }
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use crate::sync::{
-		commit, get_commit_files, get_commits_info, stage_add_file,
-		tests::{
-			debug_cmd_print, get_statuses, repo_init,
-			write_commit_file,
-		},
-		utils::{repo_read_file, repo_write_file},
-	};
-	use std::{fs::File, io::Write, path::Path};
+    use std::{fs::File, io::Write, path::Path};
 
-	#[test]
-	fn test_smoke() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+    use super::*;
+    use crate::sync::{
+        commit, get_commit_files, get_commits_info, stage_add_file,
+        tests::{debug_cmd_print, get_statuses, repo_init, write_commit_file},
+        utils::{repo_read_file, repo_write_file},
+    };
 
-		assert_eq!(
-			stash_save(repo_path, None, true, false).is_ok(),
-			false
-		);
+    #[test]
+    fn test_smoke() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		assert_eq!(get_stashes(repo_path).unwrap().is_empty(), true);
-	}
+        assert_eq!(stash_save(repo_path, None, true, false).is_ok(), false);
 
-	#[test]
-	fn test_stashing() -> Result<()> {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        assert_eq!(get_stashes(repo_path).unwrap().is_empty(), true);
+    }
 
-		File::create(root.join("foo.txt"))?
-			.write_all(b"test\nfoo")?;
+    #[test]
+    fn test_stashing() -> Result<()> {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		assert_eq!(get_statuses(repo_path), (1, 0));
+        File::create(root.join("foo.txt"))?.write_all(b"test\nfoo")?;
 
-		stash_save(repo_path, None, true, false)?;
+        assert_eq!(get_statuses(repo_path), (1, 0));
 
-		assert_eq!(get_statuses(repo_path), (0, 0));
+        stash_save(repo_path, None, true, false)?;
 
-		Ok(())
-	}
+        assert_eq!(get_statuses(repo_path), (0, 0));
 
-	#[test]
-	fn test_stashes() -> Result<()> {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        Ok(())
+    }
 
-		File::create(root.join("foo.txt"))?
-			.write_all(b"test\nfoo")?;
+    #[test]
+    fn test_stashes() -> Result<()> {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		stash_save(repo_path, Some("foo"), true, false)?;
+        File::create(root.join("foo.txt"))?.write_all(b"test\nfoo")?;
 
-		let res = get_stashes(repo_path)?;
+        stash_save(repo_path, Some("foo"), true, false)?;
 
-		assert_eq!(res.len(), 1);
+        let res = get_stashes(repo_path)?;
 
-		let infos =
-			get_commits_info(repo_path, &[res[0]], 100).unwrap();
+        assert_eq!(res.len(), 1);
 
-		assert_eq!(infos[0].message, "On master: foo");
+        let infos = get_commits_info(repo_path, &[res[0]], 100).unwrap();
 
-		Ok(())
-	}
+        assert_eq!(infos[0].message, "On master: foo");
 
-	#[test]
-	fn test_stash_nothing_untracked() -> Result<()> {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        Ok(())
+    }
 
-		File::create(root.join("foo.txt"))?
-			.write_all(b"test\nfoo")?;
+    #[test]
+    fn test_stash_nothing_untracked() -> Result<()> {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		assert!(
-			stash_save(repo_path, Some("foo"), false, false).is_err()
-		);
+        File::create(root.join("foo.txt"))?.write_all(b"test\nfoo")?;
 
-		Ok(())
-	}
+        assert!(stash_save(repo_path, Some("foo"), false, false).is_err());
 
-	#[test]
-	fn test_stash_without_2nd_parent() -> Result<()> {
-		let file_path1 = Path::new("file1.txt");
-		let (_td, repo) = repo_init()?;
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        Ok(())
+    }
 
-		File::create(root.join(file_path1))?.write_all(b"test")?;
-		stage_add_file(repo_path, file_path1)?;
-		commit(repo_path, "c1")?;
+    #[test]
+    fn test_stash_without_second_parent() -> Result<()> {
+        let file_path1 = Path::new("file1.txt");
+        let (_td, repo) = repo_init()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		File::create(root.join(file_path1))?
-			.write_all(b"modified")?;
+        File::create(root.join(file_path1))?.write_all(b"test")?;
+        stage_add_file(repo_path, file_path1)?;
+        commit(repo_path, "c1")?;
 
-		//NOTE: apparently `libgit2` works differently to git stash in
-		//always creating the third parent for untracked files while the
-		//cli skips that step when no new files exist
-		debug_cmd_print(repo_path, "git stash");
+        File::create(root.join(file_path1))?.write_all(b"modified")?;
 
-		let stash = get_stashes(repo_path)?[0];
+        //NOTE: apparently `libgit2` works differently to git stash
+        // in always creating the third parent for untracked files
+        // while the cli skips that step when no new files exist
+        debug_cmd_print(repo_path, "git stash");
 
-		let diff = get_commit_files(repo_path, stash, None)?;
+        let stash = get_stashes(repo_path)?[0];
 
-		assert_eq!(diff.len(), 1);
+        let diff = get_commit_files(repo_path, stash, None)?;
 
-		Ok(())
-	}
+        assert_eq!(diff.len(), 1);
 
-	#[test]
-	fn test_stash_apply_conflict() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        Ok(())
+    }
 
-		repo_write_file(&repo, "test.txt", "test").unwrap();
+    #[test]
+    fn test_stash_apply_conflict() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		let id =
-			stash_save(repo_path, Some("foo"), true, false).unwrap();
+        repo_write_file(&repo, "test.txt", "test").unwrap();
 
-		repo_write_file(&repo, "test.txt", "foo").unwrap();
+        let id = stash_save(repo_path, Some("foo"), true, false).unwrap();
 
-		let res = stash_apply(repo_path, id, false);
+        repo_write_file(&repo, "test.txt", "foo").unwrap();
 
-		assert!(res.is_err());
-	}
+        let res = stash_apply(repo_path, id, false);
 
-	#[test]
-	fn test_stash_apply_conflict2() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        assert!(res.is_err());
+    }
 
-		write_commit_file(&repo, "test.txt", "test", "c1");
+    #[test]
+    fn test_stash_apply_conflict2() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		repo_write_file(&repo, "test.txt", "test2").unwrap();
+        write_commit_file(&repo, "test.txt", "test", "c1");
 
-		let id =
-			stash_save(repo_path, Some("foo"), true, false).unwrap();
+        repo_write_file(&repo, "test.txt", "test2").unwrap();
 
-		repo_write_file(&repo, "test.txt", "test3").unwrap();
+        let id = stash_save(repo_path, Some("foo"), true, false).unwrap();
 
-		let res = stash_apply(repo_path, id, false);
+        repo_write_file(&repo, "test.txt", "test3").unwrap();
 
-		assert!(res.is_err());
-	}
+        let res = stash_apply(repo_path, id, false);
 
-	#[test]
-	fn test_stash_apply_creating_conflict() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        assert!(res.is_err());
+    }
 
-		write_commit_file(&repo, "test.txt", "test", "c1");
+    #[test]
+    fn test_stash_apply_creating_conflict() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		repo_write_file(&repo, "test.txt", "test2").unwrap();
+        write_commit_file(&repo, "test.txt", "test", "c1");
 
-		let id =
-			stash_save(repo_path, Some("foo"), true, false).unwrap();
+        repo_write_file(&repo, "test.txt", "test2").unwrap();
 
-		repo_write_file(&repo, "test.txt", "test3").unwrap();
+        let id = stash_save(repo_path, Some("foo"), true, false).unwrap();
 
-		let res = stash_apply(repo_path, id, false);
+        repo_write_file(&repo, "test.txt", "test3").unwrap();
 
-		assert!(res.is_err());
+        let res = stash_apply(repo_path, id, false);
 
-		let res = stash_apply(repo_path, id, true);
+        assert!(res.is_err());
 
-		assert!(res.is_ok());
-	}
+        let res = stash_apply(repo_path, id, true);
 
-	#[test]
-	fn test_stash_pop_no_conflict() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        assert!(res.is_ok());
+    }
 
-		write_commit_file(&repo, "test.txt", "test", "c1");
+    #[test]
+    fn test_stash_pop_no_conflict() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		repo_write_file(&repo, "test.txt", "test2").unwrap();
+        write_commit_file(&repo, "test.txt", "test", "c1");
 
-		let id =
-			stash_save(repo_path, Some("foo"), true, false).unwrap();
+        repo_write_file(&repo, "test.txt", "test2").unwrap();
 
-		let res = stash_pop(repo_path, id);
+        let id = stash_save(repo_path, Some("foo"), true, false).unwrap();
 
-		assert!(res.is_ok());
-		assert_eq!(
-			repo_read_file(&repo, "test.txt").unwrap(),
-			"test2"
-		);
-	}
+        let res = stash_pop(repo_path, id);
 
-	#[test]
-	fn test_stash_pop_conflict() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        assert!(res.is_ok());
+        assert_eq!(repo_read_file(&repo, "test.txt").unwrap(), "test2");
+    }
 
-		repo_write_file(&repo, "test.txt", "test").unwrap();
+    #[test]
+    fn test_stash_pop_conflict() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		let id =
-			stash_save(repo_path, Some("foo"), true, false).unwrap();
+        repo_write_file(&repo, "test.txt", "test").unwrap();
 
-		repo_write_file(&repo, "test.txt", "test2").unwrap();
+        let id = stash_save(repo_path, Some("foo"), true, false).unwrap();
 
-		let res = stash_pop(repo_path, id);
+        repo_write_file(&repo, "test.txt", "test2").unwrap();
 
-		assert!(res.is_err());
-		assert_eq!(
-			repo_read_file(&repo, "test.txt").unwrap(),
-			"test2"
-		);
-	}
+        let res = stash_pop(repo_path, id);
 
-	#[test]
-	fn test_stash_pop_conflict_after_commit() {
-		let (_td, repo) = repo_init().unwrap();
-		let root = repo.path().parent().unwrap();
-		let repo_path: &RepoPath =
-			&root.as_os_str().to_str().unwrap().into();
+        assert!(res.is_err());
+        assert_eq!(repo_read_file(&repo, "test.txt").unwrap(), "test2");
+    }
 
-		write_commit_file(&repo, "test.txt", "test", "c1");
+    #[test]
+    fn test_stash_pop_conflict_after_commit() {
+        let (_td, repo) = repo_init().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-		repo_write_file(&repo, "test.txt", "test2").unwrap();
+        write_commit_file(&repo, "test.txt", "test", "c1");
 
-		let id =
-			stash_save(repo_path, Some("foo"), true, false).unwrap();
+        repo_write_file(&repo, "test.txt", "test2").unwrap();
 
-		repo_write_file(&repo, "test.txt", "test3").unwrap();
+        let id = stash_save(repo_path, Some("foo"), true, false).unwrap();
 
-		let res = stash_pop(repo_path, id);
+        repo_write_file(&repo, "test.txt", "test3").unwrap();
 
-		assert!(res.is_err());
-		assert_eq!(
-			repo_read_file(&repo, "test.txt").unwrap(),
-			"test3"
-		);
-	}
+        let res = stash_pop(repo_path, id);
+
+        assert!(res.is_err());
+        assert_eq!(repo_read_file(&repo, "test.txt").unwrap(), "test3");
+    }
 }

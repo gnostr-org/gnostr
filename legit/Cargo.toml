@@ -1,0 +1,27 @@
+[package]
+name    = "gnostr-legit"
+version = "1911.921558.782146"
+authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
+edition = "2021"
+rust-version = "1.61.0"
+description = "add proof of work to a git commit"
+documentation = "https://legit.randymcmillan.net"
+readme = "README.md"
+homepage = "https://legit.randymcmillan.net/"
+repository = "https://github.com/randymcmillan/legit.git"
+license = "MIT OR Apache-2.0"
+keywords = ["git", "pow", "proof-of-work"]
+categories = ["command-line-utilities"]
+
+
+[dependencies]
+argparse = "0.2.2"
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+env_logger = "0.10.0"
+git2 = "0.18.1"
+log = "0.4"
+rust-crypto = "^0.2"
+time-0-3 = { package = "time", version = "0.3.34", features = ["formatting", "parsing", "macros", "local-offset"] }
+
+[build-dependencies]
+chrono      = "^0"

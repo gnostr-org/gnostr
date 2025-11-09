@@ -15,9 +15,14 @@
 #![deny(clippy::panic)]
 #![deny(clippy::match_like_matches_macro)]
 #![deny(clippy::needless_update)]
-#![allow(clippy::module_name_repetitions)]
-#![allow(clippy::must_use_candidate)]
-#![allow(clippy::missing_errors_doc)]
+#![allow(
+	clippy::module_name_repetitions,
+	clippy::must_use_candidate,
+	clippy::missing_errors_doc,
+	clippy::empty_docs
+)]
+#![allow(clippy::legacy_numeric_constants)]
+#![allow(clippy::needless_pass_by_ref_mut)]
 
 mod error;
 mod filetree;
@@ -27,7 +32,6 @@ mod tree_iter;
 mod treeitems_iter;
 
 pub use crate::{
-	filetree::FileTree,
-	filetree::MoveSelection,
+	filetree::{FileTree, MoveSelection},
 	item::{FileTreeItem, TreeItemInfo},
 };
