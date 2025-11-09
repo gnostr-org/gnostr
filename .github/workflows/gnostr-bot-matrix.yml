@@ -27,7 +27,7 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         #os: [windows-latest]
         rustup: [stable, nightly]
-      fail-fast: true
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
 
