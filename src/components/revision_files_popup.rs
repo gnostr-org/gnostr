@@ -36,6 +36,10 @@ impl FileTreeOpen {
 			selection: None,
 		}
 	}
+
+	pub const fn get_selection(&self) -> Option<usize> {
+		self.selection
+	}
 }
 
 pub struct RevisionFilesPopup {

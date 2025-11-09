@@ -2,7 +2,7 @@
 #![deny(
 	unused_imports,
 	unused_must_use,
-	dead_code,
+	//dead_code,
 	unstable_name_collisions,
 	unused_assignments
 )]

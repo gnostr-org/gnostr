@@ -38,6 +38,12 @@ pub struct ResetItem {
 	pub is_folder: bool,
 }
 
+impl ResetItem {
+	pub const fn is_folder(&self) -> bool {
+		self.is_folder
+	}
+}
+
 ///
 pub enum Action {
 	Reset(ResetItem),
