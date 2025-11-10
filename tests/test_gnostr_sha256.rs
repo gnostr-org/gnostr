@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
-    
+
     use assert_cmd::Command;
-    
 
     #[test]
     fn test_gnostr_sha256_basic() {
@@ -12,10 +11,19 @@ mod tests {
         let mut cmd = Command::cargo_bin("gnostr").unwrap();
         cmd.arg("--hash").arg(input_string);
 
-        let output = cmd.output().expect("Failed to execute gnostr --hash command");
+        let output = cmd
+            .output()
+            .expect("Failed to execute gnostr --hash command");
 
-        assert!(output.status.success(), "Command failed with status: {}", output.status);
-        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), expected_hash);
+        assert!(
+            output.status.success(),
+            "Command failed with status: {}",
+            output.status
+        );
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            expected_hash
+        );
     }
 
     #[test]
@@ -26,9 +34,18 @@ mod tests {
         let mut cmd = Command::cargo_bin("gnostr").unwrap();
         cmd.arg("--hash").arg(input_string);
 
-        let output = cmd.output().expect("Failed to execute gnostr --hash command");
+        let output = cmd
+            .output()
+            .expect("Failed to execute gnostr --hash command");
 
-        assert!(output.status.success(), "Command failed with status: {}", output.status);
-        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), expected_hash);
+        assert!(
+            output.status.success(),
+            "Command failed with status: {}",
+            output.status
+        );
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            expected_hash
+        );
     }
 }

@@ -165,7 +165,6 @@ mod with_relays {
                 }
 
                 mod poorly_quality_metadata_event {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -862,9 +861,8 @@ mod with_relays {
 /// using the offline flag simplifies the test. relay interaction is
 /// tested seperately
 mod with_offline_flag {
-    
+
     mod when_first_time_login {
-        
 
         #[test]
         #[cfg(feature = "expensive_tests")]
@@ -922,7 +920,6 @@ mod with_offline_flag {
         }
 
         mod when_invalid_nsec {
-            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -964,7 +961,6 @@ mod with_offline_flag {
     }
 
     mod when_called_with_nsec_parameter_only {
-        
 
         #[test]
         #[cfg(feature = "expensive_tests")]
@@ -1002,7 +998,6 @@ mod with_offline_flag {
         }
 
         mod when_logging_in_as_different_nsec {
-            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -1035,7 +1030,6 @@ mod with_offline_flag {
     }
 
     mod when_called_with_nsec_and_password_parameter {
-        
 
         #[test]
         #[cfg(feature = "expensive_tests")]
@@ -1076,7 +1070,6 @@ mod with_offline_flag {
         }
 
         mod when_logging_in_as_different_nsec {
-            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -1100,7 +1093,6 @@ mod with_offline_flag {
         }
 
         mod when_provided_with_new_password {
-            
 
             #[test]
             #[cfg(feature = "expensive_tests")]
@@ -1151,7 +1143,6 @@ mod with_offline_flag {
     }
 
     mod when_weak_password {
-        
 
         #[test]
         #[cfg(feature = "expensive_tests")]

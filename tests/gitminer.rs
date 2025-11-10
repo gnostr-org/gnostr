@@ -1,5 +1,5 @@
+use git2::{Oid, Repository, Signature};
 use gnostr_legit::gitminer::{Gitminer, Options};
-use git2::{Repository, Signature, Oid};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -16,7 +16,9 @@ fn setup_test_repo() -> (TempDir, Repository) {
     let mut config = repo.config().unwrap();
     config.set_str("user.name", "Test User").unwrap();
     config.set_str("user.email", "test@example.com").unwrap();
-    config.set_str("gnostr.relays", "wss://relay.example.com").unwrap();
+    config
+        .set_str("gnostr.relays", "wss://relay.example.com")
+        .unwrap();
 
     // Create an initial commit
     {
@@ -87,7 +89,6 @@ fn test_gitminer_new_fail_no_repo() {
     assert_eq!(miner_result.err(), Some("Failed to open repository"));
 }
 
-
 #[test]
 #[ignore]
 fn test_mine_commit_success() {
@@ -122,8 +123,14 @@ fn test_mine_commit_success() {
     // Verify the commit exists in the repo
     let oid = Oid::from_str(&commit_hash).unwrap();
     let commit = repo.find_commit(oid).unwrap();
-    assert_eq!(commit.message().unwrap().lines().next().unwrap(), "Mined commit");
-    println!("Verified commit message: '{}'", commit.message().unwrap().lines().next().unwrap());
+    assert_eq!(
+        commit.message().unwrap().lines().next().unwrap(),
+        "Mined commit"
+    );
+    println!(
+        "Verified commit message: '{}'",
+        commit.message().unwrap().lines().next().unwrap()
+    );
 
     // Verify that .gnostr directories and files were created
     let repo_path = Path::new(&repo_path_str);

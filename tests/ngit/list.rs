@@ -47,11 +47,9 @@ async fn prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(
 }
 
 mod cannot_find_repo_event {
-    
-    mod cli_prompts {
-        
 
-        
+    mod cli_prompts {
+
         #[cfg(feature = "expensive_tests")]
         async fn run_async_repo_event_ref_needed(invalid_input: bool, naddr: bool) -> Result<()> {
             let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -144,14 +142,13 @@ mod when_main_branch_is_uptodate {
             use super::*;
 
             mod when_first_proposal_selected {
-                
 
                 // TODO: test when other proposals with the same name
                 // but from other repositories are       present
                 // on relays
 
                 mod cli_prompts {
-                    
+
                     #[tokio::test]
                     #[serial]
                     #[cfg(feature = "expensive_tests")]
@@ -273,10 +270,8 @@ mod when_main_branch_is_uptodate {
                 }
             }
             mod when_third_proposal_selected {
-                
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -480,7 +475,6 @@ mod when_main_branch_is_uptodate {
                 }
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -715,7 +709,6 @@ mod when_main_branch_is_uptodate {
                 }
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -908,7 +901,6 @@ mod when_main_branch_is_uptodate {
                 }
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -1105,7 +1097,6 @@ mod when_main_branch_is_uptodate {
                 }
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -1291,7 +1282,6 @@ mod when_main_branch_is_uptodate {
                 }
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]
@@ -1479,7 +1469,6 @@ mod when_main_branch_is_uptodate {
                 }
 
                 mod cli_prompts {
-                    
 
                     #[tokio::test]
                     #[serial]

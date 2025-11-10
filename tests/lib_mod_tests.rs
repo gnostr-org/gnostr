@@ -2,11 +2,10 @@
 mod tests {
     use gnostr::{
         get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
-        get_relays_offline, get_relays_online, get_relays_paid, get_relays_public,
-        get_weeble_sync, get_wobble_sync, Config,
+        get_relays_offline, get_relays_online, get_relays_paid, get_relays_public, get_weeble_sync,
+        get_wobble_sync, Config,
     };
-    
-    
+
     use std::sync::Once;
 
     static INIT: Once = Once::new();

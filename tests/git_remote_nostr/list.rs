@@ -1,7 +1,4 @@
-
 mod without_state_announcement {
-
-    
 
     //#[tokio::test]
     //#[serial]
@@ -78,11 +75,7 @@ mod without_state_announcement {
 }
 mod with_state_announcement {
 
-    
-
     mod when_announcement_matches_git_server {
-
-        
 
         #[tokio::test]
         #[serial]
@@ -159,8 +152,6 @@ mod with_state_announcement {
         }
     }
     mod when_announcement_doesnt_match_git_server {
-
-        
 
         #[tokio::test]
         #[serial]

@@ -48,13 +48,8 @@ fn get_cli_args() -> Vec<&'static str> {
 }
 
 mod when_repo_not_previously_claimed {
-    
 
     mod when_repo_relays_specified_as_arguments {
-        
-        
-
-        
 
         #[cfg(feature = "expensive_tests")]
         fn prep_git_repo() -> Result<GitTestRepo> {
@@ -129,8 +124,6 @@ mod when_repo_not_previously_claimed {
 
         mod sent_to_correct_relays {
 
-            
-
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
@@ -202,9 +195,6 @@ mod when_repo_not_previously_claimed {
         }
 
         mod yaml_file {
-            
-
-            
 
             #[cfg(feature = "expensive_tests")]
             async fn async_run_test() -> Result<()> {
@@ -286,9 +276,7 @@ mod when_repo_not_previously_claimed {
                 async_run_test().await
             }
             mod updates_existing_with_missing_identifier {
-                
 
-                
                 #[cfg(feature = "expensive_tests")]
                 async fn async_run_test() -> Result<()> {
                     let git_repo = prep_git_repo()?;
@@ -385,11 +373,6 @@ mod when_repo_not_previously_claimed {
 
         mod git_config_updated {
 
-            
-            
-
-            
-
             #[cfg(feature = "expensive_tests")]
             async fn async_run_test() -> Result<()> {
                 let git_repo = prep_git_repo()?;
@@ -467,7 +450,6 @@ mod when_repo_not_previously_claimed {
         }
 
         mod tags_as_specified_in_args {
-            
 
             #[tokio::test]
             #[serial]
@@ -659,7 +641,6 @@ mod when_repo_not_previously_claimed {
         }
 
         mod cli_ouput {
-            
 
             #[tokio::test]
             #[serial]

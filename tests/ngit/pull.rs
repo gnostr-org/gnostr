@@ -3,10 +3,8 @@ use futures::join;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
 mod when_main_is_checked_out {
-    
 
     mod cli_prompts {
-        
 
         #[tokio::test]
         #[serial]
@@ -60,10 +58,8 @@ mod when_main_is_checked_out {
 }
 
 mod when_branch_doesnt_exist {
-    
 
     mod cli_prompts {
-        
 
         #[tokio::test]
         #[serial]
@@ -125,10 +121,9 @@ mod when_branch_is_checked_out {
     use super::*;
 
     mod when_branch_is_up_to_date {
-        
 
         mod cli_prompts {
-            
+
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
@@ -234,7 +229,6 @@ mod when_branch_is_checked_out {
         }
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]
@@ -310,10 +304,8 @@ mod when_branch_is_checked_out {
     }
 
     mod when_latest_proposal_amended_locally {
-        
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]
@@ -434,7 +426,6 @@ mod when_branch_is_checked_out {
         }
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]
@@ -557,7 +548,6 @@ mod when_branch_is_checked_out {
         }
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]

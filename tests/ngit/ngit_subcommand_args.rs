@@ -1,5 +1,5 @@
-use gnostr::cli::{NgitCli, NgitCommands};
 use clap::Parser;
+use gnostr::cli::{NgitCli, NgitCommands};
 
 #[test]
 fn test_ngit_subcommand_global_args() {
@@ -18,45 +18,31 @@ fn test_ngit_subcommand_global_args() {
     assert_eq!(cli_args.password, Some("test_password".to_string()));
 
     // Test with no global arguments
-    let args_no_globals = vec![
-        "ngit",
-        "list",
-    ];
+    let args_no_globals = vec!["ngit", "list"];
     let cli_args_no_globals = NgitCli::parse_from(args_no_globals);
 
     assert_eq!(cli_args_no_globals.nsec, None);
     assert_eq!(cli_args_no_globals.password, None);
 
     // Test with only nsec
-    let args_only_nsec = vec![
-        "ngit",
-        "--nsec",
-        "only_nsec",
-        "list",
-    ];
+    let args_only_nsec = vec!["ngit", "--nsec", "only_nsec", "list"];
     let cli_args_only_nsec = NgitCli::parse_from(args_only_nsec);
 
     assert_eq!(cli_args_only_nsec.nsec, Some("only_nsec".to_string()));
     assert_eq!(cli_args_only_nsec.password, None);
 
     // Test with only password
-    let args_only_password = vec![
-        "ngit",
-        "--password",
-        "only_password",
-        "list",
-    ];
+    let args_only_password = vec!["ngit", "--password", "only_password", "list"];
     let cli_args_only_password = NgitCli::parse_from(args_only_password);
 
     assert_eq!(cli_args_only_password.nsec, None);
-    assert_eq!(cli_args_only_password.password, Some("only_password".to_string()));
+    assert_eq!(
+        cli_args_only_password.password,
+        Some("only_password".to_string())
+    );
 
     // Test with only disable_cli_spinners
-    let args_only_spinners = vec![
-        "ngit",
-        "--disable-cli-spinners",
-        "list",
-    ];
+    let args_only_spinners = vec!["ngit", "--disable-cli-spinners", "list"];
     let cli_args_only_spinners = NgitCli::parse_from(args_only_spinners);
 
     assert_eq!(cli_args_only_spinners.nsec, None);
