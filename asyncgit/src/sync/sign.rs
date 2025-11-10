@@ -87,7 +87,7 @@ impl SignBuilder {
 	///
 	///
 	/// ```no_run
-	/// use gnostr_asyncgit::sync::sign::SignBuilder;
+	/// use asyncgit::sync::sign::SignBuilder;
 	/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 	///
 	/// /// Repo in a temporary directory for demonstration

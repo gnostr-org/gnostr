@@ -14,7 +14,7 @@
 //!   - [popups] for temporary dialogs
 //!   - [ui] for tooling like scrollbars
 //! - Git Interface
-//!   - [gnostr_asyncgit] (crate) for async operations on repository
+//!   - [asyncgit] (crate) for async operations on repository
 //! - Distribution and Documentation
 //!   - Project files
 //!   - Github CI
@@ -23,7 +23,7 @@
 //!
 //! ## Included Crates
 //! Some crates are part of the gitui repository:
-//! - [gnostr_asyncgit] for Git operations in the background.
+//! - [asyncgit] for Git operations in the background.
 //!   - git2-hooks (used by asyncgit).
 //!     - git2-testing (used by git2-hooks).
 //!   - invalidstring used by asyncgit for testing with invalid strings.
@@ -32,7 +32,7 @@
 //!
 
 #![forbid(unsafe_code)]
-#![warn(
+#![deny(
 	mismatched_lifetime_syntaxes,
 	unused_imports,
 	unused_must_use,
@@ -40,8 +40,8 @@
 	unstable_name_collisions,
 	unused_assignments
 )]
-#![warn(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
-#![warn(
+#![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
+#![deny(
 	clippy::unwrap_used,
 	clippy::filetype_is_file,
 	clippy::cargo,
@@ -79,60 +79,10 @@ mod tabs;
 mod ui;
 mod watcher;
 
-//mod core;
-mod legit;
-mod relays;
-mod utils;
-mod args;
-mod decrypt_privkey;
-mod login;
-mod remote;
-mod verify_keypair;
-mod blockhash;
-mod dns_resolver;
-mod repo_ref;
-mod watch_list;
-mod blockheight;
-mod fetch_by_kind_and_commit;
-mod ngit;
-mod repo_state;
-mod watcher;
-mod bug_report;
-mod git;
-mod notify_mutex;
-mod spinner;
-mod weeble;
-mod cli;
-mod git_events;
-mod options;
-mod ssh;
-mod wobble;
-mod cli_interactor;
-mod global_rt;
-mod p2p;
-mod string_utils;
-mod ws;
-mod client;
-mod hash;
-//mod popup_stack;
-//mod strings;
-//mod clipboard;
-//mod input;
-//mod popups;
-mod sub_commands;
-//mod cmdbar;
-//mod internal;
-//mod queue;
-//mod tabs;
-//mod components;
-//mod keys;
-//mod reflog;
-//mod ui;
-
 use crate::{app::App, args::process_cmdline};
 use anyhow::{anyhow, bail, Result};
 use app::QuitState;
-use gnostr_asyncgit::{
+use asyncgit::{
 	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
 };
@@ -215,7 +165,7 @@ pub fn run_cli() -> Result<()> {
 
 	let cliargs = process_cmdline()?;
 
-	gnostr_asyncgit::register_tracing_logging();
+	asyncgit::register_tracing_logging();
 	ensure_valid_path(&cliargs.repo_path)?;
 
 	let key_config = KeyConfig::init()
@@ -403,7 +353,7 @@ fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 }
 
 fn ensure_valid_path(repo_path: &RepoPath) -> Result<()> {
-	match gnostr_asyncgit::sync::repo_open_error(repo_path) {
+	match asyncgit::sync::repo_open_error(repo_path) {
 		Some(e) => {
 			log::error!("invalid repo path: {e}");
 			bail!("invalid repo path: {e}")
