@@ -343,7 +343,6 @@ fn get_git_hash() -> String {
 }
 
 fn main() {
-
     println!("cargo:rerun-if-changed=src/empty");
     make_empty();
 
@@ -840,7 +839,7 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
     let dir_path_str = dir_path.to_str().ok_or_else(|| {
         Error::new(
             ErrorKind::InvalidInput,
-            format!("Path '{}' is not valid UTF-8", dir_path.display())
+            format!("Path '{}' is not valid UTF-8", dir_path.display()),
         )
     })?; // Now the '?' operator works, returning an io::Error on failure.
 
@@ -855,7 +854,6 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
         .env("GIT_COMMITTER_EMAIL", "admin@gnostr.org")
         .env("GIT_AUTHOR_DATE", "Thu, 01 Jan 1970 00:00:00 +0000")
         .env("GIT_COMMITTER_DATE", "Thu, 01 Jan 1970 00:00:00 +0000");
-
 
     // 3. Set the arguments. Note the use of the safe dir_path_str variable.
     command.args(&[
@@ -882,12 +880,12 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
         println!("\n❌ Git command failed!");
         eprintln!("Status: {}", output.status);
         eprintln!("Stderr:\n{}", String::from_utf8_lossy(&output.stderr));
-        
+
         // The failure block must return the error value, which is Err(io::Error).
         // We create a new io::Error here to indicate the child process failed.
         Err(Error::new(
             ErrorKind::Other,
-            format!("'git commit' failed with status: {}", output.status)
+            format!("'git commit' failed with status: {}", output.status),
         ))
     }
 }
