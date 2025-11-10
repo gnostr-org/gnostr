@@ -1,8 +1,8 @@
+use crate::legit::command::create_event;
+use crate::queue::InternalEvent;
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
-use crate::legit::command::create_event;
-use crate::queue::InternalEvent;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
@@ -25,18 +25,17 @@ use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
 use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
+use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 
 pub mod msg;
 pub use msg::*;
 pub mod p2p;
 pub use p2p::evt_loop;
-pub mod ui;
 pub mod tests;
+pub mod ui;
 
 const TITLE: &str = include_str!("./title.txt");
-
 
 /// Simple CLI application to interact with nostr
 #[derive(Debug, Parser)]
@@ -256,7 +255,8 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     let serialized_commit = serialize_commit(&commit).expect("Failed to serialize commit");
 
     let binding = serialized_commit.clone();
-    let deserialized_commit = deserialize_commit(&repo, &binding).expect("Failed to deserialize commit");
+    let deserialized_commit =
+        deserialize_commit(&repo, &binding).expect("Failed to deserialize commit");
 
     //access commit summary in the deserialized commit
     debug!("Original commit ID:\n{}", commit_id);
@@ -573,7 +573,9 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
     global_rt().spawn(async move {
         tokio::time::sleep(Duration::from_millis(1000)).await;
         input_tx_clone
-            .send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Join)))
+            .send(InternalEvent::ChatMessage(
+                Msg::default().set_kind(MsgKind::Join),
+            ))
             .await
             .unwrap();
     });
@@ -582,7 +584,9 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
 
     // say goodbye
     // input_tx.blocking_send(Msg::default().set_kind(MsgKind::Leave))?;
-    let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
+    let _ = input_tx.send(InternalEvent::ChatMessage(
+        Msg::default().set_kind(MsgKind::Leave),
+    ));
     std::thread::sleep(Duration::from_millis(500));
 
     Ok(())

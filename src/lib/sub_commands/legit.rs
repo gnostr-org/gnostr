@@ -1,7 +1,6 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 use crate::cli::LegitCommands;
-use gnostr_legit::gitminer;
 use crate::sub_commands::fetch;
 use crate::sub_commands::init;
 use crate::sub_commands::list;
@@ -10,12 +9,12 @@ use crate::sub_commands::pull;
 use crate::sub_commands::push;
 use crate::sub_commands::send;
 use clap::Args;
+use gnostr_legit::gitminer;
 use nostr_sdk_0_34_0::prelude::*;
 use serde::ser::StdError;
 
 use crate::legit::command;
 use ::time::OffsetDateTime;
-
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -68,12 +67,19 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                 threads: sub_command_args.threads as u32,
                 target: sub_command_args.prefix.clone().unwrap_or_default(),
                 message: sub_command_args.message.clone().unwrap_or_default(),
-                repo: sub_command_args.repo.clone().unwrap_or(sub_command_args.repository_path.clone().unwrap_or(".".to_string())),
+                repo: sub_command_args.repo.clone().unwrap_or(
+                    sub_command_args
+                        .repository_path
+                        .clone()
+                        .unwrap_or(".".to_string()),
+                ),
 
                 timestamp: OffsetDateTime::now_local().unwrap(),
                 kind: sub_command_args.kind,
             };
-            command::run_legit_command(opts).await.map_err(|e| Box::new(e) as Box<dyn StdError>)?;
+            command::run_legit_command(opts)
+                .await
+                .map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
     Ok(())

@@ -1,8 +1,11 @@
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub,
-    identify,
-    kad::{self, store::{self}, Config as KadConfig},
+    gossipsub, identify,
+    kad::{
+        self,
+        store::{self},
+        Config as KadConfig,
+    },
     mdns, noise, ping,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
@@ -15,11 +18,7 @@ use tracing::{debug, warn};
 
 use ureq::Agent;
 
-
-
 use crate::p2p::kvs::{FileRequest, FileResponse};
-
-
 
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {

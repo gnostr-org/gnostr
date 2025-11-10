@@ -16,8 +16,6 @@ use std::{
     thread,
 };
 
-
-
 type IoOut = Receiver<Vec<u8>>;
 
 #[derive(Default)]

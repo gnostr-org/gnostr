@@ -189,7 +189,8 @@ mod tests {
             "--chat",
             "--cfg",
             "my_config.toml",
-        ]).unwrap();
+        ])
+        .unwrap();
         assert_eq!(args.name, "Alice");
         assert_eq!(args.count, 5);
         assert_eq!(args.tui, true);

@@ -11,7 +11,10 @@ mod mock_ssh {
     // Further investigation might be needed on how start() uses configuration.
     pub async fn start() -> Result<(), Box<dyn std::error::Error>> {
         // In test environment, always return an error for now
-        Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Mock SSH Start Error")))
+        Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Mock SSH Start Error",
+        )))
     }
 }
 
@@ -26,12 +29,13 @@ pub struct GitshSubCommand {
 }
 
 pub async fn gitsh(_sub_command_args: &GitshSubCommand) -> Result<(), Box<dyn std::error::Error>> {
-//#[cfg(not(test))]
+    //#[cfg(not(test))]
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     // The start() function takes no arguments. The remote_url is available in _sub_command_args.remote_url
     // but is not directly passed to start().
     let res = start().await;
-    if let Err(e) = &res { // Use reference to res to avoid moving it
+    if let Err(e) = &res {
+        // Use reference to res to avoid moving it
         println!("{}", e);
         println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
         println!("check the port in your server.toml is available!\n");

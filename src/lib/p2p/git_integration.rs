@@ -1,6 +1,9 @@
 use git2::{Commit, DiffFormat, ObjectType, Repository};
 
-pub fn get_commit_diff_as_bytes(repo: &Repository, commit: &Commit) -> Result<Vec<u8>, git2::Error> {
+pub fn get_commit_diff_as_bytes(
+    repo: &Repository,
+    commit: &Commit,
+) -> Result<Vec<u8>, git2::Error> {
     let tree = commit.tree()?;
     let parent_tree = if commit.parent_count() > 0 {
         Some(commit.parent(0)?.tree()?)

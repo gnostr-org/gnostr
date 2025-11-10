@@ -1,6 +1,6 @@
+use crate::p2p::network_config::Network;
 use clap::Parser;
 use libp2p::Multiaddr;
-use crate::p2p::network_config::Network;
 
 #[derive(Debug, Parser)]
 pub struct Args {

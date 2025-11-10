@@ -1,7 +1,10 @@
 use libp2p::{gossipsub, kad};
 use tracing::debug;
 
-pub async fn handle_input_line(swarm: &mut libp2p::Swarm<super::behaviour::Behaviour>, line: String) {
+pub async fn handle_input_line(
+    swarm: &mut libp2p::Swarm<super::behaviour::Behaviour>,
+    line: String,
+) {
     let mut args = line.split_whitespace();
     match args.next() {
         Some("TOPIC") => {

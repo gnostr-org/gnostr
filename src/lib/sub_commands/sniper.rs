@@ -1,3 +1,4 @@
+use clap::Parser;
 use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
@@ -7,7 +8,6 @@ use std::{
     path::Path,
 };
 use tracing::{debug, error};
-use clap::Parser;
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -106,7 +106,8 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
                 let data: Result<Relay, _> = serde_json::from_str(&json);
                 if let Ok(relay_info) = data {
                     for n in &relay_info.supported_nips {
-                        if n == &args.nip_lower { // Use nip_lower from args
+                        if n == &args.nip_lower {
+                            // Use nip_lower from args
                             debug!("contact:{:?}", &relay_info.contact);
                             debug!("description:{:?}", &relay_info.description);
                             debug!("name:{:?}", &relay_info.name);
@@ -132,11 +133,14 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
                                 + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!("
+                            debug!(
+                                "
 
 {}
 
-", file_path_str);
+",
+                                file_path_str
+                            );
 
                             match File::create(&file_path) {
                                 Ok(mut file) => {

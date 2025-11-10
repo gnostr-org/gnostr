@@ -1,18 +1,17 @@
 /// #![allow(unused)]
 /// #![allow(dead_code)]
-/// 
+///
 /// #![allow(unused)]
 /// #![allow(dead_code)]
-
 use clap::Parser;
 use gnostr::legit::command;
 use gnostr_legit::gitminer;
-use std::io::{Result, self};
-use std::env;
-use std::process::Command;
-use std::time::SystemTime;
-use std::thread;
 use std::convert::TryInto;
+use std::env;
+use std::io::{self, Result};
+use std::process::Command;
+use std::thread;
+use std::time::SystemTime;
 use time::OffsetDateTime;
 
 #[derive(Parser, Debug)]
@@ -54,7 +53,8 @@ async fn main() -> io::Result<()> {
         };
         [String::from_utf8(output.stdout)
             .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-            .unwrap()].to_vec()
+            .unwrap()]
+        .to_vec()
     };
 
     let count = thread::available_parallelism()?.get();

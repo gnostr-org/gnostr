@@ -5,12 +5,10 @@
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::*;
- //migrate carefully
+//migrate carefully
 use anyhow::Result;
 
 use serde::ser::StdError;
-
-
 
 use nostr_sdk_0_37_0::Keys;
 

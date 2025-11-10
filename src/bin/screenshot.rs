@@ -183,10 +183,7 @@ fn macos() {
             }
 
             alt_ctx
-                .set_contents(format!(
-                    "formatted! {}",
-                    clipboard_input_1.clone()
-                ))
+                .set_contents(format!("formatted! {}", clipboard_input_1.clone()))
                 .expect("set_result failed!");
 
             if Some(alt_ctx.get_contents()).is_some() {
