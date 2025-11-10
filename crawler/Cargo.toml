@@ -21,7 +21,7 @@ dns-lookup = "2.0.4"
 env_logger = "0.11"
 #tokio = { version = "1.26.0", features = ["full"] }
 futures = "0.3.25"
-git2 = "^0.18"
+git2 = "^0.20"
 ##use ../Cargo.toml version for ngit
 indicatif = "0.14.0"
 log = "0.4.24"

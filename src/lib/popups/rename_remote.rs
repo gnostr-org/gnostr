@@ -1,30 +1,31 @@
-use crate::components::{
-	visibility_blocking, CommandBlocking, CommandInfo, Component,
-	DrawableComponent, EventState, InputType, TextInputComponent,
-};
-use crate::ui::style::SharedTheme;
-use crate::{
-	app::Environment,
-	keys::{key_match, SharedKeyConfig},
-	queue::{InternalEvent, NeedsUpdate, Queue},
-	strings,
-};
 use anyhow::Result;
 use asyncgit::sync::{self, RepoPathRef};
 use crossterm::event::Event;
 use easy_cast::Cast;
 use ratatui::{layout::Rect, widgets::Paragraph, Frame};
 
-pub struct RenameBranchPopup {
+use crate::{
+	app::Environment,
+	components::{
+		visibility_blocking, CommandBlocking, CommandInfo, Component,
+		DrawableComponent, EventState, InputType, TextInputComponent,
+	},
+	keys::{key_match, SharedKeyConfig},
+	queue::{InternalEvent, NeedsUpdate, Queue},
+	strings,
+	ui::style::SharedTheme,
+};
+
+pub struct RenameRemotePopup {
 	repo: RepoPathRef,
 	input: TextInputComponent,
-	branch_ref: Option<String>,
-	queue: Queue,
-	key_config: SharedKeyConfig,
 	theme: SharedTheme,
+	key_config: SharedKeyConfig,
+	queue: Queue,
+	initial_name: Option<String>,
 }
 
-impl DrawableComponent for RenameBranchPopup {
+impl DrawableComponent for RenameRemotePopup {
 	fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()> {
 		if self.is_visible() {
 			self.input.draw(f, rect)?;
@@ -34,7 +35,7 @@ impl DrawableComponent for RenameBranchPopup {
 	}
 }
 
-impl Component for RenameBranchPopup {
+impl Component for RenameRemotePopup {
 	fn commands(
 		&self,
 		out: &mut Vec<CommandInfo>,
@@ -44,14 +45,13 @@ impl Component for RenameBranchPopup {
 			self.input.commands(out, force_all);
 
 			out.push(CommandInfo::new(
-				strings::commands::rename_branch_confirm_msg(
+				strings::commands::remote_confirm_name_msg(
 					&self.key_config,
 				),
 				true,
 				true,
 			));
 		}
-
 		visibility_blocking(self)
 	}
 
@@ -63,7 +63,7 @@ impl Component for RenameBranchPopup {
 
 			if let Event::Key(e) = ev {
 				if key_match(e, self.key_config.keys.enter) {
-					self.rename_branch();
+					self.rename_remote();
 				}
 
 				return Ok(EventState::Consumed);
@@ -87,80 +87,39 @@ impl Component for RenameBranchPopup {
 	}
 }
 
-impl RenameBranchPopup {
+impl RenameRemotePopup {
 	///
 	pub fn new(env: &Environment) -> Self {
 		Self {
 			repo: env.repo.clone(),
-			queue: env.queue.clone(),
 			input: TextInputComponent::new(
 				env,
-				&strings::rename_branch_popup_title(&env.key_config),
-				&strings::rename_branch_popup_msg(&env.key_config),
+				&strings::rename_remote_popup_title(&env.key_config),
+				&strings::rename_remote_popup_msg(&env.key_config),
 				true,
 			)
 			.with_input_type(InputType::Singleline),
-			branch_ref: None,
-			key_config: env.key_config.clone(),
 			theme: env.theme.clone(),
+			key_config: env.key_config.clone(),
+			queue: env.queue.clone(),
+			initial_name: None,
 		}
 	}
 
 	///
-	pub fn open(
-		&mut self,
-		branch_ref: String,
-		cur_name: String,
-	) -> Result<()> {
-		self.branch_ref = None;
-		self.branch_ref = Some(branch_ref);
-		self.input.set_text(cur_name);
+	pub fn open(&mut self, cur_name: String) -> Result<()> {
+		self.input.set_text(cur_name.clone());
+		self.initial_name = Some(cur_name);
 		self.show()?;
 
 		Ok(())
-	}
-
-	///
-	pub fn rename_branch(&mut self) {
-		if let Some(br) = &self.branch_ref {
-			let res = sync::rename_branch(
-				&self.repo.borrow(),
-				br,
-				self.input.get_text(),
-			);
-
-			match res {
-				Ok(()) => {
-					self.queue.push(InternalEvent::Update(
-						NeedsUpdate::ALL,
-					));
-					self.hide();
-					self.queue.push(InternalEvent::SelectBranch);
-				}
-				Err(e) => {
-					log::error!("create branch: {e}");
-					self.queue.push(InternalEvent::ShowErrorMsg(
-						format!("rename branch error:\n{e}",),
-					));
-				}
-			}
-		} else {
-			log::error!("create branch: No branch selected");
-			self.queue.push(InternalEvent::ShowErrorMsg(
-				"rename branch error: No branch selected to rename"
-					.to_string(),
-			));
-		}
-
-		self.input.clear();
 	}
 
 	fn draw_warnings(&self, f: &mut Frame) {
 		let current_text = self.input.get_text();
 
 		if !current_text.is_empty() {
-			let valid = sync::validate_branch_name(current_text)
-				.unwrap_or_default();
+			let valid = sync::validate_remote_name(current_text);
 
 			if !valid {
 				let msg = strings::branch_name_invalid();
@@ -184,5 +143,34 @@ impl RenameBranchPopup {
 				f.render_widget(w, rect);
 			}
 		}
+	}
+
+	///
+	pub fn rename_remote(&mut self) {
+		if let Some(init_name) = &self.initial_name {
+			if init_name != self.input.get_text() {
+				let res = sync::rename_remote(
+					&self.repo.borrow(),
+					init_name,
+					self.input.get_text(),
+				);
+				match res {
+					Ok(()) => {
+						self.queue.push(InternalEvent::Update(
+							NeedsUpdate::ALL | NeedsUpdate::REMOTES,
+						));
+					}
+					Err(e) => {
+						log::error!("rename remote: {e}");
+						self.queue.push(InternalEvent::ShowErrorMsg(
+							format!("rename remote error:\n{e}",),
+						));
+					}
+				}
+			}
+		}
+		self.input.clear();
+		self.initial_name = None;
+		self.hide();
 	}
 }

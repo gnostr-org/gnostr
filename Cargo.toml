@@ -51,8 +51,8 @@ ghemoji = ["gh-emoji"]
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
 regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
-trace-libgit = ["gnostr-asyncgit/trace-libgit"]
-vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
+trace-libgit = ["asyncgit/trace-libgit"]
+vendor-openssl = ["asyncgit/vendor-openssl"]
 nightly = []
 
 [dependencies]
@@ -117,11 +117,11 @@ futures-util = "0.3"
 fuzzy-matcher = "0.3"
 getopts = "0.2.21"
 gh-emoji = { version = "1.0", optional = true }
-git2 = "^0.18" ## asyncgit ^0.19
+git2 = "^0.20" ## asyncgit ^0.19
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { path = "asyncgit", version = "1912.921274.23285", default-features = false }
+asyncgit = { package = "asyncgit", path = "asyncgit", version = "1912.921274.23285", default-features = false }
 gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
 gnostr-legit = { path = "./legit", version = "1911.921558.782146" }
 gnostr-query = { version = "1912.921276.230652", path = "query" }
@@ -189,12 +189,12 @@ num_cpus = "1.16.0"
 
 #num_cpus = "1.16.0"
 once_cell = "1.21.3"
+#once_cell = "1"
 ordered-float = "3.4.0"
 pad = "0.1.6"
-parking_lot = "0.12.3"
-#once_cell = "1"
 # pin until upgrading this does not introduce a duplicate dependency
-parking_lot_core = "=0.9.9"
+#parking_lot_core = "=0.9.9"
+parking_lot = "0.12.3"
 passwords = "3.1.13"
 rand = "0.8"
 rand_core = "0.6"
@@ -281,7 +281,7 @@ env_logger = "0.11"
 expectrl = "0.8.0"
 futures-util = "0.3.30"
 gag = "1.0.0"
-git2 = "0.18.3"
+git2 = "^0.20"
 mockall = "0.11.4"
 predicates = "3.1.3"
 pretty_assertions = "1.4"
