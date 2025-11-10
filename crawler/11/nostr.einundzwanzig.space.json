@@ -1,0 +1,26 @@
+{
+  "id": "wss://nostr.einundzwanzig.space/",
+  "name": "nostr-einundzwanzig-space",
+  "description": "In code we trust.",
+  "pubkey": "031ea306188fee631a86f1a0e49cee8f3d62592b2e7be5f8eb1788e327db340a",
+  "contact": "mail@einundzwanzig.space",
+  "supported_nips": [
+    1,
+    2,
+    9,
+    11,
+    12,
+    15,
+    16,
+    20,
+    22,
+    33,
+    40
+  ],
+  "software": "https://git.sr.ht/~gheartsfield/nostr-rs-relay",
+  "version": "0.9.0",
+  "limitation": {
+    "payment_required": false,
+    "restricted_writes": false
+  }
+}

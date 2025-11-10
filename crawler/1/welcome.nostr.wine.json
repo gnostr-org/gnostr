@@ -1,0 +1,1 @@
+{"contact":"wino@nostr.wine","description":"A read only relay that shows posts exclusively from new nostr users! Powered by nostr.wine.","name":"welcome.nostr.wine","pubkey":"4918eb332a41b71ba9a74b1dc64276cfff592e55107b93baae38af3520e55975","software":"git+https://github.com/hoytech/strfry.git","supported_nips":[1,2,4,9,11,12,16,20,22,28,33,40],"version":"0.9.6-7-g7196547"}

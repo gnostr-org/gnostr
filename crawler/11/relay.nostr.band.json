@@ -1,0 +1,1 @@
+{"name":"Nostr.Band Relay","description":"This is a fast relay with full archive of textual posts","pubkey":"818a39b5f164235f86254b12ca586efccc1f95e98b45cb1c91c71dc5d9486dda","contact":"mailto:admin@nostr.band","supported_nips":[1,11,12,15,20,33,45,50],"software":"https://relay.nostr.band","version":"0.4"}

@@ -1,0 +1,1 @@
+{"contact":"https://sovbit.host","description":"A free relay for sovbit.host","name":"Freelay","pubkey":"44dc1c2db9c3fbd7bee9257eceb52be3cf8c40baf7b63f46e56b58a131c74f0b","software":"git+https://github.com/hoytech/strfry.git","supported_nips":[1,2,4,9,11,12,16,20,22,28,33,40],"version":"0.9.6-26-gc0dec7c"}

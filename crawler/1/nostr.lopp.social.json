@@ -1,0 +1,1 @@
+{"contact":"https://lopp.net","description":"Jameson Lopp's nostr relay.","name":"nostr.lopp.social","pubkey":"f728d9e6e7048358e70930f5ca64b097770d989ccd86854fe618eda9c8a38106","software":"git+https://github.com/hoytech/strfry.git","supported_nips":[1,2,4,9,11,12,16,20,22,28,33,40],"version":"0.9.6"}
