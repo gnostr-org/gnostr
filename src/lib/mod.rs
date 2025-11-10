@@ -14,7 +14,7 @@
 //!   - [popups] for temporary dialogs
 //!   - [ui] for tooling like scrollbars
 //! - Git Interface
-//!   - [asyncgit] (crate) for async operations on repository
+//!   - [gnostr_asyncgit] (crate) for async operations on repository
 //! - Distribution and Documentation
 //!   - Project files
 //!   - Github CI
@@ -23,7 +23,7 @@
 //!
 //! ## Included Crates
 //! Some crates are part of the gitui repository:
-//! - [asyncgit] for Git operations in the background.
+//! - [gnostr_asyncgit] for Git operations in the background.
 //!   - git2-hooks (used by asyncgit).
 //!     - git2-testing (used by git2-hooks).
 //!   - invalidstring used by asyncgit for testing with invalid strings.
@@ -79,7 +79,7 @@ mod tabs;
 mod ui;
 mod watcher;
 
-mod core;
+//mod core;
 mod legit;
 mod relays;
 mod utils;
@@ -132,7 +132,7 @@ mod sub_commands;
 use crate::{app::App, args::process_cmdline};
 use anyhow::{anyhow, bail, Result};
 use app::QuitState;
-use asyncgit::{
+use gnostr_asyncgit::{
 	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
 };
@@ -215,7 +215,7 @@ pub fn run_cli() -> Result<()> {
 
 	let cliargs = process_cmdline()?;
 
-	asyncgit::register_tracing_logging();
+	gnostr_asyncgit::register_tracing_logging();
 	ensure_valid_path(&cliargs.repo_path)?;
 
 	let key_config = KeyConfig::init()
@@ -403,7 +403,7 @@ fn draw(terminal: &mut Terminal, app: &App) -> io::Result<()> {
 }
 
 fn ensure_valid_path(repo_path: &RepoPath) -> Result<()> {
-	match asyncgit::sync::repo_open_error(repo_path) {
+	match gnostr_asyncgit::sync::repo_open_error(repo_path) {
 		Some(e) => {
 			log::error!("invalid repo path: {e}");
 			bail!("invalid repo path: {e}")

@@ -1,4 +1,4 @@
-use asyncgit::{
+use gnostr_asyncgit::{
 	asyncjob::{AsyncJob, RunParams},
 	ProgressPercent,
 };
@@ -73,7 +73,7 @@ impl SyntaxText {
 		file_path: &Path,
 		params: &RunParams<AsyncAppNotification, ProgressPercent>,
 		syntax: &str,
-	) -> asyncgit::Result<Self> {
+	) -> gnostr_asyncgit::Result<Self> {
 		scope_time!("syntax_highlighting");
 		let mut state = {
 			scope_time!("syntax_highlighting.0");
@@ -89,9 +89,9 @@ impl SyntaxText {
 			ParseState::new(syntax)
 		};
 
-		let theme = THEME.get_or_try_init(|| -> Result<Theme, asyncgit::Error> {
+		let theme = THEME.get_or_try_init(|| -> Result<Theme, gnostr_asyncgit::Error> {
 			let theme_path = crate::args::get_app_config_path()
-				.map_err(|e| asyncgit::Error::Generic(e.to_string()))?.join(format!("{syntax}.tmTheme"));
+				.map_err(|e| gnostr_asyncgit::Error::Generic(e.to_string()))?.join(format!("{syntax}.tmTheme"));
 
 			match ThemeSet::get_theme(&theme_path) {
 				Ok(t) => return Ok(t),
@@ -130,7 +130,7 @@ impl SyntaxText {
 					.parse_line(line, &SYNTAX_SET)
 					.map_err(|e| {
 						log::error!("syntax error: {e:?}");
-						asyncgit::Error::Generic(
+						gnostr_asyncgit::Error::Generic(
 							"syntax error".to_string(),
 						)
 					})?;
@@ -269,7 +269,7 @@ impl AsyncJob for AsyncSyntaxJob {
 	fn run(
 		&mut self,
 		params: RunParams<Self::Notification, Self::Progress>,
-	) -> asyncgit::Result<Self::Notification> {
+	) -> gnostr_asyncgit::Result<Self::Notification> {
 		let mut state_mutex = self.state.lock()?;
 
 		if let Some(state) = state_mutex.take() {
