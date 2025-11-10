@@ -7,9 +7,7 @@ use std::time::Duration;
 //use nostr_sdk_0_32_0::{EventBuilder, EventId, FromBech32, Keys, Kind, Metadata, SecretKey, Tag, Url};
 use nostr_0_34_1::prelude::Tag;
 use nostr_0_34_1::prelude::*;
-use nostr_database_0_34_0::{
-    nostr::types::filter::Filter, NostrDatabase, Order,
-};
+use nostr_database_0_34_0::{nostr::types::filter::Filter, NostrDatabase, Order};
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use tracing_subscriber::fmt::format::FmtSpan;
 
