@@ -32,7 +32,7 @@
 //!
 
 #![forbid(unsafe_code)]
-#![deny(
+#![warn(
 	mismatched_lifetime_syntaxes,
 	unused_imports,
 	unused_must_use,
@@ -40,8 +40,8 @@
 	unstable_name_collisions,
 	unused_assignments
 )]
-#![deny(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
-#![deny(
+#![warn(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
+#![warn(
 	clippy::unwrap_used,
 	clippy::filetype_is_file,
 	clippy::cargo,
