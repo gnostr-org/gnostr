@@ -1,3 +1,8 @@
+.genkit/
+.gnostr/
+data/
+src/empty/
+!src/empty/README.md
 /target
 /release
 .DS_Store
