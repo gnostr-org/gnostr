@@ -1,6 +1,7 @@
 // #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 #![deny(
+	mismatched_lifetime_syntaxes,
 	unused_imports,
 	unused_must_use,
 	dead_code,
@@ -21,8 +22,6 @@
 	clippy::missing_errors_doc,
 	clippy::empty_docs
 )]
-#![allow(clippy::legacy_numeric_constants)]
-#![allow(clippy::needless_pass_by_ref_mut)]
 
 mod error;
 mod filetree;
@@ -32,6 +31,7 @@ mod tree_iter;
 mod treeitems_iter;
 
 pub use crate::{
-	filetree::{FileTree, MoveSelection},
+	filetree::FileTree,
+	filetree::MoveSelection,
 	item::{FileTreeItem, TreeItemInfo},
 };

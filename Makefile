@@ -1,176 +1,120 @@
-export HOMEBREW_NO_INSTALL_CLEANUP=1
-ifeq ($(TAG),)
-TAG := v$(shell cat Cargo.toml | grep 'version = "' | head -n 1 | sed 's/version = "\(.*\)".*/\1/')
-endif
-export TAG
 
-ifeq ($(NPROC),)
-NPROC := $(shell sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)
-endif
-export NPROC
-JFLAGS := -j$(NPROC)
+.PHONY: debug build-release release-linux-musl test clippy clippy-pedantic install install-debug sort
 
-ifeq ($(FORCE),)
-       FORCE :=-f
-endif
-export FORCE
+ARGS=-l
+# ARGS=-l -d ~/code/extern/kubernetes
+# ARGS=-l -d ~/code/extern/linux
+# ARGS=-l -d ~/code/git-bare-test.git -w ~/code/git-bare-test
 
-help:
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo
+profile:
+	CARGO_PROFILE_RELEASE_DEBUG=true cargo flamegraph --features timing -- ${ARGS}
 
-##
-##===============================================================================
-##all
-## 	bin
-all: 	bin### 	all
-##bin
-## 	cargo b -j $(NPROC)
-bin: 	### 	bin
-	cargo b -j $(NPROC)
+run-timing:
+	cargo run --features=timing --release -- ${ARGS}
 
-##
-##===============================================================================
-##make cargo-*
-cargo-help: 	### 	cargo-help
-	@awk 'BEGIN {FS = ":.*?###"} /^[a-zA-Z_-]+:.*?###/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-cargo-release-all: 	### 	cargo-release-all
-## 	cargo-release-all recursively cargo build --release
-	for t in **Cargo.toml;  do echo $$t; cargo b -r -j $(NPROC) -vv --manifest-path $$t; done
-cargo-clean-release: 	### 	cargo-clean-release - clean release artifacts
-## 	cargo-clean-release 	recursively cargo clean --release
-	for t in **Cargo.toml;  do echo $$t && cargo clean -r  -j $(NPROC) -vv --manifest-path $$t 2>/dev/null; done
-cargo-publish-all: 	### 	cargo-publish-all
-## 	cargo-publish-all 	recursively publish rust projects
-	for t in *Cargo.toml;  do echo $$t; cargo publish -j $(NPROC) -vv --manifest-path $$t; done
+debug:
+	RUST_BACKTRACE=true cargo run --features=timing -- ${ARGS}
 
-cargo-install-bins:### 	cargo-install-bins
-## 	cargo-install-all 	recursively cargo install -vv $(SUBMODULES)
-## 	*** cargo install -vv --force is NOT used.
-## 	*** FORCE=--force cargo install -vv $(FORCE) is used.
-## 	*** FORCE=--force cargo install -vv $(FORCE) --path <path>
-## 	*** to overwrite deploy cargo.io crates.
-	export RUSTFLAGS=-Awarning;  for t in $(SUBMODULES); do echo $$t; cargo  -j $(NPROC) install --bins --path  $$t -vv $(FORCE) 2>/dev/null || echo ""; done
-	#for t in $(SUBMODULES); do echo $$t; cargo install -j $(NPROC) -vv gnostr-$$t --force || echo ""; done
+build-release:
+	cargo build --release --locked
 
-cargo-build: 	## 	cargo build
-## 	cargo-build q=true
-	@. $(HOME)/.cargo/env
-	@RUST_BACKTRACE=all cargo b -j $(NPROC) $(QUIET)
-cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
-	@. $(HOME)/.cargo/env
-	@cargo install -j $(NPROC) --path . $(FORCE)
+release-mac: build-release
+	strip target/release/gitui
+	otool -L target/release/gitui
+	ls -lisah target/release/gitui
+	mkdir -p release
+	tar -C ./target/release/ -czvf ./release/gitui-mac.tar.gz ./gitui
+	ls -lisah ./release/gitui-mac.tar.gz
 
-cargo-sort: 	cargo-sort
-	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
+release-mac-x86: build-apple-x86-release
+	strip target/x86_64-apple-darwin/release/gitui
+	otool -L target/x86_64-apple-darwin/release/gitui
+	ls -lisah target/x86_64-apple-darwin/release/gitui
+	mkdir -p release
+	tar -C ./target/x86_64-apple-darwin/release/ -czvf ./release/gitui-mac-x86.tar.gz ./gitui
+	ls -lisah ./release/gitui-mac-x86.tar.gz
 
-.PHONY:crawler asyncgit relay query
-crawler: 	###     crawler
-	@cargo install -j $(NPROC) --path ./crawler $(FORCE)
-asyncgit: 	###     asyncgit
-	@cargo  install -j $(NPROC) --path ./asyncgit $(FORCE)
-relay: 	###     relay
-	@cargo install -j $(NPROC) --path ./relay $(FORCE)
-query: 	###     query
-	@cargo install -j $(NPROC) --path ./query $(FORCE)
+release-win: build-release
+	mkdir -p release
+	tar -C ./target/release/ -czvf ./release/gitui-win.tar.gz ./gitui.exe
+	cargo install cargo-wix --version 0.3.3 --locked
+	cargo wix -p gitui --no-build --nocapture --output ./release/gitui-win.msi
+	ls -l ./release/gitui-win.msi
 
-## 	cargo-br q=true
-cargo-build-release: 	### 	cargo-build-release
-## 	cargo-build-release q=true
-	@. $(HOME)/.cargo/env
-	@cargo b -r -j $(NPROC) $(QUIET)
-cargo-check: 	### 	cargo-check
-	@. $(HOME)/.cargo/env
-	@cargo  c -j $(NPROC)
-cargo-bench: 	### 	cargo-bench
-	@. $(HOME)/.cargo/env
-	@cargo bench -j $(NPROC)
-cargo-test: 	### 	cargo-test
-	@. $(HOME)/.cargo/env
-	#@cargo test
-	cargo  test -j $(NPROC)
-cargo-test-workspace: 	### 	cargo-test-workspace
-	@. $(HOME)/.cargo/env
-	#@cargo test
-	cargo  test -j $(NPROC) --workspace
-cargo-test-nightly: 	### 	cargo-test-nightly
-	@. $(HOME)/.cargo/env
-	#@cargo test
-	cargo  +nightly test -j $(NPROC)
-cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
-	@. $(HOME)/.cargo/env
-	#@cargo test
-	cargo  +nightly test -j $(NPROC) --workspace
-cargo-report: 	### 	cargo-report
-	@. $(HOME)/.cargo/env
-	cargo report future-incompatibilities --id 1 -j $(NPROC)
-cargo-run: 	### 	cargo-run
-	@. $(HOME)/.cargo/env
-	cargo run -j $(NPROC)  --bin gnostr -- -h
+release-linux-musl: build-linux-musl-release
+	strip target/x86_64-unknown-linux-musl/release/gitui
+	mkdir -p release
+	tar -C ./target/x86_64-unknown-linux-musl/release/ -czvf ./release/gitui-linux-x86_64.tar.gz ./gitui
 
-##===============================================================================
-cargo-dist: 	### 	make cargo-dist TAG=$(TAG)
-	
-	@dist host --steps=create --tag=$(TAG) --allow-dirty --output-format=json > plan-dist-manifest.json
-cargo-dist-build: 	### 	cargo-dist-build
-	RUSTFLAGS="--cfg tokio_unstable" dist build --allow-dirty
-cargo-dist-manifest: 	### 	dist manifest --artifacts=all
-	dist manifest --artifacts=all
+build-apple-x86-debug:
+	cargo build --target=x86_64-apple-darwin
 
-dep-graph: 	### 	dep-graph
-	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
+build-apple-x86-release:
+	cargo build --release --target=x86_64-apple-darwin --locked
 
-gnostr-chat: 	## 	gnostr-chat
-	cargo  b -j $(NPROC) --bin gnostr
-	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
+build-linux-musl-debug:
+	cargo build --target=x86_64-unknown-linux-musl
 
-fetch-by-id: 	### 	fetch-by-id
-	cargo  -j $(NPROC) install --bin gnostr-fetch-by-id --path .
-	event_id=$(shell gnostr note -c test --hex | jq .id | sed "s/\"//g") && gnostr-fetch-by-id $;
+build-linux-musl-release:
+	cargo build --release --target=x86_64-unknown-linux-musl --locked
 
-fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
-	cargo  -j $(NPROC) install --bin fetch_by_kind-and-author --path .
-	cargo  -j $(NPROC) install --bin fetch_by_kind_and_author --path .
-	fetch_by_kind_and_author wss://relay.nostr.band 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
+test-linux-musl:
+	cargo test --workspace --target=x86_64-unknown-linux-musl
 
-crawler-test-relays: 	### crawler-test-relays
-	for relay in $(shell echo $(shell gnostr-crawler));do echo $$relay;done
-	for relay in $(shell echo $(shell gnostr-crawler));do test_relay $$relay;done
+release-linux-arm: build-linux-arm-release
+	mkdir -p release
 
-gnostr-note-debug: 	### 	gnostr-note-debug
-	@gnostr --debug --hash "" note -c "gnostr --debug" --hex -s "gnostr --debug subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--debug|tag" --verbose --expiration 144000
+	aarch64-linux-gnu-strip target/aarch64-unknown-linux-gnu/release/gitui
+	arm-linux-gnueabihf-strip target/armv7-unknown-linux-gnueabihf/release/gitui
+	arm-linux-gnueabihf-strip target/arm-unknown-linux-gnueabihf/release/gitui
 
-gnostr-note-trace: 	### 	gnostr-note-debug
-	@gnostr --trace --hash "" note -c "gnostr --trace" --hex -s "gnostr --trace subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--trace|tag" --verbose --expiration 144000
+	tar -C ./target/aarch64-unknown-linux-gnu/release/ -czvf ./release/gitui-linux-aarch64.tar.gz ./gitui
+	tar -C ./target/armv7-unknown-linux-gnueabihf/release/ -czvf ./release/gitui-linux-armv7.tar.gz ./gitui
+	tar -C ./target/arm-unknown-linux-gnueabihf/release/ -czvf ./release/gitui-linux-arm.tar.gz ./gitui
 
-post_event: 	### 	post_event
-	cat tests/events/json/first-gnostr-commit.json | post_event wss://relay.nostr.band
+build-linux-arm-debug:
+	cargo build --target=aarch64-unknown-linux-gnu
+	cargo build --target=armv7-unknown-linux-gnueabihf
+	cargo build --target=arm-unknown-linux-gnueabihf
 
-post_from_files: 	### 	post_from_files
-	post_from_files ./tests/events/json wss://relay.nostr.band
+build-linux-arm-release:
+	cargo build --release --target=aarch64-unknown-linux-gnu --locked
+	cargo build --release --target=armv7-unknown-linux-gnueabihf --locked
+	cargo build --release --target=arm-unknown-linux-gnueabihf --locked
 
-broadcast_event_list: 	### 	nip-0034-events syndication example
-	@RUST_LOG=debug gnostr --debug list-events -k 30617 -k 30618 -k 1617 -k 1621 -k 1630 -k 1631 -k 1632 -k 1633 -o nip-0034.json && gnostr --debug  --nsec $(shell gnostr-sha256) broadcast-events  -f ./nip-0034.json
+test:
+	cargo test --workspace
 
-nip_thirty_four_requests: 	### 	nip_thirty_four_requests
-	@echo '["REQ","nip-0034",{"kinds":[1630,1632,1621,30618,1633,1631,1617,30617]}]' | gnostr-cat -k -t -n -B 210000 wss://relay.nostr.band | jq
+fmt:
+	cargo fmt -- --check
 
+clippy:
+	cargo clippy --workspace --all-features
 
-plan-dist-manifest: 	### 	plan-dist-manifest
-	dist host --allow-dirty --steps=create --tag=$(TAG) --output-format=json | sed 's/windows-2019/windows-latest/g' | sed 's/ubuntu-20.04/ubuntu-latest/g' > plan-dist-manifest.json
+clippy-nightly:
+	cargo +nightly clippy --workspace --all-features
 
-docker: 	### 	gnostr in a docker container
-	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
-docker-tui: 	### 	gnostr tui in a docker container
-	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr tui --gitdir ."
-docker-chat: 	### 	gnostr chat in a docker container
-	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
-docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
+check: fmt clippy test sort
 
-gh-act-run-all: 	### 	gh-act-run-all
-	gh extension install nektos/gh-act
-	gh act -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+check-nightly:
+	cargo +nightly c
+	cargo +nightly clippy --workspace --all-features
+	cargo +nightly t
 
-# vim: set noexpandtab:
-# vim: set setfiletype make
+deny:
+	cargo deny check
+
+sort:
+	cargo sort -c -w "."
+
+install:
+	cargo install --path "." --offline --locked
+
+install-timing:
+	cargo install --features=timing --path "." --offline --locked
+
+licenses:
+	cargo bundle-licenses --format toml --output THIRDPARTY.toml
+
+clean:
+	cargo clean
