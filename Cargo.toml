@@ -1,5 +1,5 @@
 [package]
-name = "gitui"
+name = "gnostr"
 version = "0.27.0"
 authors = ["extrawurst <mail@rusticorn.com>"]
 description = "blazing fast terminal-ui for git"
@@ -24,7 +24,7 @@ members = [
 ]
 
 [lib]
-name = "gitui"
+name = "gnostr"
 path = "src/lib/mod.rs"
 
 [features]
@@ -55,6 +55,9 @@ easy-cast = "0.5"
 filetreelist = { path = "./filetreelist", version = "0.5" }
 fuzzy-matcher = "0.3"
 gh-emoji = { version = "1.0", optional = true }
+gnostr-legit = { version = "1911.921558.782146", path = "legit" }
+gnostr-query = { version = "1912.921276.230652", path = "query" }
+gnostr-relay = { version = "1912.921275.23100", path = "relay", features = ["search"] }
 indexmap = "2"
 itertools = "0.14"
 log = "0.4"
