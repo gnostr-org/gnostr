@@ -31,7 +31,9 @@ regex = "1"
 tempfile = "3"
 thiserror = "1.0.34"
 which = { version = "5.0", optional = true }
-simple-websockets = { git = "https://github.com/DanConwayDev/simple-websockets", branch = "auto-release-port" }
+##gnostr has a gnostr::ws library that is a copy of simple-websockets
+##replace the dependency below
+gnostr = { path = "../" }
 strip-ansi-escapes = "0.2.0"
 tokio = "1.33.0"
 tungstenite = "0.20.1"
