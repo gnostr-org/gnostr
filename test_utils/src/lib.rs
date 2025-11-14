@@ -23,6 +23,7 @@ pub mod git;
 pub mod relay;
 pub mod error;
 pub mod reader;
+pub mod ws_test;
 
 pub static TEST_KEY_1_NSEC: &str =
 	"nsec1ppsg5sm2aexq06juxmu9evtutr6jkwkhp98exxxvwamhru9lyx9s3rwseq";
