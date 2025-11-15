@@ -188,7 +188,7 @@ jobs:
           gnostr ngit --help
           gnostr set-metadata --help
           gnostr note --help
-          gnostr publish-contact-list --help
+          gnostr publish-contact-list-csv --help
           gnostr delete-event --help
           gnostr delete-profile --help
           gnostr react --help
