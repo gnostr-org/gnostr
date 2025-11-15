@@ -136,15 +136,15 @@ jobs:
           cargo search gnostr --limit 100
 
       - run: |
-          cargo install cargo-binstall || true
+          cargo install cargo-binstall -j8 || true
 
       - run: |
-          cargo-binstall --force --no-confirm gnostr
+          cargo-binstall --force --no-confirm gnostr -j8
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
 
-      - run: cargo install sccache --force
+      - run: cargo install sccache --force -j8
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
 
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -257,22 +257,22 @@ jobs:
       - name: 🚀 cargo build
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          cargo build && echo "✅" || echo "❌"
+          cargo build -j8 && echo "✅" || echo "❌"
 
-      - name: 🚀 cargo install git-remote-nostr
+      - name: 🚀 cargo install -j8 git-remote-nostr
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          cargo install --bin git-remote-nostr --path . && echo "✅" || echo "❌"
+          cargo install -j8 --bin git-remote-nostr --path . && echo "✅" || echo "❌"
 
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          cargo test -- --nocapture && echo "✅" || echo "❌"
+          cargo test -j8 -- --nocapture && echo "✅" || echo "❌"
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
         run: |
-          cargo test -- --ignored && echo "✅" || echo "❌"
+          cargo test -j8 -- --ignored && echo "✅" || echo "❌"
 
       - run: |
           printenv
