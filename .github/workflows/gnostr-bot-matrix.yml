@@ -211,6 +211,8 @@ jobs:
         shell: bash
         run: |
           gnostr -V
+          git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+          gnostr ngit --nsec $(gnostr --hash "") list
           gnostr ngit --nsec $(gnostr --hash "") fetch
         #if: matrix.os == 'macos-latest'
 
