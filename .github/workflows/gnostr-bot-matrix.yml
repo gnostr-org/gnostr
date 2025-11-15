@@ -257,6 +257,11 @@ jobs:
         run: |
           cargo build && echo "✅" || echo "❌"
 
+      - name: 🚀 cargo install git-remote-nostr
+        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        run: |
+          cargo install --bin git-remote-nostr --path . && echo "✅" || echo "❌"
+
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
