@@ -1,9 +1,8 @@
-use gnostr::ws::{Event, Message, Responder, launch_from_listener};
-use tokio_tungstenite::MaybeTlsStream;
+use gnostr::ws::{Message, Responder, launch_from_listener, Error};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use tokio::net::TcpStream;
 use futures_util::StreamExt;
 use std::time::Duration;
-use tokio_tungstenite::WebSocketStream;
 
 // Helper to find an available port and return a bound TcpListener
 async fn find_available_listener() -> tokio::net::TcpListener {
@@ -21,7 +20,7 @@ async fn connect_websocket_client(port: u16) -> WebSocketStream<MaybeTlsStream<T
         match tokio_tungstenite::connect_async(&addr).await {
             Ok((ws_stream, _)) => return ws_stream,
             Err(e) => {
-                if let tungstenite::Error::Io(e) = e {
+                if let tokio_tungstenite::tungstenite::Error::Io(e) = e {
                     if e.kind() == std::io::ErrorKind::ConnectionRefused {
                         tokio::time::sleep(Duration::from_millis(100)).await;
                     } else {
@@ -40,17 +39,17 @@ async fn test_message_conversion() {
     // Test Text message
     let text_msg = Message::Text("Hello".to_string());
     let tungstenite_text = text_msg.clone().into_tungstenite();
-    assert!(matches!(tungstenite_text, tungstenite::Message::Text(_)));
+    assert!(matches!(tungstenite_text, tokio_tungstenite::Message::Text(_)));
     assert_eq!(Message::from_tungstenite(tungstenite_text).unwrap(), text_msg);
 
     // Test Binary message
     let binary_msg = Message::Binary(vec![1, 2, 3]);
     let tungstenite_binary = binary_msg.clone().into_tungstenite();
-    assert!(matches!(tungstenite_binary, tungstenite::Message::Binary(_)));
+    assert!(matches!(tungstenite_binary, tokio_tungstenite::Message::Binary(_)));
     assert_eq!(Message::from_tungstenite(tungstenite_binary).unwrap(), binary_msg);
 
     // Test unsupported message type
-    let ping_msg = tungstenite::Message::Ping(vec![1]);
+    let ping_msg = tokio_tungstenite::Message::Ping(vec![1]);
     assert!(Message::from_tungstenite(ping_msg).is_none());
 }
 
@@ -74,7 +73,7 @@ async fn test_websocket_connection_and_message_echo() {
 
     // Send a message from client to server
     let client_message = "Hello from client".to_string();
-    client_ws.send(tungstenite::Message::Text(client_message.clone())).await.unwrap();
+    client_ws.send(tokio_tungstenite::Message::Text(client_message.clone())).await.unwrap();
 
     // Verify message event on server side
     let received_message = match event_hub.poll_async().await {
@@ -91,7 +90,7 @@ async fn test_websocket_connection_and_message_echo() {
     // Verify message received by client
     let response = client_ws.next().await.unwrap().unwrap();
     match response {
-        tungstenite::Message::Text(text) => assert_eq!(text, client_message),
+        tokio_tungstenite::Message::Text(text) => assert_eq!(text, client_message),
         _ => panic!("Expected text message back"),
     }
 

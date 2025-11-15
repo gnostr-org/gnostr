@@ -16,8 +16,8 @@ pub type ListenerReqFunc<'a> = &'a dyn Fn(
 
 pub struct Relay<'a> {
 	port: u16,
-	event_hub: simple_websockets::EventHub,
-	clients: HashMap<u64, simple_websockets::Responder>,
+	event_hub: gnostr::ws::EventHub,
+	clients: HashMap<u64, gnostr::ws::Responder>,
 	pub events: Vec<nostr::Event>,
 	pub reqs: Vec<Vec<nostr::Filter>>,
 	event_listener: Option<ListenerEventFunc<'a>>,
@@ -30,7 +30,7 @@ impl<'a> Relay<'a> {
 		event_listener: Option<ListenerEventFunc<'a>>,
 		req_listener: Option<ListenerReqFunc<'a>>,
 	) -> Self {
-		let event_hub = simple_websockets::launch(port)
+		let event_hub = gnostr::ws::launch(port)
 			.unwrap_or_else(|_| {
 				panic!("failed to listen on port {port}")
 			});
@@ -59,7 +59,7 @@ impl<'a> Relay<'a> {
 		}
 		.as_json();
 		// bail!(format!("{}", &ok_json));
-		Ok(responder.send(simple_websockets::Message::Text(ok_json)))
+		Ok(responder.send(gnostr::ws::Message::Text(ok_json)))
 	}
 
 	pub fn respond_eose(
@@ -69,7 +69,7 @@ impl<'a> Relay<'a> {
 	) -> Result<bool> {
 		let responder = self.clients.get(&client_id).unwrap();
 
-		Ok(responder.send(simple_websockets::Message::Text(
+		Ok(responder.send(gnostr::ws::Message::Text(
 			RelayMessage::EndOfStoredEvents(subscription_id)
 				.as_json(),
 		)))
@@ -86,7 +86,7 @@ impl<'a> Relay<'a> {
 
 		for event in events {
 			let res =
-				responder.send(simple_websockets::Message::Text(
+				responder.send(gnostr::ws::Message::Text(
 					RelayMessage::Event {
 						subscription_id: subscription_id.clone(),
 						event: Box::new(event.clone()),
@@ -128,21 +128,21 @@ impl<'a> Relay<'a> {
 		loop {
 			println!("{} polling", self.port);
 			match self.event_hub.poll_async().await {
-				simple_websockets::Event::Connect(
+				gnostr::ws::Event::Connect(
 					client_id,
 					responder,
 				) => {
 					// add their Responder to our `clients` map:
 					self.clients.insert(client_id, responder);
 				}
-				simple_websockets::Event::Disconnect(client_id) => {
+				gnostr::ws::Event::Disconnect(client_id) => {
 					// remove the disconnected client from the clients
 					// map:
 					println!("{} disconnected", self.port);
 					self.clients.remove(&client_id);
 					// break;
 				}
-				simple_websockets::Event::Message(
+				gnostr::ws::Event::Message(
 					client_id,
 					message,
 				) => {
@@ -152,7 +152,7 @@ impl<'a> Relay<'a> {
 						"{} Received a message from client #{}: {:?}",
 						self.port, client_id, message
 					);
-					if let simple_websockets::Message::Text(s) =
+					if let gnostr::ws::Message::Text(s) =
 						message.clone()
 					{
 						if s.eq("shut me down") {
@@ -240,9 +240,9 @@ pub fn shutdown_relay(port: u64) -> Result<()> {
 }
 
 fn get_nevent(
-	message: &simple_websockets::Message,
+	message: &gnostr::ws::Message,
 ) -> Result<nostr::Event> {
-	if let simple_websockets::Message::Text(s) = message.clone() {
+	if let gnostr::ws::Message::Text(s) = message.clone() {
 		let cm_result = ClientMessage::from_json(s);
 		if let Ok(ClientMessage::Event(event)) = cm_result {
 			let e = *event;
@@ -253,9 +253,9 @@ fn get_nevent(
 }
 
 fn get_nreq(
-	message: &simple_websockets::Message,
+	message: &gnostr::ws::Message,
 ) -> Result<(nostr::SubscriptionId, Vec<nostr::Filter>)> {
-	if let simple_websockets::Message::Text(s) = message.clone() {
+	if let gnostr::ws::Message::Text(s) = message.clone() {
 		let cm_result = ClientMessage::from_json(s);
 		if let Ok(ClientMessage::Req {
 			subscription_id,
@@ -268,8 +268,8 @@ fn get_nreq(
 	bail!("not nostr event")
 }
 
-fn is_nclose(message: &simple_websockets::Message) -> bool {
-	if let simple_websockets::Message::Text(s) = message.clone() {
+fn is_nclose(message: &gnostr::ws::Message) -> bool {
+	if let gnostr::ws::Message::Text(s) = message.clone() {
 		let cm_result = ClientMessage::from_json(s);
 		if let Ok(ClientMessage::Close(_)) = cm_result {
 			return true;
