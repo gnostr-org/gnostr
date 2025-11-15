@@ -136,7 +136,7 @@ jobs:
           cargo search gnostr --limit 100
 
       - run: |
-          cargo -j8 install cargo-binstall || true
+          cargo install cargo-binstall -j8 || true
 
       - run: |
           cargo-binstall --force --no-confirm gnostr
