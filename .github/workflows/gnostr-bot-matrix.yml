@@ -136,10 +136,10 @@ jobs:
           cargo search gnostr --limit 100
 
       - run: |
-          cargo install cargo-binstall -j8 || true
+          cargo -j8 install cargo-binstall || true
 
       - run: |
-          cargo-binstall --force --no-confirm gnostr -j8
+          cargo-binstall --force --no-confirm gnostr
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
