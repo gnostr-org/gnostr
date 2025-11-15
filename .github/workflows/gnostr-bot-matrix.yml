@@ -212,8 +212,9 @@ jobs:
         run: |
           gnostr -V
           git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
-          gnostr ngit --nsec $(gnostr --hash "") list
-          gnostr ngit --nsec $(gnostr --hash "") fetch
+          gnostr ngit --help
+          #gnostr ngit --nsec $(gnostr --hash "") list
+          gnostr ngit --nsec $(gnostr --hash "") fetch 2>/dev/null 
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
