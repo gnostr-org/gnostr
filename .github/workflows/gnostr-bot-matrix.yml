@@ -175,9 +175,25 @@ jobs:
       - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: runner.os == 'macos'
 
-      - run: |
+      - name: gnostr ngit compatibility
+        shell: bash
+        run: |
           gnostr -V
           gnostr --help
+          gnostr tui --help
+          gnostr sniper --help
+          gnostr chat --help
+          gnostr legit --help
+          gnostr legit --help
+          gnostr ngit --help
+          gnostr set-metadata --help
+          gnostr note --help
+          gnostr publish-contact-list --help
+          gnostr delete-event --help
+          gnostr delete-profile --help
+          gnostr react --help
+          gnostr list-events --help
+          gnostr generate-keypair --help
 
       - name: create set-metadata kind 0
         shell: bash
