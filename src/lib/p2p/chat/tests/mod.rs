@@ -345,9 +345,8 @@ More details here.".to_string(), "some value".to_string()],
         assert_eq!(found_tags.len(), 2); // Ensure no extra tags were added unintentionally
     }
 
-    #[test]
-    #[ignore] // TODO
-    fn test_create_event_defaults() {
+    #[tokio::test]
+    async fn test_create_event_defaults() {
         // Test create_event without custom tags, using default values
         let sk_hex = "2a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Another example key
         let keys = Keys::parse(sk_hex).unwrap();
@@ -360,17 +359,12 @@ More details here.".to_string(), "some value".to_string()],
         });
 
         assert!(event_result.is_ok());
-        // The `create_event` function itself returns Result<()>, it doesn't return the event.
-        // However, `create_event_with_custom_tags` is called internally.
-        // We need to check the side effects or the internal calls if possible.
-        // For now, we assume that if it doesn't error, the internal call was made.
-        // To properly test `create_event`, we might need to refactor it to return the event or use mocking.
-        // As per the current structure, `create_event` doesn't return the Event, so we can only assert it doesn't return an error.
-        // The logs within `create_event` would show if the event was sent, but that's not testable here.
-        // Let's focus on the fact that it executes without error.
-        
-        // If we wanted to test event generation, we'd need `create_event` to return the event.
-        // For now, we only assert that it completes.
+        let event = event_result.unwrap();
+
+        assert_eq!(event.content, content);
+        assert_eq!(event.pubkey, pubkey);
+        assert_eq!(event.kind, Kind::TextNote); // Default kind used by EventBuilder::new
+        assert!(event.tags.is_empty()); // No custom tags were provided
     }
 
     // Add more tests for different `MsgKind` scenarios if needed

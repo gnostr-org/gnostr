@@ -45,6 +45,8 @@ use futures_util::{SinkExt, StreamExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
 use tokio_tungstenite::{accept_async, tungstenite};
+use tokio_util::sync::CancellationToken;
+use tracing::{debug, info, error, warn};
 
 #[derive(Debug)]
 pub enum Error {
@@ -203,10 +205,11 @@ impl EventHub {
 /// Start listening for websocket connections on `port`.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
-pub fn launch(port: u16) -> Result<EventHub, Error> {
+pub fn launch(port: u16) -> Result<(EventHub, std::thread::JoinHandle<()>), Error> {
     let address = format!("0.0.0.0:{}", port);
     let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
-    launch_from_listener(listener)
+    let cancellation_token = CancellationToken::new();
+    launch_from_listener(listener, cancellation_token)
 }
 
 /// Start listening for websocket connections with the specified [`TcpListener`](std::net::TcpListener).
@@ -223,21 +226,25 @@ pub fn launch(port: u16) -> Result<EventHub, Error> {
 ///     // ...
 /// }
 /// ```
-pub fn launch_from_listener(listener: std::net::TcpListener) -> Result<EventHub, Error> {
+pub fn launch_from_listener(
+    listener: std::net::TcpListener,
+    cancellation_token: CancellationToken,
+) -> Result<(EventHub, std::thread::JoinHandle<()>), Error> {
     let (tx, rx) = flume::unbounded();
-    std::thread::Builder::new()
+    let handle = std::thread::Builder::new()
         .name("Websocket listener".to_string())
         .spawn(move || {
-            start_runtime(tx, listener).unwrap();
+            start_runtime(tx, listener, cancellation_token).unwrap();
         })
         .map_err(|_| Error::FailedToStart)?;
 
-    Ok(EventHub::new(rx))
+    Ok((EventHub::new(rx), handle))
 }
 
 fn start_runtime(
     event_tx: flume::Sender<Event>,
     listener: std::net::TcpListener,
+    cancellation_token: CancellationToken,
 ) -> Result<(), Error> {
     listener
         .set_nonblocking(true)
@@ -248,15 +255,18 @@ fn start_runtime(
             let tokio_listener = TcpListener::from_std(listener).unwrap();
             let mut current_id: u64 = 0;
             loop {
-                if current_id == 15 {
-                    println!("stopping listening on port");
-                    break Ok(());
-                }
-                if let Ok((stream, _)) = tokio_listener.accept().await {
-                    tokio::spawn(handle_connection(stream, event_tx.clone(), current_id));
-                    current_id = current_id.wrapping_add(1);
+                tokio::select! {
+                    _ = cancellation_token.cancelled() => {
+                        println!("Websocket listener shutting down.");
+                        break;
+                    }
+                    Ok((stream, _)) = tokio_listener.accept() => {
+                        tokio::spawn(handle_connection(stream, event_tx.clone(), current_id));
+                        current_id = current_id.wrapping_add(1);
+                    }
                 }
             }
+            Ok(())
         })
 }
 
@@ -273,7 +283,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
 
     event_tx
         .send(Event::Connect(id, Responder::new(resp_tx, id)))
-        .expect("Parent thread is dead");
+        .unwrap_or_else(|e| warn!("Failed to send Connect event: {}", e));
 
     // future that waits for commands from the `Responder`
     let responder_events = async move {
@@ -307,7 +317,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
                 if let Some(msg) = Message::from_tungstenite(tungstenite_msg) {
                     event_tx2
                         .send(Event::Message(id, msg))
-                        .expect("Parent thread is dead");
+                        .unwrap_or_else(|e| warn!("Failed to send Message event: {}", e));
                 }
             }
         }
@@ -324,7 +334,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
 
     event_tx
         .send(Event::Disconnect(id))
-        .expect("Parent thread is dead");
+        .unwrap_or_else(|e| warn!("Failed to send Disconnect event: {}", e));
 }
 
 #[cfg(test)]
@@ -334,7 +344,7 @@ mod tests {
     use tokio_tungstenite::MaybeTlsStream;
     use tokio::net::TcpStream;
     use futures_util::StreamExt;
-    use std::time::Duration;
+    use tokio::time::{timeout, Duration};
     use tokio_tungstenite::WebSocketStream;
 
     // Helper to find an available port and return a bound TcpListener
@@ -387,11 +397,11 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_websocket_connection_and_message_echo() {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
-        let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+        let cancellation_token = CancellationToken::new();
+        let (event_hub, server_handle) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
 
         // Give the server a moment to start
         tokio::time::sleep(Duration::from_secs(1)).await;
@@ -399,9 +409,9 @@ mod tests {
         let mut client_ws = connect_websocket_client(port).await;
 
         // Verify connection event
-        let (client_id, responder) = match event_hub.poll_async().await {
+        let (client_id, responder) = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Connect event in time") {
             Event::Connect(id, resp) => (id, resp),
-            _ => panic!("Expected Connect event"),
+            other => panic!("Expected Connect event, got {:?}", other),
         };
 
         // Send a message from client to server
@@ -409,42 +419,47 @@ mod tests {
         client_ws.send(tungstenite::Message::Text(client_message.clone())).await.unwrap();
 
         // Verify message event on server side
-        let received_message = match event_hub.poll_async().await {
+        let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Message event in time") {
             Event::Message(id, msg) => {
                 assert_eq!(id, client_id);
                 msg
             },
-            _ => panic!("Expected Message event"),
+            other => panic!("Expected Message event, got {:?}", other),
         };
 
         // Echo the message back to the client
         responder.send(received_message.clone());
 
         // Verify message received by client
-        let response = client_ws.next().await.unwrap().unwrap();
+        let response = timeout(Duration::from_secs(5), client_ws.next()).await.expect("Client did not receive message in time").unwrap().unwrap();
         match response {
             tungstenite::Message::Text(text) => assert_eq!(text, client_message),
-            _ => panic!("Expected text message back"),
+            other => panic!("Expected text message back, got {:?}", other),
         }
 
         // Test Responder::close
         responder.close();
         // The client should receive a close frame and then the connection should be dropped
-        let client_close_frame = client_ws.next().await.unwrap().unwrap().is_close();
+        let client_close_frame = timeout(Duration::from_secs(5), client_ws.next()).await.expect("Client did not receive close frame in time").unwrap().unwrap().is_close();
         assert!(client_close_frame);
 
         // Verify disconnect event on server side
-        match event_hub.poll_async().await {
+        match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Disconnect event in time") {
             Event::Disconnect(id) => assert_eq!(id, client_id),
-            _ => panic!("Expected Disconnect event after Responder.close()"),
+            other => panic!("Expected Disconnect event after Responder.close(), got {:?}", other),
         };
+
+        // Signal the server to shut down and wait for its thread to finish
+        cancellation_token.cancel();
+        server_handle.join().expect("Server thread panicked");
     }
 
     #[tokio::test]
     async fn test_event_hub_drain() {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
-        let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+        let cancellation_token = CancellationToken::new();
+        let (event_hub, server_handle) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client1 = connect_websocket_client(port).await;
@@ -457,13 +472,17 @@ mod tests {
         assert!(events.iter().all(|e| matches!(e, Event::Connect(_, _))));
 
         assert!(event_hub.is_empty());
+
+        cancellation_token.cancel();
+        server_handle.join().expect("Server thread panicked");
     }
 
     #[tokio::test]
     async fn test_event_hub_next_event() {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
-        let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+        let cancellation_token = CancellationToken::new();
+        let (event_hub, server_handle) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client = connect_websocket_client(port).await;
@@ -471,13 +490,17 @@ mod tests {
 
         assert!(event_hub.next_event().is_some()); // Connect event
         assert!(event_hub.next_event().is_none()); // No more events
+
+        cancellation_token.cancel();
+        server_handle.join().expect("Server thread panicked");
     }
 
     #[tokio::test]
     async fn test_responder_client_id() {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
-        let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+        let cancellation_token = CancellationToken::new();
+        let (event_hub, server_handle) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client_ws = connect_websocket_client(port).await;
@@ -486,5 +509,8 @@ mod tests {
             _ => panic!("Expected Connect event"),
         };
         assert_eq!(responder.client_id(), client_id);
+
+        cancellation_token.cancel();
+        server_handle.join().expect("Server thread panicked");
     }
 }

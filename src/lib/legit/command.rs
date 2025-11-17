@@ -185,7 +185,7 @@ pub async fn create_event(
     keys: Keys,
     custom_tags: HashMap<String, Vec<String>>,
     content: &str,
-) -> Result<()> {
+) -> Result<Event> {
     //let content = "Hello, Nostr with custom tags!";
 
     let (signed_event, _unsigned_event) = create_event_with_custom_tags(&keys, content, custom_tags).await?;
@@ -295,7 +295,7 @@ pub async fn create_event(
         info!("test_author:\n\n{}", event.as_json());
     }
 
-    Ok(())
+    Ok(signed_event)
 }
 
 
