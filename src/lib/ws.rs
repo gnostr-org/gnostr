@@ -45,7 +45,7 @@ use futures_util::{SinkExt, StreamExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
 use tokio_tungstenite::{accept_async, tungstenite};
-use tokio_util::sync::CancellationToken;
+pub use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, error, warn};
 
 #[derive(Debug)]
