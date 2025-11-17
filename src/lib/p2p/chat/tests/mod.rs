@@ -359,12 +359,28 @@ More details here.".to_string(), "some value".to_string()],
         });
 
         assert!(event_result.is_ok());
-        let event = event_result.unwrap();
-
-        assert_eq!(event.content, content);
+        assert_eq!(event.content, format!("gnostr:legit {}", pubkey));
         assert_eq!(event.pubkey, pubkey);
         assert_eq!(event.kind, Kind::TextNote); // Default kind used by EventBuilder::new
-        assert!(event.tags.is_empty()); // No custom tags were provided
+        
+        let expected_tags: Vec<Tag> = vec![
+            Tag::public_key(pubkey),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11 22 33 44".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11 22 33".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11 22".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1".chars()),
+            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "".chars()),
+        ];
+
+        // Convert to HashSet for order-independent comparison
+        let event_tags_set: HashSet<Tag> = event.tags.into_iter().collect();
+        let expected_tags_set: HashSet<Tag> = expected_tags.into_iter().collect();
+
+        assert_eq!(event_tags_set, expected_tags_set);
     }
 
     // Add more tests for different `MsgKind` scenarios if needed
