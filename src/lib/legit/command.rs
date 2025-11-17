@@ -205,12 +205,15 @@ pub async fn create_event(
     client.send_event(signed_event.clone()).await?;
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
-    info!("signed_event sent:\n{:?}", signed_event);
-
-
-    //
-
-    // Publish a text note
+        info!("signed_event sent:\n{:?}", signed_event);
+        debug!("signed_event.content: {}", signed_event.content);
+        debug!("signed_event.pubkey: {}", signed_event.pubkey);
+        debug!("signed_event.kind: {:?}", signed_event.kind);
+        debug!("signed_event.tags: {:?}", signed_event.tags);
+    
+        //
+    
+        // Publish a text note
     let pubkey = keys.public_key();
 
     info!("pubkey={}", keys.public_key());

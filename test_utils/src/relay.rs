@@ -3,6 +3,7 @@ use std::thread::JoinHandle;
 
 use anyhow::{Result, bail};
 use nostr::{ClientMessage, JsonUtil, RelayMessage};
+use gnostr::ws::CancellationToken;
 
 use crate::CliTester;
 
@@ -23,7 +24,8 @@ pub struct Relay<'a> {
 	pub reqs: Vec<Vec<nostr::Filter>>,
 	event_listener: Option<ListenerEventFunc<'a>>,
 	req_listener: Option<ListenerReqFunc<'a>>,
-	server_handle: JoinHandle<()>, // New field to store the JoinHandle
+	server_handle: Option<JoinHandle<()>>, // Changed to Option
+	cancellation_token: CancellationToken, // New field to store the CancellationToken
 }
 
 impl<'a> Relay<'a> {
@@ -32,7 +34,7 @@ impl<'a> Relay<'a> {
 		event_listener: Option<ListenerEventFunc<'a>>,
 		req_listener: Option<ListenerReqFunc<'a>>,
 	) -> Self {
-		let (event_hub, server_handle) = gnostr::ws::launch(port)
+		let (event_hub, server_handle, cancellation_token) = gnostr::ws::launch(port)
 			.unwrap_or_else(|_| {
 				panic!("failed to listen on port {port}")
 			});
@@ -44,7 +46,8 @@ impl<'a> Relay<'a> {
 			clients: HashMap::new(),
 			event_listener,
 			req_listener,
-			server_handle,
+			server_handle: Some(server_handle),
+			cancellation_token,
 		}
 	}
 	pub fn respond_ok(
@@ -229,7 +232,10 @@ impl<'a> Relay<'a> {
 
 impl Drop for Relay<'_> {
     fn drop(&mut self) {
-        self.server_handle.join().expect("Relay server thread panicked during shutdown");
+        self.cancellation_token.cancel();
+        if let Some(handle) = self.server_handle.take() {
+            handle.join().expect("Relay server thread panicked during shutdown");
+        }
     }
 }
 
