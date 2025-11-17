@@ -294,6 +294,25 @@ jobs:
       - run: |
           printenv
 
+      - name: Cleanup lingering gnostr processes (Linux/macOS)
+        if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
+        run: |
+          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
+          pkill -f "gnostr" || true
+          pkill -f "git-remote-nostr" || true
+          echo "Cleanup attempt finished."
+        continue-on-error: true
+
+      - name: Cleanup lingering gnostr processes (Windows)
+        if: success() && (matrix.os == 'windows-latest')
+        shell: pwsh
+        run: |
+          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
+          Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue || true
+          Stop-Process -Name "git-remote-nostr" -ErrorAction SilentlyContinue || true
+          echo "Cleanup attempt finished."
+        continue-on-error: true
+
       - name: Get Current Job Log URL
         uses: Tiryoh/gha-jobid-action@v1.4.0
         id: jobs
