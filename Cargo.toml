@@ -263,6 +263,7 @@ urlencoding = "2.1.3"
 which = "6.0"
 yansi = "1.0.1"
 zeroize = "1.6.0"
+tokio-util = "0.7.17"
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
