@@ -280,7 +280,6 @@ jobs:
       - name: 🚀 cargo install -j8 git-remote-nostr
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          #which git-remote-nostr
           cargo install -j8 -f --bin git-remote-nostr --path . && echo "✅" || echo "❌"
 
       - name: 🚀 cargo test
