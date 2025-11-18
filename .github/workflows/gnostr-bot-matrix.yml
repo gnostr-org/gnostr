@@ -82,6 +82,13 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rustup }}
+          #components: rustfmt, clippy # Optional: Install additional components
+          #targets: wasm32-unknown-unknown # Optional: Install additional targets
+
       ##- name: Restore rustup
       ##  id: cache-rustup-restore
       ##  uses: actions/cache/restore@v3
@@ -90,13 +97,6 @@ jobs:
       ##    path: |
       ##      ~/.rustup
       ##    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
-
-      - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rustup }}
-          #components: rustfmt, clippy # Optional: Install additional components
-          #targets: wasm32-unknown-unknown # Optional: Install additional targets
 
       - name: Restore cargo
         id: cache-cargo-restore
