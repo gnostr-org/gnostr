@@ -1,11 +1,9 @@
-use std::env;
-use std::fs;
-use std::io;
-use std::io::Error;
-use std::io::ErrorKind;
-use std::io::Write;
-use std::path::Path;
-use std::process::Command;
+use std::{
+    env, fs, io,
+    io::{Error, ErrorKind, Write},
+    path::Path,
+    process::Command,
+};
 
 // try:
 // cargo build --features memory_profiling -j8
@@ -32,75 +30,79 @@ fn check_brew() -> bool {
 fn install_sccache() {
     // Check if the target is a Linux environment.
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    if target_os == "linux" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected Linux OS. Attempting to install sccache.");
+    if target_os == "linux" {}
+    //    println!("cargo:rerun-if-changed=build.rs");
+    //    println!("cargo:warning=Detected Linux OS. Attempting to install
+    // sccache.");
 
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y sscache; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y sccache; else echo 'Neither apt-get nor yum found. Please install sccache manually.'; fi; fi")
-            .output();
+    //    let output = Command::new("sh")
+    //        .arg("-c")
+    //        .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y sscache; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y sccache; else echo 'Neither apt-get nor yum found. Please install sccache manually.'; fi; fi")
+    //        .output();
 
-        match output {
-            Ok(output) => {
-                if !output.status.success() {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                    // Exit the build process with an error
-                    panic!("Failed to install required Linux dependencies.");
-                } else {
-                    println!("cargo:warning=Successfully installed xcb dependencies.");
-                }
-            }
-            Err(e) => {
-                println!(
-                    "cargo:warning=Failed to run dependency installation command: {}",
-                    e
-                );
-                // Exit the build process with an error
-                panic!("Failed to run dependency installation command.");
-            }
-        }
-    }
-    if target_os == "macos" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
+    //    match output {
+    //        Ok(output) => {
+    //            if !output.status.success() {
+    //                let stderr = String::from_utf8_lossy(&output.stderr);
+    //                println!("cargo:warning=Failed to install dependencies: {}",
+    // stderr);                // Exit the build process with an error
+    //                panic!("Failed to install required Linux dependencies.");
+    //            } else {
+    //                println!("cargo:warning=Successfully installed xcb
+    // dependencies.");            }
+    //        }
+    //        Err(e) => {
+    //            println!(
+    //                "cargo:warning=Failed to run dependency installation command:
+    // {}",                e
+    //            );
+    //            // Exit the build process with an error
+    //            panic!("Failed to run dependency installation command.");
+    //        }
+    //    }
+    //}
+    if target_os == "macos" {}
+    //    println!("cargo:rerun-if-changed=build.rs");
+    //    println!("cargo:warning=Detected macOS. Attempting to install 'sccache'
+    // using Homebrew.");
 
-        // We use a shell command to first check if 'brew' is installed,
-        // and then run the installation command.
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("if command -v brew >/dev/null 2>&1; then brew install sccache; else echo 'Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.'; exit 1; fi")
-            .output();
+    //    // We use a shell command to first check if 'brew' is installed,
+    //    // and then run the installation command.
+    //    let output = Command::new("sh")
+    //        .arg("-c")
+    //        .arg("if command -v brew >/dev/null 2>&1; then brew install sccache; else echo 'Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.'; exit 1; fi")
+    //        .output();
 
-        match output {
-            Ok(output) => {
-                if !output.status.success() {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                    // Exit the build process with a panick, since the build cannot continue.
-                    panic!("Failed to install required macOS dependencies.");
-                } else {
-                    println!("cargo:warning=Successfully installed sccache dependency.");
-                }
-            }
-            Err(e) => {
-                println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                // Exit the build process with a panick.
-                panic!("Failed to run Homebrew command.");
-            }
-        }
-    }
-    if target_os == "windows" {
-        println!("cargo:warning=Detected Windows. Trying to install sccache.");
-        install_windows_dependency("sccache", "scoop install sccache");
-        println!("cargo:rerun-if-changed=build.rs");
+    //    match output {
+    //        Ok(output) => {
+    //            if !output.status.success() {
+    //                let stderr = String::from_utf8_lossy(&output.stderr);
+    //                println!("cargo:warning=Failed to install dependencies: {}",
+    // stderr);                // Exit the build process with a panick, since
+    // the build cannot continue.                panic!("Failed to install
+    // required macOS dependencies.");            } else {
+    //                println!("cargo:warning=Successfully installed sccache
+    // dependency.");            }
+    //        }
+    //        Err(e) => {
+    //            println!("cargo:warning=Failed to run Homebrew command: {}", e);
+    //            // Exit the build process with a panick.
+    //            panic!("Failed to run Homebrew command.");
+    //        }
+    //    }
+    //}
+    if target_os == "windows" {}
+    //    println!("cargo:warning=Detected Windows. Trying to install
+    // sccache.");    install_windows_dependency("sccache", "scoop install
+    // sccache");    println!("cargo:rerun-if-changed=build.rs");
 
-        println!("cargo:warning=Detected Windows. No XCB libraries are required for this build.");
-    }
+    //    println!("cargo:warning=Detected Windows. No XCB libraries are
+    // required for this build.");
+    //}
 }
 fn install_windows_dependency(name: &str, install_command: &str) {
-    // Check if the dependency is already installed using the Windows 'where' command.
+    // Check if the dependency is already installed using the Windows 'where'
+    // command.
     let check_command = format!("where.exe {} >nul 2>nul", name);
 
     // Command::new("cmd") is the standard way to run shell commands on Windows.
@@ -114,8 +116,8 @@ fn install_windows_dependency(name: &str, install_command: &str) {
             }
         }
         Err(e) => {
-            // A non-zero exit from the 'where.exe' check is expected if the command isn't found,
-            // but a generic error here means 'cmd' itself couldn't run.
+            // A non-zero exit from the 'where.exe' check is expected if the command isn't
+            // found, but a generic error here means 'cmd' itself couldn't run.
             println!("cargo:warning=Failed to check for '{}': {}", name, e);
         }
     }
@@ -226,8 +228,9 @@ fn install_xcb_deps() {
         println!("cargo:rerun-if-changed=build.rs");
 
         // This project uses conditional compilation to handle Windows dependencies.
-        // No external package manager is needed for `libxcb` because it's an X11 library.
-        // The linker will automatically use the correct platform-specific APIs.
+        // No external package manager is needed for `libxcb` because it's an X11
+        // library. The linker will automatically use the correct
+        // platform-specific APIs.
         println!("cargo:warning=Detected Windows. No XCB libraries are required for this build.");
     }
 }
@@ -239,11 +242,12 @@ fn install_openssl_brew() {
     match install_result {
         Ok(status) if status.success() => {
             println!("cargo:warning=Successfully installed openssl@3 via Homebrew.");
-            // Instruct rustc to link against the OpenSSL libraries installed by Brew.
-            // The exact paths might vary slightly based on Brew's configuration.
-            // It's generally safer to rely on the `openssl` crate to handle linking.
-            // However, if you need explicit linking:
-            // The corrected paths are used conditionally in the main function.
+            // Instruct rustc to link against the OpenSSL libraries installed by
+            // Brew. The exact paths might vary slightly based on
+            // Brew's configuration. It's generally safer to rely on
+            // the `openssl` crate to handle linking. However, if
+            // you need explicit linking: The corrected paths are
+            // used conditionally in the main function.
         }
         Ok(status) => {
             println!(
@@ -343,7 +347,6 @@ fn get_git_hash() -> String {
 }
 
 fn main() {
-
     println!("cargo:rerun-if-changed=src/empty");
     make_empty();
 
@@ -356,7 +359,8 @@ fn main() {
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/index");
 
-    // Tell Cargo to rerun this build script only if these environment variables change
+    // Tell Cargo to rerun this build script only if these environment variables
+    // change
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
 
@@ -535,8 +539,8 @@ fn if_linux_unknown() -> bool {
                 println!(
                     "cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly."
                 );
-                // You might choose to fail the build here if it's strictly necessary
-                // std::process::exit(1);
+                // You might choose to fail the build here if it's strictly
+                // necessary std::process::exit(1);
             }
         }
         true
@@ -587,8 +591,8 @@ fn linux_install_pkg_config() {
                 println!(
                     "cargo:warning=`pkg-config` not found in your PATH. Ensure `pkg-config` (or equivalent) is installed and accessible."
                 );
-                // You might choose to fail the build here if it's strictly necessary
-                // std::process::exit(1);
+                // You might choose to fail the build here if it's strictly
+                // necessary std::process::exit(1);
             }
         }
     } else {
@@ -640,8 +644,8 @@ fn musl_install_pkg_config() {
                 println!(
                     "cargo:warning=`pkg-config` not found in your PATH. Please ensure it is installed and accessible."
                 );
-                // You might choose to fail the build here if `pkg-config` is strictly necessary
-                // std::process::exit(1);
+                // You might choose to fail the build here if `pkg-config` is
+                // strictly necessary std::process::exit(1);
             }
         }
 
@@ -661,7 +665,8 @@ fn make_empty() {
     let target_path = Path::new("src/empty");
 
     // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
-    // We try to remove the path as a file first, and if that fails, we try as a directory.
+    // We try to remove the path as a file first, and if that fails, we try as a
+    // directory.
     if target_path.exists() {
         if target_path.is_file() {
             println!("cargo:warning=Found file at target path. Removing src/empty.");
@@ -673,16 +678,18 @@ fn make_empty() {
                 );
             }
         } else if target_path.is_dir() {
-            // If it exists as a directory, we can skip removal, as create_dir_all is idempotent,
-            // but if the goal is absolute cleanup, we use remove_dir_all.
-            // For simplicity, we let create_dir_all handle the existing directory case.
+            // If it exists as a directory, we can skip removal, as
+            // create_dir_all is idempotent, but if the goal is
+            // absolute cleanup, we use remove_dir_all.
+            // For simplicity, we let create_dir_all handle the existing
+            // directory case.
         }
     }
 
     // 2. Create the directory `./src/empty` (using create_dir_all for robustness).
-    // This function creates all necessary parent directories and succeeds if the directory already exists.
-    //println!("cargo:warning=Creating directory: ./src/empty");
-    //if let Err(e) = fs::create_dir_all(target_path) {
+    // This function creates all necessary parent directories and succeeds if the
+    // directory already exists. println!("cargo:warning=Creating directory:
+    // ./src/empty"); if let Err(e) = fs::create_dir_all(target_path) {
     //    panic!("Failed to create directory {}: {}", target_path.display(), e);
     //}
 
@@ -812,10 +819,10 @@ git commit --allow-empty -m "initial commit"
     //    .arg("-C")
     //    .arg(dir_path)
     //    .arg("commit")
-    //    .arg("-m") // Use '.' to add all files in the current directory (src/empty)
-    //    .arg("READM.md") // Use '.' to add all files in the current directory (src/empty)
-    //    //.current_dir(dir_path) // Executes 'git add .' inside src/empty
-    //    .output()
+    //    .arg("-m") // Use '.' to add all files in the current directory
+    // (src/empty)    .arg("READM.md") // Use '.' to add all files in the
+    // current directory (src/empty)    //.current_dir(dir_path) // Executes
+    // 'git add .' inside src/empty    .output()
     //    .expect("Failed to execute 'git add'");
 
     //if output.status.success() {
@@ -840,7 +847,7 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
     let dir_path_str = dir_path.to_str().ok_or_else(|| {
         Error::new(
             ErrorKind::InvalidInput,
-            format!("Path '{}' is not valid UTF-8", dir_path.display())
+            format!("Path '{}' is not valid UTF-8", dir_path.display()),
         )
     })?; // Now the '?' operator works, returning an io::Error on failure.
 
@@ -855,7 +862,6 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
         .env("GIT_COMMITTER_EMAIL", "admin@gnostr.org")
         .env("GIT_AUTHOR_DATE", "Thu, 01 Jan 1970 00:00:00 +0000")
         .env("GIT_COMMITTER_DATE", "Thu, 01 Jan 1970 00:00:00 +0000");
-
 
     // 3. Set the arguments. Note the use of the safe dir_path_str variable.
     command.args(&[
@@ -882,12 +888,12 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
         println!("\n❌ Git command failed!");
         eprintln!("Status: {}", output.status);
         eprintln!("Stderr:\n{}", String::from_utf8_lossy(&output.stderr));
-        
+
         // The failure block must return the error value, which is Err(io::Error).
         // We create a new io::Error here to indicate the child process failed.
         Err(Error::new(
             ErrorKind::Other,
-            format!("'git commit' failed with status: {}", output.status)
+            format!("'git commit' failed with status: {}", output.status),
         ))
     }
 }
