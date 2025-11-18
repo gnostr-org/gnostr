@@ -82,14 +82,14 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Restore rustup
-        id: cache-rustup-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            ~/.rustup
-          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+      ##- name: Restore rustup
+      ##  id: cache-rustup-restore
+      ##  uses: actions/cache/restore@v3
+      ##  if: ${{ !env.ACT }}
+      ##  with:
+      ##    path: |
+      ##      ~/.rustup
+      ##    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -428,14 +428,15 @@ jobs:
             gnostr-query -i $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
-      - name: Save rustup
-        id: cache-rustup-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            ~/.rustup
-          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+      #- name: Save rustup
+      #  id: cache-rustup-save
+      #  uses: actions/cache/save@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      ~/.rustup
+      #    key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
+
       - name: Save cargo
         id: cache-cargo-save
         uses: actions/cache/save@v3
@@ -444,6 +445,7 @@ jobs:
           path: |
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+
       - name: Save target
         id: cache-target-save
         uses: actions/cache/save@v3
