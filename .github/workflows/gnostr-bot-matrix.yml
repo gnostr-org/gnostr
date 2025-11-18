@@ -281,7 +281,7 @@ jobs:
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
           #which git-remote-nostr
-          cargo install -j8 --bin git-remote-nostr --path . && echo "✅" || echo "❌"
+          cargo install -j8 -f --bin git-remote-nostr --path . && echo "✅" || echo "❌"
 
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
