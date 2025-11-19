@@ -224,10 +224,9 @@ jobs:
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         #if: matrix.os == 'macos-latest'
 
-      - name: gnostr ngit compatibility
+      - name: gnostr ngit fetch
         shell: bash
         run: |
-          gnostr -V
           git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
           gnostr ngit --help
           #gnostr ngit --nsec $(gnostr --hash "") list
