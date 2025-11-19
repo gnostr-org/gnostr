@@ -4230,6 +4230,7 @@ dependencies = [
  "actix-web-actors",
  "bytes",
  "bytestring",
+ "clap 4.5.37",
  "config",
  "duration-str",
  "hex",
