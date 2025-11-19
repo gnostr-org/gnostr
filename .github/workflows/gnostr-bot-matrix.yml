@@ -285,6 +285,7 @@ jobs:
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
+          if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi
           cargo test -j8 -- --nocapture && echo "✅" || echo "❌"
 
       - name: 🌙 UTC second is ODD
