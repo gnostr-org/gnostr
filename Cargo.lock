@@ -4221,13 +4221,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "1912.921275.23100"
+version = "1908.924232.84720"
 dependencies = [
  "actix",
  "actix-cors",
  "actix-http",
  "actix-web",
  "actix-web-actors",
+ "anyhow",
  "bytes",
  "bytestring",
  "clap 4.5.37",
@@ -4242,6 +4243,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 1.0.69",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]
