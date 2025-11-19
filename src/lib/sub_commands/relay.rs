@@ -1,8 +1,29 @@
 use anyhow::{anyhow, Context, Result};
 use gnostr_relay::App;
 use std::path::PathBuf;
-use tracing::info;
 use tokio::process::Command;
+use tracing::info;
+
+#[derive(clap::ValueEnum, Clone, Debug, Copy)]
+pub enum LogLevel {
+    Trace,
+    Debug,
+    Info,
+    Warn,
+    Error,
+}
+
+impl std::fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LogLevel::Trace => write!(f, "trace"),
+            LogLevel::Debug => write!(f, "debug"),
+            LogLevel::Info => write!(f, "info"),
+            LogLevel::Warn => write!(f, "warn"),
+            LogLevel::Error => write!(f, "error"),
+        }
+    }
+}
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct RelaySubCommand {
@@ -17,6 +38,10 @@ pub struct RelaySubCommand {
     /// Watch for configuration file changes.
     #[clap(short, long)]
     pub watch: bool,
+
+    /// Set the logging level.
+    #[clap(long, value_enum, default_value_t = LogLevel::Info)]
+    pub logging: LogLevel,
 }
 //TODO web actix runtime
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
@@ -34,7 +59,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     } else {
         info!("gnostr-relay not found. Attempting to install...");
         let install_status = Command::new("cargo")
-            .args(&["install", "gnostr-relay"])//, "--path", "relay"])
+            .args(&["install", "gnostr-relay"]) //, "--path", "relay"])
             .spawn()
             .context("Failed to spawn `cargo install gnostr-relay`")?
             .wait()
@@ -51,10 +76,16 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
             .await
             .context("Failed to run `which gnostr-relay` after install")?;
 
-        if which_output_after_install.status.success() && !which_output_after_install.stdout.is_empty() {
-            String::from_utf8_lossy(&which_output_after_install.stdout).trim().to_string()
+        if which_output_after_install.status.success()
+            && !which_output_after_install.stdout.is_empty()
+        {
+            String::from_utf8_lossy(&which_output_after_install.stdout)
+                .trim()
+                .to_string()
         } else {
-            return Err(anyhow!("gnostr-relay not found in PATH after installation."));
+            return Err(anyhow!(
+                "gnostr-relay not found in PATH after installation."
+            ));
         }
     };
 
@@ -70,15 +101,20 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     if args.watch {
         cmd.arg("--watch");
     }
+    cmd.arg("--logging").arg(args.logging.to_string());
 
-    let status = cmd.spawn()
+    let status = cmd
+        .spawn()
         .context("Failed to spawn gnostr-relay process")?
         .wait()
         .await
         .context("Failed to await gnostr-relay process")?;
 
     if !status.success() {
-        return Err(anyhow!("gnostr-relay process exited with non-zero status: {:?}", status.code()));
+        return Err(anyhow!(
+            "gnostr-relay process exited with non-zero status: {:?}",
+            status.code()
+        ));
     }
 
     info!("Relay server shutdown");
