@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "1912.921275.23100"
+version = "1908.924232.84720"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -20,8 +20,10 @@ actix-cors = "0.7.0"
 actix-http = "3.9.0"
 actix-web = "4.9.0"
 actix-web-actors = "4.3.1"
+anyhow = "1.0.75"
 bytes = "1.7.1"
 bytestring = "1.3.1"
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 config = { version = "0.14.0", features = [
     "toml",
     "json",
@@ -36,8 +38,9 @@ parking_lot = "0.12.3"
 serde = { version = "1.0.209", features = ["derive"] }
 serde_json = "1.0.127"
 thiserror = "1.0.63"
+tokio = { version = "1.33.0", features = ["full"] }
 tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 [dev-dependencies]
 actix-rt = "2.10.0"
