@@ -1,0 +1,26 @@
+[package]
+name = "bcrypt-pbkdf"
+version = "0.9.0" # Also update html_root_url in lib.rs when bumping this
+description = "bcrypt-pbkdf password-based key derivation function"
+authors = ["RustCrypto Developers"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+documentation = "https://docs.rs/bcrypt-pbkdf"
+repository = "https://github.com/RustCrypto/password-hashes/tree/master/bcrypt-pbkdf"
+keywords = ["crypto", "password", "hashing"]
+categories = ["cryptography"]
+edition = "2021"
+rust-version = "1.57"
+
+[dependencies]
+blowfish = { version = "0.9.1", features = ["bcrypt"] }
+pbkdf2 = { version = "0.11", default-features = false, path = "../pbkdf2" }
+sha2 = { version = "0.10.2", default-features = false }
+zeroize = { version = "1", default-features = false, optional = true }
+
+[dev-dependencies]
+hex-literal = "0.3.3"
+
+[features]
+default = ["std"]
+std = []
