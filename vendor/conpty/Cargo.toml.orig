@@ -1,0 +1,35 @@
+[package]
+name = "conpty"
+version = "0.5.1"
+edition = "2021"
+authors = ["Maxim Zhiburt <zhiburt@gmail.com>"]
+description = "A library which provides an interface for ConPTY"
+repository = "https://github.com/zhiburt/conpty"
+homepage = "https://github.com/zhiburt/conpty"
+documentation = "https://docs.rs/conpty"
+license = "MIT"
+categories = ["os", "os::windows-apis"]
+keywords = ["win32", "ConPTY", "terminal", "shell"]
+readme = "README.md"
+
+[dependencies.windows]
+version = "0.44.0"
+features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_System_Console",
+    "Win32_System_Pipes",
+    "Win32_System_SystemServices",
+    "Win32_System_WindowsProgramming",
+    "Win32_System_IO",
+    "Win32_Storage_FileSystem",
+]
+
+[dev-dependencies]
+strip-ansi-escapes = "0.1.1"
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+targets = []
+rustc-args = ["--cfg", "docsrs"]
