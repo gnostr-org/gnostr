@@ -5,7 +5,7 @@ use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, S
 use http::Uri;
 use tungstenite::protocol::Message;
 
-pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
+pub fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(
         SubscriptionId(format!(
             "{:?}/{:?}/{:?}",
@@ -18,7 +18,7 @@ pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
     serde_json::to_string(&message).expect("Could not serialize message")
 }
 
-pub(crate) fn event_to_wire(event: Event) -> String {
+pub fn event_to_wire(event: Event) -> String {
     let message = ClientMessage::Event(Box::new(event));
     serde_json::to_string(&message).expect("Could not serialize message")
 }

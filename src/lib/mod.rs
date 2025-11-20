@@ -353,8 +353,10 @@ pub fn print_event(event: &Event) {
     );
 }
 
-mod internal;
+pub mod internal;
+pub use internal::{event_to_wire, filters_to_wire};
 use internal::*;
+
 
 /// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;
