@@ -1,0 +1,21 @@
+[package]
+name = "ptyprocess"
+version = "0.5.0"
+authors = ["Maxim Zhiburt <zhiburt@gmail.com>"]
+edition = "2018"
+description = "A library to work with PTY/TTY on Unix systems"
+repository = "https://github.com/zhiburt/ptyprocess"
+documentation = "https://docs.rs/ptyprocess"
+homepage = "https://github.com/zhiburt/ptyprocess"
+license = "MIT"
+readme = "README.md"
+keywords = ["pty", "tty", "terminal"]
+categories = ["development-tools", "command-line-interface"]
+
+[dependencies]
+nix = "0.26"
+
+[features]
+# Use `close_range` on supported platforms to improve performance when closing many descriptors.
+# This is only available since Linux 5.9 and glibc 2.34, and is always enabled on FreeBSD.
+close-range = []
