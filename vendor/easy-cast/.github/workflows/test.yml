@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  fmt-and-test:
+    name: Test and check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: beta
+          override: true
+          components: rustfmt
+      - name: Rustfmt check
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Test
+        run: |
+          cargo test
+          cargo test --all-features
+          cargo test --no-default-features --lib --tests
+          cargo test --no-default-features --features libm
+
+  test:
+    name: Test MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: "1.60.0"
+          override: true
+      - name: Use Cargo.lock.msrv
+        run: cp Cargo.lock.msrv Cargo.lock
+      - name: Test
+        run: |
+          cargo test
+          cargo test --all-features
+          cargo test --no-default-features --lib --tests
+          cargo test --no-default-features --features libm
