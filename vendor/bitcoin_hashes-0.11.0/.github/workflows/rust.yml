@@ -1,0 +1,124 @@
+
+on: [push, pull_request]
+
+name: Continuous integration
+
+jobs:
+  Nightly:
+    name: Nightly - ASan + Bench + Docs
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - nightly
+    steps:
+      - name: Checkout Crate
+        uses: actions/checkout@v2
+      - name: Checkout Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rust-src
+      - name: Running address sanitizer
+        env:
+          DO_ASAN: true
+        run: ./contrib/test.sh
+      - name: Running benchmarks
+        env:
+          DO_BENCH: true
+        run: ./contrib/test.sh
+      - name: Building docs
+        env:
+          DO_DOCS: true
+        run: ./contrib/test.sh
+
+  Clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: rustup component add clippy
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-features -- -D warnings
+
+  wasm:
+    name: Stable - WebAssembly Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+    steps:
+      - name: Checkout Crate
+        uses: actions/checkout@v2
+      - name: Checkout Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Running WASM build
+        env:
+          DO_WASM: true
+        run: ./contrib/test.sh
+
+  Tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.41.1
+          - beta
+          - stable
+    steps:
+      - name: Checkout Crate
+        uses: actions/checkout@v2
+      - name: Checkout Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Running cargo
+        env:
+          DO_FEATURE_MATRIX: true
+          DO_SCHEMARS_TESTS: true
+          DO_ALLOC_TESTS: true
+        run: ./contrib/test.sh
+
+  Embedded:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        run: sudo apt update && sudo apt install qemu-system-arm
+      - name: Checkout Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rust-src
+          target: thumbv7m-none-eabi
+      - name: Run
+        env:
+          RUSTFLAGS: "-C link-arg=-Tlink.x"
+          CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
+        run: cd embedded && cargo run --target thumbv7m-none-eabi
+      - name: Run with alloc
+        env:
+          RUSTFLAGS: "-C link-arg=-Tlink.x"
+          CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
+        run: cd embedded && cargo run --target thumbv7m-none-eabi --features=alloc
+
