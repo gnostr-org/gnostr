@@ -235,7 +235,7 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
 
     //TODO gnostr --gitdir
     //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
-    let mut gitdir = sub_command_args.gitdir.clone().unwrap();
+    let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
     if !valid_path(&gitdir) {
         debug!("237:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
