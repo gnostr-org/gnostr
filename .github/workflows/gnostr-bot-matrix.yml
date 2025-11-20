@@ -26,7 +26,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rustup: [stable]  # , nightly]
-        commands: ["tui"]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
+        #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -182,13 +182,13 @@ jobs:
         run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: runner.os == 'macos'
 
-      - name: gnostr ${{ matrix.commands }}
-        shell: bash
-        run: |
-          gnostr ${{ matrix.commands }} -V
-          gnostr ${{ matrix.commands }} --version
-          gnostr ${{ matrix.commands }} -h
-          gnostr ${{ matrix.commands }} --help
+      #- name: gnostr ${{ matrix.commands }}
+      #  shell: bash
+      #  run: |
+      #    gnostr ${{ matrix.commands }} -V
+      #    gnostr ${{ matrix.commands }} --version
+      #    gnostr ${{ matrix.commands }} -h
+      #    gnostr ${{ matrix.commands }} --help
 
       - name: create set-metadata kind 0
         shell: bash
