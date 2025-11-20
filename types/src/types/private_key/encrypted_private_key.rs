@@ -1,4 +1,4 @@
-use super::{KeySecurity, PrivateKey};
+use super::{base64flex, KeySecurity, PrivateKey};
 use crate::Error;
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 use base64::Engine;
@@ -23,7 +23,7 @@ const V1_CHECK_VALUE: [u8; 11] = [15, 91, 241, 148, 90, 143, 101, 12, 172, 255, 
 const V1_HMAC_ROUNDS: u32 = 100_000;
 
 /// This is an encrypted private key (the string inside is the bech32 ncryptsec string)
-#[derive(Clone, Debug, Display, Serialize, Deserialize)]
+#[derive(Clone, Debug, Display, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct EncryptedPrivateKey(pub String);
 
@@ -264,7 +264,7 @@ impl PrivateKey {
         encrypted: &EncryptedPrivateKey,
         password: &str,
     ) -> Result<PrivateKey, Error> {
-        let concatenation = base64::engine::general_purpose::STANDARD.decode(&encrypted.0)?; // 64 or 80 bytes
+        let concatenation = base64flex().decode(&encrypted.0)?; // 64 or 80 bytes
         if concatenation.len() == 64 {
             Self::import_encrypted_pre_v1(concatenation, password)
         } else if concatenation.len() == 80 {

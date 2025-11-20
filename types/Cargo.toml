@@ -1,55 +1,103 @@
 [package]
-name = "gnostr-types"
-version = "0.7.6"
+name = "nostr-types"
+version = "0.8.0-unstable"
 edition = "2021"
-homepage = "https://github.com/gnostr-org/gnostr"
-authors = ["gnostr <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>"]
-description = "gnostr: a git+nostr workflow utility"
-repository = "https://github.com/gnostr-org/gnostr"
-documentation = "https://docs.rs/gnostr-bins"
+authors = ["Mike Dilger <mike@mikedilger.com>"]
+description = "Types for nostr protocol handling"
+repository = "https://github.com/mikedilger/nostr-types"
+documentation = "https://docs.rs/nostr-types"
 readme = "README.md"
-keywords = [ "git", "nostr", "gnostr" ]
+keywords = [ "nostr" ]
 license = "MIT"
 
 [features]
 default = []
+nip46 = [
+   "client"
+]
+client = [
+   "futures-util",
+   "http",
+   "reqwest",
+   "textnonce",
+   "tokio",
+   "tokio-tungstenite",
+   "tungstenite",
+   # Note that you must also select one of the 3 TLS choices below.
+   # Cargo makes it hard to specify that, but without any of them,
+   # you won't get TLS support.
+]
+
+# Use Native TLS code and native root certs
+native-tls = [
+  "reqwest/native-tls",
+  "tungstenite/native-tls",
+  "tokio-tungstenite/native-tls"
+]
+
+# Use Rust TLS code with WebPKI compiled-in root certs
+rustls-tls = [
+  "reqwest/rustls-tls-webpki-roots",
+  "tungstenite/rustls-tls-webpki-roots",
+  "tokio-tungstenite/rustls-tls-webpki-roots"
+]
+
+# Use Rust TLS  code with native root certs
+rustls-tls-native = [
+  "reqwest/rustls-tls-native-roots",
+  "tungstenite/rustls-tls-native-roots",
+  "tokio-tungstenite/rustls-tls-native-roots"
+]
 
 [dependencies]
 aes = "0.8"
+aho-corasick = "1.1"
+async-trait = "0.1"
 base64 = "0.22"
 bech32 = "0.11"
 cbc = { version = "0.1", features = [ "std" ] }
-chacha20 = "0.9"
 chacha20poly1305 = "0.10"
+chacha20 = "0.9"
 core-net = "0.1"
 derive_more = "0.99"
+futures-util = { version = "0.3", optional = true, features = [ "sink" ] }
 hex = "0.4"
 hmac = "0.12"
+http = { version = "1.1", optional = true }
 lazy_static = "1.4"
-lightning-invoice = "0.33.2"
-#lightning-invoice = { path = "../lightning/lightning-invoice", version = "0.31.0-beta" }
-#lightning = { version = "0.0.123-beta", path = "../lightning/lightning" }
+lightning-invoice = "0.33"
 linkify = "0.10"
-nip44 = { path = "../gnip44", package = "gnip44", version = "0.0.72" }
+## nip44 = { git = "https://github.com/mikedilger/nip44", rev="386c8bc879e0ddf392df81a60610d3123330846b" }
+
 num_cpus = "1"
 pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
-rand = "0.8"
 rand_core = "0.6"
+rand = "0.8"
 regex = "1.10"
+reqwest = { version = "0.12", default-features=false, features = ["brotli", "deflate", "gzip", "json", "stream"], optional = true }
 scrypt = "0.11"
 secp256k1 = { version = "0.29", features = [ "hashes", "global-context", "rand-std", "serde" ] }
-serde = { version = "1.0", features = [ "derive" ] }
+serde = { version = "1.0", features = [ "derive", "rc" ] }
 serde_json = "1.0"
 sha2 = "0.10"
 speedy = { version = "0.8.7", optional = true }
+textnonce = { version = "1", optional = true }
 thiserror = "1.0"
 thread-priority = "1.0"
+tokio = { version = "1", features = ["full"], optional = true }
+tokio-tungstenite = { version = "0.26", default-features = false, features = [ "connect", "handshake" ], optional = true }
+tracing = "0.1"
+tungstenite = { version = "0.26", default-features = false, optional = true }
 unicode-normalization = "0.1"
 url = "2.5"
 zeroize = "1.7"
+nip44 = { version = "0.1.0", path = "../nip44" }
 
-## # Force scrypt to build with release-like speed even in dev mode
-## [profile.dev.package.scrypt]
-## opt-level = 3
-## debug-assertions = false
-## overflow-checks = false
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+
+# Force scrypt to build with release-like speed even in dev mode
+[profile.dev.package.scrypt]
+opt-level = 3
+debug-assertions = false
+overflow-checks = false

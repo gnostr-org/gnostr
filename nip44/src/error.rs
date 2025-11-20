@@ -26,9 +26,13 @@ pub enum Error {
     #[error("Message is empty")]
     MessageIsEmpty,
 
-    /// Message is too long (max len 65536 - 128)
+    /// Message is too long (max len 4_294_967_296 - 128)
     #[error("Message is too long")]
     MessageIsTooLong,
+
+    /// Random source failed
+    #[error("Random source failed")]
+    RandOsError(rand_core::OsError),
 
     /// Unsupported future version
     #[error("Encryption format is not yet supported")]
@@ -41,4 +45,10 @@ pub enum Error {
     // UTF8 Decode
     #[error("UTF8 Decode: {0}")]
     Utf8Decode(#[from] std::string::FromUtf8Error),
+}
+
+impl From<rand_core::OsError> for Error {
+    fn from(err: rand_core::OsError) -> Self {
+        Error::RandOsError(err)
+    }
 }

@@ -2104,9 +2104,9 @@ checksum = "fb58b6451e8c2a812ad979ed1d83378caa5e927eef2622017a45f251457c2c9d"
 
 [[package]]
 name = "constant_time_eq"
-version = "0.3.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
+checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 
 [[package]]
 name = "convert_case"
@@ -3762,21 +3762,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnip44"
-version = "0.0.72"
-dependencies = [
- "base64 0.22.1",
- "chacha20",
- "constant_time_eq",
- "hkdf",
- "hmac",
- "rand_core 0.6.4",
- "secp256k1 0.29.1",
- "sha2 0.10.9",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "gnostr"
 version = "1908.924233.83694"
 dependencies = [
@@ -3843,7 +3828,6 @@ dependencies = [
  "gnostr-legit",
  "gnostr-query",
  "gnostr-relay",
- "gnostr-types",
  "gnostr_qr",
  "hex",
  "hostname",
@@ -3869,6 +3853,7 @@ dependencies = [
  "nostr-sdk 0.37.0",
  "nostr-signer 0.34.0",
  "nostr-sqlite",
+ "nostr-types",
  "notify 6.1.1",
  "notify-debouncer-mini",
  "num-bigint",
@@ -4088,41 +4073,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "gnostr-types"
-version = "0.7.6"
-dependencies = [
- "aes",
- "base64 0.22.1",
- "bech32 0.11.0",
- "cbc",
- "chacha20",
- "chacha20poly1305",
- "core-net",
- "derive_more 0.99.20",
- "gnip44",
- "hex",
- "hmac",
- "lazy_static",
- "lightning-invoice",
- "linkify",
- "num_cpus",
- "pbkdf2 0.12.2",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "regex",
- "scrypt",
- "secp256k1 0.29.1",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "thread-priority",
- "unicode-normalization",
- "url",
- "zeroize",
 ]
 
 [[package]]
@@ -6524,6 +6474,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
+name = "nip44"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "chacha20",
+ "constant_time_eq",
+ "hkdf",
+ "hmac",
+ "rand_core 0.9.3",
+ "secp256k1 0.29.1",
+ "sha2 0.10.9",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "nix"
 version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6950,6 +6915,44 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "nostr-types"
+version = "0.8.0-unstable"
+dependencies = [
+ "aes",
+ "aho-corasick",
+ "async-trait",
+ "base64 0.22.1",
+ "bech32 0.11.0",
+ "cbc",
+ "chacha20",
+ "chacha20poly1305",
+ "core-net",
+ "derive_more 0.99.20",
+ "hex",
+ "hmac",
+ "lazy_static",
+ "lightning-invoice",
+ "linkify",
+ "nip44",
+ "num_cpus",
+ "pbkdf2 0.12.2",
+ "rand 0.8.5",
+ "rand_core 0.6.4",
+ "regex",
+ "scrypt",
+ "secp256k1 0.29.1",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 1.0.69",
+ "thread-priority",
+ "tracing",
+ "unicode-normalization",
+ "url",
+ "zeroize",
 ]
 
 [[package]]

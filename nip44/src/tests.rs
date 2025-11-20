@@ -31,12 +31,12 @@ fn test_valid_get_conversation_key() {
         let sec1 = {
             let sec1hex = vector.get("sec1").unwrap().as_str().unwrap();
             let sec1bytes = hex::decode(sec1hex).unwrap();
-            SecretKey::from_slice(&sec1bytes).unwrap()
+            SecretKey::from_byte_array(sec1bytes.try_into().unwrap()).unwrap()
         };
         let pub2 = {
             let pub2hex = vector.get("pub2").unwrap().as_str().unwrap();
             let pub2bytes = hex::decode(pub2hex).unwrap();
-            XOnlyPublicKey::from_slice(&pub2bytes).unwrap()
+            XOnlyPublicKey::from_byte_array(pub2bytes.try_into().unwrap()).unwrap()
         };
         let conversation_key: [u8; 32] = {
             let ckeyhex = vector.get("conversation_key").unwrap().as_str().unwrap();
@@ -107,12 +107,12 @@ fn test_valid_encrypt_decrypt() {
         let sec1 = {
             let sec1hex = vector.get("sec1").unwrap().as_str().unwrap();
             let sec1bytes = hex::decode(sec1hex).unwrap();
-            SecretKey::from_slice(&sec1bytes).unwrap()
+            SecretKey::from_byte_array(sec1bytes.try_into().unwrap()).unwrap()
         };
         let sec2 = {
             let sec2hex = vector.get("sec2").unwrap().as_str().unwrap();
             let sec2bytes = hex::decode(sec2hex).unwrap();
-            SecretKey::from_slice(&sec2bytes).unwrap()
+            SecretKey::from_byte_array(sec2bytes.try_into().unwrap()).unwrap()
         };
         let conversation_key: [u8; 32] = {
             let ckeyhex = vector.get("conversation_key").unwrap().as_str().unwrap();
@@ -193,12 +193,12 @@ fn test_invalid_get_conversation_key() {
         let sec1result = {
             let sec1hex = vector.get("sec1").unwrap().as_str().unwrap();
             let sec1bytes = hex::decode(sec1hex).unwrap();
-            SecretKey::from_slice(&sec1bytes)
+            SecretKey::from_byte_array(sec1bytes.try_into().unwrap())
         };
         let pub2result = {
             let pub2hex = vector.get("pub2").unwrap().as_str().unwrap();
             let pub2bytes = hex::decode(pub2hex).unwrap();
-            XOnlyPublicKey::from_slice(&pub2bytes)
+            XOnlyPublicKey::from_byte_array(pub2bytes.try_into().unwrap())
         };
         let note = vector.get("note").unwrap().as_str().unwrap();
 
@@ -221,7 +221,7 @@ fn test_invalid_decrypt() {
         Error::InvalidMac,
         Error::InvalidMac,
         Error::InvalidPadding,
-        Error::MessageIsEmpty,
+        Error::InvalidPadding,
         Error::InvalidPadding,
         Error::InvalidPadding,
     ];
@@ -269,6 +269,8 @@ fn test_invalid_decrypt() {
     }
 }
 
+// Run this with `cargo test --release --  --ignored --no-capture`
+#[ignore]
 #[test]
 fn bench_encryption_inner() {
     const SEC1HEX: &'static str =
@@ -277,10 +279,10 @@ fn bench_encryption_inner() {
         "3072ab28ed7d5c2e4f5efbdcde5fb11455ab7f976225d1779a1751eb6400411a";
 
     let sec1bytes = hex::decode(SEC1HEX).unwrap();
-    let sec1 = SecretKey::from_slice(&sec1bytes).unwrap();
+    let sec1 = SecretKey::from_byte_array(sec1bytes.try_into().unwrap()).unwrap();
 
     let sec2bytes = hex::decode(SEC2HEX).unwrap();
-    let sec2 = SecretKey::from_slice(&sec2bytes).unwrap();
+    let sec2 = SecretKey::from_byte_array(sec2bytes.try_into().unwrap()).unwrap();
 
     let (pub2, _) = sec2.x_only_public_key(&SECP256K1);
 
