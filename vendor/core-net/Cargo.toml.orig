@@ -1,0 +1,11 @@
+[package]
+name = "core-net"
+version = "0.1.0"
+edition = "2021"
+description = "Rust core library net module, extracted as stand-alone with all unstable features enabled"
+repository = "https://github.com/mikedilger/core-net"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = [ "core", "net" ]
+
+[dependencies]
