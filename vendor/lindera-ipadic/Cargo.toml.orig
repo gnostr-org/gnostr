@@ -1,0 +1,27 @@
+[package]
+name = "lindera-ipadic"
+version = "0.42.3"
+edition = "2021"
+description = "A Japanese morphological dictionary for IPADIC."
+documentation = "https://docs.rs/lindera-ipadic"
+homepage = "https://github.com/lindera-morphology/lindera"
+repository = "https://github.com/lindera-morphology/lindera"
+readme = "README.md"
+keywords = ["japanese", "morphological", "dictionary", "ipadic"]
+categories = ["text-processing"]
+license = "MIT"
+
+[features]
+ipadic = []
+compress = ["lindera-dictionary/compress"]
+
+[dependencies]
+bincode.workspace = true
+byteorder.workspace = true
+once_cell.workspace = true
+
+lindera-dictionary.workspace = true
+
+[build-dependencies]
+tokio.workspace = true
+lindera-dictionary = { workspace = true, features = ["build_rs"] }
