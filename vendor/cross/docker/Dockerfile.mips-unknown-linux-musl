@@ -1,0 +1,33 @@
+FROM ubuntu:18.04
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY common.sh lib.sh /
+RUN /common.sh
+
+COPY cmake.sh /
+RUN /cmake.sh
+
+COPY xargo.sh /
+RUN /xargo.sh
+
+COPY qemu.sh /
+RUN /qemu.sh mips
+
+COPY musl.sh /
+RUN /musl.sh \
+    TARGET=mips-linux-muslsf \
+    "COMMON_CONFIG += -with-arch=mips32r2"
+
+ENV CROSS_MUSL_SYSROOT=/usr/local/mips-linux-muslsf
+COPY musl-symlink.sh /
+RUN /musl-symlink.sh $CROSS_MUSL_SYSROOT mips-sf
+
+COPY qemu-runner /
+
+ENV CARGO_TARGET_MIPS_UNKNOWN_LINUX_MUSL_LINKER=mips-linux-muslsf-gcc \
+    CARGO_TARGET_MIPS_UNKNOWN_LINUX_MUSL_RUNNER="/qemu-runner mips" \
+    CC_mips_unknown_linux_musl=mips-linux-muslsf-gcc \
+    CXX_mips_unknown_linux_musl=mips-linux-muslsf-g++ \
+    BINDGEN_EXTRA_CLANG_ARGS_mips_unknown_linux_musl="--sysroot=$CROSS_MUSL_SYSROOT" \
+    QEMU_LD_PREFIX=$CROSS_MUSL_SYSROOT \
+    RUST_TEST_THREADS=1

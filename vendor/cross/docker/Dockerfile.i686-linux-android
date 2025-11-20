@@ -1,0 +1,48 @@
+FROM ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY common.sh lib.sh /
+RUN /common.sh
+
+COPY cmake.sh /
+RUN /cmake.sh
+
+COPY xargo.sh /
+RUN /xargo.sh
+
+COPY android-ndk.sh /
+RUN /android-ndk.sh x86 28
+ENV PATH=$PATH:/android-ndk/bin
+
+COPY android-system.sh /
+RUN /android-system.sh x86
+
+# We could supposedly directly run i686 binaries like we do for x86_64, but
+# doing so generates an assertion failure:
+#   ... assertion failed: signal(libc::SIGPIPE, libc::SIG_IGN) != libc::SIG_ERR
+#   ... src/libstd/sys/unix/mod.rs
+#   fatal runtime error: failed to initiate panic, error 5
+#
+# Running with qemu works as expected
+COPY qemu.sh /
+RUN /qemu.sh i386
+
+RUN cp /android-ndk/sysroot/usr/lib/i686-linux-android/28/libz.so /system/lib/
+
+COPY android-runner /
+
+# Libz is distributed in the android ndk, but for some unknown reason it is not
+# found in the build process of some crates, so we explicit set the DEP_Z_ROOT
+ENV CARGO_TARGET_I686_LINUX_ANDROID_LINKER=i686-linux-android-gcc \
+    CARGO_TARGET_I686_LINUX_ANDROID_RUNNER="/android-runner i686" \
+    CC_i686_linux_android=i686-linux-android-gcc \
+    CXX_i686_linux_android=i686-linux-android-g++ \
+    BINDGEN_EXTRA_CLANG_ARGS_i686_linux_android="--sysroot=/android-ndk/sysroot" \
+    DEP_Z_INCLUDE=/android-ndk/sysroot/usr/include/ \
+    LIBZ_SYS_STATIC=1 \
+    RUST_TEST_THREADS=1 \
+    HOME=/tmp/ \
+    TMPDIR=/tmp/ \
+    ANDROID_DATA=/ \
+    ANDROID_DNS_MODE=local \
+    ANDROID_ROOT=/system

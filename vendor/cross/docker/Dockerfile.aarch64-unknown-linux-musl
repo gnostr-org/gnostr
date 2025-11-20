@@ -1,0 +1,33 @@
+FROM ubuntu:18.04
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY common.sh lib.sh /
+RUN /common.sh
+
+COPY cmake.sh /
+RUN /cmake.sh
+
+COPY xargo.sh /
+RUN /xargo.sh
+
+COPY qemu.sh /
+RUN /qemu.sh aarch64
+
+COPY musl.sh /
+RUN /musl.sh TARGET=aarch64-linux-musl
+
+ENV CROSS_MUSL_SYSROOT=/usr/local/aarch64-linux-musl
+COPY musl-symlink.sh /
+RUN /musl-symlink.sh $CROSS_MUSL_SYSROOT aarch64
+
+COPY aarch64-linux-musl-gcc.sh /usr/bin/
+
+COPY qemu-runner /
+
+ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc.sh \
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUNNER="/qemu-runner aarch64" \
+    CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc \
+    CXX_aarch64_unknown_linux_musl=aarch64-linux-musl-g++ \
+    BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_musl="--sysroot=$CROSS_MUSL_SYSROOT" \
+    QEMU_LD_PREFIX=$CROSS_MUSL_SYSROOT \
+    RUST_TEST_THREADS=1

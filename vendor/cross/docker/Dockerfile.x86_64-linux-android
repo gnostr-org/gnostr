@@ -1,0 +1,41 @@
+FROM ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY common.sh lib.sh /
+RUN /common.sh
+
+COPY cmake.sh /
+RUN /cmake.sh
+
+COPY xargo.sh /
+RUN /xargo.sh
+
+COPY android-ndk.sh /
+RUN /android-ndk.sh x86_64 28
+ENV PATH=$PATH:/android-ndk/bin
+
+COPY android-system.sh /
+RUN /android-system.sh x86_64
+
+# Using qemu allows older host cpus (without sse4) to execute the target binaries
+COPY qemu.sh /
+RUN /qemu.sh x86_64
+
+RUN cp /android-ndk/sysroot/usr/lib/x86_64-linux-android/28/libz.so /system/lib/
+
+COPY android-runner /
+
+# Libz is distributed in the android ndk, but for some unknown reason it is not
+# found in the build process of some crates, so we explicit set the DEP_Z_ROOT
+ENV CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=x86_64-linux-android-gcc \
+    CARGO_TARGET_X86_64_LINUX_ANDROID_RUNNER="/android-runner x86_64" \
+    CC_x86_64_linux_android=x86_64-linux-android-gcc \
+    CXX_x86_64_linux_android=x86_64-linux-android-g++ \
+    BINDGEN_EXTRA_CLANG_ARGS_x86_64_linux_android="--sysroot=/android-ndk/sysroot" \
+    DEP_Z_INCLUDE=/android-ndk/sysroot/usr/include/ \
+    RUST_TEST_THREADS=1 \
+    HOME=/tmp/ \
+    TMPDIR=/tmp/ \
+    ANDROID_DATA=/ \
+    ANDROID_DNS_MODE=local \
+    ANDROID_ROOT=/system

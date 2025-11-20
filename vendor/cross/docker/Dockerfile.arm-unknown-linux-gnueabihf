@@ -1,0 +1,31 @@
+FROM ubuntu:18.04
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY common.sh lib.sh /
+RUN /common.sh
+
+COPY cmake.sh /
+RUN /cmake.sh
+
+COPY xargo.sh /
+RUN /xargo.sh
+
+ARG VERBOSE
+COPY crosstool-ng.sh /
+COPY crosstool-config/arm-unknown-linux-gnueabihf.config /
+RUN /crosstool-ng.sh arm-unknown-linux-gnueabihf.config 5
+
+ENV PATH /x-tools/arm-unknown-linux-gnueabihf/bin/:$PATH
+
+COPY qemu.sh /
+RUN /qemu.sh arm
+
+COPY qemu-runner /
+
+ENV CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-unknown-linux-gnueabihf-gcc \
+    CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABIHF_RUNNER="/qemu-runner arm" \
+    CC_arm_unknown_linux_gnueabihf=arm-unknown-linux-gnueabihf-gcc \
+    CXX_arm_unknown_linux_gnueabihf=arm-unknown-linux-gnueabihf-g++ \
+    BINDGEN_EXTRA_CLANG_ARGS_arm_unknown_linux_gnueabihf="--sysroot=/x-tools/arm-unknown-linux-gnueabihf/arm-unknown-linux-gnueabihf/sysroot/" \
+    QEMU_LD_PREFIX=/x-tools/arm-unknown-linux-gnueabihf/arm-unknown-linux-gnueabihf/sysroot/ \
+    RUST_TEST_THREADS=1

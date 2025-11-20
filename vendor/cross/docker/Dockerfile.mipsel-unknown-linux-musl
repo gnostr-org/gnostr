@@ -1,0 +1,33 @@
+FROM ubuntu:18.04
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY common.sh lib.sh /
+RUN /common.sh
+
+COPY cmake.sh /
+RUN /cmake.sh
+
+COPY xargo.sh /
+RUN /xargo.sh
+
+COPY qemu.sh /
+RUN /qemu.sh mipsel
+
+COPY musl.sh /
+RUN /musl.sh \
+    TARGET=mipsel-linux-muslsf \
+    "COMMON_CONFIG += -with-arch=mips32"
+
+ENV CROSS_MUSL_SYSROOT=/usr/local/mipsel-linux-muslsf
+COPY musl-symlink.sh /
+RUN /musl-symlink.sh $CROSS_MUSL_SYSROOT mipsel-sf
+
+COPY qemu-runner /
+
+ENV CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_LINKER=mipsel-linux-muslsf-gcc \
+    CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_RUNNER="/qemu-runner mipsel" \
+    CC_mipsel_unknown_linux_musl=mipsel-linux-muslsf-gcc \
+    CXX_mipsel_unknown_linux_musl=mipsel-linux-muslsf-g++ \
+    BINDGEN_EXTRA_CLANG_ARGS_mipsel_unknown_linux_musl="--sysroot=$CROSS_MUSL_SYSROOT" \
+    QEMU_LD_PREFIX=$CROSS_MUSL_SYSROOT \
+    RUST_TEST_THREADS=1
