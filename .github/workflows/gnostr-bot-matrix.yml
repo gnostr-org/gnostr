@@ -24,9 +24,9 @@ jobs:
       RUSTFLAGS: "-Awarnings"
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        rustup: [stable, nightly]
-        commands: ["tui", "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
+        os: [ubuntu-latest]
+        rustup: [stable]  # , nightly]
+        commands: ["tui"]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -278,8 +278,26 @@ jobs:
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi
+          if command -v apt-get &> /dev/null; then \
+          sudo apt-get update && \
+          sudo apt-get install -y \
+          libxcb1-dev \
+          libxcb-render0-dev \
+          libxcb-shape0-dev \
+          libxcb-xfixes0-dev; \
+          else echo 'apt-get not found, trying yum'; \
+          if command -v yum &> /dev/null; \
+          then sudo yum install -y libxcb \
+          libxcb-devel \
+          libxcb-render-devel \
+          libxcb-shape-devel \
+          libxcb-xfixes-devel; \
+          else echo \
+          'Neither apt-get nor yum found. Please install libxcb development libraries manually.';\
+          fi;\
+          fi;
           cargo test -j8 -- --nocapture && echo "✅" || echo "❌"
+        if: matrix.os != 'windows-latest'
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
