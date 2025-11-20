@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 
 /// A bech32 sequence representing a nostr object (or set of objects)
 // note, internally we store them as the object the sequence represents
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub enum NostrBech32 {
     /// naddr - a NostrBech32 parameterized replaceable event coordinate
     NAddr(NAddr),
@@ -126,7 +126,7 @@ impl NostrBech32 {
         tlv.push(0); // special for nrelay
         let len = url.0.len() as u8;
         tlv.push(len); // length
-        tlv.extend(&url.0.as_bytes()[..len as usize]);
+        tlv.extend(url.0[..len as usize].as_bytes());
         bech32::encode::<bech32::Bech32>(*crate::HRP_NRELAY, &tlv).unwrap()
     }
 
@@ -175,7 +175,7 @@ impl NostrBech32 {
 }
 
 /// A Nostr URL (starting with 'nostr:')
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct NostrUrl(pub NostrBech32);
 
 impl std::fmt::Display for NostrUrl {

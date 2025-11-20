@@ -1,7 +1,7 @@
-use super::TagV3;
+use super::{TagV2, ZapDataV1};
 use crate::types::{
-    EventDelegation, EventKind, EventReference, Id, KeySigner, MilliSatoshi, NostrBech32, NostrUrl,
-    PrivateKey, PublicKey, RelayUrl, Signature, Signer, Unixtime, ZapData,
+    EventDelegation, EventKind, EventReference, Id, KeySigner, MilliSatoshi, NAddr, NostrBech32,
+    NostrUrl, PrivateKey, PublicKey, PublicKeyHex, RelayUrl, Signature, Signer, Unixtime,
 };
 use crate::{Error, IntoVec};
 use lightning_invoice::Bolt11Invoice;
@@ -10,13 +10,12 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::cmp::Ordering;
 use std::str::FromStr;
 
 /// The main event type
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
-pub struct EventV3 {
+pub struct EventV2 {
     /// The Id of the event, generated as a SHA256 of the inner event data
     pub id: Id,
 
@@ -39,7 +38,7 @@ pub struct EventV3 {
     pub content: String,
 
     /// A set of tags that apply to the event
-    pub tags: Vec<TagV3>,
+    pub tags: Vec<TagV2>,
 }
 
 macro_rules! serialize_inner_event {
@@ -59,7 +58,7 @@ macro_rules! serialize_inner_event {
 /// Data used to construct an event
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
-pub struct PreEventV3 {
+pub struct PreEventV2 {
     /// The public key of the actor who is creating the event
     pub pubkey: PublicKey,
     /// The time at which the event was created
@@ -67,12 +66,12 @@ pub struct PreEventV3 {
     /// The kind of event
     pub kind: EventKind,
     /// A set of tags that apply to the event
-    pub tags: Vec<TagV3>,
+    pub tags: Vec<TagV2>,
     /// The content of the event
     pub content: String,
 }
 
-impl PreEventV3 {
+impl PreEventV2 {
     /// Generate an ID from this PreEvent for use in an Event or a Rumor
     pub fn hash(&self) -> Result<Id, Error> {
         use secp256k1::hashes::Hash;
@@ -95,7 +94,7 @@ impl PreEventV3 {
 /// A Rumor is an Event without a signature
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
-pub struct RumorV3 {
+pub struct RumorV2 {
     /// The Id of the event, generated as a SHA256 of the inner event data
     pub id: Id,
 
@@ -112,16 +111,16 @@ pub struct RumorV3 {
     pub content: String,
 
     /// A set of tags that apply to the event
-    pub tags: Vec<TagV3>,
+    pub tags: Vec<TagV2>,
 }
 
-impl RumorV3 {
+impl RumorV2 {
     /// Create a new rumor
-    pub fn new(input: PreEventV3) -> Result<RumorV3, Error> {
+    pub fn new(input: PreEventV2) -> Result<RumorV2, Error> {
         // Generate Id
         let id = input.hash()?;
 
-        Ok(RumorV3 {
+        Ok(RumorV2 {
             id,
             pubkey: input.pubkey,
             created_at: input.created_at,
@@ -132,8 +131,8 @@ impl RumorV3 {
     }
 
     /// Turn into an Event (the signature will be all zeroes)
-    pub fn into_event_with_bad_signature(self) -> EventV3 {
-        EventV3 {
+    pub fn into_event_with_bad_signature(self) -> EventV2 {
+        EventV2 {
             id: self.id,
             pubkey: self.pubkey,
             created_at: self.created_at,
@@ -145,7 +144,7 @@ impl RumorV3 {
     }
 }
 
-impl EventV3 {
+impl EventV2 {
     /// Check the validity of an event. This is useful if you deserialize an event
     /// from the network. If you create an event using new() it should already be
     /// trustworthy.
@@ -185,37 +184,27 @@ impl EventV3 {
 
     /// Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> EventV3 {
+    pub(crate) fn mock() -> EventV2 {
         let signer = {
             let private_key = PrivateKey::mock();
             KeySigner::from_private_key(private_key, "", 1).unwrap()
         };
         let public_key = signer.public_key();
-        let pre = PreEventV3 {
+        let pre = PreEventV2 {
             pubkey: public_key,
             created_at: Unixtime::mock(),
             kind: EventKind::mock(),
-            tags: vec![TagV3::mock(), TagV3::mock()],
+            tags: vec![TagV2::mock(), TagV2::mock()],
             content: "This is a test".to_string(),
         };
-        let id = pre.hash().unwrap();
-        let sig = signer.sign_id(id).unwrap();
-        EventV3 {
-            id,
-            pubkey: pre.pubkey,
-            created_at: pre.created_at,
-            kind: pre.kind,
-            tags: pre.tags,
-            content: pre.content,
-            sig,
-        }
+        signer.sign_event2(pre).unwrap()
     }
 
     /// Get the k-tag kind, if any
     pub fn k_tag_kind(&self) -> Option<EventKind> {
         for tag in self.tags.iter() {
-            if let Ok(kind) = tag.parse_kind() {
-                return Some(kind);
+            if let TagV2::Kind { kind, .. } = tag {
+                return Some(*kind);
             }
         }
         None
@@ -223,11 +212,17 @@ impl EventV3 {
 
     /// If the event refers to people by tag, get all the PublicKeys it refers to
     /// along with recommended relay URL and petname for each
-    pub fn people(&self) -> Vec<(PublicKey, Option<RelayUrl>, Option<String>)> {
-        let mut output: Vec<(PublicKey, Option<RelayUrl>, Option<String>)> = Vec::new();
+    pub fn people(&self) -> Vec<(PublicKeyHex, Option<RelayUrl>, Option<String>)> {
+        let mut output: Vec<(PublicKeyHex, Option<RelayUrl>, Option<String>)> = Vec::new();
         // All 'p' tags
         for tag in self.tags.iter() {
-            if let Ok((pubkey, recommended_relay_url, petname)) = tag.parse_pubkey() {
+            if let TagV2::Pubkey {
+                pubkey,
+                recommended_relay_url,
+                petname,
+                ..
+            } = tag
+            {
                 output.push((
                     pubkey.to_owned(),
                     recommended_relay_url
@@ -242,10 +237,12 @@ impl EventV3 {
     }
 
     /// If the pubkey is tagged in the event
-    pub fn is_tagged(&self, pk: &PublicKey) -> bool {
+    pub fn is_tagged(&self, pubkey: &PublicKey) -> bool {
+        let pkh: PublicKeyHex = pubkey.into();
+
         for tag in self.tags.iter() {
-            if let Ok((pubkey, _recommended_relay_url, _petname)) = tag.parse_pubkey() {
-                if pubkey == *pk {
+            if let TagV2::Pubkey { pubkey, .. } = tag {
+                if *pubkey == pkh {
                     return true;
                 }
             }
@@ -276,18 +273,38 @@ impl EventV3 {
 
         // Collect every 'e' tag and 'a' tag
         for tag in self.tags.iter() {
-            if let Ok((id, rurl, marker)) = tag.parse_event() {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
                 output.push(EventReference::Id {
-                    id,
+                    id: *id,
                     author: None,
-                    relays: rurl
+                    relays: recommended_relay_url
                         .as_ref()
                         .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                         .into_vec(),
-                    marker,
+                    marker: marker.clone(),
                 });
-            } else if let Ok((ea, _optmarker)) = tag.parse_address() {
-                output.push(EventReference::Addr(ea))
+            } else if let TagV2::Address {
+                kind,
+                pubkey,
+                d,
+                relay_url: Some(rurl),
+                ..
+            } = tag
+            {
+                if let Ok(pk) = PublicKey::try_from_hex_string(pubkey.as_str(), true) {
+                    output.push(EventReference::Addr(NAddr {
+                        d: d.to_string(),
+                        relays: vec![rurl.clone()],
+                        kind: *kind,
+                        author: pk,
+                    }));
+                }
             }
         }
 
@@ -311,7 +328,7 @@ impl EventV3 {
         let num_event_ref_tags = self
             .tags
             .iter()
-            .filter(|t| t.tagname() == "e" || t.tagname() == "a")
+            .filter(|e| matches!(e, TagV2::Event { .. }) || matches!(e, TagV2::Address { .. }))
             .count();
         if num_event_ref_tags == 0 {
             return None;
@@ -319,16 +336,22 @@ impl EventV3 {
 
         // look for an 'e' tag with marker 'reply'
         for tag in self.tags.iter() {
-            if let Ok((id, rurl, marker)) = tag.parse_event() {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
                 if marker.is_some() && marker.as_deref().unwrap() == "reply" {
                     return Some(EventReference::Id {
-                        id,
+                        id: *id,
                         author: None,
-                        relays: rurl
+                        relays: recommended_relay_url
                             .as_ref()
                             .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                             .into_vec(),
-                        marker,
+                        marker: marker.clone(),
                     });
                 }
             }
@@ -336,60 +359,63 @@ impl EventV3 {
 
         // look for an 'e' tag with marker 'root'
         for tag in self.tags.iter() {
-            if let Ok((id, rurl, marker)) = tag.parse_event() {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
                 if marker.is_some() && marker.as_deref().unwrap() == "root" {
                     return Some(EventReference::Id {
-                        id,
+                        id: *id,
                         author: None,
-                        relays: rurl
+                        relays: recommended_relay_url
                             .as_ref()
                             .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                             .into_vec(),
-                        marker,
+                        marker: marker.to_owned(),
                     });
                 }
             }
         }
 
-        // look for an 'a' tag marked 'reply'
-        for tag in self.tags.iter() {
-            if let Ok((ea, marker)) = tag.parse_address() {
-                if marker.is_some() && marker.as_deref().unwrap() == "reply" {
-                    return Some(EventReference::Addr(ea));
-                };
-            }
-        }
-
-        // look for an 'a' tag marked 'root'
-        for tag in self.tags.iter() {
-            if let Ok((ea, marker)) = tag.parse_address() {
-                if marker.is_some() && marker.as_deref().unwrap() == "root" {
-                    return Some(EventReference::Addr(ea));
-                };
-            }
-        }
-
-        // Use the last unmarked 'e' or 'a' tag (whichever is last)
-        for tag in self.tags.iter().rev() {
-            if tag.tagname() == "e" {
-                if let Ok((id, rurl, marker)) = tag.parse_event() {
-                    if marker.is_none() {
-                        return Some(EventReference::Id {
-                            id,
-                            author: None,
-                            relays: rurl
-                                .as_ref()
-                                .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
-                                .into_vec(),
-                            marker: None,
-                        });
-                    }
-                }
-            } else if tag.tagname() == "a" {
-                if let Ok((ea, marker)) = tag.parse_address() {
-                    if marker.is_some() && marker.as_deref().unwrap() == "root" {
-                        return Some(EventReference::Addr(ea));
-                    };
+        // Use the last unmarked 'e' tag or any 'a' tag
+        if let Some(tag) = self.tags.iter().rev().find(|t| {
+            matches!(t, TagV2::Event { marker: None, .. })
+                || matches!(t, TagV2::Address { marker: None, .. })
+        }) {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
+                return Some(EventReference::Id {
+                    id: *id,
+                    author: None,
+                    relays: recommended_relay_url
+                        .as_ref()
+                        .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
+                        .into_vec(),
+                    marker: marker.clone(),
+                });
+            } else if let TagV2::Address {
+                kind,
+                pubkey,
+                d,
+                relay_url: Some(rurl),
+                ..
+            } = tag
+            {
+                if let Ok(pk) = PublicKey::try_from_hex_string(pubkey.as_str(), true) {
+                    return Some(EventReference::Addr(NAddr {
+                        d: d.to_string(),
+                        relays: vec![rurl.clone()],
+                        kind: *kind,
+                        author: pk,
+                    }));
                 }
             }
         }
@@ -406,67 +432,69 @@ impl EventV3 {
 
         // look for an 'e' tag with marker 'root'
         for tag in self.tags.iter() {
-            if let Ok((id, rurl, optmarker)) = tag.parse_event() {
-                if optmarker.is_some() && optmarker.as_deref().unwrap() == "root" {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
+                if marker.is_some() && marker.as_deref().unwrap() == "root" {
                     return Some(EventReference::Id {
-                        id,
+                        id: *id,
                         author: None,
-                        relays: rurl
+                        relays: recommended_relay_url
                             .as_ref()
                             .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                             .into_vec(),
-                        marker: optmarker,
+                        marker: marker.to_owned(),
                     });
                 }
             }
         }
 
-        for tag in self.tags.iter() {
-            if let Ok((id, rurl, optmarker)) = tag.parse_event() {
-                if optmarker.is_none() {
-                    return Some(EventReference::Id {
-                        id,
-                        author: None,
-                        relays: rurl
-                            .as_ref()
-                            .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
-                            .into_vec(),
-                        marker: None,
-                    });
-                }
-            } else if let Ok((ea, optmarker)) = tag.parse_address() {
-                if optmarker.is_none() {
-                    return Some(EventReference::Addr(ea));
+        // otherwise use the first unmarked 'e' tag or first 'a' tag
+        // (even if there is only 1 'e' or 'a' tag which means it is both root and reply)
+        if let Some(tag) = self.tags.iter().find(|t| {
+            matches!(t, TagV2::Event { marker: None, .. })
+                || matches!(t, TagV2::Address { marker: None, .. })
+        }) {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
+                return Some(EventReference::Id {
+                    id: *id,
+                    author: None,
+                    relays: recommended_relay_url
+                        .as_ref()
+                        .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
+                        .into_vec(),
+                    marker: marker.to_owned(),
+                });
+            } else if let TagV2::Address {
+                kind,
+                pubkey,
+                d,
+                relay_url: Some(rurl),
+                ..
+            } = tag
+            {
+                if let Ok(pk) = PublicKey::try_from_hex_string(pubkey.as_str(), true) {
+                    return Some(EventReference::Addr(NAddr {
+                        d: d.to_string(),
+                        relays: vec![rurl.clone()],
+                        kind: *kind,
+                        author: pk,
+                    }));
                 }
             }
         }
 
         None
-    }
-
-    /// If this event quotes others, get those other events
-    pub fn quotes(&self) -> Vec<EventReference> {
-        if self.kind != EventKind::TextNote {
-            return vec![];
-        }
-
-        let mut output: Vec<EventReference> = Vec::new();
-
-        for tag in self.tags.iter() {
-            if let Ok((id, rurl)) = tag.parse_quote() {
-                output.push(EventReference::Id {
-                    id,
-                    author: None,
-                    relays: rurl
-                        .as_ref()
-                        .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
-                        .into_vec(),
-                    marker: None,
-                });
-            }
-        }
-
-        output
     }
 
     /// If this event mentions others, get those other event Ids
@@ -481,18 +509,39 @@ impl EventV3 {
         // For kind=6 and kind=16, all 'e' and 'a' tags are mentions
         if self.kind == EventKind::Repost || self.kind == EventKind::GenericRepost {
             for tag in self.tags.iter() {
-                if let Ok((id, rurl, optmarker)) = tag.parse_event() {
+                if let TagV2::Event {
+                    id,
+                    recommended_relay_url,
+                    marker,
+                    ..
+                } = tag
+                {
                     output.push(EventReference::Id {
-                        id,
+                        id: *id,
                         author: None,
-                        relays: rurl
+                        relays: recommended_relay_url
                             .as_ref()
                             .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                             .into_vec(),
-                        marker: optmarker,
+                        marker: marker.clone(),
                     });
-                } else if let Ok((ea, _optmarker)) = tag.parse_address() {
-                    output.push(EventReference::Addr(ea));
+                } else if let TagV2::Address {
+                    kind,
+                    pubkey,
+                    d,
+                    relay_url: Some(rurl),
+                    marker: _,
+                    trailing: _,
+                } = tag
+                {
+                    if let Ok(pk) = PublicKey::try_from_hex_string(pubkey.as_str(), true) {
+                        output.push(EventReference::Addr(NAddr {
+                            d: d.to_string(),
+                            relays: vec![rurl.clone()],
+                            kind: *kind,
+                            author: pk,
+                        }));
+                    }
                 }
             }
 
@@ -503,42 +552,71 @@ impl EventV3 {
 
         // Collect every 'e' tag marked as 'mention'
         for tag in self.tags.iter() {
-            if let Ok((id, rurl, optmarker)) = tag.parse_event() {
-                if optmarker.is_some() && optmarker.as_deref().unwrap() == "mention" {
+            if let TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                ..
+            } = tag
+            {
+                if marker.is_some() && marker.as_deref().unwrap() == "mention" {
                     output.push(EventReference::Id {
-                        id,
+                        id: *id,
                         author: None,
-                        relays: rurl
+                        relays: recommended_relay_url
                             .as_ref()
                             .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                             .into_vec(),
-                        marker: optmarker,
+                        marker: marker.clone(),
                     });
                 }
             }
         }
 
         // Collect every unmarked 'e' or 'a' tag that is not the first (root) or the last (reply)
-        let e_tags: Vec<&TagV3> = self
+        let e_tags: Vec<&TagV2> = self
             .tags
             .iter()
-            .filter(|t| (t.tagname() == "e" || t.tagname() == "a") && t.marker() == "")
+            .filter(|e| {
+                matches!(e, TagV2::Event { marker: None, .. })
+                    || matches!(e, TagV2::Address { marker: None, .. })
+            })
             .collect();
         if e_tags.len() > 2 {
             // mentions are everything other than first and last
             for tag in &e_tags[1..e_tags.len() - 1] {
-                if let Ok((id, rurl, optmarker)) = tag.parse_event() {
+                if let TagV2::Event {
+                    id,
+                    recommended_relay_url,
+                    marker,
+                    ..
+                } = tag
+                {
                     output.push(EventReference::Id {
-                        id,
+                        id: *id,
                         author: None,
-                        relays: rurl
+                        relays: recommended_relay_url
                             .as_ref()
                             .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok())
                             .into_vec(),
-                        marker: optmarker,
+                        marker: marker.to_owned(),
                     });
-                } else if let Ok((ea, _optmarker)) = tag.parse_address() {
-                    output.push(EventReference::Addr(ea));
+                } else if let TagV2::Address {
+                    kind,
+                    pubkey,
+                    d,
+                    relay_url: Some(rurl),
+                    ..
+                } = tag
+                {
+                    if let Ok(pk) = PublicKey::try_from_hex_string(pubkey.as_str(), true) {
+                        output.push(EventReference::Addr(NAddr {
+                            d: d.to_string(),
+                            relays: vec![rurl.clone()],
+                            kind: *kind,
+                            author: pk,
+                        }));
+                    }
                 }
             }
         }
@@ -554,15 +632,23 @@ impl EventV3 {
         }
 
         // The last 'e' tag is it
-        for tag in self.tags.iter().rev() {
-            if let Ok((id, rurl, _optmarker)) = tag.parse_event() {
-                return Some((
-                    id,
-                    self.content.clone(),
-                    rurl.as_ref()
-                        .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok()),
-                ));
-            }
+        if let Some(TagV2::Event {
+            id,
+            recommended_relay_url,
+            ..
+        }) = self
+            .tags
+            .iter()
+            .rev()
+            .find(|t| matches!(t, TagV2::Event { .. }))
+        {
+            return Some((
+                *id,
+                self.content.clone(),
+                recommended_relay_url
+                    .as_ref()
+                    .and_then(|rru| RelayUrl::try_from_unchecked_url(rru).ok()),
+            ));
         }
 
         None
@@ -578,16 +664,36 @@ impl EventV3 {
         let mut erefs: Vec<EventReference> = Vec::new();
 
         for tag in self.tags.iter() {
-            if let Ok((id, _rurl, _optmarker)) = tag.parse_event() {
-                // All 'e' tags are deleted
+            // All 'e' tags are deleted
+            if let TagV2::Event { id, .. } = tag {
                 erefs.push(EventReference::Id {
-                    id,
+                    id: *id,
                     author: None,
                     relays: vec![],
                     marker: None,
                 });
-            } else if let Ok((ea, _optmarker)) = tag.parse_address() {
-                erefs.push(EventReference::Addr(ea));
+            }
+            // All 'a' tag groups are deleted
+            else if let TagV2::Address {
+                kind,
+                pubkey,
+                d,
+                relay_url,
+                ..
+            } = tag
+            {
+                if let Ok(pk) = PublicKey::try_from_hex_string(pubkey, false) {
+                    let ea = NAddr {
+                        d: d.clone(),
+                        relays: match relay_url {
+                            Some(url) => vec![url.clone()],
+                            None => vec![],
+                        },
+                        kind: *kind,
+                        author: pk,
+                    };
+                    erefs.push(EventReference::Addr(ea));
+                }
             }
         }
 
@@ -607,8 +713,9 @@ impl EventV3 {
 
         if self.kind == EventKind::GiftWrap {
             for tag in self.tags.iter() {
-                if let Ok((pk, _, _)) = tag.parse_pubkey() {
-                    return by == pk;
+                if let TagV2::Pubkey { pubkey, .. } = tag {
+                    let pkh: PublicKeyHex = by.into();
+                    return pkh == *pubkey;
                 }
             }
         }
@@ -618,174 +725,88 @@ impl EventV3 {
 
     /// If this event zaps another event, get data about that.
     ///
+    /// That includes the Id, the amount, and the public key of the provider,
+    /// all of which should be verified by the caller.
+    ///
     /// Errors returned from this are not fatal, but may be useful for
     /// explaining to a user why a zap receipt is invalid.
-    pub fn zaps(&self) -> Result<Option<ZapData>, Error> {
+    pub fn zaps(&self) -> Result<Option<ZapDataV1>, Error> {
         if self.kind != EventKind::Zap {
             return Ok(None);
         }
 
-        let (zap_request, bolt11invoice, payer_p_tag, target_event_from_tags): (
-            EventV3,
-            Bolt11Invoice,
-            Option<PublicKey>,
-            Option<EventReference>,
-        ) = {
-            let mut zap_request: Option<EventV3> = None;
-            let mut bolt11invoice: Option<Bolt11Invoice> = None;
-            let mut payer_p_tag: Option<PublicKey> = None;
-            let mut target_event_from_tags: Option<EventReference> = None;
+        let mut zapped_id: Option<Id> = None;
+        let mut zapped_amount: Option<MilliSatoshi> = None;
+        let mut zapped_pubkey: Option<PublicKey> = None;
 
-            for tag in self.tags.iter() {
-                if tag.tagname() == "description" {
-                    let request_string = tag.value();
-                    if let Ok(e) = serde_json::from_str::<EventV3>(&request_string) {
-                        zap_request = Some(e);
-                    }
+        for tag in self.tags.iter() {
+            if let TagV2::Other { tag, data } = tag {
+                // Find the bolt11 tag
+                if tag != "bolt11" {
+                    continue;
                 }
-                // we ignore the "p" tag, we have that data from two other places (invoice and request)
-                else if tag.tagname() == "P" {
-                    if let Ok((pk, _, _)) = tag.parse_pubkey() {
-                        payer_p_tag = Some(pk);
-                    }
-                } else if tag.tagname() == "bolt11" {
-                    if tag.value() == "" {
-                        return Err(Error::ZapReceipt("missing bolt11 tag value".to_string()));
-                    }
-
-                    // Extract as an Invoice
-                    let invoice = match Bolt11Invoice::from_str(tag.value()) {
-                        Ok(inv) => inv,
-                        Err(e) => {
-                            return Err(Error::ZapReceipt(format!("bolt11 failed to parse: {}", e)))
-                        }
-                    };
-
-                    // Verify the signature
-                    if let Err(e) = invoice.check_signature() {
-                        return Err(Error::ZapReceipt(format!(
-                            "bolt11 signature check failed: {}",
-                            e
-                        )));
-                    }
-
-                    bolt11invoice = Some(invoice);
+                if data.is_empty() {
+                    return Err(Error::ZapReceipt("missing bolt11 tag value".to_string()));
                 }
-            }
 
-            let re = self.referred_events();
-            if re.len() == 1 {
-                target_event_from_tags = Some(re[0].clone());
-            }
+                // Extract as an Invoice
+                let result = Bolt11Invoice::from_str(&data[0]);
+                if let Err(e) = result {
+                    return Err(Error::ZapReceipt(format!("bolt11 failed to parse: {}", e)));
+                }
+                let invoice = result.unwrap();
 
-            // "The zap receipt MUST contain a description tag which is the JSON-encoded zap request."
-            if zap_request.is_none() {
-                return Ok(None);
-            }
-            let zap_request = zap_request.unwrap();
+                // Verify the signature
+                if let Err(e) = invoice.check_signature() {
+                    return Err(Error::ZapReceipt(format!(
+                        "bolt11 signature check failed: {}",
+                        e
+                    )));
+                }
 
-            // "The zap receipt MUST have a bolt11 tag containing the description hash bolt11 invoice."
-            if bolt11invoice.is_none() {
-                return Ok(None);
-            }
-            let bolt11invoice = bolt11invoice.unwrap();
-
-            (
-                zap_request,
-                bolt11invoice,
-                payer_p_tag,
-                target_event_from_tags,
-            )
-        };
-
-        // Extract data from the invoice
-        let (payee_from_invoice, amount_from_invoice): (PublicKey, MilliSatoshi) = {
-            // Get the public key
-            let secpk = match bolt11invoice.payee_pub_key() {
-                Some(pubkey) => pubkey.to_owned(),
-                None => bolt11invoice.recover_payee_pub_key(),
-            };
-            let (xonlypk, _) = secpk.x_only_public_key();
-            let pubkeybytes = xonlypk.serialize();
-            let pubkey = match PublicKey::from_bytes(&pubkeybytes, false) {
-                Ok(pubkey) => pubkey,
-                Err(e) => return Err(Error::ZapReceipt(format!("payee public key error: {}", e))),
-            };
-
-            if let Some(u) = bolt11invoice.amount_milli_satoshis() {
-                (pubkey, MilliSatoshi(u))
-            } else {
-                return Err(Error::ZapReceipt(
-                    "Amount missing from zap receipt".to_string(),
-                ));
-            }
-        };
-
-        // Extract data from request
-        let (payer_from_request, amount_from_request, target_event_from_request): (
-            PublicKey,
-            MilliSatoshi,
-            EventReference,
-        ) = {
-            let mut amount_from_request: Option<MilliSatoshi> = None;
-            let mut target_event_from_request: Option<EventReference> = None;
-            for tag in zap_request.tags.iter() {
-                if tag.tagname() == "amount" {
-                    if let Ok(m) = tag.value().parse::<u64>() {
-                        amount_from_request = Some(MilliSatoshi(m));
+                // Get the public key
+                let secpk = match invoice.payee_pub_key() {
+                    Some(pubkey) => pubkey.to_owned(),
+                    None => invoice.recover_payee_pub_key(),
+                };
+                let (xonlypk, _) = secpk.x_only_public_key();
+                let pubkeybytes = xonlypk.serialize();
+                let pubkey = match PublicKey::from_bytes(&pubkeybytes, false) {
+                    Ok(pubkey) => pubkey,
+                    Err(e) => {
+                        return Err(Error::ZapReceipt(format!("payee public key error: {}", e)))
                     }
+                };
+                zapped_pubkey = Some(pubkey);
+
+                if let Some(u) = invoice.amount_milli_satoshis() {
+                    zapped_amount = Some(MilliSatoshi(u));
+                } else {
+                    return Err(Error::ZapReceipt(
+                        "Amount missing from zap receipt".to_string(),
+                    ));
                 }
             }
-
-            let re = zap_request.referred_events();
-            if re.len() == 1 {
-                target_event_from_request = Some(re[0].clone());
-            }
-
-            if amount_from_request.is_none() {
-                return Err(Error::ZapReceipt("zap request had no amount".to_owned()));
-            }
-            let amount_from_request = amount_from_request.unwrap();
-
-            if target_event_from_request.is_none() {
-                return Ok(None);
-            }
-            let target_event_from_request = target_event_from_request.unwrap();
-
-            (
-                zap_request.pubkey,
-                amount_from_request,
-                target_event_from_request,
-            )
-        };
-
-        if let Some(p) = payer_p_tag {
-            if p != payer_from_request {
-                return Err(Error::ZapReceipt(
-                    "Payer Mismatch between receipt P-tag and invoice".to_owned(),
-                ));
+            if let TagV2::Event { id, .. } = tag {
+                zapped_id = Some(*id);
             }
         }
 
-        if amount_from_invoice != amount_from_request {
-            return Err(Error::ZapReceipt(
-                "Amount Mismatch between request and invoice".to_owned(),
-            ));
+        if zapped_id.is_none() {
+            // This probably means a person was zapped, not a note. So not an error.
+            return Ok(None);
+        }
+        if zapped_amount.is_none() {
+            return Err(Error::ZapReceipt("Missing amount".to_string()));
+        }
+        if zapped_pubkey.is_none() {
+            return Err(Error::ZapReceipt("Missing payee public key".to_string()));
         }
 
-        if let Some(te) = target_event_from_tags {
-            if te != target_event_from_request {
-                return Err(Error::ZapReceipt(
-                    "Zapped event Mismatch receipt and request".to_owned(),
-                ));
-            }
-        }
-
-        Ok(Some(ZapData {
-            zapped_event: target_event_from_request,
-            amount: amount_from_invoice,
-            payee: payee_from_invoice,
-            payer: payer_from_request,
+        Ok(Some(ZapDataV1 {
+            id: zapped_id.unwrap(),
+            amount: zapped_amount.unwrap(),
+            pubkey: zapped_pubkey.unwrap(),
             provider_pubkey: self.pubkey,
         }))
     }
@@ -793,8 +814,10 @@ impl EventV3 {
     /// If this event specifies the client that created it, return that client string
     pub fn client(&self) -> Option<String> {
         for tag in self.tags.iter() {
-            if tag.tagname() == "client" && !tag.value().is_empty() {
-                return Some(tag.value().to_owned());
+            if let TagV2::Other { tag, data } = tag {
+                if tag == "client" && !data.is_empty() {
+                    return Some(data[0].clone());
+                }
             }
         }
 
@@ -804,8 +827,8 @@ impl EventV3 {
     /// If this event specifies a subject, return that subject string
     pub fn subject(&self) -> Option<String> {
         for tag in self.tags.iter() {
-            if let Ok(subject) = tag.parse_subject() {
-                return Some(subject);
+            if let TagV2::Subject { subject, .. } = tag {
+                return Some(subject.clone());
             }
         }
 
@@ -815,8 +838,8 @@ impl EventV3 {
     /// If this event specifies a title, return that title string
     pub fn title(&self) -> Option<String> {
         for tag in self.tags.iter() {
-            if let Ok(title) = tag.parse_title() {
-                return Some(title);
+            if let TagV2::Title { title, .. } = tag {
+                return Some(title.clone());
             }
         }
 
@@ -826,29 +849,21 @@ impl EventV3 {
     /// If this event specifies a summary, return that summary string
     pub fn summary(&self) -> Option<String> {
         for tag in self.tags.iter() {
-            if let Ok(summary) = tag.parse_summary() {
-                return Some(summary);
+            if let TagV2::Other { tag, data } = tag {
+                if tag == "summary" && !data.is_empty() {
+                    return Some(data[0].clone());
+                }
             }
         }
 
         None
     }
 
-    /// Is this event an annotation
-    pub fn is_annotation(&self) -> bool {
+    /// If this event specifies a content warning, return that subject string
+    pub fn content_warning(&self) -> Option<String> {
         for tag in self.tags.iter() {
-            if tag.get_index(0) == "annotation" {
-                return true;
-            }
-        }
-        false
-    }
-
-    /// If this event specifies a content warning, return that content warning
-    pub fn content_warning(&self) -> Option<Option<String>> {
-        for tag in self.tags.iter() {
-            if let Ok(optcontentwarning) = tag.parse_content_warning() {
-                return Some(optcontentwarning);
+            if let TagV2::ContentWarning { warning, .. } = tag {
+                return Some(warning.clone());
             }
         }
 
@@ -859,8 +874,8 @@ impl EventV3 {
     pub fn parameter(&self) -> Option<String> {
         if self.kind.is_parameterized_replaceable() {
             for tag in self.tags.iter() {
-                if let Ok(ident) = tag.parse_identifier() {
-                    return Some(ident);
+                if let TagV2::Identifier { d, .. } = tag {
+                    return Some(d.to_owned());
                 }
             }
             Some("".to_owned()) // implicit
@@ -878,8 +893,8 @@ impl EventV3 {
         let mut output: Vec<String> = Vec::new();
 
         for tag in self.tags.iter() {
-            if let Ok(hashtag) = tag.parse_hashtag() {
-                output.push(hashtag);
+            if let TagV2::Hashtag { hashtag, .. } = tag {
+                output.push(hashtag.clone());
             }
         }
 
@@ -895,8 +910,8 @@ impl EventV3 {
         let mut output: Vec<RelayUrl> = Vec::new();
 
         for tag in self.tags.iter() {
-            if let Ok((url, _optusage)) = tag.parse_relay() {
-                if let Ok(relay_url) = RelayUrl::try_from_unchecked_url(&url) {
+            if let TagV2::Reference { url, .. } = tag {
+                if let Ok(relay_url) = RelayUrl::try_from_unchecked_url(url) {
                     output.push(relay_url);
                 }
             }
@@ -911,23 +926,42 @@ impl EventV3 {
         let zeroes: u8 = crate::get_leading_zero_bits(&self.id.0);
 
         // Check that they meant it
+        let mut target_zeroes: u8 = 0;
         for tag in self.tags.iter() {
-            if let Ok((_nonce, Some(target))) = tag.parse_nonce() {
-                let target_zeroes = target as u8;
-                return zeroes.min(target_zeroes);
+            if let TagV2::Nonce { target, .. } = tag {
+                if let Some(t) = target {
+                    target_zeroes = t.parse::<u8>().unwrap_or(0);
+                }
+                break;
             }
         }
 
-        0
+        zeroes.min(target_zeroes)
     }
 
     /// Was this event delegated, was that valid, and if so what is the pubkey of
     /// the delegator?
     pub fn delegation(&self) -> EventDelegation {
         for tag in self.tags.iter() {
-            if let Ok((pk, conditions, sig)) = tag.parse_delegation() {
+            if let TagV2::Delegation {
+                pubkey,
+                conditions,
+                sig,
+                ..
+            } = tag
+            {
+                // Convert hex strings into functional types
+                let signature = match Signature::try_from_hex_string(sig) {
+                    Ok(sig) => sig,
+                    Err(e) => return EventDelegation::InvalidDelegation(format!("{e}")),
+                };
+                let delegator_pubkey = match PublicKey::try_from_hex_string(pubkey, true) {
+                    Ok(pk) => pk,
+                    Err(e) => return EventDelegation::InvalidDelegation(format!("{e}")),
+                };
+
                 // Verify the delegation tag
-                match conditions.verify_signature(&pk, &self.pubkey, &sig) {
+                match conditions.verify_signature(&delegator_pubkey, &self.pubkey, &signature) {
                     Ok(_) => {
                         // Check conditions
                         if let Some(kind) = conditions.kind {
@@ -951,7 +985,7 @@ impl EventV3 {
                                 );
                             }
                         }
-                        return EventDelegation::DelegatedBy(pk);
+                        return EventDelegation::DelegatedBy(delegator_pubkey);
                     }
                     Err(e) => {
                         return EventDelegation::InvalidDelegation(format!("{e}"));
@@ -964,34 +998,22 @@ impl EventV3 {
     }
 
     /// If the event came through a proxy, get the (Protocol, Id)
-    pub fn proxy(&self) -> Option<(String, String)> {
-        for tag in self.tags.iter() {
-            if let Ok((protocol, id)) = tag.parse_proxy() {
-                return Some((protocol, id));
+    pub fn proxy(&self) -> Option<(&str, &str)> {
+        for t in self.tags.iter() {
+            if let TagV2::Other { tag, data } = t {
+                if tag == "proxy" && data.len() >= 2 {
+                    return Some((&data[1], &data[0]));
+                }
             }
         }
         None
     }
 }
 
-impl Ord for EventV3 {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.created_at
-            .cmp(&other.created_at)
-            .then(self.id.cmp(&other.id))
-    }
-}
-
-impl PartialOrd for EventV3 {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 // Direct access into speedy-serialized bytes, to avoid alloc-deserialize just to peek
 // at one of these fields
 #[cfg(feature = "speedy")]
-impl EventV3 {
+impl EventV2 {
     /// Read the ID of the event from a speedy encoding without decoding
     /// (zero allocation)
     ///
@@ -1069,7 +1091,7 @@ impl EventV3 {
     }
 
     /// Check if any human-readable tag matches the Regex in the speedy encoding
-    /// without decoding the whole thing (because our TagV3 representation is so complicated,
+    /// without decoding the whole thing (because our TagV2 representation is so complicated,
     /// we do deserialize the tags for now)
     ///
     /// Note this function is fragile, if the Event structure is reordered,
@@ -1084,44 +1106,37 @@ impl EventV3 {
         let offset = 140 + 4 + len as usize;
 
         // Deserialize the tags
-        let tags: Vec<TagV3> = Vec::<TagV3>::read_from_buffer(&bytes[offset..])?;
+        let tags: Vec<TagV2> = Vec::<TagV2>::read_from_buffer(&bytes[offset..])?;
 
         // Search through them
         for tag in &tags {
-            match tag.tagname() {
-                "content-warning" => {
-                    if let Ok(Some(warning)) = tag.parse_content_warning() {
-                        if re.is_match(warning.as_ref()) {
-                            return Ok(true);
-                        }
-                    }
-                }
-                "t" => {
-                    if let Ok(hashtag) = tag.parse_hashtag() {
-                        if re.is_match(hashtag.as_ref()) {
-                            return Ok(true);
-                        }
-                    }
-                }
-                "subject" => {
-                    if let Ok(subject) = tag.parse_subject() {
-                        if re.is_match(subject.as_ref()) {
-                            return Ok(true);
-                        }
-                    }
-                }
-                "title" => {
-                    if let Ok(title) = tag.parse_title() {
-                        if re.is_match(title.as_ref()) {
-                            return Ok(true);
-                        }
-                    }
-                }
-                _ => {
-                    if tag.tagname() == "summary" && re.is_match(tag.value()) {
+            match tag {
+                TagV2::ContentWarning { warning, .. } => {
+                    if re.is_match(warning.as_ref()) {
                         return Ok(true);
                     }
                 }
+                TagV2::Hashtag { hashtag, .. } => {
+                    if re.is_match(hashtag.as_ref()) {
+                        return Ok(true);
+                    }
+                }
+                TagV2::Subject { subject, .. } => {
+                    if re.is_match(subject.as_ref()) {
+                        return Ok(true);
+                    }
+                }
+                TagV2::Title { title, .. } => {
+                    if re.is_match(title.as_ref()) {
+                        return Ok(true);
+                    }
+                }
+                TagV2::Other { tag, data } => {
+                    if tag == "summary" && !data.is_empty() && re.is_match(data[0].as_ref()) {
+                        return Ok(true);
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -1129,9 +1144,9 @@ impl EventV3 {
     }
 }
 
-impl From<EventV3> for RumorV3 {
-    fn from(e: EventV3) -> RumorV3 {
-        RumorV3 {
+impl From<EventV2> for RumorV2 {
+    fn from(e: EventV2) -> RumorV2 {
+        RumorV2 {
             id: e.id,
             pubkey: e.pubkey,
             created_at: e.created_at,
@@ -1142,9 +1157,9 @@ impl From<EventV3> for RumorV3 {
     }
 }
 
-impl From<RumorV3> for PreEventV3 {
-    fn from(r: RumorV3) -> PreEventV3 {
-        PreEventV3 {
+impl From<RumorV2> for PreEventV2 {
+    fn from(r: RumorV2) -> PreEventV2 {
+        PreEventV2 {
             pubkey: r.pubkey,
             created_at: r.created_at,
             kind: r.kind,
@@ -1154,10 +1169,10 @@ impl From<RumorV3> for PreEventV3 {
     }
 }
 
-impl TryFrom<PreEventV3> for RumorV3 {
+impl TryFrom<PreEventV2> for RumorV2 {
     type Error = Error;
-    fn try_from(e: PreEventV3) -> Result<RumorV3, Error> {
-        RumorV3::new(e)
+    fn try_from(e: PreEventV2) -> Result<RumorV2, Error> {
+        RumorV2::new(e)
     }
 }
 
@@ -1166,7 +1181,7 @@ mod test {
     use super::*;
     use crate::types::{DelegationConditions, Signer, UncheckedUrl};
 
-    test_serde! {EventV3, test_event_serde}
+    test_serde! {EventV2, test_event_serde}
 
     #[test]
     fn test_event_new_and_verify() {
@@ -1175,29 +1190,19 @@ mod test {
             KeySigner::from_private_key(privkey, "", 1).unwrap()
         };
         let pubkey = signer.public_key();
-        let preevent = PreEventV3 {
+        let preevent = PreEventV2 {
             pubkey,
             created_at: Unixtime::mock(),
             kind: EventKind::TextNote,
-            tags: vec![TagV3::new_event(
-                Id::mock(),
-                Some(UncheckedUrl::mock()),
-                None,
-            )],
+            tags: vec![TagV2::Event {
+                id: Id::mock(),
+                recommended_relay_url: Some(UncheckedUrl::mock()),
+                marker: None,
+                trailing: Vec::new(),
+            }],
             content: "Hello World!".to_string(),
         };
-        let id = preevent.hash().unwrap();
-        let sig = signer.sign_id(id).unwrap();
-        let mut event = EventV3 {
-            id,
-            pubkey: preevent.pubkey,
-            created_at: preevent.created_at,
-            kind: preevent.kind,
-            tags: preevent.tags,
-            content: preevent.content,
-            sig,
-        };
-
+        let mut event = signer.sign_event2(preevent).unwrap();
         assert!(event.verify(None).is_ok());
 
         // Now make sure it fails when the message has been modified
@@ -1220,7 +1225,7 @@ mod test {
     }
 
     // helper
-    fn create_event_with_delegation<S>(created_at: Unixtime, real_signer: &S) -> EventV3
+    fn create_event_with_delegation<S>(created_at: Unixtime, real_signer: &S) -> EventV2
     where
         S: Signer,
     {
@@ -1238,27 +1243,28 @@ mod test {
             .generate_delegation_signature(delegated_signer.public_key(), &conditions)
             .unwrap();
 
-        let preevent = PreEventV3 {
+        let preevent = PreEventV2 {
             pubkey: delegated_signer.public_key(),
             created_at,
             kind: EventKind::TextNote,
             tags: vec![
-                TagV3::new_event(Id::mock(), Some(UncheckedUrl::mock()), None),
-                TagV3::new_delegation(real_signer.public_key(), conditions, sig),
+                TagV2::Event {
+                    id: Id::mock(),
+                    recommended_relay_url: Some(UncheckedUrl::mock()),
+                    marker: None,
+                    trailing: Vec::new(),
+                },
+                TagV2::Delegation {
+                    pubkey: PublicKeyHex::try_from_string(real_signer.public_key().as_hex_string())
+                        .unwrap(),
+                    conditions,
+                    sig: sig.into(),
+                    trailing: Vec::new(),
+                },
             ],
             content: "Hello World!".to_string(),
         };
-        let id = preevent.hash().unwrap();
-        let sig = delegated_signer.sign_id(id).unwrap();
-        EventV3 {
-            id,
-            pubkey: preevent.pubkey,
-            created_at: preevent.created_at,
-            kind: preevent.kind,
-            tags: preevent.tags,
-            content: preevent.content,
-            sig,
-        }
+        delegated_signer.sign_event2(preevent).unwrap()
     }
 
     #[test]
@@ -1326,7 +1332,7 @@ mod test {
     #[test]
     fn test_realworld_event_with_naddr_tag() {
         let raw = r##"{"id":"7760408f6459b9546c3a4e70e3e56756421fba34526b7d460db3fcfd2f8817db","pubkey":"460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c","created_at":1687616920,"kind":1,"tags":[["p","1bc70a0148b3f316da33fe3c89f23e3e71ac4ff998027ec712b905cd24f6a411","","mention"],["a","30311:1bc70a0148b3f316da33fe3c89f23e3e71ac4ff998027ec712b905cd24f6a411:1687612774","","mention"]],"content":"Watching Karnage's stream to see if I learn something about design. \n\nnostr:naddr1qq9rzd3cxumrzv3hxu6qygqmcu9qzj9n7vtd5vl78jyly037wxkyl7vcqflvwy4eqhxjfa4yzypsgqqqwens0qfplk","sig":"dbc5d05a24bfe990a1faaedfcb81a98940d86a105711dbdad9145d05b0ad0f46e3e24eaa3fc283818f27e057fe836a029fd9a68e7f1de06ff477493199d64064"}"##;
-        let _: EventV3 = serde_json::from_str(&raw).unwrap();
+        let _: EventV2 = serde_json::from_str(&raw).unwrap();
     }
 
     #[cfg(feature = "speedy")]
@@ -1339,36 +1345,44 @@ mod test {
             KeySigner::from_private_key(privkey, "", 1).unwrap()
         };
 
-        let preevent = PreEventV3 {
+        let preevent = PreEventV2 {
             pubkey: signer.public_key(),
             created_at: Unixtime(1680000012),
             kind: EventKind::TextNote,
             tags: vec![
-                TagV3::new_event(Id::mock(), Some(UncheckedUrl::mock()), None),
-                TagV3::new_hashtag("foodstr".to_string()),
+                TagV2::Event {
+                    id: Id::mock(),
+                    recommended_relay_url: Some(UncheckedUrl::mock()),
+                    marker: None,
+                    trailing: Vec::new(),
+                },
+                TagV2::Hashtag {
+                    hashtag: "foodstr".to_string(),
+                    trailing: Vec::new(),
+                },
             ],
             content: "Hello World!".to_string(),
         };
-        let event = signer.sign_event(preevent).unwrap();
+        let event = signer.sign_event2(preevent).unwrap();
         let bytes = event.write_to_vec().unwrap();
 
-        let id = EventV3::get_id_from_speedy_bytes(&bytes).unwrap();
+        let id = EventV2::get_id_from_speedy_bytes(&bytes).unwrap();
         assert_eq!(id, event.id);
 
-        let pubkey = EventV3::get_pubkey_from_speedy_bytes(&bytes).unwrap();
+        let pubkey = EventV2::get_pubkey_from_speedy_bytes(&bytes).unwrap();
         assert_eq!(pubkey, event.pubkey);
 
-        let created_at = EventV3::get_created_at_from_speedy_bytes(&bytes).unwrap();
+        let created_at = EventV2::get_created_at_from_speedy_bytes(&bytes).unwrap();
         assert_eq!(created_at, Unixtime(1680000012));
 
-        let kind = EventV3::get_kind_from_speedy_bytes(&bytes).unwrap();
+        let kind = EventV2::get_kind_from_speedy_bytes(&bytes).unwrap();
         assert_eq!(kind, event.kind);
 
-        let content = EventV3::get_content_from_speedy_bytes(&bytes);
+        let content = EventV2::get_content_from_speedy_bytes(&bytes);
         assert_eq!(content, Some(&*event.content));
 
         let re = regex::Regex::new("foodstr").unwrap();
-        let found_foodstr = EventV3::tag_search_in_speedy_bytes(&bytes, &re).unwrap();
+        let found_foodstr = EventV2::tag_search_in_speedy_bytes(&bytes, &re).unwrap();
         assert!(found_foodstr);
 
         // Print to work out encoding
@@ -1407,7 +1421,7 @@ mod test {
             KeySigner::from_private_key(sec2, "", 1).unwrap()
         };
 
-        let pre = PreEventV3 {
+        let pre = PreEventV2 {
             pubkey: signer1.public_key(),
             created_at: Unixtime(1692_000_000),
             kind: EventKind::TextNote,
@@ -1415,21 +1429,12 @@ mod test {
             tags: vec![],
         };
 
-        let gift_wrap = signer1.giftwrap(pre.clone(), signer2.public_key()).unwrap();
-        let rumor = signer2.unwrap_giftwrap(&gift_wrap).unwrap();
-        let output_pre: PreEventV3 = rumor.into();
+        let gift_wrap = signer1
+            .giftwrap2(pre.clone(), signer2.public_key())
+            .unwrap();
+        let rumor = signer2.unwrap_giftwrap2(&gift_wrap).unwrap();
+        let output_pre: PreEventV2 = rumor.into();
 
         assert_eq!(pre, output_pre);
-    }
-
-    #[test]
-    fn test_a_tags_as_replies() {
-        let raw = r#"{"id":"d4fb3aeae033baa4a9504027bff8fd065ba1bbd635c501a5e4f8c7ab0bd37c34","pubkey":"7bdef7be22dd8e59f4600e044aa53a1cf975a9dc7d27df5833bc77db784a5805","created_at":1716980987,"kind":1,"sig":"903ae95893082835a42706eda1328ea85a8bf6fbb172bb2f8696b66fccfebfae8756992894a0fb7bb592cb3f78939bdd5fac4cd1eb49138cbf3ea8069574a1dc","content":"The article is interesting, but why compiling everything when configuring meta tags in dist/index.html is sufficient? (like you did in the first version, if I'm not wrong)\nOne main selling point of Oracolo is that it does not require complex server side setup.\n\n> Every time you access the web page, the web page is compiled\n\nThis is not technically correct :)\nJavaScript code is not compiled, it is simply executed; it fetches Nostr data and so builds the page.","tags":[["p","b12b632c887f0c871d140d37bcb6e7c1e1a80264d0b7de8255aa1951d9e1ff79"],["a","30023:b12b632c887f0c871d140d37bcb6e7c1e1a80264d0b7de8255aa1951d9e1ff79:1716928135712","","root"],["r","index.html"]]}"#;
-        let event: EventV3 = serde_json::from_str(&raw).unwrap();
-        if let Some(parent) = event.replies_to() {
-            assert!(matches!(parent, EventReference::Addr(_)));
-        } else {
-            panic!("a tag reply not recognized");
-        }
     }
 }

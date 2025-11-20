@@ -16,9 +16,6 @@ pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
 mod event_reference;
 pub use event_reference::EventReference;
 
-mod file_metadata;
-pub use file_metadata::FileMetadata;
-
 mod filter;
 pub use filter::Filter;
 
@@ -30,9 +27,6 @@ pub use identity::Identity;
 
 mod key_signer;
 pub use key_signer::KeySigner;
-
-mod hll8;
-pub use hll8::Hll8;
 
 mod metadata;
 pub use metadata::Metadata;
@@ -70,7 +64,7 @@ mod relay_list;
 pub use relay_list::{RelayList, RelayListUsage};
 
 mod relay_message;
-pub use relay_message::{CountResult, RelayMessage, Why};
+pub use relay_message::RelayMessage;
 
 mod relay_usage;
 pub use relay_usage::{RelayUsage, RelayUsageSet};
@@ -82,7 +76,7 @@ mod signature;
 pub use signature::{Signature, SignatureHex};
 
 mod signer;
-pub use signer::{ExportableSigner, LockableSigner, MutExportableSigner, Signer, SignerExt};
+pub use signer::Signer;
 
 mod simple_relay_list;
 pub use simple_relay_list::{SimpleRelayList, SimpleRelayUsage};
@@ -91,7 +85,7 @@ mod subscription_id;
 pub use subscription_id::SubscriptionId;
 
 mod tag;
-pub use tag::{ParsedTag, Tag};
+pub use tag::Tag;
 
 mod unixtime;
 pub use unixtime::Unixtime;

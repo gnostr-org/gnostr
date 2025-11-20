@@ -126,7 +126,7 @@ gnostr-crawler = { version = "1912.921276.230605", path = "crawler" }
 gnostr-legit = { path = "./legit", version = "1911.921558.782146" }
 gnostr-query = { version = "1912.921276.230652", path = "query" }
 gnostr-relay = { version = "1908.924232.84720", path = "relay", features = ["search"] }
-nostr-types = { version = "0.8.0-stable", path = "types" }
+gnostr-types = { package = "gnostr-types", version = "0.7.6", path = "types" }
 gnostr_qr = { version = "0.0.7", path = "qr" }
 hex = "0.4.3"
 

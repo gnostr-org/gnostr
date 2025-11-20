@@ -1,7 +1,4 @@
-use crate::{
-    Error, Event, Id, MutExportableSigner, PreEvent, PublicKey, Signature, Signer, SignerExt,
-};
-use async_trait::async_trait;
+use crate::{Error, Id, PublicKey, Signature, Signer};
 use rand_core::OsRng;
 use std::convert::TryFrom;
 use std::fmt;
@@ -62,7 +59,6 @@ impl TryFrom<u8> for KeySecurity {
 
 /// This is a private key which is to be kept secret and is used to prove identity
 #[allow(missing_debug_implementations)]
-#[derive(Clone)]
 pub struct PrivateKey(secp256k1::SecretKey, KeySecurity);
 
 impl Default for PrivateKey {
@@ -164,6 +160,22 @@ impl PrivateKey {
         self.0
     }
 
+    /// Sign a 32-bit hash
+    pub fn sign_id(&self, id: Id) -> Result<Signature, Error> {
+        let keypair = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &self.0);
+        let message = secp256k1::Message::from_digest_slice(id.0.as_slice())?;
+        Ok(Signature(keypair.sign_schnorr(message)))
+    }
+
+    /// Sign a message (this hashes with SHA-256 first internally)
+    pub fn sign(&self, message: &[u8]) -> Result<Signature, Error> {
+        use secp256k1::hashes::{sha256, Hash};
+        let keypair = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &self.0);
+        let hash = sha256::Hash::hash(message).to_byte_array();
+        let message = secp256k1::Message::from_digest(hash);
+        Ok(Signature(keypair.sign_schnorr(message)))
+    }
+
     // Mock data for testing
     #[allow(dead_code)]
     pub(crate) fn mock() -> PrivateKey {
@@ -177,40 +189,58 @@ impl Drop for PrivateKey {
     }
 }
 
-#[async_trait]
 impl Signer for PrivateKey {
+    fn is_locked(&self) -> bool {
+        false
+    }
+
+    fn unlock(&mut self, _password: &str) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn lock(&mut self) {}
+
+    fn change_passphrase(&mut self, _old: &str, _new: &str, _log_n: u8) -> Result<(), Error> {
+        Err(Error::InvalidOperation)
+    }
+
+    fn upgrade(&mut self, _pass: &str, _log_n: u8) -> Result<(), Error> {
+        Err(Error::InvalidOperation)
+    }
+
     fn public_key(&self) -> PublicKey {
         self.public_key()
     }
 
-    fn encrypted_private_key(&self) -> Option<EncryptedPrivateKey> {
+    fn encrypted_private_key(&self) -> Option<&EncryptedPrivateKey> {
         None
     }
 
-    async fn sign_event(&self, input: PreEvent) -> Result<Event, Error> {
-        // Verify the pubkey matches
-        if input.pubkey != self.public_key() {
-            return Err(Error::InvalidPrivateKey);
-        }
-
-        // Generate Id
-        let id = input.hash()?;
-
-        // Generate Signature
-        let signature = self.sign_id(id).await?;
-
-        Ok(Event {
-            id,
-            pubkey: input.pubkey,
-            created_at: input.created_at,
-            kind: input.kind,
-            tags: input.tags,
-            content: input.content,
-            sig: signature,
-        })
+    fn export_private_key_in_hex(
+        &mut self,
+        _pass: &str,
+        _log_n: u8,
+    ) -> Result<(String, bool), Error> {
+        Ok((self.as_hex_string(), false))
     }
 
-    async fn encrypt(
+    fn export_private_key_in_bech32(
+        &mut self,
+        _pass: &str,
+        _log_n: u8,
+    ) -> Result<(String, bool), Error> {
+        Ok((self.as_bech32_string(), false))
+    }
+
+    fn sign_id(&self, id: Id) -> Result<Signature, Error> {
+        self.sign_id(id)
+    }
+
+    fn sign(&self, message: &[u8]) -> Result<Signature, Error> {
+        self.sign(message)
+    }
+
+    fn encrypt(
         &self,
         other: &PublicKey,
         plaintext: &str,
@@ -220,64 +250,21 @@ impl Signer for PrivateKey {
     }
 
     /// Decrypt NIP-44
-    async fn decrypt(&self, other: &PublicKey, ciphertext: &str) -> Result<String, Error> {
+    fn decrypt(&self, other: &PublicKey, ciphertext: &str) -> Result<String, Error> {
         self.decrypt(other, ciphertext)
     }
 
-    fn key_security(&self) -> Result<KeySecurity, Error> {
-        Ok(KeySecurity::NotTracked)
-    }
-}
-
-#[async_trait]
-impl SignerExt for PrivateKey {
-    async fn sign_id(&self, id: Id) -> Result<Signature, Error> {
-        let keypair = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &self.0);
-        let message = secp256k1::Message::from_digest_slice(id.0.as_slice())?;
-        Ok(Signature(keypair.sign_schnorr(message)))
-    }
-
-    async fn sign(&self, message: &[u8]) -> Result<Signature, Error> {
-        use secp256k1::hashes::{sha256, Hash};
-        let keypair = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &self.0);
-        let hash = sha256::Hash::hash(message).to_byte_array();
-        let message = secp256k1::Message::from_digest(hash);
-        Ok(Signature(keypair.sign_schnorr(message)))
-    }
-
-    async fn nip44_conversation_key(&self, other: &PublicKey) -> Result<[u8; 32], Error> {
+    /// Get NIP-44 conversation key
+    fn nip44_conversation_key(&self, other: &PublicKey) -> Result<[u8; 32], Error> {
         Ok(nip44::get_conversation_key(
             self.0,
             other.as_xonly_public_key(),
         ))
     }
-}
 
-#[async_trait]
-impl MutExportableSigner for PrivateKey {
-    async fn export_private_key_in_hex(
-        &mut self,
-        _pass: &str,
-        _log_n: u8,
-    ) -> Result<(String, bool), Error> {
-        Ok((self.as_hex_string(), false))
+    fn key_security(&self) -> Result<KeySecurity, Error> {
+        Ok(KeySecurity::NotTracked)
     }
-
-    async fn export_private_key_in_bech32(
-        &mut self,
-        _pass: &str,
-        _log_n: u8,
-    ) -> Result<(String, bool), Error> {
-        Ok((self.as_bech32_string(), false))
-    }
-}
-
-fn base64flex() -> base64::engine::GeneralPurpose {
-    let config = base64::engine::GeneralPurposeConfig::new()
-        .with_decode_allow_trailing_bits(true)
-        .with_encode_padding(true)
-        .with_decode_padding_mode(base64::engine::DecodePaddingMode::Indifferent);
-    base64::engine::GeneralPurpose::new(&base64::alphabet::STANDARD, config)
 }
 
 #[cfg(test)]

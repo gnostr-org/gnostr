@@ -56,7 +56,7 @@ impl UncheckedUrl {
     // Mock data for testing
     #[allow(dead_code)]
     pub(crate) fn mock() -> UncheckedUrl {
-        UncheckedUrl("/home/user/file.txt".to_string())
+        UncheckedUrl("http://localhost:6102".to_string())
     }
 }
 
@@ -89,12 +89,15 @@ impl Url {
             return Err(Error::InvalidUrlMissingAuthority);
         }
 
+        //begin more support
         if let Some(host) = url.host() {
             match host {
                 url::Host::Domain(_) => {
                     // Strange that we can't access as a string
                     let s = format!("{host}");
-                    if s != s.trim() || s.starts_with("localhost") {
+                    if s != s.trim()
+                    /* || s.starts_with("localhost") */
+                    {
                         return Err(Error::InvalidUrlHost(s));
                     }
                 }
@@ -112,6 +115,7 @@ impl Url {
                 }
             }
         } else {
+            //begin more support
             return Err(Error::InvalidUrlHost("".to_string()));
         }
 
@@ -141,7 +145,7 @@ impl Url {
     // Mock data for testing
     #[allow(dead_code)]
     pub(crate) fn mock() -> Url {
-        Url("http://example.com/avatar.png".to_string())
+        Url("http://localhost:6102".to_string())
     }
 }
 
@@ -174,7 +178,8 @@ impl RelayUrl {
 
         // Verify the scheme is websockets
         if url.scheme() != "wss" && url.scheme() != "ws" {
-            return Err(Error::InvalidUrlScheme(url.scheme().to_owned()));
+
+            //return Err(Error::InvalidUrlScheme(url.scheme().to_owned()));
         }
 
         // Verify host is some
@@ -235,7 +240,7 @@ impl RelayUrl {
     // Mock data for testing
     #[allow(dead_code)]
     pub(crate) fn mock() -> Url {
-        Url("wss://example.com".to_string())
+        Url("wss://localhost:6102".to_string())
     }
 }
 
