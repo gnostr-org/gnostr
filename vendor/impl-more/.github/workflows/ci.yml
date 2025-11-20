@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  read_msrv:
+    name: Read MSRV
+    uses: actions-rust-lang/msrv/.github/workflows/msrv.yml@v0.1.0
+
+  test:
+    needs: read_msrv
+
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - { name: msrv, version: '${{ needs.read_msrv.outputs.msrv }}' }
+          - { name: stable, version: stable }
+
+    runs-on: ubuntu-latest
+
+    name: Test / ${{ matrix.toolchain.name }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (${{ matrix.toolchain.name }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1.9.0
+        with:
+          toolchain: ${{ matrix.toolchain.version }}
+          target: thumbv6m-none-eabi
+
+      - name: Install just,nextest
+        uses: taiki-e/install-action@v2.44.5
+        with:
+          tool: just,nextest
+
+      - name: Workaround MSRV issues
+        if: matrix.toolchain.name == 'msrv'
+        run: just downgrade-msrv
+
+      - name: Test
+        run: just test-no-coverage
+
+      - name: Test documentation
+        if: matrix.toolchain.name == 'stable'
+        run: just test-docs
+
+      - name: Build (no-std)
+        if: matrix.toolchain.name == 'stable'
+        run: just build-no-std
+
+  clippy:
+    runs-on: ubuntu-latest
+
+    name: Clippy
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: actions-rust-lang/setup-rust-toolchain@v1.9.0
+
+      - name: Install just
+        uses: taiki-e/install-action@v2.44.5
+        with:
+          tool: just
+
+      - name: Check with Clippy
+        run: just clippy
