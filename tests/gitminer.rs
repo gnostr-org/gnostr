@@ -12,6 +12,7 @@ fn setup_test_repo() -> (TempDir, Repository) {
     let repo_path = tmp_dir.path();
     let repo = Repository::init(repo_path).unwrap();
 
+	println!("repo {}", repo_path.display());
     // Configure user name and email
     let mut config = repo.config().unwrap();
     config.set_str("user.name", "Test User").unwrap();
@@ -93,12 +94,12 @@ fn test_gitminer_new_fail_no_repo() {
 fn test_mine_commit_success() {
     println!("Setting up test repository...");
     let (repo_path_str, repo) = setup_test_repo();
-    let repo_path_str = repo.path().to_str().unwrap().to_string();
+    let repo_path_str = repo.path().to_str().unwrap().to_string().replace(".git","");
     println!("Test repository path: {}", repo_path_str);
 
     let opts = Options {
-        threads: 4,
-        target: "00".to_string(),
+        threads: 8,
+        target: "0".to_string(),
         message: ["Mined commit".to_string()].to_vec(),
         repo: repo_path_str.clone(),
         timestamp: OffsetDateTime::now_utc(),
@@ -110,7 +111,7 @@ fn test_mine_commit_success() {
     println!("Mining commit...");
     let commit_hash_result = miner.mine();
 
-    //assert!(commit_hash_result.is_ok());
+    assert!(commit_hash_result.is_ok());
     //let commit_hash = commit_hash_result.unwrap();
     let commit_hash = commit_hash_result.clone().unwrap_or("".to_string());
     println!("Mined commit hash: {}", commit_hash);
