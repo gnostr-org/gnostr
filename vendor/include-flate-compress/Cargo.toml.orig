@@ -1,0 +1,18 @@
+[package]
+name = "include-flate-compress"
+version.workspace = true
+authors = ["SOFe <sofe2038@gmail.com>", "Kento Oki <hrn832@protonmail.com>"]
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Compression algorithm provider"
+
+[dependencies]
+libflate = { workspace = true, optional = true }
+zstd = { workspace = true, optional = true }
+
+[features]
+default = ["deflate", "zstd"]
+deflate = ["dep:libflate"]
+zstd = ["dep:zstd"]
