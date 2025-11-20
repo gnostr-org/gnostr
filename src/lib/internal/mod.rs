@@ -5,6 +5,8 @@ use gnostr_types::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, S
 use http::Uri;
 use tungstenite::protocol::Message;
 
+pub mod fetch_by_kind_and_commit;
+ 
 pub fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(
         SubscriptionId(format!(
