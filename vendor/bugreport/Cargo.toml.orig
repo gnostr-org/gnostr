@@ -1,0 +1,36 @@
+[package]
+name = "bugreport"
+description = "Collect system and environment information for bug reports"
+categories = ["command-line-interface"]
+homepage = "https://github.com/sharkdp/bugreport"
+repository = "https://github.com/sharkdp/bugreport"
+keywords = [
+    "bugreport",
+    "diagnostics",
+    "cross-platform",
+    "cli",
+    "terminal"
+]
+license = "MIT/Apache-2.0"
+authors = ["David Peter <mail@david-peter.de>"]
+edition = "2018"
+version = "0.5.1"
+
+[features]
+default = ["collector_operating_system", "git_hash", "format_markdown"]
+
+collector_operating_system = ["dep:sysinfo"]
+
+git_hash = ["git-version"]
+
+format_markdown = []
+format_plaintext = []
+
+[dependencies]
+sysinfo = { version = "0.33.1", optional = true }
+git-version = { version = "0.3", optional = true }
+shell-escape = "0.1"
+
+[dev-dependencies]
+pretty_assertions = "1.1.0"
+tempfile = "3.3.0"

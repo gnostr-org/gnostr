@@ -1,0 +1,164 @@
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+
+name: Build
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - 1.74.0
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        name: "cargo check"
+        with:
+          command: check
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - 1.74.0
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        name: "cargo test"
+        with:
+          command: test
+      - uses: actions-rs/cargo@v1
+        name: "cargo test (no default features)"
+        with:
+          command: test
+          args: --tests --no-default-features
+      - uses: actions-rs/cargo@v1
+        name: "cargo test (all features)"
+        with:
+          command: test
+          args: --all-features
+
+  run:
+    name: Run examples
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          # Ubuntu 22.04
+          - { os: ubuntu-22.04 , target: x86_64-unknown-linux-gnu    , use-cross: false }
+          - { os: ubuntu-22.04 , target: x86_64-unknown-linux-musl   , use-cross: true }
+          - { os: ubuntu-22.04 , target: arm-unknown-linux-gnueabihf , use-cross: true }
+          - { os: ubuntu-22.04 , target: aarch64-unknown-linux-gnu   , use-cross: true }
+          - { os: ubuntu-22.04 , target: i586-unknown-linux-gnu      , use-cross: true }
+          - { os: ubuntu-22.04 , target: i686-unknown-linux-gnu      , use-cross: true }
+          - { os: ubuntu-22.04 , target: i686-unknown-linux-musl     , use-cross: true }
+          # Ubuntu 20.04
+          - { os: ubuntu-20.04 , target: x86_64-unknown-linux-gnu    , use-cross: false }
+          - { os: ubuntu-20.04 , target: x86_64-unknown-linux-musl   , use-cross: true }
+          - { os: ubuntu-20.04 , target: arm-unknown-linux-gnueabihf , use-cross: true }
+          - { os: ubuntu-20.04 , target: aarch64-unknown-linux-gnu   , use-cross: true }
+          - { os: ubuntu-20.04 , target: i586-unknown-linux-gnu      , use-cross: true }
+          - { os: ubuntu-20.04 , target: i686-unknown-linux-gnu      , use-cross: true }
+          - { os: ubuntu-20.04 , target: i686-unknown-linux-musl     , use-cross: true }
+          # MacOS 14
+          - { os: macos-14     , target: aarch64-apple-darwin        , use-cross: false }
+          # Macos 13
+          - { os: macos-13     , target: x86_64-apple-darwin         , use-cross: false }
+          # Windows 2022
+          - { os: windows-2022 , target: i686-pc-windows-msvc        , use-cross: false }
+          - { os: windows-2022 , target: x86_64-pc-windows-gnu       , use-cross: false }
+          - { os: windows-2022 , target: x86_64-pc-windows-msvc      , use-cross: false }
+          # Windows 2019
+          - { os: windows-2019 , target: i686-pc-windows-msvc        , use-cross: false }
+          - { os: windows-2019 , target: x86_64-pc-windows-gnu       , use-cross: false }
+          - { os: windows-2019 , target: x86_64-pc-windows-msvc      , use-cross: false }
+
+    runs-on: ${{ matrix.job.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        name: "example 'readme'"
+        env:
+          SIMPLE_VAR_1: "'test value' in environment variable"
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: run
+          args: --target ${{ matrix.job.target }} --example=readme -- "'test value' on command line" "two" "three"
+      - uses: actions-rs/cargo@v1
+        name: "example 'simple'"
+        env:
+          SIMPLE_VAR_1: "'test value' in environment variable"
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: run
+          args: --target ${{ matrix.job.target }} --example=simple -- "'test value' on command line" "two" "three"
+      - uses: actions-rs/cargo@v1
+        name: "example 'custom_collector'"
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: run
+          args: --target ${{ matrix.job.target }} --example=custom_collector -- "'test value' on command line" "two" "three"
+      - name: "test-crates tests"
+        run: ./test-crates/run-all-tests.sh
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.74.0
+          override: true
+      - run: rustup component add rustfmt
+      - uses: actions-rs/cargo@v1
+        name: "cargo fmt"
+        with:
+          command: fmt
+          args: --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.74.0
+          override: true
+      - run: rustup component add clippy
+      - uses: actions-rs/cargo@v1
+        name: "cargo clippy"
+        with:
+          command: clippy
+          args: -- -D warnings
