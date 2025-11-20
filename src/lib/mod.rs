@@ -354,7 +354,7 @@ pub fn print_event(event: &Event) {
 }
 
 pub mod internal;
-pub use internal::{event_to_wire, filters_to_wire};
+pub use crate::internal::{event_to_wire, filters_to_wire, fetch_by_kind_and_commit::build_kind_and_commit_filter};
 use internal::*;
 
 

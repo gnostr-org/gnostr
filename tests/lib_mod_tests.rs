@@ -1,12 +1,13 @@
 #[cfg(test)]
 mod tests {
     use gnostr::{
-        get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
-        get_relays_offline, get_relays_online, get_relays_paid, get_relays_public,
-        get_weeble_sync, get_wobble_sync, Config,
+        build_kind_and_commit_filter, event_to_wire, filters_to_wire, get_blockhash,
+        get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip, get_relays_offline,
+        get_relays_online, get_relays_paid, get_relays_public, get_weeble_sync, get_wobble_sync,
+        Config,
     };
     use gnostr_types::{Filter, EventKind, Id, PublicKey, PublicKeyHex, Signature, Unixtime};
-    use gnostr::internal;
+
     use secp256k1::XOnlyPublicKey;
     
     use std::sync::Once;
@@ -142,7 +143,7 @@ mod tests {
         filter.add_event_kind(EventKind::TextNote);
 
         let filters = vec![filter];
-        let wire_message = gnostr::internal::filters_to_wire(filters);
+        let wire_message = filters_to_wire(filters);
 
         // This will be a partial match because of the dynamic SubscriptionId
         // We'll check for the static parts of the JSON
@@ -169,11 +170,56 @@ mod tests {
             sig: Signature::zeroes(), // Dummy signature
         };
 
-        let wire_message = gnostr::internal::event_to_wire(event);
+        let wire_message = event_to_wire(event);
 
         // Check for static parts of the JSON
         assert!(wire_message.contains(r#""EVENT",""#));
         assert!(wire_message.contains(r#""content":"Hello Nostr!""#));
         assert!(wire_message.contains(r#""kind":1"#));
+    }
+
+    #[test]
+    fn test_build_kind_and_commit_filter_success_hex_pubkey() {
+        setup();
+        let author_pubkey = "3bf0c63fcb93463407af97a5e5ee64cb5d9f0ab53a26a9645f5739c5ab8fd97b";
+        let kind = "1";
+        let result = build_kind_and_commit_filter(author_pubkey, kind);
+        assert!(result.is_ok());
+        let filter = result.unwrap();
+        assert_eq!(filter.authors, vec![PublicKeyHex::try_from_string(author_pubkey.to_string()).unwrap()]);
+        assert_eq!(filter.kinds, vec![EventKind::TextNote]);
+    }
+
+    #[test]
+    fn test_build_kind_and_commit_filter_success_bech32_pubkey() {
+        setup();
+        let author_pubkey = "npub1sg6plzptydad8y8y8w3rnyy89hds7n94d3l47h7j7n7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f";
+        let kind = "1";
+        let result = build_kind_and_commit_filter(author_pubkey, kind);
+        assert!(result.is_ok());
+        let filter = result.unwrap();
+        let expected_pk_hex = PublicKey::try_from_bech32_string(author_pubkey, true).unwrap().as_hex_string();
+        assert_eq!(filter.authors, vec![PublicKeyHex::try_from_string(expected_pk_hex).unwrap()]);
+        assert_eq!(filter.kinds, vec![EventKind::TextNote]);
+    }
+
+    #[test]
+    fn test_build_kind_and_commit_filter_invalid_pubkey() {
+        setup();
+        let author_pubkey = "invalid_pubkey";
+        let kind = "1";
+        let result = build_kind_and_commit_filter(author_pubkey, kind);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid author public key"));
+    }
+
+    #[test]
+    fn test_build_kind_and_commit_filter_invalid_kind() {
+        setup();
+        let author_pubkey = "3bf0c63fcb93463407af97a5e5ee64cb5d9f0ab53a26a9645f5739c5ab8fd97b";
+        let kind = "invalid_kind";
+        let result = build_kind_and_commit_filter(author_pubkey, kind);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid event kind"));
     }
 }
