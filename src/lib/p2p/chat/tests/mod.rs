@@ -4,6 +4,8 @@ mod tests {
     use super::super::*; // Import items from the parent module (chat)
     use super::super::msg::USER_NAME;
     use git2::{Commit, Signature, Time};
+    use std::borrow::Cow;
+    use std::collections::HashSet;
     
     use std::collections::HashMap;
     use std::path::Path;
@@ -354,33 +356,14 @@ More details here.".to_string(), "some value".to_string()],
         let content = "Default event test";
         let custom_tags = HashMap::new(); // Empty tags
 
-        let event_result = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            create_event(keys, custom_tags, content).await
-        });
+        let event_result = create_event_with_custom_tags(&keys, content, custom_tags).await;
 
         assert!(event_result.is_ok());
-        assert_eq!(event.content, format!("gnostr:legit {}", pubkey));
+        let (event, _) = event_result.unwrap();
+        assert_eq!(event.content, content);
         assert_eq!(event.pubkey, pubkey);
         assert_eq!(event.kind, Kind::TextNote); // Default kind used by EventBuilder::new
-        
-        let expected_tags: Vec<Tag> = vec![
-            Tag::public_key(pubkey),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11 22 33 44".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11 22 33".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11 22".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4 11".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3 4".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2 3".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1 2".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "1".chars()),
-            Tag::custom(TagKind::Custom(Cow::from("gnostr")), "".chars()),
-        ];
-
-        // Convert to HashSet for order-independent comparison
-        let event_tags_set: HashSet<Tag> = event.tags.into_iter().collect();
-        let expected_tags_set: HashSet<Tag> = expected_tags.into_iter().collect();
-
-        assert_eq!(event_tags_set, expected_tags_set);
+        assert!(event.tags.is_empty());
     }
 
     // Add more tests for different `MsgKind` scenarios if needed

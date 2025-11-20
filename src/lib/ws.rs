@@ -19,7 +19,7 @@
 //!     let mut clients: HashMap<u64, Responder> = HashMap::new();
 //!
 //!     loop {
-//!         match event_hub.poll_event() {
+//!         match event_hub.0.poll_event() {
 //!             Event::Connect(client_id, responder) => {
 //!                 println!("A client connected with id #{}", client_id);
 //!                 // add their Responder to our `clients` map:
@@ -218,11 +218,13 @@ pub fn launch(port: u16) -> Result<(EventHub, std::thread::JoinHandle<()>, Cance
 ///
 /// ```no_run
 /// use std::net::TcpListener;
+/// use gnostr::ws::CancellationToken;
 ///
 /// fn main() {
 ///     // Example of using a pre-bound listener instead of providing a port.
 ///     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
-///     let event_hub = gnostr::ws::launch_from_listener(listener).expect("failed to listen on port 8080");
+///     let cancellation_token = CancellationToken::new();
+///     let event_hub = gnostr::ws::launch_from_listener(listener, cancellation_token).expect("failed to listen on port 8080");
 ///     // ...
 /// }
 /// ```

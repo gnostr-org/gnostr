@@ -218,7 +218,7 @@ async fn prep_source_repo_and_events_including_proposals(
     );
     cli_tester_handle.join().unwrap()?;
 
-    Ok((r55.events, source_git_repo))
+    Ok((r55.events.clone(), source_git_repo))
 }
 
 //mod initially_runs_fetch {
