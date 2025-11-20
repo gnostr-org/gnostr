@@ -25,8 +25,8 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        #os: [windows-latest]
         rustup: [stable, nightly]
+        commands: ["tui", "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -86,8 +86,8 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ matrix.rustup }}
-          #components: rustfmt, clippy # Optional: Install additional components
-          #targets: wasm32-unknown-unknown # Optional: Install additional targets
+          # components: rustfmt, clippy
+          # targets: wasm32-unknown-unknown
 
       ##- name: Restore rustup
       ##  id: cache-rustup-restore
@@ -154,52 +154,45 @@ jobs:
       #  if: runner.os == 'windows'
 
 
-      - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      - name: brew install
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os != 'windows'
 
-      - run: |
+      - name: linuxbrew
+        run: |
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
           brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: matrix.os == 'ubuntu-latest'
 
-      - run: brew tap gnostr-org/homebrew-gnostr-org || true
+      - name: brew tap gnostr-org/homebrew-gnostr-org
+        run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: runner.os == 'macos'
 
-      - run: brew tap nostorg/nostr || true
+      - name: brew tap nostorg/nostr
+        run: brew tap nostorg/nostr || true
         if: runner.os == 'macos'
 
-      - run: brew tap randymcmillan/homebrew-randymcmillan || true
+      - name: brew tap randymcmillan/homebrew-randymcmillan
+        run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os == 'macos'
 
-      - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
+        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
         if: runner.os == 'macos'
 
-      - name: gnostr ngit compatibility
+      - name: gnostr ${{ matrix.commands }}
         shell: bash
         run: |
-          gnostr -V
-          gnostr --help
-          gnostr tui --help
-          gnostr sniper --help
-          gnostr chat --help
-          gnostr legit --help
-          gnostr legit --help
-          gnostr ngit --help
-          gnostr set-metadata --help
-          gnostr note --help
-          gnostr publish-contact-list-csv --help
-          gnostr delete-event --help
-          gnostr delete-profile --help
-          gnostr react --help
-          gnostr list-events --help
-          gnostr generate-keypair --help
+          gnostr ${{ matrix.commands }} -V
+          gnostr ${{ matrix.commands }} --version
+          gnostr ${{ matrix.commands }} -h
+          gnostr ${{ matrix.commands }} --help
 
       - name: create set-metadata kind 0
         shell: bash
         run: |
-          gnostr -V
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
@@ -283,6 +276,7 @@ jobs:
 
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        shell: bash
         run: |
           if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi
           cargo test -j8 -- --nocapture && echo "✅" || echo "❌"
