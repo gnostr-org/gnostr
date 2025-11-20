@@ -24,7 +24,7 @@ jobs:
       RUSTFLAGS: "-Awarnings"
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
         rustup: [stable]  # , nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: false
