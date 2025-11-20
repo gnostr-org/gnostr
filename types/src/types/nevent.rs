@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 /// An 'nevent': event id along with some relays in which that event may be found.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct NEvent {
     /// Event id
@@ -41,7 +41,7 @@ impl NEvent {
             tlv.push(1); // type 'relay'
             let len = relay.0.len() as u8;
             tlv.push(len); // the length of the string
-            tlv.extend(&relay.0.as_bytes()[..len as usize]);
+            tlv.extend(relay.0[..len as usize].as_bytes());
         }
 
         // Maybe Push kind

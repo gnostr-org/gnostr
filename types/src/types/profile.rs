@@ -31,7 +31,7 @@ impl Profile {
             tlv.push(1); // type 'relay'
             let len = relay.0.len() as u8;
             tlv.push(len); // the length of the string
-            tlv.extend(&relay.0.as_bytes()[..len as usize]);
+            tlv.extend(relay.0[..len as usize].as_bytes());
         }
 
         bech32::encode::<bech32::Bech32>(*crate::HRP_NPROFILE, &tlv).unwrap()
