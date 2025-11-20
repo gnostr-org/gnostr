@@ -58,6 +58,9 @@ cargo-bench:
 cargo-test:
   @make cargo-test
 
+cargo-test--ignored:
+  @make cargo-test--ignored
+
 cargo-test-workspace:
   @make cargo-test-workspace
 

@@ -132,6 +132,10 @@ cargo-test: 	### 	cargo-test
 	@. \$(HOME)/.cargo/env
 	#@cargo test
 	cargo  test -j \$(NPROC)
+cargo-test--ignored: 	### 	cargo-test--ignored
+	@. \$(HOME)/.cargo/env
+	#@cargo test
+	cargo  test -j \$(NPROC) -- --ignored --nocapture
 cargo-test-workspace: 	### 	cargo-test-workspace
 	@. \$(HOME)/.cargo/env
 	#@cargo test

@@ -89,6 +89,10 @@ cargo-test: 	### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
 	cargo  test -j $(NPROC)
+cargo-test--ignored: 	### 	cargo-test--ignored
+	@. $(HOME)/.cargo/env
+	#@cargo test
+	cargo  test -j $(NPROC) -- --ignored --nocapture
 cargo-test-workspace: 	### 	cargo-test-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
@@ -172,7 +176,7 @@ gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act
 	gh act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
 gnostr-bot-matrix: 	### 	gnostr-bot-matrix
-	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64
+	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	gh act -vv --container-architecture linux/amd64 -W .github/workflows/gnostr-bot-matrix.yml
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
