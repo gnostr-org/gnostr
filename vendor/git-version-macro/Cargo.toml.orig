@@ -1,0 +1,28 @@
+[package]
+name = "git-version-macro"
+version = "0.3.9"
+authors = [
+	"David Roundy <daveroundy@gmail.com>",
+	"Maarten de Vries <maarten@de-vri.es>",
+	"Mara Bos <m-ou.se@m-ou.se>",
+]
+edition = "2021"
+description = "Internal macro crate for git-version."
+repository = "https://github.com/fusion-engineering/rust-git-version"
+keywords = ["git"]
+license = "BSD-2-Clause"
+
+[features]
+nightly = []
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = "1.0"
+syn = "2.0"
+
+[dev-dependencies]
+assert2 = "0.3.11"
+git-version = { path = "../git-version" }
