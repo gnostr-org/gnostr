@@ -1,0 +1,43 @@
+[package]
+authors = ["Pascal Seitz <pascal.seitz@gmail.com>"]
+categories = ["text-processing"]
+description = "Utility library for checking and converting between Japanese characters - Kanji, Hiragana, Katakana - and Romaji\n"
+edition = "2021"
+homepage = "https://github.com/PSeitz/wana_kana_rust"
+keywords = ["japanese", "katakana", "hiragana", "kana", "romaji"]
+license = "MIT"
+name = "wana_kana"
+readme = "README.md"
+repository = "https://github.com/PSeitz/wana_kana_rust"
+version = "4.0.0"
+include = ["src/**/*", "LICENSE", "README.md", "tests/**/*", "benches/**/*"]
+
+[dependencies]
+fnv = "1.0.7"
+itertools = { version = "0.10.5", optional = true }
+lazy_static = "1.4.0"
+regex = { version = "1.7.1", optional = true }
+
+
+[features]
+enable_regex = ["regex"]
+tokenize = ["itertools"]
+default = ["tokenize"]
+
+[[bin]]
+name = "to_kana"
+path = "src/bin/to_kana.rs"
+
+[[bin]]
+name = "to_romaji"
+path = "src/bin/to_romaji.rs"
+
+[dev-dependencies]
+proptest = "1.5.0"
+
+# docs.rs-specific configuration
+[package.metadata.docs.rs]
+# document all features
+all-features = true
+# defines the configuration attribute `docsrs`
+rustdoc-args = ["--cfg", "docsrs"]
