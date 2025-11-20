@@ -1,0 +1,29 @@
+[package]
+edition = '2018'
+name = "futures-ticker"
+version = "0.0.3"
+authors = ["Andreas Fuchs <asf@boinkor.net>"]
+license = "MIT"
+repository = "https://github.com/antifuchs/futures-ticker"
+readme = "README.md"
+description = "An asynchronous recurring time event"
+documentation = "https://docs.rs/futures-ticker"
+
+[badges]
+travis-ci = { repository = "antifuchs/futures-ticker", branch = "master" }
+maintenance = { status = "passively-maintained" }
+
+[package.metadata.template_ci.clippy]
+allow_failure = false
+version = "stable"
+
+[dependencies]
+futures-timer = "3.0.2"
+futures = "0.3.28"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+instant = "0.1.12"
+
+[dev-dependencies]
+proptest = "1.0.0"
+smol = "1.2.5"
