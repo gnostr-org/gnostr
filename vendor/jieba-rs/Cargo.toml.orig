@@ -1,0 +1,65 @@
+[package]
+name = "jieba-rs"
+version = "0.7.4"
+authors = ["messense <messense@icloud.com>", "Paul Meng <me@paulme.ng>"]
+categories = ["text-processing"]
+description = "The Jieba Chinese Word Segmentation Implemented in Rust"
+keywords = ["nlp", "chinese", "segmenation"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/messense/jieba-rs"
+edition = '2021'
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dev-dependencies]
+codspeed-criterion-compat = { workspace = true }
+rand = { workspace = true }
+wasm-bindgen-test = { workspace = true }
+rayon = { workspace = true }
+
+[target.'cfg(unix)'.dev-dependencies]
+jemallocator = "0.5.0"
+
+[[bench]]
+name = "jieba_benchmark"
+harness = false
+required-features = ["tfidf", "textrank"]
+
+[dependencies]
+jieba-macros = { workspace = true }
+cedarwood = { workspace = true }
+derive_builder = { workspace = true, optional = true }
+fxhash = { workspace = true }
+include-flate = { workspace = true }
+lazy_static = { workspace = true }
+ordered-float = { workspace = true, optional = true }
+phf = { workspace = true }
+regex = { workspace = true }
+
+[features]
+default = ["default-dict"]
+default-dict = []
+tfidf = ["dep:ordered-float", "dep:derive_builder"]
+textrank = ["dep:ordered-float", "dep:derive_builder"]
+
+[workspace]
+members = [".", "capi", "jieba-macros", "examples/weicheng"]
+
+[workspace.dependencies]
+c_fixed_string = "0.2.0"
+cedarwood = "0.4"
+codspeed-criterion-compat = "2.4.1"
+derive_builder = "0.20.0"
+fxhash = "0.2.1"
+include-flate = "0.3.0"
+jieba-macros = { version = "0.7.1", path = "jieba-macros" }
+lazy_static = "1.0"
+ordered-float = "4.0"
+phf = "0.11"
+phf_codegen = "0.11"
+rand = "0.8"
+rayon = "1.10"
+regex = "1.0"
+wasm-bindgen-test = "0.3.0"
