@@ -133,3 +133,6 @@ docker-shared:
 gh-act-run-all:
   @make gh-act-run-all
 
+gnostr-bot-matrix:
+  @make gnostr-bot-matrix
+

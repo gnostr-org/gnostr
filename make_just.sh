@@ -213,8 +213,11 @@ docker-shared: 	### 	docker container with volumes
 
 gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act
-	gh act -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || \
-	act -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+	gh act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || \
+	act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+gnostr-bot-matrix: 	### 	gnostr-bot-matrix
+	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || \
+	gh act -vv --container-architecture linux/amd64 -W .github/workflows/gnostr-bot-matrix.yml
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
