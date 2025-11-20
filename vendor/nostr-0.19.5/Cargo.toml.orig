@@ -1,0 +1,97 @@
+[package]
+name = "nostr"
+version = "0.19.5"
+edition = "2021"
+description = "Rust implementation of the Nostr protocol."
+authors = ["Yuki Kishimoto <yukikishimoto@proton.me>"]
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = "README.md"
+rust-version.workspace = true
+keywords = ["nostr", "protocol", "sdk"]
+
+[features]
+default = ["all-nips"]
+blocking = ["reqwest?/blocking"]
+vanity = ["nip19"]
+all-nips = ["nip03", "nip04", "nip05", "nip06", "nip11", "nip19", "nip46"]
+nip03 = ["dep:nostr-ots"]
+nip04 = ["dep:aes", "dep:base64", "dep:cbc"]
+nip05 = ["dep:reqwest"]
+nip06 = ["dep:bip39", "dep:bitcoin"]
+nip11 = ["dep:reqwest"]
+nip19 = ["dep:bech32"]
+nip46 = ["nip04"]
+
+[dependencies]
+aes = { version = "0.8", optional = true }
+base64 = { version = "0.21", optional = true }
+bech32 = { version = "0.9", optional = true }
+bip39 = { version = "2.0", optional = true }
+bitcoin = { version = "0.29", optional = true }
+bitcoin_hashes = { version = "0.11", features = ["serde"] }
+cbc = { version = "0.1", features = ["alloc"], optional = true }
+log = "0.4"
+nostr-ots = { version = "0.2", optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls-webpki-roots", "socks"], optional = true }
+secp256k1 = { version = "0.24", features = ["global-context", "rand-std", "serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+thiserror = "1.0"
+url = { version = "2", features = ["serde"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
+
+[dev-dependencies]
+csv = "1.1.5"
+env_logger = "0.10.0"
+num_cpus = "1.15.0"
+tungstenite = { version = "0.18", features = ["rustls-tls-webpki-roots"] }
+
+[[example]]
+name = "keys"
+required-features = ["nip19"]
+
+[[example]]
+name = "metadata"
+
+[[example]]
+name = "tweet"
+
+[[example]]
+name = "nip04"
+required-features = ["nip04"]
+
+[[example]]
+name = "nip05"
+required-features = ["nip05", "blocking"]
+
+[[example]]
+name = "nip06"
+required-features = ["nip06"]
+
+[[example]]
+name = "nip09"
+required-features = ["nip19"]
+
+[[example]]
+name = "nip11"
+required-features = ["nip11", "blocking"]
+
+[[example]]
+name = "nip13"
+
+[[example]]
+name = "nip19"
+required-features = ["nip19"]
+
+[[example]]
+name = "nip65"
+required-features = ["nip19"]
+
+[[example]]
+name = "vanity"
+required-features = ["vanity"]
