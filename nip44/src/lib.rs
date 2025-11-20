@@ -3,11 +3,11 @@ use chacha20::cipher::{KeyIvInit, StreamCipher};
 use chacha20::ChaCha20;
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
-use rand_core::{OsRng, RngCore};
+use rand_core::{OsRng, TryRngCore};
 use secp256k1::ecdh::shared_secret_point;
 use secp256k1::{Parity, PublicKey, SecretKey, XOnlyPublicKey};
 use sha2::Sha256;
-use std::convert::TryInto;
+
 mod error;
 pub use error::Error;
 
@@ -88,14 +88,19 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     if len < 1 {
         return Err(Error::MessageIsEmpty);
     }
-    if len > 65536 - 128 {
+    if len > 4_294_967_296 - 128 {
         return Err(Error::MessageIsTooLong);
     }
 
     let mut padded: Vec<u8> = Vec::new();
-    padded.extend_from_slice(&(len as u16).to_be_bytes());
+    if len < 65536 {
+        padded.extend_from_slice(&(len as u16).to_be_bytes());
+    } else {
+        padded.extend_from_slice(&(0_u16).to_be_bytes());
+        padded.extend_from_slice(&(len as u32).to_be_bytes());
+    }
     padded.extend_from_slice(unpadded.as_bytes());
-    padded.extend(std::iter::repeat(0).take(calc_padding(len) - len));
+    padded.extend(std::iter::repeat_n(0, calc_padding(len) - len));
     Ok(padded)
 }
 
@@ -115,7 +120,7 @@ fn encrypt_inner(
         Some(nonce) => nonce.to_owned(),
         None => {
             let mut nonce: [u8; 32] = [0; 32];
-            OsRng.fill_bytes(&mut nonce);
+            OsRng.try_fill_bytes(&mut nonce)?;
             nonce
         }
     };
@@ -162,18 +167,24 @@ pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<S
     }
     let mut cipher = ChaCha20::new(&keys.encryption().into(), &keys.nonce().into());
     cipher.apply_keystream(&mut buffer);
-    let unpadded_len = u16::from_be_bytes(buffer[0..2].try_into().unwrap()) as usize;
-    if buffer.len() < 2 + unpadded_len {
+
+    let mut lensize = 2;
+    let mut unpadded_len = u16::from_be_bytes(buffer[0..2].try_into().unwrap()) as usize;
+    if unpadded_len == 0 {
+        lensize = 6;
+        unpadded_len = u32::from_be_bytes(buffer[2..6].try_into().unwrap()) as usize;
+    }
+    if buffer.len() < lensize + unpadded_len {
         return Err(Error::InvalidPadding);
     }
-    let unpadded = &buffer[2..2 + unpadded_len];
+    let unpadded = &buffer[lensize..lensize + unpadded_len];
     if unpadded.is_empty() {
         return Err(Error::MessageIsEmpty);
     }
     if unpadded.len() != unpadded_len {
         return Err(Error::InvalidPadding);
     }
-    if buffer.len() != 2 + calc_padding(unpadded_len) {
+    if buffer.len() != lensize + calc_padding(unpadded_len) {
         return Err(Error::InvalidPadding);
     }
     Ok(String::from_utf8(unpadded.to_vec())?)

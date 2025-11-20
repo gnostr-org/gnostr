@@ -1,4 +1,4 @@
-use super::PrivateKey;
+use super::{base64flex, PrivateKey};
 use crate::{Error, PublicKey};
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use base64::Engine;
@@ -7,7 +7,7 @@ use sha2::{Digest, Sha256};
 use zeroize::Zeroize;
 
 /// Content Encryption Algorithm
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ContentEncryptionAlgorithm {
     /// NIP-04 (insecure)
     Nip04,
@@ -52,15 +52,27 @@ impl PrivateKey {
         }
     }
 
-    /// Decrypt (detects encryption version)
-    pub fn decrypt(&self, other: &PublicKey, ciphertext: &str) -> Result<String, Error> {
+    /// Detect encryption algorithm of ciphertext
+    pub fn detect_encryption_algorithm(ciphertext: &str) -> ContentEncryptionAlgorithm {
         let cbytes = ciphertext.as_bytes();
+
         if cbytes.len() >= 28
             && cbytes[ciphertext.len() - 28] == b'?'
             && cbytes[ciphertext.len() - 27] == b'i'
             && cbytes[ciphertext.len() - 26] == b'v'
             && cbytes[ciphertext.len() - 25] == b'='
         {
+            ContentEncryptionAlgorithm::Nip04
+        } else {
+            // We presume Nip44v1Unpadded and Nip44v1Padded are so rare and unused that
+            // we won't find them here
+            ContentEncryptionAlgorithm::Nip44v2
+        }
+    }
+
+    /// Decrypt (detects encryption version)
+    pub fn decrypt(&self, other: &PublicKey, ciphertext: &str) -> Result<String, Error> {
+        if Self::detect_encryption_algorithm(ciphertext) == ContentEncryptionAlgorithm::Nip04 {
             self.decrypt_nip04(other, ciphertext)
                 .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
         } else {
@@ -80,7 +92,7 @@ impl PrivateKey {
         };
 
         let algo = {
-            let bytes = base64::engine::general_purpose::STANDARD
+            let bytes = base64flex()
                 .decode(ciphertext)
                 .map_err(Error::BadEncryptedMessageBase64)?;
             if bytes.is_empty() {
@@ -167,8 +179,8 @@ impl PrivateKey {
 
         Ok(format!(
             "{}?iv={}",
-            base64::engine::general_purpose::STANDARD.encode(ciphertext),
-            base64::engine::general_purpose::STANDARD.encode(iv)
+            base64flex().encode(ciphertext),
+            base64flex().encode(iv)
         ))
     }
 
@@ -178,10 +190,10 @@ impl PrivateKey {
         if parts.len() != 2 {
             return Err(Error::BadEncryptedMessage);
         }
-        let ciphertext: Vec<u8> = base64::engine::general_purpose::STANDARD
+        let ciphertext: Vec<u8> = base64flex()
             .decode(parts[0])
             .map_err(Error::BadEncryptedMessageBase64)?;
-        let iv_vec: Vec<u8> = base64::engine::general_purpose::STANDARD
+        let iv_vec: Vec<u8> = base64flex()
             .decode(parts[1])
             .map_err(Error::BadEncryptedMessageBase64)?;
         let iv: [u8; 16] = iv_vec.try_into().unwrap();
@@ -221,18 +233,14 @@ impl PrivateKey {
             let mut cipher = chacha20::XChaCha20::new(&shared_secret.into(), output[1..=24].into());
             shared_secret.zeroize();
             cipher.apply_keystream(&mut output[25..]);
-            base64::engine::general_purpose::STANDARD.encode(output)
+            base64flex().encode(output)
         };
 
         if pad {
             let end_plaintext = 4 + plaintext.len();
 
             // forced padding, up to a minimum of 32 bytes total so far (4 used for the u32 length)
-            let forced_padding = if end_plaintext < 32 {
-                32 - end_plaintext
-            } else {
-                0
-            };
+            let forced_padding = 32_usize.saturating_sub(end_plaintext);
             let end_forced_padding = end_plaintext + forced_padding;
 
             // random length padding, up to 50% more
@@ -264,7 +272,7 @@ impl PrivateKey {
     ) -> Result<Vec<u8>, Error> {
         use chacha20::cipher::StreamCipher;
         let mut shared_secret = self.shared_secret_nip44_v1(other);
-        let bytes = base64::engine::general_purpose::STANDARD
+        let bytes = base64flex()
             .decode(ciphertext)
             .map_err(Error::BadEncryptedMessageBase64)?;
         if bytes[0] != 1 {
@@ -511,7 +519,7 @@ mod test {
                 (&vector.plaintext, vector.ciphertext, vector.nonce)
             {
                 let nonce: [u8; 24] = hex::decode(noncestr).unwrap().try_into().unwrap();
-                let ciphertext2 = sec1.nip44_v1_encrypt(&pub2, &plaintext, false, Some(nonce));
+                let ciphertext2 = sec1.nip44_v1_encrypt(&pub2, plaintext, false, Some(nonce));
                 assert_eq!(ciphertext, ciphertext2);
                 println!("Test vector {} encryption matches", num);
             }

@@ -7,6 +7,10 @@ pub enum Error {
     #[error("Assertion failed: {0}")]
     AssertionFailed(String),
 
+    /// Bad NIP-46 Bunker URL
+    #[error("Bad NIP-46 Bunker URL")]
+    BadBunkerUrl,
+
     /// Bad Encrypted Message
     #[error("Bad Encrypted Message")]
     BadEncryptedMessage,
@@ -34,6 +38,11 @@ pub enum Error {
     /// Crypto error
     #[error("Crypto Error: {0}")]
     Crypto(#[from] nip44::Error),
+
+    /// Disconnected
+    #[cfg(feature = "client")]
+    #[error("Disconnected")]
+    Disconnected,
 
     /// Encryption/Decryption Error
     #[error("Private Key Encryption/Decryption Error")]
@@ -67,6 +76,11 @@ pub enum Error {
     #[error("Hex Decode Error: {0}")]
     HexDecode(#[from] hex::FromHexError),
 
+    /// HTTP error
+    #[cfg(feature = "client")]
+    #[error("HTTP: {0}")]
+    Http(#[from] http::Error),
+
     /// Invalid encrypted private key
     #[error("Invalid Encrypted Private Key")]
     InvalidEncryptedPrivateKey,
@@ -74,6 +88,10 @@ pub enum Error {
     /// Invalid encrypted event
     #[error("Invalid Encrypted Event")]
     InvalidEncryptedEvent,
+
+    /// Invalid HyperLogLog data
+    #[error("Invalid HLL data")]
+    InvalidHll,
 
     /// Invalid event Id
     #[error("Invalid event Id")]
@@ -119,9 +137,18 @@ pub enum Error {
     #[error("Invalid Recipient")]
     InvalidRecipient,
 
+    /// Invalid state
+    #[error("Invalid state: \"{0}\"")]
+    InvalidState(String),
+
     /// Invalid URL
     #[error("Invalid URL: \"{0}\"")]
     InvalidUrl(#[from] url::ParseError),
+
+    /// Invalid URI
+    #[cfg(feature = "client")]
+    #[error("Invalid URI: {0}")]
+    InvalidUri(#[from] http::uri::InvalidUri),
 
     /// Invalid URL TLV encoding
     #[error("Invalid URL TLV encoding")]
@@ -138,6 +165,21 @@ pub enum Error {
     /// Missing URL Authority
     #[error("Missing URL Authority")]
     InvalidUrlMissingAuthority,
+
+    /// NIP-46 error
+    #[cfg(feature = "nip46")]
+    #[error("NIP-46 error: {0}")]
+    Nip46Error(String),
+
+    /// NIP-46 failed to post
+    #[cfg(feature = "nip46")]
+    #[error("NIP-46 failed to post: {0}")]
+    Nip46FailedToPost(String),
+
+    /// NIP-46 failed to post
+    #[cfg(feature = "nip46")]
+    #[error("NIP-46 no response")]
+    Nip46NoResponse,
 
     /// Addr to a non-replaceable event kind
     #[error("Event kind is not replaceable")]
@@ -158,6 +200,31 @@ pub enum Error {
     /// Parse integer error
     #[error("Parse integer error")]
     ParseInt(#[from] std::num::ParseIntError),
+
+    /// Relay did not AUTH
+    #[error("Relay (broken) says auth-required before challenging with AUTH")]
+    RelayDidNotAuth,
+
+    /// Relay forgot that we successfully AUTHed
+    #[error("Relay (broken) forgot that we already successfully AUTHed")]
+    RelayForgotAuth,
+
+    /// Relay rejected our post
+    #[error("Relay rejected our post")]
+    RelayRejectedPost,
+
+    /// Relay rejected our AUTH
+    #[error("Relay rejected our AUTH")]
+    RelayRejectedAuth,
+
+    /// Relay requires AUTH but we aren't supplying it
+    #[error("Relay requires AUTH")]
+    RelayRequiresAuth,
+
+    /// HTTP request eror
+    #[cfg(feature = "client")]
+    #[error("HTTP error: {0}")]
+    Reqwest(#[from] reqwest::Error),
 
     /// Scrypt error
     #[error("Scrypt invalid output length")]
@@ -184,6 +251,16 @@ pub enum Error {
     #[error("Tag mismatch")]
     TagMismatch,
 
+    /// Timeout
+    #[cfg(feature = "client")]
+    #[error("Timeout")]
+    TimedOut,
+
+    /// Timeout
+    #[cfg(feature = "client")]
+    #[error("Timeout: {0}")]
+    Timeout(#[from] tokio::time::error::Elapsed),
+
     /// Unknown event kind
     #[error("Unknown event kind = {0}")]
     UnknownEventKind(u32),
@@ -200,6 +277,10 @@ pub enum Error {
     #[error("Decryption error: {0}")]
     Unpad(#[from] aes::cipher::block_padding::UnpadError),
 
+    /// Unsupported Algorithm
+    #[error("Unsupported algorithm")]
+    UnsupportedAlgorithm,
+
     /// Url Error
     #[error("Not a valid nostr relay url: {0}")]
     Url(String),
@@ -207,6 +288,16 @@ pub enum Error {
     /// UTF-8 error
     #[error("UTF-8 Error: {0}")]
     Utf8Error(#[from] std::str::Utf8Error),
+
+    /// Websocket error
+    #[cfg(feature = "client")]
+    #[error("Websocket error: {0}")]
+    Websocket(#[from] tungstenite::Error),
+
+    /// Websocket Connection Failed
+    #[cfg(feature = "client")]
+    #[error("Websocket connection failed: {0}")]
+    WebsocketConnectionFailed(http::StatusCode),
 
     /// Wrong event kind
     #[error("Wrong event kind")]
