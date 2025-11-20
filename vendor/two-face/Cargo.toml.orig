@@ -1,0 +1,78 @@
+[workspace]
+members = [
+    ".",
+    "fuzz",
+    "xtask",
+]
+
+[workspace.dependencies]
+cargo-lock = "10.1.0"
+object = { version = "0.36.4", default-features = false, features = ["read"] }
+once_cell = "1.20.2"
+serde = { version = "1.0.215", features = ["derive"] }
+strum = { version = "0.26.3", features = ["derive"] }
+syntect = { version = "5.2.0", default-features = false }
+toml = "0.8.19"
+twox-hash = { version = "2.1.0", default-features = false, features = ["std", "xxhash64"] }
+
+[package]
+name = "two-face"
+version = "0.4.3"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.65.0"
+include = [
+    "src",
+    "generated/acknowledgements_full.bin",
+    "generated/syntaxes-{fancy,fancy-no,onig,onig-no}-newlines.bin",
+    "generated/themes.bin",
+    "Cargo.lock",
+    "CHANGELOG.md",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+]
+keywords = ["syntect", "extra", "syntaxes", "themes"]
+categories = ["parser-implementations", "text-processing"]
+description = "Extra syntax and theme definitions for syntect"
+repository = "https://github.com/CosmicHorrorDev/two-face"
+homepage = "https://github.com/CosmicHorrorDev/two-face"
+
+[package.metadata.docs.rs]
+features = ["syntect-default-onig"]
+
+[features]
+# `syntect` can't compile without a regex implementation, so we match its
+# default of onig
+default = ["syntect-onig"]
+
+# A minimal set of `syntect` features with the onig regex implementation
+syntect-onig = ["syntect/regex-onig"]
+# A minimal set of `syntect` features with the fancy regex implementation
+syntect-fancy = ["syntect/regex-fancy"]
+
+# Toggles on `syntect`'s `default-onig` feature
+syntect-default-onig = ["syntect-onig", "syntect/default-onig"]
+# Toggles on `syntect`'s `default-fancy` feature
+syntect-default-fancy = ["syntect-fancy", "syntect/default-fancy"]
+
+[dependencies]
+once_cell.workspace = true
+serde.workspace = true
+
+[dependencies.syntect]
+workspace = true
+features = ["dump-load", "parsing"]
+
+[dev-dependencies]
+cargo-lock.workspace = true
+insta = "1.41.1"
+object.workspace = true
+similar = "2.6.0"
+strum.workspace = true
+syntect = { workspace = true, features = ["html"] }
+toml.workspace = true
+twox-hash.workspace = true
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ["cfg(fuzzing)"]
