@@ -1,0 +1,20 @@
+# Version 0.2.3 - 2023-08-09
+- [change][patch] Remove use of `IsTerminal` to support rust version 1.66 and up.
+- [change][patch] Declare minimum rust version in `Cargo.toml`.
+
+# Version 0.2.2 - 2023-08-08
+- [fix][minor] Fix printing of newline in `Terminal::read_input_line()`.
+
+# Version 0.2.1 - 2023-08-04
+- [change][patch] Fix category slug in `Cargo.toml`.
+
+# Version 0.2.0 - 2023-08-04
+- [rename][major] Rename `TerminalPrompter` to `Terminal`.
+- [rename][major] Rename `read_line()` to `read_input_line()`.
+- [add][minor] Implement `BufRead` for `Terminal`.
+- [change][minor] Try `sterr`, `stdin`, `stdout` and `/dev/tty` in that order on Unix.
+- [change][minor] Do not cache the terminal mode, retrieve it every time when needed.
+- [add][minor] Add documentation.
+
+# Version 0.1.0 - 2023-08-03
+- [add][minor] Initial release.

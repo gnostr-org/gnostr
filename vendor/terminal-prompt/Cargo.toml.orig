@@ -1,0 +1,22 @@
+[package]
+name = "terminal-prompt"
+version = "0.2.3"
+description = "Tiny library for prompting sensitive or non-sensitive data on the terminal"
+license = "BSD-2-Clause"
+
+authors = ["Maarten de Vries <maarten@de-vri.es>"]
+repository = "https://github.com/de-vri-es/terminal-prompt-rs"
+documentation = "https://docs.rs/terminal-prompt"
+
+keywords = ["terminal", "console", "prompt", "input", "tty"]
+categories = ["command-line-interface", "os"]
+
+publish = ["crates-io"]
+edition = "2021"
+ rust-version = "1.66"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.147"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3.9", features = ["consoleapi"] }
