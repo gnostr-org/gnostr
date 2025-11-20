@@ -1,0 +1,21 @@
+[package]
+name = "random-number-macro-impl"
+version = "0.1.8"
+authors = ["Magic Len <len@magiclen.org>"]
+edition = "2021"
+rust-version = "1.61"
+repository = "https://github.com/magiclen/random-number"
+homepage = "https://magiclen.org/random-number"
+keywords = ["random", "integer", "number", "inclusive", "fill"]
+categories = ["rust-patterns"]
+description = "Generate random numbers quickly."
+license = "MIT"
+include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro-hack = "0.5"
+syn = { version = "2", features = ["full"] }
+quote = "1"
