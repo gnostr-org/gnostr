@@ -1,0 +1,66 @@
+[package]
+authors = ["Walther Chen <walther.chen@gmail.com>", "Daniel Brotsky <dev@brotsky.com>"]
+description = "Cross-platform library for managing passwords/credentials"
+homepage = "https://github.com/hwchen/keyring-rs"
+keywords = ["password", "credential", "keychain", "keyring", "cross-platform"]
+license = "MIT OR Apache-2.0"
+name = "keyring"
+repository = "https://github.com/hwchen/keyring-rs.git"
+version = "2.3.3"
+rust-version = "1.68"
+edition = "2021"
+exclude = [".github/"]
+readme = "README.md"
+
+[features]
+default = ["platform-all"]
+platform-all = ["platform-linux", "platform-freebsd", "platform-openbsd", "platform-macos", "platform-ios", "platform-windows"]
+platform-linux = ["linux-secret-service", "linux-keyutils"]
+platform-freebsd = ["linux-secret-service"]
+platform-openbsd = ["linux-secret-service"]
+platform-macos = ["security-framework"]
+platform-ios = ["security-framework"]
+platform-windows = ["windows-sys", "byteorder"]
+linux-secret-service = ["linux-secret-service-rt-async-io-crypto-rust"]
+linux-secret-service-rt-async-io-crypto-rust = ["secret-service/rt-async-io-crypto-rust"]
+linux-secret-service-rt-tokio-crypto-rust = ["secret-service/rt-tokio-crypto-rust"]
+linux-secret-service-rt-async-io-crypto-openssl = ["secret-service/rt-async-io-crypto-openssl"]
+linux-secret-service-rt-tokio-crypto-openssl = ["secret-service/rt-tokio-crypto-openssl"]
+linux-no-secret-service = ["linux-default-keyutils"]
+linux-default-keyutils = ["linux-keyutils"]
+windows-test-threading = []
+
+[dependencies]
+lazy_static = "1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+security-framework = { version = "2.6", optional = true }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+security-framework = { version = "2.6", optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+secret-service = { version = "3", optional = true }
+linux-keyutils = { version = "0.2", features = ["std"], optional = true }
+
+[target.'cfg(target_os = "freebsd")'.dependencies]
+secret-service = { version = "3", optional = true }
+
+[target.'cfg(target_os = "openbsd")'.dependencies]
+secret-service = { version = "3", optional = true }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+byteorder = { version = "1.2", optional = true }
+windows-sys = { version = "0.52", features = ["Win32_Foundation", "Win32_Security_Credentials"], optional = true }
+
+[[example]]
+name = "iostest"
+path = "examples/ios.rs"
+crate-type = ["staticlib"]
+
+[dev-dependencies]
+clap = { version = "4", features = ["derive", "wrap_help"] }
+rpassword = "7"
+rand = "0.8"
+doc-comment = "0.3"
+whoami = "1"
