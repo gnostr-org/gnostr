@@ -1,0 +1,29 @@
+[package]
+name = "lnurl-pay"
+version = "0.5.0"
+edition = "2021"
+description = "LNURL Pay"
+authors = ["Yuki Kishimoto <yukikishimoto@protonmail.com>"]
+homepage = "https://github.com/shadowylab/lnurl-pay"
+repository = "https://github.com/shadowylab/lnurl-pay.git"
+license = "MIT"
+readme = "README.md"
+rust-version = "1.64.0"
+
+[features]
+default = ["std"]
+std = ["bech32/std", "serde/std", "serde_json/std"]
+api = ["std", "dep:reqwest"]
+
+[dependencies]
+bech32 = { version = "0.10.0-beta", default-features = false, features = ["alloc"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "socks"], optional = true }
+serde = { version = "1.0", default-features = false, features = ["alloc", "derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+
+[[example]]
+name = "get-invoice"
+required-features = ["api"]
