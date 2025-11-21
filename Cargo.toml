@@ -62,6 +62,8 @@ actix-cors = "0.7.0"
 actix-http = "3.9.0"
 actix-web = "4.9.0"
 actix-web-actors = "4.3.1"
+
+anstream = "0.6.4"
 #tracing-subscriber = "0.3.18"
 
 anyhow = "1.0.75"
@@ -87,7 +89,6 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "serd
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 clean-path = "0.2.1"
 clipboard = "0.5.0"
-color-eyre = "0.6.2"
 
 colored = "2.0.0"
 colorful = "0.2"
@@ -127,8 +128,8 @@ gnostr-legit = { path = "./legit", version = "1911.921558.782146" }
 gnostr-query = { version = "1912.921276.230652", path = "query" }
 gnostr-relay = { version = "1908.924232.84720", path = "relay", features = ["search"] }
 gnostr-types = { version = "0.7.6", path = "types" }
-gnostr_qr = { version = "0.0.7", path = "qr" }
 hex = "0.4.3"
+home = "0.5.5"
 
 #hex = "0.4"
 hostname = "0.3.1"
@@ -138,7 +139,6 @@ indicatif = "0.17.7"
 itertools = "0.13"
 k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 #indicatif = "0.17.7"
-keyring = "2.0.5"
 lazy_static = "1.4"
 libp2p = { version = "0.54.1", features = [
   "async-std",
@@ -160,15 +160,6 @@ libp2p = { version = "0.54.1", features = [
   "yamux"
 ] }
 
-anstream = "0.6.4"
-configparser = { version = "3.0.2", features = ["async-std", "indexmap"] }
-home = "0.5.5"
-octocrab = "0.32.0"
-openssl = { version = "0.10", features = ["vendored"] }
-regex = "1.10.2"
-ssh-key = { version = "0.6.2", features = ["ed25519"] }
-terminal_size = "0.3.0"
-
 log = "0.4.17"
 metrics = "0.23.0"
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
@@ -180,7 +171,6 @@ nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
 ## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
-nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
 
 nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
 
@@ -189,6 +179,7 @@ nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
+nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
 notify = "6.1.1"
 
 #notify = "6.1"
@@ -198,7 +189,7 @@ num_cpus = "1.16.0"
 
 #num_cpus = "1.16.0"
 once_cell = "1.21.3"
-ordered-float = "3.4.0"
+openssl = { version = "0.10", features = ["vendored"] }
 pad = "0.1.6"
 parking_lot = "0.12.3"
 #once_cell = "1"
@@ -212,6 +203,7 @@ ratatui = { version = "0.28", default-features = false, features = [
     'serde',
 ] }
 rayon-core = "1.12"
+regex = "1.10.2"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 ron = "0.8"
 rpassword = "7.2"
@@ -221,28 +213,26 @@ rust-crypto = "0.2.36"
 scopeguard = "1.2"
 scopetime = { path = "./scopetime", version = "0.1" }
 scrypt = "0.11.0"
-secp256k1 = { version = "0.31.0", features = ["hashes"] }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
 serde_yaml = "0.9.27"
-serial_test = "2.0.0"
 sha2 = "0.10.8"
 sha256 = "1.5.0"
 shellexpand = "3.1"
 shellwords = "1.1.0"
 simple_logger = "4.1"
 simplelog = { version = "0.12", default-features = false }
+ssh-key = { version = "0.6.2", features = ["ed25519"] }
 struct-patch = "0.4"
-structopt = "0.3.26"
 syntect = { version = "5.2", default-features = false, features = [
     "parsing",
     "default-syntaxes",
     "default-themes",
     "html",
 ] }
-temp-env = "0.3.6"
 tempfile = "3.5.0"
 tera = "1.18.1"
+terminal_size = "0.3.0"
 textwrap = "0.16.0"
 #serde = { version = "1.0.209", features = ["derive"] }
 #serde_json = "1.0.127"
@@ -251,6 +241,7 @@ thiserror = "1.0.63"
 time = { version = "0.3.41", features = ["macros", "formatting"] }
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] }
+tokio-util = "0.7.17"
 
 toml = "0.7.3"
 tracing = "0.1.40"
@@ -270,16 +261,13 @@ ureq = { version = "2", features = ["json", "charset"] }
 url = "2.5.0"
 urlencoding = "2.1.3"
 which = "6.0"
-yansi = "1.0.1"
 zeroize = "1.6.0"
-tokio-util = "0.7.17"
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
 
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-cross = { version = "0.2.5", features = ["dev"] }
 
 [dev-dependencies]
 actix-rt = "2.10.0"
@@ -287,6 +275,7 @@ actix-test = "0.1.5"
 anyhow = "1.0.86"
 assert_cmd = "2.0.17"
 env_logger = "0.11"
+expectrl = "0.8.0"
 futures-util = "0.3.30"
 gag = "1.0.0"
 git2 = "0.18.3"
@@ -294,7 +283,6 @@ mockall = "0.11.4"
 predicates = "3.1.3"
 pretty_assertions = "1.4"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
-expectrl = "0.8.0"
 serial_test = "2.0.0"
 structopt = "0.3.26"
 temp-env = "0.3.6"
