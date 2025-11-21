@@ -2,6 +2,9 @@ use clap::Parser;
 use env_logger::Env;
 use anyhow::Result;
 use std::process::Command;
+use clap::ArgAction;
+use which::which;
+use std::io::Error;
 
 #[cfg(not(test))]
 use crate::ssh::start;
@@ -26,8 +29,11 @@ pub struct GitSubCommand {
     #[arg(long)]
     pub gitweb: bool,
     /// Creates a git tag with an optional suffix.
-    #[arg(long)]
+    #[arg(long, action = ArgAction::Set, num_args = 0..=1, default_value_if("tag", clap::builder::ArgPredicate::IsPresent, Some("")))]
     pub tag: Option<String>,
+    /// Displays local git information (version, path).
+    #[arg(long)]
+    pub info: bool,
 }
 
 pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::error::Error>> {
@@ -43,16 +49,40 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         return res.map_err(|e| e.into());
     }
 
-    if let Some(suffix) = &sub_command_args.tag {
-        run_git_tag(suffix.clone()).map_err(Into::<Box<dyn std::error::Error>>::into)?;
+    if sub_command_args.tag.is_some() {
+        let suffix = sub_command_args.tag.as_ref().map_or("".to_string(), |s| s.clone());
+        run_git_tag(suffix).map_err(Into::<Box<dyn std::error::Error>>::into)?;
         return Ok(());
     }
 
+    if sub_command_args.info {
+        println!("{}", get_git_info());
+        return Ok(());
+    }
 
+    let git_info = get_git_info();
     println!("The 'git' subcommand requires a flag to specify functionality.");
     println!("For example, use '--gitweb' to start the SSH server.");
     println!("Or, use '--tag [SUFFIX]' to create a git tag.");
+    println!("Or, use '--info' to display local git information.");
+    println!("{}", git_info);
     Ok(())
+}
+
+fn get_git_info() -> String {
+    let git_path = match which("git") {
+        Ok(path) => format!("Git path: {}", path.display()),
+        Err(_) => "Git not found in PATH.".to_string(),
+    };
+
+    let git_version = match Command::new("git").arg("--version").output() {
+        Ok(output) if output.status.success() => {
+            String::from_utf8_lossy(&output.stdout).trim().to_string()
+        },
+        _ => "Git version: Not available.".to_string(),
+    };
+
+    format!("\nLocal Git Info:\n{}\n{}", git_path, git_version)
 }
 
 fn run_git_tag(suffix: String) -> Result<()> {
