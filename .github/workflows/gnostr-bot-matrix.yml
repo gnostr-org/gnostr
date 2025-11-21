@@ -133,7 +133,7 @@ jobs:
           rustup default ${{ matrix.rustup }}
 
       - run: |
-          cargo report future-incompatibilities --id 1
+          cargo report future-incompatibilities --id 1 || true
 
       - run: |
           cargo search gnostr --limit 100
