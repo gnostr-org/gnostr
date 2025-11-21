@@ -1,5 +1,7 @@
 use clap::Parser;
 use env_logger::Env;
+use anyhow::Result;
+use std::process::Command;
 
 #[cfg(not(test))]
 use crate::ssh::start;
@@ -23,7 +25,9 @@ pub struct GitSubCommand {
     /// Starts the gnostr git SSH server (gitweb).
     #[arg(long)]
     pub gitweb: bool,
-    // Future git-related flags can be added here.
+    /// Creates a git tag with an optional suffix.
+    #[arg(long)]
+    pub tag: Option<String>,
 }
 
 pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::error::Error>> {
@@ -31,7 +35,6 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         env_logger::init_from_env(Env::default().default_filter_or("info"));
         let res = start().await;
         if let Err(e) = &res {
-            // Use reference to res to avoid moving it
             println!("{}", e);
             println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
             println!("check the port in your server.toml is available!\n");
@@ -40,10 +43,50 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         return res.map_err(|e| e.into());
     }
 
-    // If no flags are provided, or other flags are handled, you can add logic here.
-    // For now, it does nothing if --gitweb is not specified.
+    if let Some(suffix) = &sub_command_args.tag {
+        run_git_tag(suffix.clone()).map_err(Into::<Box<dyn std::error::Error>>::into)?;
+        return Ok(());
+    }
+
+
     println!("The 'git' subcommand requires a flag to specify functionality.");
     println!("For example, use '--gitweb' to start the SSH server.");
+    println!("Or, use '--tag [SUFFIX]' to create a git tag.");
+    Ok(())
+}
+
+fn run_git_tag(suffix: String) -> Result<()> {
+    let weeble_output = Command::new("gnostr-weeble").output()?.stdout;
+    let weeble_cmd_output = String::from_utf8_lossy(&weeble_output).trim().to_string();
+
+    let blockheight_output = Command::new("gnostr-blockheight").output()?.stdout;
+    let blockheight_cmd_output = String::from_utf8_lossy(&blockheight_output).trim().to_string();
+
+    let wobble_output = Command::new("gnostr-wobble").output()?.stdout;
+    let wobble_cmd_output = String::from_utf8_lossy(&wobble_output).trim().to_string();
+
+    let weeble = weeble_cmd_output.trim().to_string();
+    let blockheight = blockheight_cmd_output.trim().to_string();
+    let wobble = wobble_cmd_output.trim().to_string();
+
+    let mut tag_name = format!("{}.{}.{}",
+        if weeble.is_empty() { "0" } else { &weeble },
+        if blockheight.is_empty() { "0" } else { &blockheight },
+        if wobble.is_empty() { "0" } else { &wobble },
+    );
+
+    if !suffix.is_empty() {
+        tag_name = format!("{}-{}", tag_name, suffix);
+    }
+
+    let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).output()?;
+
+    if !output.status.success() {
+        eprintln!("Error creating tag: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!("Failed to create tag");
+    }
+    print!("{}", tag_name);
+
     Ok(())
 }
 
