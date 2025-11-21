@@ -107,6 +107,13 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
+
+
+      - run: |
+          rustup default ${{ matrix.rustup }}
+
+
+
       - name: Restore target
         if: ${{ !env.ACT }}
         id: cache-target-restore
@@ -128,9 +135,6 @@ jobs:
 
       - run: |
           make || true
-
-      - run: |
-          rustup default ${{ matrix.rustup }}
 
       - run: |
           cargo search gnostr --limit 100
