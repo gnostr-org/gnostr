@@ -29,7 +29,7 @@ pub struct GitSubCommand {
     #[arg(long)]
     pub gitweb: bool,
     /// Creates a git tag with an optional suffix.
-    #[arg(long, action = ArgAction::Set, num_args = 0..=1, default_value_if("tag", clap::builder::ArgPredicate::IsPresent, Some("")))]
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
     pub tag: Option<String>,
     /// Displays local git information (version, path).
     #[arg(long)]
@@ -49,12 +49,10 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         return res.map_err(|e| e.into());
     }
 
-    if sub_command_args.tag.is_some() {
-        let suffix = sub_command_args.tag.as_ref().map_or("".to_string(), |s| s.clone());
-        run_git_tag(suffix).map_err(Into::<Box<dyn std::error::Error>>::into)?;
-        return Ok(());
-    }
-
+        if let Some(suffix) = &sub_command_args.tag {
+            run_git_tag(suffix.clone()).map_err(Into::<Box<dyn std::error::Error>>::into)?;
+            return Ok(());
+        }
     if sub_command_args.info {
         println!("{}", get_git_info());
         return Ok(());
@@ -109,6 +107,7 @@ fn run_git_tag(suffix: String) -> Result<()> {
         tag_name = format!("{}-{}", tag_name, suffix);
     }
 
+	//USE git2 instead of system git 
     let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).output()?;
 
     if !output.status.success() {
