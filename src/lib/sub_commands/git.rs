@@ -6,12 +6,12 @@ use crate::ssh::start;
 
 #[cfg(test)]
 mod mock_ssh {
-    // Modified to accept 0 arguments to match the actual start() function signature.
-    // The remote_url is captured by GitshSubCommand but not directly passed to start().
-    // Further investigation might be needed on how start() uses configuration.
     pub async fn start() -> Result<(), Box<dyn std::error::Error>> {
         // In test environment, always return an error for now
-        Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Mock SSH Start Error")))
+        Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Mock SSH Start Error",
+        )))
     }
 }
 
@@ -19,25 +19,32 @@ mod mock_ssh {
 use mock_ssh::start;
 
 #[derive(Parser, Debug, Clone)]
-pub struct GitshSubCommand {
-    // This field captures the remote_url, but the start() function does not directly accept it.
-    #[arg(index = 1)]
-    remote_url: Option<String>,
+pub struct GitSubCommand {
+    /// Starts the gnostr git SSH server (gitweb).
+    #[arg(long)]
+    pub gitweb: bool,
+    // Future git-related flags can be added here.
 }
 
-pub async fn gitsh(_sub_command_args: &GitshSubCommand) -> Result<(), Box<dyn std::error::Error>> {
-//#[cfg(not(test))]
-    env_logger::init_from_env(Env::default().default_filter_or("info"));
-    // The start() function takes no arguments. The remote_url is available in _sub_command_args.remote_url
-    // but is not directly passed to start().
-    let res = start().await;
-    if let Err(e) = &res { // Use reference to res to avoid moving it
-        println!("{}", e);
-        println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
-        println!("check the port in your server.toml is available!\n");
-        println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
+pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::error::Error>> {
+    if sub_command_args.gitweb {
+        env_logger::init_from_env(Env::default().default_filter_or("info"));
+        let res = start().await;
+        if let Err(e) = &res {
+            // Use reference to res to avoid moving it
+            println!("{}", e);
+            println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
+            println!("check the port in your server.toml is available!\n");
+            println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
+        }
+        return res.map_err(|e| e.into());
     }
-    res.map_err(|e| e.into())
+
+    // If no flags are provided, or other flags are handled, you can add logic here.
+    // For now, it does nothing if --gitweb is not specified.
+    println!("The 'git' subcommand requires a flag to specify functionality.");
+    println!("For example, use '--gitweb' to start the SSH server.");
+    Ok(())
 }
 
 static REPO_TOML: &str = r###"#
@@ -47,7 +54,7 @@ members = ["gnostr", "gnostr-user"]
 failed_push_message = "Issues and patches can be emailed to admin@gnostr.org"
 "###;
 
-static SERVER_TOML: &str = r#"
+static SERVER_TOML: &str = r###"#
 name = "gnostr.org"
 port = 2222
 
@@ -63,4 +70,4 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
 
 // Optional.
 welcome_message = "welcome to gnostr.org!"
-"#;
+"###;

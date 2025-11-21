@@ -47,7 +47,7 @@ use crate::sub_commands::relay;
 use crate::sub_commands::query::QuerySubCommand;
 // Import the sniper subcommand module
 use crate::sub_commands::sniper;
-use crate::sub_commands::gitsh;
+use crate::sub_commands::git;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -287,8 +287,8 @@ pub enum GnostrCommands {
     Relay(relay::RelaySubCommand),
     // Add the query subcommand here, using the new QuerySubCommand struct
     Query(QuerySubCommand),
-    /// Gitsh sub commands
-    Gitsh(gitsh::GitshSubCommand),
+    /// Git sub commands
+    Git(git::GitSubCommand),
 }
 
 pub fn setup_logging() -> Result<()> {
