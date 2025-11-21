@@ -5,6 +5,9 @@ use std::process::Command;
 use clap::ArgAction;
 use which::which;
 use std::io::Error;
+use crate::weeble;
+use crate::wobble;
+use crate::blockheight;
 
 #[cfg(not(test))]
 use crate::ssh::start;
@@ -84,18 +87,15 @@ fn get_git_info() -> String {
 }
 
 fn run_git_tag(suffix: String) -> Result<()> {
-    let weeble_output = Command::new("gnostr-weeble").output()?.stdout;
-    let weeble_cmd_output = String::from_utf8_lossy(&weeble_output).trim().to_string();
+    let weeble = weeble::weeble().unwrap_or(0.0).to_string();
 
-    let blockheight_output = Command::new("gnostr-blockheight").output()?.stdout;
-    let blockheight_cmd_output = String::from_utf8_lossy(&blockheight_output).trim().to_string();
+    let blockheight = blockheight::blockheight().unwrap_or(0.0).to_string();
 
-    let wobble_output = Command::new("gnostr-wobble").output()?.stdout;
-    let wobble_cmd_output = String::from_utf8_lossy(&wobble_output).trim().to_string();
+    let wobble = wobble::wobble().unwrap_or(0.0).to_string();
 
-    let weeble = weeble_cmd_output.trim().to_string();
-    let blockheight = blockheight_cmd_output.trim().to_string();
-    let wobble = wobble_cmd_output.trim().to_string();
+    let weeble = weeble;
+    let blockheight = blockheight;
+    let wobble = wobble;
 
     let mut tag_name = format!("{}.{}.{}",
         if weeble.is_empty() { "0" } else { &weeble },
