@@ -1,0 +1,92 @@
+name: CI
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      bin: gh
+      cross-version: 0.2.5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - aarch64-pc-windows-msvc
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
+          - armv7-unknown-linux-gnueabihf
+          - armv7-unknown-linux-musleabihf
+          - i686-pc-windows-gnu
+          - i686-pc-windows-msvc
+          - i686-unknown-linux-gnu
+          - i686-unknown-linux-musl
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-gnu
+          - x86_64-pc-windows-msvc
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rustup update & install cross bin 
+        run: |
+          rustup update stable
+          curl -sSfL https://github.com/cross-rs/cross/releases/download/v${{ env.cross-version }}/cross-x86_64-unknown-linux-musl.tar.gz | sudo tar xzf - -C /usr/local/bin
+        shell: bash
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Clone cross repo
+        run: git clone --depth 1 --branch v${{ env.cross-version }} --recursive https://github.com/cross-rs/cross /tmp/cross
+        shell: bash
+        if: contains(matrix.target, 'darwin') || contains(matrix.target, 'msvc')
+
+      - name: Run cross Dockerfile
+        uses: docker/build-push-action@v5
+        with:
+          context: /tmp/cross/docker
+          file: /tmp/cross/docker/cross-toolchains/docker/Dockerfile.${{ matrix.target }}-cross
+          build-args: |
+            MACOS_SDK_URL=https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.3.sdk.tar.xz
+          tags: "${{ matrix.target }}-cross:latest"
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        if: contains(matrix.target, 'darwin') || contains(matrix.target, 'msvc')
+
+      - name: Run cross build
+        run: |
+          if ${{ contains(matrix.target, 'darwin') || contains(matrix.target, 'msvc') }}; then
+            uppercase_target=$(echo "${{ matrix.target }}" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+            export CROSS_TARGET_${uppercase_target}_IMAGE=${{ matrix.target }}-cross
+          fi
+          cross build --release --bin ${{ env.bin }} --target ${{ matrix.target }}
+        shell: bash
+
+      - name: Save release to tarball
+        run: |
+          tar czf ${{ env.bin }}.${{ matrix.target }}.tar.gz \
+            -C target/${{ matrix.target }}/release \
+            ${{ env.bin }}${{ contains(matrix.target, 'windows') && '.exe' || '' }}
+        shell: bash
+
+      - name: Upload tarball as GitHub artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.bin }}.${{ matrix.target }}.tar.gz
+          path: ${{ env.bin }}.${{ matrix.target }}.tar.gz
+          if-no-files-found: error
+
+      - name: Create release draft with tarball artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.bin }}.${{ matrix.target }}.tar.gz
+          draft: true
