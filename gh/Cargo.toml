@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 async-std = "1.12.0"
-chrono = { version = "0.4", features = ["serde"] }
-clap = { version = "4.5.20" }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 configparser = { version = "3.0.2", features = ["async-std", "indexmap"] }
 openssl = { version = "0.10", features = ["vendored"] }
 git2 = "^0.18"
@@ -14,7 +14,7 @@ home = "0.5.5"
 octocrab = "0.32.0"
 rand_core = { version = "0.6", features = ["getrandom"] }
 regex = "1.10.2"
-serde = "1.0.203"
+serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
 ssh-key = { version = "0.6.2", features = ["ed25519"] }
 terminal_size = "0.3.0"
