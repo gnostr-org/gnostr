@@ -52,11 +52,15 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         return res.map_err(|e| e.into());
     }
 
-        if let Some(suffix) = &sub_command_args.tag {
-            run_git_tag(suffix.clone()).map_err(Into::<Box<dyn std::error::Error>>::into)?;
-            return Ok(());
-        }
-    if sub_command_args.info {
+                if let Some(suffix) = &sub_command_args.tag {
+                    let owned_suffix = suffix.clone();
+                    tokio::task::spawn_blocking(move || {
+                        run_git_tag(owned_suffix)
+                    })
+                    .await?
+                    .map_err(Into::<Box<dyn std::error::Error>>::into)?;
+                    return Ok(());
+                }    if sub_command_args.info {
         println!("{}", get_git_info());
         return Ok(());
     }
