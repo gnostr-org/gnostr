@@ -37,6 +37,12 @@ pub struct GitSubCommand {
     /// Displays local git information (version, path).
     #[arg(long)]
     pub info: bool,
+    /// Creates a git branch using gnostr-git-checkout-b.
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
+    pub checkout_branch: Option<String>,
+    /// Creates a git PR branch using gnostr-git-checkout-pr.
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
+    pub checkout_pr: Option<String>,
 }
 
 pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::error::Error>> {
@@ -60,16 +66,34 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
                     .await?
                     .map_err(Into::<Box<dyn std::error::Error>>::into)?;
                     return Ok(());
-                }    if sub_command_args.info {
-        println!("{}", get_git_info());
-        return Ok(());
-    }
+                }
+                if let Some(suffix) = &sub_command_args.checkout_branch {
+                    let owned_suffix = suffix.clone();
+                    tokio::task::spawn_blocking(move || {
+                        run_git_checkout_b(owned_suffix)
+                    })
+                    .await?
+                    .map_err(Into::<Box<dyn std::error::Error>>::into)?;
+                    return Ok(());
+                }
+                if let Some(suffix) = &sub_command_args.checkout_pr {
+                    let owned_suffix = suffix.clone();
+                    tokio::task::spawn_blocking(move || {
+                        run_git_checkout_pr(owned_suffix)
+                    })
+                    .await?
+                    .map_err(Into::<Box<dyn std::error::Error>>::into)?;
+                    return Ok(());
+                }
+
 
     let git_info = get_git_info();
     println!("The 'git' subcommand requires a flag to specify functionality.");
     println!("For example, use '--gitweb' to start the SSH server.");
     println!("Or, use '--tag [SUFFIX]' to create a git tag.");
     println!("Or, use '--info' to display local git information.");
+    println!("Or, use '--checkout-branch [SUFFIX]' to create a git branch.");
+    println!("Or, use '--checkout-pr [SUFFIX]' to create a git PR branch.");
     println!("{}", git_info);
     Ok(())
 }
@@ -123,7 +147,37 @@ fn run_git_tag(suffix: String) -> Result<()> {
     Ok(())
 }
 
-static REPO_TOML: &str = r###"#
+fn run_git_checkout_b(suffix: String) -> Result<()> {
+    let mut cmd = Command::new("gnostr-git-checkout-b");
+    if !suffix.is_empty() {
+        cmd.arg(&suffix);
+    }
+    let output = cmd.output()?;
+
+    if !output.status.success() {
+        eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!("Failed to create branch");
+    }
+    print!("{}", String::from_utf8_lossy(&output.stdout));
+    Ok(())
+}
+
+fn run_git_checkout_pr(suffix: String) -> Result<()> {
+    let mut cmd = Command::new("gnostr-git-checkout-pr");
+    if !suffix.is_empty() {
+        cmd.arg(&suffix);
+    }
+    let output = cmd.output()?;
+
+    if !output.status.success() {
+        eprintln!("Error creating PR branch: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!("Failed to create PR branch");
+    }
+    print!("{}", String::from_utf8_lossy(&output.stdout));
+    Ok(())
+}
+
+static REPO_TOML: &str = r###"#'''
 name = "gnostr-gnit-server"
 public = true
 members = ["gnostr", "gnostr-user"]
