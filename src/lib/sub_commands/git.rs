@@ -85,7 +85,10 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
                     .map_err(Into::<Box<dyn std::error::Error>>::into)?;
                     return Ok(());
                 }
-
+    if sub_command_args.info {
+        println!("{}", get_git_info());
+        return Ok(());
+    }
 
     let git_info = get_git_info();
     println!("The 'git' subcommand requires a flag to specify functionality.");
@@ -148,32 +151,70 @@ fn run_git_tag(suffix: String) -> Result<()> {
 }
 
 fn run_git_checkout_b(suffix: String) -> Result<()> {
-    let mut cmd = Command::new("gnostr-git-checkout-b");
+    let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
+    let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
+    let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+
+    let head_parent_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD^1").output()?.stdout;
+    let head_parent = String::from_utf8_lossy(&head_parent_output).trim().to_string();
+
+    let head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD").output()?.stdout;
+    let head = String::from_utf8_lossy(&head_output).trim().to_string();
+
+    let mut branch_name = format!("{}/{}/{}/{}/{}",
+        if weeble.is_empty() { "0" } else { &weeble },
+        if blockheight.is_empty() { "0" } else { &blockheight },
+        if wobble.is_empty() { "0" } else { &wobble },
+        head_parent,
+        head
+    );
+
     if !suffix.is_empty() {
-        cmd.arg(&suffix);
+        branch_name = format!("{}-{}", branch_name, suffix);
     }
-    let output = cmd.output()?;
+
+    let output = Command::new("git").arg("checkout").arg("-b").arg(&branch_name).output()?;
 
     if !output.status.success() {
         eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("Failed to create branch");
     }
-    print!("{}", String::from_utf8_lossy(&output.stdout));
+    print!("{}", branch_name);
+
     Ok(())
 }
 
 fn run_git_checkout_pr(suffix: String) -> Result<()> {
-    let mut cmd = Command::new("gnostr-git-checkout-pr");
+    let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
+    let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
+    let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+
+    let head_parent_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD^1").output()?.stdout;
+    let head_parent = String::from_utf8_lossy(&head_parent_output).trim().to_string();
+
+    let head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD").output()?.stdout;
+    let head = String::from_utf8_lossy(&head_output).trim().to_string();
+
+    let mut branch_name = format!("pr/{}/{}/{}/{}/{}",
+        if weeble.is_empty() { "0" } else { &weeble },
+        if blockheight.is_empty() { "0" } else { &blockheight },
+        if wobble.is_empty() { "0" } else { &wobble },
+        head_parent,
+        head
+    );
+
     if !suffix.is_empty() {
-        cmd.arg(&suffix);
+        branch_name = format!("{}-{}", branch_name, suffix);
     }
-    let output = cmd.output()?;
+
+    let output = Command::new("git").arg("checkout").arg("-b").arg(&branch_name).output()?;
 
     if !output.status.success() {
         eprintln!("Error creating PR branch: {}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("Failed to create PR branch");
     }
-    print!("{}", String::from_utf8_lossy(&output.stdout));
+    print!("{}", branch_name);
+
     Ok(())
 }
 
