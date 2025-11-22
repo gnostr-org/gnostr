@@ -68,6 +68,8 @@ pub mod strings;
 pub mod sub_commands;
 ///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
 pub mod tabs;
+///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
+pub mod types;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -96,7 +98,7 @@ pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
-pub use gnostr_types::{
+pub use types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
@@ -337,7 +339,7 @@ pub fn post_event(url: &str, event: Event) {
 //     post(host, uri, wire)
 // }
 /// use nostr_types::EventV3;
-use gnostr_types::EventV3;
+use types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
@@ -353,8 +355,7 @@ pub fn print_event(event: &Event) {
     );
 }
 
-mod internal;
-use internal::*;
+use crate::types::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;

@@ -3588,6 +3588,7 @@ dependencies = [
  "actix-test",
  "actix-web",
  "actix-web-actors",
+ "aes",
  "anstream",
  "anyhow",
  "argparse",
@@ -3598,6 +3599,7 @@ dependencies = [
  "auth-git2",
  "backtrace",
  "base64 0.21.7",
+ "bech32 0.11.0",
  "bincode",
  "bitcoin_hashes 0.14.0",
  "bitflags 2.9.0",
@@ -3606,6 +3608,8 @@ dependencies = [
  "bytes",
  "bytesize",
  "bytestring",
+ "cbc",
+ "chacha20",
  "chacha20poly1305",
  "chrono",
  "clap 4.5.37",
@@ -3616,10 +3620,12 @@ dependencies = [
  "comrak",
  "config",
  "console 0.15.11",
+ "core-net",
  "crossbeam-channel",
  "crossterm",
  "csv",
  "ctrlc",
+ "derive_more 0.99.20",
  "dialoguer",
  "directories",
  "dirs 5.0.1",
@@ -3638,14 +3644,15 @@ dependencies = [
  "getopts",
  "gh-emoji",
  "git2",
+ "gnip44",
  "gnostr-asyncgit",
  "gnostr-crawler",
  "gnostr-legit",
  "gnostr-query",
  "gnostr-relay",
- "gnostr-types",
  "gnostr_qr",
  "hex",
+ "hmac",
  "home",
  "hostname",
  "http 1.3.1",
@@ -3655,6 +3662,8 @@ dependencies = [
  "k256",
  "lazy_static",
  "libp2p",
+ "lightning-invoice",
+ "linkify",
  "log",
  "metrics",
  "mockall",
@@ -3679,6 +3688,7 @@ dependencies = [
  "parking_lot",
  "parking_lot_core",
  "passwords",
+ "pbkdf2 0.12.2",
  "predicates 3.1.3",
  "pretty_assertions",
  "rand 0.8.5",
@@ -3696,6 +3706,7 @@ dependencies = [
  "scopetime",
  "scrypt",
  "sd-notify",
+ "secp256k1 0.29.1",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -3706,6 +3717,7 @@ dependencies = [
  "shellwords",
  "simple_logger",
  "simplelog",
+ "speedy",
  "ssh-key",
  "struct-patch",
  "structopt",
@@ -3717,6 +3729,7 @@ dependencies = [
  "test_utils",
  "textwrap 0.16.2",
  "thiserror 1.0.69",
+ "thread-priority",
  "time 0.3.41",
  "tokio",
  "tokio-tungstenite 0.21.0",
@@ -3730,6 +3743,7 @@ dependencies = [
  "tui-textarea",
  "tungstenite 0.21.0",
  "two-face",
+ "unicode-normalization",
  "unicode-segmentation",
  "unicode-truncate",
  "unicode-width 0.1.14",
@@ -3889,41 +3903,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "gnostr-types"
-version = "0.7.6"
-dependencies = [
- "aes",
- "base64 0.22.1",
- "bech32 0.11.0",
- "cbc",
- "chacha20",
- "chacha20poly1305",
- "core-net",
- "derive_more 0.99.20",
- "gnip44",
- "hex",
- "hmac",
- "lazy_static",
- "lightning-invoice",
- "linkify",
- "num_cpus",
- "pbkdf2 0.12.2",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "regex",
- "scrypt",
- "secp256k1 0.29.1",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "thread-priority",
- "unicode-normalization",
- "url",
- "zeroize",
 ]
 
 [[package]]
@@ -5988,6 +5967,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "memoffset"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "metrics"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6252,7 +6240,7 @@ dependencies = [
  "bitflags 1.3.2",
  "cfg-if",
  "libc",
- "memoffset",
+ "memoffset 0.7.1",
  "pin-utils",
 ]
 
@@ -9513,6 +9501,27 @@ checksum = "17129e116933cf371d018bb80ae557e889637989d8638274fb25622827b03881"
 dependencies = [
  "libc",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "speedy"
+version = "0.8.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da1992073f0e55aab599f4483c460598219b4f9ff0affa124b33580ab511e25a"
+dependencies = [
+ "memoffset 0.9.1",
+ "speedy-derive",
+]
+
+[[package]]
+name = "speedy-derive"
+version = "0.8.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "658f2ca5276b92c3dfd65fa88316b4e032ace68f88d7570b43967784c0bac5ac"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
