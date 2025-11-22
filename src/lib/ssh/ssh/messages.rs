@@ -29,11 +29,11 @@ async fn send_message(
 
 impl Knob {
     pub async fn info(&self, message: &str) -> anyhow::Result<()> {
-        send_message(self.handle.clone(), self.channel, "INFO".green(), message).await
+        send_message(self.handle.clone(), self.channel, "GNOSTR".green(), message).await
     }
 
     pub async fn error(&self, message: &str) -> anyhow::Result<()> {
-        send_message(self.handle.clone(), self.channel, "ERROR".red(), message).await
+        send_message(self.handle.clone(), self.channel, "GNOSTR".red(), message).await
     }
 
     pub async fn repo_note(&self, message: &str) -> anyhow::Result<()> {

@@ -8,7 +8,7 @@ use comrak::{markdown_to_html, ComrakOptions};
 use tempfile::tempdir;
 use tera::{Context, Tera};
 
-use crate::{ssh::config::repo::RepoConfig, ssh::git::Repo, ssh::state::State, ssh::vars::*};
+use crate::ssh::{config::repo::RepoConfig, git::Repo, state::State, vars::*};
 
 impl State {
     pub async fn rebuild_site(&self, repo_path: &Path) -> anyhow::Result<()> {
@@ -21,7 +21,7 @@ impl State {
 
         let config: RepoConfig = {
             let text =
-                read_to_string(clone_dir.join(&config_name)).context("Couldn't read eejit.toml")?;
+                read_to_string(clone_dir.join(&config_name)).context("Couldn't read gnostr-repo.toml")?;
             toml::from_str(&text)?
         };
 

@@ -58,14 +58,8 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
 
     if sub_command_args.gitweb {
         env_logger::init_from_env(Env::default().default_filter_or("info"));
-        let res = start().await;
-        if let Err(e) = &res {
-            println!("{}", e);
-            println!("EXAMPLE:server.toml\n{}", SERVER_TOML);
-            println!("check the port in your server.toml is available!\n");
-            println!("EXAMPLE:repo.toml\n{}", REPO_TOML);
-        }
-        return res.map_err(|e| e.into());
+        crate::ssh::start().await?;
+        return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag {
         let owned_suffix = suffix.clone();
         let cloned_repo_path = current_dir.clone();

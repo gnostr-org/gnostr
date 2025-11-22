@@ -8,12 +8,11 @@ use russh_keys::*;
 use tokio::io::AsyncWriteExt;
 use tokio::process::ChildStdin;
 
-use crate::ssh::config::server::ServerUser;
-use crate::ssh::State;
-use log::{debug, error};
+use log::error;
 use tokio::sync::Mutex;
-use toml::Table;
-use std::net::TcpListener;
+
+use crate::ssh::config::server::ServerUser;
+use crate::ssh::state::State;
 
 mod keys;
 use self::keys::server_keys;
@@ -21,19 +20,7 @@ use self::keys::server_keys;
 mod commands;
 mod messages;
 
-fn is_port_available(port: u16) -> anyhow::Result<()> {
-    match TcpListener::bind(("127.0.0.1", port)) {
-        Ok(listener) => {
-            drop(listener);
-            Ok(())
-        }
-        Err(e) => Err(anyhow::anyhow!("Port {} is not available: {}", port, e)),
-    }
-}
-
 pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
-    debug!("start_server");
-    debug!("russh::server::Config");
     let config = russh::server::Config {
         connection_timeout: Some(std::time::Duration::from_secs(3600)),
         auth_rejection_time: std::time::Duration::from_secs(3),
@@ -43,18 +30,12 @@ pub async fn start_server(state: Arc<Mutex<State>>) -> anyhow::Result<()> {
     };
 
     let config = Arc::new(config);
-    debug!("russh::server::Config:{:?}", config);
 
     let sh = Server {
         state: state.clone(),
     };
 
     let port = state.lock().await.server_config.port;
-    is_port_available(port)?;
-    debug!(
-        "russh::server::run({:?}, (\"0.0.0.0\", {}), sh)",
-        config, port
-    );
 
     russh::server::run(config, ("0.0.0.0", port), sh).await?;
 
@@ -73,8 +54,6 @@ impl server::Server for Server {
             state: self.state.clone(),
             user: None,
             username: None,
-            welcome_message: None,
-            extra: None,
         }
     }
 }
@@ -84,8 +63,6 @@ struct Handler {
     state: Arc<Mutex<State>>,
     user: Option<ServerUser>,
     username: Option<String>,
-    welcome_message: Option<Table>,
-    extra: Option<Table>,
 }
 
 impl Handler {

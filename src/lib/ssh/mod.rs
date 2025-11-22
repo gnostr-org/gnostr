@@ -1,24 +1,50 @@
-use log::{debug, info};
+pub mod config;
+pub mod git;
+pub mod site;
+pub mod ssh;
+pub mod state;
+pub mod utils;
+pub mod vars;
+
+#[cfg(test)]
+#[path = "./utils_test.rs"]
+mod utils_test;
+
+#[cfg(test)]
+#[path = "./git_test.rs"]
+mod git_test;
+
+#[cfg(test)]
+#[path = "./config_test.rs"]
+mod config_test;
+
+#[cfg(test)]
+#[path = "./state_test.rs"]
+mod state_test;
+
+use anyhow::anyhow;
+use log::info;
 use state::State;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-mod config;
-mod git;
-mod site;
-mod ssh;
-mod state;
-mod utils;
-mod vars;
-
 pub async fn start() -> anyhow::Result<()> {
-    info!("Loading state...");
-    let state = State::new().await?;
-    info!("{:?}", state);
-    let state = Arc::new(Mutex::new(state));
-    debug!("{:?}", state);
+    let port = 2222;
+    let config = PathBuf::from("gnostr-ssh.toml");
+    let repo_config = PathBuf::from("gnostr-repo.toml");
 
-    info!("Starting server...");
+    if utils::is_port_in_use(port).await {
+        return Err(anyhow!("Port {} is already in use.", port));
+    }
+
+    info!("Loading state...");
+    let mut state = State::new(config, repo_config).await?;
+    state.server_config.port = port;
+
+    let state = Arc::new(Mutex::new(state));
+
+    info!("Starting server on port {}...", port);
     #[cfg(not(target_os = "windows"))]
     let _ = sd_notify::notify(true, &[sd_notify::NotifyState::Ready]);
     ssh::start_server(state).await?;

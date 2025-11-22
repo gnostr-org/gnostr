@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-use log::debug;
+
 pub struct Repo {
     dir: PathBuf,
 }
@@ -25,7 +25,6 @@ impl ExitOK for ExitStatus {
 
 impl Repo {
     pub async fn create_bare(path: &Path) -> anyhow::Result<Self> {
-        debug!("create_bare:{}", path.display());
         tokio::process::Command::new("git")
             .arg("init")
             .arg("--bare")
@@ -45,7 +44,7 @@ impl Repo {
             .status
             .exit_ok()
             .context("Failed to rename branch")?;
-        Repo::from(path).await
+        Repo::new(path).await
     }
 
     pub async fn clone(from: &Path, to: &Path) -> anyhow::Result<Self> {
@@ -58,16 +57,16 @@ impl Repo {
             .status
             .exit_ok()
             .context("Failed to clone repo")?;
-        Repo::from(to).await
+        Repo::new(to).await
     }
 
-    pub async fn from(path: &Path) -> anyhow::Result<Repo> {
+    pub async fn new(path: &Path) -> anyhow::Result<Repo> {
         tokio::process::Command::new("git")
             .current_dir(path)
             .arg("config")
             .arg("--local")
             .arg("user.name")
-            .arg("gnostr")
+            .arg("Eejit Server")
             .output()
             .await?
             .status
@@ -91,11 +90,26 @@ impl Repo {
         })
     }
 
-    pub async fn push_changes(&self, message: &str) -> anyhow::Result<()> {
+    pub async fn push_changes(&self, branch: &str) -> anyhow::Result<()> {
+        tokio::process::Command::new("git")
+            .current_dir(&self.dir)
+            .arg("push")
+            .arg("origin")
+            .arg(branch)
+            .output()
+            .await?
+            .status
+            .exit_ok()
+            .context("Failed to push changes")?;
+
+        Ok(())
+    }
+
+    pub async fn add_and_commit(&self, file: &str, message: &str) -> anyhow::Result<()> {
         tokio::process::Command::new("git")
             .current_dir(&self.dir)
             .arg("add")
-            .arg(".")
+            .arg(file)
             .output()
             .await?
             .status
@@ -112,16 +126,47 @@ impl Repo {
             .status
             .exit_ok()
             .context("Failed to create commit")?;
+        Ok(())
+    }
 
+    pub async fn fetch_changes(&self, remote: &str, branch: &str) -> anyhow::Result<()> {
         tokio::process::Command::new("git")
             .current_dir(&self.dir)
-            .arg("push")
+            .arg("fetch")
+            .arg(remote)
+            .arg(branch)
             .output()
             .await?
             .status
             .exit_ok()
-            .context("Failed to push changes")?;
+            .context("Failed to fetch changes")?;
+        Ok(())
+    }
 
+    pub async fn checkout_branch(&self, branch: &str) -> anyhow::Result<()> {
+        tokio::process::Command::new("git")
+            .current_dir(&self.dir)
+            .arg("checkout")
+            .arg(branch)
+            .output()
+            .await?
+            .status
+            .exit_ok()
+            .context("Failed to checkout branch")?;
+        Ok(())
+    }
+
+    pub async fn reset_hard(&self, target: &str) -> anyhow::Result<()> {
+        tokio::process::Command::new("git")
+            .current_dir(&self.dir)
+            .arg("reset")
+            .arg("--hard")
+            .arg(target)
+            .output()
+            .await?
+            .status
+            .exit_ok()
+            .context("Failed to reset hard")?;
         Ok(())
     }
 }

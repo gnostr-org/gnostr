@@ -5,7 +5,7 @@ use std::{path::PathBuf, process::Stdio};
 
 use anyhow::Context;
 use clean_path::Clean;
-use log::{debug, info, trace};
+use log::info;
 use russh::{server::Handle, ChannelId, CryptoVec};
 use shellwords::split;
 use tokio::{io::AsyncReadExt, process::Command};
@@ -31,34 +31,25 @@ impl Handler {
         channel: ChannelId,
         command: &[u8],
     ) -> anyhow::Result<()> {
-        debug!("handle_command:{:?}", command);
-        debug!("{:?}", channel);
         let server_config = self.state.lock().await.server_config.clone();
-
-        trace!("server_config:\n{:?}", server_config);
-
         let knob = Knob { handle, channel };
 
         let command = from_utf8(command).context("Failed to parse command bytes into a string")?;
         let command = split(command).context("Could not split command into words.")?;
 
-        debug!("{:?}", command);
         // Politely decline non-git commands.
         if !GIT_COMMANDS.contains(&command[0].as_str()) {
-            info!("rejected command[0]:{:?}", command[0]);
             knob.close().await?;
             return Ok(());
         }
 
         // The git plumbing commands give the repo like this: '/repo.git'.
-        debug!("PathBuf::from(command[1]):{:?}", command[1]);
         let mut repo_path = PathBuf::from(&command[1]);
         repo_path = repo_path.strip_prefix("/")?.into();
         repo_path = repo_path.clean();
 
-        // Reject repo paths outside gnostr-ssh dir.
+        // Reject repo paths outside eejit's dir.
         if repo_path.components().next() == Some(Component::ParentDir) {
-            info!("rejected repo_path:{:?}", command[1]);
             knob.close().await?;
             return Ok(());
         }
@@ -79,17 +70,9 @@ impl Handler {
         let is_admin = user.is_admin.unwrap_or(false);
         let can_create_repos = user.can_create_repos.unwrap_or(false);
 
-        //let welcome_message = self.welcome_message.clone().unwrap_or(GUEST_USERNAME.to_string());
-        //info!("welcome_message={}", welcome_message);
-        //if let Some(welcome_message) = server_config.welcome_message {
-        //    info!("welcome_message={}", welcome_message);
-        //    knob.info(&welcome_message.replace('%', &username)).await?;
-        //}
-        //if let Some(extra) = server_config.extra {
-        //let extra = self.extra.clone().unwrap_or(GUEST_USERNAME.to_string());
-        //info!("extra={}", extra);
-        //knob.info(&extra.replace('%', &username)).await?;
-        //}
+        if let Some(welcome_message) = server_config.welcome_message {
+            knob.info(&welcome_message.replace('%', &username)).await?;
+        }
 
         // Deny non-admins access to the config repo.
         if !is_admin && repo_path == PathBuf::from(SERVER_CONFIG_REPO) {
@@ -142,7 +125,7 @@ impl Handler {
                         .await?;
 
                     if let Some(message) = repo_config.failed_push_message {
-                        knob.repo_note(&message.clone()).await?;
+                        knob.repo_note(&message).await?;
                     }
 
                     knob.close().await?;
@@ -190,7 +173,7 @@ impl Handler {
                 if repo_path == PathBuf::from(SERVER_CONFIG_REPO) {
                     info!("Reloading server config...");
                     knob.info("Reloading server config...").await?;
-                    state.lock().await.server_config = load_server_config().await?;
+                    state.lock().await.server_config = load_server_config(state.lock().await.config_path.clone()).await?;
                 } else {
                     knob.info("Reloading repo information...").await?;
                     state.lock().await.rebuild_site(&repo_path).await?;

@@ -3,13 +3,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{ssh::git::Repo, ssh::vars::*};
 use anyhow::Context;
-use dirs::home_dir;
-use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tempfile::tempdir;
 use toml::Table;
+
+use crate::ssh::{git::Repo, vars::*};
 
 #[derive(Serialize, Deserialize)]
 pub struct RepoConfig {
@@ -17,26 +16,40 @@ pub struct RepoConfig {
     pub public: bool,
     pub members: Vec<String>,
     pub failed_push_message: Option<String>,
+    /// Path to a custom Tera template for this repo's static site.
     pub web_template: Option<String>,
     pub extra: Option<Table>,
 }
 
 pub async fn load_repo_config(repo_path: &Path) -> anyhow::Result<RepoConfig> {
-    let config_file_path = home_dir().expect("REASON").join(REPO_CONFIG_FILE);
-    info!("Using config file: {:?}", config_file_path);
-
-    if config_file_path.exists() {
-        debug!("Config file exists!");
-    } else {
-        debug!("Config file does not exist.");
-    }
+    let config_name = PathBuf::from(REPO_CONFIG_FILE);
 
     let temp_dir = tempdir()?;
     let clone_dir = temp_dir.path().join(repo_path);
     Repo::clone(repo_path, &clone_dir).await?;
 
-    let text =
-        read_to_string(clone_dir.join(&config_file_path)).context("Couldn't read repo.toml")?;
+    if let Ok(text) = read_to_string(clone_dir.join(&config_name)) {
+        Ok(toml::from_str(&text)?)
+    } else {
+        Ok(RepoConfig {
+            name: repo_path
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string(),
+            public: false,
+            members: vec![],
+            failed_push_message: None,
+            web_template: None,
+            extra: None,
+        })
+    }
+}
+
+pub async fn load_repo_config_from_path(config_path: PathBuf) -> anyhow::Result<RepoConfig> {
+    let text = read_to_string(&config_path)
+        .context(format!("Couldn't read repo config from {}", config_path.display()))?;
     Ok(toml::from_str(&text)?)
 }
 
