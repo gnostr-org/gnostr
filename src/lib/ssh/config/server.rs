@@ -1,20 +1,22 @@
-use crate::{ssh::git::Repo, ssh::vars::*};
-use anyhow::{anyhow, Context};
-use log::info;
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    fs::{copy, read_to_string, remove_file},
-    path::PathBuf,
-};
-use tempfile::tempdir;
-use toml::Table;
+use std::{fs::{read_to_string, write}, path::PathBuf};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerUser {
     pub public_key: String,
     pub is_admin: Option<bool>,
     pub can_create_repos: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ServerConfig {
+    pub name: String,
+    pub hostname: String,
+    pub port: u16,
+    pub users: std::collections::HashMap<String, ServerUser>,
+    pub welcome_message: Option<String>,
+    pub exta: Option<toml::Table>,
 }
 
 // The default for ServerUser is used for guest access.
@@ -28,44 +30,13 @@ impl Default for ServerUser {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ServerConfig {
-    pub name: String,
-    pub hostname: String,
-    pub port: u16,
-    pub users: HashMap<String, ServerUser>,
-    pub welcome_message: Option<Table>,
-    pub extra: Option<Table>,
-}
-
-pub async fn load_server_config() -> anyhow::Result<ServerConfig> {
-    let repo_name = PathBuf::from(SERVER_CONFIG_REPO);
-    let config_name = PathBuf::from(SERVER_CONFIG_FILE);
-
-    let mut new = false;
-    if !repo_name.exists() {
-        if !config_name.exists() {
-            return Err(anyhow!(
-                "There's no server config, and no initial config to move in!"
-            ));
-        }
-        Repo::create_bare(&repo_name).await?;
-        new = true;
+pub async fn load_server_config(config_path: PathBuf) -> anyhow::Result<ServerConfig> {
+    if !config_path.exists() {
+        let default_config = include_str!("default_server.toml");
+        write(&config_path, default_config).context("Could not write default server config")?;
     }
 
-    let temp_dir = tempdir()?;
-    let clone_dir = temp_dir.path().join(&repo_name);
-    let repo = Repo::clone(&repo_name, &clone_dir).await?;
-
-    if new {
-        copy(&config_name, clone_dir.join(&config_name))?;
-        //TODO if not debug cfg
-        remove_file(&config_name)?;
-        repo.push_changes("chore: move in initial config").await?;
-    }
-
-    let text = read_to_string(clone_dir.join(&config_name)).context("Couldn't read server.toml")?;
-    info!("server.toml:\n{}", text);
+    let text = read_to_string(&config_path).context("Couldn't read gnostr-ssh.toml")?;
     Ok(toml::from_str(&text)?)
 }
 
