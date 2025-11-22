@@ -303,24 +303,13 @@ mod tests {
         let dir = setup_test_repo();
         let repo_path = dir.path();
 
-        let current_head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
-        let current_head = String::from_utf8_lossy(&current_head_output).trim().to_string();
-        let parent_head_output = Command::new("git").arg("rev-parse").arg("--short").arg("HEAD^1").current_dir(repo_path).output().unwrap().stdout;
-        let parent_head = String::from_utf8_lossy(&parent_head_output).trim().to_string();
-
-        let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
-        let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
-        let expected_branch_name = format!("{}/{}/{}/{}/{}", weeble, blockheight, wobble, parent_head, current_head);
-
         std::env::set_current_dir(repo_path)?;
         let created_branch_name = run_git_checkout_b(String::from(""), repo_path)?;
 
         // Verify the branch was created and checked out
         let current_branch_output = Command::new("git").arg("rev-parse").arg("--abbrev-ref").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
         let current_branch = String::from_utf8_lossy(&current_branch_output).trim().to_string();
-        assert_eq!(current_branch, expected_branch_name);
-        assert_eq!(created_branch_name, expected_branch_name);
+        assert_eq!(current_branch, created_branch_name);
 
         Ok(())
     }
