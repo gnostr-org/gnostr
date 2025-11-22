@@ -88,29 +88,28 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_git_tag_version_with_arg() -> Result<()> {
         let dir = setup_test_repo();
-        let _repo_path = dir.path();
+        let repo_path = dir.path();
+        std::env::set_current_dir(repo_path)?;
 
-        let weeble = gnostr::weeble::weeble().unwrap().to_string();
-        let blockheight = gnostr::blockheight::blockheight().unwrap().to_string();
-        let wobble = gnostr::wobble::wobble().unwrap().to_string();
+        let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
+        let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
+        let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
 
         let suffix = "test_suffix";
-        std::env::set_current_dir(_repo_path)?;
-
         let expected_tag_name = format!("{}.{}.{}-{}", weeble, blockheight, wobble, suffix);
-        println!("expected_tag_name={}", expected_tag_name);
-        let _ = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble);
+        
+        let created_tag = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble)?;
 
         // Verify the tag was created
-        let tag_list_output = Command::new("git").arg("tag").arg("-l").arg(&expected_tag_name).output().unwrap().stdout;
+        let tag_list_output = Command::new("git").arg("tag").arg("-l").arg(&expected_tag_name).current_dir(repo_path).output().unwrap().stdout;
         let tag_exists = String::from_utf8_lossy(&tag_list_output).trim().to_string();
         assert_eq!(tag_exists, expected_tag_name);
+        assert_eq!(created_tag, expected_tag_name);
 
         // Clean up the tag
-        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).output().unwrap();
+        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).current_dir(repo_path).output().unwrap();
 
         Ok(())
     }

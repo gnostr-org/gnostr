@@ -546,7 +546,6 @@ line3");
     }
 
     #[test]
-    #[ignore]
     fn test_get_current_working_dir() {
         let cwd = get_current_working_dir();
         assert!(cwd.is_ok());
