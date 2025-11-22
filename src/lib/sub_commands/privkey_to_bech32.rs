@@ -1,0 +1,30 @@
+use anyhow::Result;
+use clap::Parser;
+use crate::types::PrivateKey;
+use zeroize::Zeroize;
+
+#[derive(Parser, Debug, Clone)]
+pub struct PrivkeyToBech32SubCommand {
+    /// Private key in hex format. If not provided, it will be prompted securely.
+    #[clap(name = "PRIVATE_KEY_HEX", required = false)]
+    pub privkey_hex: Option<String>,
+}
+
+pub fn privkey_to_bech32(sub_command_args: &PrivkeyToBech32SubCommand) -> Result<()> {
+    let mut private_key_hex = String::new();
+
+    if let Some(hex_arg) = &sub_command_args.privkey_hex {
+        private_key_hex.clone_from(hex_arg);
+    } else {
+        private_key_hex = rpassword::prompt_password("Private key hex: ").unwrap();
+    }
+
+    let mut private_key = PrivateKey::try_from_hex_string(&private_key_hex)?;
+    private_key_hex.zeroize(); // Zeroize after use
+
+    let mut bech32 = private_key.as_bech32_string();
+    print!("{}", bech32);
+    bech32.zeroize(); // Zeroize after use
+
+    Ok(())
+}

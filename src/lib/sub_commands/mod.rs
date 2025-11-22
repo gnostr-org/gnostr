@@ -35,3 +35,4 @@ pub mod list;
 pub mod pull;
 pub mod chat;
 pub mod tui;
+pub mod privkey_to_bech32;
