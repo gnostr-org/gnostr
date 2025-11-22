@@ -31,6 +31,15 @@ mod mock_ssh {
 use mock_ssh::start;
 
 #[derive(Parser, Debug, Clone)]
+#[clap(
+    about = "A tool for interacting with git repositories.",
+    help_template = "\
+{about-with-newline}
+{usage-heading} {usage}
+
+{all-args}
+"
+)]
 pub struct GitSubCommand {
     /// Starts the gnostr git SSH server (gitweb).
     #[arg(long)]
@@ -97,15 +106,8 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         gnostr_asyncgit::gitui::run(&gnostr_asyncgit::gitui::cli::Args::default(), &mut terminal).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
         return Ok(());
     } else {
-        let git_info = get_git_info();
         println!("The 'git' subcommand requires a flag to specify functionality.");
-        println!("For example, use '--serve-ssh' to start the SSH server.");
-        println!("Or, use '--tag [SUFFIX]' to create a git tag.");
-        println!("Or, use '--info' to display local git information.");
-        println!("Or, use '--checkout-branch [SUFFIX]' to create a git branch.");
-        println!("Or, use '--checkout-pr [SUFFIX]' to create a git PR branch.");
-        println!("Or, use '--tui' to open the git terminal user interface.");
-        println!("{}", git_info);
+        println!("Use 'gnostr git --help' for more information.");
         Ok(())
     }
 }
