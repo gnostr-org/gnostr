@@ -13,10 +13,11 @@ fn main() -> Result<()> {
     let wobble_output = Command::new("gnostr-wobble").output()?.stdout;
     let wobble_cmd_output = String::from_utf8_lossy(&wobble_output).trim().to_string();
 
-    run(std::env::args().skip(1).collect(), &weeble_cmd_output, &blockheight_cmd_output, &wobble_cmd_output)
+    let tag_name = run(std::env::args().skip(1).collect(), &weeble_cmd_output, &blockheight_cmd_output, &wobble_cmd_output)?;
+    print!("{}", tag_name);
+    Ok(())
 }
-
-fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Result<()> {
+fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Result<String> {
     let weeble = weeble.trim().to_string();
     let blockheight = blockheight.trim().to_string();
     let wobble = wobble.trim().to_string();
@@ -37,9 +38,7 @@ fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Resu
         eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("Failed to create branch");
     }
-    print!("{}", tag_name);
-
-    Ok(())
+    Ok(tag_name)
 }
 
 #[cfg(test)]
@@ -64,26 +63,26 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_git_tag_version_no_arg() -> Result<()> {
         let dir = setup_test_repo();
-        let _repo_path = dir.path();
+        let repo_path = dir.path();
+        std::env::set_current_dir(repo_path)?;
 
         let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
         let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
         let expected_tag_name = format!("{}.{}.{}", weeble.clone(), blockheight.clone(), wobble.clone());
-        println!("expected_tag_name={}", expected_tag_name);
 
-        let _ = run(vec![], &weeble, &blockheight, &wobble);
+        let created_tag = run(vec![], &weeble, &blockheight, &wobble)?;
 
-        let current_tag_output = Command::new("git").arg("describe").arg("--tags").output().unwrap().stdout;
+        let current_tag_output = Command::new("git").arg("describe").arg("--tags").current_dir(repo_path).output().unwrap().stdout;
         let current_tag = String::from_utf8_lossy(&current_tag_output).trim().to_string();
-        println!("current_tag={}", current_tag);
+
         assert_eq!(current_tag, expected_tag_name);
+        assert_eq!(created_tag, expected_tag_name);
 
         // Clean up the tag
-        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).output().unwrap();
+        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).current_dir(repo_path).output().unwrap();
 
         Ok(())
     }
