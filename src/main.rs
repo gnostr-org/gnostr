@@ -346,6 +346,10 @@ async fn main() -> anyhow::Result<()> {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::git::git(sub_command_args).await.map_err(|e| anyhow!("Error in git subcommand: {}", e))
         }
+        Some(GnostrCommands::Bech32ToAny(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::bech32_to_any::bech32_to_any(sub_command_args).map_err(|e| anyhow!("Error in bech32_to_any subcommand: {}", e))
+        }
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
