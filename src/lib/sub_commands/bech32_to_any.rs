@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use gnostr_types::{NostrBech32, PrivateKey};
+use crate::types::{NostrBech32, PrivateKey};
 use nostr_0_34_1::bech32;
 use serde_json::{json, Value};
 
