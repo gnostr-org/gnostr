@@ -196,9 +196,8 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
             Ok(())
         }
 
-        #[tokio::test]
-		#[ignore]
-        async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<(), Box<dyn StdError>> {
+    #[tokio::test]
+    async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<(), Box<dyn StdError>> {
             let kinds_string = "1630,1632,1621,30618,1633,1631,1617,30617".to_string();
             let base_query_args = QuerySubCommand {
                 authors: None,
