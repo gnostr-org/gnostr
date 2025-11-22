@@ -46,6 +46,7 @@ mod tests {
     use super::*;
     use std::fs;
     use tempfile::tempdir;
+    use serial_test::serial;
 
     // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {
@@ -63,6 +64,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_git_tag_version_no_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
@@ -88,6 +90,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_git_tag_version_with_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
