@@ -42,6 +42,7 @@ use crate::sub_commands::profile_badges;
 use crate::sub_commands::custom_event;
 use crate::sub_commands::user_status;
 use crate::sub_commands::bech32_to_any;
+use crate::sub_commands::privkey_to_bech32;
 // Import the new relay subcommand module
 use crate::sub_commands::relay;
 // Import the new QuerySubCommand struct
@@ -286,6 +287,8 @@ pub enum GnostrCommands {
     SetUserStatus(user_status::UserStatusSubCommand),
     /// Convert bech32 string to other formats
     Bech32ToAny(bech32_to_any::Bech32ToAnySubCommand),
+    /// Convert a private key to its bech32 representation
+    PrivkeyToBech32(privkey_to_bech32::PrivkeyToBech32SubCommand),
         /// Relay sub commands
     Relay(relay::RelaySubCommand),
     // Add the query subcommand here, using the new QuerySubCommand struct
