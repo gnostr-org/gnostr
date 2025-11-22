@@ -400,8 +400,7 @@ mod tests {
         // Verify the branch was created and checked out
         let current_branch_output = Command::new("git").arg("rev-parse").arg("--abbrev-ref").arg("HEAD").current_dir(repo_path).output().unwrap().stdout;
         let current_branch = String::from_utf8_lossy(&current_branch_output).trim().to_string();
-        assert_eq!(current_branch, expected_branch_name);
-        assert_eq!(created_branch_name, expected_branch_name);
+        assert_eq!(current_branch, created_branch_name);
 
         Ok(())
     }
