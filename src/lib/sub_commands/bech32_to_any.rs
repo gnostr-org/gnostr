@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use gnostr_types::{NostrBech32, PrivateKey};
 use nostr_0_34_1::bech32;
-use serde_json::json;
+use serde_json::{json, Value};
 
 #[derive(Parser, Debug, Clone)]
 pub struct Bech32ToAnySubCommand {
@@ -30,19 +30,32 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
                 "kind": ne.kind.map(|k| Into::<u32>::into(k)),
                 "author": ne.author.map(|a| a.as_hex_string()),
             }),
-            NostrBech32::Id(id) => json!({ "hex": id.as_hex_string() }),
+            NostrBech32::Id(id) => {
+                let (hrp, _) = bech32::decode(bech32).unwrap();
+                let mut map = serde_json::Map::new();
+                map.insert(hrp.to_string(), Value::String(id.as_hex_string()));
+                Value::Object(map)
+            }
             NostrBech32::Profile(profile) => json!({
                 "type": "Profile",
                 "pubkey": profile.pubkey.as_hex_string(),
                 "relays": profile.relays.iter().map(|r| r.as_str().to_owned()).collect::<Vec<String>>(),
             }),
-            NostrBech32::Pubkey(pubkey) => json!({ "pubkey": pubkey.as_hex_string() }),
+            NostrBech32::Pubkey(pubkey) => {
+                let (hrp, _) = bech32::decode(bech32).unwrap();
+                let mut map = serde_json::Map::new();
+                map.insert(hrp.to_string(), Value::String(pubkey.as_hex_string()));
+                Value::Object(map)
+            }
             NostrBech32::Relay(url) => json!({ "relay_url": url.0 }),
             NostrBech32::CryptSec(_) => json!({ "error": "CryptSec not implemented" }),
         };
         println!("{}", serde_json::to_string_pretty(&json_output)?);
     } else if let Ok(mut key) = PrivateKey::try_from_bech32_string(bech32) {
-        let json_output = json!({ "private_key": key.as_hex_string() });
+        let (hrp, _) = bech32::decode(bech32).unwrap();
+        let mut map = serde_json::Map::new();
+        map.insert(hrp.to_string(), Value::String(key.as_hex_string()));
+        let json_output = Value::Object(map);
         println!("{}", serde_json::to_string_pretty(&json_output)?);
     } else {
         let (hrp, data) = bech32::decode(bech32).unwrap();
