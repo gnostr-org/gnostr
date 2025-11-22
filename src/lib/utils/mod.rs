@@ -546,12 +546,45 @@ line3");
     }
 
     #[test]
-    fn test_get_current_working_dir() {
+    fn test_get_current_working_dir() -> std::io::Result<()> {
+        let original_cwd = env::current_dir()?;
+        println!("Original CWD: {:?}", original_cwd);
+
+        // Manually create a temporary directory
+        let unique_name = format!("test_temp_dir_{}", get_epoch_millisecs());
+        let temp_dir_path = env::temp_dir().join(unique_name);
+        println!("Attempting to create temporary directory: {:?}", temp_dir_path);
+        std::fs::create_dir_all(&temp_dir_path)?;
+        println!("Successfully created temporary directory: {:?}", temp_dir_path);
+
+        // Ensure the directory exists and is a directory before changing to it
+        if !temp_dir_path.exists() {
+            panic!("Error: Manually created temporary directory does not exist: {:?}", temp_dir_path);
+        }
+        if !temp_dir_path.is_dir() {
+            panic!("Error: Manually created temporary path is not a directory: {:?}", temp_dir_path);
+        }
+
+        env::set_current_dir(&temp_dir_path)?;
+        println!("Changed CWD to temporary directory: {:?}", env::current_dir()?);
+
         let cwd = get_current_working_dir();
+        println!("Result of get_current_working_dir(): {:?}", cwd);
+
         assert!(cwd.is_ok());
         let path = cwd.unwrap();
+        assert_eq!(std::fs::canonicalize(&path)?, std::fs::canonicalize(&temp_dir_path)?);
+
         assert!(path.is_dir());
-        // You can add more specific checks if you know the expected CWD during tests
+        println!("Asserted that returned path {:?} matches temp dir path {:?}", path, temp_dir_path);
+        println!("Asserted that returned path {:?} is a directory", path);
+
+        // Clean up the manually created directory
+        env::set_current_dir(&original_cwd)?;
+        println!("Restored CWD to original: {:?}", env::current_dir()?);
+        std::fs::remove_dir_all(&temp_dir_path)?;
+        println!("Cleaned up temporary directory: {:?}", temp_dir_path);
+        Ok(())
     }
 
     #[test]
