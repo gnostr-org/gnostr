@@ -1,5 +1,6 @@
 use std::process::Command;
 use anyhow::Result;
+use std::path::Path;
 
 
 
@@ -13,10 +14,11 @@ fn main() -> Result<()> {
     let wobble_output = Command::new("gnostr-wobble").output()?.stdout;
     let wobble_cmd_output = String::from_utf8_lossy(&wobble_output).trim().to_string();
 
-    run(std::env::args().skip(1).collect(), &weeble_cmd_output, &blockheight_cmd_output, &wobble_cmd_output)
+    let tag_name = run(std::env::args().skip(1).collect(), &weeble_cmd_output, &blockheight_cmd_output, &wobble_cmd_output, &std::env::current_dir()?)?;
+    print!("{}", tag_name);
+    Ok(())
 }
-
-fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Result<()> {
+fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str, repo_path: &Path) -> Result<String> {
     let weeble = weeble.trim().to_string();
     let blockheight = blockheight.trim().to_string();
     let wobble = wobble.trim().to_string();
@@ -31,15 +33,13 @@ fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Resu
         tag_name = format!("{}-{}", tag_name, args[0]);
     }
 
-    let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).output()?;
+    let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).current_dir(repo_path).output()?;
 
     if !output.status.success() {
         eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("Failed to create branch");
     }
-    print!("{}", tag_name);
-
-    Ok(())
+    Ok(tag_name)
 }
 
 #[cfg(test)]
@@ -64,29 +64,29 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_git_tag_version_no_arg() -> Result<()> {
         let dir = setup_test_repo();
         let repo_path = dir.path();
+        std::env::set_current_dir(repo_path)?;
 
         let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
         let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
         let expected_tag_name = format!("pr/{}.{}.{}", weeble.clone(), blockheight.clone(), wobble.clone());
-        println!("expected_tag_name={}", expected_tag_name);
 
-        let _ = run(vec![], &weeble, &blockheight, &wobble);
+        let created_tag = run(vec![], &weeble, &blockheight, &wobble, repo_path)?;
 
-        let current_tag_output = Command::new("git").arg("describe").arg("--tags").output().unwrap().stdout;
+        let current_tag_output = Command::new("git").arg("describe").arg("--tags").current_dir(repo_path).output().unwrap().stdout;
         let current_tag = String::from_utf8_lossy(&current_tag_output).trim().to_string();
-        //assert_eq!(current_tag, expected_tag_name);
+
+        assert_eq!(current_tag, expected_tag_name);
+        assert_eq!(created_tag, expected_tag_name);
 
         // Clean up the tag
-        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).output().unwrap();
+        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).current_dir(repo_path).output().unwrap();
 
         Ok(())
     }
-
     #[test]
     #[ignore]
     fn test_git_tag_version_with_arg() -> Result<()> {
@@ -102,7 +102,7 @@ mod tests {
 
         let expected_tag_name = format!("pr/{}.{}.{}-{}", weeble, blockheight, wobble, suffix);
         println!("expected_tag_name={}", expected_tag_name);
-        let _ = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble);
+        let created_tag = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble, repo_path)?;
 
         // Verify the tag was created
         let tag_list_output = Command::new("git").arg("tag").arg("-l").arg(&expected_tag_name).output().unwrap().stdout;
