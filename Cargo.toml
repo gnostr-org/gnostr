@@ -163,27 +163,30 @@ libp2p = { version = "0.54.1", features = [
 
 log = "0.4.17"
 metrics = "0.23.0"
+
+## nostr deps
+## primary 0.34.0/1
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
+
+## relay
 nostr-db = { version = "0.4.5", features = ["search"] }
 
+## TODO remove and upgrade
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
+## TODO remove and upgrade
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
 ## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
-
 nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
-
 nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
-
+## TODO remove and upgrade
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
-
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
 nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
-notify = "6.1.1"
 
-#notify = "6.1"
+notify = "6.1.1"
 notify-debouncer-mini = "0.4"
 num-bigint = "0.4.6"
 num_cpus = "1.16.0"
