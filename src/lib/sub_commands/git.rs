@@ -34,7 +34,7 @@ use mock_ssh::start;
 pub struct GitSubCommand {
     /// Starts the gnostr git SSH server (gitweb).
     #[arg(long)]
-    pub gitweb: bool,
+    pub serve_ssh: bool,
     /// Creates a git tag with an optional suffix.
     #[arg(long, num_args = 0..=1, default_missing_value = "")]
     pub tag: Option<String>,
@@ -56,7 +56,7 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
     let current_dir = std::env::current_dir()?;
     let repo_path = current_dir.as_path();
 
-    if sub_command_args.gitweb {
+    if sub_command_args.serve_ssh {
         env_logger::init_from_env(Env::default().default_filter_or("info"));
         crate::ssh::start().await?;
         return Ok(());
@@ -99,7 +99,7 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
     } else {
         let git_info = get_git_info();
         println!("The 'git' subcommand requires a flag to specify functionality.");
-        println!("For example, use '--gitweb' to start the SSH server.");
+        println!("For example, use '--serve-ssh' to start the SSH server.");
         println!("Or, use '--tag [SUFFIX]' to create a git tag.");
         println!("Or, use '--info' to display local git information.");
         println!("Or, use '--checkout-branch [SUFFIX]' to create a git branch.");
