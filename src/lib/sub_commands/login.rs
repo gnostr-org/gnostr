@@ -13,10 +13,16 @@ pub struct LoginArgs {
     /// don't fetch user metadata and relay list from relays
     #[arg(long, action)]
     pub offline: bool,
+    /// Disable spinners for a cleaner output
+    #[arg(long, action, default_value_t = false)]
     pub disable_cli_spinners: bool,
+    /// Password to decrypt nsec
     pub password: Option<String>,
+    /// Nostr secret key
     pub nsec: Option<String>,
+    /// Bunker application key
     pub bunker_app_key: Option<String>,
+    /// Bunker URI
     pub bunker_uri: Option<String>,
 }
 
