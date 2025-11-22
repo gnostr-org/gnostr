@@ -59,6 +59,8 @@ pub struct GitSubCommand {
     /// Opens the gitui terminal user interface.
     #[arg(long)]
     pub tui: bool,
+    #[arg(trailing_var_arg = true)]
+    git_args: Vec<String>,
 }
 
 pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::error::Error>> {
@@ -106,9 +108,11 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         gnostr_asyncgit::gitui::run(&gnostr_asyncgit::gitui::cli::Args::default(), &mut terminal).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
         return Ok(());
     } else {
-        println!("The 'git' subcommand requires a flag to specify functionality.");
-        println!("Use 'gnostr git --help' for more information.");
-        Ok(())
+        let mut cmd = Command::new("git");
+        cmd.args(&sub_command_args.git_args);
+        let status = cmd.status()?;
+        // Exit with the same code as git
+        std::process::exit(status.code().unwrap_or(1));
     }
 }
 
