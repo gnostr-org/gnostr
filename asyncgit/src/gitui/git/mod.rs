@@ -16,15 +16,15 @@ use std::{
     str::{self},
 };
 
-pub(crate) mod commit;
-pub(crate) mod diff;
-pub(crate) mod merge_status;
-pub(crate) mod rebase_status;
-pub(crate) mod remote;
+pub mod commit;
+pub mod diff;
+pub mod merge_status;
+pub mod rebase_status;
+pub mod remote;
 
 // TODO Use only plumbing commands
 
-pub(crate) fn rebase_status(repo: &Repository) -> Res<Option<RebaseStatus>> {
+pub fn rebase_status(repo: &Repository) -> Res<Option<RebaseStatus>> {
     let dir = repo.workdir().expect("No workdir");
     let mut rebase_onto_file = dir.to_path_buf();
     rebase_onto_file.push(".git/rebase-merge/onto");
@@ -58,7 +58,7 @@ pub(crate) fn rebase_status(repo: &Repository) -> Res<Option<RebaseStatus>> {
     }
 }
 
-pub(crate) fn merge_status(repo: &Repository) -> Res<Option<MergeStatus>> {
+pub fn merge_status(repo: &Repository) -> Res<Option<MergeStatus>> {
     let dir = repo.workdir().expect("No workdir");
     let mut merge_head_file = dir.to_path_buf();
     merge_head_file.push(".git/MERGE_HEAD");
@@ -81,11 +81,11 @@ pub(crate) fn merge_status(repo: &Repository) -> Res<Option<MergeStatus>> {
     }
 }
 
-pub(crate) struct RevertStatus {
+pub struct RevertStatus {
     pub head: String,
 }
 
-pub(crate) fn revert_status(repo: &Repository) -> Res<Option<RevertStatus>> {
+pub fn revert_status(repo: &Repository) -> Res<Option<RevertStatus>> {
     let dir = repo.workdir().expect("No workdir");
     let mut revert_head_file = dir.to_path_buf();
     revert_head_file.push(".git/REVERT_HEAD");
@@ -123,7 +123,7 @@ fn branch_name_lossy(dir: &Path, hash: &str) -> Res<Option<String>> {
         .map(|line| line.split(' ').nth(1).unwrap().to_string()))
 }
 
-pub(crate) fn diff_unstaged(repo: &Repository) -> Res<Diff> {
+pub fn diff_unstaged(repo: &Repository) -> Res<Diff> {
     let text = String::from_utf8(
         Command::new("git")
             // TODO What if bare repo?
@@ -141,7 +141,7 @@ pub(crate) fn diff_unstaged(repo: &Repository) -> Res<Diff> {
     })
 }
 
-pub(crate) fn diff_staged(repo: &Repository) -> Res<Diff> {
+pub fn diff_staged(repo: &Repository) -> Res<Diff> {
     let text = String::from_utf8(
         Command::new("git")
             // TODO What if bare repo?
@@ -159,7 +159,7 @@ pub(crate) fn diff_staged(repo: &Repository) -> Res<Diff> {
     })
 }
 
-pub(crate) fn show(repo: &Repository, reference: &str) -> Res<Diff> {
+pub fn show(repo: &Repository, reference: &str) -> Res<Diff> {
     let text = String::from_utf8(
         Command::new("git")
             // TODO What if bare repo?
@@ -177,7 +177,7 @@ pub(crate) fn show(repo: &Repository, reference: &str) -> Res<Diff> {
     })
 }
 
-pub(crate) fn show_summary(repo: &Repository, reference: &str) -> Res<Commit> {
+pub fn show_summary(repo: &Repository, reference: &str) -> Res<Commit> {
     let object = &repo
         .revparse_single(reference)
         .map_err(Error::GitShowMeta)?;
@@ -218,7 +218,7 @@ pub(crate) fn show_summary(repo: &Repository, reference: &str) -> Res<Commit> {
     })
 }
 
-pub(crate) fn get_current_branch_name(repo: &git2::Repository) -> Res<String> {
+pub fn get_current_branch_name(repo: &git2::Repository) -> Res<String> {
     String::from_utf8(
         get_current_branch(repo)?
             .name_bytes()
@@ -229,13 +229,13 @@ pub(crate) fn get_current_branch_name(repo: &git2::Repository) -> Res<String> {
     .map_err(Error::BranchNameUtf8)
 }
 
-pub(crate) fn get_head_name(repo: &git2::Repository) -> Res<String> {
+pub fn get_head_name(repo: &git2::Repository) -> Res<String> {
     String::from_utf8(repo.head().map_err(Error::GetHead)?.name_bytes().to_vec())
         .map_err(Utf8Error::String)
         .map_err(Error::BranchNameUtf8)
 }
 
-pub(crate) fn get_current_branch(repo: &git2::Repository) -> Res<Branch<'_>> {
+pub fn get_current_branch(repo: &git2::Repository) -> Res<Branch<'_>> {
     let head = repo.head().map_err(Error::GetHead)?;
     if head.is_branch() {
         Ok(Branch::wrap(head))
@@ -244,7 +244,7 @@ pub(crate) fn get_current_branch(repo: &git2::Repository) -> Res<Branch<'_>> {
     }
 }
 
-pub(crate) fn is_branch_merged(repo: &git2::Repository, name: &str) -> Res<bool> {
+pub fn is_branch_merged(repo: &git2::Repository, name: &str) -> Res<bool> {
     let branch = repo
         .find_branch(name, git2::BranchType::Local)
         .map_err(Error::IsBranchMerged)?;

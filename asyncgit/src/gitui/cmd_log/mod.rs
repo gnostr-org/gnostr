@@ -10,8 +10,8 @@ use std::process::Command;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-pub(crate) struct CmdLog {
-    pub(crate) entries: Vec<Arc<RwLock<CmdLogEntry>>>,
+pub struct CmdLog {
+    pub entries: Vec<Arc<RwLock<CmdLogEntry>>>,
 }
 
 impl CmdLog {
@@ -51,11 +51,11 @@ impl CmdLog {
         self.entries.clear();
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
-    pub(crate) fn format_log(&self, config: &Config) -> Text<'static> {
+    pub fn format_log(&self, config: &Config) -> Text<'static> {
         Text::from(
             self.entries
                 .iter()
@@ -65,14 +65,14 @@ impl CmdLog {
     }
 }
 
-pub(crate) fn command_args(cmd: &Command) -> Cow<'static, str> {
+pub fn command_args(cmd: &Command) -> Cow<'static, str> {
     iter::once(cmd.get_program().to_string_lossy())
         .chain(cmd.get_args().map(|arg| arg.to_string_lossy()))
         .join(" ")
         .into()
 }
 
-pub(crate) fn format_log_entry<'a>(
+pub fn format_log_entry<'a>(
     config: &Config,
     log: &Arc<RwLock<CmdLogEntry>>,
 ) -> Vec<Line<'a>> {
@@ -105,7 +105,7 @@ pub(crate) fn format_log_entry<'a>(
     }
 }
 
-pub(crate) enum CmdLogEntry {
+pub enum CmdLogEntry {
     Cmd {
         args: Cow<'static, str>,
         out: Option<Cow<'static, str>>,

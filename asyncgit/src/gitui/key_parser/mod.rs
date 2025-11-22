@@ -11,7 +11,7 @@ use nom::{
 
 // TODO Improve error messages
 
-pub(crate) fn parse_keys(input: &str) -> IResult<&str, Vec<(KeyModifiers, KeyCode)>> {
+pub fn parse_keys(input: &str) -> IResult<&str, Vec<(KeyModifiers, KeyCode)>> {
     all_consuming(many0(parse_key))(input)
 }
 

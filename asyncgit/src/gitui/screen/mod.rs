@@ -5,11 +5,11 @@ use crate::gitui::{config::Config, items::TargetData, Res};
 use super::Item;
 use std::{borrow::Cow, collections::HashSet, rc::Rc};
 
-pub(crate) mod log;
-pub(crate) mod show;
-pub(crate) mod show_refs;
-pub(crate) mod status;
-pub(crate) mod gnostr;
+pub mod log;
+pub mod show;
+pub mod show_refs;
+pub mod status;
+pub mod gnostr;
 
 const BOTTOM_CONTEXT_LINES: usize = 2;
 

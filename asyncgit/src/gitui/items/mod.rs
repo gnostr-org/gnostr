@@ -19,18 +19,18 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 #[derive(Default, Clone, Debug)]
-pub(crate) struct Item {
-    pub(crate) id: Cow<'static, str>,
-    pub(crate) display: Line<'static>,
-    pub(crate) section: bool,
-    pub(crate) default_collapsed: bool,
-    pub(crate) depth: usize,
-    pub(crate) unselectable: bool,
-    pub(crate) target_data: Option<TargetData>,
+pub struct Item {
+    pub id: Cow<'static, str>,
+    pub display: Line<'static>,
+    pub section: bool,
+    pub default_collapsed: bool,
+    pub depth: usize,
+    pub unselectable: bool,
+    pub target_data: Option<TargetData>,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum TargetData {
+pub enum TargetData {
     AllStaged,
     AllUnstaged,
     AllUntracked(Vec<PathBuf>),
@@ -58,7 +58,7 @@ pub(crate) enum TargetData {
     },
 }
 
-pub(crate) fn create_diff_items(
+pub fn create_diff_items(
     config: Rc<Config>,
     diff: &Rc<Diff>,
     depth: usize,
@@ -187,7 +187,7 @@ fn format_diff_hunk_items(
         .collect()
 }
 
-pub(crate) fn stash_list(config: &Config, repo: &Repository, limit: usize) -> Res<Vec<Item>> {
+pub fn stash_list(config: &Config, repo: &Repository, limit: usize) -> Res<Vec<Item>> {
     let style = &config.style;
 
     Ok(repo
@@ -229,7 +229,7 @@ pub(crate) fn stash_list(config: &Config, repo: &Repository, limit: usize) -> Re
         .collect::<Vec<_>>())
 }
 
-pub(crate) fn log(
+pub fn log(
     config: &Config,
     repo: &Repository,
     limit: usize,
@@ -327,7 +327,7 @@ pub(crate) fn log(
     }
 }
 
-pub(crate) fn blank_line() -> Item {
+pub fn blank_line() -> Item {
     Item {
         display: Line::raw(""),
         depth: 0,

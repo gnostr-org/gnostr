@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::gitui::ops;
 
-pub(crate) mod arg;
+pub mod arg;
 
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum Menu {
+pub enum Menu {
     #[serde(rename = "root")]
     Root,
     #[serde(rename = "branch_menu")]
@@ -37,10 +37,10 @@ pub(crate) enum Menu {
     Stash,
 }
 
-pub(crate) struct PendingMenu {
+pub struct PendingMenu {
     pub menu: Menu,
     pub is_hidden: bool,
-    pub(crate) args: BTreeMap<Cow<'static, str>, arg::Arg>,
+    pub args: BTreeMap<Cow<'static, str>, arg::Arg>,
 }
 
 impl PendingMenu {

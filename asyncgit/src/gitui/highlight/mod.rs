@@ -16,7 +16,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 type LineHighlights<'a> = (&'a str, Vec<(Range<usize>, Style)>);
 
-pub(crate) fn highlight_hunk_lines<'a>(
+pub fn highlight_hunk_lines<'a>(
     config: &'a Config,
     diff: &'a Rc<Diff>,
     file_i: usize,
@@ -52,7 +52,7 @@ pub(crate) fn highlight_hunk_lines<'a>(
         })
 }
 
-pub(crate) fn iter_diff_highlights<'a>(
+pub fn iter_diff_highlights<'a>(
     config: &'a DiffHighlightConfig,
     hunk_text: &'a str,
     hunk: &'a gitu_diff::Hunk,
@@ -125,7 +125,7 @@ pub(crate) fn iter_diff_highlights<'a>(
     .peekable()
 }
 
-pub(crate) fn iter_diff_context_highlights<'a>(
+pub fn iter_diff_context_highlights<'a>(
     config: &'a DiffHighlightConfig,
     hunk_text: &'a str,
 ) -> Peekable<impl Iterator<Item = (Range<usize>, Style)> + 'a> {
@@ -162,7 +162,7 @@ impl<'a, I: Iterator<Item = &'a str>> ScanByteRanges<&'a str> for I {
     }
 }
 
-pub(crate) fn iter_syntax_highlights<'a>(
+pub fn iter_syntax_highlights<'a>(
     config: &'a SyntaxHighlightConfig,
     path: &'a str,
     content: String,
@@ -177,7 +177,7 @@ pub(crate) fn iter_syntax_highlights<'a>(
     .peekable()
 }
 
-pub(crate) fn fill_gaps<T: Clone + Default>(
+pub fn fill_gaps<T: Clone + Default>(
     full_range: Range<usize>,
     ranges: impl Iterator<Item = (Range<usize>, T)>,
     fill: T,
@@ -191,7 +191,7 @@ pub(crate) fn fill_gaps<T: Clone + Default>(
         .peekable()
 }
 
-pub(crate) fn zip_styles(
+pub fn zip_styles(
     mut a: Peekable<impl Iterator<Item = (Range<usize>, Style)>>,
     mut b: Peekable<impl Iterator<Item = (Range<usize>, Style)>>,
 ) -> Peekable<impl Iterator<Item = (Range<usize>, Style)>> {
@@ -202,7 +202,7 @@ pub(crate) fn zip_styles(
 
 /// Merges overlapping style-ranges from two iterators.
 /// This should produce a continuous range, given that a and b are continuous.
-pub(crate) fn next_merged_style(
+pub fn next_merged_style(
     a: &mut Peekable<impl Iterator<Item = (Range<usize>, Style)>>,
     b: &mut Peekable<impl Iterator<Item = (Range<usize>, Style)>>,
 ) -> Option<(Range<usize>, Style)> {
@@ -260,7 +260,7 @@ pub(crate) fn next_merged_style(
     }
 }
 
-pub(crate) fn collect_line_highlights(
+pub fn collect_line_highlights(
     highlights_iter: &mut Peekable<impl Iterator<Item = (Range<usize>, Style)>>,
     line_range: &Range<usize>,
 ) -> Vec<(Range<usize>, Style)> {
@@ -287,7 +287,7 @@ pub(crate) fn collect_line_highlights(
     spans
 }
 
-pub(crate) fn syntax_highlight_tag_style(config: &SyntaxHighlightConfig, tag: SyntaxTag) -> Style {
+pub fn syntax_highlight_tag_style(config: &SyntaxHighlightConfig, tag: SyntaxTag) -> Style {
     match tag {
         SyntaxTag::Attribute => &config.attribute,
         SyntaxTag::Comment => &config.comment,
