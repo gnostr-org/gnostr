@@ -152,7 +152,7 @@ aaa9402664f1a41f40ebbc52c9993eb66aeb366602958fdfaa283b71e64db123";
     }
 
     #[test]
-    #[ignore]
+    //#[ignore]
     #[should_panic]
     fn hello_panic_query() {
         let query = digest(r#"hello\n"#);
