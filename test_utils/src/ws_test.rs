@@ -54,7 +54,6 @@ async fn test_message_conversion() {
 }
 
 #[tokio::test]
-#[ignore]
 async fn test_websocket_connection_and_message_echo() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
