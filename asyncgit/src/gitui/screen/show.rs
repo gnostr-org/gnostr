@@ -14,7 +14,7 @@ use ratatui::{
 
 use super::Screen;
 
-pub(crate) fn create(
+pub fn create(
     config: Rc<Config>,
     repo: Rc<Repository>,
     size: Size,

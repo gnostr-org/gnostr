@@ -3,7 +3,7 @@ use crate::gitui::{config::Config, Res};
 use ratatui::prelude::Size;
 use std::rc::Rc;
 
-pub(crate) fn create(config: Rc<Config>, size: Size) -> Res<Screen> {
+pub fn create(config: Rc<Config>, size: Size) -> Res<Screen> {
     Screen::new(
         Rc::clone(&config),
         size,

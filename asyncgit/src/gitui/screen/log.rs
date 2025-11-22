@@ -5,7 +5,7 @@ use ratatui::layout::Size;
 use regex::Regex;
 use std::rc::Rc;
 
-pub(crate) fn create(
+pub fn create(
     config: Rc<Config>,
     repo: Rc<Repository>,
     size: Size,

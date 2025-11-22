@@ -7,7 +7,7 @@ use crate::{
 };
 use crossterm::event::{KeyCode, KeyModifiers};
 
-pub(crate) struct Bindings {
+pub struct Bindings {
     vec: Vec<Binding>,
 }
 
@@ -29,7 +29,7 @@ impl From<&BTreeMap<Menu, BTreeMap<Op, Vec<String>>>> for Bindings {
 }
 
 impl Bindings {
-    pub(crate) fn match_bindings<'a>(
+    pub fn match_bindings<'a>(
         &'a self,
         pending: &'a Menu,
         events: &'a [(KeyModifiers, KeyCode)],
@@ -40,7 +40,7 @@ impl Bindings {
             .filter(|binding| binding.keys.starts_with(events))
     }
 
-    pub(crate) fn list<'a>(&'a self, pending: &Menu) -> impl Iterator<Item = &'a Binding> {
+    pub fn list<'a>(&'a self, pending: &Menu) -> impl Iterator<Item = &'a Binding> {
         let expected = if pending == &Menu::Help {
             Menu::Root
         } else {
@@ -53,7 +53,7 @@ impl Bindings {
             .filter(move |keybind| keybind.menu == expected)
     }
 
-    pub(crate) fn arg_list<'a>(
+    pub fn arg_list<'a>(
         &'a self,
         pending: &'a PendingMenu,
     ) -> impl Iterator<Item = &'a Binding> {
@@ -76,7 +76,7 @@ impl Bindings {
     }
 }
 
-pub(crate) struct Binding {
+pub struct Binding {
     pub menu: Menu,
     pub raw: String,
     pub keys: Vec<(KeyModifiers, KeyCode)>,

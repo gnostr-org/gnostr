@@ -1,3 +1,3 @@
-pub(crate) struct MergeStatus {
+pub struct MergeStatus {
     pub head: String,
 }

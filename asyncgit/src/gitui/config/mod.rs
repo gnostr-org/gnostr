@@ -14,7 +14,7 @@ const DEFAULT_CONFIG: &str = include_str!("../../default_config.toml");
 
 ///
 #[derive(Default, Debug, Deserialize)]
-pub(crate) struct Config {
+pub struct Config {
     ///
     pub general: GeneralConfig,
     ///

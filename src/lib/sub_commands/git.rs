@@ -1,14 +1,17 @@
-use clap::Parser;
-use env_logger::Env;
-use anyhow::Result;
-use std::process::Command;
 use clap::ArgAction;
-use which::which;
-use std::io::Error;
-use std::path::Path;
+use clap::Parser;
+
+use crate::blockheight;
 use crate::weeble;
 use crate::wobble;
-use crate::blockheight;
+
+use env_logger::Env;
+use anyhow::Result;
+use gnostr_asyncgit::gitui;
+use std::io::Error;
+use std::path::Path;
+use std::process::Command;
+use which::which;
 
 #[cfg(not(test))]
 use crate::ssh::start;
@@ -44,6 +47,9 @@ pub struct GitSubCommand {
     /// Creates a git PR branch using gnostr-git-checkout-pr.
     #[arg(long, num_args = 0..=1, default_missing_value = "")]
     pub checkout_pr: Option<String>,
+    /// Opens the gitui terminal user interface.
+    #[arg(long)]
+    pub tui: bool,
 }
 
 pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::error::Error>> {
@@ -90,6 +96,12 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
     } else if sub_command_args.info {
         println!("{}", get_git_info());
         return Ok(());
+    } else if sub_command_args.tui {
+        // This will run the gitui TUI
+        let term = gnostr_asyncgit::gitui::term::backend();
+        let mut terminal = gnostr_asyncgit::gitui::term::Term::new(term)?;
+        gnostr_asyncgit::gitui::run(&gnostr_asyncgit::gitui::cli::Args::default(), &mut terminal).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        return Ok(());
     } else {
         let git_info = get_git_info();
         println!("The 'git' subcommand requires a flag to specify functionality.");
@@ -98,6 +110,7 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         println!("Or, use '--info' to display local git information.");
         println!("Or, use '--checkout-branch [SUFFIX]' to create a git branch.");
         println!("Or, use '--checkout-pr [SUFFIX]' to create a git PR branch.");
+        println!("Or, use '--tui' to open the git terminal user interface.");
         println!("{}", git_info);
         Ok(())
     }

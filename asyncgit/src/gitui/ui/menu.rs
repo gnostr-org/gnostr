@@ -11,7 +11,7 @@ use ratatui::{
     widgets::{Row, Table, Widget},
 };
 
-pub(crate) struct MenuWidget<'a> {
+pub struct MenuWidget<'a> {
     table: Table<'a>,
 }
 

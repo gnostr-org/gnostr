@@ -2,29 +2,29 @@ use crate::gitui::gitu_diff::FileDiff;
 use std::ops::Range;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Diff {
+pub struct Diff {
     pub text: String,
     pub file_diffs: Vec<FileDiff>,
 }
 
 #[derive(Debug)]
-pub(crate) enum PatchMode {
+pub enum PatchMode {
     Normal,
     Reverse,
 }
 
 impl Diff {
-    pub(crate) fn mask_old_hunk(&self, file_i: usize, hunk_i: usize) -> String {
+    pub fn mask_old_hunk(&self, file_i: usize, hunk_i: usize) -> String {
         let content = &self.text[self.file_diffs[file_i].hunks[hunk_i].content.range.clone()];
         mask_hunk_content(content, '-', '+')
     }
 
-    pub(crate) fn mask_new_hunk(&self, file_i: usize, hunk_i: usize) -> String {
+    pub fn mask_new_hunk(&self, file_i: usize, hunk_i: usize) -> String {
         let content = &self.text[self.file_diffs[file_i].hunks[hunk_i].content.range.clone()];
         mask_hunk_content(content, '+', '-')
     }
 
-    pub(crate) fn format_patch(&self, file_i: usize, hunk_i: usize) -> String {
+    pub fn format_patch(&self, file_i: usize, hunk_i: usize) -> String {
         let file_diff = &self.file_diffs[file_i];
         format!(
             "{}{}",
@@ -33,7 +33,7 @@ impl Diff {
         )
     }
 
-    pub(crate) fn format_line_patch(
+    pub fn format_line_patch(
         &self,
         file_i: usize,
         hunk_i: usize,
@@ -74,7 +74,7 @@ impl Diff {
         format!("{}{}{}", file_header, hunk_header, modified_content)
     }
 
-    pub(crate) fn first_diff_line(&self, file_i: usize, hunk_i: usize) -> usize {
+    pub fn first_diff_line(&self, file_i: usize, hunk_i: usize) -> usize {
         if let Some(change) = self.file_diffs[file_i].hunks[hunk_i]
             .content
             .changes

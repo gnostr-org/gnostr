@@ -6,11 +6,11 @@ use crate::{gitui::git, gitui::Res};
 
 use super::{Error, Utf8Error};
 
-pub(crate) fn get_upstream(repo: &Repository) -> Res<Option<Branch<'_>>> {
+pub fn get_upstream(repo: &Repository) -> Res<Option<Branch<'_>>> {
     get_branch_upstream(&git::get_current_branch(repo)?)
 }
 
-pub(crate) fn get_branch_upstream<'repo>(branch: &Branch<'repo>) -> Res<Option<Branch<'repo>>> {
+pub fn get_branch_upstream<'repo>(branch: &Branch<'repo>) -> Res<Option<Branch<'repo>>> {
     match branch.upstream() {
         Ok(v) => Ok(Some(v)),
         Err(e) if e.class() == git2::ErrorClass::Config => Ok(None),
@@ -32,7 +32,7 @@ pub(crate) fn get_branch_upstream<'repo>(branch: &Branch<'repo>) -> Res<Option<B
 /// git … push -v . feature-branch\:refs/heads/main
 /// git … pull . refs/heads/main
 /// git … rebase --autostash main
-pub(crate) fn get_upstream_components(repo: &Repository) -> Res<Option<(String, String)>> {
+pub fn get_upstream_components(repo: &Repository) -> Res<Option<(String, String)>> {
     let Some(upstream) = get_upstream(repo)? else {
         return Ok(None);
     };
@@ -61,7 +61,7 @@ pub(crate) fn get_upstream_components(repo: &Repository) -> Res<Option<(String, 
     }
 }
 
-pub(crate) fn get_upstream_shortname(repo: &Repository) -> Res<Option<String>> {
+pub fn get_upstream_shortname(repo: &Repository) -> Res<Option<String>> {
     let Some(upstream) = get_upstream(repo)? else {
         return Ok(None);
     };
@@ -72,7 +72,7 @@ pub(crate) fn get_upstream_shortname(repo: &Repository) -> Res<Option<String>> {
     ))
 }
 
-pub(crate) fn get_push_remote(repo: &Repository) -> Res<Option<String>> {
+pub fn get_push_remote(repo: &Repository) -> Res<Option<String>> {
     let push_remote_cfg = head_push_remote_cfg(repo)?;
     let config = repo.config().map_err(Error::ReadGitConfig)?;
     let result = match config.get_entry(&push_remote_cfg) {
@@ -88,7 +88,7 @@ pub(crate) fn get_push_remote(repo: &Repository) -> Res<Option<String>> {
     result
 }
 
-pub(crate) fn get_default_push_remote(repo: &Repository) -> Res<Option<String>> {
+pub fn get_default_push_remote(repo: &Repository) -> Res<Option<String>> {
     let push_default_cfg = "remote.pushDefault";
     let config = repo.config().map_err(Error::ReadGitConfig)?;
     let result = match config.get_entry(push_default_cfg) {
@@ -104,7 +104,7 @@ pub(crate) fn get_default_push_remote(repo: &Repository) -> Res<Option<String>> 
     result
 }
 
-pub(crate) fn set_push_remote(repo: &Repository, remote: Option<&Remote>) -> Res<()> {
+pub fn set_push_remote(repo: &Repository, remote: Option<&Remote>) -> Res<()> {
     let push_remote_cfg = head_push_remote_cfg(repo)?;
     let mut config = repo.config().map_err(Error::ReadGitConfig)?;
     match remote {
@@ -127,7 +127,7 @@ pub(crate) fn set_push_remote(repo: &Repository, remote: Option<&Remote>) -> Res
     Ok(())
 }
 
-pub(crate) fn head_push_remote_cfg(repo: &Repository) -> Res<String> {
+pub fn head_push_remote_cfg(repo: &Repository) -> Res<String> {
     let branch = git::get_current_branch_name(repo)?;
     let push_remote_cfg = format!("branch.{branch}.pushRemote");
     Ok(push_remote_cfg)

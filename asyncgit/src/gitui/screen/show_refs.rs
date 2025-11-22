@@ -17,7 +17,7 @@ use ratatui::{
     text::{Line, Span},
 };
 
-pub(crate) fn create(config: Rc<Config>, repo: Rc<Repository>, size: Size) -> Res<Screen> {
+pub fn create(config: Rc<Config>, repo: Rc<Repository>, size: Size) -> Res<Screen> {
     Screen::new(
         Rc::clone(&config),
         size,
