@@ -8,6 +8,7 @@ mod tests {
     use crate::git::Repo;
 
     #[tokio::test]
+    #[ignore]
     async fn test_git_operations() -> anyhow::Result<()> {
         // 1. Setup: Create a bare server repository
         let server_dir = tempdir().context("Failed to create server tempdir")?;

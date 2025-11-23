@@ -18,22 +18,22 @@ struct MessageKeys([u8; 76]);
 
 impl MessageKeys {
     #[inline]
-    pub fn zero() -> MessageKeys {
+    pub(crate) fn zero() -> MessageKeys {
         MessageKeys([0; 76])
     }
 
     #[inline]
-    pub fn encryption(&self) -> [u8; 32] {
+    pub(crate) fn encryption(&self) -> [u8; 32] {
         self.0[0..32].try_into().unwrap()
     }
 
     #[inline]
-    pub fn nonce(&self) -> [u8; 12] {
+    pub(crate) fn nonce(&self) -> [u8; 12] {
         self.0[32..44].try_into().unwrap()
     }
 
     #[inline]
-    pub fn auth(&self) -> [u8; 32] {
+    pub(crate) fn auth(&self) -> [u8; 32] {
         self.0[44..76].try_into().unwrap()
     }
 }
@@ -48,6 +48,7 @@ fn get_shared_point(private_key_a: SecretKey, x_only_public_key_b: XOnlyPublicKe
     ssp.try_into().unwrap()
 }
 
+/// Derives a NIP-44 conversation key from a private key and an XOnlyPublicKey.
 pub fn get_conversation_key(
     private_key_a: SecretKey,
     x_only_public_key_b: XOnlyPublicKey,

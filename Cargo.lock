@@ -1988,9 +1988,9 @@ checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
 name = "constant_time_eq"
-version = "0.3.1"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
+checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "convert_case"
@@ -3563,25 +3563,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnip44"
-version = "0.0.72"
-dependencies = [
- "base64 0.22.1",
- "chacha20",
- "constant_time_eq",
- "hkdf",
- "hmac",
- "rand_core 0.6.4",
- "secp256k1 0.29.1",
- "sha2 0.10.9",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "gnostr"
 version = "1908.924233.83694"
 dependencies = [
- "actix",
  "actix-cors",
  "actix-http",
  "actix-rt",
@@ -3598,7 +3582,7 @@ dependencies = [
  "async-trait",
  "auth-git2",
  "backtrace",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bech32 0.11.0",
  "bincode",
  "bitcoin_hashes 0.14.0",
@@ -3620,6 +3604,7 @@ dependencies = [
  "comrak",
  "config",
  "console 0.15.11",
+ "constant_time_eq",
  "core-net",
  "crossbeam-channel",
  "crossterm",
@@ -3644,7 +3629,6 @@ dependencies = [
  "getopts",
  "gh-emoji",
  "git2",
- "gnip44",
  "gnostr-asyncgit",
  "gnostr-crawler",
  "gnostr-legit",
@@ -3652,6 +3636,7 @@ dependencies = [
  "gnostr-relay",
  "gnostr_qr",
  "hex",
+ "hkdf",
  "hmac",
  "home",
  "hostname",

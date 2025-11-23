@@ -112,7 +112,7 @@ pub use tokio::sync::mpsc::{Receiver, Sender};
 pub use tungstenite::Message;
 ///
 pub use zeroize::Zeroize;
-//pub use gnip44::*;
+pub use types::nip44;
 //avoid?//upgrade?
 //pub use lightning;
 

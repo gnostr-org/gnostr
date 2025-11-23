@@ -256,7 +256,7 @@ impl Signer for PrivateKey {
 
     /// Get NIP-44 conversation key
     fn nip44_conversation_key(&self, other: &PublicKey) -> Result<[u8; 32], Error> {
-        Ok(nip44::get_conversation_key(
+        Ok(super::nip44::get_conversation_key(
             self.0,
             other.as_xonly_public_key(),
         ))
