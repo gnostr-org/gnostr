@@ -218,9 +218,9 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 #[cfg(all(test, target_os = "macos"))]
 mod tests {
     use super::*;
+    use crate::{blockheight, weeble, wobble};
     use std::fs;
     use std::path::PathBuf;
-    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn test_take_screenshot_macos() {
@@ -229,14 +229,17 @@ mod tests {
         screenshot_path.push("test_screenshots");
         fs::create_dir_all(&screenshot_path).expect("Failed to create screenshot directory");
 
-        // Add a timestamp to the filename
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs();
-        let filename = format!("test_screenshot-{}.png", timestamp);
-        screenshot_path.push(filename);
+        // Get weeble, blockheight, and wobble values
+        let weeble_val = weeble::weeble().unwrap();
+        let blockheight_val = blockheight::blockheight().unwrap();
+        let wobble_val = wobble::wobble().unwrap();
 
+        // Add values to the filename
+        let filename = format!(
+            "test_screenshot-{}-{}-{}.png",
+            weeble_val, blockheight_val, wobble_val
+        );
+        screenshot_path.push(filename);
         let screenshot_path_str = screenshot_path.to_str().unwrap();
 
         // --- Execute ---
@@ -249,6 +252,6 @@ mod tests {
         assert!(metadata.len() > 0, "Screenshot file is empty");
 
         // --- Teardown ---
-        fs::remove_file(screenshot_path_str).expect("Failed to remove screenshot file");
+        // fs::remove_file(screenshot_path_str).expect("Failed to remove screenshot file");
     }
 }
