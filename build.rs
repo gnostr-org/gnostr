@@ -169,31 +169,31 @@ fn install_xcb_deps() {
         println!("cargo:rerun-if-changed=build.rs");
         println!("cargo:warning=Detected Linux OS. Attempting to install xcb dependencies.");
 
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi")
-            .output();
+        //let output = Command::new("sh")
+        //    .arg("-c")
+        //    .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi")
+        //    .output();
 
-        match output {
-            Ok(output) => {
-                if !output.status.success() {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                    // Exit the build process with an error
-                    panic!("Failed to install required Linux dependencies.");
-                } else {
-                    println!("cargo:warning=Successfully installed xcb dependencies.");
-                }
-            }
-            Err(e) => {
-                println!(
-                    "cargo:warning=Failed to run dependency installation command: {}",
-                    e
-                );
-                // Exit the build process with an error
-                panic!("Failed to run dependency installation command.");
-            }
-        }
+        //match output {
+        //    Ok(output) => {
+        //        if !output.status.success() {
+        //            let stderr = String::from_utf8_lossy(&output.stderr);
+        //            println!("cargo:warning=Failed to install dependencies: {}", stderr);
+        //            // Exit the build process with an error
+        //            panic!("Failed to install required Linux dependencies.");
+        //        } else {
+        //            println!("cargo:warning=Successfully installed xcb dependencies.");
+        //        }
+        //    }
+        //    Err(e) => {
+        //        println!(
+        //            "cargo:warning=Failed to run dependency installation command: {}",
+        //            e
+        //        );
+        //        // Exit the build process with an error
+        //        panic!("Failed to run dependency installation command.");
+        //    }
+        //}
     }
     if target_os == "macos" {
         println!("cargo:rerun-if-changed=build.rs");
