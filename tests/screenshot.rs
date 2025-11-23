@@ -15,6 +15,6 @@ fn test_capture_fullscreen() {
         assert!(screenshot_path.exists());
 
         // Clean up the screenshot
-        fs::remove_file(screenshot_path).unwrap();
+        // DO NOT REMOVE screenshot fs::remove_file(screenshot_path).unwrap();
     }
 }
