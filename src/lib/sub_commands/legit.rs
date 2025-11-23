@@ -26,12 +26,6 @@ pub struct LegitSubCommand {
     /// Path to your git repository
     repository_path: Option<String>,
     ///// nsec or hex private key
-    #[arg(short, long, global = true)]
-    nsec: Option<String>,
-    ///// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    password: Option<String>,
-    ///// nsec or hex private key
     #[arg(long, global = true)]
     repo: Option<String>,
     ///// password to decrypt nsec
@@ -49,9 +43,6 @@ pub struct LegitSubCommand {
     /// Nostr event kind to use for the git event
     #[arg(long)]
     kind: Option<u16>,
-    ///// disable spinner animations
-    #[arg(long, action)]
-    disable_cli_spinners: bool,
 }
 
 pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
@@ -66,7 +57,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Mine) | None => {
             let opts = gitminer::Options {
                 threads: sub_command_args.threads as u32,
-                target: sub_command_args.prefix.clone().unwrap_or_default(),
+                target: sub_command_args.pow.clone().unwrap_or(sub_command_args.prefix.clone().unwrap_or_default()),
                 message: sub_command_args.message.clone().unwrap_or_default(),
                 repo: sub_command_args.repo.clone().unwrap_or(sub_command_args.repository_path.clone().unwrap_or(".".to_string())),
 
