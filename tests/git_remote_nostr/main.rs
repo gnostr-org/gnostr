@@ -30,7 +30,7 @@ fn get_nostr_remote_url() -> Result<String> {
 }
 
 fn prep_git_repo() -> Result<GitTestRepo> {
-    let test_repo = GitTestRepo::without_repo_in_git_config();
+    let mut test_repo = GitTestRepo::without_repo_in_git_config();
     set_git_nostr_login_config(&test_repo)?;
     test_repo.add_remote(NOSTR_REMOTE_NAME, &get_nostr_remote_url()?)?;
     test_repo.populate()?;
@@ -55,13 +55,13 @@ fn clone_git_repo_with_nostr_url() -> Result<GitTestRepo> {
     std::fs::create_dir(path.clone())?;
     CliTester::new_git_with_remote_helper_from_dir(&path, ["clone", &get_nostr_remote_url()?, "."])
         .expect_end_eventually_and_print()?;
-    let test_repo = GitTestRepo::open(&path)?;
+    let mut test_repo = GitTestRepo::open(&path)?;
     set_git_nostr_login_config(&test_repo)?;
     Ok(test_repo)
 }
 
 fn prep_git_repo_minus_1_commit() -> Result<GitTestRepo> {
-    let test_repo = GitTestRepo::without_repo_in_git_config();
+    let mut test_repo = GitTestRepo::without_repo_in_git_config();
     set_git_nostr_login_config(&test_repo)?;
     test_repo.add_remote(NOSTR_REMOTE_NAME, &get_nostr_remote_url()?)?;
     test_repo.populate_minus_1()?;
@@ -99,7 +99,7 @@ fn cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
 }
 
 async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, GitTestRepo)> {
-    let git_repo = prep_git_repo()?;
+    let mut git_repo = prep_git_repo()?;
     git_repo.create_branch("example-branch")?;
     let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string();
     // TODO recreate_as_bare isn't creating other branches

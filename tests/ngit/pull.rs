@@ -31,7 +31,7 @@ mod when_main_is_checked_out {
             let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
                 cli_tester_create_proposals()?;
 
-                let test_repo = create_repo_with_proposal_branch_pulled_and_checkedout(1)?;
+                let mut test_repo = create_repo_with_proposal_branch_pulled_and_checkedout(1)?;
 
                 test_repo.checkout("main")?;
 
@@ -88,7 +88,7 @@ mod when_branch_doesnt_exist {
             let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
                 cli_tester_create_proposals()?;
 
-                let test_repo = GitTestRepo::default();
+                let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
 
                 test_repo.create_branch("random-name")?;

@@ -9,7 +9,7 @@ static EXPECTED_SET_PASSWORD_PROMPT: &str = "encrypt with password";
 static EXPECTED_SET_PASSWORD_CONFIRM_PROMPT: &str = "confirm password";
 
 fn standard_first_time_login_encrypting_nsec() -> Result<CliTester> {
-    let test_repo = GitTestRepo::default();
+    let mut test_repo = GitTestRepo::default();
     let mut p = CliTester::new_from_dir(&test_repo.dir, ["login", "--offline"]);
 
     p.expect_input_eventually(EXPECTED_NSEC_PROMPT)?
@@ -59,7 +59,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let test_repo = GitTestRepo::default();
+                        let mut test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -99,7 +99,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let test_repo = GitTestRepo::default();
+                        let mut test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -424,7 +424,7 @@ mod with_relays {
                         );
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             let mut p = CliTester::new_from_dir(
                                 &test_repo.dir,
                                 ["login", "--nsec", TEST_KEY_1_NSEC],
@@ -481,7 +481,7 @@ mod with_relays {
                         );
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             CliTester::new_from_dir(
                                 &test_repo.dir,
                                 [
@@ -549,7 +549,7 @@ mod with_relays {
                         );
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             let mut p = CliTester::new_from_dir(
                                 &test_repo.dir,
                                 [
@@ -601,7 +601,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let test_repo = GitTestRepo::default();
+                        let mut test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -665,7 +665,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let test_repo = GitTestRepo::default();
+                        let mut test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -733,7 +733,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let test_repo = GitTestRepo::default();
+                        let mut test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(
                             &test_repo.dir,
                             [
@@ -789,7 +789,7 @@ mod with_relays {
                 );
 
                 let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                    let test_repo = GitTestRepo::default();
+                    let mut test_repo = GitTestRepo::default();
                     let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                     p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -876,7 +876,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn succeeds_with_text_logged_in_as_npub() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(&test_repo.dir, ["login", "--offline"]);
 
             p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -900,7 +900,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn succeeds_with_hex_secret_key_in_place_of_nsec() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(&test_repo.dir, ["login", "--offline"]);
 
             p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -930,7 +930,7 @@ mod with_offline_flag {
                 let invalid_nsec_response =
                     "invalid. try again with nostr address / bunker uri / nsec";
 
-                let test_repo = GitTestRepo::default();
+                let mut test_repo = GitTestRepo::default();
                 let mut p = CliTester::new_from_dir(&test_repo.dir, ["login", "--offline"]);
 
                 p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -969,7 +969,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
                 &test_repo.dir,
                 ["login", "--offline", "--nsec", TEST_KEY_1_NSEC],
@@ -983,7 +983,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn forgets_identity() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
                 &test_repo.dir,
                 ["login", "--offline", "--nsec", TEST_KEY_1_NSEC],
@@ -1008,7 +1008,7 @@ mod with_offline_flag {
             #[cfg(feature = "expensive_tests")]
             fn valid_nsec_param_succeeds_without_prompts_and_logs_in() -> Result<()> {
                 standard_first_time_login_encrypting_nsec()?.exit()?;
-                let test_repo = GitTestRepo::default();
+                let mut test_repo = GitTestRepo::default();
                 let mut p = CliTester::new_from_dir(
                     &test_repo.dir,
                     ["login", "--offline", "--nsec", TEST_KEY_2_NSEC],
@@ -1022,7 +1022,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
                 &test_repo.dir,
                 ["login", "--offline", "--nsec", TEST_INVALID_NSEC],
@@ -1040,7 +1040,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
                 &test_repo.dir,
                 [
@@ -1059,7 +1059,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn parameters_can_be_called_globally() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
                 &test_repo.dir,
                 [
@@ -1082,7 +1082,7 @@ mod with_offline_flag {
             #[cfg(feature = "expensive_tests")]
             fn valid_nsec_param_succeeds_without_prompts_and_logs_in() -> Result<()> {
                 standard_first_time_login_encrypting_nsec()?.exit()?;
-                let test_repo = GitTestRepo::default();
+                let mut test_repo = GitTestRepo::default();
                 let mut p = CliTester::new_from_dir(
                     &test_repo.dir,
                     [
@@ -1106,7 +1106,7 @@ mod with_offline_flag {
             #[cfg(feature = "expensive_tests")]
             fn password_changes() -> Result<()> {
                 standard_first_time_login_encrypting_nsec()?.exit()?;
-                let test_repo = GitTestRepo::default();
+                let mut test_repo = GitTestRepo::default();
                 let mut p = CliTester::new_from_dir(
                     &test_repo.dir,
                     [
@@ -1132,7 +1132,7 @@ mod with_offline_flag {
         #[test]
         #[cfg(feature = "expensive_tests")]
         fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
                 &test_repo.dir,
                 [
@@ -1159,7 +1159,7 @@ mod with_offline_flag {
         // expensive to run
         fn warns_it_might_take_a_few_seconds_then_succeeds_then_second_login_prompts_for_password_then_warns_again_then_succeeds(
         ) -> Result<()> {
-            let test_repo = GitTestRepo::default();
+            let mut test_repo = GitTestRepo::default();
             let mut p =
                 CliTester::new_with_timeout_from_dir(15000, &test_repo.dir, ["login", "--offline"]);
             p.expect_input(EXPECTED_NSEC_PROMPT)?

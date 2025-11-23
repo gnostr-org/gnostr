@@ -49,7 +49,7 @@ mod when_proposal_isnt_associated_with_branch_name {
             let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
                 cli_tester_create_proposals()?;
 
-                let test_repo = GitTestRepo::default();
+                let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
 
                 test_repo.create_branch("random-name")?;
@@ -313,7 +313,7 @@ mod when_branch_is_checked_out {
             r55.events.push(generate_test_key_1_relay_list_event());
 
             let cli_tester_handle = std::thread::spawn(move || -> Result<GitTestRepo> {
-                let (_, test_repo) =
+                let (_, mut test_repo) =
                     create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                 // add another commit (so we have an ammened local
@@ -403,7 +403,7 @@ mod when_branch_is_checked_out {
                         create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
                     let branch_name = tmp_repo.get_checked_out_branch_name()?;
 
-                    let test_repo = GitTestRepo::default();
+                    let mut test_repo = GitTestRepo::default();
                     test_repo.populate()?;
 
                     // simulate rebase
@@ -470,7 +470,7 @@ mod when_branch_is_checked_out {
                             create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
                         let branch_name = tmp_repo.get_checked_out_branch_name()?;
 
-                        let test_repo = GitTestRepo::default();
+                        let mut test_repo = GitTestRepo::default();
                         test_repo.populate()?;
 
                         // simulate rebase
