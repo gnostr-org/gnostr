@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn when_from_branch_doesnt_exist_return_error() -> Result<()> {
-        let test_repo = GitTestRepo::default();
+        let mut test_repo = GitTestRepo::default();
         let git_repo = Repo::from_path(&test_repo.dir)?;
 
         test_repo.populate()?;
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn when_to_branch_doesnt_exist_return_error() -> Result<()> {
-        let test_repo = GitTestRepo::default();
+        let mut test_repo = GitTestRepo::default();
         let git_repo = Repo::from_path(&test_repo.dir)?;
 
         test_repo.populate()?;
@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn when_to_branch_is_none_and_no_main_or_master_branch_return_error() -> Result<()> {
-        let test_repo = GitTestRepo::new("notmain")?;
+        let mut test_repo = GitTestRepo::new("notmain")?;
         let git_repo = Repo::from_path(&test_repo.dir)?;
 
         test_repo.populate()?;
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn when_from_branch_is_not_head_return_as_from_branch() -> Result<()> {
-        let test_repo = GitTestRepo::default();
+        let mut test_repo = GitTestRepo::default();
         let git_repo = Repo::from_path(&test_repo.dir)?;
 
         test_repo.populate()?;
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn when_to_branch_is_not_main_return_as_to_branch() -> Result<()> {
-        let test_repo = GitTestRepo::default();
+        let mut test_repo = GitTestRepo::default();
         let git_repo = Repo::from_path(&test_repo.dir)?;
 
         test_repo.populate()?;

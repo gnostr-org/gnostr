@@ -1,4 +1,4 @@
-use super::{PublicKey, UncheckedUrl};
+#[cfg(test)]use crate::test_serde;use crate::types::{PublicKey, UncheckedUrl};
 use super::Error;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]

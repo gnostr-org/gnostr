@@ -69,6 +69,7 @@ impl Sub<Unixtime> for Unixtime {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {Unixtime, test_unixtime_serde}
 

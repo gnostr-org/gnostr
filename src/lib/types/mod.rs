@@ -87,7 +87,8 @@ mod profile;
 pub use profile::Profile;
 
 mod public_key;
-pub use public_key::{PublicKey, PublicKeyHex, XOnlyPublicKey};
+pub use public_key::{PublicKey, PublicKeyHex};
+pub use secp256k1::XOnlyPublicKey;
 
 mod relay_information_document;
 pub use relay_information_document::{
@@ -128,6 +129,8 @@ mod url;
 pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
 #[cfg(test)]
+#[macro_export]
+/// A helper macro for testing `serde` serialization and deserialization.
 macro_rules! test_serde {
     ($t:ty, $fnname:ident) => {
         #[test]

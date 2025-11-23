@@ -343,6 +343,7 @@ impl From<RelayOrigin> for RelayUrl {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {UncheckedUrl, test_unchecked_url_serde}
 

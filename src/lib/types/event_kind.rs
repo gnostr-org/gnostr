@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
 use std::convert::From;
+#[cfg(test)]
+use crate::test_serde;
+
 use std::fmt;
 
 macro_rules! define_event_kinds {

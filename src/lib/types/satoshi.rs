@@ -44,6 +44,7 @@ impl Add<MilliSatoshi> for MilliSatoshi {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {MilliSatoshi, test_millisatoshi_serde}
 

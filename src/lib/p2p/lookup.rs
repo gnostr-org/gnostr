@@ -24,31 +24,27 @@ use log::debug;
 use std::io;
 use std::str::FromStr;
 use std::time::Duration;
-use structopt::clap::arg_enum;
-use structopt::StructOpt;
 use thiserror::Error;
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "libp2p-lookup", about = "Lookup libp2p nodes.")]
+#[derive(Debug, Parser)]
+#[command(name = "libp2p-lookup", about = "Lookup libp2p nodes.")]
 enum Opt {
     /// Lookup peer by its address.
     Direct {
         /// Address of the peer.
-        #[structopt(long)]
+        #[arg(long)]
         address: Multiaddr,
     },
     /// Lookup peer by its ID via the Kademlia DHT.
     Dht {
         /// ID of the peer.
-        #[structopt(long)]
+        #[arg(long)]
         peer_id: PeerId,
         /// Network of the peer.
-        #[structopt(
+        #[arg(
         long,
-        possible_values = &Network::variants(),
-        case_insensitive = true,
-        //default_value = &Network::protocol(&Network::Ipfs).unwrap(),
-        default_value = &"ipfs",
+        value_enum,
+        default_value = "ipfs",
         )]
         network: Network,
     },
@@ -57,7 +53,7 @@ enum Opt {
 #[async_std::main]
 async fn main() {
     env_logger::init();
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     let lookup = match opt {
         Opt::Dht { peer_id, network } => {
@@ -398,15 +394,8 @@ struct LookupBehaviour {
     keep_alive: swarm::keep_alive::Behaviour,
 }
 
-arg_enum! {
-    #[derive(Debug, Clone,Copy)]
-    enum Network {
-        Kusama,
-        Polkadot,
-        Ipfs,
-        Ursa,
-    }
-}
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum Network {
 
 impl Network {
     #[rustfmt::skip]

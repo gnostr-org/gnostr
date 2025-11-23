@@ -82,7 +82,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
 
         #[tokio::test]
         async fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
-            let git_repo = test_utils::git::GitTestRepo::new("main")?;
+            let mut git_repo = test_utils::git::GitTestRepo::new("main")?;
             git_repo.initial_commit()?;
 
             let mut p = test_utils::CliTester::new_from_dir(
@@ -103,7 +103,7 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
 
         #[tokio::test]
         async fn test_ngit_send_command() -> Result<(), Box<dyn StdError>> {
-            let git_repo = test_utils::git::GitTestRepo::new("main")?;
+            let mut git_repo = test_utils::git::GitTestRepo::new("main")?;
             git_repo.populate()?;
 
             let mut p = test_utils::CliTester::new_from_dir(
