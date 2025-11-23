@@ -4,6 +4,7 @@ use std::time::Duration;
 use std::path::PathBuf;
 
 fn main() {
+    // Define the path for the screenshot
     let screenshot_path: PathBuf = [
         "/Users/randymcmillan/.gemini/tmp/e2231b79f1bd8b2a6ddfa2b8e1288337b83b48b9c931587d9e416bcd03fb2b14",
         "tui_capture.png",
@@ -12,38 +13,70 @@ fn main() {
     .collect();
     let screenshot_path_str = screenshot_path.to_str().expect("Path is not valid UTF-8");
 
-    // Compile the gnostr binary first to avoid delays
+    // --- 1. Compile the gnostr binary ---
+    // This ensures we're testing the latest code without race conditions from `cargo watch`.
     println!("Compiling gnostr TUI...");
-    let mut build_cmd = Command::new("cargo");
-    build_cmd.arg("build").arg("--bin").arg("gnostr");
-    let build_status = build_cmd.status().expect("Failed to build gnostr binary");
+    let build_status = Command::new("cargo")
+        .arg("build")
+        .arg("--bin")
+        .arg("gnostr")
+        .status()
+        .expect("Failed to execute cargo build");
+
     if !build_status.success() {
-        panic!("Failed to compile gnostr TUI");
+        panic!("Failed to compile gnostr TUI. Aborting.");
     }
 
-    // Use osascript to open a new terminal and run the pre-compiled TUI
-    let script = format!(
-        "tell application \"Terminal\" to do script \"cd {} && ./target/debug/gnostr tui\"",
-        std::env::current_dir().unwrap().to_str().unwrap()
+    // --- 2. Launch TUI in a new Terminal window and get its ID ---
+    // We use a single AppleScript to both launch the TUI and return the new window's ID.
+    // This is more reliable than trying to find the window after the fact.
+    let project_dir = std::env::current_dir().unwrap().to_str().unwrap().to_string();
+    let start_and_get_id_script = format!(
+        r#"
+        tell application "Terminal"
+            activate
+            -- Execute the command in a new tab/window
+            set theTab to do script "cd {} && {}/target/debug/gnostr tui"
+            -- Give the window a moment to be created and assigned an ID
+            delay 2
+            -- Find the window containing the new tab and return its ID
+            return id of first window whose tabs contains theTab
+        end tell
+        "#,
+        project_dir, project_dir
     );
 
-    let mut cmd = Command::new("osascript");
-    cmd.arg("-e").arg(&script);
+    println!("Launching TUI and getting window ID...");
+    let osascript_output = Command::new("osascript")
+        .arg("-e")
+        .arg(&start_and_get_id_script)
+        .output()
+        .expect("Failed to execute osascript to start TUI");
 
-    let status = cmd.status().expect("Failed to open new terminal with osascript");
-    if !status.success() {
-        panic!("Failed to execute osascript");
+    if !osascript_output.status.success() {
+        eprintln!("osascript error: {}", String::from_utf8_lossy(&osascript_output.stderr));
+        panic!("Failed to get window ID from AppleScript.");
     }
 
-    // Wait for the new window and TUI to initialize
-    println!("Waiting for TUI to launch in new window...");
-    thread::sleep(Duration::from_secs(10));
+    let window_id = String::from_utf8(osascript_output.stdout)
+        .expect("osascript output was not valid UTF-8")
+        .trim()
+        .to_string();
 
-    // Find the process ID of the new Terminal window running the TUI
-    // This is tricky; for now, we will use screencapture's interactive window selection.
-    println!("Please click on the gnostr TUI window to capture it.");
+    if window_id.is_empty() {
+        panic!("AppleScript did not return a window ID. Cannot proceed.");
+    }
+    println!("TUI is running in window ID: {}", window_id);
+
+    // --- 3. Capture the screenshot ---
+    // Wait for the TUI to fully render before taking the screenshot.
+    println!("Waiting for TUI to render...");
+    thread::sleep(Duration::from_secs(5));
+
+    println!("Capturing screenshot of window {}...", window_id);
     let mut capture_cmd = Command::new("screencapture");
-    capture_cmd.arg("-w")
+    capture_cmd.arg("-l") // Capture a specific window ID
+               .arg(&window_id)
                .arg(screenshot_path_str);
     
     let capture_status = capture_cmd.status().expect("Failed to execute screencapture");
@@ -53,4 +86,23 @@ fn main() {
     } else {
         eprintln!("Failed to capture screenshot.");
     }
+
+    // --- 4. Clean up and close the Terminal window ---
+    let close_script = format!(
+        r#"
+        tell application "Terminal"
+            close window id {}
+        end tell
+        "#,
+        window_id
+    );
+
+    println!("Closing TUI window...");
+    Command::new("osascript")
+        .arg("-e")
+        .arg(&close_script)
+        .status()
+        .expect("Failed to close terminal window via osascript");
+
+    println!("Automation complete.");
 }
