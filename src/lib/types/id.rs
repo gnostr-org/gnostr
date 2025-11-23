@@ -228,6 +228,7 @@ impl Visitor<'_> for IdHexVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {Id, test_id_serde}
     test_serde! {IdHex, test_id_hex_serde}

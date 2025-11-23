@@ -569,8 +569,8 @@ mod test {
     { "time": 3600, "count": 10000 }
   ] }"##;
         let rid: RelayInformationDocumentV2 = serde_json::from_str(json).unwrap();
-        let json2 = serde_json::to_string(&rid).unwrap();
-        let expected_json2 = r##"{"name":"A Relay","supported_nips":[11,12],"retention":[{"kinds":[0,1,[5,7],[40,49]],"time":3600},{"kinds":[[40000,49999]],"time":100},{"count":1000,"kinds":[[30000,39999]]},{"count":10000,"time":3600}],"myfield":[1,2]}"##;
+        let json2 = serde_json::to_value(&rid).unwrap();
+        let expected_json2: Value = serde_json::from_str(r##"{"name":"A Relay","supported_nips":[11,12],"retention":[{"kinds":[0,1,[5,7],[40,49]],"time":3600},{"kinds":[[40000,49999]],"time":100},{"kinds":[[30000,39999]],"count":1000},{"time":3600,"count":10000}],"myfield":[1,2]}"##).unwrap();
         assert_eq!(json2, expected_json2);
     }
 }

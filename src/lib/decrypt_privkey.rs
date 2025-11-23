@@ -1,7 +1,7 @@
 // TEMPORARILY
 #![allow(clippy::uninlined_format_args)]
 
-use gnostr_types::{EncryptedPrivateKey, PrivateKey};
+use gnostr::types::{EncryptedPrivateKey, PrivateKey};
 
 fn decrypt_privkey() {
     println!("DANGER this exposes the private key.");

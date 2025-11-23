@@ -1,3 +1,6 @@
+#[cfg(test)]
+use crate::test_serde;
+
 use super::{EventKind, Id, PublicKey, UncheckedUrl};
 use super::Error;
 use serde::{Deserialize, Serialize};

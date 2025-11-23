@@ -1,4 +1,7 @@
-use super::{EventKind, PublicKey, UncheckedUrl};
+#[cfg(test)]
+use crate::test_serde;
+
+use crate::types::{EventKind, NEvent, NostrBech32, PublicKey, UncheckedUrl};
 use super::Error;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]

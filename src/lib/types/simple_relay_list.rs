@@ -105,6 +105,7 @@ impl<'de> Visitor<'de> for SimpleRelayListVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {SimpleRelayList, test_simple_relay_list_serde}
 

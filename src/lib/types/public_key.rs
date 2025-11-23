@@ -1,6 +1,10 @@
 use super::{Error, PrivateKey, Signature};
 use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
-pub use secp256k1::XOnlyPublicKey;
+#[cfg(test)]
+use crate::test_serde;
+
+use secp256k1::XOnlyPublicKey;
+use hex::FromHexError;
 use secp256k1::SECP256K1;
 use serde::de::{Deserializer, Visitor};
 use serde::ser::Serializer;
