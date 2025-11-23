@@ -576,15 +576,15 @@ impl Probe {
                     }
                     RelayMessage::Event(sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
-                        #[cfg(debug_assertions)]
-                        eprintln!(
-                            "mod.rs:498:{}: EVENT({}, {})",
-                            PREFIXES.from_relay,
-                            sub.as_str(),
-                            event_json
-                        );
-                        #[cfg(not(debug_assertions))]
-                        eprintln!("{}", event_json);
+                        //#[cfg(debug_assertions)]
+                        //eprintln!(
+                        //    "mod.rs:581:{}: EVENT({}, {})",
+                        //    PREFIXES.from_relay,
+                        //    sub.as_str(),
+                        //    event_json
+                        //);
+                        //#[cfg(not(debug_assertions))]
+                        print!("{}", event_json);
                     }
                     RelayMessage::Closed(sub, msg) => {
                         eprintln!("{}: CLOSED({}, {})", PREFIXES.from_relay, sub.as_str(), msg);

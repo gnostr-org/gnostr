@@ -329,31 +329,37 @@ async fn main() -> anyhow::Result<()> {
             }
             result // Return the accumulated result
         }
+        Some(GnostrCommands::FetchById(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::fetch_by_id::run_fetch_by_id(sub_command_args)
+                .await
+                .map_err(|e| anyhow!("Error in fetch_by_id subcommand: {}", e))
+        },
         Some(GnostrCommands::Relay(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             let local_set = tokio::task::LocalSet::new();
             local_set.run_until(async move {
                 sub_commands::relay::relay(sub_command_args.clone()).await
             }).await.map_err(|e| anyhow!("Error in relay subcommand: {}", e))
-        }
+        },
         Some(GnostrCommands::Sniper(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::sniper::run_sniper(sub_command_args.clone())
                 .await
                 .map_err(|e| anyhow!("Error in sniper subcommand: {}", e))
-        }
+        },
         Some(GnostrCommands::Git(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::git::git(sub_command_args).await.map_err(|e| anyhow!("Error in git subcommand: {}", e))
-        }
+        },
         Some(GnostrCommands::Bech32ToAny(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::bech32_to_any::bech32_to_any(sub_command_args).map_err(|e| anyhow!("Error in bech32_to_any subcommand: {}", e))
-        }
+        },
         Some(GnostrCommands::PrivkeyToBech32(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::privkey_to_bech32::privkey_to_bech32(sub_command_args).map_err(|e| anyhow!("Error in privkey_to_bech32 subcommand: {}", e))
-        }
+        },
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
