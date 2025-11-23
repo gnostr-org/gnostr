@@ -1,13 +1,13 @@
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
+use gnostr::utils::screenshot::{execute_linux_command, execute_macos_command};
 use std::io::{self, Write};
-use std::process::Command;
 
 fn main() {
     if cfg!(target_os = "macos") {
-        macos()
+        macos();
     } else {
-        linux()
+        linux();
     }
 }
 
@@ -35,53 +35,27 @@ fn linux() {
     match user_input {
         "1" => {
             // gnome-screenshot - Captures the whole screen.
-            execute_linuxcommand("gnome-screenshot", &[]);
+            execute_and_handle_linux("gnome-screenshot", &[]);
         }
         "2" => {
             // scrot -s - Captures an active window or selected area.
-            execute_linuxcommand("scrot", &["-s"]);
+            execute_and_handle_linux("scrot", &["-s"]);
         }
         "3" => {
             // gnome-screenshot -w - Captures the active window.
-            execute_linuxcommand("gnome-screenshot", &["-w"]);
+            execute_and_handle_linux("gnome-screenshot", &["-w"]);
         }
         "4" => {
             // scrot -s myscreenshot.png - Captures a specific area and names the file.
-            execute_linuxcommand("scrot", &["-s", "myscreenshot.png"]);
+            execute_and_handle_linux("scrot", &["-s", "myscreenshot.png"]);
         }
         "5" => {
             // gnome-screenshot -a - Captures a specific area.
-            execute_linuxcommand("gnome-screenshot", &["-a"]);
+            execute_and_handle_linux("gnome-screenshot", &["-a"]);
         }
         _ => {
             // default
-            execute_linuxcommand("gnome-screenshot", &[]);
-        }
-    }
-}
-
-// A helper function to execute the external command and handle errors.
-fn execute_linuxcommand(program: &str, args: &[&str]) {
-    println!("Executing command: {} {}", program, args.join(" "));
-
-    let output = Command::new(program).args(args).output();
-
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                println!("Command executed successfully.");
-                if !output.stdout.is_empty() {
-                    println!("{}", String::from_utf8_lossy(&output.stdout));
-                }
-            } else {
-                eprintln!(
-                    "Command failed with error: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-            }
-        }
-        Err(e) => {
-            eprintln!("Failed to execute command '{}': {}", program, e);
+            execute_and_handle_linux("gnome-screenshot", &[]);
         }
     }
 }
@@ -109,15 +83,15 @@ fn macos() {
     match user_input {
         "1" => {
             // Captures the whole screen and saves it to the desktop.
-            execute_macoscommand("screencapture", &["-x", "full_screen.png"]);
+            execute_and_handle_macos("screencapture", &["-x", "full_screen.png"]);
         }
         "2" => {
             // Captures a specific area. This is an interactive command.
-            execute_macoscommand("screencapture", &["-i", "selected_area.png"]);
+            execute_and_handle_macos("screencapture", &["-i", "selected_area.png"]);
         }
         "3" => {
             // Captures a specific window. This is an interactive command.
-            execute_macoscommand("screencapture", &["-w", "specific_window.png"]);
+            execute_and_handle_macos("screencapture", &["-w", "specific_window.png"]);
         }
         "4" => {
             // Captures to the clipboard.
@@ -203,42 +177,32 @@ fn macos() {
             }
 
             match clipboard_input {
-                "a" => execute_macoscommand("screencapture", &["-c"]),
-                "b" => execute_macoscommand("screencapture", &["-ic"]),
-                "c" => execute_macoscommand("screencapture", &["-wc"]),
+                "a" => execute_and_handle_macos("screencapture", &["-c"]),
+                "b" => execute_and_handle_macos("screencapture", &["-ic"]),
+                "c" => execute_and_handle_macos("screencapture", &["-wc"]),
                 // default
-                _ => execute_macoscommand("screencapture", &["-c"]),
+                _ => execute_and_handle_macos("screencapture", &["-c"]),
             }
         }
         _ => {
             // default
-            execute_macoscommand("screencapture", &["-x", "full_screen.png"]);
+            execute_and_handle_macos("screencapture", &["-x", "full_screen.png"]);
         }
     }
 }
 
-// A helper function to execute the external command and handle errors.
-fn execute_macoscommand(program: &str, args: &[&str]) {
+fn execute_and_handle_linux(program: &str, args: &[&str]) {
+    println!("Executing command: {} {}", program, args.join(" "));
+    match execute_linux_command(program, args) {
+        Ok(_) => println!("Command executed successfully."),
+        Err(e) => eprintln!("Command failed with error: {}", e),
+    }
+}
+
+fn execute_and_handle_macos(program: &str, args: &[&str]) {
     println!("\nExecuting command: {} {}", program, args.join(" "));
-
-    let output = Command::new(program).args(args).output();
-
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                println!("Command executed successfully.");
-                if !output.stdout.is_empty() {
-                    println!("{}", String::from_utf8_lossy(&output.stdout));
-                }
-            } else {
-                eprintln!(
-                    "Command failed with error: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-            }
-        }
-        Err(e) => {
-            eprintln!("Failed to execute command '{}': {}", program, e);
-        }
+    match execute_macos_command(program, args) {
+        Ok(_) => println!("Command executed successfully."),
+        Err(e) => eprintln!("Command failed with error: {}", e),
     }
 }
