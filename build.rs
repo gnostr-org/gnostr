@@ -5,6 +5,20 @@ use std::{
     process::Command,
 };
 
+fn command_exists(command: &str) -> bool {
+    let checker = if env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows" {
+        "where"
+    } else {
+        "which"
+    };
+    Command::new(checker)
+        .arg(command)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map_or(false, |s| s.success())
+}
+
 // try:
 // cargo build --features memory_profiling -j8
 
@@ -20,85 +34,104 @@ fn check_sscache() {
 }
 
 fn check_brew() -> bool {
-    Command::new("brew")
-        .arg("--version")
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+    command_exists("brew")
 }
 
 fn install_sccache() {
-    // Check if the target is a Linux environment.
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    if target_os == "linux" {}
-    //    println!("cargo:rerun-if-changed=build.rs");
-    //    println!("cargo:warning=Detected Linux OS. Attempting to install
-    // sccache.");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
 
-    //    let output = Command::new("sh")
-    //        .arg("-c")
-    //        .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y sscache; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y sccache; else echo 'Neither apt-get nor yum found. Please install sccache manually.'; fi; fi")
-    //        .output();
+    if target_os == "linux" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Linux OS. Attempting to install sccache.");
 
-    //    match output {
-    //        Ok(output) => {
-    //            if !output.status.success() {
-    //                let stderr = String::from_utf8_lossy(&output.stderr);
-    //                println!("cargo:warning=Failed to install dependencies: {}",
-    // stderr);                // Exit the build process with an error
-    //                panic!("Failed to install required Linux dependencies.");
-    //            } else {
-    //                println!("cargo:warning=Successfully installed xcb
-    // dependencies.");            }
-    //        }
-    //        Err(e) => {
-    //            println!(
-    //                "cargo:warning=Failed to run dependency installation command:
-    // {}",                e
-    //            );
-    //            // Exit the build process with an error
-    //            panic!("Failed to run dependency installation command.");
-    //        }
-    //    }
-    //}
-    if target_os == "macos" {}
-    //    println!("cargo:rerun-if-changed=build.rs");
-    //    println!("cargo:warning=Detected macOS. Attempting to install 'sccache'
-    // using Homebrew.");
+        let installer = if command_exists("apt-get") {
+            "apt-get"
+        } else if command_exists("yum") {
+            "yum"
+        } else if command_exists("dnf") {
+            "dnf"
+        } else {
+            println!("cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually.");
+            return;
+        };
 
-    //    // We use a shell command to first check if 'brew' is installed,
-    //    // and then run the installation command.
-    //    let output = Command::new("sh")
-    //        .arg("-c")
-    //        .arg("if command -v brew >/dev/null 2>&1; then brew install sccache; else echo 'Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.'; exit 1; fi")
-    //        .output();
+        if installer == "apt-get" {
+            if !Command::new("sudo")
+                .arg("apt-get")
+                .arg("update")
+                .status()
+                .map_or(false, |s| s.success())
+            {
+                println!("cargo:warning=Failed to update package lists with apt-get.");
+            }
+        }
 
-    //    match output {
-    //        Ok(output) => {
-    //            if !output.status.success() {
-    //                let stderr = String::from_utf8_lossy(&output.stderr);
-    //                println!("cargo:warning=Failed to install dependencies: {}",
-    // stderr);                // Exit the build process with a panick, since
-    // the build cannot continue.                panic!("Failed to install
-    // required macOS dependencies.");            } else {
-    //                println!("cargo:warning=Successfully installed sccache
-    // dependency.");            }
-    //        }
-    //        Err(e) => {
-    //            println!("cargo:warning=Failed to run Homebrew command: {}", e);
-    //            // Exit the build process with a panick.
-    //            panic!("Failed to run Homebrew command.");
-    //        }
-    //    }
-    //}
-    if target_os == "windows" {}
-    //    println!("cargo:warning=Detected Windows. Trying to install
-    // sccache.");    install_windows_dependency("sccache", "scoop install
-    // sccache");    println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Installing sccache with {}", installer);
+        let output = Command::new("sudo")
+            .arg(installer)
+            .arg("install")
+            .arg("-y")
+            .arg("sccache")
+            .output();
 
-    //    println!("cargo:warning=Detected Windows. No XCB libraries are
-    // required for this build.");
-    //}
+        match output {
+            Ok(output) if output.status.success() => {
+                println!("cargo:warning=Successfully installed sccache.");
+            }
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!("cargo:warning=Failed to install sccache: {}", stderr);
+                panic!("Failed to install required Linux dependencies.");
+            }
+            Err(e) => {
+                println!("cargo:warning=Failed to run installation command: {}", e);
+                panic!("Failed to run dependency installation command.");
+            }
+        }
+    } else if target_os == "macos" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
+
+        if check_brew() {
+            let output = Command::new("brew").arg("install").arg("sccache").output();
+            match output {
+                Ok(output) if output.status.success() => {
+                    println!("cargo:warning=Successfully installed sccache dependency.");
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!(
+                        "cargo:warning=Failed to install sccache with brew: {}",
+                        stderr
+                    );
+                    panic!("Failed to install required macOS dependencies.");
+                }
+                Err(e) => {
+                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
+                    panic!("Failed to run Homebrew command.");
+                }
+            }
+        } else {
+            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            panic!("Homebrew not found.");
+        }
+    } else if target_os == "windows" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Windows. Trying to install sccache.");
+        let install_command = if command_exists("scoop") {
+            "scoop install sccache"
+        } else if command_exists("winget") {
+            "winget install --id=Mozilla.sccache -e"
+        } else {
+            ""
+        };
+
+        if !install_command.is_empty() {
+            install_windows_dependency("sccache", install_command);
+        } else {
+            println!("cargo:warning=Neither scoop nor winget found. Please install sccache manually.");
+        }
+    }
 }
 fn install_windows_dependency(name: &str, install_command: &str) {
     // Check if the dependency is already installed using the Windows 'where'
@@ -163,74 +196,104 @@ fn install_windows_dependency(name: &str, install_command: &str) {
 }
 
 fn install_xcb_deps() {
-    // Check if the target is a Linux environment.
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
     if target_os == "linux" {
         println!("cargo:rerun-if-changed=build.rs");
         println!("cargo:warning=Detected Linux OS. Attempting to install xcb dependencies.");
 
-        //let output = Command::new("sh")
-        //    .arg("-c")
-        //    .arg("if command -v apt-get &> /dev/null; then sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev; else echo 'apt-get not found, trying yum'; if command -v yum &> /dev/null; then sudo yum install -y libxcb libxcb-devel libxcb-render-devel libxcb-shape-devel libxcb-xfixes-devel; else echo 'Neither apt-get nor yum found. Please install libxcb development libraries manually.'; fi; fi")
-        //    .output();
+        let (installer, pkgs) = if command_exists("apt-get") {
+            (
+                "apt-get",
+                vec![
+                    "libxcb1-dev",
+                    "libxcb-render0-dev",
+                    "libxcb-shape0-dev",
+                    "libxcb-xfixes0-dev",
+                ],
+            )
+        } else if command_exists("yum") {
+            (
+                "yum",
+                vec![
+                    "libxcb-devel",
+                    "libxcb-render-devel",
+                    "libxcb-shape-devel",
+                    "libxcb-xfixes-devel",
+                ],
+            )
+        } else if command_exists("dnf") {
+            (
+                "dnf",
+                vec![
+                    "libxcb-devel",
+                    "libxcb-render-devel",
+                    "libxcb-shape-devel",
+                    "libxcb-xfixes-devel",
+                ],
+            )
+        } else {
+            println!("cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually.");
+            return;
+        };
 
-        //match output {
-        //    Ok(output) => {
-        //        if !output.status.success() {
-        //            let stderr = String::from_utf8_lossy(&output.stderr);
-        //            println!("cargo:warning=Failed to install dependencies: {}", stderr);
-        //            // Exit the build process with an error
-        //            panic!("Failed to install required Linux dependencies.");
-        //        } else {
-        //            println!("cargo:warning=Successfully installed xcb dependencies.");
-        //        }
-        //    }
-        //    Err(e) => {
-        //        println!(
-        //            "cargo:warning=Failed to run dependency installation command: {}",
-        //            e
-        //        );
-        //        // Exit the build process with an error
-        //        panic!("Failed to run dependency installation command.");
-        //    }
-        //}
-    }
-    if target_os == "macos" {
+        if installer == "apt-get" {
+            if !Command::new("sudo")
+                .arg("apt-get")
+                .arg("update")
+                .status()
+                .map_or(false, |s| s.success())
+            {
+                println!("cargo:warning=Failed to update package lists with apt-get.");
+            }
+        }
+
+        let mut cmd = Command::new("sudo");
+        cmd.arg(installer).arg("install").arg("-y").args(&pkgs);
+
+        match cmd.output() {
+            Ok(output) if output.status.success() => {
+                println!("cargo:warning=Successfully installed xcb dependencies.");
+            }
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                panic!("Failed to install required Linux dependencies.");
+            }
+            Err(e) => {
+                println!(
+                    "cargo:warning=Failed to run dependency installation command: {}",
+                    e
+                );
+                panic!("Failed to run dependency installation command.");
+            }
+        }
+    } else if target_os == "macos" {
         println!("cargo:rerun-if-changed=build.rs");
         println!("cargo:warning=Detected macOS. Attempting to install 'libxcb' using Homebrew.");
 
-        // We use a shell command to first check if 'brew' is installed,
-        // and then run the installation command.
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("if command -v brew >/dev/null 2>&1; then brew install libxcb; else echo 'Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.'; exit 1; fi")
-            .output();
-
-        match output {
-            Ok(output) => {
-                if !output.status.success() {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                    // Exit the build process with a panick, since the build cannot continue.
-                    panic!("Failed to install required macOS dependencies.");
-                } else {
+        if check_brew() {
+            let output = Command::new("brew").arg("install").arg("libxcb").output();
+            match output {
+                Ok(output) if output.status.success() => {
                     println!("cargo:warning=Successfully installed xcb dependencies.");
                 }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                    panic!("Failed to install required macOS dependencies.");
+                }
+                Err(e) => {
+                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
+                    panic!("Failed to run Homebrew command.");
+                }
             }
-            Err(e) => {
-                println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                // Exit the build process with a panick.
-                panic!("Failed to run Homebrew command.");
-            }
+        } else {
+            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            panic!("Failed to install required macOS dependencies.");
         }
-    }
-    if target_os == "windows" {
+    } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
-
-        // This project uses conditional compilation to handle Windows dependencies.
-        // No external package manager is needed for `libxcb` because it's an X11
-        // library. The linker will automatically use the correct
-        // platform-specific APIs.
         println!("cargo:warning=Detected Windows. No XCB libraries are required for this build.");
     }
 }
