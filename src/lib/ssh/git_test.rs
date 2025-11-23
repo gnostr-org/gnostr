@@ -17,6 +17,7 @@ mod tests {
         initial_repo.stage_and_commit("Initial commit").context("Failed to make initial commit")?;
         
         let server_repo = test_utils::git::GitTestRepo::recreate_as_bare(&initial_repo)?;
+        server_repo.git_repo.set_head("refs/heads/main")?;
 
         // 2. Client 1: Clone, commit, and push
         let client1_dir = tempdir().context("Failed to create client1 tempdir")?;
