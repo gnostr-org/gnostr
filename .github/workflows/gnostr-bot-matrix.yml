@@ -21,7 +21,6 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
-      RUSTFLAGS: "-Awarnings"
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
@@ -45,6 +44,7 @@ jobs:
         shell: bash
         id: time_check_hour
         run: |
+          # Alternate tasks on cron runs to balance testing depth and speed.
           # Get the current hour (0-23) in UTC
           CURRENT_HOUR=$(date -u +%H)
           echo "Current UTC Hour is $CURRENT_HOUR"
@@ -264,23 +264,23 @@ jobs:
         #if: matrix.os == 'macos-latest'
 
       - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }} && runner.os != 'windows'
+        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
         run: |
           cargo clean && echo "✅" || echo "❌"
 
       - name: 🚀 cargo check -j8
-        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
           cargo check -j8 && echo "✅" ## || echo "❌"
 
       - name: 🚀 cargo install -j8
-        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
 
       - name: 🚀 cargo test
-        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           if command -v apt-get &> /dev/null; then \
@@ -304,19 +304,20 @@ jobs:
         if: matrix.os != 'windows-latest' && matrix.os != 'macos-latest'
 
       - name: 🚀 cargo test
-        #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
+        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
 
       - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
+        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
         run: |
           cargo test -j8 -- --ignored && echo "✅" || echo "❌"
 
       - run: |
          make gnostr-chat &
          make gnostr-chat &
+         sleep 5 # Wait for services to start
          gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
