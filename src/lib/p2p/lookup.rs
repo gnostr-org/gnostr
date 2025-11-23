@@ -25,6 +25,7 @@ use std::io;
 use std::str::FromStr;
 use std::time::Duration;
 use thiserror::Error;
+use clap::Parser;
 
 #[derive(Debug, Parser)]
 #[command(name = "libp2p-lookup", about = "Lookup libp2p nodes.")]
@@ -396,6 +397,11 @@ struct LookupBehaviour {
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Network {
+    Kusama,
+    Ipfs,
+    Polkadot,
+    Ursa,
+
 
 impl Network {
     #[rustfmt::skip]
