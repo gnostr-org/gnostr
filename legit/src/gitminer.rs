@@ -79,9 +79,6 @@ impl Gitminer {
         };
         debug!("Tree: {}, Parent: {}", tree, parent);
 
-        Gitminer::ensure_gnostr_dirs_exist(Path::new(&self.opts.repo))?;
-        debug!(".gnostr directories ensured to exist.");
-
 
         let (tx, rx) = channel();
 
@@ -121,40 +118,44 @@ impl Gitminer {
     }
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+        Gitminer::ensure_gnostr_dirs_exist(Path::new(&self.opts.repo))?;
         debug!("Writing commit for hash: {}", hash);
         /* repo.blob() generates a blob, not a commit.
          * don't know if there's a way to do this with libgit2. */
         let tmpfile  = format!("/tmp/{}.tmp", hash);
         debug!("Creating temporary file: {}", tmpfile);
-        let mut file = File::create(&Path::new(&tmpfile))
-            .ok()
-            .expect(&format!("Failed to create temporary file {}", &tmpfile));
+        let mut file = match File::create(&Path::new(&tmpfile)) {
+            Ok(f) => f,
+            Err(_) => return Err("Failed to create temporary file"),
+        };
 
-        file.write_all(blob.as_bytes())
-            .ok()
-            .expect(&format!("Failed to write temporary file {}", &tmpfile));
+        if let Err(_) = file.write_all(blob.as_bytes()) {
+            return Err("Failed to write to temporary file");
+        }
         debug!("Temporary file {} written.", tmpfile);
 
         // Write the blob to .gnostr/blobs/<commit_hash>
         let gnostr_blob_path = Path::new(&self.opts.repo).join(".gnostr/blobs").join(hash);
         debug!("Creating .gnostr blob file: {}", gnostr_blob_path.display());
-        let mut gnostr_blob_file = File::create(&gnostr_blob_path)
-            .ok()
-            .expect(&format!("Failed to create .gnostr blob file {}", &gnostr_blob_path.display()));
-        gnostr_blob_file.write_all(blob.as_bytes())
-            .ok()
-            .expect(&format!("Failed to write .gnostr blob file {}", &gnostr_blob_path.display()));
+        let mut gnostr_blob_file = match File::create(&gnostr_blob_path) {
+            Ok(f) => f,
+            Err(_) => return Err("Failed to create .gnostr blob file"),
+        };
+        if let Err(_) = gnostr_blob_file.write_all(blob.as_bytes()) {
+            return Err("Failed to write to .gnostr blob file");
+        }
         debug!(".gnostr blob file {} written.", gnostr_blob_path.display());
 
         // Write the blob to .gnostr/reflog/<commit_hash>
         let gnostr_reflog_path = Path::new(&self.opts.repo).join(".gnostr/reflog").join(hash);
         debug!("Creating .gnostr reflog file: {}", gnostr_reflog_path.display());
-        let mut gnostr_reflog_file = File::create(&gnostr_reflog_path)
-            .ok()
-            .expect(&format!("Failed to create .gnostr reflog file {}", &gnostr_reflog_path.display()));
-        gnostr_reflog_file.write_all(blob.as_bytes())
-            .ok()
-            .expect(&format!("Failed to write .gnostr reflog file {}", &gnostr_reflog_path.display()));
+        let mut gnostr_reflog_file = match File::create(&gnostr_reflog_path) {
+            Ok(f) => f,
+            Err(_) => return Err("Failed to create .gnostr reflog file"),
+        };
+        if let Err(_) = gnostr_reflog_file.write_all(blob.as_bytes()) {
+            return Err("Failed to write to .gnostr reflog file");
+        }
         debug!(".gnostr reflog file {} written.", gnostr_reflog_path.display());
 
         let command_str = format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash);
@@ -212,30 +213,10 @@ impl Gitminer {
         let blobs_path = gnostr_path.join("blobs");
         let reflog_path = gnostr_path.join("reflog");
 
-        if !gnostr_path.exists() {
-            debug!("Creating .gnostr directory: {}", gnostr_path.display());
-            std::fs::create_dir_all(&gnostr_path)
-                .map_err(|e| {
-                    error!("Failed to create .gnostr directory {}: {}", gnostr_path.display(), e);
-                    "Failed to create .gnostr directory"
-                })?;
-        }
-        if !blobs_path.exists() {
-            debug!("Creating .gnostr/blobs directory: {}", blobs_path.display());
-            std::fs::create_dir_all(&blobs_path)
-                .map_err(|e| {
-                    error!("Failed to create .gnostr/blobs directory {}: {}", blobs_path.display(), e);
-                    "Failed to create .gnostr/blobs directory"
-                })?;
-        }
-        if !reflog_path.exists() {
-            debug!("Creating .gnostr/reflog directory: {}", reflog_path.display());
-            std::fs::create_dir_all(&reflog_path)
-                .map_err(|e| {
-                    error!("Failed to create .gnostr/reflog directory {}: {}", reflog_path.display(), e);
-                    "Failed to create .gnostr/reflog directory"
-                })?;
-        }
+        std::fs::create_dir_all(&gnostr_path).map_err(|_| "Failed to create .gnostr directory")?;
+        std::fs::create_dir_all(&blobs_path).map_err(|_| "Failed to create .gnostr/blobs directory")?;
+        std::fs::create_dir_all(&reflog_path).map_err(|_| "Failed to create .gnostr/reflog directory")?;
+
         Ok(())
     }
 
@@ -243,9 +224,18 @@ impl Gitminer {
         debug!("Preparing tree.");
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
-        let head      = repo.revparse_single("HEAD").unwrap();
-        let mut index = repo.index().unwrap();
-        let tree      = index.write_tree().unwrap();
+        let head = match repo.revparse_single("HEAD") {
+            Ok(h) => h,
+            Err(_) => return Err("Failed to get HEAD"),
+        };
+        let mut index = match repo.index() {
+            Ok(i) => i,
+            Err(_) => return Err("Failed to get index"),
+        };
+        let tree = match index.write_tree() {
+            Ok(t) => t,
+            Err(_) => return Err("Failed to write tree"),
+        };
 
         let head_s = format!("{}", head.id());
         let tree_s = format!("{}", tree);
@@ -258,7 +248,10 @@ impl Gitminer {
         debug!("Ensuring no unstaged changes.");
         let mut opts = git2::StatusOptions::new();
         let mut m    = git2::Status::empty();
-        let statuses = repo.statuses(Some(&mut opts)).unwrap();
+        let statuses = match repo.statuses(Some(&mut opts)) {
+            Ok(s) => s,
+            Err(_) => return Err("Failed to get statuses"),
+        };
 
         m.insert(git2::Status::WT_NEW);
         m.insert(git2::Status::WT_MODIFIED);
@@ -267,7 +260,10 @@ impl Gitminer {
         m.insert(git2::Status::WT_TYPECHANGE);
 
         for i in 0..statuses.len() {
-            let status_entry = statuses.get(i).unwrap();
+            let status_entry = match statuses.get(i) {
+                Some(s) => s,
+                None => return Err("Failed to get status entry"),
+            };
             if status_entry.status().intersects(m) {
                 return Err("Please stash all unstaged changes before running.");
             }
