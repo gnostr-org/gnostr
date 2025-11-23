@@ -67,21 +67,6 @@ pub struct CliArgs {
 pub struct LegitCli {
     #[command(subcommand)]
     pub command: Option<LegitCommands>,
-    /// remote signer address
-    #[arg(long, global = true)]
-    pub bunker_uri: Option<String>,
-    /// remote signer app secret key
-    #[arg(long, global = true)]
-    pub bunker_app_key: Option<String>,
-    /// nsec or hex private key
-    #[arg(short, long, global = true)]
-    pub nsec: Option<String>,
-    /// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    pub password: Option<String>,
-    /// disable spinner animations
-    #[arg(long, action = clap::ArgAction::SetTrue)]
-    pub disable_cli_spinners: bool,
 }
 
 #[derive(Subcommand, Debug)]
