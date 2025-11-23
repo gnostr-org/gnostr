@@ -962,7 +962,7 @@ git commit --allow-empty -m "initial commit"
     //    );
     //}
 
-    git_commit(dir_path);
+    let _ = git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
 }

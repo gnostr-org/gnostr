@@ -8,7 +8,7 @@ use sha2::{Digest, Sha256};
 
 use hex;
 
-fn sync_nip44_vectors() {
+fn _sync_nip44_vectors() {
     const NIP44_VECTORS_URL: &str = "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
     const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
     let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -476,7 +476,7 @@ fn get_git_hash() -> String {
 fn main() {
     println!("cargo:rerun-if-changed=src/empty");
     make_empty();
-    // sync_nip44_vectors();
+    // _sync_nip44_vectors();
 
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
@@ -962,7 +962,7 @@ git commit --allow-empty -m "initial commit"
     //    );
     //}
 
-    git_commit(dir_path);
+    let _ = git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
 }
