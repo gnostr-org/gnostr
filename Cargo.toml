@@ -337,6 +337,7 @@ tempfile = "3.12.0"
 ###
 test_utils = { path = "test_utils" }
 time = "0.3.36"
+tmux_interface = "0.3.1"
 ###
 ###
 ###
