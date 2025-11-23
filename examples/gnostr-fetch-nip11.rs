@@ -4,7 +4,7 @@
 use std::env;
 use std::time::Duration;
 
-use gnostr_types::RelayInformationDocument;
+use gnostr::types::RelayInformationDocument;
 use reqwest::blocking::Client;
 use reqwest::redirect::Policy;
 

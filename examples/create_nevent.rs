@@ -1,4 +1,4 @@
-use gnostr_types::{Id, NEvent, NostrBech32, UncheckedUrl};
+use gnostr::types::{Id, NEvent, NostrBech32, UncheckedUrl};
 use std::env;
 
 fn main() {

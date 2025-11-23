@@ -1,7 +1,7 @@
 // TEMPORARILY
 #![allow(clippy::uninlined_format_args)]
 
-use gnostr_types::RelayInformationDocument;
+use gnostr::types::RelayInformationDocument;
 use reqwest::blocking::Client;
 use reqwest::redirect::Policy;
 use std::env;

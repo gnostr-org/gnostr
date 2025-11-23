@@ -4,7 +4,7 @@ use std::io::Read;
 use std::ops::Deref;
 use std::{env, process};
 
-//use gnostr_types::Event;
+//use gnostr::types::Event;
 
 static DEFAULT_SEC: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 

@@ -1,4 +1,4 @@
-use gnostr_types::Event;
+use gnostr::types::Event;
 use std::io::Read;
 
 #[tokio::main]

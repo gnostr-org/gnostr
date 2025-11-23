@@ -1,4 +1,4 @@
-use gnostr_types::{PreEvent, PublicKey, Signer, Unixtime};
+use gnostr::types::{PreEvent, PublicKey, Signer, Unixtime};
 use std::env;
 use std::io::Read;
 
