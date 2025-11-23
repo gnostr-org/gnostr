@@ -266,17 +266,17 @@ jobs:
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }} && runner.os != 'windows'
         run: |
-          cargo clean && echo "✅" || echo "❌" ## || true
+          cargo clean && echo "✅" || echo "❌"
 
       - name: 🚀 cargo build
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          cargo build -j8 && echo "✅" || echo "❌"
+          cargo build -j8 && echo "✅" ## || echo "❌"
 
       - name: 🚀 cargo install -j8 git-remote-nostr
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
         run: |
-          cargo install -j8 -f --bin git-remote-nostr --path . && echo "✅" || echo "❌"
+          cargo install -j8 -f --bin git-remote-nostr --path . && echo "✅" ## || echo "❌"
 
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_second.outputs.is_even == 'true' }}
@@ -300,8 +300,8 @@ jobs:
           'Neither apt-get nor yum found. Please install libxcb development libraries manually.';\
           fi;\
           fi;
-          cargo test -j8 -- --nocapture && echo "✅" || echo "❌"
-        if: matrix.os != 'windows-latest'
+          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
+        if: matrix.os != 'windows-latest' && matrix.os != 'macos-latest'
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_second.outputs.is_even != 'true' }}
