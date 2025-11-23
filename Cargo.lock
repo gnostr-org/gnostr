@@ -3841,8 +3841,11 @@ dependencies = [
  "clap 4.5.37",
  "env_logger 0.10.2",
  "git2",
+ "hex",
  "log",
+ "reqwest 0.11.27",
  "rust-crypto",
+ "sha2 0.10.9",
  "time 0.3.41",
 ]
 
