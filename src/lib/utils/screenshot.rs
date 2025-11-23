@@ -214,3 +214,32 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
         ))
     }
 }
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_take_screenshot_macos() {
+        // --- Setup ---
+        let mut screenshot_path = std::env::current_dir().expect("Failed to get current directory");
+        screenshot_path.push("test_screenshots");
+        fs::create_dir_all(&screenshot_path).expect("Failed to create screenshot directory");
+        screenshot_path.push("test_screenshot.png");
+        let screenshot_path_str = screenshot_path.to_str().unwrap();
+
+        // --- Execute ---
+        let result = take_screenshot(screenshot_path_str);
+        assert!(result.is_ok(), "take_screenshot failed");
+
+        // --- Verify ---
+        let metadata = fs::metadata(screenshot_path_str).expect("Failed to get screenshot metadata");
+        assert!(metadata.is_file(), "Screenshot is not a file");
+        assert!(metadata.len() > 0, "Screenshot file is empty");
+
+        // --- Teardown ---
+        fs::remove_file(screenshot_path_str).expect("Failed to remove screenshot file");
+    }
+}
