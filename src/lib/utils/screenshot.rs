@@ -220,6 +220,7 @@ mod tests {
     use super::*;
     use std::fs;
     use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn test_take_screenshot_macos() {
@@ -227,7 +228,15 @@ mod tests {
         let mut screenshot_path = std::env::current_dir().expect("Failed to get current directory");
         screenshot_path.push("test_screenshots");
         fs::create_dir_all(&screenshot_path).expect("Failed to create screenshot directory");
-        screenshot_path.push("test_screenshot.png");
+
+        // Add a timestamp to the filename
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs();
+        let filename = format!("test_screenshot-{}.png", timestamp);
+        screenshot_path.push(filename);
+
         let screenshot_path_str = screenshot_path.to_str().unwrap();
 
         // --- Execute ---
