@@ -1,4 +1,0 @@
-/target
-/Cargo.lock
-flamegraph.svg
-perf.data

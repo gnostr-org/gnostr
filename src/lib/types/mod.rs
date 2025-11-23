@@ -128,6 +128,10 @@ pub use unixtime::Unixtime;
 mod url;
 pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
+/// NIP-44 related types and functionalities for secure direct messages.
+pub mod nip44;
+pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
+
 #[cfg(test)]
 #[macro_export]
 /// A helper macro for testing `serde` serialization and deserialization.

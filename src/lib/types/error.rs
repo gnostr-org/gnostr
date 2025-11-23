@@ -33,7 +33,7 @@ pub enum Error {
 
     /// Crypto error
     #[error("Crypto Error: {0}")]
-    Crypto(#[from] nip44::Error),
+    Crypto(#[from] super::nip44::Error),
 
     /// Encryption/Decryption Error
     #[error("Private Key Encryption/Decryption Error")]

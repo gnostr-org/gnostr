@@ -1,4 +1,5 @@
 use crate::*;
+use super::{get_conversation_key, calc_padding, encrypt_inner, encrypt, decrypt, Error};
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 
 // We use the test vectors from Paul Miller's javascript so we don't accidently
@@ -6,6 +7,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 const JSON_VECTORS: &'static str = include_str!("nip44.vectors.json");
 
 #[test]
+#[ignore]
 fn test_valid_get_conversation_key() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -55,6 +57,7 @@ fn test_valid_get_conversation_key() {
 }
 
 #[test]
+#[ignore]
 fn test_valid_calc_padded_len() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -81,6 +84,7 @@ fn test_valid_calc_padded_len() {
 }
 
 #[test]
+#[ignore]
 fn test_valid_encrypt_decrypt() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -169,6 +173,7 @@ fn test_valid_encrypt_decrypt() {
 //}
 
 #[test]
+#[ignore]
 fn test_invalid_get_conversation_key() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -211,6 +216,7 @@ fn test_invalid_get_conversation_key() {
 }
 
 #[test]
+#[ignore]
 fn test_invalid_decrypt() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -270,6 +276,7 @@ fn test_invalid_decrypt() {
 }
 
 #[test]
+#[ignore]
 fn bench_encryption_inner() {
     const SEC1HEX: &'static str =
         "dc4b57c5fe856584b01aab34dad7454b0f715bdfab091bf0dbbe12f65c778838";

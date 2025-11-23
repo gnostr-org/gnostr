@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// Errors that can occur in NIP-44 operations.
 #[derive(Clone, Error, Debug, PartialEq)]
 pub enum Error {
     /// Base64 Decode
@@ -38,7 +39,7 @@ pub enum Error {
     #[error("Encryption format is unknown")]
     UnknownVersion,
 
-    // UTF8 Decode
+        /// UTF8 Decode
     #[error("UTF8 Decode: {0}")]
     Utf8Decode(#[from] std::string::FromUtf8Error),
 }
