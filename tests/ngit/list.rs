@@ -72,7 +72,7 @@ mod cannot_find_repo_event {
             r56.events.push(repo_event.clone());
 
             let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                let test_repo = GitTestRepo::without_repo_in_git_config();
+                let mut test_repo = GitTestRepo::without_repo_in_git_config();
                 test_repo.populate()?;
                 let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
                 p.expect(
@@ -301,7 +301,7 @@ mod when_main_branch_is_uptodate {
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
                             cli_tester_create_proposals()?;
 
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             test_repo.populate()?;
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
 
@@ -430,7 +430,7 @@ mod when_main_branch_is_uptodate {
                                 None,
                                 None,
                             )?;
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             test_repo.populate()?;
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
 
@@ -512,7 +512,7 @@ mod when_main_branch_is_uptodate {
                                 None,
                                 None,
                             )?;
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             test_repo.populate()?;
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
 
@@ -641,7 +641,7 @@ mod when_main_branch_is_uptodate {
                         move || -> Result<(GitTestRepo, GitTestRepo)> {
                             let originating_repo = cli_tester_create_proposals()?;
 
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             test_repo.populate()?;
                             // create proposal branch
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
@@ -854,11 +854,11 @@ mod when_main_branch_is_uptodate {
 
                     let cli_tester_handle = std::thread::spawn(
                         move || -> Result<(GitTestRepo, GitTestRepo)> {
-                            let (originating_repo, test_repo) =
+                            let (originating_repo, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                             remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
-                                &test_repo,
+                                &mut test_repo,
                             )?;
 
                             // run test
@@ -1231,7 +1231,7 @@ mod when_main_branch_is_uptodate {
 
                     let cli_tester_handle = std::thread::spawn(
                         move || -> Result<(GitTestRepo, GitTestRepo)> {
-                            let (originating_repo, test_repo) =
+                            let (originating_repo, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                             // add another commit (so we have a local branch 1 ahead)
