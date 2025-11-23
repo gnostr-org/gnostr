@@ -6,7 +6,7 @@ use test_utils::{git::GitTestRepo, relay::Relay, *};
 #[test]
 #[cfg(feature = "expensive_tests")]
 fn when_no_main_or_master_branch_return_error() -> Result<()> {
-    let test_repo = GitTestRepo::new("notmain")?;
+    let mut test_repo = GitTestRepo::new("notmain")?;
     test_repo.populate()?;
     let mut p = CliTester::new_from_dir(&test_repo.dir, ["send"]);
     p.expect("Error: the default branches (main or master) do not exist")?;
@@ -19,7 +19,7 @@ mod when_commits_behind_ask_to_proceed {
     use super::*;
 
     fn prep_test_repo() -> Result<GitTestRepo> {
-        let test_repo = GitTestRepo::default();
+        let mut test_repo = GitTestRepo::default();
         test_repo.populate()?;
         // create feature branch with 2 commit ahead
         test_repo.create_branch("feature")?;
@@ -104,7 +104,7 @@ fn is_patch(event: &nostr_0_34_1::Event) -> bool {
 }
 
 fn prep_git_repo() -> Result<GitTestRepo> {
-    let test_repo = GitTestRepo::default();
+    let mut test_repo = GitTestRepo::default();
     test_repo.populate()?;
     // create feature branch with 2 commit ahead
     test_repo.create_branch("feature")?;

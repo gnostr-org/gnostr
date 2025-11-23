@@ -8,9 +8,9 @@ mod when_main_is_checked_out {
     #[test]
     #[cfg(feature = "expensive_tests")]
     fn cli_returns_error() -> Result<()> {
-        let test_repo = GitTestRepo::default();
+        let mut test_repo = GitTestRepo::default();
         test_repo.populate()?;
-        create_and_populate_branch(&test_repo, FEATURE_BRANCH_NAME_1, "a", false)?;
+        create_and_populate_branch(&mut test_repo, FEATURE_BRANCH_NAME_1, "a", false)?;
         test_repo.checkout("main")?;
         let mut p = CliTester::new_from_dir(&test_repo.dir, ["push"]);
         p.expect("Error: checkout a branch associated with a proposal first\r\n")?;
@@ -165,12 +165,12 @@ mod when_branch_is_checked_out {
                 r55.events.push(generate_test_key_1_relay_list_event());
 
                 let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                    let (_, test_repo) =
+                    let (_, mut test_repo) =
                         create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                     let branch_name =
                         remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
-                            &test_repo,
+                            &mut test_repo,
                         )?;
 
                     test_repo.checkout(&branch_name)?;
@@ -232,7 +232,7 @@ mod when_branch_is_checked_out {
 
                 let cli_tester_handle =
                     std::thread::spawn(move || -> Result<(GitTestRepo, GitTestRepo)> {
-                        let (originating_repo, test_repo) =
+                        let (originating_repo, mut test_repo) =
                             create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                         // add another commit (so we have an ammened

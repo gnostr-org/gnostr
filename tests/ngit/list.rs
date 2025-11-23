@@ -175,7 +175,7 @@ mod when_main_branch_is_uptodate {
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
                             cli_tester_create_proposals()?;
 
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             test_repo.populate()?;
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
 
@@ -422,9 +422,9 @@ mod when_main_branch_is_uptodate {
 
                     let cli_tester_handle = std::thread::spawn(
                         move || -> Result<(GitTestRepo, GitTestRepo)> {
-                            let originating_repo = cli_tester_create_proposals()?;
+                            let mut originating_repo = cli_tester_create_proposals()?;
                             cli_tester_create_proposal(
-                                &originating_repo,
+                                &mut originating_repo,
                                 FEATURE_BRANCH_NAME_4,
                                 "d",
                                 None,
@@ -503,10 +503,10 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_relay_list_event());
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let originating_repo = cli_tester_create_proposals()?;
+                            let mut originating_repo = cli_tester_create_proposals()?;
                             std::thread::sleep(std::time::Duration::from_millis(1000));
                             cli_tester_create_proposal(
-                                &originating_repo,
+                                &mut originating_repo,
                                 FEATURE_BRANCH_NAME_4,
                                 "d",
                                 None,
@@ -740,7 +740,7 @@ mod when_main_branch_is_uptodate {
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
                             cli_tester_create_proposals()?;
 
-                            let test_repo = GitTestRepo::default();
+                            let mut test_repo = GitTestRepo::default();
                             test_repo.populate()?;
                             // create proposal branch
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
@@ -931,11 +931,11 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_relay_list_event());
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let (_, test_repo) =
+                            let (_, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                             remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
-                                &test_repo,
+                                &mut test_repo,
                             )?;
 
                             // run test
@@ -1037,13 +1037,13 @@ mod when_main_branch_is_uptodate {
 
                     let cli_tester_handle =
                         std::thread::spawn(move || -> Result<(GitTestRepo, GitTestRepo)> {
-                            let (originating_repo, test_repo) =
+                            let (originating_repo, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                             let branch_name = test_repo.get_checked_out_branch_name()?;
 
                             remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
-                                &test_repo,
+                                &mut test_repo,
                             )?;
 
                             // add another commit (so we have an ammened local branch)
@@ -1129,10 +1129,10 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_relay_list_event());
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let (_, test_repo) =
+                            let (_, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
-                            amend_last_commit(&test_repo, "add ammended-commit.md")?;
+                            amend_last_commit(&mut test_repo, "add ammended-commit.md")?;
                             test_repo.checkout("main")?;
 
                             // run test
@@ -1429,7 +1429,7 @@ mod when_main_branch_is_uptodate {
 
                     let cli_tester_handle: JoinHandle<Result<(GitTestRepo, GitTestRepo)>> =
                         tokio::task::spawn_blocking(move || {
-                            let (originating_repo, test_repo) = create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebased_proposal()?;
+                            let (originating_repo, mut test_repo) = create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebased_proposal()?;
                             test_repo.checkout("main")?;
 
                             let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
