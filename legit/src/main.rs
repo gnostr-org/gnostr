@@ -52,13 +52,19 @@ fn main() -> io::Result<()> {
     parse_args_or_exit(&mut opts);
 
     let mut miner = match Gitminer::new(opts) {
-        Ok(m)  => m,
-        Err(e) => { panic!("Failed to start git miner: {}", e); }
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("Failed to start git miner: {}", e);
+            std::process::exit(1);
+        }
     };
 
     let hash = match miner.mine() {
-        Ok(s)  => s,
-        Err(e) => { panic!("Failed to generate commit: {}", e); }
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Failed to generate commit: {}", e);
+            std::process::exit(1);
+        }
     };
 
     let duration = start.elapsed();

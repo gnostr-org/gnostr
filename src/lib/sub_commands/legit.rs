@@ -44,7 +44,7 @@ pub struct LegitSubCommand {
     #[arg(short, long, default_value_t = 1)]
     threads: usize,
     /// Commit message to use
-    #[arg(short, long)]
+    #[arg(short, long, action = clap::ArgAction::Append)]
     message: Option<Vec<String>>,
     /// Nostr event kind to use for the git event
     #[arg(long)]
