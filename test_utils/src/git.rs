@@ -126,7 +126,8 @@ impl GitTestRepo {
 				.bare(true)
 				.mkpath(true),
 		)?;
-		// clone existing to a temp repo
+
+        // clone existing to a temp repo
 		let tmp_repo = Self::duplicate(existing_repo)?;
 		// add bare as a remote and push branches
 		let mut remote = tmp_repo
@@ -138,9 +139,9 @@ impl GitTestRepo {
 			.filter_map(|b| b.ok())
 			.map(|(b, _)| {
 				format!(
-					"refs/heads/{}:refs/heads/{}",
-					b.name().unwrap().unwrap(),
-					b.name().unwrap().unwrap(),
+					"refs/heads/{}:refs/heads/{}"
+					,b.name().unwrap().unwrap()
+					,b.name().unwrap().unwrap()
 				)
 			})
 			.collect::<Vec<String>>();
@@ -153,21 +154,7 @@ impl GitTestRepo {
 		})
 	}
 
-	pub fn clone_repo(existing_repo: &GitTestRepo) -> Result<Self> {
-		let path = current_dir()?
-			.join(format!("tmpgit-{}", rand::random::<u64>()));
-		let git_repo = git2::Repository::clone(
-			existing_repo.dir.to_str().unwrap(),
-			path.clone(),
-		)?;
-		Ok(Self {
-			dir: path,
-			git_repo,
-			delete_dir_on_drop: true,
-		})
-	}
-
-	pub fn initial_commit(&self) -> Result<Oid> {
+    pub fn initial_commit(&mut self) -> Result<Oid> {
 		let oid = self.git_repo.index()?.write_tree()?;
 		let tree = self.git_repo.find_tree(oid)?;
 		let commit_oid = self.git_repo.commit(
@@ -181,7 +168,7 @@ impl GitTestRepo {
 		Ok(commit_oid)
 	}
 
-	pub fn populate(&self) -> Result<Oid> {
+	pub fn populate(&mut self) -> Result<Oid> {
 		self.initial_commit()?;
 		fs::write(self.dir.join("t1.md"), "some content")?;
 		self.stage_and_commit("add t1.md")?;
@@ -189,13 +176,13 @@ impl GitTestRepo {
 		self.stage_and_commit("add t2.md")
 	}
 
-	pub fn populate_minus_1(&self) -> Result<Oid> {
+	pub fn populate_minus_1(&mut self) -> Result<Oid> {
 		self.initial_commit()?;
 		fs::write(self.dir.join("t1.md"), "some content")?;
 		self.stage_and_commit("add t1.md")
 	}
 
-	pub fn populate_with_test_branch(&self) -> Result<Oid> {
+	pub fn populate_with_test_branch(&mut self) -> Result<Oid> {
 		self.populate()?;
 		self.create_branch("add-example-feature")?;
 		self.checkout("add-example-feature")?;
@@ -207,14 +194,12 @@ impl GitTestRepo {
 		self.stage_and_commit("add f3.md")
 	}
 
-	pub fn stage_and_commit(&self, message: &str) -> Result<Oid> {
-		self.stage_and_commit_custom_signature(message, None, None)
+	    pub fn stage_and_commit(&mut self, message: &str) -> Result<Oid> {		self.stage_and_commit_custom_signature(message, None, None)
 	}
 
-	pub fn stage_and_commit_custom_signature(
-		&self,
-		message: &str,
-		author: Option<&git2::Signature>,
+	    pub fn stage_and_commit_custom_signature(
+			&mut self,
+			message: &str,		author: Option<&git2::Signature>,
 		commiter: Option<&git2::Signature>,
 	) -> Result<Oid> {
 		let prev_oid =
@@ -236,17 +221,25 @@ impl GitTestRepo {
 		Ok(oid)
 	}
 
-	    pub fn create_branch(&self, branch_name: &str) -> Result<Branch<'_>> {		self.git_repo
-			.branch(
-				branch_name,
-				&self.git_repo.head()?.peel_to_commit()?,
-				false,
-			)
-			.context("could not create branch")
-	}
+	        pub fn create_branch(&mut self, branch_name: &str) -> Result<Branch<'_>> {
 
-	pub fn checkout(&self, ref_name: &str) -> Result<Oid> {
-		let (object, reference) =
+	    		self.git_repo
+
+	    			.branch(
+
+	    				branch_name,
+
+	    				&self.git_repo.head()?.peel_to_commit()?,
+
+	    				false,
+
+	    			)
+
+	    			.context("could not create branch")
+
+	    	}
+
+	    pub fn checkout(&mut self, ref_name: &str) -> Result<Oid> {		let (object, reference) =
 			self.git_repo.revparse_ext(ref_name)?;
 
 		self.git_repo.checkout_tree(&object, None)?;
@@ -311,35 +304,89 @@ impl GitTestRepo {
 		Ok(branch.into_reference().peel_to_commit()?.id())
 	}
 
-	pub fn add_remote(&self, name: &str, url: &str) -> Result<()> {
-		self.git_repo.remote(name, url)?;
+	    pub fn add_remote(&mut self, name: &str, url: &str) -> Result<()> {		self.git_repo.remote(name, url)?;
 		Ok(())
 	}
 
-	pub fn checkout_remote_branch(
-		&self,
-		branch_name: &str,
-	) -> Result<Oid> {
-		self.checkout(&format!("remotes/origin/{branch_name}"))?;
-		let mut branch = self.create_branch(branch_name)?;
-		branch
-			.set_upstream(Some(&format!("origin/{branch_name}")))?;
-		self.checkout(branch_name)
-	}
-}
+	                pub fn checkout_remote_branch(
 
-impl Drop for GitTestRepo {
-	fn drop(&mut self) {
-		if self.delete_dir_on_drop {
-			let _ = fs::remove_dir_all(&self.dir);
+	            		&mut self,
+
+	            		branch_name: &str,
+
+	            	) -> Result<Oid> {
+
+	            		self.checkout(&format!("remotes/origin/{branch_name}"))?;
+
+	            
+
+	            		// Create the local branch
+
+	            		self.create_branch(branch_name)?;
+
+	            
+
+	            			            		// Set upstream for the local branch
+
+	            
+
+	            			            		{
+
+	            
+
+	            			            			let mut local_branch = self.git_repo.find_branch(branch_name, git2::BranchType::Local)?;
+
+	            
+
+	            			            			local_branch.set_upstream(Some(&format!("origin/{branch_name}")))?;
+
+	            
+
+	            			            		}
+
+	            
+
+	            			            
+
+	            
+
+	            			            		self.checkout(branch_name)
+
+	            	}
+	
+	    pub fn push_changes(&mut self, remote_name: &str, branch_name: &str) -> Result<()> {
+	        let mut remote = self.git_repo.find_remote(remote_name)?;
+	        let refspec = format!("refs/heads/{}:refs/heads/{}", branch_name, branch_name);
+	        remote.push(&[refspec.as_str()], None)?;
+	        Ok(())
+	    }
+	
+	    pub fn fetch_changes(&mut self, remote_name: &str, branch_name: &str) -> Result<()> {
+	        let mut remote = self.git_repo.find_remote(remote_name)?;
+	        let refspec = format!("refs/heads/{}:refs/heads/{}", branch_name, branch_name);
+	        remote.fetch(&[refspec.as_str()], None, None)?;
+	        Ok(())
+	    }
+	
+	    pub fn reset_hard(&mut self, target_ref: &str) -> Result<()> {
+	        let object = self.git_repo.revparse_single(target_ref)?;
+	        let commit = object.peel_to_commit()?;
+	        self.git_repo.reset(&commit.into_object(), git2::ResetType::Hard, None)?;
+	        Ok(())
+	    }
+	}
+	
+	impl Drop for GitTestRepo {
+		fn drop(&mut self) {
+			if self.delete_dir_on_drop {
+				let _ = fs::remove_dir_all(&self.dir);
+			}
 		}
 	}
-}
-pub fn joe_signature() -> Signature<'static> {
-	Signature::new("Joe Bloggs", "joe.bloggs@pm.me", &Time::new(0, 0))
-		.unwrap()
-}
-
+	pub fn joe_signature() -> Signature<'static> {
+		Signature::new("Joe Bloggs", "joe.bloggs@pm.me", &Time::new(0, 0))
+			.unwrap()
+	}
 #[cfg(test)]
 mod tests {
 
@@ -399,15 +446,21 @@ mod tests {
 		Ok(())
 	}
 
-	#[test]
-	fn test_git_test_repo_clone_repo() -> Result<()> {
-		let original_repo = GitTestRepo::new("main")?;
-		original_repo.populate()?;
-		fs::write(original_repo.dir.join("test.txt"), "original content")?;
-		original_repo.stage_and_commit("add test.txt")?;
+		#[test]
 
-		let cloned_repo = GitTestRepo::clone_repo(&original_repo)?;
-		assert!(cloned_repo.dir.exists());
+		fn test_git_test_repo_clone_repo() -> Result<()> {
+
+			let mut original_repo = GitTestRepo::new("main")?;
+
+			original_repo.populate()?;
+
+			fs::write(original_repo.dir.join("test.txt"), "original content")?;
+
+			original_repo.stage_and_commit("add test.txt")?;
+
+	
+
+			let cloned_repo = GitTestRepo::clone_repo(&original_repo.dir)?;		assert!(cloned_repo.dir.exists());
 		assert_ne!(original_repo.dir, cloned_repo.dir);
 
 		let original_content = fs::read_to_string(original_repo.dir.join("test.txt"))?;
@@ -420,7 +473,7 @@ mod tests {
 
 	#[test]
 	fn test_get_local_branch_names() -> Result<()> {
-		let repo = GitTestRepo::new("main")?;
+		let mut repo = GitTestRepo::new("main")?;
 		repo.initial_commit()?;
 		let mut branches = repo.get_local_branch_names()?;
 		branches.sort();
@@ -437,7 +490,7 @@ mod tests {
 
 	#[test]
 	fn test_get_checked_out_branch_name() -> Result<()> {
-		let repo = GitTestRepo::new("main")?;
+		let mut repo = GitTestRepo::new("main")?;
 		repo.initial_commit()?;
 		assert_eq!(repo.get_checked_out_branch_name()?, "main");
 
@@ -453,7 +506,7 @@ mod tests {
 
 	#[test]
 	fn test_get_tip_of_local_branch() -> Result<()> {
-		let repo = GitTestRepo::new("main")?;
+		let mut repo = GitTestRepo::new("main")?;
 		let commit_oid = repo.populate()?;
 		assert_eq!(repo.get_tip_of_local_branch("main")?, commit_oid);
 

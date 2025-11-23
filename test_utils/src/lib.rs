@@ -1276,7 +1276,7 @@ pub async fn get_events_from_cache(
 }
 
 pub fn get_proposal_branch_name(
-	test_repo: &GitTestRepo,
+	test_repo: &mut GitTestRepo,
 	branch_name_in_event: &str,
 ) -> Result<String> {
 	let events =
@@ -1325,10 +1325,10 @@ pub static PROPOSAL_TITLE_2: &str = "proposal b";
 pub static PROPOSAL_TITLE_3: &str = "proposal c";
 
 pub fn cli_tester_create_proposals() -> Result<GitTestRepo> {
-	let git_repo = GitTestRepo::default();
+	let mut git_repo = GitTestRepo::default();
 	git_repo.populate()?;
 	cli_tester_create_proposal(
-		&git_repo,
+		&mut git_repo,
 		FEATURE_BRANCH_NAME_1,
 		"a",
 		Some((PROPOSAL_TITLE_1, "proposal a description")),
@@ -1336,7 +1336,7 @@ pub fn cli_tester_create_proposals() -> Result<GitTestRepo> {
 	)?;
 	std::thread::sleep(std::time::Duration::from_millis(1000));
 	cli_tester_create_proposal(
-		&git_repo,
+		&mut git_repo,
 		FEATURE_BRANCH_NAME_2,
 		"b",
 		Some((PROPOSAL_TITLE_2, "proposal b description")),
@@ -1344,7 +1344,7 @@ pub fn cli_tester_create_proposals() -> Result<GitTestRepo> {
 	)?;
 	std::thread::sleep(std::time::Duration::from_millis(1000));
 	cli_tester_create_proposal(
-		&git_repo,
+		&mut git_repo,
 		FEATURE_BRANCH_NAME_3,
 		"c",
 		Some((PROPOSAL_TITLE_3, "proposal c description")),
@@ -1355,22 +1355,22 @@ pub fn cli_tester_create_proposals() -> Result<GitTestRepo> {
 
 pub fn cli_tester_create_proposal_branches_ready_to_send()
 -> Result<GitTestRepo> {
-	let git_repo = GitTestRepo::default();
+	let mut git_repo = GitTestRepo::default();
 	git_repo.populate()?;
 	create_and_populate_branch(
-		&git_repo,
+		&mut git_repo,
 		FEATURE_BRANCH_NAME_1,
 		"a",
 		false,
 	)?;
 	create_and_populate_branch(
-		&git_repo,
+		&mut git_repo,
 		FEATURE_BRANCH_NAME_2,
 		"b",
 		false,
 	)?;
 	create_and_populate_branch(
-		&git_repo,
+		&mut git_repo,
 		FEATURE_BRANCH_NAME_3,
 		"c",
 		false,
@@ -1379,7 +1379,7 @@ pub fn cli_tester_create_proposal_branches_ready_to_send()
 }
 
 pub fn create_and_populate_branch(
-	test_repo: &GitTestRepo,
+	test_repo: &mut GitTestRepo,
 	branch_name: &str,
 	prefix: &str,
 	only_one_commit: bool,
@@ -1406,7 +1406,7 @@ pub fn create_and_populate_branch(
 }
 
 pub fn cli_tester_create_proposal(
-	test_repo: &GitTestRepo,
+	test_repo: &mut GitTestRepo,
 	branch_name: &str,
 	prefix: &str,
 	cover_letter_title_and_description: Option<(&str, &str)>,
@@ -1481,17 +1481,17 @@ pub fn create_proposals_and_repo_with_proposal_pulled_and_checkedout(
 pub fn create_repo_with_proposal_branch_pulled_and_checkedout(
 	proposal_number: u16,
 ) -> Result<GitTestRepo> {
-	let test_repo = GitTestRepo::default();
+	let mut test_repo = GitTestRepo::default();
 	test_repo.populate()?;
 	use_ngit_list_to_download_and_checkout_proposal_branch(
-		&test_repo,
+		&mut test_repo,
 		proposal_number,
 	)?;
 	Ok(test_repo)
 }
 
 pub fn use_ngit_list_to_download_and_checkout_proposal_branch(
-	test_repo: &GitTestRepo,
+	test_repo: &mut GitTestRepo,
 	proposal_number: u16,
 ) -> Result<()> {
 	let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
@@ -1527,7 +1527,7 @@ pub fn use_ngit_list_to_download_and_checkout_proposal_branch(
 }
 
 pub fn remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
-	test_repo: &GitTestRepo,
+	test_repo: &mut GitTestRepo,
 ) -> Result<String> {
 	let branch_name = test_repo.get_checked_out_branch_name()?;
 	test_repo.checkout("main")?;
@@ -1545,7 +1545,7 @@ pub fn remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
 }
 
 pub fn amend_last_commit(
-	test_repo: &GitTestRepo,
+	test_repo: &mut GitTestRepo,
 	commit_msg: &str,
 ) -> Result<String> {
 	let branch_name =
@@ -1562,11 +1562,11 @@ pub fn amend_last_commit(
 
 pub fn create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebased_proposal()
 -> Result<(GitTestRepo, GitTestRepo)> {
-	let (_, test_repo) = create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
+	let (_, mut test_repo) = create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
 	// recreate proposal 1 on top of a another commit (like a rebase
 	// on top of one extra commit)
-	let second_originating_repo = GitTestRepo::default();
+	let mut second_originating_repo = GitTestRepo::default();
 	second_originating_repo.populate()?;
 	std::fs::write(
 		second_originating_repo.dir.join("amazing.md"),
@@ -1575,7 +1575,7 @@ pub fn create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebas
 	second_originating_repo
 		.stage_and_commit("commit for rebasing on top of")?;
 	cli_tester_create_proposal(
-		&second_originating_repo,
+		&mut second_originating_repo,
 		FEATURE_BRANCH_NAME_1,
 		"a",
 		Some((PROPOSAL_TITLE_1, "proposal a description")),
@@ -1626,19 +1626,32 @@ fn get_first_proposal_event_id() -> Result<nostr::EventId> {
 	Ok(proposal_1_id)
 }
 
-pub fn create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()
--> Result<(GitTestRepo, GitTestRepo)> {
-	let (originating_repo, test_repo) =
+pub fn create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout(
+
+) -> Result<(GitTestRepo, GitTestRepo)> {
+
+	let (mut originating_repo, test_repo) =
+
         create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
+
+
 	use_ngit_list_to_download_and_checkout_proposal_branch(
-		&originating_repo,
+
+		&mut originating_repo,
+
 		1,
+
 	)?;
 
+
+
 	amend_last_commit(
-		&originating_repo,
+
+		&mut originating_repo,
+
 		"add some ammended-commit.md",
+
 	)?;
 
 	let mut p = CliTester::new_from_dir(&originating_repo.dir, [
