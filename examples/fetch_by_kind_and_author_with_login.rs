@@ -1,5 +1,5 @@
 use gnostr::{Command, Probe};
-use gnostr_types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage};
+use gnostr::types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage};
 use std::env;
 
 #[tokio::main]

@@ -1,5 +1,5 @@
 use gnostr::{Command, Probe};
-use gnostr_types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer};
+use gnostr::types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer};
 use std::env;
 
 //use gnostr::Signer;

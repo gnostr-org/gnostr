@@ -1,4 +1,4 @@
-use gnostr_types::Id;
+use gnostr::types::Id;
 use std::env;
 
 fn main() {

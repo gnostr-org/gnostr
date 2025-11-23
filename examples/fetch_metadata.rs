@@ -1,6 +1,6 @@
 use gnostr::get_weeble;
 use gnostr::{Command, Probe};
-use gnostr_types::{EventKind, Filter, PublicKeyHex, RelayMessage, SubscriptionId};
+use gnostr::types::{EventKind, Filter, PublicKeyHex, RelayMessage, SubscriptionId};
 use std::env;
 
 #[tokio::main]

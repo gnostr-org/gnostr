@@ -5,7 +5,7 @@
 // those terms.
 
 #![allow(clippy::uninlined_format_args)]
-use gnostr_types::{PrivateKey, PublicKey};
+use gnostr::types::{PrivateKey, PublicKey};
 use k256::schnorr::SigningKey;
 use zeroize::Zeroize;
 

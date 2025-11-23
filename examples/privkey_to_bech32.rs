@@ -1,4 +1,4 @@
-use gnostr_types::PrivateKey;
+use gnostr::types::PrivateKey;
 use zeroize::Zeroize;
 
 // The zeroize in here is really silly because we print it.

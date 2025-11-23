@@ -1,4 +1,4 @@
-use gnostr_types::{NostrBech32, PrivateKey};
+use gnostr::types::{NostrBech32, PrivateKey};
 use nostr_0_34_1::bech32;
 use std::env;
 

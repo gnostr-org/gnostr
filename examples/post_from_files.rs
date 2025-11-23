@@ -1,5 +1,5 @@
 use gnostr::{Command, Probe};
-use gnostr_types::{Event, RelayMessage};
+use gnostr::types::{Event, RelayMessage};
 use std::env;
 use std::fs;
 use std::io::Read;
