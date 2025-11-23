@@ -1,193 +1,126 @@
-use clipboard::ClipboardContext;
-use clipboard::ClipboardProvider;
+use clap::{Parser, Subcommand, ValueEnum};
 use gnostr::utils::screenshot::{execute_linux_command, execute_macos_command};
-use std::io::{self, Write};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Capture the full screen
+    Full {
+        /// (Linux only) The tool to use for screenshot
+        #[arg(long, value_enum, default_value_t = Tool::Gnome)]
+        tool: Tool,
+        /// (macOS only) Output file name
+        #[arg(default_value = "full_screen.png")]
+        filename: String,
+    },
+    /// Capture a specific area
+    Area {
+        /// (Linux only) The tool to use for screenshot
+        #[arg(long, value_enum, default_value_t = Tool::Gnome)]
+        tool: Tool,
+        /// (macOS and Linux/scrot) Output file name
+        #[arg(default_value = "selected_area.png")]
+        filename: String,
+    },
+    /// Capture a specific window
+    Window {
+        /// (Linux only) The tool to use for screenshot
+        #[arg(long, value_enum, default_value_t = Tool::Gnome)]
+        tool: Tool,
+        /// (macOS only) Output file name
+        #[arg(default_value = "specific_window.png")]
+        filename: String,
+    },
+    /// Capture to clipboard (macOS only)
+    Clipboard {
+        #[command(subcommand)]
+        command: ClipboardCommands,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ClipboardCommands {
+    /// Capture full screen to clipboard
+    Full,
+    /// Capture area to clipboard
+    Area,
+    /// Capture window to clipboard
+    Window,
+}
+
+#[derive(ValueEnum, Clone, Debug, PartialEq)]
+enum Tool {
+    Gnome,
+    Scrot,
+}
+
 
 fn main() {
+    let cli = Cli::parse();
+
     if cfg!(target_os = "macos") {
-        macos();
+        macos(cli.command);
     } else {
-        linux();
+        linux(cli.command);
     }
 }
 
-fn linux() {
-    // Present the menu to the user.
-    println!("\n[ 1 ] for Capturing the whole Screen using gnome-screenshot");
-    println!("[ 2 ] for Capturing the Active window using the Scrot");
-    println!("[ 3 ] for Capturing the Active window using the gnome-screenshot");
-    println!("[ 4 ] for Capturing the Specific Area using the Scrot");
-    println!("[ 5 ] for Capturing the Specific Area using the gnome-screenshot\n");
-
-    // Read the user input.
-    print!("Enter your choice: ");
-    io::stdout().flush().unwrap(); // Ensure the prompt is printed before reading input.
-
-    let mut user_input = String::new();
-    io::stdin()
-        .read_line(&mut user_input)
-        .expect("Failed to read line");
-
-    // Trim whitespace and handle the input.
-    let user_input = user_input.trim();
-
-    // Use a match statement to handle the user's choice.
-    match user_input {
-        "1" => {
-            // gnome-screenshot - Captures the whole screen.
-            execute_and_handle_linux("gnome-screenshot", &[]);
+fn linux(command: Commands) {
+    match command {
+        Commands::Full { tool, .. } => {
+            if tool == Tool::Gnome {
+                execute_and_handle_linux("gnome-screenshot", &[]);
+            } else {
+                eprintln!("'scrot' does not have a dedicated full screen command. Use 'scrot <filename>' or 'scrot -s' to select the whole screen.");
+            }
         }
-        "2" => {
-            // scrot -s - Captures an active window or selected area.
-            execute_and_handle_linux("scrot", &["-s"]);
+        Commands::Area { tool, filename } => {
+            match tool {
+                Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-a"]),
+                Tool::Scrot => execute_and_handle_linux("scrot", &["-s", &filename]),
+            }
         }
-        "3" => {
-            // gnome-screenshot -w - Captures the active window.
-            execute_and_handle_linux("gnome-screenshot", &["-w"]);
+        Commands::Window { tool, .. } => {
+             match tool {
+                Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-w"]),
+                Tool::Scrot => execute_and_handle_linux("scrot", &["-s"]),
+            }
         }
-        "4" => {
-            // scrot -s myscreenshot.png - Captures a specific area and names the file.
-            execute_and_handle_linux("scrot", &["-s", "myscreenshot.png"]);
-        }
-        "5" => {
-            // gnome-screenshot -a - Captures a specific area.
-            execute_and_handle_linux("gnome-screenshot", &["-a"]);
-        }
-        _ => {
-            // default
-            execute_and_handle_linux("gnome-screenshot", &[]);
+        Commands::Clipboard { .. } => {
+            eprintln!("Clipboard capture is not implemented for Linux in this tool. You can pipe the output of scrot to xclip for example: `scrot -s -o /dev/stdout | xclip -selection clipboard -t image/png`");
         }
     }
 }
 
-fn macos() {
-    // Present the menu to the user.
-    println!("\n[ 1 ] for Capturing the whole Screen");
-    println!("[ 2 ] for Capturing the Specific Area");
-    println!("[ 3 ] for Capturing a specific Window");
-    println!("[ 4 ] for Capturing from Clipboard\n");
-
-    // Read the user input.
-    print!("Enter your choice: ");
-    io::stdout().flush().unwrap(); // Ensure the prompt is printed before reading input.
-
-    let mut user_input = String::new();
-    io::stdin()
-        .read_line(&mut user_input)
-        .expect("Failed to read line");
-
-    // Trim whitespace and handle the input.
-    let user_input = user_input.trim();
-
-    // Use a match statement to handle the user's choice.
-    match user_input {
-        "1" => {
-            // Captures the whole screen and saves it to the desktop.
-            execute_and_handle_macos("screencapture", &["-x", "full_screen.png"]);
+fn macos(command: Commands) {
+    match command {
+        Commands::Full { filename, .. } => {
+            execute_and_handle_macos("screencapture", &["-x", &filename]);
         }
-        "2" => {
-            // Captures a specific area. This is an interactive command.
-            execute_and_handle_macos("screencapture", &["-i", "selected_area.png"]);
+        Commands::Area { filename, .. } => {
+            execute_and_handle_macos("screencapture", &["-i", &filename]);
         }
-        "3" => {
-            // Captures a specific window. This is an interactive command.
-            execute_and_handle_macos("screencapture", &["-w", "specific_window.png"]);
+        Commands::Window { filename, .. } => {
+            execute_and_handle_macos("screencapture", &["-w", &filename]);
         }
-        "4" => {
-            // Captures to the clipboard.
-            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-            let mut alt_ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-            println!("Choose an option to capture to the clipboard:");
-            println!("  [a] for whole screen");
-            println!("  [b] for a specific area");
-            println!("  [c] for a specific window");
-            print!("Enter your choice: ");
-            io::stdout().flush().unwrap();
-
-            let mut clipboard_input_1 = String::new();
-            io::stdin()
-                .read_line(&mut clipboard_input_1)
-                .expect("Failed to read line");
-            let clipboard_input = clipboard_input_1.trim();
-            println!("clipboard_input_1={}", clipboard_input_1.trim());
-
-            if Some(ctx.get_contents()).is_some() {
-                println!("1:is some!");
-                match ctx.get_contents() {
-                    Ok(contents) => {
-                        println!("1:match!");
-                        println!("1:Clipboard contents:\n{}", contents);
-                    }
-                    Err(e) => {
-                        eprintln!("1:Failed to get clipboard contents: {}", e);
-                    }
-                }
-                println!("display alt_ctx1:is some!");
-                match alt_ctx.get_contents() {
-                    Ok(contents) => {
-                        println!("display alt_ctx1:match!");
-                        println!("display alt_ctx1:Clipboard contents:\n{}", contents);
-                    }
-                    Err(e) => {
-                        eprintln!("display alt_ctx1:Failed to get clipboard contents: {}", e);
-                    }
-                }
+        Commands::Clipboard { command } => match command {
+            ClipboardCommands::Full => {
+                execute_and_handle_macos("screencapture", &["-c"]);
             }
-            if Some(ctx.get_contents()).is_some() {
-                println!("1b:is some!");
-                match ctx.get_contents() {
-                    Ok(contents) => {
-                        println!("1b:match!");
-                        println!("1b:Clipboard contents:\n{}", contents);
-                    }
-                    Err(e) => {
-                        eprintln!("1b:Failed to get clipboard contents: {}", e);
-                    }
-                }
-                println!("display alt_ctx1b:is some!");
-                match alt_ctx.get_contents() {
-                    Ok(contents) => {
-                        println!("display alt_ctx1b:match!");
-                        println!("display alt_ctx1b:Clipboard contents:\n{}", contents);
-                    }
-                    Err(e) => {
-                        eprintln!("display alt_ctx1b:Failed to get clipboard contents: {}", e);
-                    }
-                }
+            ClipboardCommands::Area => {
+                execute_and_handle_macos("screencapture", &["-ic"]);
             }
-
-            alt_ctx
-                .set_contents(format!(
-                    "formatted! {}",
-                    clipboard_input_1.clone()
-                ))
-                .expect("set_result failed!");
-
-            if Some(alt_ctx.get_contents()).is_some() {
-                println!("1b_alt_ctx:is some!");
-                match alt_ctx.get_contents() {
-                    Ok(contents) => {
-                        println!("1b_alt_ctx:match!");
-                        println!("1b_alt_ctx:Clipboard contents:\n{}", contents);
-                    }
-                    Err(e) => {
-                        eprintln!("1b_alt_ctx:Failed to get clipboard contents: {}", e);
-                    }
-                }
+            ClipboardCommands::Window => {
+                execute_and_handle_macos("screencapture", &["-wc"]);
             }
-
-            match clipboard_input {
-                "a" => execute_and_handle_macos("screencapture", &["-c"]),
-                "b" => execute_and_handle_macos("screencapture", &["-ic"]),
-                "c" => execute_and_handle_macos("screencapture", &["-wc"]),
-                // default
-                _ => execute_and_handle_macos("screencapture", &["-c"]),
-            }
-        }
-        _ => {
-            // default
-            execute_and_handle_macos("screencapture", &["-x", "full_screen.png"]);
-        }
+        },
     }
 }
 
