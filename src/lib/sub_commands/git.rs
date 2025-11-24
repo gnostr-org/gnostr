@@ -211,7 +211,7 @@ fn get_git_tag_version(suffix: String) -> Result<String> {
     );
 
     if !suffix.is_empty() {
-        tag_name = format!("{}-", tag_name, suffix);
+        tag_name = format!("{}-{}", tag_name, suffix);
     }
 
     Ok(tag_name)
@@ -255,7 +255,7 @@ fn get_git_tag_pr_version(suffix: String) -> Result<String> {
     );
 
     if !suffix.is_empty() {
-        tag_name = format!("{}-", tag_name, suffix);
+        tag_name = format!("{}-{}", tag_name, suffix);
     }
 
     Ok(tag_name)
@@ -319,7 +319,7 @@ fn run_git_checkout_b(suffix: String, repo_path: &Path) -> Result<String> {
     );
 
     if !suffix.is_empty() {
-        branch_name = format!("{}-", branch_name, suffix);
+        branch_name = format!("{}-{}", branch_name, suffix);
     }
 
     let output = Command::new("git")
@@ -377,7 +377,7 @@ fn run_git_checkout_pr(suffix: String, repo_path: &Path) -> Result<String> {
     );
 
     if !suffix.is_empty() {
-        branch_name = format!("{}-", branch_name, suffix);
+        branch_name = format!("{}-{}", branch_name, suffix);
     }
 
     let output = Command::new("git")
