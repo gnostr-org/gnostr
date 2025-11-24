@@ -1,4 +1,4 @@
-!test_screenshots/
+test_screenshots/
 !test_screenshots/**.png
 legit/src/empty/
 src/empty
