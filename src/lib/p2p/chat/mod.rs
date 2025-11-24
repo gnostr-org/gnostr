@@ -140,7 +140,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
+pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
 
     if let Some(hash) = args.hash.clone() {
@@ -187,88 +187,88 @@ pub fn chat(sub_command_args: &ChatSubCommands) -> Result<(), Box<dyn Error>> {
         let topic_str = args.topic.expect("--topic is required with --oneshot");
         let topic = gossipsub::IdentTopic::new(topic_str);
 
-        global_rt().block_on(async {
-            let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-            let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+        let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
 
-            let _p2p_handle = tokio::spawn(async move {
-                if let Err(e) = evt_loop(input_rx, peer_tx, topic).await {
-                    eprintln!("p2p event loop error: {}", e);
-                }
-            });
-
-            // Allow time for network initialization and peer discovery.
-            println!("Initializing network and discovering peers...");
-            tokio::time::sleep(Duration::from_secs(3)).await;
-
-            let msg = Msg::default().set_content(message, 0);
-            if input_tx.send(InternalEvent::ChatMessage(msg)).await.is_err() {
-                eprintln!("Failed to send message to event loop.");
-            } else {
-                println!("Message sent. Waiting for propagation...");
+        let _p2p_handle = tokio::spawn(async move {
+            if let Err(e) = evt_loop(input_rx, peer_tx, topic).await {
+                eprintln!("p2p event loop error: {}", e);
             }
-
-            // Allow time for the message to propagate.
-            tokio::time::sleep(Duration::from_secs(2)).await;
         });
+
+        // Allow time for network initialization and peer discovery.
+        println!("Initializing network and discovering peers...");
+        tokio::time::sleep(Duration::from_secs(3)).await;
+
+        let msg = Msg::default().set_content(message, 0);
+        if input_tx.send(InternalEvent::ChatMessage(msg)).await.is_err() {
+            eprintln!("Failed to send message to event loop.");
+        } else {
+            println!("Message sent. Waiting for propagation...");
+        }
+
+        // Allow time for the message to propagate.
+        tokio::time::sleep(Duration::from_secs(2)).await;
 
         println!("Oneshot operation complete.");
         return Ok(());
     }
-    let repo = Repository::discover(".")?;
-    let head = repo.head()?;
-    let obj = head.resolve()?.peel(ObjectType::Commit)?;
-    let commit = obj.peel_to_commit()?;
-    let commit_id = commit.id().to_string();
 
-    let mut app = ui::App::default();
-    app.topic = args.topic.unwrap_or_else(|| commit_id.to_string());
+    tokio::task::spawn_blocking(move || {
+        let repo = Repository::discover(".")?;
+        let head = repo.head()?;
+        let obj = head.resolve()?.peel(ObjectType::Commit)?;
+        let commit = obj.peel_to_commit()?;
+        let commit_id = commit.id().to_string();
 
-    let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+        let mut app = ui::App::default();
+        app.topic = args.topic.unwrap_or_else(|| commit_id.to_string());
 
-    let value = input_tx.clone();
-    app.on_submit(move |m| {
-        let value = value.clone();
-        global_rt().spawn(async move {
-            debug!("sent: {:?}", m);
-            value.send(InternalEvent::ChatMessage(m)).await.unwrap();
+        let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+
+        let value = input_tx.clone();
+        app.on_submit(move |m| {
+            let value = value.clone();
+            global_rt().spawn(async move {
+                debug!("sent: {:?}", m);
+                value.send(InternalEvent::ChatMessage(m)).await.unwrap();
+            });
         });
-    });
 
-    let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
+        let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
 
-    global_rt().spawn(async move {
-        evt_loop(input_rx, peer_tx, topic).await.unwrap();
-    });
+        global_rt().spawn(async move {
+            evt_loop(input_rx, peer_tx, topic).await.unwrap();
+        });
 
-    let mut tui_msg_adder = app.add_msg_fn();
-    global_rt().spawn(async move {
-        while let Some(event) = peer_rx.recv().await {
-            debug!("recv: {:?}", event);
-            if let InternalEvent::ChatMessage(m) = event {
-                tui_msg_adder(m);
-            } else {
-                debug!("Received non-chat message event: {:?}", event);
+        let mut tui_msg_adder = app.add_msg_fn();
+        global_rt().spawn(async move {
+            while let Some(event) = peer_rx.recv().await {
+                debug!("recv: {:?}", event);
+                if let InternalEvent::ChatMessage(m) = event {
+                    tui_msg_adder(m);
+                } else {
+                    debug!("Received non-chat message event: {:?}", event);
+                }
             }
-        }
-    });
+        });
 
-    let input_tx_clone = input_tx.clone();
-    global_rt().spawn(async move {
-        tokio::time::sleep(Duration::from_millis(1000)).await;
-        input_tx_clone
-            .send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Join)))
-            .await
-            .unwrap();
-    });
+        let input_tx_clone = input_tx.clone();
+        global_rt().spawn(async move {
+            tokio::time::sleep(Duration::from_millis(1000)).await;
+            input_tx_clone
+                .send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Join)))
+                .await
+                .unwrap();
+        });
 
-    app.run()?;
+        app.run().map_err(|e| anyhow!(e.to_string()))?;
 
-    let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
-    std::thread::sleep(Duration::from_millis(500));
-
-    Ok(())
+        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
+        std::thread::sleep(Duration::from_millis(500));
+        Ok(())
+    }).await?
 }
 
 pub async fn input_loop(
