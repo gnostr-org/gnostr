@@ -281,6 +281,8 @@ pub enum GnostrCommands {
     Query(QuerySubCommand),
     /// Git sub commands
     Git(git::GitSubCommand),
+    /// Nip34 sub commands
+    Nip34(crate::sub_commands::nip34::Nip34Command),
 }
 
 pub fn setup_logging() -> Result<()> {

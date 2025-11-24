@@ -352,6 +352,16 @@ async fn main() -> anyhow::Result<()> {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::git::git(sub_command_args).await.map_err(|e| anyhow!("Error in git subcommand: {}", e))
         },
+        Some(GnostrCommands::Nip34(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::nip34::launch(
+                gnostr_cli_args.nsec,
+                gnostr_cli_args.relays,
+                gnostr_cli_args.difficulty_target,
+                sub_command_args,
+            )
+            .await.map_err(|e| anyhow!("Error in nip34 subcommand: {}", e))
+        },
         Some(GnostrCommands::Bech32ToAny(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::bech32_to_any::bech32_to_any(sub_command_args).map_err(|e| anyhow!("Error in bech32_to_any subcommand: {}", e))
