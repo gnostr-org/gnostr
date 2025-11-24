@@ -164,6 +164,9 @@ cargo-dist-build: 	### 	cargo-dist-build
 cargo-dist-manifest: 	### 	dist manifest --artifacts=all
 	dist manifest --artifacts=all
 
+cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog
+	git-cliff --output CHANGELOG.md || cargo install git-cliff
+
 dep-graph: 	### 	dep-graph
 	@cargo  -j \$(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
 
