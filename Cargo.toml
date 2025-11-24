@@ -313,6 +313,7 @@ reqwest = { version = "0.11", features = ["blocking"] }
 sha2 = "0.10"
 
 [dev-dependencies]
+test_utils = { path = "test_utils" }
 actix-rt = "2.10.0"
 actix-test = "0.1.5"
 anyhow = "1.0.86"
@@ -330,18 +331,8 @@ serial_test = "2.0.0"
 structopt = "0.3.26"
 temp-env = "0.3.6"
 tempfile = "3.12.0"
-#tempfile = "3"
-###
-###
-###
-###
-test_utils = { path = "test_utils" }
 time = "0.3.36"
 tmux_interface = "0.3.1"
-###
-###
-###
-###
 tokio = { version = "1", features = ["full"] } # Required for async operations
 tracing-subscriber = "0.3.18"
 tungstenite = { version = "0.21.0", features = ["native-tls"] }
