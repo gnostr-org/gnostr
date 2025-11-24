@@ -425,4 +425,35 @@ mod tests {
 
         Ok(())
     }
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_run_gnostr_ngit_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
+        let (_tmp_dir, repo) = setup_test_repo();
+        let repo_path = repo.path().to_str().unwrap().to_string();
+
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--gitdir").arg(&repo_path).arg("ngit");
+
+        // Spawn the command as a child process
+        let mut child = cmd.spawn().expect("Failed to spawn gnostr ngit command");
+
+        // Give the TUI a moment to initialize
+        thread::sleep(Duration::from_secs(2));
+
+        // Capture the screenshot
+        let screenshot_path_result = screenshot::make_screenshot("gnostr_ngit_run");
+
+        // Terminate the child process
+        child.kill().expect("Failed to kill gnostr ngit process");
+        child.wait().expect("Failed to wait for gnostr ngit process");
+
+        // Assert that the screenshot was created
+        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        let screenshot_path = screenshot_path_result.unwrap();
+        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+        assert!(metadata.is_file(), "Screenshot is not a file");
+        assert!(metadata.len() > 0, "Screenshot file is empty");
+
+        Ok(())
+    }
 }
