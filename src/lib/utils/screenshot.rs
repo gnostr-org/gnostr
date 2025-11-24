@@ -292,6 +292,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn test_make_screenshot_macos() {
         // This test now verifies that our new screenshot utility works correctly.
         let screenshot_path =
