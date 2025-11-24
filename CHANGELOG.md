@@ -1,4 +1,10 @@
 
+### src/lib/sub_commands/git.rs
+
+* refactor tag logic (cb43b48)
+
+
+
 ### Bug Fixes
 
 * Correctly handle DEPTH variable in gh-cancel-queue.sh (9f82e37)
@@ -38,6 +44,12 @@
 ### Features
 
 * Add git info subcommand and display local git details (41e4955)
+
+
+
+### README.md
+
+* update (b130011)
 
 
 
@@ -176,6 +188,10 @@
 * clean up --help (3a9266e)
 
 * git fallback (46ce549)
+
+* add --tag-version (0ff1b9f)
+
+* add --tag-pr-version (1c84739)
 
 
 
