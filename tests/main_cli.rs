@@ -1,3 +1,22 @@
+/// ## Screenshot Testing
+///
+/// The screenshot tests are designed to capture the state of the TUI at a specific
+/// moment. They are particularly useful for debugging and verifying the UI.
+///
+/// To add a new screenshot test, follow this pattern:
+///
+/// 1.  **Spawn the application in a separate process.** This is necessary to
+///     prevent the TUI from blocking the test runner.
+/// 2.  **Wait for the TUI to initialize.** A simple `thread::sleep` is
+///     sufficient for this purpose.
+/// 3.  **Call the `make_screenshot` utility.** This will capture the screen and
+///     save it to the `test_screenshots` directory.
+/// 4.  **Terminate the process.** This is important to prevent the TUI from
+///     running indefinitely.
+/// 5.  **Assert that the screenshot was created.** This verifies that the
+///     test ran successfully.
+///
+/// For an example, see `test_run_gnostr_and_capture_screenshot`.
 #[cfg(test)]
 mod tests {
     use std::process::Command;

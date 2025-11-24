@@ -219,6 +219,55 @@ use std::path::PathBuf;
 use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// # Captures a screenshot for debugging purposes during a test.
+///
+/// This function is designed to be called from other tests to capture the UI
+/// state at a specific moment. The screenshot is saved in the `test_screenshots`
+/// directory with a filename that includes the provided context along with
+/// a timestamp.
+///
+/// ## Platform
+///
+/// This utility is only available and compiled on **macOS**.
+///
+/// ## Error Handling
+///
+/// This function will not fail the test if the screenshot cannot be taken;
+/// it will return an `Err` instead. The calling test can then decide how to
+/// handle the failure.
+///
+/// ## File Management
+///
+/// The screenshot file is not deleted after being taken, so it can be
+/// inspected after the test run.
+///
+/// ## Example
+///
+/// ```
+/// #[test]
+/// #[cfg(target_os = "macos")]
+/// fn my_tui_test() -> Result<(), Box<dyn std::error::Error>> {
+///     let mut cmd = Command::new(cargo_bin("gnostr"));
+///     cmd.arg("tui");
+///
+///     // Spawn the command as a child process
+///     let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
+///
+///     // Give the TUI a moment to initialize
+///     std::thread::sleep(std::time::Duration::from_secs(2));
+///
+///     // Capture the screenshot
+///     let screenshot_path_result = gnostr::utils::screenshot::make_screenshot("my_tui_test");
+///
+///     // Terminate the child process
+///     child.kill().expect("Failed to kill gnostr process");
+///
+///     // Assert that the screenshot was created
+///     assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+///
+///     Ok(())
+/// }
+/// ```
 #[cfg(target_os = "macos")]
 pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
     let mut screenshot_path = std::env::current_dir()?;
