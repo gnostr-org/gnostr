@@ -12,6 +12,9 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::env;
     use gnostr::cli::get_app_cache_path;
+    use std::thread;
+    use std::time::Duration;
+    use gnostr::utils::screenshot;
 
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
@@ -316,4 +319,60 @@ mod tests {
 
     //    Ok(())
     //}
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_help_output_generates_screenshot() -> Result<(), Box<dyn Error>> {
+        // First, verify the help command runs successfully.
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--help");
+        cmd.assert().success();
+
+        // As requested, use the screenshot utility to capture the state of the screen
+        // during the test run for manual inspection.
+        let screenshot_path_result = screenshot::make_screenshot("main_cli_help");
+
+        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        
+        let screenshot_path = screenshot_path_result.unwrap();
+        
+        // Verify the screenshot file was created
+        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+        assert!(metadata.is_file(), "Screenshot is not a file");
+        assert!(metadata.len() > 0, "Screenshot file is empty");
+
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_run_gnostr_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
+        let (_tmp_dir, repo) = setup_test_repo();
+        let repo_path = repo.path().to_str().unwrap().to_string();
+
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--gitdir").arg(&repo_path);
+
+        // Spawn the command as a child process
+        let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
+
+        // Give the TUI a moment to initialize
+        thread::sleep(Duration::from_secs(2));
+
+        // Capture the screenshot
+        let screenshot_path_result = screenshot::make_screenshot("gnostr_tui_run");
+
+        // Terminate the child process
+        child.kill().expect("Failed to kill gnostr process");
+        child.wait().expect("Failed to wait for gnostr process");
+
+        // Assert that the screenshot was created
+        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        let screenshot_path = screenshot_path_result.unwrap();
+        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+        assert!(metadata.is_file(), "Screenshot is not a file");
+        assert!(metadata.len() > 0, "Screenshot file is empty");
+
+        Ok(())
+    }
 }

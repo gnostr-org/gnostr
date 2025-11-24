@@ -215,85 +215,38 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
     }
 }
 
+use std::path::PathBuf;
+use std::fs;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+#[cfg(target_os = "macos")]
+pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
+    let mut screenshot_path = std::env::current_dir()?;
+    screenshot_path.push("test_screenshots");
+    fs::create_dir_all(&screenshot_path)?;
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?
+        .as_secs();
+
+    let filename = format!("test_screenshot_{}_{}.png", context, timestamp);
+    screenshot_path.push(&filename);
+
+    take_screenshot(screenshot_path.to_str().unwrap())?;
+
+    Ok(screenshot_path)
+}
+
 #[cfg(all(test, target_os = "macos"))]
-pub mod tests {
+mod tests {
     use super::*;
-    use crate::{blockheight, weeble, wobble};
-    use std::fs;
-    use std::path::PathBuf;
-
-    /// # Captures a screenshot for debugging purposes during a test.
-    ///
-    /// This function is designed to be called from other tests to capture the UI
-    /// state at a specific moment. The screenshot is saved in the `test_screenshots`
-    /// directory with a filename that includes the provided context along with
-    /// weeble, blockheight, and wobble values.
-    ///
-    /// ## Platform
-    ///
-    /// This utility is only available and compiled on **macOS**.
-    ///
-    /// ## Error Handling
-    ///
-    /// This function will not fail the test if the screenshot cannot be taken;
-    /// it will return an `Err` instead. The calling test can then decide how to
-    /// handle the failure.
-    ///
-    /// ## File Management
-    ///
-    /// The screenshot file is not deleted after being taken, so it can be
-    /// inspected after the test run.
-    ///
-    /// ## Arguments
-    ///
-    /// * `context` - A string slice that describes the context of the screenshot,
-    ///   which will be included in the filename (e.g., "before_login", "after_error").
-    ///
-    /// ## Returns
-    ///
-    /// On success, returns an `Ok(PathBuf)` containing the full path to the saved
-    /// screenshot file.
-    ///
-    /// ## Example
-    ///
-    /// ```
-    /// #[test]
-    /// #[cfg(target_os = "macos")] // Ensure this test only runs on macOS
-    /// fn my_other_test() {
-    ///     // ... some test logic ...
-    ///     match screenshot::tests::capture_test_screenshot("before_assertion") {
-    ///         Ok(path) => println!("Screenshot saved to {:?}", path),
-    ///         Err(e) => eprintln!("Failed to capture screenshot: {}", e),
-    ///     }
-    ///     // ... more test logic and assertions ...
-    /// }
-    /// ```
-    pub fn capture_test_screenshot(context: &str) -> io::Result<PathBuf> {
-        let mut screenshot_path = std::env::current_dir()?;
-        screenshot_path.push("test_screenshots");
-        fs::create_dir_all(&screenshot_path)?;
-
-        let weeble_val = weeble::weeble().map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))?;
-let blockheight_val =
-    blockheight::blockheight().map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))?;
-let wobble_val = wobble::wobble().map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))?;
-
-        let filename = format!(
-            "test_screenshot_{}-{}-{}-{}.png",
-            context, weeble_val, blockheight_val, wobble_val
-        );
-        screenshot_path.push(filename);
-
-        take_screenshot(screenshot_path.to_str().unwrap())?;
-
-        Ok(screenshot_path)
-    }
 
     #[test]
-    fn test_take_screenshot_macos() {
-        // This test now verifies that our screenshot utility function works correctly.
+    fn test_make_screenshot_macos() {
+        // This test now verifies that our new screenshot utility works correctly.
         let screenshot_path =
-            capture_test_screenshot("self_test").expect("Failed to capture screenshot during self-test");
+            make_screenshot("self_test").expect("Failed to capture screenshot during self-test");
 
         // --- Verify ---
         let metadata =
@@ -302,6 +255,6 @@ let wobble_val = wobble::wobble().map_err(|err| io::Error::new(io::ErrorKind::Ot
         assert!(metadata.len() > 0, "Screenshot file is empty");
 
         // --- Teardown ---
-        // DO NOT DELETE THE SCREEN SHOT! fs::remove_file(&screenshot_path).expect("Failed to remove screenshot file");
+        // DO NOT DELETE THE SCREEN SHOT!
     }
 }
