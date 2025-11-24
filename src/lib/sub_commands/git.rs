@@ -47,6 +47,9 @@ pub struct GitSubCommand {
     /// Creates a git tag with an optional suffix.
     #[arg(long, num_args = 0..=1, default_missing_value = "")]
     pub tag: Option<String>,
+    /// Displays git tag version with an optional suffix, but does not create the tag.
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
+    pub tag_version: Option<String>,
     /// Displays local git information (version, path).
     #[arg(long)]
     pub info: bool,
@@ -70,6 +73,10 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
     if sub_command_args.serve_ssh {
         env_logger::init_from_env(Env::default().default_filter_or("info"));
         crate::ssh::start().await?;
+        return Ok(());
+    } else if let Some(suffix) = &sub_command_args.tag_version {
+        let tag_name = get_git_tag_version(suffix.clone())?;
+        println!("{}", tag_name);
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag {
         let owned_suffix = suffix.clone();
@@ -132,18 +139,14 @@ fn get_git_info() -> String {
     format!("\nLocal Git Info:\n{}\n{}", git_path, git_version)
 }
 
-fn run_git_tag(suffix: String, repo_path: &Path) -> Result<String> {
+fn get_git_tag_version(suffix: String) -> Result<String> {
     let weeble = weeble::weeble().unwrap_or(0.0).to_string();
 
     let blockheight = blockheight::blockheight().unwrap_or(0.0).to_string();
 
     let wobble = wobble::wobble().unwrap_or(0.0).to_string();
 
-    let weeble = weeble;
-    let blockheight = blockheight;
-    let wobble = wobble;
-
-    let mut tag_name = format!("{}.{}.{}",
+    let mut tag_name = format!("v{}.{}.{}",
         if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() { "0" } else { &blockheight },
         if wobble.is_empty() { "0" } else { &wobble },
@@ -152,6 +155,12 @@ fn run_git_tag(suffix: String, repo_path: &Path) -> Result<String> {
     if !suffix.is_empty() {
         tag_name = format!("{}-{}", tag_name, suffix);
     }
+
+    Ok(tag_name)
+}
+
+fn run_git_tag(suffix: String, repo_path: &Path) -> Result<String> {
+    let tag_name = get_git_tag_version(suffix)?;
 
 	//USE git2 instead of system git 
     let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).current_dir(repo_path).output()?;
