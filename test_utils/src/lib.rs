@@ -271,6 +271,13 @@ pub struct CliTester {
 	formatter: ColorfulTheme,
 }
 
+impl Drop for CliTester {
+    fn drop(&mut self) {
+        // Ensure the child process is killed when the CliTester is dropped.
+        let _ = self.expectrl_session.kill();
+    }
+}
+
 impl CliTester {
 
 	pub fn expect_input(
