@@ -50,6 +50,12 @@ pub struct GitSubCommand {
     /// Displays git tag version with an optional suffix, but does not create the tag.
     #[arg(long, num_args = 0..=1, default_missing_value = "")]
     pub tag_version: Option<String>,
+    /// Creates a git PR tag with an optional suffix.
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
+    pub tag_pr: Option<String>,
+    /// Displays git PR tag version with an optional suffix, but does not create the tag.
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
+    pub tag_pr_version: Option<String>,
     /// Displays local git information (version, path).
     #[arg(long)]
     pub info: bool,
@@ -78,11 +84,24 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         let tag_name = get_git_tag_version(suffix.clone())?;
         println!("{}", tag_name);
         return Ok(());
+    } else if let Some(suffix) = &sub_command_args.tag_pr_version {
+        let tag_name = get_git_tag_pr_version(suffix.clone())?;
+        println!("{}", tag_name);
+        return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag {
         let owned_suffix = suffix.clone();
         let cloned_repo_path = current_dir.clone();
         let tag_name = tokio::task::spawn_blocking(move || {
             run_git_tag(owned_suffix, &cloned_repo_path)
+        })
+        .await??;
+        println!("{}", tag_name);
+        return Ok(());
+    } else if let Some(suffix) = &sub_command_args.tag_pr {
+        let owned_suffix = suffix.clone();
+        let cloned_repo_path = current_dir.clone();
+        let tag_name = tokio::task::spawn_blocking(move || {
+            run_git_tag_pr(owned_suffix, &cloned_repo_path)
         })
         .await??;
         println!("{}", tag_name);
@@ -168,6 +187,35 @@ fn run_git_tag(suffix: String, repo_path: &Path) -> Result<String> {
     if !output.status.success() {
         eprintln!("Error creating tag: {}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("Failed to create tag");
+    }
+    Ok(tag_name)
+}
+
+fn get_git_tag_pr_version(suffix: String) -> Result<String> {
+    let weeble = weeble::weeble().unwrap_or(0.0).to_string();
+    let blockheight = blockheight::blockheight().unwrap_or(0.0).to_string();
+    let wobble = wobble::wobble().unwrap_or(0.0).to_string();
+
+    let mut tag_name = format!("pr/{}.{}.{}",
+        if weeble.is_empty() { "0" } else { &weeble },
+        if blockheight.is_empty() { "0" } else { &blockheight },
+        if wobble.is_empty() { "0" } else { &wobble },
+    );
+
+    if !suffix.is_empty() {
+        tag_name = format!("{}-{}", tag_name, suffix);
+    }
+
+    Ok(tag_name)
+}
+
+fn run_git_tag_pr(suffix: String, repo_path: &Path) -> Result<String> {
+    let tag_name = get_git_tag_pr_version(suffix)?;
+    let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).current_dir(repo_path).output()?;
+
+    if !output.status.success() {
+        eprintln!("Error creating PR tag: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!("Failed to create PR tag");
     }
     Ok(tag_name)
 }
