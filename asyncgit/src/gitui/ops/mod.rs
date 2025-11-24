@@ -39,7 +39,7 @@ pub(crate) trait OpTrait {
 
 #[derive(Clone, PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum Op {
+pub enum Op {
     Checkout,
     CheckoutNewBranch,
     Delete,
