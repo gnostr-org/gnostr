@@ -153,7 +153,6 @@ impl HookPaths {
 #[cfg(unix)]
 fn is_executable(path: &Path) -> bool {
 	use std::os::unix::fs::PermissionsExt;
-
 	let metadata = match path.metadata() {
 		Ok(metadata) => metadata,
 		Err(e) => {
