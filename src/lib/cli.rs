@@ -265,9 +265,7 @@ pub enum GnostrCommands {
     AwardBadge(award_badge::AwardBadgeSubCommand),
     /// Set profile badges
     ProfileBadges(profile_badges::ProfileBadgesSubCommand),
-    /// Create	custom	event	more
-    /// 1	custom	event	more
-    /// 2	custom	event	more
+    /// Create custom event	more --help
     CustomEvent(custom_event::CustomEventCommand),
     /// Create a user status event
     SetUserStatus(user_status::UserStatusSubCommand),
