@@ -81,38 +81,39 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         crate::ssh::start().await?;
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag_version {
-        let tag_name = get_git_tag_version(suffix.clone())?;
+        let owned_suffix = suffix.clone();
+        let tag_name = tokio::task::spawn_blocking(move || get_git_tag_version(owned_suffix))
+            .await??;
         println!("{}", tag_name);
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag_pr_version {
-        let tag_name = get_git_tag_pr_version(suffix.clone())?;
+        let owned_suffix = suffix.clone();
+        let tag_name = tokio::task::spawn_blocking(move || get_git_tag_pr_version(owned_suffix))
+            .await??;
         println!("{}", tag_name);
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag {
         let owned_suffix = suffix.clone();
         let cloned_repo_path = current_dir.clone();
-        let tag_name = tokio::task::spawn_blocking(move || {
-            run_git_tag(owned_suffix, &cloned_repo_path)
-        })
-        .await??;
+        let tag_name =
+            tokio::task::spawn_blocking(move || run_git_tag(owned_suffix, &cloned_repo_path))
+                .await??;
         println!("{}", tag_name);
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.tag_pr {
         let owned_suffix = suffix.clone();
         let cloned_repo_path = current_dir.clone();
-        let tag_name = tokio::task::spawn_blocking(move || {
-            run_git_tag_pr(owned_suffix, &cloned_repo_path)
-        })
-        .await??;
+        let tag_name =
+            tokio::task::spawn_blocking(move || run_git_tag_pr(owned_suffix, &cloned_repo_path))
+                .await??;
         println!("{}", tag_name);
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.checkout_branch {
         let owned_suffix = suffix.clone();
         let cloned_repo_path = current_dir.clone();
-        let branch_name = tokio::task::spawn_blocking(move || {
-            run_git_checkout_b(owned_suffix, &cloned_repo_path)
-        })
-        .await??;
+        let branch_name =
+            tokio::task::spawn_blocking(move || run_git_checkout_b(owned_suffix, &cloned_repo_path))
+                .await??;
         println!("{}", branch_name);
         return Ok(());
     } else if let Some(suffix) = &sub_command_args.checkout_pr {
@@ -125,19 +126,22 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
         println!("{}", pr_branch_name);
         return Ok(());
     } else if sub_command_args.info {
-        println!("{}", get_git_info());
+        let info = tokio::task::spawn_blocking(get_git_info).await?;
+        println!("{}", info);
         return Ok(());
     } else if sub_command_args.tui {
         // This will run the gitui TUI
         let term = gnostr_asyncgit::gitui::term::backend();
         let mut terminal = gnostr_asyncgit::gitui::term::Term::new(term)?;
-        gnostr_asyncgit::gitui::run(&gnostr_asyncgit::gitui::cli::Args::default(), &mut terminal).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        gnostr_asyncgit::gitui::run(&gnostr_asyncgit::gitui::cli::Args::default(), &mut terminal)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
         return Ok(());
     } else {
-        let mut cmd = Command::new("git");
-        cmd.args(&sub_command_args.git_args);
-        let status = cmd.status()?;
-        // Exit with the same code as git
+        let git_args = sub_command_args.git_args.clone();
+        let status = tokio::task::spawn_blocking(move || {
+            Command::new("git").args(&git_args).status()
+        })
+        .await??;
         std::process::exit(status.code().unwrap_or(1));
     }
 }
