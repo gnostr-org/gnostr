@@ -315,29 +315,48 @@ async fn run_indexer(
         }
     });
 
-    tokio::spawn({
-        let mut sighup = signal(SignalKind::hangup()).expect("could not subscribe to sighup");
-        let build_sleeper = move || async move {
-            match refresh_interval {
-                RefreshInterval::Never => futures_util::future::pending().await,
-                RefreshInterval::Duration(v) => tokio::time::sleep(v).await,
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{signal, SignalKind};
+        tokio::spawn({
+            let mut sighup = signal(SignalKind::hangup()).expect("could not subscribe to sighup");
+            let build_sleeper = move || async move {
+                match refresh_interval {
+                    RefreshInterval::Never => futures_util::future::pending().await,
+                    RefreshInterval::Duration(v) => tokio::time::sleep(v).await,
+                };
             };
-        };
 
-        async move {
-            loop {
-                tokio::select! {
-                    _ = sighup.recv() => {},
-                    () = build_sleeper() => {},
-                }
+            async move {
+                loop {
+                    tokio::select! {
+                        _ = sighup.recv() => {},
+                        () = build_sleeper() => {},
+                    }
 
-                if indexer_wakeup_send.send(()).await.is_err() {
-                    error!("Indexing thread has died and is no longer accepting wakeup messages");
+                    if indexer_wakeup_send.send(()).await.is_err() {
+                        error!("Indexing thread has died and is no longer accepting wakeup messages");
+                    }
                 }
             }
-        }
-    })
-    .await
+        })
+        .await
+    }
+    #[cfg(not(unix))]
+    {
+        tokio::spawn(async move {
+            if let RefreshInterval::Duration(v) = refresh_interval {
+                loop {
+                    tokio::time::sleep(v).await;
+                    if indexer_wakeup_send.send(()).await.is_err() {
+                        error!("Indexing thread has died and is no longer accepting wakeup messages");
+                    }
+                }
+            } else {
+                futures_util::future::pending().await
+            }
+        }).await
+    }
 }
 
 #[must_use]

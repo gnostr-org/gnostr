@@ -271,8 +271,10 @@ pub struct CliTester {
 	formatter: ColorfulTheme,
 }
 
+#[cfg(unix)]
 use expectrl::process::unix::Signal;
 
+#[cfg(unix)]
 impl Drop for CliTester {
     fn drop(&mut self) {
         // Ensure the child process is killed when the CliTester is dropped.
@@ -280,6 +282,7 @@ impl Drop for CliTester {
     }
 }
 
+#[cfg(unix)]
 impl CliTester {
 
 	pub fn expect_input(

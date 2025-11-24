@@ -6,6 +6,7 @@ use std::env;
 use std::fs;
 use std::io;
 #[cfg(not(windows))]
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
 
 use std::path::{Path, PathBuf};
