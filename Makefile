@@ -121,6 +121,9 @@ cargo-dist-build: 	### 	cargo-dist-build
 cargo-dist-manifest: 	### 	dist manifest --artifacts=all
 	dist manifest --artifacts=all
 
+cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog
+	git-cliff --output CHANGELOG.md || cargo install git-cliff
+
 dep-graph: 	### 	dep-graph
 	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
 
@@ -170,7 +173,7 @@ docker-tui: 	### 	gnostr tui in a docker container
 docker-chat: 	### 	gnostr chat in a docker container
 	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
 docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
+	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/randymcmillan:/Users/randymcmillan gnostr:latest
 
 gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act

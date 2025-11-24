@@ -85,6 +85,9 @@ cargo-dist-build:
 cargo-dist-manifest:
   @make cargo-dist-manifest
 
+cargo-git-cliff-changelog:
+  @make cargo-git-cliff-changelog
+
 dep-graph:
   @make dep-graph
 
