@@ -4,8 +4,11 @@ use super::{apply_selection, load_file};
 use crate::{
     error::Result,
     sync::{
-        diff::DiffLinePosition, patches::get_file_diff_patch_and_hunklines, repository::repo,
-        utils::repo_write_file, RepoPath,
+        diff::DiffLinePosition,
+        patches::{get_file_diff_patch, get_hunklines},
+        repository::repo,
+        utils::repo_write_file,
+        RepoPath,
     },
 };
 
@@ -27,7 +30,8 @@ pub fn discard_lines(
     //TODO: check that file is not new (status modified)
 
     let new_content = {
-        let (_patch, hunks) = get_file_diff_patch_and_hunklines(&repo, file_path, false, false)?;
+        let patch = get_file_diff_patch(&repo, file_path, false, false)?;
+        let hunks = get_hunklines(&patch)?;
 
         let working_content = load_file(&repo, file_path)?;
         let old_lines = working_content.lines().collect::<Vec<_>>();
