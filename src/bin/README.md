@@ -174,9 +174,9 @@ The tool outputs the current Bitcoin block height. In debug mode, it also provid
 
 ---
 
-# gnostr-cube
+# gnostr-dashboard
 
-`gnostr-cube` is a TUI (Text User Interface) application that provides various functionalities, including chat and system command execution, leveraging a global Tokio runtime for asynchronous operations.
+`gnostr-dashboard` is a TUI (Text User Interface) application that provides various functionalities, including chat and system command execution, leveraging a global Tokio runtime for asynchronous operations.
 
 ## Features
 
@@ -187,7 +187,7 @@ The tool outputs the current Bitcoin block height. In debug mode, it also provid
 ## Usage
 
 ```bash
-gnostr-cube [OPTIONS]
+gnostr-dashboard [OPTIONS]
 ```
 
 ### Options
@@ -201,10 +201,10 @@ gnostr-cube [OPTIONS]
 ## Example
 
 ```bash
-gnostr-cube --tui --chat -n Alice -c 5
+gnostr-dashboard --tui --chat -n Alice -c 5
 ```
 
-This command will launch the `gnostr-cube` TUI with chat functionality enabled, greet "Alice" 5 times, and execute asynchronous tasks for chat and system command tests.
+This command will launch the `gnostr-dashboard` TUI with chat functionality enabled, greet "Alice" 5 times, and execute asynchronous tasks for chat and system command tests.
 
 ## Output
 
@@ -440,9 +440,9 @@ The tool provides detailed output on the creation of the `~/.ssh` directory, SSH
 
 ---
 
-# gnostr-cube
+# gnostr-dashboard
 
-`gnostr-cube` is a TUI (Text User Interface) application that provides various functionalities, including chat and system command execution, leveraging a global Tokio runtime for asynchronous operations.
+`gnostr-dashboard` is a TUI (Text User Interface) application that provides various functionalities, including chat and system command execution, leveraging a global Tokio runtime for asynchronous operations.
 
 ## Features
 
@@ -453,7 +453,7 @@ The tool provides detailed output on the creation of the `~/.ssh` directory, SSH
 ## Usage
 
 ```bash
-gnostr-cube [OPTIONS]
+gnostr-dashboard [OPTIONS]
 ```
 
 ### Options
@@ -467,10 +467,10 @@ gnostr-cube [OPTIONS]
 ## Example
 
 ```bash
-gnostr-cube --tui --chat -n Alice -c 5
+gnostr-dashboard --tui --chat -n Alice -c 5
 ```
 
-This command will launch the `gnostr-cube` TUI with chat functionality enabled, greet "Alice" 5 times, and execute asynchronous tasks for chat and system command tests.
+This command will launch the `gnostr-dashboard` TUI with chat functionality enabled, greet "Alice" 5 times, and execute asynchronous tasks for chat and system command tests.
 
 ## Output
 
