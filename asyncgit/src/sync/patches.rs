@@ -10,12 +10,12 @@ pub(crate) struct HunkLines<'a> {
 }
 
 #[allow(clippy::redundant_pub_crate)]
-pub(crate) fn get_file_diff_patch_and_hunklines<'a>(
+pub(crate) fn get_file_diff_patch<'a>(
     repo: &'a Repository,
     file: &str,
     is_staged: bool,
     reverse: bool,
-) -> Result<(Patch<'a>, Vec<HunkLines<'a>>)> {
+) -> Result<Patch<'a>> {
     let diff = get_diff_raw(
         repo,
         file,
@@ -31,18 +31,18 @@ pub(crate) fn get_file_diff_patch_and_hunklines<'a>(
         return Err(Error::Generic(String::from("patch error")));
     }
 
-    let patch = patches
+    patches
         .into_iter()
         .next()
-        .ok_or_else(|| Error::Generic(String::from("no patch found")))?;
+        .ok_or_else(|| Error::Generic(String::from("no patch found")))
+}
 
-    let lines = patch_get_hunklines(&patch)?;
-
-    Ok((patch, lines))
+pub(crate) fn get_hunklines<'a>(patch: &'a Patch<'_>) -> Result<Vec<HunkLines<'a>>> {
+    patch_get_hunklines(patch)
 }
 
 //
-fn patch_get_hunklines<'a>(patch: &Patch<'a>) -> Result<Vec<HunkLines<'a>>> {
+fn patch_get_hunklines<'a>(patch: &'a Patch<'_>) -> Result<Vec<HunkLines<'a>>> {
     let count_hunks = patch.num_hunks();
     let mut res = Vec::with_capacity(count_hunks);
     for hunk_idx in 0..count_hunks {
