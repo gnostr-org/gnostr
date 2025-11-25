@@ -553,6 +553,7 @@ impl BranchListPopup {
             checkout_branch(
                 &self.repo.borrow(),
                 &self.branches[self.selection as usize].name,
+                false,
             )?;
             self.hide();
         } else {
