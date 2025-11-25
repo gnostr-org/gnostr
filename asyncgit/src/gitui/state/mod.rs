@@ -39,36 +39,21 @@ use crate::gitui::ui;
 
 use super::Res;
 
-/// The state of the application.
 pub struct State {
-    /// The git repository.
     pub repo: Rc<Repository>,
-    /// The application config.
     pub config: Rc<Config>,
-    /// The key bindings.
     pub bindings: Bindings,
-    /// The keys that have been pressed but not yet handled.
-    pending_keys: Vec<(KeyModifiers, KeyCode)>,
-    /// Whether the application should quit.
+    pub pending_keys: Vec<(KeyModifiers, KeyCode)>,
     pub quit: bool,
-    /// The screens that are currently visible.
     pub screens: Vec<Screen>,
-    /// The menu that is currently pending.
     pub pending_menu: Option<PendingMenu>,
-    /// The command that is currently running.
-    pending_cmd: Option<(Child, Arc<RwLock<CmdLogEntry>>)>,
-    /// Whether to enable asynchronous commands.
-    enable_async_cmds: bool,
-    /// The log of commands that have been run.
+    pub pending_cmd: Option<(Child, Arc<RwLock<CmdLogEntry>>)>, 
+    pub enable_async_cmds: bool,
     pub current_cmd_log: CmdLog,
-    /// The prompt that is currently active.
     pub prompt: prompt::Prompt,
-    /// The clipboard.
     pub clipboard: Option<Clipboard>,
-    /// Whether the application needs to be redrawn.
-    needs_redraw: bool,
-    /// The file watcher.
-    file_watcher: Option<FileWatcher>,
+    pub needs_redraw: bool,
+    pub file_watcher: Option<FileWatcher>,
 }
 
 impl State {
