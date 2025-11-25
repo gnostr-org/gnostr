@@ -61,7 +61,7 @@ fn test_get_head_commit() {
 #[test]
 fn test_complex_git_workflow() {
     let (_tmp_dir, repo_path) = setup_test_repo();
-    let repo_path_str = repo_path.gitpath().unwrap();
+    let repo_path_str = repo_path.gitpath();
 
     // 1. Create a new branch
     create_branch(&repo_path, "feature-branch").unwrap();
@@ -73,21 +73,23 @@ fn test_complex_git_workflow() {
     stage_add_file(&repo_path, file_path.as_path()).unwrap();
 
     // 3. Verify the file is staged
-    let status = get_status(&repo_path, Default::default()).unwrap();
+    let status = get_status(&repo_path, Default::default(), None).unwrap();
     assert_eq!(status.len(), 1);
     assert_eq!(status[0].path, "test.txt");
     assert_eq!(status[0].status, StatusItemType::New);
 
     // 4. Stash the changes
-    let stash_hash = stash_save(&repo_path, Some("test stash"), false, false).unwrap();
-    assert!(stash_hash.is_some());
+    let stash_result = stash_save(&repo_path, Some("test stash"), false, false);
+    assert!(stash_result.is_ok());
+    let stash_option = stash_result.unwrap();
+    assert!(stash_option.is_some());
 
     // 5. Verify the stash and that the working directory is clean
     let stashes = get_stashes(&repo_path).unwrap();
     assert_eq!(stashes.len(), 1);
     assert_eq!(stashes[0].message, "On feature-branch: test stash");
 
-    let status_after_stash = get_status(&repo_path, Default::default()).unwrap();
+    let status_after_stash = get_status(&repo_path, Default::default(), None).unwrap();
     assert!(status_after_stash.is_empty());
 
     // 6. Check out the main branch again
