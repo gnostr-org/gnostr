@@ -1,0 +1,75 @@
+// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
+// https://github.com/nostr-protocol/nips/blob/master/05.md
+
+use crate::event::{Event, UnsignedEvent};
+use crate::utils::ureq_async;
+use anyhow::{anyhow, Result};
+use secp256k1::XOnlyPublicKey;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Nip05 {
+    pub names: HashMap<String, String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Metadata {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub about: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub picture: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub banner: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nip05: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lud06: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lud16: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
+}
+
+pub fn set_metadata(
+    metadata: &Metadata,
+    tags: Vec<Vec<String>>,
+    public_key: &XOnlyPublicKey,
+    private_key: &secp256k1::SecretKey,
+) -> Result<Event, serde_json::Error> {
+    let content = serde_json::to_string(metadata)?;
+    let unsigned_event = UnsignedEvent::new(public_key, 0, tags, content);
+    let signed_event = unsigned_event.sign(private_key).unwrap();
+    Ok(signed_event)
+}
+
+pub async fn verify(public_key: &XOnlyPublicKey, nip05_identifier: &str) -> Result<bool> {
+    let mut parts = nip05_identifier.split('@');
+    let name = parts.next();
+    let domain = parts.next();
+
+    if name.is_none() || domain.is_none() {
+        return Err(anyhow!("Invalid NIP-05 identifier format"));
+    }
+
+    let name = name.unwrap();
+    let domain = domain.unwrap();
+
+    let url = format!(
+        "https://{}/.well-known/nostr.json?name={}",
+        domain, name
+    );
+
+    let response_str = ureq_async(url).await.map_err(|e| anyhow!(e))?;
+    let nip05_data: Nip05 = serde_json::from_str(&response_str)?;
+
+    if let Some(found_pubkey) = nip05_data.names.get(name) {
+        let pk_hex = public_key.to_string();
+        return Ok(found_pubkey == &pk_hex);
+    }
+
+    Ok(false)
+}
