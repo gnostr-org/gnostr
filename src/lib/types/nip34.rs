@@ -110,63 +110,137 @@ pub enum Nip34Kind {
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::*;
+
     use secp256k1::{schnorr, Secp256k1};
+
     use rand::rngs::OsRng;
 
-    #[test]
-    fn test_sign_and_verify() {
+
+
+    fn test_event_creation(kind: Nip34Kind, tags: Vec<Vec<String>>, content: String) {
+
         let secp = Secp256k1::new();
+
         let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
+
         let x_only_public_key = public_key.x_only_public_key().0;
 
+
+
         let unsigned_event = UnsignedEvent::new(
+
             &x_only_public_key,
-            1,
-            vec![vec!["p".to_string(), "pubkey_hex".to_string()]],
-            "Hello, Nostr!".to_string(),
+
+            kind as u16,
+
+            tags.clone(),
+
+            content.clone(),
+
         );
+
+
 
         let event = unsigned_event.sign(&secret_key).unwrap();
 
+        println!("Signed event for kind {:?}: {:?}", kind, event);
+
+
+
+        assert_eq!(event.kind, kind as u16);
+
+        assert_eq!(event.content, content);
+
+        assert_eq!(event.tags, tags);
+
+
+
         let event_id_bytes = hex::decode(event.id).unwrap();
+
         let message = Message::from_slice(&event_id_bytes).unwrap();
+
         let signature = schnorr::Signature::from_slice(&hex::decode(event.sig).unwrap()).unwrap();
 
+
+
         secp.verify_schnorr(&signature, &message, &x_only_public_key)
+
             .unwrap();
+
     }
+
+
 
     #[test]
-    fn test_nip34_kinds() {
-        let secp = Secp256k1::new();
-        let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
-        let x_only_public_key = public_key.x_only_public_key().0;
 
-        let kinds = vec![
-            Nip34Kind::RepoAnnouncement,
-            Nip34Kind::RepoState,
-            Nip34Kind::Patch,
-            Nip34Kind::PullRequest,
-            Nip34Kind::PullRequestUpdate,
-            Nip34Kind::Issue,
-            Nip34Kind::StatusOpen,
-            Nip34Kind::StatusApplied,
-            Nip34Kind::StatusClosed,
-            Nip34Kind::StatusDraft,
-            Nip34Kind::UserGraspList,
+    fn test_repo_announcement() {
+
+        let tags = vec![
+
+            vec!["d".to_string(), "gnostr".to_string()],
+
+            vec!["name".to_string(), "gnostr".to_string()],
+
+            vec!["description".to_string(), "A git implementation on nostr".to_string()],
+
+            vec!["web".to_string(), "https://github.com/gnostr-org/gnostr".to_string()],
+
+            vec!["clone".to_string(), "https://github.com/gnostr-org/gnostr.git".to_string()],
+
+            vec!["relays".to_string(), "wss://relay.damus.io".to_string()],
+
         ];
 
-        for kind in kinds {
-            let unsigned_event = UnsignedEvent::new(
-                &x_only_public_key,
-                kind as u16,
-                vec![],
-                "test".to_string(),
-            );
-            let event = unsigned_event.sign(&secret_key).unwrap();
-            assert_eq!(event.kind, kind as u16);
-        }
+        test_event_creation(Nip34Kind::RepoAnnouncement, tags, "".to_string());
+
     }
+
+
+
+    #[test]
+
+    fn test_repo_state() {
+
+        let tags = vec![
+
+            vec!["d".to_string(), "gnostr".to_string()],
+
+            vec!["refs/heads/main".to_string(), "abcdef123456".to_string()],
+
+            vec!["refs/tags/v0.1.0".to_string(), "fedcba654321".to_string()],
+
+        ];
+
+        test_event_creation(Nip34Kind::RepoState, tags, "".to_string());
+
+    }
+
+
+
+    #[test]
+
+    fn test_patch() {
+
+        let tags = vec![
+
+            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
+
+            vec!["commit".to_string(), "abcdef123456".to_string()],
+
+        ];
+
+        let content = "--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,3 @@\n # gnostr\n-A git implementation on nostr\n+A git implementation over nostr".to_string();
+
+        test_event_creation(Nip34Kind::Patch, tags, content);
+
+    }
+
+    
+
+    // Add other tests for each kind here...
+
 }
