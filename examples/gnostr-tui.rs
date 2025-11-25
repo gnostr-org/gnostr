@@ -66,13 +66,13 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::tui::tui(sub_command_args.clone()).await
+            sub_commands::tui::tui(sub_command_args.clone(), &GnostrCli::default()).await
         }
         //
         None => {
             {
                 let gnostr_subcommands = gnostr::core::GnostrSubCommands::default();
-                let _ = sub_commands::tui::tui(gnostr_subcommands).await;
+                let _ = sub_commands::tui::tui(gnostr_subcommands, &GnostrCli::default()).await;
             };
             Ok(())
         }

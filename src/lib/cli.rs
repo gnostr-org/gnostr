@@ -135,7 +135,6 @@ pub enum NgitCommands {
     Query(QuerySubCommand),
 }
 
-/// GnostrCli application to interact with nostr
 #[derive(Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
@@ -179,17 +178,17 @@ pub struct GnostrCli {
     #[arg(long, value_name = "WATCHER", help = "gnostr --watcher '<string>'")]
     pub watcher: Option<String>,
     ///
-    #[arg(long)]
-    pub weeble: Option<String>,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub weeble: bool,
     ///
-    #[arg(long)]
-    pub blockheight: Option<String>,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub blockheight: bool,
     ///
-    #[arg(long)]
-    pub wobble: Option<String>,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub wobble: bool,
     ///
-    #[arg(long)]
-    pub blockhash: Option<String>,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub blockhash: bool,
     ///
     #[arg(short, long, action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
@@ -197,6 +196,10 @@ pub struct GnostrCli {
     /// Proof of work difficulty target
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     pub difficulty_target: u8,
+
+    /// Take screenshots at a given interval in seconds. The interval defaults to 1 second.
+    #[clap(long, value_name = "INTERVAL_SECONDS", num_args = 0..=1, default_missing_value = "1")]
+    pub screenshots: Option<u8>,
 
     /// Enable info logging
     #[clap(long, default_value = "false", conflicts_with = "logging")]
@@ -221,6 +224,34 @@ pub struct GnostrCli {
     /// Enable logging
     #[clap(long, default_value = "false", conflicts_with = "info", conflicts_with = "debug", conflicts_with = "trace", conflicts_with = "warn")]
     pub logging: bool,
+}
+
+impl Default for GnostrCli {
+    fn default() -> Self {
+        Self {
+            command: None,
+            nsec: Some("0000000000000000000000000000000000000000000000000000000000000001".to_string()),
+            hash: None,
+            workdir: Some(".".to_string()),
+            gitdir: Some(".".into()),
+            directory: None,
+            theme: None,
+            watcher: None,
+            weeble: false,
+            blockheight: false,
+            wobble: false,
+            blockhash: false,
+            relays: vec!["wss://relay.damus.io".to_string(), "wss://nos.lol".to_string()],
+            difficulty_target: 0,
+            screenshots: None,
+            info: false,
+            debug: false,
+            trace: false,
+            warn: false,
+            bugreport: false,
+            logging: false,
+        }
+    }
 }
 
 #[derive(Subcommand)]

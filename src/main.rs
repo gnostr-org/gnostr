@@ -83,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
     // if gnostr_cli_args.directory.is_some() {};
     if gnostr_cli_args.hash.is_some() {
         //not none
-        if let Some(input_string) = gnostr_cli_args.hash {
+        if let Some(ref input_string) = gnostr_cli_args.hash {
             let mut hasher = Sha256::new();
             hasher.update(input_string.as_bytes());
             let result = hasher.finalize();
@@ -98,24 +98,25 @@ async fn main() -> anyhow::Result<()> {
             gnostr_cli_args.nsec = format!("{:x}", result).into();
         }
     }
-    if gnostr_cli_args.weeble.is_some() {
+    if gnostr_cli_args.weeble {
         let result = weeble::weeble();
         print!("{:?}", result.unwrap());
         std::process::exit(0);
     }
-    if gnostr_cli_args.wobble.is_some() {
+    if gnostr_cli_args.wobble {
         let result = wobble::wobble();
         print!("{:?}", result.unwrap());
         std::process::exit(0);
     }
-    if gnostr_cli_args.blockheight.is_some() {
+    if gnostr_cli_args.blockheight {
         let result = blockheight::blockheight();
         print!("{:?}", result.unwrap());
         std::process::exit(0);
     }
-    if gnostr_cli_args.blockhash.is_some() {
-        let result = blockhash::blockhash();
-        print!("{:?}", result.unwrap());
+    if gnostr_cli_args.blockhash {
+        let result = blockhash::blockhash().unwrap();
+        env::set_var("BLOCKHASH", &result);
+        print!("{}", result);
         std::process::exit(0);
     }
 
@@ -340,7 +341,7 @@ async fn main() -> anyhow::Result<()> {
                     debug!("342:OVERRIDE!! The git directory is: {:?}", gitdir_string.clone());
                     sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
                     // Call tui and map error, then assign to result
-                    result = sub_commands::tui::tui(sub_command_args_mut.clone()).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
+                    result = sub_commands::tui::tui(sub_command_args_mut.clone(), &gnostr_cli_args).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
                 } else {
                     // If gitdir_value is None, we don't override. The result remains Ok(()).
                     result = Ok(()); // Explicitly set for clarity
@@ -349,7 +350,7 @@ async fn main() -> anyhow::Result<()> {
                 // GNOSTR_GITDIR environment variable is not set.
                 debug!("354:The GNOSTR_GITDIR environment variable is not set.");
                 // Call tui with original args and map error, then assign to result
-                result = sub_commands::tui::tui(sub_command_args.clone()).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
+                result = sub_commands::tui::tui(sub_command_args.clone(), &gnostr_cli_args).await.map_err(|e| anyhow!("Error in tui subcommand: {}", e));
             }
             result // Return the accumulated result
         }
@@ -397,7 +398,7 @@ async fn main() -> anyhow::Result<()> {
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
-            sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default()).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
+            sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default(), &gnostr_cli_args).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
     }
 }

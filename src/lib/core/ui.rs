@@ -83,7 +83,7 @@ impl App {
         })
     }
 
-    pub fn run(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn run(&mut self, cli: &crate::cli::GnostrCli) -> Result<(), Box<dyn Error>> {
         // setup terminal
         enable_raw_mode()?;
         let mut stdout = io::stdout();
@@ -92,7 +92,7 @@ impl App {
         let mut terminal = Terminal::new(backend)?;
 
         // run app
-        run_app(&mut terminal, self)?;
+        run_app(&mut terminal, self, cli.screenshots)?;
 
         // restore terminal
         disable_raw_mode()?;
@@ -107,10 +107,31 @@ impl App {
     }
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
+fn run_app<B: Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+    screenshots: Option<u8>,
+) -> io::Result<()> {
     let tick_rate = Duration::from_millis(100);
+    let mut last_screenshot = std::time::Instant::now();
+
     loop {
         terminal.draw(|f| ui(f, &app))?;
+
+        if let Some(interval) = screenshots {
+            if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
+                let mut path = crate::cli::get_app_cache_path().unwrap();
+                path.push("screenshots");
+                std::fs::create_dir_all(&path).unwrap();
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                path.push(format!("screenshot-{}.png", timestamp));
+                crate::utils::screenshot::make_screenshot_macos(&path).unwrap();
+                last_screenshot = std::time::Instant::now();
+            }
+        }
 
         if !event::poll(tick_rate)? {
             continue;
