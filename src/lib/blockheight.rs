@@ -10,14 +10,8 @@ pub fn check_curl() {
 }
 
 pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
-    let blockheight = match reqwest::blocking::get("https://mempool.space/api/blocks/tip/height") {
-        Ok(mut res) => {
-            let mut tmp_string = String::new();
-            match res.read_to_string(&mut tmp_string) {
-                Ok(_) => tmp_string.parse::<u64>().unwrap_or(0) as f64,
-                Err(_) => 0.0,
-            }
-        }
+    let blockheight = match ureq_sync("https://mempool.space/api/blocks/tip/height".to_string()) {
+        Ok(val) => val.parse::<u64>().unwrap_or(0) as f64,
         Err(_) => 0.0,
     };
 

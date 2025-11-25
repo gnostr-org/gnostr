@@ -226,7 +226,10 @@ pub fn set_panic_handlers() -> Result<()> {
     Ok(())
 }
 /// GNOSTR_TUI
-pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
+pub async fn tui(
+    mut sub_command_args: GnostrSubCommands,
+    cli: &crate::cli::GnostrCli,
+) -> Result<(), Box<dyn StdError>> {
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
@@ -342,6 +345,7 @@ pub async fn tui(mut sub_command_args: GnostrSubCommands) -> Result<(), Box<dyn 
             &input,
             updater,
             &mut terminal,
+            cli.screenshots,
         )
         .await
         .expect("");
@@ -374,6 +378,7 @@ pub async fn run_app(
     input: &Input,
     updater: Updater,
     terminal: &mut Terminal,
+    screenshots: Option<u8>,
 ) -> Result<QuitState, anyhow::Error> {
     let (tx_git, rx_git) = unbounded();
     let (tx_app, rx_app) = unbounded();
@@ -407,7 +412,22 @@ pub async fn run_app(
 
     log::trace!("app start: {} ms", app_start.elapsed().as_millis());
 
+    let mut last_screenshot = Instant::now();
     loop {
+        if let Some(interval) = screenshots {
+            if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
+                let mut path = crate::cli::get_app_cache_path().unwrap();
+                path.push("screenshots");
+                std::fs::create_dir_all(&path).unwrap();
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                path.push(format!("screenshot-{}.png", timestamp));
+                crate::utils::screenshot::make_screenshot(path.to_str().unwrap()).unwrap();
+                last_screenshot = Instant::now();
+            }
+        }
         let event = if first_update {
             first_update = false;
             QueueEvent::Notify

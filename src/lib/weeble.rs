@@ -21,7 +21,7 @@ pub fn weeble_sync() -> Result<f64, ascii::AsciiChar> {
     let blockheight = blockheight_sync();
     let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
     let weeble = seconds as f64 / tmp_u64 as f64;
-    env::set_var("WEEBLE", weeble.clone().to_string());
+    env::set_var("WEEBLE", weeble.to_string());
     return Ok(weeble.floor());
 }
 /// pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar>
