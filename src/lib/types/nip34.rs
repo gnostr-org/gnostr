@@ -1,6 +1,6 @@
 //! NIP-34 implementation for creating git-related events.
 
-use crate::{blockheight, weeble, wobble};
+use crate::{blockheight, blockhash, weeble, wobble};
 use secp256k1::{Message, SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -56,6 +56,9 @@ impl UnsignedEvent {
         }
         if let Ok(val) = wobble::wobble() {
             tags.push(vec!["wobble".to_string(), val.to_string()]);
+        }
+        if let Ok(val) = blockhash::blockhash() {
+            tags.push(vec!["blockhash".to_string(), val]);
         }
 
         Self {

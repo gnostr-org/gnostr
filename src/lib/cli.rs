@@ -188,6 +188,9 @@ pub struct GnostrCli {
     #[arg(long)]
     pub wobble: Option<String>,
     ///
+    #[arg(long)]
+    pub blockhash: Option<String>,
+    ///
     #[arg(short, long, action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
     pub relays: Vec<String>,

@@ -3,22 +3,28 @@ use reqwest::Url;
 use std::io::Read;
 
 pub fn blockhash() -> Result<String, ascii::AsciiChar> {
-    let url = Url::parse("https://mempool.space/api/blocks/tip/hash").unwrap();
-    let mut res = reqwest::blocking::get(url).unwrap();
-
-    let mut blockhash = String::new();
-    res.read_to_string(&mut blockhash).unwrap();
+    let blockhash = match reqwest::blocking::get("https://mempool.space/api/blocks/tip/hash") {
+        Ok(mut res) => {
+            let mut tmp_string = String::new();
+            match res.read_to_string(&mut tmp_string) {
+                Ok(_) => tmp_string,
+                Err(_) => String::new(),
+            }
+        }
+        Err(_) => String::new(),
+    };
     Ok(blockhash)
 }
 
 pub async fn blockhash_async() -> String {
-    ureq_async("https://mempool.space/api/blocks/tip/hash".to_string())
-        .await
-        .unwrap()
-        .to_string()
+    match ureq_async("https://mempool.space/api/blocks/tip/hash".to_string()).await {
+        Ok(val) => val.to_string(),
+        Err(_) => String::new(),
+    }
 }
 pub fn blockhash_sync() -> String {
-    ureq_sync("https://mempool.space/api/blocks/tip/hash".to_string())
-        .unwrap()
-        .to_string()
+    match ureq_sync("https://mempool.space/api/blocks/tip/hash".to_string()) {
+        Ok(val) => val.to_string(),
+        Err(_) => String::new(),
+    }
 }
