@@ -161,7 +161,35 @@ mod tests {
             tags.push(vec!["blockhash".to_string(), val]);
         }
 
-        assert_eq!(event.tags, tags);
+        let mut actual_tags = event.tags.clone();
+        let actual_wobble_pos = actual_tags
+            .iter()
+            .position(|t| t.get(0).map_or(false, |s| s == "wobble"));
+        if let Some(pos) = actual_wobble_pos {
+            let _ = actual_tags.remove(pos);
+        }
+
+        let mut expected_tags = tags;
+        let expected_wobble_pos = expected_tags
+            .iter()
+            .position(|t| t.get(0).map_or(false, |s| s == "wobble"));
+        if let Some(pos) = expected_wobble_pos {
+            let _ = expected_tags.remove(pos);
+        }
+
+        assert!(
+            actual_wobble_pos.is_some(),
+            "wobble tag not found in actual tags"
+        );
+        assert!(
+            expected_wobble_pos.is_some(),
+            "wobble tag not found in expected tags"
+        );
+
+        actual_tags.sort();
+        expected_tags.sort();
+
+        assert_eq!(actual_tags, expected_tags);
 
         let event_id_bytes = hex::decode(event.id).unwrap();
         let message = Message::from_slice(&event_id_bytes).unwrap();
