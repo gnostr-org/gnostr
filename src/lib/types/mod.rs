@@ -76,6 +76,7 @@ pub mod nip2;
 pub mod nip4;
 pub mod nip6;
 pub mod nip9;
+pub mod nip15;
 pub mod nip34;
 mod nip05;
 pub use nip05::Nip05;
