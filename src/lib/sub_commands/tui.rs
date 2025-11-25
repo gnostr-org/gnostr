@@ -1,5 +1,8 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
+use crate::blockheight;
+use crate::weeble;
+use crate::wobble;
 use std::env;
 
 use crate::app::App;
@@ -424,6 +427,12 @@ pub async fn run_app(
                     crate::cli::get_app_cache_path().unwrap()
                 };
                 path.push("screenshots");
+                let weeble = weeble::weeble().unwrap_or(0.0) as u64;
+                let wobble = wobble::wobble().unwrap_or(0.0) as u64;
+                let blockheight = blockheight::blockheight().unwrap_or(0.0) as u64;
+                path.push(weeble.to_string());
+                path.push(blockheight.to_string());
+                path.push(wobble.to_string());
                 std::fs::create_dir_all(&path).unwrap();
                 let timestamp = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)

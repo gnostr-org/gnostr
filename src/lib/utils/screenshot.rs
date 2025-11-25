@@ -1,7 +1,12 @@
+use crate::blockheight;
+use crate::weeble;
+use crate::wobble;
 use std::io;
 use std::process::Command;
 use clap::{Parser, Subcommand, ValueEnum};
-
+use std::path::PathBuf;
+use std::fs;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -215,10 +220,6 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
     }
 }
 
-use std::path::PathBuf;
-use std::fs;
-use std::time::{SystemTime, UNIX_EPOCH};
-
 /// # Captures a screenshot for debugging purposes during a test.
 ///
 /// This function is designed to be called from other tests to capture the UI
@@ -272,6 +273,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
     let mut screenshot_path = std::env::current_dir()?;
     screenshot_path.push("test_screenshots");
+    let weeble = weeble::weeble().unwrap_or(0.0) as u64;
+    let wobble = wobble::wobble().unwrap_or(0.0) as u64;
+    let blockheight = blockheight::blockheight().unwrap_or(0.0) as u64;
+    screenshot_path.push(weeble.to_string());
+    screenshot_path.push(blockheight.to_string());
+    screenshot_path.push(wobble.to_string());
     fs::create_dir_all(&screenshot_path)?;
 
     let timestamp = SystemTime::now()
