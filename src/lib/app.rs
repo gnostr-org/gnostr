@@ -26,32 +26,7 @@ use ratatui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-use crate::{
-    accessors,
-    cmdbar::CommandBar,
-    components::{
-        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
-    },
-    input::{Input, InputEvent, InputState},
-    keys::{key_match, KeyConfig, SharedKeyConfig},
-    options::{Options, SharedOptions},
-    popup_stack::PopupStack,
-    popups::{
-        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
-        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
-        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,
-        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,
-        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,
-        TagCommitPopup, TagListPopup,
-    },
-    queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
-    setup_popups,
-    strings::{self, ellipsis_trim_start, order},
-    sub_commands::tui::{AsyncAppNotification, AsyncNotification},
-    tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
-    try_or_popup,
-    ui::style::{SharedTheme, Theme},
-};
+use crate::{    accessors,    cmdbar::CommandBar,    components::{        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,    },    input::{Input, InputEvent, InputState},    keys::{key_match, KeyConfig, SharedKeyConfig},    options::{Options, SharedOptions},    popup_stack::PopupStack,    popups::{        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,        TagCommitPopup, TagListPopup,    },    queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},    setup_popups,    strings::{self, ellipsis_trim_start, order},    sub_commands::tui::{AsyncAppNotification, AsyncNotification},    tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},    try_or_popup,    types::nip34,    ui::style::{SharedTheme, Theme},};
 
 #[derive(Clone)]
 pub enum QuitState {
