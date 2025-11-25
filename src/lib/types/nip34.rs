@@ -91,3 +91,82 @@ impl UnsignedEvent {
         })
     }
 }
+
+/// NIP-34 event kinds.
+#[allow(missing_docs)]
+#[derive(Debug, Copy, Clone)]
+pub enum Nip34Kind {
+    RepoAnnouncement = 30617,
+    RepoState = 30618,
+    Patch = 1617,
+    PullRequest = 1618,
+    PullRequestUpdate = 1619,
+    Issue = 1621,
+    StatusOpen = 1630,
+    StatusApplied = 1631,
+    StatusClosed = 1632,
+    StatusDraft = 1633,
+    UserGraspList = 10317,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use secp256k1::{schnorr, Secp256k1};
+    use rand::rngs::OsRng;
+
+    #[test]
+    fn test_sign_and_verify() {
+        let secp = Secp256k1::new();
+        let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
+        let x_only_public_key = public_key.x_only_public_key().0;
+
+        let unsigned_event = UnsignedEvent::new(
+            &x_only_public_key,
+            1,
+            vec![vec!["p".to_string(), "pubkey_hex".to_string()]],
+            "Hello, Nostr!".to_string(),
+        );
+
+        let event = unsigned_event.sign(&secret_key).unwrap();
+
+        let event_id_bytes = hex::decode(event.id).unwrap();
+        let message = Message::from_slice(&event_id_bytes).unwrap();
+        let signature = schnorr::Signature::from_slice(&hex::decode(event.sig).unwrap()).unwrap();
+
+        secp.verify_schnorr(&signature, &message, &x_only_public_key)
+            .unwrap();
+    }
+
+    #[test]
+    fn test_nip34_kinds() {
+        let secp = Secp256k1::new();
+        let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
+        let x_only_public_key = public_key.x_only_public_key().0;
+
+        let kinds = vec![
+            Nip34Kind::RepoAnnouncement,
+            Nip34Kind::RepoState,
+            Nip34Kind::Patch,
+            Nip34Kind::PullRequest,
+            Nip34Kind::PullRequestUpdate,
+            Nip34Kind::Issue,
+            Nip34Kind::StatusOpen,
+            Nip34Kind::StatusApplied,
+            Nip34Kind::StatusClosed,
+            Nip34Kind::StatusDraft,
+            Nip34Kind::UserGraspList,
+        ];
+
+        for kind in kinds {
+            let unsigned_event = UnsignedEvent::new(
+                &x_only_public_key,
+                kind as u16,
+                vec![],
+                "test".to_string(),
+            );
+            let event = unsigned_event.sign(&secret_key).unwrap();
+            assert_eq!(event.kind, kind as u16);
+        }
+    }
+}
