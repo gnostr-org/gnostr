@@ -77,17 +77,26 @@ pub(crate) fn signature_allow_undefined_name(
     signature
 }
 
-/// pub struct SerializableCommit
+/// Serializable representation of a Git commit.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SerializableCommit {
+    /// Commit ID
     pub id: String,
+    /// Tree ID
     pub tree: String,
+    /// Parent commit IDs
     pub parents: Vec<String>,
+    /// Author name
     pub author_name: String,
+    /// Author email
     pub author_email: String,
+    /// Committer name
     pub committer_name: String,
+    /// Committer email
     pub committer_email: String,
+    /// Commit message
     pub message: String,
+    /// Commit time
     pub time: i64,
 }
 ///
