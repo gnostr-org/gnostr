@@ -456,4 +456,34 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_blockheight_flag_prints_a_number() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--blockheight");
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_weeble_flag_prints_a_number() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--weeble");
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_wobble_flag_prints_a_number() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--wobble");
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+        Ok(())
+    }
 }
