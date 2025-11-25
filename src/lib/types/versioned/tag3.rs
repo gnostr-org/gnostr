@@ -9,7 +9,7 @@ use speedy::{Readable, Writable};
 /// A tag on an Event
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
-pub struct TagV3(Vec<String>);
+pub struct TagV3(pub Vec<String>);
 
 impl TagV3 {
     const EMPTY_STRING: &'static str = "";

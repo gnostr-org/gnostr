@@ -1,23 +1,22 @@
-// NIP-04: Encrypted Direct Message
-// https://github.com/nostr-protocol/nips/blob/master/04.md
-
 use aes::Aes256;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use cbc::{Decryptor, Encryptor};
-use cbc::block_padding::Pkcs7;
+use cbc::cipher::{BlockEncrypt, BlockDecrypt, KeyInit, KeyIvInit, BlockEncryptMut, BlockDecryptMut};
+use block_padding::Pkcs7;
 use secp256k1::{ecdh, PublicKey, Secp256k1, SecretKey, XOnlyPublicKey};
 use rand::RngCore;
 
 type Aes256CbcEncryptor = Encryptor<Aes256>;
 type Aes256CbcDecryptor = Decryptor<Aes256>;
 
+/// Encrypt content
 pub fn encrypt(
     sender_private_key: &SecretKey,
     recipient_public_key: &XOnlyPublicKey,
     content: &str,
 ) -> Result<String, anyhow::Error> {
     let secp = Secp256k1::new();
-    
+
     // NIP-04 specifies using the first 32 bytes of the sha256 of the shared secret point
     let shared_secret = ecdh::shared_secret_point(
         &recipient_public_key.public_key(secp256k1::Parity::Even), // Simplified assumption
@@ -29,7 +28,7 @@ pub fn encrypt(
     rand::thread_rng().fill_bytes(&mut iv);
 
     let cipher = Aes256CbcEncryptor::new(shared_key.into(), &iv.into());
-    let encrypted_content = cipher.encrypt_padded_vec_mut<Pkcs7>(content.as_bytes());
+    let encrypted_content = cipher.encrypt_padded_vec_mut::<Pkcs7>(content.as_bytes());
 
     let iv_base64 = BASE64.encode(iv);
     let content_base64 = BASE64.encode(encrypted_content);
@@ -37,6 +36,7 @@ pub fn encrypt(
     Ok(format!("{}?iv={}", content_base64, iv_base64))
 }
 
+/// Decrypt content
 pub fn decrypt(
     recipient_private_key: &SecretKey,
     sender_public_key: &XOnlyPublicKey,
