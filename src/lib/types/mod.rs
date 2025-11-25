@@ -71,6 +71,10 @@ pub use naddr::NAddr;
 mod nevent;
 pub use nevent::NEvent;
 
+pub mod nip0;
+pub mod nip2;
+pub mod nip4;
+pub mod nip6;
 pub mod nip34;
 mod nip05;
 pub use nip05::Nip05;
