@@ -2,7 +2,7 @@ use crate::{gitui::gitui_error::Error, gitui::Res};
 use regex::Regex;
 
 #[derive(Debug)]
-pub(crate) struct Arg {
+pub struct Arg {
     pub arg: &'static str,
     pub display: &'static str,
     value: Box<dyn ArgValue>,
@@ -76,7 +76,7 @@ impl Arg {
     }
 }
 
-trait ArgValue: std::fmt::Debug {
+pub trait ArgValue: std::fmt::Debug {
     fn is_set(&self) -> bool;
     fn unset(&mut self);
     fn expects_value(&self) -> bool;
