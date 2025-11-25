@@ -65,7 +65,7 @@ fn test_complex_git_workflow() {
 
     // 1. Create a new branch
     create_branch(&repo_path, "feature-branch").unwrap();
-    checkout_branch(&repo_path, "refs/heads/feature-branch").unwrap();
+    checkout_branch(&repo_path, "feature-branch").unwrap();
 
     // 2. Create a new file and stage it
     let file_path = repo_path_str.join("test.txt");
@@ -81,21 +81,28 @@ fn test_complex_git_workflow() {
     // 4. Stash the changes
     let stash_result = stash_save(&repo_path, Some("test stash"), false, false);
     assert!(stash_result.is_ok());
-    let stash_option = stash_result.unwrap();
-    assert!(stash_option.is_some());
 
     // 5. Verify the stash and that the working directory is clean
     let stashes = get_stashes(&repo_path).unwrap();
     assert_eq!(stashes.len(), 1);
-    assert_eq!(stashes[0].message, "On feature-branch: test stash");
+    let stash_commit_details = get_commit_details(&repo_path, stashes[0]).unwrap();
+    assert_eq!(
+        stash_commit_details.message.unwrap().subject,
+        "On feature-branch: test stash"
+    );
 
     let status_after_stash = get_status(&repo_path, StatusType::Both, None).unwrap();
     assert!(status_after_stash.is_empty());
 
-    // 6. Check out the main branch again
-    checkout_branch(&repo_path, "refs/heads/main").unwrap();
+    // 6. Apply the stash and reset the workdir to discard the changes
+    sync::stash_apply(&repo_path, stashes[0], true).unwrap();
+    // TODO: verify popped content
+    sync::reset_workdir(&repo_path, ".").unwrap();
 
-    // 7. Confirm that the HEAD is pointing to main
+    // 7. Check out the main branch again
+    checkout_branch(&repo_path, "main").unwrap();
+
+    // 8. Confirm that the HEAD is pointing to main
     let head = get_head_tuple(&repo_path).unwrap();
     assert_eq!(head.name, "refs/heads/main");
 }

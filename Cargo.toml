@@ -123,7 +123,7 @@ dirs = "5.0.1"
 duration-str = { version = "0.11.2", default-features = false }
 easy-cast = "0.5"
 env_logger = "0.11"
-filetreelist = { path = "./filetreelist", version = "0.5" }
+filetreelist = { package = "gnostr-filetreelist", path = "./filetreelist", version = "0.0" }
 
 flume = "0.10"
 futures = "0.3.28"

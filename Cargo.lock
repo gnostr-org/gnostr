@@ -3160,13 +3160,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "filetreelist"
-version = "0.5.1"
-dependencies = [
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "flatbuffers"
 version = "23.5.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3746,7 +3739,6 @@ dependencies = [
  "easy-cast",
  "env_logger 0.11.8",
  "expectrl",
- "filetreelist",
  "flume",
  "futures",
  "futures-core",
@@ -3759,6 +3751,7 @@ dependencies = [
  "git2",
  "gnostr-asyncgit",
  "gnostr-crawler",
+ "gnostr-filetreelist",
  "gnostr-legit",
  "gnostr-query",
  "gnostr-relay",
@@ -3961,6 +3954,13 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "gnostr-filetreelist"
+version = "0.0.0"
+dependencies = [
+ "thiserror 1.0.69",
 ]
 
 [[package]]

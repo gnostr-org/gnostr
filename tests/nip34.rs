@@ -155,3 +155,26 @@ fn test_nip34_status_draft() -> Result<(), Box<dyn Error>> {
     p.expect_end_eventually()?;
     Ok(())
 }
+
+#[test]
+fn test_nip34_repo_announcement_alternate() -> Result<(), Box<dyn Error>> {
+    let mut p = CliTester::new([
+        "nip34",
+        "repo-announcement",
+        "--name",
+        "alternate-repo",
+        "--description",
+        "An alternate repo for testing.",
+        "--clone-url",
+        "https://github.com/example/alternate",
+        "--relays",
+        "wss://relay.alternate.com",
+        "wss://relay.v2.alternate.com",
+        "--maintainers",
+        "npub1...",
+        "--root-commit",
+        "fedcba...",
+    ]);
+    p.expect_end_eventually()?;
+    Ok(())
+}
