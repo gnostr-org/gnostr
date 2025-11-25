@@ -19,6 +19,7 @@ This module contains various subcommands for interacting with the Nostr protocol
 *   **`list`**: Lists Nostr proposals and allows interaction with them (checkout, apply patches, etc.).
 *   **`login`**: Handles user login, potentially using NSEC keys, passwords, or Bunker integration.
 *   **`mute_publickey`**: Mutes a public key by publishing a mute event.
+*   **`nip34`**: Handles NIP-34 git-related events.
 *   **`ngit`**: A wrapper command that routes to other `ngit` subcommands like `login`, `init`, `send`, `list`, `pull`, `push`, `fetch`, and `query`.
 *   **`note`**: Publishes a Nostr text note (NIP-01) with optional subject, tags, and expiration.
 *   **`profile_badges`**: Sets the user's profile badges by publishing a Nostr event with badge definition and award information.
