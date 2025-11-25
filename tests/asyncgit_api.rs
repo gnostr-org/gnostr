@@ -73,7 +73,7 @@ fn test_complex_git_workflow() {
     stage_add_file(&repo_path, file_path.as_path()).unwrap();
 
     // 3. Verify the file is staged
-    let status = get_status(&repo_path, Default::default(), None).unwrap();
+    let status = get_status(&repo_path, StatusType::Both, None).unwrap();
     assert_eq!(status.len(), 1);
     assert_eq!(status[0].path, "test.txt");
     assert_eq!(status[0].status, StatusItemType::New);
@@ -89,7 +89,7 @@ fn test_complex_git_workflow() {
     assert_eq!(stashes.len(), 1);
     assert_eq!(stashes[0].message, "On feature-branch: test stash");
 
-    let status_after_stash = get_status(&repo_path, Default::default(), None).unwrap();
+    let status_after_stash = get_status(&repo_path, StatusType::Both, None).unwrap();
     assert!(status_after_stash.is_empty());
 
     // 6. Check out the main branch again
