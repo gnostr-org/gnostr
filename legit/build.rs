@@ -259,7 +259,7 @@ fn install_windows_dependency(name: &str, install_command: &str) {
     }
 }
 
-fn install_xcb_deps() {
+fn _install_xcb_deps() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
 
     if target_os == "linux" {
@@ -570,9 +570,9 @@ fn main() {
     if !if_windows() {
         //try
         musl_install_pkg_config();
-        //install_xcb_deps();
+        //_install_xcb_deps();
         if if_linux_unknown() {
-            //linux_install_pkg_config();
+            //_linux_install_pkg_config();
         }
         if target_os == "aarch64-apple-darwin" || target_os == "x86_64-apple-darwin" {
             println!("cargo:warning=On macOS, openssl@3 is recommended for this crate.");
@@ -681,7 +681,7 @@ fn if_linux_unknown() -> bool {
 
     // Add other build logic here if needed
 }
-fn linux_install_pkg_config() {
+fn _linux_install_pkg_config() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "linux" {
