@@ -3,7 +3,7 @@ use gnostr_asyncgit::sync::{
     self, create_branch, get_commit_details, get_head, get_stashes,
     stage_add_file, stash_save, checkout_branch, get_head_tuple, RepoPath,
 };
-use gnostr_asyncgit::sync::status::{get_status, StatusItemType};
+use gnostr_asyncgit::sync::status::{get_status, StatusItemType, StatusType};
 use git2::{Repository, Signature};
 use std::fs::{self, File};
 use std::io::Write;
