@@ -148,6 +148,12 @@ cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
 	@. \$(HOME)/.cargo/env
 	#@cargo test
 	cargo  +nightly test -j \$(NPROC) --workspace
+
+cargo-test-types-nip34: 	### 	cargo-test-types-nip34
+	@. \$(HOME)/.cargo/env
+	#@cargo test
+	cargo test -j \$(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
+
 cargo-report: 	### 	cargo-report
 	@. \$(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1 -j \$(NPROC)
