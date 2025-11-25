@@ -531,4 +531,14 @@ mod tests {
         assert_eq!(wobble_env, expected_wobble.to_string());
         Ok(())
     }
+
+    #[test]
+    fn test_blockhash_flag_prints_a_hash() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--blockhash");
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::is_match(r"^[a-f0-9]{64}$").unwrap());
+        Ok(())
+    }
 }

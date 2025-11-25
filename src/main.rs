@@ -3,6 +3,7 @@ use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use gnostr_asyncgit::sync::RepoPath;
 use gnostr::blockheight;
+use gnostr::blockhash;
 use gnostr::weeble;
 use gnostr::wobble;
 use sha2::{Digest, Sha256};
@@ -109,6 +110,11 @@ async fn main() -> anyhow::Result<()> {
     }
     if gnostr_cli_args.blockheight.is_some() {
         let result = blockheight::blockheight();
+        print!("{:?}", result.unwrap());
+        std::process::exit(0);
+    }
+    if gnostr_cli_args.blockhash.is_some() {
+        let result = blockhash::blockhash();
         print!("{:?}", result.unwrap());
         std::process::exit(0);
     }
