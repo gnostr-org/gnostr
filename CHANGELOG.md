@@ -1,7 +1,97 @@
 
+### .gitignore
+
+* vendor (23a8a72)
+
+
+
+### CHANGELOG.md
+
+* update (aa40009)
+
+
+
+### Refactoring
+
+* guard os-specific code (000cade)
+
+
+
+### Testing
+
+* :test_chat_simulation:intermediate (677d478)
+
+* initial impl (d8c75af)
+
+* bypass some tests (bfbcc1d)
+
+
+
+### asyncgit/src/gitui/ops/mod.rs
+
+* pub enum Op (4639507)
+
+
+
+### make
+
+* cargo-test-types-nip_three_four (93063ca)
+
+
+
+### make_just.sh
+
+* cargo-test-types-nip34 (f00906f)
+
+
+
+### src/bin/capture_tui.rs
+
+* disable (74544b7)
+
+
+
+### src/lib/dashboard
+
+* initial impl (a292449)
+
+
+
+### src/lib/p2p/lookup.rs
+
+* initial impl:add src/bin/gnostr-lookup.rs (aaf87e7)
+
+
+
 ### src/lib/sub_commands/git.rs
 
 * refactor tag logic (cb43b48)
+
+* sub-subcommand:intermediate (a1262a3)
+
+* sub-subcommands:initial impl (d47c33e)
+
+
+
+### src/lib/sub_commands/nip34.rs
+
+* initial impl (f07af95)
+
+
+
+### src/lib/sub_commands/rad.rs
+
+* begin radicle support (76d69dd)
+
+
+
+### src/lib/types/nip34.rs
+
+* add tests (ea7b9c3)
+
+* more tests (20a3e66)
+
+* more tests (538f394)
 
 
 
