@@ -262,7 +262,7 @@ pub fn branch_compare_upstream(repo_path: &RepoPath, branch: &str) -> Result<Bra
 /// and target branch. However, if files are not conflicting, they
 /// will remain in tree (e.g. tracked new file is not conflicting and
 /// therefore is kept in tree even after checkout).
-pub fn checkout_branch(repo_path: &RepoPath, branch_name: &str) -> Result<()> {
+pub fn checkout_branch(repo_path: &RepoPath, branch_name: &str, force: bool) -> Result<()> {
     scope_time!("checkout_branch");
 
     let repo = repo(repo_path)?;
@@ -274,10 +274,15 @@ pub fn checkout_branch(repo_path: &RepoPath, branch_name: &str) -> Result<()> {
     let target_treeish = branch_ref.peel_to_tree()?;
     let target_treeish_object = target_treeish.as_object();
 
+    let mut checkout_builder = git2::build::CheckoutBuilder::new();
+    if force {
+        checkout_builder.force();
+    }
+
     // modify state to match branch's state
     repo.checkout_tree(
         target_treeish_object,
-        Some(&mut git2::build::CheckoutBuilder::new()),
+        Some(&mut checkout_builder),
     )?;
 
     let branch_ref = branch_ref
