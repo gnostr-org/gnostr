@@ -16,18 +16,18 @@ fn main() {
     screenshot_path.push("tui_capture.png");
     let screenshot_path_str = screenshot_path.to_str().expect("Path is not valid UTF-8");
 
-    // --- 1. Compile the gnostr binary ---
-    println!("Compiling gnostr TUI...");
-    let build_status = Command::new("cargo")
-        .arg("build")
-        .arg("--bin")
-        .arg("gnostr")
-        .status()
-        .expect("Failed to execute cargo build");
+    //// --- 1. Compile the gnostr binary ---
+    //println!("Compiling gnostr TUI...");
+    //let build_status = Command::new("cargo")
+    //    .arg("build")
+    //    .arg("--bin")
+    //    .arg("gnostr")
+    //    .status()
+    //    .expect("Failed to execute cargo build");
 
-    if !build_status.success() {
-        panic!("Failed to compile gnostr TUI. Aborting.");
-    }
+    //if !build_status.success() {
+    //    panic!("Failed to compile gnostr TUI. Aborting.");
+    //}
 
     // --- 2. Launch TUI in a new Terminal window and get its ID ---
     let project_dir = std::env::current_dir().unwrap().to_str().unwrap().to_string();
@@ -35,7 +35,7 @@ fn main() {
         r#"
         tell application "Terminal"
             activate
-            set theTab to do script "cd {} && {}/target/debug/gnostr tui"
+            set theTab to do script "cd {} && {}/target/debug/gnostr"
             delay 2
             return id of first window whose tabs contains theTab
         end tell
@@ -70,7 +70,7 @@ fn main() {
     thread::sleep(Duration::from_secs(5));
 
     let mut attempts = 0;
-    const MAX_ATTEMPTS: u8 = 3;
+    const MAX_ATTEMPTS: u8 = 1;
     let mut capture_successful = false;
 
     while attempts < MAX_ATTEMPTS {
