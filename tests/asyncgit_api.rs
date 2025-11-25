@@ -5,14 +5,14 @@ mod tests {
     use git2::{Repository, Signature};
     use std::fs::File;
     use std::io::Write;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use tempfile::TempDir;
     
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, RepoPath) {
         let tmp_dir = TempDir::new().unwrap();
-        let repo_path = tmp_dir.path();
-        let repo = Repository::init(repo_path).unwrap();
+        let repo_path = tmp_dir.path().to_path_buf();
+        let repo = Repository::init(&repo_path).unwrap();
     
         // Configure user name and email
         let mut config = repo.config().unwrap();
@@ -33,7 +33,7 @@ mod tests {
             repo.find_tree(oid).unwrap().id()
         };
         let tree = repo.find_tree(tree_id).unwrap();
-        let commit_id = repo.commit(
+        let _commit_id = repo.commit(
             Some("HEAD"),
             &signature,
             &signature,
@@ -43,7 +43,7 @@ mod tests {
         )
         .unwrap();
     
-        (tmp_dir, RepoPath::Path(repo_path.to_path_buf()))
+        (tmp_dir, RepoPath::Path(repo_path))
     }
     
     #[test]
