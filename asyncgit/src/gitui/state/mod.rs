@@ -40,17 +40,26 @@ use crate::gitui::ui;
 use super::Res;
 
 pub struct State {
+    /// The git repository.
     pub repo: Rc<Repository>,
+    /// The application config.
     pub config: Rc<Config>,
+    /// The key bindings.
     pub bindings: Bindings,
     pending_keys: Vec<(KeyModifiers, KeyCode)>,
+    /// A flag to indicate if the application should quit.
     pub quit: bool,
+    /// The stack of screens.
     pub screens: Vec<Screen>,
+    /// The pending menu.
     pub pending_menu: Option<PendingMenu>,
     pending_cmd: Option<(Child, Arc<RwLock<CmdLogEntry>>)>,
     enable_async_cmds: bool,
+    /// The command log.
     pub current_cmd_log: CmdLog,
+    /// The user prompt.
     pub prompt: prompt::Prompt,
+    /// The system clipboard.
     pub clipboard: Option<Clipboard>,
     needs_redraw: bool,
     file_watcher: Option<FileWatcher>,
@@ -619,9 +628,14 @@ fn write_child_output_to_log(
 
 type DefaultFn = Box<dyn Fn(&State) -> Option<String>>;
 
+
+/// The parameters for a prompt.
 pub(crate) struct PromptParams {
+    /// The prompt text.
     pub prompt: &'static str,
+    /// A function to create the default value.
     pub create_default_value: DefaultFn,
+    /// A flag to indicate if the menu should be hidden.
     pub hide_menu: bool,
 }
 

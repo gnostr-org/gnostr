@@ -8,38 +8,55 @@ use crate::gitui::ops;
 
 pub mod arg;
 
+/// The menu.
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Menu {
+    /// The root menu.
     #[serde(rename = "root")]
     Root,
+    /// The branch menu.
     #[serde(rename = "branch_menu")]
     Branch,
+    /// The commit menu.
     #[serde(rename = "commit_menu")]
     Commit,
+    /// The fetch menu.
     #[serde(rename = "fetch_menu")]
     Fetch,
+    /// The help menu.
     #[serde(rename = "help_menu")]
     Help,
+    /// The log menu.
     #[serde(rename = "log_menu")]
     Log,
+    /// The pull menu.
     #[serde(rename = "pull_menu")]
     Pull,
+    /// The push menu.
     #[serde(rename = "push_menu")]
     Push,
+    /// The rebase menu.
     #[serde(rename = "rebase_menu")]
     Rebase,
+    /// The reset menu.
     #[serde(rename = "reset_menu")]
     Reset,
+    /// The revert menu.
     #[serde(rename = "revert_menu")]
     Revert,
+    /// The stash menu.
     #[serde(rename = "stash_menu")]
     Stash,
 }
 
+/// The pending menu.
 pub struct PendingMenu {
+    /// The current menu.
     pub menu: Menu,
+    /// A flag to indicate if the menu is hidden.
     pub is_hidden: bool,
+    /// The arguments for the menu.
     pub args: BTreeMap<Cow<'static, str>, arg::Arg>,
 }
 
