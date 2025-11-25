@@ -126,7 +126,7 @@ impl NostrBech32 {
         tlv.push(0); // special for nrelay
         let len = url.0.len() as u8;
         tlv.push(len); // length
-        tlv.extend(url.0[..len as usize].as_bytes());
+        tlv.extend(url.0.as_bytes().iter().take(len as usize));
         bech32::encode::<bech32::Bech32>(*super::HRP_NRELAY, &tlv).unwrap()
     }
 

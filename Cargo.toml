@@ -66,12 +66,13 @@ actix-web-actors = "4.3.1"
 aes = "0.8"
 
 anstream = "0.6.4"
+ansi_term = "0.12"
 #tracing-subscriber = "0.3.18"
 
 anyhow = "1.0.75"
 argparse    = "0.2.2"
 ascii = "1.1.0"
-async-std = "1.12"
+async-std = { version = "1.12", features = ["attributes"] }
 async-trait = "0.1.73"
 
 ##nostr
@@ -174,8 +175,11 @@ libp2p = { version = "0.54.1", features = [
   "request-response",
   "tcp",
   "tokio",
-  "yamux"
+  "yamux",
+  "websocket"
 ] }
+libp2p-mplex = "0.42.0"
+libp2p-quic = { version = "0.9.0", features = ["async-std"] }
 #hex = "0.4"
 #lazy_static = "1.4"
 lightning-invoice = "0.33.2"
