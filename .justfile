@@ -70,8 +70,8 @@ cargo-test-nightly:
 cargo-test-nightly-workspace:
   @make cargo-test-nightly-workspace
 
-cargo-test-types-nip34:
-  @make cargo-test-types-nip34
+cargo-test-types-nip_three_four:
+  @make cargo-test-types-nip_three_four
 
 cargo-report:
   @make cargo-report
