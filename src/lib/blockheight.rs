@@ -10,44 +10,34 @@ pub fn check_curl() {
 }
 
 pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
-    let since_the_epoch = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .expect("get millis error");
-    let seconds = since_the_epoch.as_secs();
-    let subsec_millis = since_the_epoch.subsec_millis() as u64;
-    let _now_millis = seconds * 1000 + subsec_millis;
-    //println!("now millis: {}", seconds * 1000 + subsec_millis);
+    let blockheight = match reqwest::blocking::get("https://mempool.space/api/blocks/tip/height") {
+        Ok(mut res) => {
+            let mut tmp_string = String::new();
+            match res.read_to_string(&mut tmp_string) {
+                Ok(_) => tmp_string.parse::<u64>().unwrap_or(0) as f64,
+                Err(_) => 0.0,
+            }
+        }
+        Err(_) => 0.0,
+    };
 
-    //let bh = get_blockheight();
-    //println!("{}",bh.unwrap());
-    let url = Url::parse("https://mempool.space/api/blocks/tip/height").unwrap();
-    let mut res = reqwest::blocking::get(url).unwrap();
-
-    let mut tmp_string = String::new();
-    res.read_to_string(&mut tmp_string).unwrap();
-    let tmp_u64 = tmp_string.parse::<u64>().unwrap_or(0);
-
-    //TODO:impl gnostr-weeble_millis
-    //let weeble = now_millis as f64 / tmp_u64 as f64;
-    //let blockheight = seconds as f64 / tmp_u64 as f64;
-    let blockheight = tmp_u64 as f64;
-    //return Ok(blockheight.floor());
     env::set_var("BLOCKHEIGHT", blockheight.to_string());
     Ok(blockheight)
 }
 
 pub async fn blockheight_async() -> String {
-    let blockheight = ureq_async("https://mempool.space/api/blocks/tip/height".to_string())
-        .await
-        .unwrap()
-        .to_string();
+    let blockheight = match ureq_async("https://mempool.space/api/blocks/tip/height".to_string()).await {
+        Ok(val) => val.to_string(),
+        Err(_) => "0".to_string(),
+    };
     env::set_var("BLOCKHEIGHT", blockheight.clone());
     blockheight
 }
 pub fn blockheight_sync() -> String {
-    let blockheight = ureq_sync("https://mempool.space/api/blocks/tip/height".to_string())
-        .unwrap()
-        .to_string();
+    let blockheight = match ureq_sync("https://mempool.space/api/blocks/tip/height".to-string()) {
+        Ok(val) => val.to_string(),
+        Err(_) => "0".to_string(),
+    };
     env::set_var("BLOCKHEIGHT", blockheight.clone());
     blockheight
 }
