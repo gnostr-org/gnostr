@@ -1,5 +1,6 @@
 //! NIP-34 implementation for creating git-related events.
 
+use crate::{blockheight, weeble, wobble};
 use secp256k1::{Message, SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -41,11 +42,22 @@ pub struct UnsignedEvent {
 
 impl UnsignedEvent {
     /// Create a new unsigned event.
-    pub fn new(pubkey: &XOnlyPublicKey, kind: u16, tags: Vec<Vec<String>>, content: String) -> Self {
+    pub fn new(pubkey: &XOnlyPublicKey, kind: u16, mut tags: Vec<Vec<String>>, content: String) -> Self {
         let created_at = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
+
+        if let Ok(val) = weeble::weeble() {
+            tags.push(vec!["weeble".to_string(), val.to_string()]);
+        }
+        if let Ok(val) = blockheight::blockheight() {
+            tags.push(vec!["blockheight".to_string(), val.to_string()]);
+        }
+        if let Ok(val) = wobble::wobble() {
+            tags.push(vec!["wobble".to_string(), val.to_string()]);
+        }
+
         Self {
             pubkey: pubkey.to_string(),
             created_at,
