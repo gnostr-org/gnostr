@@ -1,15 +1,22 @@
 // NIP-02: Contact List and Petnames
 // https://github.com/nostr-protocol/nips/blob/master/02.md
 
-use crate::event::{Event, UnsignedEvent};
+use crate::types::event::{Event, UnsignedEvent};
 use secp256k1::XOnlyPublicKey;
 
+
+/// A contact
+#[derive(Debug, Clone)]
 pub struct Contact {
+    /// Their public key
     pub public_key: XOnlyPublicKey,
+    /// A relay URL for them
     pub relay_url: Option<String>,
+    /// A petname for them
     pub petname: Option<String>,
 }
 
+/// Set a contact list
 pub fn set_contact_list(
     contacts: Vec<Contact>,
     public_key: &XOnlyPublicKey,

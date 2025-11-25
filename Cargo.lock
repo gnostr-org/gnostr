@@ -3773,9 +3773,9 @@ dependencies = [
  "base64 0.22.1",
  "bech32 0.11.0",
  "bincode",
- "bip39",
  "bitcoin_hashes 0.14.0",
  "bitflags 2.9.0",
+ "block-padding 0.3.3",
  "bugreport",
  "bwrap",
  "bytes",
@@ -3907,6 +3907,7 @@ dependencies = [
  "thiserror 1.0.69",
  "thread-priority",
  "time 0.3.41",
+ "tiny-bip39",
  "tiny-hderive",
  "tmux_interface",
  "tokio",
@@ -10695,6 +10696,23 @@ checksum = "3526739392ec93fd8b359c8e98514cb3e8e021beb4e5f597b00a0221f8ed8a49"
 dependencies = [
  "num-conv",
  "time-core",
+]
+
+[[package]]
+name = "tiny-bip39"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a30fd743a02bf35236f6faf99adb03089bb77e91c998dac2c2ad76bb424f668c"
+dependencies = [
+ "once_cell",
+ "pbkdf2 0.12.2",
+ "rand 0.8.5",
+ "rustc-hash 1.1.0",
+ "sha2 0.10.9",
+ "thiserror 1.0.69",
+ "unicode-normalization",
+ "wasm-bindgen",
+ "zeroize",
 ]
 
 [[package]]

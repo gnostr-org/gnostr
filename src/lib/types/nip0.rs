@@ -1,7 +1,7 @@
 // NIP-05: Mapping Nostr keys to DNS-based internet identifiers
 // https://github.com/nostr-protocol/nips/blob/master/05.md
 
-use crate::event::{Event, UnsignedEvent};
+use crate::types::event::{Event, UnsignedEvent};
 use crate::utils::ureq_async;
 use anyhow::{anyhow, Result};
 use secp256k1::XOnlyPublicKey;
@@ -9,31 +9,43 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
+/// A Nip05 record
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Nip05 {
+    /// A map of names to public keys
     pub names: HashMap<String, String>,
 }
 
+/// A metadata record
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Metadata {
+    /// The user's name
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// A description of the user
     #[serde(skip_serializing_if = "Option::is_none")]
     pub about: Option<String>,
+    /// A URL to the user's profile picture
     #[serde(skip_serializing_if = "Option::is_none")]
     pub picture: Option<String>,
+    /// A URL to the user's banner image
     #[serde(skip_serializing_if = "Option::is_none")]
     pub banner: Option<String>,
+    /// The user's Nip05 identifier
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nip05: Option<String>,
+    /// The user's lightning address (LUD-06)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lud06: Option<String>,
+    /// The user's lightning address (LUD-16)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lud16: Option<String>,
+    /// Extra fields
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
 
+/// Set metadata for a user
 pub fn set_metadata(
     metadata: &Metadata,
     tags: Vec<Vec<String>>,
@@ -46,6 +58,7 @@ pub fn set_metadata(
     Ok(signed_event)
 }
 
+/// Verify a nip05 identifier
 pub async fn verify(public_key: &XOnlyPublicKey, nip05_identifier: &str) -> Result<bool> {
     let mut parts = nip05_identifier.split('@');
     let name = parts.next();

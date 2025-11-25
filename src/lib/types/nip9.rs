@@ -1,9 +1,10 @@
 // NIP-09: Event Deletion
 // https://github.com/nostr-protocol/nips/blob/master/09.md
 
-use crate::event::{Event, EventId, UnsignedEvent};
-use secp256k1::{XOnlyPublicKey, SecretKey};
+use crate::types::event::{Event, EventId, UnsignedEvent};
+use secp256k1::{SecretKey, XOnlyPublicKey};
 
+/// Create a deletion event
 pub fn delete(
     ids_to_delete: Vec<EventId>,
     reason: Option<&str>,
@@ -12,7 +13,7 @@ pub fn delete(
 ) -> Event {
     let tags: Vec<Vec<String>> = ids_to_delete
         .into_iter()
-        .map(|id| vec!["e".to_string(), id.to_string()])
+        .map(|id: EventId| vec!["e".to_string(), id.as_hex_string()])
         .collect();
 
     let content = reason.unwrap_or("").to_string();

@@ -1,7 +1,7 @@
 use crate::types::{
     Error, EventDelegation, EventKind, EventReference, Id, IntoVec, KeySigner, MilliSatoshi,
     NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3, Unixtime,
-    ZapData,
+    ZapData, KeySecurity
 };
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 use std::cmp::Ordering;
 use std::str::FromStr;
+use secp256k1::XOnlyPublicKey;
 
 /// The main event type
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -1125,6 +1126,45 @@ impl EventV3 {
         }
 
         Ok(false)
+    }
+}
+
+pub(crate) struct UnsignedEventV3(pub PreEventV3);
+
+impl UnsignedEventV3 {
+    pub(crate) fn new(
+        pubkey: &XOnlyPublicKey,
+        kind: u16,
+        tags: Vec<Vec<String>>,
+        content: String,
+    ) -> UnsignedEventV3 {
+        let tags = tags
+            .into_iter()
+            .map(|tag_vec| TagV3(tag_vec))
+            .collect();
+
+        UnsignedEventV3(PreEventV3 {
+            pubkey: PublicKey::from_bytes(&pubkey.public_key(secp256k1::Parity::Even).serialize(), false).unwrap(),
+            created_at: Unixtime::now(),
+            kind: EventKind::from(kind as u32),
+            tags,
+            content,
+        })
+    }
+
+    pub(crate) fn sign(self, private_key: &secp256k1::SecretKey) -> Result<EventV3, Error> {
+        let id = self.0.hash()?;
+        let signer = KeySigner::from_private_key(PrivateKey(private_key.clone(), KeySecurity::Medium), "", 1)?;
+        let sig = signer.sign_id(id)?;
+        Ok(EventV3 {
+            id,
+            pubkey: self.0.pubkey,
+            created_at: self.0.created_at,
+            kind: self.0.kind,
+            tags: self.0.tags,
+            content: self.0.content,
+            sig,
+        })
     }
 }
 

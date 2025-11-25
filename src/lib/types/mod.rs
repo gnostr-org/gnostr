@@ -71,12 +71,19 @@ pub use naddr::NAddr;
 mod nevent;
 pub use nevent::NEvent;
 
+/// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
 pub mod nip0;
+/// NIP-02: Contact List and Petnames
 pub mod nip2;
+/// NIP-04: Encrypted Direct Message
 pub mod nip4;
+/// NIP-06: Basic key derivation from mnemonic seed phrase
 pub mod nip6;
+/// NIP-09: Event Deletion
 pub mod nip9;
+/// NIP-15: End of Stored Events Notice
 pub mod nip15;
+/// NIP-26: Delegation
 pub mod nip26;
 pub mod nip34;
 mod nip05;

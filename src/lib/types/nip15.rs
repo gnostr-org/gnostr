@@ -1,9 +1,10 @@
 // NIP-15: End of Stored Events Notice
 // https://github.com/nostr-protocol/nips/blob/master/15.md
 
-use crate::event::{Event, UnsignedEvent};
-use secp256k1::{XOnlyPublicKey, SecretKey};
+use crate::types::event::{Event, UnsignedEvent};
+use secp256k1::{SecretKey, XOnlyPublicKey};
 
+/// Create an End of Stored Events (EOSE) event
 pub fn end_of_stored_events(
     public_key: &XOnlyPublicKey,
     private_key: &SecretKey,
