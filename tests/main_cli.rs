@@ -486,4 +486,49 @@ mod tests {
             .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
         Ok(())
     }
+
+    #[test]
+    fn test_blockheight_flag_sets_env_var() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--blockheight");
+        let output = cmd.output().unwrap();
+        let output_str = String::from_utf8(output.stdout).unwrap();
+        let re = regex::Regex::new(r"(\d+)\.0").unwrap();
+        let caps = re.captures(&output_str).unwrap();
+        let num_str = caps.get(1).unwrap().as_str();
+        let expected_blockheight = num_str.parse::<f64>().unwrap();
+        let blockheight_env = std::env::var("BLOCKHEIGHT").unwrap_or("0".to_string());
+        assert_eq!(blockheight_env, expected_blockheight.to_string());
+        Ok(())
+    }
+
+    #[test]
+    fn test_weeble_flag_sets_env_var() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--weeble");
+        let output = cmd.output().unwrap();
+        let output_str = String::from_utf8(output.stdout).unwrap();
+        let re = regex::Regex::new(r"(\d+)\.0").unwrap();
+        let caps = re.captures(&output_str).unwrap();
+        let num_str = caps.get(1).unwrap().as_str();
+        let expected_weeble = num_str.parse::<f64>().unwrap();
+        let weeble_env = std::env::var("WEEBLE").unwrap_or("0".to_string());
+        assert_eq!(weeble_env, expected_weeble.to_string());
+        Ok(())
+    }
+
+    #[test]
+    fn test_wobble_flag_sets_env_var() -> Result<(), Box<dyn Error>> {
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--wobble");
+        let output = cmd.output().unwrap();
+        let output_str = String::from_utf8(output.stdout).unwrap();
+        let re = regex::Regex::new(r"(\d+)\.0").unwrap();
+        let caps = re.captures(&output_str).unwrap();
+        let num_str = caps.get(1).unwrap().as_str();
+        let expected_wobble = num_str.parse::<f64>().unwrap();
+        let wobble_env = std::env::var("WOBBLE").unwrap_or("0".to_string());
+        assert_eq!(wobble_env, expected_wobble.to_string());
+        Ok(())
+    }
 }
