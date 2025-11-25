@@ -634,7 +634,7 @@ fn write_child_output_to_log(
 
 type DefaultFn = Box<dyn Fn(&State) -> Option<String>>;
 
-pub(crate) struct PromptParams {
+pub struct PromptParams {
     pub prompt: &'static str,
     pub create_default_value: DefaultFn,
     pub hide_menu: bool,

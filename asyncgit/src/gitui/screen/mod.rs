@@ -21,7 +21,7 @@ pub(crate) enum NavMode {
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub(crate) enum ScreenType {
+pub enum ScreenType {
     Status,
     Show,
     Gnostr,
@@ -29,16 +29,16 @@ pub(crate) enum ScreenType {
     ShowRefs,
 }
 
-pub(crate) struct Screen {
-    pub(crate) size: Size,
-    cursor: usize,
-    scroll: usize,
-    config: Rc<Config>,
-    refresh_items: Box<dyn Fn() -> Res<Vec<Item>>>,
-    items: Vec<Item>,
-    line_index: Vec<usize>,
-    collapsed: HashSet<Cow<'static, str>>,
-    pub(crate) screen_type: ScreenType,
+pub struct Screen {
+    pub size: Size,
+    pub cursor: usize,
+    pub scroll: usize,
+    pub config: Rc<Config>,
+    pub refresh_items: Box<dyn Fn() -> Res<Vec<Item>>>,
+    pub items: Vec<Item>,
+    pub line_index: Vec<usize>,
+    pub collapsed: HashSet<Cow<'static, str>>,
+    pub screen_type: ScreenType,
 }
 
 impl Screen {
