@@ -11,77 +11,35 @@ use libp2p::identify;
 use libp2p::identity::Keypair;
 use libp2p::kad::ProgressStep;
 use libp2p::kad::{
-    record::store::MemoryStore, GetClosestPeersOk, Kademlia, KademliaConfig, KademliaEvent,
+    store::MemoryStore, GetClosestPeersOk,
     QueryResult,
 };
 use libp2p::ping;
 use libp2p::relay;
-use libp2p::swarm::{self, SwarmBuilder, SwarmEvent};
-use libp2p::{core, StreamProtocol};
-use libp2p::{dns, noise, swarm::NetworkBehaviour, tcp, yamux, Multiaddr, PeerId, Swarm};
+use libp2p::{
+    core,
+    dns,
+    noise,
+    swarm::{NetworkBehaviour},
+    tcp,
+    yamux,
+    Multiaddr,
+    PeerId,
+    Swarm,
+    StreamProtocol,
+    SwarmBuilder,
+};
+use libp2p::swarm::SwarmEvent;
 use libp2p_mplex as mplex;
 use log::debug;
 use std::io;
 use std::str::FromStr;
 use std::time::Duration;
+use clap::{Parser, ValueEnum};
+use crate::p2p::network_config::Network;
 use thiserror::Error;
-use clap::Parser;
 
-#[derive(Debug, Parser)]
-#[command(name = "libp2p-lookup", about = "Lookup libp2p nodes.")]
-enum Opt {
-    /// Lookup peer by its address.
-    Direct {
-        /// Address of the peer.
-        #[arg(long)]
-        address: Multiaddr,
-    },
-    /// Lookup peer by its ID via the Kademlia DHT.
-    Dht {
-        /// ID of the peer.
-        #[arg(long)]
-        peer_id: PeerId,
-        /// Network of the peer.
-        #[arg(
-        long,
-        value_enum,
-        default_value = "ipfs",
-        )]
-        network: Network,
-    },
-}
 
-#[async_std::main]
-async fn main() {
-    env_logger::init();
-    let opt = Opt::parse();
-
-    let lookup = match opt {
-        Opt::Dht { peer_id, network } => {
-            let client = LookupClient::new(Some(network));
-            client.lookup_on_dht(peer_id).boxed()
-        }
-        Opt::Direct { address } => {
-            let client = LookupClient::new(None);
-            client.lookup_directly(address).boxed()
-        }
-    };
-
-    let timed_lookup = async_std::future::timeout(std::time::Duration::from_secs(20), lookup)
-        .map_err(|_| LookupError::Timeout);
-
-    match timed_lookup.await {
-        Ok(Ok(peer)) => {
-            //println!("Lookup for peer with id {:?} succeeded.", peer.peer_id);
-            //println!("\n{peer}");
-            print!("{peer}");
-        }
-        Ok(Err(e)) | Err(e) => {
-            log::error!("Lookup failed: {e:?}.");
-            std::process::exit(1);
-        }
-    }
-}
 
 fn print_key(k: &str, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     writeln!(f, "{}:", Style::new().bold().paint(k))
@@ -99,7 +57,7 @@ pub struct LookupClient {
     swarm: Swarm<LookupBehaviour>,
 }
 
-struct Peer {
+pub struct Peer {
     peer_id: PeerId,
     protocol_version: String,
     agent_version: String,
@@ -132,116 +90,60 @@ impl std::fmt::Display for Peer {
 }
 
 impl LookupClient {
-    fn new(network: Option<Network>) -> Self {
+    pub fn new(network: Option<Network>) -> Self {
         // Create a random key for ourselves.
         let local_key = Keypair::generate_ed25519();
         let local_peer_id = PeerId::from(local_key.public());
 
         //println!("Local peer id: {local_peer_id}");
 
-        let (relay_transport, relay_client) = relay::client::new(local_peer_id);
 
-        let transport = {
-            let authentication_config = noise::Config::new(&local_key).unwrap();
 
-            let multiplexing_config = {
-                let mut mplex_config = mplex::MplexConfig::new();
-                mplex_config.set_max_buffer_behaviour(mplex::MaxBufferBehaviour::Block);
-                mplex_config.set_max_buffer_size(usize::MAX);
+            let (relay_transport, relay_client) = relay::client::new(local_peer_id);
+            let mut swarm = SwarmBuilder::with_existing_identity(local_key)
+                .with_async_std()
+                .with_tcp(
+                    tcp::Config::default(),
+                    noise::Config::new,
+                    yamux::Config::default,
+                )
+                .unwrap()
+                .with_quic()
+                .with_relay_client(noise::Config::new, yamux::Config::default)
+                .unwrap()
+                .with_behaviour(|key, relay_client| {
+                    let local_peer_id = PeerId::from(key.public());
 
-                let mut yamux_config = yamux::Config::default();
-                // Enable proper flow-control: window updates are only sent when
-                // buffered data has been consumed.
-                yamux_config.set_window_update_mode(yamux::WindowUpdateMode::on_read());
+                    // Create a Kademlia behaviour.
+                    let store = MemoryStore::new(local_peer_id);
+                    let mut kademlia_config = libp2p::kad::Config::default();
+                    if let Some(protocol_name) = network.clone().and_then(|n| n.protocol()) {
+                        kademlia_config
+                            .set_protocol_names(vec![
+                                StreamProtocol::try_from_owned(protocol_name).unwrap()
+                            ]);
+                    }
+                    let kademlia = libp2p::kad::Behaviour::new(local_peer_id, store);
 
-                core::upgrade::SelectUpgrade::new(yamux_config, mplex_config)
-            };
+                    let ping = ping::Behaviour::new(ping::Config::new());
 
-            let tcp_and_relay_transport = OrTransport::new(
-                relay_transport,
-                tcp::async_io::Transport::new(tcp::Config::new().port_reuse(true).nodelay(true)),
-            )
-            .upgrade(upgrade::Version::V1)
-            .authenticate(authentication_config.clone())
-            .multiplex(multiplexing_config.clone())
-            .timeout(Duration::from_secs(20));
+                    let user_agent =
+                        "substrate-node/v2.0.0-e3245d49d-x86_64-linux-gnu (unknown)".to_string();
+                    let proto_version = "/substrate/1.0".to_string();
+                    let identify = identify::Behaviour::new(
+                        identify::Config::new(proto_version, key.public())
+                            .with_agent_version(user_agent),
+                    );
 
-            let quic_transport = {
-                let mut config = libp2p_quic::Config::new(&local_key);
-                config.support_draft_29 = true;
-                libp2p_quic::async_std::Transport::new(config)
-            };
-
-            let tcp_and_relay_and_quic = block_on(dns::DnsConfig::system(
-                libp2p::core::transport::OrTransport::new(quic_transport, tcp_and_relay_transport),
-            ))
-            .unwrap()
-            .map(|either_output, _| match either_output {
-                Either::Left((peer_id, muxer)) => (peer_id, StreamMuxerBox::new(muxer)),
-                Either::Right((peer_id, muxer)) => (peer_id, StreamMuxerBox::new(muxer)),
-            })
-            .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
-
-            let websocket = libp2p::websocket::WsConfig::new(
-                block_on(libp2p::dns::DnsConfig::system(
-                    libp2p::tcp::async_io::Transport::new(libp2p::tcp::Config::default()),
-                ))
-                .unwrap(),
-            )
-            .upgrade(upgrade::Version::V1)
-            .authenticate(authentication_config)
-            .multiplex(multiplexing_config)
-            .timeout(Duration::from_secs(20));
-
-            OrTransport::new(websocket, tcp_and_relay_and_quic)
-                .map(|either_output, _| match either_output {
-                    Either::Left((peer_id, muxer)) => (peer_id, StreamMuxerBox::new(muxer)),
-                    Either::Right((peer_id, muxer)) => (peer_id, StreamMuxerBox::new(muxer)),
+                    LookupBehaviour {
+                        kademlia,
+                        ping,
+                        identify,
+                        relay: relay_client,
+                    }
                 })
-                .boxed()
-        };
-
-        let behaviour = {
-            let local_peer_id = PeerId::from(local_key.public());
-
-            // Create a Kademlia behaviour.
-            let store = MemoryStore::new(local_peer_id);
-            let mut kademlia_config = KademliaConfig::default();
-            if let Some(protocol_name) = network.clone().and_then(|n| n.protocol()) {
-                kademlia_config
-                    .set_protocol_names(vec![
-                        StreamProtocol::try_from_owned(protocol_name).unwrap()
-                    ]);
-            }
-            let kademlia = Kademlia::with_config(local_peer_id, store, kademlia_config);
-
-            let ping = ping::Behaviour::new(ping::Config::new());
-
-            let user_agent =
-                "substrate-node/v2.0.0-e3245d49d-x86_64-linux-gnu (unknown)".to_string();
-            let proto_version = "/substrate/1.0".to_string();
-            let identify = identify::Behaviour::new(
-                identify::Config::new(proto_version, local_key.public())
-                    .with_agent_version(user_agent),
-            );
-
-            LookupBehaviour {
-                kademlia,
-                ping,
-                identify,
-                relay: relay_client,
-                keep_alive: swarm::keep_alive::Behaviour,
-            }
-        };
-        let mut swarm = SwarmBuilder::with_executor(
-            transport,
-            behaviour,
-            local_peer_id,
-            Box::new(|fut| {
-                async_std::task::spawn(fut);
-            }),
-        )
-        .build();
+                .unwrap()
+                .build();
 
         if let Some(network) = network {
             for (addr, peer_id) in network.bootnodes() {
@@ -252,7 +154,7 @@ impl LookupClient {
         LookupClient { swarm }
     }
 
-    async fn lookup_directly(mut self, dst_addr: Multiaddr) -> Result<Peer, LookupError> {
+    pub async fn lookup_directly(mut self, dst_addr: Multiaddr) -> Result<Peer, LookupError> {
         self.swarm.dial(dst_addr.clone()).unwrap();
 
         loop {
@@ -270,6 +172,7 @@ impl LookupClient {
                         ConnectedPoint::Dialer {
                             address,
                             role_override: _,
+                            ..
                         } => {
                             if address == dst_addr {
                                 return self.wait_for_identify(peer_id).await;
@@ -294,7 +197,7 @@ impl LookupClient {
         }
     }
 
-    async fn lookup_on_dht(mut self, peer: PeerId) -> Result<Peer, LookupError> {
+    pub async fn lookup_on_dht(mut self, peer: PeerId) -> Result<Peer, LookupError> {
         self.swarm.behaviour_mut().kademlia.get_closest_peers(peer);
 
         loop {
@@ -310,7 +213,7 @@ impl LookupClient {
                     }
                 }
                 SwarmEvent::Behaviour(LookupBehaviourEvent::Kademlia(
-                    KademliaEvent::OutboundQueryProgressed {
+                    libp2p::kad::Event::OutboundQueryProgressed {
                         result: QueryResult::Bootstrap(_),
                         ..
                     },
@@ -318,13 +221,13 @@ impl LookupClient {
                     panic!("Unexpected bootstrap.");
                 }
                 SwarmEvent::Behaviour(LookupBehaviourEvent::Kademlia(
-                    KademliaEvent::OutboundQueryProgressed {
+                    libp2p::kad::Event::OutboundQueryProgressed {
                         result: QueryResult::GetClosestPeers(Ok(GetClosestPeersOk { peers, .. })),
                         step: ProgressStep { count: _, last },
                         ..
                     },
                 )) => {
-                    if peers.contains(&peer) {
+                    if peers.iter().any(|p| p.peer_id == peer) {
                         if !Swarm::is_connected(&self.swarm, &peer) {
                             // TODO: Kademlia might not be caching the address of the peer.
                             Swarm::dial(&mut self.swarm, peer).unwrap();
@@ -357,6 +260,7 @@ impl LookupClient {
                                 observed_addr,
                                 ..
                             },
+                        ..
                     },
                 )) => {
                     if peer_id == peer {
@@ -377,7 +281,7 @@ impl LookupClient {
 }
 
 #[derive(Debug, Error)]
-enum LookupError {
+pub enum LookupError {
     #[error("Looking up the given peer timed out")]
     Timeout,
     #[error("Failed to dial peer {error}")]
@@ -388,72 +292,10 @@ enum LookupError {
 
 #[derive(NetworkBehaviour)]
 struct LookupBehaviour {
-    pub(crate) kademlia: Kademlia<MemoryStore>,
+    pub(crate) kademlia: libp2p::kad::Behaviour<MemoryStore>,
     pub(crate) ping: ping::Behaviour,
     pub(crate) identify: identify::Behaviour,
     relay: relay::client::Behaviour,
-    keep_alive: swarm::keep_alive::Behaviour,
 }
 
-#[derive(Debug, Clone, Copy, ValueEnum)]
-enum Network {
-    Kusama,
-    Ipfs,
-    Polkadot,
-    Ursa,
 
-
-impl Network {
-    #[rustfmt::skip]
-    fn bootnodes(&self) -> Vec<(Multiaddr, PeerId)> {
-        match self {
-            Network::Kusama => {
-                vec![
-                    ("/dns/p2p.cc3-0.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd").unwrap()),
-                    ("/dns/p2p.cc3-1.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWNpGriWPmf621Lza9UWU9eLLBdCFaErf6d4HSK7Bcqnv4").unwrap()),
-                    ("/dns/p2p.cc3-2.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWLmLiB4AenmN2g2mHbhNXbUcNiGi99sAkSk1kAQedp8uE").unwrap()),
-                    ("/dns/p2p.cc3-3.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWEGHw84b4hfvXEfyq4XWEmWCbRGuHMHQMpby4BAtZ4xJf").unwrap()),
-                    ("/dns/p2p.cc3-4.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWF9KDPRMN8WpeyXhEeURZGP8Dmo7go1tDqi7hTYpxV9uW").unwrap()),
-                    ("/dns/p2p.cc3-5.kusama.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWDiwMeqzvgWNreS9sV1HW3pZv1PA7QGA7HUCo7FzN5gcA").unwrap()),
-                    ("/dns/kusama-bootnode-0.paritytech.net/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWSueCPH3puP2PcvqPJdNaDNF3jMZjtJtDiSy35pWrbt5h").unwrap()),
-                    ("/dns/kusama-bootnode-1.paritytech.net/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWQKqane1SqWJNWMQkbia9qiMWXkcHtAdfW5eVF8hbwEDw").unwrap())
-                ]
-            }
-            Network::Polkadot => {
-                vec![
-                    // ("/dns/p2p.cc1-0.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWEdsXX9657ppNqqrRuaCHFvuNemasgU5msLDwSJ6WqsKc").unwrap()),
-                    ("/dns/p2p.cc1-1.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWAtx477KzC8LwqLjWWUG6WF4Gqp2eNXmeqAG98ehAMWYH").unwrap()),
-                    ("/dns/p2p.cc1-2.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWAGCCPZbr9UWGXPtBosTZo91Hb5M3hU8v6xbKgnC5LVao").unwrap()),
-                    ("/dns/p2p.cc1-3.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWJ4eyPowiVcPU46pXuE2cDsiAmuBKXnFcFPapm4xKFdMJ").unwrap()),
-                    ("/dns/p2p.cc1-4.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWNMUcqwSj38oEq1zHeGnWKmMvrCFnpMftw7JzjAtRj2rU").unwrap()),
-                    ("/dns/p2p.cc1-5.polkadot.network/tcp/30100".parse().unwrap(), FromStr::from_str("12D3KooWDs6LnpmWDWgZyGtcLVr3E75CoBxzg1YZUPL5Bb1zz6fM").unwrap()),
-                    ("/dns/cc1-0.parity.tech/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWSz8r2WyCdsfWHgPyvD8GKQdJ1UAiRmrcrs8sQB3fe2KU").unwrap()),
-                    ("/dns/cc1-1.parity.tech/tcp/30333".parse().unwrap(), FromStr::from_str("12D3KooWFN2mhgpkJsDBuNuE5427AcDrsib8EoqGMZmkxWwx3Md4").unwrap()),
-                ]
-            }
-            Network::Ipfs => {
-                vec![
-                    ("/ip4/104.131.131.82/tcp/4001".parse().unwrap(), FromStr::from_str("QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ").unwrap()),
-                    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN").unwrap()),
-                    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa").unwrap()),
-                    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb").unwrap()),
-                    ("/dnsaddr/bootstrap.libp2p.io".parse().unwrap(), FromStr::from_str("QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt").unwrap()),
-                ]
-            }
-            Network::Ursa => {
-                vec![
-                    ("/dns/bootstrap-node-0.ursa.earth/tcp/6009".parse().unwrap(), FromStr::from_str("12D3KooWDji7xMLia6GAsyr4oiEFD2dd3zSryqNhfxU3Grzs1r9p").unwrap()),
-                ]
-            }
-        }
-    }
-
-    fn protocol(&self) -> Option<String> {
-        match self {
-            Network::Kusama => Some("/ksmcc3/kad".to_string()),
-            Network::Polkadot => Some("/dot/kad".to_string()),
-            Network::Ipfs => None,
-            Network::Ursa => Some("/ursa/kad/0.0.1".to_string()),
-        }
-    }
-}
