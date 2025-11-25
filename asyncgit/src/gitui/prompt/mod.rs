@@ -5,12 +5,12 @@ use std::borrow::Cow;
 use tui_prompts::{State as _, TextState};
 
 pub struct PromptData {
-    pub(crate) prompt_text: Cow<'static, str>,
+    pub prompt_text: Cow<'static, str>,
 }
 
-pub(crate) struct Prompt {
-    pub(crate) data: Option<PromptData>,
-    pub(crate) state: TextState<'static>,
+pub struct Prompt {
+    pub data: Option<PromptData>,
+    pub state: TextState<'static>,
 }
 
 impl Prompt {
