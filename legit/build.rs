@@ -570,9 +570,9 @@ fn main() {
     if !if_windows() {
         //try
         musl_install_pkg_config();
-        install_xcb_deps();
+        //install_xcb_deps();
         if if_linux_unknown() {
-            linux_install_pkg_config();
+            //linux_install_pkg_config();
         }
         if target_os == "aarch64-apple-darwin" || target_os == "x86_64-apple-darwin" {
             println!("cargo:warning=On macOS, openssl@3 is recommended for this crate.");
