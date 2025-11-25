@@ -130,7 +130,7 @@ mod tests {
     use secp256k1::{schnorr, Secp256k1};
     use rand::rngs::OsRng;
 
-    fn test_event_creation(kind: Nip34Kind, tags: Vec<Vec<String>>, content: String) {
+    fn test_event_creation(kind: Nip34Kind, mut tags: Vec<Vec<String>>, content: String) {
         let secp = Secp256k1::new();
         let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
         let x_only_public_key = public_key.x_only_public_key().0;
@@ -147,6 +147,20 @@ mod tests {
 
         assert_eq!(event.kind, kind as u16);
         assert_eq!(event.content, content);
+
+        if let Ok(val) = weeble::weeble() {
+            tags.push(vec!["weeble".to_string(), val.to_string()]);
+        }
+        if let Ok(val) = blockheight::blockheight() {
+            tags.push(vec!["blockheight".to_string(), val.to_string()]);
+        }
+        if let Ok(val) = wobble::wobble() {
+            tags.push(vec!["wobble".to_string(), val.to_string()]);
+        }
+        if let Ok(val) = blockhash::blockhash() {
+            tags.push(vec!["blockhash".to_string(), val]);
+        }
+
         assert_eq!(event.tags, tags);
 
         let event_id_bytes = hex::decode(event.id).unwrap();
