@@ -34,7 +34,7 @@ pub async fn blockheight_async() -> String {
     blockheight
 }
 pub fn blockheight_sync() -> String {
-    let blockheight = match ureq_sync("https://mempool.space/api/blocks/tip/height".to-string()) {
+    let blockheight = match ureq_sync("https://mempool.space/api/blocks/tip/height".to_string()) {
         Ok(val) => val.to_string(),
         Err(_) => "0".to_string(),
     };
