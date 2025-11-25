@@ -397,7 +397,7 @@ pub async fn run_app(
     let spinner_ticker = tick(SPINNER_INTERVAL);
 
     let mut app = App::new(
-        RefCell::new(repo),
+        RefCell::new(repo.clone()),
         tx_git,
         tx_app,
         input.clone(),
@@ -416,7 +416,13 @@ pub async fn run_app(
     loop {
         if let Some(interval) = screenshots {
             if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
-                let mut path = crate::cli::get_app_cache_path().unwrap();
+                let mut path = if let Some(workdir) = repo.workdir() {
+                    let mut p = workdir.to_path_buf();
+                    p.push(".gnostr");
+                    p
+                } else {
+                    crate::cli::get_app_cache_path().unwrap()
+                };
                 path.push("screenshots");
                 std::fs::create_dir_all(&path).unwrap();
                 let timestamp = std::time::SystemTime::now()
