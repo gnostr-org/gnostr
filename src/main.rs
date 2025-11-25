@@ -2,6 +2,9 @@ use clap::{Parser /*, Subcommand*/};
 use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use gnostr_asyncgit::sync::RepoPath;
+use gnostr::blockheight;
+use gnostr::weeble;
+use gnostr::wobble;
 use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, trace};
@@ -93,6 +96,21 @@ async fn main() -> anyhow::Result<()> {
             }
             gnostr_cli_args.nsec = format!("{:x}", result).into();
         }
+    }
+    if gnostr_cli_args.weeble.is_some() {
+        let result = weeble::weeble();
+        print!("{:?}", result.unwrap());
+        std::process::exit(0);
+    }
+    if gnostr_cli_args.wobble.is_some() {
+        let result = wobble::wobble();
+        print!("{:?}", result.unwrap());
+        std::process::exit(0);
+    }
+    if gnostr_cli_args.blockheight.is_some() {
+        let result = blockheight::blockheight();
+        print!("{:?}", result.unwrap());
+        std::process::exit(0);
     }
 
     // Post event
