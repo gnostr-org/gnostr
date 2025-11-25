@@ -261,8 +261,7 @@ impl FileTreeItems {
 			if item.info().indent() == current_folder.1 {
 				item.show();
 				shown += 1;
-			}
-			if item.info().indent() == current_folder.1 - 1 {
+			} else if current_folder.1 > 0 && item.info().indent() == current_folder.1 - 1 {
 				// this must be our parent
 
 				item.show();

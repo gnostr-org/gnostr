@@ -39,7 +39,7 @@ use crate::gitui::ui;
 
 use super::Res;
 
-pub(crate) struct State {
+pub struct State {
     pub repo: Rc<Repository>,
     pub config: Rc<Config>,
     pub bindings: Bindings,
