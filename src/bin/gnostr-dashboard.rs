@@ -19,7 +19,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
-use gnostr::dashboard::app::{App, P2pEvent};
+use gnostr::dashboard::app::App;
 use gnostr::dashboard::p2p::evt_loop;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     tokio::spawn(async move {
         if let Err(e) = evt_loop(p2p_event_tx).await {
-            eprintln!("P2P event loop error: {}", e);
+            eprintln!("P2P event loop error: {e}");
         }
     });
 

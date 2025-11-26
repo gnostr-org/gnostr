@@ -7,10 +7,9 @@
 use clap::Parser;
 use gnostr::legit::command;
 use gnostr_legit::gitminer;
-use std::io::{Result, self};
+use std::io::{self};
 use std::env;
 use std::process::Command;
-use std::time::SystemTime;
 use std::thread;
 use std::convert::TryInto;
 use time::OffsetDateTime;
