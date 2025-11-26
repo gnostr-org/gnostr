@@ -34,7 +34,7 @@ pub async fn parse_json(urls_str: &str) -> Result<Vec<String>> {
                             url: part.to_owned(),
                         };
                         let j = serde_json::to_string(&relay)?;
-                        print!("{},", format!("{}", j.clone().replace("\\\"", "")));
+                        print!("{},", j.clone().replace("\\\"", ""));
                         collected.push(part.clone());
                         part = String::new();
                     } //end if !part.is_empty()
@@ -65,7 +65,7 @@ pub async fn parse_urls(urls_str: &str) -> Result<Vec<String>> {
                 Some(',') | Some(' ') => {
                     if !part.is_empty() {
                         collected.push(part.clone());
-                        print!("{}, ", format!("{}", part.clone().replace("\"", "")));
+                        print!("{}, ", part.clone().replace("\"", ""));
                         part = String::new();
                     }
                 }
@@ -100,13 +100,10 @@ pub async fn stripped_urls(urls_str: &str) -> Result<Vec<String>> {
                         //print!("{}:{}",collected.len(),collected[collected.len()-1]);
                         print!(
                             "{} ",
-                            format!(
-                                "{}",
-                                part.clone()
-                                    .replace("}},", "")
-                                    .replace(",", "\u{a0}")
-                                    .replace("\"", "")
-                            )
+                            part.clone()
+                                .replace("}},", "")
+                                .replace(",", "\u{a0}")
+                                .replace("\"", "")
                         );
                         part = String::new();
                     }
