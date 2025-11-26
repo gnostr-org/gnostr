@@ -62,14 +62,14 @@ pub(crate) fn ui(frame: &mut Frame, state: &mut State) {
         Direction::Vertical,
         [
             Constraint::Min(1),
-            widget_height(&maybe_prompt),
-            widget_height(&maybe_menu),
-            widget_height(&maybe_log),
+            widget_height(maybe_prompt.as_ref()),
+            widget_height(maybe_menu.as_ref()),
+            widget_height(maybe_log.as_ref()),
         ],
     )
     .split(frame.area());
 
-    frame.render_widget(state.screens.last().unwrap(), layout[0]);
+    frame.render_widget(state.screens.last().expect("There should always be at least one screen."), layout[0]);
 
     maybe_render(maybe_menu, frame, layout[2]);
     maybe_render(maybe_log, frame, layout[3]);
@@ -80,7 +80,7 @@ pub(crate) fn ui(frame: &mut Frame, state: &mut State) {
         frame.set_cursor_position((cx, cy));
     }
 
-    state.screens.last_mut().unwrap().size = layout[0].as_size();
+    state.screens.last_mut().expect("There should always be at least one screen.").size = layout[0].as_size();
 }
 
 fn popup_block() -> Block<'static> {
@@ -90,7 +90,7 @@ fn popup_block() -> Block<'static> {
         .border_type(ratatui::widgets::BorderType::Plain)
 }
 
-fn widget_height<W>(maybe_prompt: &Option<SizedWidget<W>>) -> Constraint {
+fn widget_height<W>(maybe_prompt: Option<&SizedWidget<W>>) -> Constraint {
     Constraint::Length(
         maybe_prompt
             .as_ref()
