@@ -422,7 +422,7 @@ pub fn fetch_by_id(url: &str, id: IdHex) -> Option<Event> {
 pub fn get_pwd() -> Result<String, &'static str> {
     let mut no_nl = crate::utils::pwd::pwd().unwrap().to_string();
     no_nl.retain(|c| c != '\n');
-    return Ok(format!("{  }", no_nl));
+    Ok(no_nl)
 }
 
 pub struct Prefixes {
