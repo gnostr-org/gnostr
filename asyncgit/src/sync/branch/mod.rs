@@ -595,8 +595,8 @@ mod tests_checkout {
         let root = repo.path().parent().unwrap();
         let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
-        assert!(checkout_branch(repo_path, "master").is_ok());
-        assert!(checkout_branch(repo_path, "foobar").is_err());
+        assert!(checkout_branch(repo_path, "master", false).is_ok());
+        assert!(checkout_branch(repo_path, "foobar", false).is_err());
     }
 
     #[test]
@@ -607,9 +607,9 @@ mod tests_checkout {
 
         create_branch(repo_path, "test").unwrap();
 
-        assert!(checkout_branch(repo_path, "test").is_ok());
-        assert!(checkout_branch(repo_path, "master").is_ok());
-        assert!(checkout_branch(repo_path, "test").is_ok());
+        assert!(checkout_branch(repo_path, "test", false).is_ok());
+        assert!(checkout_branch(repo_path, "master", false).is_ok());
+        assert!(checkout_branch(repo_path, "test", false).is_ok());
     }
 
     #[test]
@@ -619,7 +619,7 @@ mod tests_checkout {
         let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
 
         create_branch(repo_path, "foo/bar").unwrap();
-        checkout_branch(repo_path, "foo/bar").unwrap();
+        checkout_branch(repo_path, "foo/bar", false).unwrap();
     }
 
     #[test]
@@ -636,7 +636,7 @@ mod tests_checkout {
 
         stage_add_file(&repo_path, &Path::new(filename)).unwrap();
 
-        assert!(checkout_branch(repo_path, "test").is_ok());
+        assert!(checkout_branch(repo_path, "test", false).is_ok());
     }
 }
 
@@ -678,7 +678,7 @@ mod test_delete_branch {
         create_branch(repo_path, "branch1").unwrap();
         create_branch(repo_path, "branch2").unwrap();
 
-        checkout_branch(repo_path, "branch1").unwrap();
+        checkout_branch(repo_path, "branch1", false).unwrap();
 
         assert_eq!(
             repo.branches(None)
