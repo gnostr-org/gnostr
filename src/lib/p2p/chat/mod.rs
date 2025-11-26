@@ -139,7 +139,34 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-use crate::types::{KeySigner, Signer};
+use crate::types::{EventKind, Filter, KeySigner, Metadata, Signer};
+
+async fn fetch_metadata_name(pubkey: crate::types::PublicKey) -> Option<String> {
+    let bootstrap_relays = &*gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+    let mut filter = Filter::new();
+    filter.add_author(&pubkey.into());
+    filter.add_event_kind(EventKind::Metadata);
+    filter.limit = Some(1);
+
+    let task = tokio::task::spawn_blocking(move || {
+        for relay_url in bootstrap_relays {
+            let events = crate::fetch_by_filter(relay_url, filter.clone());
+            if let Some(event) = events.first() {
+                if let Ok(metadata) = serde_json::from_str::<crate::types::Metadata>(&event.content)
+                {
+                    if let Some(name) = metadata.name {
+                        if !name.is_empty() {
+                            return Some(name);
+                        }
+                    }
+                }
+            }
+        }
+        None
+    });
+
+    task.await.unwrap_or(None)
+}
 
 pub async fn chat(
     sub_command_args: &ChatSubCommands,
@@ -181,6 +208,33 @@ pub async fn chat(
 
     let _ = subscriber.try_init();
 
+    let (identity_pubkey, topic_name) = if let Some(signer) = key_signer {
+        let pubkey = signer.public_key();
+        let pubkey_hex = pubkey.as_hex_string();
+        tracing::info!("Using provided nsec for identity: {}", pubkey_hex);
+
+        if args.name.is_none() {
+            use std::env;
+            // Attempt to fetch name from network
+            if let Some(fetched_name) = fetch_metadata_name(pubkey).await {
+                env::set_var("USER", &fetched_name);
+                tracing::info!("Setting USER to fetched metadata name: {}", fetched_name);
+            } else {
+                // Fallback to fingerprint
+                let fingerprint = &pubkey_hex[0..8];
+                env::set_var("USER", fingerprint);
+                tracing::info!("No metadata name found. Setting USER to fingerprint: {}", fingerprint);
+            }
+        }
+                    (pubkey_hex.clone(), args.topic.clone().unwrap_or(pubkey_hex))    } else {
+        let repo = Repository::discover(".")?;
+        let head = repo.head()?;
+        let obj = head.resolve()?.peel(ObjectType::Commit)?;
+        let commit = obj.peel_to_commit()?;
+        let commit_id = commit.id().to_string();
+        tracing::info!("Using git commit for identity: {}", commit_id);
+                    (commit_id.clone(), args.topic.clone().unwrap_or(commit_id))    };
+
     if let Some(message) = args.oneshot {
         info!("Oneshot mode: sending message '{}'", message);
 
@@ -215,26 +269,6 @@ pub async fn chat(
     }
 
     tokio::task::spawn_blocking(move || {
-        let (_identity_pubkey, topic_name) = if let Some(signer) = key_signer {
-            let pubkey = signer.public_key().as_hex_string();
-            tracing::info!("Using provided nsec for identity: {}", pubkey);
-            if args.name.is_none() {
-                use std::env;
-                let fingerprint = &pubkey[0..8];
-                env::set_var("USER", fingerprint);
-                tracing::info!("Setting USER to fingerprint: {}", fingerprint);
-            }
-            (pubkey.clone(), args.topic.unwrap_or(pubkey))
-        } else {
-            let repo = Repository::discover(".")?;
-            let head = repo.head()?;
-            let obj = head.resolve()?.peel(ObjectType::Commit)?;
-            let commit = obj.peel_to_commit()?;
-            let commit_id = commit.id().to_string();
-            tracing::info!("Using git commit for identity: {}", commit_id);
-            (commit_id.clone(), args.topic.unwrap_or(commit_id))
-        };
-
         let mut app = ui::App::default();
         app.topic = topic_name;
 
