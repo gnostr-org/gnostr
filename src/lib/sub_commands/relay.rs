@@ -4,6 +4,11 @@ use std::path::PathBuf;
 use tokio::process::Command;
 use tracing::info;
 
+use crate::p2p::chat::p2p::evt_loop;
+use crate::queue::InternalEvent;
+use libp2p::gossipsub;
+use tokio::sync::mpsc;
+
 #[derive(clap::ValueEnum, Clone, Debug, Copy)]
 pub enum LogLevel {
     Trace,
@@ -46,6 +51,19 @@ pub struct RelaySubCommand {
 //TODO web actix runtime
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Start relay server with args: {:?}", args);
+
+    info!("Starting background p2p chat relay on topic 'gnostr'");
+    // Channels to handle communication with the p2p event loop, though they won't be actively used in this background setup.
+    let (_input_tx, input_rx) = mpsc::channel::<InternalEvent>(100);
+    let (peer_tx, mut _peer_rx) = mpsc::channel::<InternalEvent>(100);
+    let topic = gossipsub::IdentTopic::new("gnostr");
+
+    tokio::spawn(async move {
+        if let Err(e) = evt_loop(input_rx, peer_tx, topic).await {
+            tracing::error!("p2p chat relay event loop failed: {}", e);
+        }
+    });
+    info!("p2p chat relay started in the background.");
 
     // Check if gnostr-relay is installed
     let which_output = Command::new("which")
