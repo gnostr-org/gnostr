@@ -139,7 +139,12 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
+use crate::types::{KeySigner, Signer};
+
+pub async fn chat(
+    sub_command_args: &ChatSubCommands,
+    key_signer: Option<KeySigner>,
+) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
 
     if let Some(hash) = args.hash.clone() {
@@ -210,14 +215,22 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     }
 
     tokio::task::spawn_blocking(move || {
-        let repo = Repository::discover(".")?;
-        let head = repo.head()?;
-        let obj = head.resolve()?.peel(ObjectType::Commit)?;
-        let commit = obj.peel_to_commit()?;
-        let commit_id = commit.id().to_string();
+        let (identity_pubkey, topic_name) = if let Some(signer) = key_signer {
+            let pubkey = signer.public_key().as_hex_string();
+            tracing::info!("Using provided nsec for identity: {}", pubkey);
+            (pubkey.clone(), args.topic.unwrap_or(pubkey))
+        } else {
+            let repo = Repository::discover(".")?;
+            let head = repo.head()?;
+            let obj = head.resolve()?.peel(ObjectType::Commit)?;
+            let commit = obj.peel_to_commit()?;
+            let commit_id = commit.id().to_string();
+            tracing::info!("Using git commit for identity: {}", commit_id);
+            (commit_id.clone(), args.topic.unwrap_or(commit_id))
+        };
 
         let mut app = ui::App::default();
-        app.topic = args.topic.unwrap_or_else(|| commit_id.to_string());
+        app.topic = topic_name;
 
         let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
         let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
