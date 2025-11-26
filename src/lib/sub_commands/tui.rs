@@ -181,7 +181,7 @@ pub fn select_event(
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
 /// permission to read it.
-pub async fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
+pub /*async*/fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
     let backend = CrosstermBackend::new(buf);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
@@ -277,7 +277,7 @@ pub async fn tui(
 
     set_panic_handlers()?;
 
-    let mut terminal = start_terminal(io::stdout()).await.expect("");
+    let mut terminal = start_terminal(io::stdout())/*.await*/.expect("");
     //let mut gitdir = sub_command_args.gitdir.clone().unwrap();
     let input = Input::new();
 
