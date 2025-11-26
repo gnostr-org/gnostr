@@ -234,7 +234,7 @@ pub async fn chat(
                 let commit = obj.peel_to_commit()?;
                 let commit_id = commit.id().to_string();
                 tracing::info!("Using git commit for identity: {}", commit_id);
-                (commit_id.clone(), args.topic.clone().unwrap_or(commit_id))
+                (commit_id.clone(), args.topic.clone().unwrap_or("gnostr".to_string()))
             },
             Err(_) => {
                 tracing::warn!("No git repository found and no --nsec provided. Using ephemeral key for identity.");
