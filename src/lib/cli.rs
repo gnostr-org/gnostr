@@ -144,12 +144,10 @@ pub struct GnostrCli {
     //
     #[command(subcommand)]
     pub command: Option<GnostrCommands>,
-    ///
     #[arg(short, long,
         action = clap::ArgAction::Append,
         default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     pub nsec: Option<String>,
-    ///
     #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
     pub hash: Option<String>,
     /// TODO handle gnostr tui --repo_path
@@ -168,28 +166,20 @@ pub struct GnostrCli {
         help = "gnostr --gitdir '<string>'"
     )]
     pub gitdir: Option<RepoPath>,
-    ///
     #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
     pub directory: Option<String>,
-    ///
     #[arg(long, value_name = "THEME", help = "gnostr --theme '<string>'")]
     pub theme: Option<String>,
-    ///
     #[arg(long, value_name = "WATCHER", help = "gnostr --watcher '<string>'")]
     pub watcher: Option<String>,
-    ///
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub weeble: bool,
-    ///
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub blockheight: bool,
-    ///
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub wobble: bool,
-    ///
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub blockhash: bool,
-    ///
     #[arg(short, long, action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
     pub relays: Vec<String>,
