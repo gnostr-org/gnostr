@@ -59,7 +59,7 @@ fn main() {
     println!("{}", fbs);
 
     let mut sec = DEFAULT_SEC;
-    if sec == DEFAULT_SEC {}
+    sec == DEFAULT_SEC;
     let args_vector: Vec<String> = env::args().collect();
 
     #[allow(unreachable_code)]
@@ -68,7 +68,7 @@ fn main() {
             process::exit(i.try_into().unwrap());
         } else {
             //impossible case
-            if args_vector.len() == 0 {
+            if args_vector.is_empty() {
                 print!("args_vector.len() = {}", 0);
             };
             //TODO send to self  as double encrypted --dm
@@ -79,8 +79,8 @@ fn main() {
                 // //let event: Event = serde_json::from_str(&s).unwrap();
                 // //relay_url = DEFAULT_RELAY_URL;
                 // //always reprint s for further piping
-                print!(
-                    "LINE:30 args_vector.len()={}: gnostr-xor <key> {}\n",
+                println!(
+                    "LINE:30 args_vector.len()={}: gnostr-xor <key> {}",
                     args_vector.len(),
                     s
                 );
@@ -129,7 +129,7 @@ fn main() {
                     //let input: String = serde_json::from_str(&priv_key).unwrap();
                     let input: String = String::from(&priv_key).clone();
                     //always reprint s for further piping
-                    print!("LINE:69:input={}, s={}\n", input, priv_key);
+                    println!("LINE:69:input={}, s={}", input, priv_key);
                     //gnostr_bins::post_event(relay_url, event);
                     process::exit(0);
                 }
@@ -145,7 +145,7 @@ fn main() {
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 //let event: Event = serde_json::from_str(&s).unwrap();
                 //always reprint s for further piping
-                print!("LINE:82 {} {}\n", sec, s);
+                println!("LINE:82 {} {}", sec, s);
                 //gnostr_bins::post_event(relay_url, event);
                 process::exit(0);
             };
@@ -158,7 +158,7 @@ fn main() {
                     std::io::stdin().read_to_string(&mut s).unwrap();
                     //let event: Event = serde_json::from_str(&s).unwrap();
                     //always reprint s for further piping
-                    print!("{} {}\n", sec, s);
+                    println!("{} {}", sec, s);
                     //gnostr_bins::post_event(relay_url, event);
                     process::exit(0);
                 }
@@ -166,7 +166,7 @@ fn main() {
                 let mut s: String = String::new();
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 //always reprint s for further piping
-                print!("{} {}\n", sec, s);
+                println!("{} {}", sec, s);
                 //let event: Event = serde_json::from_str(&s).unwrap();
                 //gnostr_bins::post_event(relay_url, event);
             };
