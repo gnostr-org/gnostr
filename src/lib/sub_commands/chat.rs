@@ -10,10 +10,6 @@ use anyhow::Result;
 
 use serde::ser::StdError;
 
-
-
-use nostr_sdk_0_37_0::Keys;
-
 use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
@@ -41,12 +37,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
     //TODO chat specific filters
     let filter = EnvFilter::default()
         .add_directive(level.into())
-        .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::client=off".parse().unwrap())
-        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         .add_directive("nostr_relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
