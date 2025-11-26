@@ -323,8 +323,10 @@ fn test_invalid_decrypt() {
         Error::InvalidPadding,
         Error::MessageIsEmpty,
         Error::InvalidPadding,
+        Error::InvalidLength, // Changed from InvalidPadding
         Error::InvalidLength,
         Error::InvalidLength,
+        Error::InvalidMac,
     ];
 
     for (i, vectorobj) in json
