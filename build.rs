@@ -6,7 +6,7 @@ use std::{
 };
 use sha2::{Digest, Sha256};
 
-use hex;
+
 
 fn sync_nip44_vectors() {
     const NIP44_VECTORS_URL: &str = "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
@@ -80,7 +80,7 @@ fn command_exists(command: &str) -> bool {
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .status()
-        .map_or(false, |s| s.success())
+        .is_ok_and(|s| s.success())
 }
 
 // try:
@@ -119,15 +119,14 @@ fn install_sccache() {
             return;
         };
 
-        if installer == "apt-get" {
-            if !Command::new("sudo")
+        if installer == "apt-get"
+            && !Command::new("sudo")
                 .arg("apt-get")
                 .arg("update")
                 .status()
-                .map_or(false, |s| s.success())
-            {
-                println!("cargo:warning=Failed to update package lists with apt-get.");
-            }
+                .is_ok_and(|s| s.success())
+        {
+            println!("cargo:warning=Failed to update package lists with apt-get.");
         }
 
         println!("cargo:warning=Installing sccache with {}", installer);
@@ -301,15 +300,14 @@ fn install_xcb_deps() {
             return;
         };
 
-        if installer == "apt-get" {
-            if !Command::new("sudo")
+        if installer == "apt-get"
+            && !Command::new("sudo")
                 .arg("apt-get")
                 .arg("update")
                 .status()
-                .map_or(false, |s| s.success())
-            {
-                println!("cargo:warning=Failed to update package lists with apt-get.");
-            }
+                .is_ok_and(|s| s.success())
+        {
+            println!("cargo:warning=Failed to update package lists with apt-get.");
         }
 
         let mut cmd = Command::new("sudo");
@@ -992,7 +990,7 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
         .env("GIT_COMMITTER_DATE", "Thu, 01 Jan 1970 00:00:00 +0000");
 
     // 3. Set the arguments. Note the use of the safe dir_path_str variable.
-    command.args(&[
+    command.args([
         "-C", // Use -C to run the git command from the specified directory
         dir_path_str,
         "commit",
@@ -1019,8 +1017,7 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
 
         // The failure block must return the error value, which is Err(io::Error).
         // We create a new io::Error here to indicate the child process failed.
-        Err(Error::new(
-            ErrorKind::Other,
+        Err(Error::other(
             format!("'git commit' failed with status: {}", output.status),
         ))
     }
