@@ -55,12 +55,11 @@ impl TreeItemInfo {
 		self.folded.as_ref().map_or_else(
 			|| {
 				Path::new(
-					self.full_path
-						.components()
-						.last()
-						.and_then(|c| c.as_os_str().to_str())
-						.unwrap_or_default(),
-				)
+					                			self.full_path
+											.components()
+											.next_back()
+											.and_then(|c| c.as_os_str().to_str())
+											.unwrap_or_default(),				)
 			},
 			PathBuf::as_path,
 		)
@@ -72,12 +71,10 @@ impl TreeItemInfo {
 	}
 
 	///
-	pub fn unindent(&mut self) {
-		self.indent = self.indent.saturating_sub(1);
+	    pub const fn unindent(&mut self) {		self.indent = self.indent.saturating_sub(1);
 	}
 
-	pub fn set_visible(&mut self, visible: bool) {
-		self.visible = visible;
+	    pub const fn set_visible(&mut self, visible: bool) {		self.visible = visible;
 	}
 }
 
@@ -156,8 +153,7 @@ impl FileTreeItem {
 	}
 
 	///
-	pub fn info_mut(&mut self) -> &mut TreeItemInfo {
-		&mut self.info
+	    pub const fn info_mut(&mut self) -> &mut TreeItemInfo {		&mut self.info
 	}
 
 	///
@@ -180,13 +176,11 @@ impl FileTreeItem {
 	}
 
 	///
-	pub fn hide(&mut self) {
-		self.info.visible = false;
+	    pub const fn hide(&mut self) {		self.info.visible = false;
 	}
 
 	///
-	pub fn show(&mut self) {
-		self.info.visible = true;
+	    pub const fn show(&mut self) {		self.info.visible = true;
 	}
 }
 

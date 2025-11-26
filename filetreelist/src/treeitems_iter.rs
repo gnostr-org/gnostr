@@ -34,10 +34,8 @@ impl<'a> Iterator for TreeItemsIterator<'a> {
 			if let Some(i) = self.increments.as_mut() {
 				*i += 1;
 			} else {
-				self.increments = Some(0);
-			};
-
-			loop {
+				            			            			self.increments = Some(0);
+				            			            		}			loop {
 				if !init {
 					self.index += 1;
 				}

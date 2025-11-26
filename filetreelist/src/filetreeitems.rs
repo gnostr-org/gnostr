@@ -61,8 +61,7 @@ impl FileTreeItems {
 	}
 
 	/// how many individual items (files/paths) are in the list
-	pub fn len(&self) -> usize {
-		self.tree_items.len()
+	    pub const fn len(&self) -> usize {		self.tree_items.len()
 	}
 
 	/// how many files were added to this list
@@ -186,12 +185,11 @@ impl FileTreeItems {
 				}
 			}
 
-			self.update_visibility(
-				&Some(full_path),
-				index + 1,
-				false,
-			);
-		}
+			        	self.update_visibility(
+			        		Some(full_path).as_ref(),
+			        		index + 1,
+			        		false,
+			        	);		}
 	}
 
 	/// makes sure `index` is visible.
@@ -277,13 +275,12 @@ impl FileTreeItems {
 		Some(shown)
 	}
 
-	fn update_visibility(
-		&mut self,
-		prefix: &Option<PathBuf>,
-		start_idx: usize,
-		set_defaults: bool,
-	) {
-		// if we are in any subpath that is collapsed we keep skipping
+	    fn update_visibility(
+	        &mut self,
+	        prefix: Option<&PathBuf>,
+	        start_idx: usize,
+	        set_defaults: bool,
+	    ) {		// if we are in any subpath that is collapsed we keep skipping
 		// over it
 		let mut inner_collapsed: Option<PathBuf> = None;
 
@@ -315,11 +312,9 @@ impl FileTreeItems {
 				inner_collapsed = Some(item_path.into());
 			}
 
-			if prefix
-				.as_ref()
-				.map_or(true, |prefix| item_path.starts_with(prefix))
-			{
-				self.tree_items[i].info_mut().set_visible(true);
+			            if prefix
+			                .is_none_or(|prefix| item_path.starts_with(prefix))
+			            {				self.tree_items[i].info_mut().set_visible(true);
 			} else {
 				// if we do not set defaults we can early out
 				if set_defaults {
