@@ -7,7 +7,6 @@ use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 const JSON_VECTORS: &'static str = include_str!("nip44.vectors.json");
 
 #[test]
-#[ignore]
 fn test_valid_get_conversation_key() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -28,6 +27,7 @@ fn test_valid_get_conversation_key() {
         .as_array()
         .unwrap()
     {
+        println!("vectorobj: {:?}", vectorobj);
         let vector = vectorobj.as_object().unwrap();
 
         let sec1 = {
@@ -44,9 +44,13 @@ fn test_valid_get_conversation_key() {
             let ckeyhex = vector.get("conversation_key").unwrap().as_str().unwrap();
             hex::decode(ckeyhex).unwrap().try_into().unwrap()
         };
-        let note = vector.get("note").unwrap().as_str().unwrap();
+        let note = vector.get("note").map(|v| v.as_str().unwrap()).unwrap_or("");
 
         let computed_conversation_key = get_conversation_key(sec1, pub2);
+
+        println!("note: {}", note);
+        println!("computed: {}", hex::encode(computed_conversation_key));
+        println!("expected: {}", hex::encode(conversation_key));
 
         assert_eq!(
             conversation_key, computed_conversation_key,
@@ -57,7 +61,6 @@ fn test_valid_get_conversation_key() {
 }
 
 #[test]
-#[ignore]
 fn test_valid_calc_padded_len() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -84,7 +87,6 @@ fn test_valid_calc_padded_len() {
 }
 
 #[test]
-#[ignore]
 fn test_valid_encrypt_decrypt() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -106,6 +108,7 @@ fn test_valid_encrypt_decrypt() {
         .iter()
         .enumerate()
     {
+        println!("vectorobj: {:?}", vectorobj);
         let vector = vectorobj.as_object().unwrap();
 
         let sec1 = {
@@ -141,6 +144,8 @@ fn test_valid_encrypt_decrypt() {
         // Test encryption with an overridden nonce
         let computed_ciphertext =
             encrypt_inner(&conversation_key, &plaintext, Some(&nonce)).unwrap();
+        println!("computed_ciphertext: {}", computed_ciphertext);
+        println!("expected_ciphertext: {}", ciphertext);
         assert_eq!(
             computed_ciphertext, ciphertext,
             "Encryption does not match on ValidSec #{}",
@@ -173,7 +178,6 @@ fn test_valid_encrypt_decrypt() {
 //}
 
 #[test]
-#[ignore]
 fn test_invalid_get_conversation_key() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -216,7 +220,6 @@ fn test_invalid_get_conversation_key() {
 }
 
 #[test]
-#[ignore]
 fn test_invalid_decrypt() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -267,6 +270,9 @@ fn test_invalid_decrypt() {
         assert!(result.is_err(), "Should not have decrypted: {}", note);
 
         let err = result.unwrap_err();
+        println!("note: {}", note);
+        println!("computed_error: {:?}", err);
+        println!("expected_error: {:?}", known_errors[i]);
         assert_eq!(
             err, known_errors[i],
             "Unexpected error in invalid decrypt #{}",
