@@ -8,21 +8,21 @@ fn main() {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
     if args.len() == 1 {
-        for arg in &args {
-            if arg == "-p" || arg == "--png" {
-                help();
-                std::process::exit(0);
-            }
-            if arg == "-h" || arg == "--help" {
-                help();
-            }
-            if arg == "-v" || arg == "--version" {
-                version();
-            }
-            gnostr_qr::render(&arg, true);
-            println!("{}", &arg);
+        let arg = &args[0];
+        if arg == "-p" || arg == "--png" {
+            help();
             std::process::exit(0);
         }
+        if arg == "-h" || arg == "--help" {
+            help();
+            std::process::exit(0);
+        }
+        if arg == "-v" || arg == "--version" {
+            version();
+            std::process::exit(0);
+        }
+        gnostr_qr::render(&arg, true);
+        println!("{}", &arg);
         std::process::exit(0);
     }
     if args.len() > 1 {
