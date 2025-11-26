@@ -222,7 +222,7 @@ mod test_conflict_free_rebase {
 
         assert_eq!(parent_ids(&repo, c2), vec![c1]);
 
-        checkout_branch(repo_path, "master").unwrap();
+        checkout_branch(repo_path, "master", false).unwrap();
 
         let c3 = write_commit_file(&repo, "test3.txt", "test", "commit3");
 
