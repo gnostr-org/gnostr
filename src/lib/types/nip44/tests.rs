@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+#[rustfmt::skip]
 use crate::*;
 use super::{get_conversation_key, calc_padding, encrypt_inner, encrypt, decrypt, Error};
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
