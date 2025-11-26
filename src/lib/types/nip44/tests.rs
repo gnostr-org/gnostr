@@ -272,7 +272,7 @@ fn test_invalid_decrypt() {
         //};
         // let plaintext = vector.get("plaintext").unwrap().as_str().unwrap();
         let ciphertext = vector.get("ciphertext").unwrap().as_str().unwrap();
-        let note = vector.get("note").unwrap().as_str().unwrap();
+        let note = vector.get("note").map(|v| v.as_str().unwrap()).unwrap_or("");
 
         let result = decrypt(&conversation_key, &ciphertext);
         assert!(result.is_err(), "Should not have decrypted: {}", note);
