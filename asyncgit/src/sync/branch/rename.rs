@@ -35,7 +35,7 @@ mod test {
 
         create_branch(repo_path, "branch1").unwrap();
 
-        checkout_branch(repo_path, "branch1").unwrap();
+        checkout_branch(repo_path, "branch1", false).unwrap();
 
         assert_eq!(
             repo.branches(None)
