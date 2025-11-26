@@ -30,7 +30,7 @@ lightning-invoice = "0.33.2"
 #lightning-invoice = { path = "../lightning/lightning-invoice", version = "0.31.0-beta" }
 #lightning = { version = "0.0.123-beta", path = "../lightning/lightning" }
 linkify = "0.10"
-nip44 = { path = "../gnip44", package = "gnip44", version = "0.0.72" }
+nip44 = { package = "gnip44", version = "0.0.72" }
 num_cpus = "1"
 pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
 rand = "0.8"
