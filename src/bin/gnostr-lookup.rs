@@ -1,7 +1,6 @@
-use gnostr::p2p::lookup::{LookupClient, LookupError, Peer};
+use gnostr::p2p::lookup::{LookupClient, LookupError};
 use clap::Parser;
 use libp2p::{Multiaddr, PeerId};
-use std::str::FromStr;
 use gnostr::p2p::network_config::Network;
 use futures::future::{FutureExt, TryFutureExt};
 
