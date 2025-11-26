@@ -144,6 +144,7 @@ fn test_valid_encrypt_decrypt() {
         // Test encryption with an overridden nonce
         let computed_ciphertext =
             encrypt_inner(&conversation_key, &plaintext, Some(&nonce)).unwrap();
+        println!("plaintext: {}", plaintext);
         println!("computed_ciphertext: {}", computed_ciphertext);
         println!("expected_ciphertext: {}", ciphertext);
         assert_eq!(
@@ -154,6 +155,7 @@ fn test_valid_encrypt_decrypt() {
 
         // Test decryption
         let computed_plaintext = decrypt(&conversation_key, &ciphertext).unwrap();
+        println!("computed_plaintext: {}", computed_plaintext);
         assert_eq!(
             computed_plaintext, plaintext,
             "Decryption does not match on ValidSec #{}",
