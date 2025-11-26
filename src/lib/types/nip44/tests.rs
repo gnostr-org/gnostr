@@ -113,25 +113,31 @@ fn test_valid_encrypt_decrypt() {
         println!("vectorobj: {:?}", vectorobj);
         let vector = vectorobj.as_object().unwrap();
 
+        println!("getting sec1");
         let sec1 = {
             let sec1hex = vector.get("sec1").unwrap().as_str().unwrap();
             let sec1bytes = hex::decode(sec1hex).unwrap();
             SecretKey::from_slice(&sec1bytes).unwrap()
         };
+        println!("getting sec2");
         let sec2 = {
             let sec2hex = vector.get("sec2").unwrap().as_str().unwrap();
             let sec2bytes = hex::decode(sec2hex).unwrap();
             SecretKey::from_slice(&sec2bytes).unwrap()
         };
+        println!("getting conversation_key");
         let conversation_key: [u8; 32] = {
             let ckeyhex = vector.get("conversation_key").unwrap().as_str().unwrap();
             hex::decode(ckeyhex).unwrap().try_into().unwrap()
         };
+        println!("getting nonce");
         let nonce: [u8; 32] = {
             let noncehex = vector.get("nonce").unwrap().as_str().unwrap();
             hex::decode(noncehex).unwrap().try_into().unwrap()
         };
+        println!("getting plaintext");
         let plaintext = vector.get("plaintext").unwrap().as_str().unwrap();
+        println!("getting ciphertext");
         let ciphertext = vector.get("ciphertext").unwrap().as_str().unwrap();
 
         // Test conversation key
