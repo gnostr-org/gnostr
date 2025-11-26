@@ -140,11 +140,17 @@ fn encrypt_inner(
 
 /// Decrypt the base64 encrypted contents with a conversation key
 pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
+    if base64_ciphertext.is_empty() {
+        return Err(Error::InvalidLength);
+    }
     if base64_ciphertext.as_bytes()[0] == b'#' {
         return Err(Error::UnsupportedFutureVersion);
     }
     let binary_ciphertext: Vec<u8> =
         base64::engine::general_purpose::STANDARD.decode(base64_ciphertext)?;
+    if binary_ciphertext.len() < 65 {
+        return Err(Error::InvalidLength);
+    }
     let version = binary_ciphertext[0];
     if version != 2 {
         return Err(Error::UnknownVersion);
