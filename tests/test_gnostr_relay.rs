@@ -21,14 +21,14 @@ mod tests {
         // Create a temporary config file
         let config_file = NamedTempFile::with_suffix(".toml").expect("Failed to create temp config file");
         let config_path = config_file.path().to_str().unwrap().to_owned();
-        let default_config_content = format!(r#"
+        let default_config_content = r#"
             [server]
             port = 0 # Use a random available port
             host = "127.0.0.1"
 
             [database]
             path = ":memory:" # Use in-memory database for tests
-        "#);
+        "#.to_string();
         fs::write(&config_path, default_config_content).expect("Failed to write temp config");
 
         let app_data = GnostrRelayApp::create(
