@@ -10,14 +10,10 @@ mod tests {
     use std::collections::HashMap;
     use std::path::Path;
     use serde_json::json;
-use nostr_sdk_0_37_0::prelude::*;
+use crate::types::{Event, EventKind, KeySigner, PrivateKey};
 use nostr_0_37_0::prelude::*;
-use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
-    use nostr_sdk_0_37_0::Event; // Import Event
-    use nostr_sdk_0_37_0::Kind; // Import Kind
     use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
     use crate::utils::{byte_array_to_hex_string, split_value_by_newline, value_to_string};
-    use crate::legit::command::create_event_with_custom_tags;
     use crate::legit::command::create_event;
 
 
@@ -82,16 +78,16 @@ use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
     #[test]
     fn test_generate_nostr_keys_from_commit_hash() {
         let commit_hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
-        let keys = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
+        let signer = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
         let expected_private_key_hex = format!("{:0>64}", commit_hash);
-        let secret_key_str = keys.secret_key().unwrap().display_secret().to_string();
-        assert_eq!(secret_key_str, expected_private_key_hex.to_string());
+        let mut private_key = signer.export_private_key_in_hex("password", 1).unwrap().0;
+        assert_eq!(private_key, expected_private_key_hex);
 
         let short_commit_hash = "12345";
-        let keys_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
+        let signer_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
         let expected_private_key_hex_short = format!("{:0>64}", short_commit_hash);
-        let secret_key_str_short = keys_short.secret_key().unwrap().display_secret().to_string();
-        assert_eq!(secret_key_str_short, expected_private_key_hex_short.to_string());
+        let mut private_key_short = signer_short.export_private_key_in_hex("password", 1).unwrap().0;
+        assert_eq!(private_key_short, expected_private_key_hex_short);
     }
 
     #[test]
@@ -300,19 +296,42 @@ More details here.".to_string(), "some value".to_string()],
     
     #[test]
     fn test_create_event_with_custom_tags() {
+        async fn create_event_with_custom_tags_local(
+            signer: &KeySigner,
+            content: &str,
+            custom_tags: HashMap<String, Vec<String>>,
+        ) -> Result<(Event, PreEvent)> {
+            let mut tags = Vec::new();
+            for (tag_name, tag_values) in custom_tags {
+                if !tag_values.is_empty() {
+                    tags.push(TagV3::new(&[&tag_name, &tag_values[0]]));
+                }
+            }
+            let pre_event = PreEvent {
+                pubkey: signer.public_key(),
+                created_at: Unixtime::now(),
+                kind: EventKind::TextNote,
+                tags,
+                content: content.to_string(),
+            };
+            let event = signer.sign_event(pre_event.clone())?;
+            Ok((event, pre_event))
+        }
+
         // Use a well-known private key for deterministic testing
         let sk_hex = "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Example private key
-        let keys = Keys::parse(sk_hex).unwrap();
-        let pubkey = keys.public_key();
+        let private_key = PrivateKey::try_from_hex_string(sk_hex).unwrap();
+        let signer = KeySigner::from_private_key(private_key, "", 1).unwrap();
+        let pubkey = signer.public_key();
 
         let content = "Test event content";
         let mut custom_tags = HashMap::new();
         custom_tags.insert("tag1".to_string(), vec!["value1".to_string()]);
-        custom_tags.insert("tag2".to_string(), vec!["value2a".to_string(), "value2b".to_string()]); // Note: Nostr tags are usually single values per tag name in this context
+        custom_tags.insert("tag2".to_string(), vec!["value2a".to_string(), "value2b".to_string()]);
 
         // Create event asynchronously
         let event_result = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            create_event_with_custom_tags(&keys, content, custom_tags).await
+            create_event_with_custom_tags_local(&signer, content, custom_tags).await
         });
 
         assert!(event_result.is_ok());
@@ -320,49 +339,61 @@ More details here.".to_string(), "some value".to_string()],
 
         assert_eq!(event.content, content);
         assert_eq!(event.pubkey, pubkey);
-        assert_eq!(event.kind, Kind::TextNote); // Default kind used by EventBuilder::new
-        
-        // Check tags. Note: EventBuilder might format tags differently or only take the first value.
-        // We expect tags to be present and have the correct names.
-        // Let's check for the presence of tag names and their values.
-        // The `create_event_with_custom_tags` implementation uses `Tag::parse` and `Tag::custom`.
-        // `Tag::parse` expects a `&[&str]` where first element is tag name, second is value.
-        // `Tag::custom` is similar.
-        // The provided `custom_tags` HashMap has `Vec<String>` for values. The implementation pops the first value.
+        assert_eq!(event.kind, EventKind::TextNote); // Use internal EventKind
         
         let mut found_tags = HashMap::new();
         for tag in event.tags.iter() {
-                if let Some(name) = tag.clone().to_vec().get(0).map(|s| s.clone()) {
-                 // Collect all values associated with a tag name
-                for value in tag.clone().to_vec().iter().skip(1) {
-                    found_tags.entry(name.to_string()).or_insert_with(Vec::new).push(value.to_string());
+            if let Some(name) = tag.0.get(0) {
+                if let Some(value) = tag.0.get(1) {
+                    found_tags.entry(name.clone()).or_insert_with(Vec::new).push(value.clone());
                 }
             }
         }
 
-        // Verify tags as per the implementation's handling of HashMap<String, Vec<String>>
-        // The current implementation `Tag::parse([&tag_name, &tag_values[0]]).unwrap()` suggests only the first value is used.
         assert_eq!(found_tags.get("tag1").map(|v| v[0].clone()), Some("value1".to_string()));
         assert_eq!(found_tags.get("tag2").map(|v| v[0].clone()), Some("value2a".to_string()));
-        assert_eq!(found_tags.len(), 2); // Ensure no extra tags were added unintentionally
+        assert_eq!(found_tags.len(), 2);
     }
 
     #[tokio::test]
     async fn test_create_event_defaults() {
+        async fn create_event_with_custom_tags_local(
+            signer: &KeySigner,
+            content: &str,
+            custom_tags: HashMap<String, Vec<String>>,
+        ) -> Result<(Event, PreEvent)> {
+            let mut tags = Vec::new();
+            for (tag_name, tag_values) in custom_tags {
+                if !tag_values.is_empty() {
+                    tags.push(TagV3::new(&[&tag_name, &tag_values[0]]));
+                }
+            }
+            let pre_event = PreEvent {
+                pubkey: signer.public_key(),
+                created_at: Unixtime::now(),
+                kind: EventKind::TextNote,
+                tags,
+                content: content.to_string(),
+            };
+            let event = signer.sign_event(pre_event.clone())?;
+            Ok((event, pre_event))
+        }
+
         // Test create_event without custom tags, using default values
         let sk_hex = "2a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Another example key
-        let keys = Keys::parse(sk_hex).unwrap();
-        let pubkey = keys.public_key();
+        let private_key = PrivateKey::try_from_hex_string(sk_hex).unwrap();
+        let signer = KeySigner::from_private_key(private_key, "", 1).unwrap();
+        let pubkey = signer.public_key();
         let content = "Default event test";
         let custom_tags = HashMap::new(); // Empty tags
 
-        let event_result = create_event_with_custom_tags(&keys, content, custom_tags).await;
+        let event_result = create_event_with_custom_tags_local(&signer, content, custom_tags).await;
 
         assert!(event_result.is_ok());
         let (event, _) = event_result.unwrap();
         assert_eq!(event.content, content);
         assert_eq!(event.pubkey, pubkey);
-        assert_eq!(event.kind, Kind::TextNote); // Default kind used by EventBuilder::new
+        assert_eq!(event.kind, EventKind::TextNote);
         assert!(event.tags.is_empty());
     }
 
