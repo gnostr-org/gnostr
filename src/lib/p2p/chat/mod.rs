@@ -246,7 +246,7 @@ pub async fn chat(
                     env::set_var("USER", fingerprint);
                     tracing::info!("Setting USER to ephemeral fingerprint: {}", fingerprint);
                 }
-                (pubkey.clone(), args.topic.unwrap_or(pubkey))
+                (pubkey.clone(), args.topic.clone().unwrap_or("gnostr".to_string()))
             }
         }
     };
