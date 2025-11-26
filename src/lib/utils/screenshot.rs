@@ -153,8 +153,7 @@ pub fn take_screenshot(output_path: &str) -> io::Result<()> {
     } else if cfg!(target_os = "linux") {
         linux_simple(output_path)
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             "Unsupported operating system for screenshots",
         ))
     }
@@ -185,7 +184,7 @@ fn command_exists(command: &str) -> bool {
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .status()
-        .map_or(false, |s| s.success())
+        .is_ok_and(|s| s.success())
 }
 
 pub fn execute_linux_command(program: &str, args: &[&str]) -> io::Result<()> {
@@ -193,8 +192,7 @@ pub fn execute_linux_command(program: &str, args: &[&str]) -> io::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             format!(
                 "Command failed: {} {}",
                 program,
@@ -209,8 +207,7 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             format!(
                 "Command failed: {} {}",
                 program,
@@ -245,8 +242,6 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 /// ## Example
 ///
 /// ```
-/// #[test]
-/// #[cfg(target_os = "macos")]
 /// fn my_tui_test() -> Result<(), Box<dyn std::error::Error>> {
 ///     let mut cmd = Command::new(cargo_bin("gnostr"));
 ///     cmd.arg("tui");
@@ -283,7 +278,7 @@ pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?
+        .map_err(|e| io::Error::other(e.to_string()))?
         .as_secs();
 
     let filename = format!("test_screenshot_{}_{}.png", context, timestamp);
