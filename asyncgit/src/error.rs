@@ -2,6 +2,7 @@
 
 use std::{num::TryFromIntError, path::StripPrefixError, string::FromUtf8Error};
 
+use serde_json::Error as SerdeJsonError;
 use thiserror::Error;
 
 ///
@@ -108,6 +109,10 @@ pub enum Error {
 		"reword error: config commit.gpgsign=true detected.\ngpg signing is not supported for rewording commits with staged changes\ntry unstaging or stashing your changes"
 	)]
     SignRewordLastCommitStaged,
+
+    ///
+    #[error("serde json error:{0}")]
+    SerdeJson(#[from] SerdeJsonError),
 }
 
 ///
