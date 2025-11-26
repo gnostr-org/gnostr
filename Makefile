@@ -111,6 +111,9 @@ cargo-test-types-nip_three_four: 	### 	cargo-test-types-nip34
 	#@cargo test
 	cargo test -j $(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
 
+cargo-clippy-workspace: 	### 	cargo-clippy-workspace
+	cargo clippy --workspace --all-targets --all-features -- -D warnings
+
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1 -j $(NPROC)
@@ -179,7 +182,7 @@ docker-tui: 	### 	gnostr tui in a docker container
 docker-chat: 	### 	gnostr chat in a docker container
 	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
 docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/randymcmillan:/Users/randymcmillan gnostr:latest
+	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
 
 gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act

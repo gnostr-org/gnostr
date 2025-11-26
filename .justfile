@@ -73,6 +73,9 @@ cargo-test-nightly-workspace:
 cargo-test-types-nip_three_four:
   @make cargo-test-types-nip_three_four
 
+cargo-clippy-workspace:
+  @make cargo-clippy-workspace
+
 cargo-report:
   @make cargo-report
 
