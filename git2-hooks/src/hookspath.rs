@@ -111,13 +111,11 @@ impl HookPaths {
 	pub fn run_hook(&self, args: &[&str]) -> Result<HookResult> {
 		let hook = self.hook.clone();
 
-		let arg_str = format!("{:?} {}", hook, args.join(" "));
-		// Use -l to avoid "command not found" on Windows.
+		        let arg_str = format!("{} {}", hook.display(), args.join(" "));		// Use -l to avoid "command not found" on Windows.
 		let bash_args =
 			vec!["-l".to_string(), "-c".to_string(), arg_str];
 
-		log::trace!("run hook '{:?}' in '{:?}'", hook, self.pwd);
-
+		        log::trace!("run hook '{}' in '{}'", hook.display(), self.pwd.display());
 		let git_bash = find_bash_executable()
 			.unwrap_or_else(|| PathBuf::from("bash"));
 		let output = Command::new(git_bash)
@@ -156,8 +154,7 @@ fn is_executable(path: &Path) -> bool {
 	let metadata = match path.metadata() {
 		Ok(metadata) => metadata,
 		Err(e) => {
-			log::error!("metadata error: {}", e);
-			return false;
+			        		log::error!("metadata error: {e}");			return false;
 		}
 	};
 
