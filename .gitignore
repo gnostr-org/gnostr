@@ -1,3 +1,5 @@
+.gemini/tmp
+
 vendor/
 test_screenshots/
 !test_screenshots/**.png
