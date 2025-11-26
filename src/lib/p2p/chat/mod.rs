@@ -6,7 +6,6 @@ use crate::queue::InternalEvent;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
-use nostr_sdk_0_37_0::prelude::*;
 //use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
@@ -164,13 +163,9 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
     let filter = EnvFilter::default()
         .add_directive(level.into())
-        .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
         .add_directive("nostr_relay_pool=off".parse().unwrap())
         .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
         .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
         .add_directive("gnostr::chat::p2p=off".parse().unwrap())
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap());
