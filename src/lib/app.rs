@@ -35,7 +35,6 @@ pub enum QuitState {
     OpenSubmodule(RepoPath),
 }
 
-/// the main app type
 pub struct App {
     repo: RepoPathRef,
     do_quit: QuitState,
@@ -121,7 +120,6 @@ impl Environment {
 
 // public interface
 impl App {
-    ///
     #[allow(clippy::too_many_lines)]
     pub async fn new(
         repo: RepoPathRef,
@@ -210,7 +208,6 @@ impl App {
         Ok(app)
     }
 
-    ///
     pub fn draw(&self, f: &mut Frame) -> Result<()> {
         let fsize = f.area();
 
@@ -262,7 +259,6 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn event(&mut self, ev: InputEvent) -> Result<()> {
         log::trace!("event: {:?}", ev);
 
@@ -332,8 +328,6 @@ impl App {
         Ok(())
     }
 
-    //TODO: do we need this?
-    /// forward ticking to components that require it
     pub fn update(&mut self) -> Result<()> {
         log::trace!("update");
 
@@ -354,7 +348,6 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
 
@@ -394,17 +387,14 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn is_quit(&self) -> bool {
         !matches!(self.do_quit, QuitState::None) || self.input.is_aborted()
     }
 
-    ///
     pub fn quit_state(&self) -> QuitState {
         self.do_quit.clone()
     }
 
-    ///
     pub fn any_work_pending(&self) -> bool {
         self.status_tab.anything_pending()
             || self.revlog.any_work_pending()
@@ -426,7 +416,6 @@ impl App {
             || self.tags_popup.any_work_pending()
     }
 
-    ///
     pub fn requires_redraw(&self) -> bool {
         if self.requires_redraw.get() {
             self.requires_redraw.set(false);
