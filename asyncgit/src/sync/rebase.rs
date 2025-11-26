@@ -226,7 +226,7 @@ mod test_conflict_free_rebase {
 
         let c3 = write_commit_file(&repo, "test3.txt", "test", "commit3");
 
-        checkout_branch(repo_path, "foo").unwrap();
+        checkout_branch(repo_path, "foo", false).unwrap();
 
         let r = test_rebase_branch_repo(repo_path, "master");
 
