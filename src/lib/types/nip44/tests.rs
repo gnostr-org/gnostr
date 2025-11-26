@@ -323,7 +323,8 @@ fn test_invalid_decrypt() {
         Error::InvalidPadding,
         Error::MessageIsEmpty,
         Error::InvalidPadding,
-        Error::InvalidPadding,
+        Error::InvalidLength,
+        Error::InvalidLength,
     ];
 
     for (i, vectorobj) in json
@@ -349,6 +350,8 @@ fn test_invalid_decrypt() {
             let ckeyhex = vector.get("conversation_key").unwrap().as_str().unwrap();
             hex::decode(ckeyhex).unwrap().try_into().unwrap()
         };
+
+		//TODO handle nonce and println! for verbose output
         //let nonce: [u8; 32] = {
         //    let noncehex = vector.get("nonce").unwrap().as_str().unwrap();
         //    hex::decode(noncehex).unwrap().try_into().unwrap()
@@ -358,6 +361,8 @@ fn test_invalid_decrypt() {
         let note = vector.get("note").map(|v| v.as_str().unwrap()).unwrap_or("");
 
         let result = decrypt(&conversation_key, &ciphertext);
+
+		//TODO why would this always be an error? 
         assert!(result.is_err(), "Should not have decrypted: {} (decrypted to {:?})", note, result.ok());
 
         let err = result.unwrap_err();

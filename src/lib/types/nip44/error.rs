@@ -39,6 +39,10 @@ pub enum Error {
     #[error("Encryption format is unknown")]
     UnknownVersion,
 
+    /// Invalid length
+    #[error("Invalid Length")]
+    InvalidLength,
+
         /// UTF8 Decode
     #[error("UTF8 Decode: {0}")]
     Utf8Decode(#[from] std::string::FromUtf8Error),
