@@ -13,7 +13,6 @@ use crate::{
     strings,
 };
 
-///
 pub struct CredComponent {
     visible: bool,
     key_config: SharedKeyConfig,
@@ -23,7 +22,6 @@ pub struct CredComponent {
 }
 
 impl CredComponent {
-    ///
     pub fn new(env: &Environment) -> Self {
         let key_config = env.key_config.clone();
         Self {
