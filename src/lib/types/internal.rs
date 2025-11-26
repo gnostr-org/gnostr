@@ -8,10 +8,10 @@ use tungstenite::protocol::Message;
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(
         SubscriptionId(format!(
-            "{:?}/{:?}/{:?}",
-            weeble_sync(),
-            blockheight_sync(),
-            weeble_sync(),
+            "{}-{}-{}",
+            weeble_sync().unwrap_or(0.0),
+            blockheight_sync().unwrap_or(0.0),
+            weeble_sync().unwrap_or(0.0),
         )),
         filters,
     );
@@ -76,10 +76,10 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
                     RelayMessageV5::Notice(s) => println!("NOTICE: {}", s),
                     RelayMessageV5::Eose(_) => {
                         let message = ClientMessage::Close(SubscriptionId(format!(
-                            "{:?}/{:?}/{:?}",
-                            weeble_sync(),
-                            blockheight_sync(),
-                            weeble_sync(),
+                            "{}-{}-{}",
+                            weeble_sync().unwrap_or(0.0),
+                            blockheight_sync().unwrap_or(0.0),
+                            weeble_sync().unwrap_or(0.0),
                         )));
                         let wire = match serde_json::to_string(&message) {
                             Ok(w) => w,

@@ -19,19 +19,19 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
     Ok(blockheight)
 }
 
-pub async fn blockheight_async() -> String {
+pub async fn blockheight_async() -> Result<f64, ascii::AsciiChar> {
     let blockheight = match ureq_async("https://mempool.space/api/blocks/tip/height".to_string()).await {
-        Ok(val) => val.to_string(),
-        Err(_) => "0".to_string(),
+        Ok(val) => val.parse::<f64>().unwrap_or(0.0),
+        Err(_) => 0.0,
     };
-    env::set_var("BLOCKHEIGHT", blockheight.clone());
-    blockheight
+    env::set_var("BLOCKHEIGHT", blockheight.to_string());
+    Ok(blockheight)
 }
-pub fn blockheight_sync() -> String {
+pub fn blockheight_sync() -> Result<f64, ascii::AsciiChar> {
     let blockheight = match ureq_sync("https://mempool.space/api/blocks/tip/height".to_string()) {
-        Ok(val) => val.to_string(),
-        Err(_) => "0".to_string(),
+        Ok(val) => val.parse::<f64>().unwrap_or(0.0),
+        Err(_) => 0.0,
     };
-    env::set_var("BLOCKHEIGHT", blockheight.clone());
-    blockheight
+    env::set_var("BLOCKHEIGHT", blockheight.to_string());
+    Ok(blockheight)
 }

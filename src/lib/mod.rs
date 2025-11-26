@@ -240,7 +240,7 @@ pub fn get_blockheight_sync() -> Result<String, &'static str> {
 }
 /// pub async fn get_blockheight_async() -> Result<String, &'static str>
 pub async fn get_blockheight_async() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight_async().await))
+    Ok(format!("{:?}", blockheight_async().await))
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
