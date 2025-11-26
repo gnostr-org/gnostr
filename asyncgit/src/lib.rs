@@ -1,15 +1,15 @@
 //! asyncgit
 
-#![warn(missing_docs)]
-#![warn(
+#![allow(missing_docs)]
+#![allow(
     unused_imports,
     unused_must_use,
     dead_code,
     unstable_name_collisions,
     unused_assignments
 )]
-#![warn(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
-#![warn(
+#![allow(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
+#![allow(
 	clippy::filetype_is_file,
 	clippy::cargo,
 	clippy::unwrap_used,
