@@ -35,11 +35,7 @@ pub async fn run_list(
     for_push: bool,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
     let nostr_state =
-        if let Ok(nostr_state) = get_state_from_cache(git_repo.get_path()?, repo_ref).await {
-            Some(nostr_state)
-        } else {
-            None
-        };
+        (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
 
     let term = console::Term::stderr();
 
@@ -95,7 +91,7 @@ pub async fn run_list(
             if let Ok(mut branch_name) = cl.get_branch_name() {
                 branch_name = if let Some(public_key) = current_user {
                     if proposal.author().eq(&public_key) {
-                        cl.branch_name.to_string()
+                        cl.branch_name.clone()
                     } else {
                         branch_name
                     }
@@ -146,7 +142,7 @@ pub fn list_from_remotes(
                 errors.insert(url, error);
             }
             Ok(state) => {
-                remote_states.insert(url.to_string(), state);
+                remote_states.insert(url.clone(), state);
             }
         }
     }
