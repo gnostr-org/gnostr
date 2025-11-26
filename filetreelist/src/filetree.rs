@@ -116,38 +116,37 @@ impl FileTree {
 
 	///
 	pub fn move_selection(&mut self, dir: MoveSelection) -> bool {
-		self.selection.map_or(false, |selection| {
-			let new_index = match dir {
-				MoveSelection::Up => {
-					self.selection_updown(selection, true)
-				}
-				MoveSelection::Down => {
-					self.selection_updown(selection, false)
-				}
-				MoveSelection::Left => self.selection_left(selection),
-				MoveSelection::Right => {
-					self.selection_right(selection)
-				}
-				MoveSelection::Top => {
-					Self::selection_start(selection)
-				}
-				MoveSelection::End => self.selection_end(selection),
-				MoveSelection::PageDown | MoveSelection::PageUp => {
-					None
-				}
-			};
-
-			let changed_index =
-				new_index.is_some_and(|i| i != selection);
-
-			if changed_index {
-				self.selection = new_index;
-				self.visual_selection = self.calc_visual_selection();
-			}
-
-			changed_index || new_index.is_some()
-		})
-	}
+		        self.selection.is_some_and(|selection| {
+		            let new_index = match dir {
+		                MoveSelection::Up => {
+		                    self.selection_updown(selection, true)
+		                }
+		                MoveSelection::Down => {
+		                    self.selection_updown(selection, false)
+		                }
+		                MoveSelection::Left => self.selection_left(selection),
+		                MoveSelection::Right => {
+		                    self.selection_right(selection)
+		                }
+		                MoveSelection::Top => {
+		                    Self::selection_start(selection)
+		                }
+		                MoveSelection::End => self.selection_end(selection),
+		                MoveSelection::PageDown | MoveSelection::PageUp => {
+		                    None
+		                }
+		            };
+		
+		            let changed_index =
+		                new_index.is_some_and(|i| i != selection);
+		
+		            if changed_index {
+		                self.selection = new_index;
+		                self.visual_selection = self.calc_visual_selection();
+		            }
+		
+		            changed_index || new_index.is_some()
+		        })	}
 
 	pub fn select_file(&mut self, path: &Path) -> bool {
 		let new_selection = self
