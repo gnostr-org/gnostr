@@ -170,7 +170,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             //    .map(|i| format!("{}", i)),
             //),
             GitCommitId => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"commit\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -183,7 +183,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitTree => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"tree\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -196,7 +196,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitAuthor => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"Author\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -209,7 +209,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitParent => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"parent\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -222,7 +222,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitMessagePart => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"msg\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -235,7 +235,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitName => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"name\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -248,7 +248,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitEmail => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"email\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -261,7 +261,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitTime => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"time\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -274,7 +274,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitHeader => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"header\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
@@ -287,7 +287,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .map(|i| format!("{}", i)),
             ),
             GitCommitBody => Line::default().spans(
-                vec![
+                [
                     Span::styled(
                         format!("{{\"body\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
