@@ -22,7 +22,6 @@ use crate::{
     strings, try_or_popup,
 };
 
-///
 pub struct ChangesComponent {
     repo: RepoPathRef,
     files: StatusTreeComponent,
@@ -33,7 +32,6 @@ pub struct ChangesComponent {
 }
 
 impl ChangesComponent {
-    ///
     pub fn new(env: &Environment, title: &str, focus: bool, is_working_dir: bool) -> Self {
         Self {
             files: StatusTreeComponent::new(env, title, focus),
@@ -45,19 +43,16 @@ impl ChangesComponent {
         }
     }
 
-    ///
     pub fn set_items(&mut self, list: &[StatusItem]) -> Result<()> {
         self.files.show()?;
         self.files.update(list)?;
         Ok(())
     }
 
-    ///
     pub fn selection(&self) -> Option<FileTreeItem> {
         self.files.selection()
     }
 
-    ///
     pub fn focus_select(&mut self, focus: bool) {
         self.files.focus(focus);
         self.files.show_selection(focus);
@@ -68,7 +63,6 @@ impl ChangesComponent {
         self.files.is_empty()
     }
 
-    ///
     pub fn is_file_selected(&self) -> bool {
         self.files.is_file_selected()
     }
