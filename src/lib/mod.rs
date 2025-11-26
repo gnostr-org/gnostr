@@ -82,19 +82,12 @@ pub mod watcher;
 
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
-///
 pub use base64::Engine;
-///
 pub use colorful::{Color, Colorful};
-///
 pub use futures_util::stream::FusedStream;
-///
 pub use futures_util::{SinkExt, StreamExt};
-///
 pub use http::Uri;
-///
 pub use lazy_static::lazy_static;
-///
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
@@ -118,7 +111,6 @@ pub use types::nip44;
 
 ///
 use anyhow::{anyhow, Result};
-///
 use directories::ProjectDirs;
 
 ///
@@ -147,20 +139,12 @@ pub fn get_dirs() -> Result<ProjectDirs> {
 ///
 type Ws =
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-
-///
 pub mod reflog;
-///
 pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message};
-
-///
 pub use relays::{
     relays, relays_by_nip, relays_offline, relays_online, relays_paid, relays_public,
 };
-
-///
 pub mod watch_list;
-///
 pub use watch_list::*;
 
 //TODO
@@ -207,8 +191,6 @@ pub fn get_relays_offline() -> Result<String, &'static str> {
     Ok(format!("{}", relays_offline().unwrap().to_string()))
 }
 
-/// weeble
-/// pub fn get_weeble() -> Result<String, &'static str>
 pub fn get_weeble() -> Result<String, &'static str> {
     get_weeble_sync()
 }
@@ -230,8 +212,6 @@ pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
         weeble_millis_async().await.unwrap_or(0_f64).to_string()
     ))
 }
-/// wobble
-/// pub fn get_wobble() -> Result<String, &'static str>
 pub fn get_wobble() -> Result<String, &'static str> {
     get_wobble_sync()
 }
