@@ -227,13 +227,29 @@ pub async fn chat(
             }
         }
                     (pubkey_hex.clone(), args.topic.clone().unwrap_or(pubkey_hex))    } else {
-        let repo = Repository::discover(".")?;
-        let head = repo.head()?;
-        let obj = head.resolve()?.peel(ObjectType::Commit)?;
-        let commit = obj.peel_to_commit()?;
-        let commit_id = commit.id().to_string();
-        tracing::info!("Using git commit for identity: {}", commit_id);
-                    (commit_id.clone(), args.topic.clone().unwrap_or(commit_id))    };
+        match Repository::discover(".") {
+            Ok(repo) => {
+                let head = repo.head()?;
+                let obj = head.resolve()?.peel(ObjectType::Commit)?;
+                let commit = obj.peel_to_commit()?;
+                let commit_id = commit.id().to_string();
+                tracing::info!("Using git commit for identity: {}", commit_id);
+                (commit_id.clone(), args.topic.clone().unwrap_or(commit_id))
+            },
+            Err(_) => {
+                tracing::warn!("No git repository found and no --nsec provided. Using ephemeral key for identity.");
+                let ephemeral_signer = KeySigner::generate("", 1)?;
+                let pubkey = ephemeral_signer.public_key().as_hex_string();
+                if args.name.is_none() {
+                    use std::env;
+                    let fingerprint = &pubkey[0..8];
+                    env::set_var("USER", fingerprint);
+                    tracing::info!("Setting USER to ephemeral fingerprint: {}", fingerprint);
+                }
+                (pubkey.clone(), args.topic.unwrap_or(pubkey))
+            }
+        }
+    };
 
     if let Some(message) = args.oneshot {
         info!("Oneshot mode: sending message '{}'", message);
