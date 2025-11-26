@@ -108,8 +108,7 @@ pub fn serialize_commit(commit: &Commit) -> Result<String> {
     let committer = commit.committer();
     let message = commit
         .message()
-        .ok_or(log::debug!("No commit message"))
-        .expect("")
+        .unwrap_or_default()
         .to_string();
     log::debug!("message:\n{:?}", message);
     let time = commit.time().seconds();
@@ -127,7 +126,7 @@ pub fn serialize_commit(commit: &Commit) -> Result<String> {
         time,
     };
 
-    let serialized = serde_json::to_string(&serializable_commit).expect("");
+    let serialized = serde_json::to_string(&serializable_commit)?;
     debug!("serialized_commit: {:?}", serialized);
     Ok(serialized)
 }
@@ -135,7 +134,7 @@ pub fn serialize_commit(commit: &Commit) -> Result<String> {
 pub fn deserialize_commit<'a>(repo: &'a Repository, data: &'a str) -> Result<Commit<'a>> {
     //we serialize the commit data
     //easier to grab the commit.id
-    let serializable_commit: SerializableCommit = serde_json::from_str(data).expect("");
+    let serializable_commit: SerializableCommit = serde_json::from_str(data)?;
     //grab the commit.id
     let oid = Oid::from_str(&serializable_commit.id)?;
     //oid used to search the repo
