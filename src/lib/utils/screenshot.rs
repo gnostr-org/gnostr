@@ -242,6 +242,8 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 /// ## Example
 ///
 /// ```
+/// use assert_cmd::cargo::cargo_bin;
+/// use std::process::Command;
 /// fn my_tui_test() -> Result<(), Box<dyn std::error::Error>> {
 ///     let mut cmd = Command::new(cargo_bin("gnostr"));
 ///     cmd.arg("tui");

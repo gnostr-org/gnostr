@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-types"
-version = "0.7.6"
+version = "1906.925289.572444"
 edition = "2021"
 homepage = "https://github.com/gnostr-org/gnostr"
 authors = ["gnostr <admin@gnostr.org>", "Mike Dilger <mike@mikedilger.com>"]

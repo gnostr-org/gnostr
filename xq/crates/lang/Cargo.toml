@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-xq-lang"
-version = "0.0.1"
+version = "1906.925289.572444"
 authors = ["gnostr <admin@gnostr.org>","mi_sawa <mi.sawa.1216+git@gmail.com>"]
 edition = "2021"
 description = "Lexer, parser and AST of jq."
