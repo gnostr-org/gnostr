@@ -215,9 +215,15 @@ pub async fn chat(
     }
 
     tokio::task::spawn_blocking(move || {
-        let (identity_pubkey, topic_name) = if let Some(signer) = key_signer {
+        let (_identity_pubkey, topic_name) = if let Some(signer) = key_signer {
             let pubkey = signer.public_key().as_hex_string();
             tracing::info!("Using provided nsec for identity: {}", pubkey);
+            if args.name.is_none() {
+                use std::env;
+                let fingerprint = &pubkey[0..8];
+                env::set_var("USER", fingerprint);
+                tracing::info!("Setting USER to fingerprint: {}", fingerprint);
+            }
             (pubkey.clone(), args.topic.unwrap_or(pubkey))
         } else {
             let repo = Repository::discover(".")?;
