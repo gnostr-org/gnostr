@@ -220,13 +220,11 @@ pub fn launch(port: u16) -> Result<(EventHub, std::thread::JoinHandle<()>, Cance
 /// use std::net::TcpListener;
 /// use gnostr::ws::CancellationToken;
 ///
-/// fn main() {
 ///     // Example of using a pre-bound listener instead of providing a port.
 ///     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
 ///     let cancellation_token = CancellationToken::new();
 ///     let event_hub = gnostr::ws::launch_from_listener(listener, cancellation_token).expect("failed to listen on port 8080");
 ///     // ...
-/// }
 /// ```
 pub fn launch_from_listener(
     listener: std::net::TcpListener,
@@ -293,7 +291,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
         while let Ok(event) = resp_rx.recv_async().await {
             match event {
                 ResponderCommand::Message(message) => {
-                    if let Err(_) = outgoing.send(message.into_tungstenite()).await {
+                    if (outgoing.send(message.into_tungstenite()).await).is_err() {
                         let _ = outgoing.close().await;
                         return Ok(());
                     }
