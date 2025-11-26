@@ -6,6 +6,7 @@
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::*;
  //migrate carefully
+use crate::types::{KeySigner, PrivateKey};
 use anyhow::Result;
 
 use serde::ser::StdError;
@@ -62,7 +63,18 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
     tracing::debug!("\n{:?}\n", &sub_command_args);
     tracing::info!("\n{:?}\n", &sub_command_args);
 
-    crate::p2p::chat::chat(sub_command_args).await?;
+    let key_signer = if let Some(nsec) = &sub_command_args.nsec {
+        let private_key = if nsec.starts_with("nsec1") {
+            PrivateKey::try_from_bech32_string(nsec)?
+        } else {
+            PrivateKey::try_from_hex_string(nsec)?
+        };
+        Some(KeySigner::from_private_key(private_key, "", 1)?)
+    } else {
+        None
+    };
+
+    crate::p2p::chat::chat(sub_command_args, key_signer).await?;
 
     Ok(())
 }
