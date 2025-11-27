@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::gitui::config::Config;
 use itertools::Itertools;
 use ratatui::style::Style;

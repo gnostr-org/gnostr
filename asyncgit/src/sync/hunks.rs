@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{ApplyLocation, ApplyOptions, Diff};
 use scopetime::scope_time;
 

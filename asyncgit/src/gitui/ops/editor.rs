@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::{confirm, Action, OpTrait};
 use crate::{
     gitui::items::TargetData,

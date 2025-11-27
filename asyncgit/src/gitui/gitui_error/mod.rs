@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{fmt::Display, io, string};
 
 ///

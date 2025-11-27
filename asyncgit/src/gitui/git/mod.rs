@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use diff::Diff;
 use git2::{Branch, Repository};
 use itertools::Itertools;

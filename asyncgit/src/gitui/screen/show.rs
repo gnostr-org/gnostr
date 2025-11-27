@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{iter, rc::Rc};
 
 use crate::gitui::{

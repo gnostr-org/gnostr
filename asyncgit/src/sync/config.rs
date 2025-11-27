@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 //TODO: hopefully released in next rust (see https://github.com/rust-lang/rust-clippy/issues/9440)
 #![allow(clippy::use_self)]
 

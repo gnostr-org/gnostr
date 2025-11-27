@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use scopetime::scope_time;
 
 use super::{apply_selection, load_file};

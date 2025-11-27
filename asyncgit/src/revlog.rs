@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},

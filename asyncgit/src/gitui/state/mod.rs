@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::borrow::Cow;
 use std::io::Read;
 use std::io::Write;

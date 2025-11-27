@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::path::{Path, PathBuf};
 
 pub use git2::SubmoduleStatus;

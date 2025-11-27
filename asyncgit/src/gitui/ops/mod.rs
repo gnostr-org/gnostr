@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use serde::{Deserialize, Serialize};
 
 use crate::gitui::{items::TargetData, menu::Menu, state::State, term::Term, Res};

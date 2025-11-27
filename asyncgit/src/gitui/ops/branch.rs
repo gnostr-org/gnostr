@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::{selected_rev, Action, OpTrait};
 use crate::{
     gitui::git::{get_current_branch_name, is_branch_merged},

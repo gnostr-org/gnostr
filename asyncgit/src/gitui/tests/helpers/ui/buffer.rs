@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use ratatui::buffer::Buffer;
 use std::{
     fmt::{Formatter, Result},

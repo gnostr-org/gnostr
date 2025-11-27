@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::{
+//! <ADD A SHORT DESCRIPTION HERE>use std::{
     cmp::Ordering,
     collections::{BinaryHeap, HashSet},
 };

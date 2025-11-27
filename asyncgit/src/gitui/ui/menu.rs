@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::SizedWidget;
 use crate::gitui::{
     bindings::Bindings, config::Config, items::Item, menu::PendingMenu, ops::Op, state::State,

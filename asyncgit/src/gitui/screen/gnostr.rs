@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::Screen;
 use crate::gitui::{config::Config, Res};
 use ratatui::prelude::Size;

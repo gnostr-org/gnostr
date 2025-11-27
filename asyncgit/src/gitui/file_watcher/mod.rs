@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::{gitui::gitui_error::Error, gitui::open_repo, gitui::Res};
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::{

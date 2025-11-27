@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use clap::Parser;
 use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
 use log::LevelFilter;

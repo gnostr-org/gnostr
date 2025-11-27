@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},

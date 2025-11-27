@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::Screen;
 use crate::gitui::{config::Config, items::log, Res};
 use git2::{Oid, Repository};

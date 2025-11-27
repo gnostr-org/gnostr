@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{build::CheckoutBuilder, Oid, Repository, StashApplyOptions, StashFlags};
 use scopetime::scope_time;
 

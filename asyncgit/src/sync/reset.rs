@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{build::CheckoutBuilder, ObjectType, ResetType};
 use scopetime::scope_time;
 

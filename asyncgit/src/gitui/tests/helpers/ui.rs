@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::{
     gitui::cli::{self, Args},
     gitui::config::{self, Config},

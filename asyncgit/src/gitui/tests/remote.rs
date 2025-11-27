@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{Buf, Error, Repository};
 
 use crate::gitui::git::remote::*;

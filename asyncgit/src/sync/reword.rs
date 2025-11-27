@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{Oid, RebaseOptions, Repository};
 
 use super::{

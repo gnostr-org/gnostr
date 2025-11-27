@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::{Action, OpTrait};
 use crate::{gitui::gitui_error::Error, gitui::items::TargetData, gitui::state::State};
 use std::rc::Rc;

@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     sync::{Arc, Mutex},
     time::{Duration, Instant},

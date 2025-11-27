@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::gitui::gitu_diff::FileDiff;
 use std::ops::Range;
 

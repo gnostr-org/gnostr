@@ -1,5 +1,5 @@
 #![allow(renamed_and_removed_lints, clippy::unknown_clippy_lints)]
-
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{num::TryFromIntError, path::StripPrefixError, string::FromUtf8Error};
 
 use serde_json::Error as SerdeJsonError;

@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::OpTrait;
 use crate::{
     gitui::gitui_error::Error, gitui::items::TargetData, gitui::ops::Action, gitui::screen,
