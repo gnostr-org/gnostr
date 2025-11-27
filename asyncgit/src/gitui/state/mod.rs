@@ -73,6 +73,8 @@ pub struct State {
 }
 
 impl State {
+    /// Creates a new `State` instance, initializing the application with the given repository, size, arguments, and configuration.
+    /// It sets up the initial screens, key bindings, and optionally a file watcher.
     pub fn create(
         repo: Rc<Repository>,
         size: Size,
@@ -127,6 +129,8 @@ impl State {
         Ok(state)
     }
 
+    /// Initializes the file watcher if enabled in the configuration and if untracked files are not hidden.
+    /// It returns `Some(FileWatcher)` if successful, or `None` if disabled or an error occurs.
     fn init_file_watcher(&mut self) -> Res<Option<FileWatcher>> {
         if !self.config.general.refresh_on_file_change.enabled {
             return Ok(None);
@@ -155,6 +159,7 @@ impl State {
         )
     }
 
+    /// Runs the main application loop, continuously updating the UI and handling events until the application quits.
     pub fn run(&mut self, term: &mut Term, max_tick_delay: Duration) -> Res<()> {
         while !self.quit {
             term.backend_mut().poll_event(max_tick_delay)?;
@@ -164,6 +169,8 @@ impl State {
         Ok(())
     }
 
+    /// Updates the application state based on events, file watcher changes, and pending commands.
+    /// It also triggers a redraw of the UI if necessary.
     pub fn update(&mut self, term: &mut Term) -> Res<()> {
         if term.backend_mut().poll_event(Duration::ZERO)? {
             let event = term.backend_mut().read_event()?;
@@ -187,6 +194,7 @@ impl State {
         Ok(())
     }
 
+    /// Handles a single `crossterm::event::Event`, processing key presses, resizes, and other events.
     pub fn handle_event(&mut self, term: &mut Term, event: Event) -> Res<()> {
         log::debug!("{:?}", event);
 
@@ -219,6 +227,7 @@ impl State {
         }
     }
 
+    /// Redraws the entire UI immediately if a screen is active.
     pub fn redraw_now(&mut self, term: &mut Term) -> Res<()> {
         if self.screens.last_mut().is_some() {
             term.draw(|frame| ui::ui(frame, self))
@@ -230,10 +239,12 @@ impl State {
         Ok(())
     }
 
+    /// Marks the UI as needing a redraw, which will be performed on the next `update` cycle.
     pub fn stage_redraw(&mut self) {
         self.needs_redraw = true;
     }
 
+    /// Handles a keyboard input event, matching it against registered key bindings.
     fn handle_key_input(&mut self, term: &mut Term, key: event::KeyEvent) -> Res<()> {
         let menu = match &self.pending_menu {
             None => Menu::Root,
