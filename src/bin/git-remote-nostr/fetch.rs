@@ -104,7 +104,7 @@ pub async fn run_fetch(
                                             author: Some(patch.author()),
                                             kind: Some(patch.kind()),
                                             relays: if let Some(relay) = repo_ref.relays.first() {
-                                                vec![relay.to_string()]
+                                                vec![relay.clone()]
                                             } else { vec![]},
                                         }.to_bech32().unwrap_or_default()
                                     )

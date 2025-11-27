@@ -12,7 +12,7 @@ fn main() {
     let id = Id::try_from_hex_string(&hex).unwrap();
 
     let mut relays: Vec<UncheckedUrl> = Vec::new();
-    while let Some(urlstr) = args.next() {
+    for urlstr in args {
         let url = UncheckedUrl::from_str(&urlstr);
         relays.push(url);
     }

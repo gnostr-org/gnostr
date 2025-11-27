@@ -1,7 +1,7 @@
-use crate::get_nostr_remote_url;
-use test_utils::relay;
+use crate::{get_nostr_remote_url, clone_git_repo_with_nostr_url, cli_expect_nostr_fetch};
+use test_utils::{relay, CliTester, Relay};
 use std::collections::HashSet;
-use gnostr::{Event, git::Oid};
+use gnostr::{Event, git2::Oid};
 
 #[tokio::test]
 #[serial]
