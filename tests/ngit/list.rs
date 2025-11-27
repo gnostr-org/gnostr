@@ -373,7 +373,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_checked_out() -> Result<()> {
-                    let (_, test_repo) =
+                    let (_, mut test_repo) =
                         prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(3).await?;
                     assert_eq!(
                         get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_3)?,
@@ -386,7 +386,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
-                    let (originating_repo, test_repo) =
+                    let (originating_repo, mut test_repo) =
                         prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(3).await?;
                     assert_eq!(
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_3)?,
@@ -596,7 +596,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
-                    let (originating_repo, test_repo) = prep_and_run().await?;
+                    let (originating_repo, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_4)?,
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
@@ -821,7 +821,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_checked_out() -> Result<()> {
-                    let (_, test_repo) = prep_and_run().await?;
+                    let (_, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_1)?,
                         test_repo.get_checked_out_branch_name()?,
@@ -988,7 +988,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_checked_out() -> Result<()> {
-                    let (_, test_repo) = prep_and_run().await?;
+                    let (_, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_1)?,
                         test_repo.get_checked_out_branch_name()?,
@@ -1000,7 +1000,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
-                    let (originating_repo, test_repo) = prep_and_run().await?;
+                    let (originating_repo, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?,
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
@@ -1314,7 +1314,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_relay_list_event());
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let (_, test_repo) =
+                            let (_, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
                             // add another commit (so we have a
@@ -1378,7 +1378,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_checked_out() -> Result<()> {
-                    let (_, test_repo) = prep_and_run().await?;
+                    let (_, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_1)?,
                         test_repo.get_checked_out_branch_name()?,
@@ -1390,7 +1390,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn didnt_overwrite_local_appendments() -> Result<()> {
-                    let (originating_repo, test_repo) = prep_and_run().await?;
+                    let (originating_repo, mut test_repo) = prep_and_run().await?;
                     assert_ne!(
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
                             &test_repo,
