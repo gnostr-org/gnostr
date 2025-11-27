@@ -1,3 +1,5 @@
+use crate::get_nostr_remote_url;
+use test_utils::relay;
 
 #[tokio::test]
 #[serial]
