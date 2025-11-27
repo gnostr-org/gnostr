@@ -343,6 +343,7 @@ impl State {
 
     /// Runs a `Command` and handles its output asynchronously (if async commands are enabled).
     /// Will return `Ok(())` if one is already running.
+    /// Runs a `Command` asynchronously, returning immediately. If another command is already running, an error is returned.
     pub fn run_cmd_async(&mut self, term: &mut Term, input: &[u8], mut cmd: Command) -> Res<()> {
         cmd.env("CLICOLOR_FORCE", "1"); // No guarantee, but modern tools seem to implement this
 
@@ -379,6 +380,7 @@ impl State {
         Ok(())
     }
 
+    /// Awaits the completion of a pending asynchronous command.
     fn await_pending_cmd(&mut self) -> Res<()> {
         if let Some((child, _)) = &mut self.pending_cmd {
             child.wait().map_err(Error::CouldntAwaitCmd)?;
@@ -387,6 +389,7 @@ impl State {
     }
 
     /// Handles any pending_cmd in State without blocking. Returns `true` if a cmd was handled.
+    /// Checks and handles the completion of a pending asynchronous command without blocking.
     fn handle_pending_cmd(&mut self) -> Res<()> {
         let Some((ref mut child, ref mut log_rwlock)) = self.pending_cmd else {
             return Ok(());
@@ -407,6 +410,7 @@ impl State {
         Ok(())
     }
 
+    /// Runs a `Command` interactively, allowing user input and displaying output directly to the terminal.
     pub fn run_cmd_interactive(&mut self, term: &mut Term, mut cmd: Command) -> Res<()> {
         cmd.env("CLICOLOR_FORCE", "1"); // No guarantee, but modern tools seem to implement this
 
@@ -483,12 +487,14 @@ impl State {
         Ok(())
     }
 
+    /// Hides the currently active menu.
     pub fn hide_menu(&mut self) {
         if let Some(ref mut menu) = self.pending_menu {
             menu.is_hidden = true;
         }
     }
 
+    /// Unhides the currently active menu.
     pub fn unhide_menu(&mut self) {
         if let Some(ref mut menu) = self.pending_menu {
             menu.is_hidden = false;
