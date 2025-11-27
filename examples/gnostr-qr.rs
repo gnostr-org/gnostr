@@ -8,7 +8,7 @@ fn main() {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
     if args.len() == 1 {
-        if let Some(arg) = args.iter().next() {
+        if let Some(arg) = args.first() {
             if arg == "-p" || arg == "--png" {
                 help();
                 std::process::exit(0);

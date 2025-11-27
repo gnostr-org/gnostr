@@ -157,11 +157,11 @@ mod tests {
     /// cargo test --bin gnostr-weeble -- --nocapture
     #[test]
     fn gnostr_weeble() {
-        print!("\nweeble:{}\n", weeble().unwrap().to_string());
-        print!("\nweeble_sync:{}\n", weeble_sync().unwrap().to_string());
+        print!("\nweeble:{}\n", weeble().unwrap());
+        print!("\nweeble_sync:{}\n", weeble_sync().unwrap());
         print!(
             "\nweeble_millis_sync:{}\n",
-            weeble_millis_sync().unwrap().to_string()
+            weeble_millis_sync().unwrap()
         );
     }
 
@@ -175,7 +175,7 @@ mod tests {
 
         // Ensure the runtime is functional by spawning a simple task.
         rt1.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-weeble:main test begin...");
                 main();
                 println!("\ngnostr-weeble:main test end...");
@@ -185,7 +185,7 @@ mod tests {
         });
         // Ensure the runtime is functional by spawning a simple task.
         rt2.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-weeble:main test begin...");
                 main();
                 println!("\ngnostr-weeble:main test end...");
@@ -194,7 +194,7 @@ mod tests {
             .unwrap();
         });
         rt1.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-weeble:main test begin...");
                 let _ = get_weeble_async().await;
                 println!("\ngnostr-weeble:main test end...");
@@ -203,7 +203,7 @@ mod tests {
             .unwrap();
         });
         rt1.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-weeble:main test begin...");
                 let _ = get_weeble_sync();
                 println!("\ngnostr-weeble:main test end...");
