@@ -333,6 +333,7 @@ impl State {
 
     /// Runs a `Command` and handles its output.
     /// Will block awaiting its completion.
+    /// Runs a `Command` and handles its output, blocking until completion.
     pub fn run_cmd(&mut self, term: &mut Term, input: &[u8], cmd: Command) -> Res<()> {
         self.run_cmd_async(term, input, cmd)?;
         self.await_pending_cmd()?;
