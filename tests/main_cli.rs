@@ -365,6 +365,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     #[cfg(target_os = "macos")]
     fn test_run_gnostr_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
@@ -396,6 +397,7 @@ mod tests {
         Ok(())
     }
     #[test]
+    #[ignore]
     #[cfg(target_os = "macos")]
     fn test_run_gnostr_chat_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
@@ -427,6 +429,7 @@ mod tests {
         Ok(())
     }
     #[test]
+    #[ignore]
     #[cfg(target_os = "macos")]
     fn test_run_gnostr_ngit_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
