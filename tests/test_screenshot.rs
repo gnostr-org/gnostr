@@ -16,6 +16,7 @@ fn is_tmux_installed() -> bool {
 }
 
 #[test]
+#[ignore]
 fn test_capture_tmux() {
     if !is_tmux_installed() {
         println!("Skipping test_capture_tmux: tmux is not installed.");
@@ -24,6 +25,7 @@ fn test_capture_tmux() {
 
     let session_name = "gnostr-tmux-test";
     let screenshot_path: PathBuf = [
+		//TODO local directory .gnostr/screenshots/
         "/Users/randymcmillan/.gemini/tmp/e2231b79f1bd8b2a6ddfa2b8e1288337b83b48b9c931587d9e416bcd03fb2b14",
         "tmux_test.txt",
     ]
