@@ -272,6 +272,7 @@ impl State {
         Ok(())
     }
 
+    /// Handles a given `Op` (operation), executing its action based on the currently selected UI item.
     pub(crate) fn handle_op(&mut self, op: Op, term: &mut Term) -> Res<()> {
         let screen = self.screen();
         let target = if screen.is_empty() {
