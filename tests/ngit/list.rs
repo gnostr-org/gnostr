@@ -569,7 +569,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_created_with_correct_name() -> Result<()> {
-                    let (_, test_repo) = prep_and_run().await?;
+                    let (_, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         vec![
                             "main",
@@ -584,7 +584,7 @@ mod when_main_branch_is_uptodate {
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
                 async fn proposal_branch_checked_out() -> Result<()> {
-                    let (_, test_repo) = prep_and_run().await?;
+                    let (_, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_4)?,
                         test_repo.get_checked_out_branch_name()?,
@@ -1195,7 +1195,7 @@ mod when_main_branch_is_uptodate {
                 #[cfg(feature = "expensive_tests")]
                 async fn second_choice_discarded_unpublished_commits_and_checked_out_latest_revision(
                 ) -> Result<()> {
-                    let (originating_repo, test_repo) = prep_and_run().await?;
+                    let (originating_repo, mut test_repo) = prep_and_run().await?;
                     println!("test_dir: {:?}", test_repo.dir);
                     assert_eq!(
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
