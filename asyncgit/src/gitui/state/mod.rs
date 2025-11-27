@@ -1,4 +1,4 @@
-#[allow(missing_docs)]`
+#[allow(missing_docs)]
 
 //! <ADD A SHORT DESCRIPTION HERE>
 use std::borrow::Cow;
