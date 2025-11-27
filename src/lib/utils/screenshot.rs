@@ -266,7 +266,7 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 ///     Ok(())
 /// }
 /// ```
-#[cfg(target_os = "macos")]
+// #[cfg(target_os = "macos")]
 pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
     let mut screenshot_path = std::env::current_dir()?;
     screenshot_path.push("test_screenshots");
