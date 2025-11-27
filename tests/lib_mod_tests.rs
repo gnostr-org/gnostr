@@ -102,8 +102,7 @@ mod tests {
         let result = get_blockheight_sync();
         assert!(result.is_ok());
         let value = result.unwrap();
-        assert!(!value.is_empty());
-        assert!(value.parse::<f64>().is_ok());
+        assert!(value.to_string().parse::<f64>().is_ok());
     }
 
     #[test]
