@@ -309,10 +309,12 @@ impl State {
         self.pending_menu = root_menu(&self.config).map(PendingMenu::init)
     }
 
+    /// Returns a mutable reference to the currently active screen.
     pub fn screen_mut(&mut self) -> &mut Screen {
         self.screens.last_mut().expect("No screen")
     }
 
+    /// Returns an immutable reference to the currently active screen.
     pub fn screen(&self) -> &Screen {
         self.screens.last().expect("No screen")
     }
