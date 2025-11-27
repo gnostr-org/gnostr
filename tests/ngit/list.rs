@@ -236,7 +236,7 @@ mod when_main_branch_is_uptodate {
                     assert_eq!(
                         vec![
                             "main",
-                            &get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_1)?,
+                            &get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_1)?,
                         ],
                         test_repo.get_local_branch_names()?
                     );
@@ -250,7 +250,7 @@ mod when_main_branch_is_uptodate {
                     let (_, test_repo) =
                         prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(1).await?;
                     assert_eq!(
-                        get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_1)?,
+                        get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_1)?,
                         test_repo.get_checked_out_branch_name()?,
                     );
                     Ok(())
@@ -265,7 +265,7 @@ mod when_main_branch_is_uptodate {
                     assert_eq!(
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?,
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
-                            &test_repo,
+                            &mut test_repo,
                             FEATURE_BRANCH_NAME_1
                         )?)?,
                     );
@@ -362,7 +362,7 @@ mod when_main_branch_is_uptodate {
                     assert_eq!(
                         vec![
                             "main",
-                            &get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_3)?,
+                            &get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_3)?,
                         ],
                         test_repo.get_local_branch_names()?
                     );
@@ -376,7 +376,7 @@ mod when_main_branch_is_uptodate {
                     let (_, test_repo) =
                         prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(3).await?;
                     assert_eq!(
-                        get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_3)?,
+                        get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_3)?,
                         test_repo.get_checked_out_branch_name()?,
                     );
                     Ok(())
@@ -573,7 +573,7 @@ mod when_main_branch_is_uptodate {
                     assert_eq!(
                         vec![
                             "main",
-                            &get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_4)?,
+                            &get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_4)?,
                         ],
                         test_repo.get_local_branch_names()?
                     );
@@ -586,7 +586,7 @@ mod when_main_branch_is_uptodate {
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
                     assert_eq!(
-                        get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_4)?,
+                        get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_4)?,
                         test_repo.get_checked_out_branch_name()?,
                     );
                     Ok(())
@@ -1199,7 +1199,7 @@ mod when_main_branch_is_uptodate {
                     println!("test_dir: {:?}", test_repo.dir);
                     assert_eq!(
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
-                            &test_repo,
+                            &mut test_repo,
                             FEATURE_BRANCH_NAME_1
                         )?)?,
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?,
