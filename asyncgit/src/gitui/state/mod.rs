@@ -289,6 +289,7 @@ impl State {
         Ok(())
     }
 
+    /// Handles the result of an operation, logging errors to the command log.
     fn handle_result<T>(&mut self, result: Res<T>) -> Res<()> {
         match result {
             Ok(_) => Ok(()),
