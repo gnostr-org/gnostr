@@ -549,6 +549,7 @@ impl State {
         }
     }
 
+    ///
     pub fn confirm(&mut self, term: &mut Term, prompt: &'static str) -> Res<()> {
         self.hide_menu();
         self.prompt.set(PromptData {
@@ -662,9 +663,13 @@ fn write_child_output_to_log(
 
 type DefaultFn = Box<dyn Fn(&State) -> Option<String>>;
 
+///
 pub struct PromptParams {
+    ///
     pub prompt: &'static str,
+    ///
     pub create_default_value: DefaultFn,
+    ///
     pub hide_menu: bool,
 }
 
