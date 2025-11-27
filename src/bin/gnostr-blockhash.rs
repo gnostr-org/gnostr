@@ -149,7 +149,7 @@ async fn print_blockhash() {
     #[cfg(debug_assertions)]
     let start_millis = seconds * 1000 + start_subsec_millis;
     #[cfg(debug_assertions)]
-    println!("start_millis: {}", start_millis);
+    //println!("start_millis: {}", start_millis);
 
     let blockhash = gnostr::get_blockhash();
     print!("{}", blockhash.unwrap());
@@ -164,10 +164,10 @@ async fn print_blockhash() {
     let stop_subsec_millis = stop.subsec_millis() as u64;
     #[cfg(debug_assertions)]
     let stop_millis = seconds * 1000 + stop_subsec_millis;
-    #[cfg(debug_assertions)]
-    println!("\nstop_millis: {}", stop_millis);
-    #[cfg(debug_assertions)]
-    println!("\ndelta_millis: {}", stop_millis - start_millis);
+    //#[cfg(debug_assertions)]
+    //println!("\nstop_millis: {}", stop_millis);
+    //#[cfg(debug_assertions)]
+    //println!("\ndelta_millis: {}", stop_millis - start_millis);
 }
 
 /// fn main()
