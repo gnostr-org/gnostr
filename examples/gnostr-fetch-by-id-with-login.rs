@@ -32,8 +32,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    let req = gnostr::req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
+    gnostr::req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
 
-    println!("{:?}", req);
+    println!("{:?}", ());
     Ok(join_handle.await?)
 }

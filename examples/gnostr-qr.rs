@@ -8,7 +8,7 @@ fn main() {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
     if args.len() == 1 {
-        for arg in &args {
+        if let Some(arg) = args.first() {
             if arg == "-p" || arg == "--png" {
                 help();
                 std::process::exit(0);
@@ -19,7 +19,7 @@ fn main() {
             if arg == "-v" || arg == "--version" {
                 version();
             }
-            gnostr_qr::render(&arg, true);
+            gnostr_qr::render(arg, true);
             println!("{}", &arg);
             std::process::exit(0);
         }
@@ -39,13 +39,13 @@ fn main() {
             if arg == "-p" || arg == "--png" {
                 next = true;
             } else if next {
-                if arg.len() < 1 {
+                if arg.is_empty() {
                     gnostr_qr::help();
                 }
-                gnostr_qr::render(&arg, true);
+                gnostr_qr::render(arg, true);
                 println!("{}", &arg);
             } else {
-                gnostr_qr::render(&arg, false);
+                gnostr_qr::render(arg, false);
                 println!("{}", &arg);
             }
         }
