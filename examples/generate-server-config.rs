@@ -52,7 +52,7 @@ fn move_gnostr_gnit_key() -> io::Result<()> {
         PathBuf::from(&home_dir).join(".ssh").join(format!(
             "gnostr-gnit-key-{}-{}-{}",
             &weeble_sync().unwrap().to_string(),
-            blockheight_sync(),
+            blockheight_sync().unwrap(),
             &wobble_sync().unwrap().to_string()
         ));
 
