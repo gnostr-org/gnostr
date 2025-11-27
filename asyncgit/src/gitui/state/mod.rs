@@ -501,6 +501,7 @@ impl State {
         }
     }
 
+    /// Returns the currently selected revision (branch or commit ID) as an `Option<String>`.
     pub fn selected_rev(&self) -> Option<String> {
         match &self.screen().get_selected_item().target_data {
             Some(TargetData::Branch(branch)) => Some(branch.to_owned()),
@@ -509,6 +510,7 @@ impl State {
         }
     }
 
+    /// Displays a prompt to the user and returns their input. It can optionally hide the menu during the prompt.
     pub fn prompt(&mut self, term: &mut Term, params: &PromptParams) -> Res<String> {
         let prompt_text = if let Some(default) = (params.create_default_value)(self) {
             format!("{} (default {}):", params.prompt, default).into()
