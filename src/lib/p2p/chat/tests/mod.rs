@@ -6,11 +6,11 @@ mod tests {
     use git2::{Commit, Signature, Time};
     use std::borrow::Cow;
     use std::collections::HashSet;
-    
+    use std::result::Result; // Add this line
     use std::collections::HashMap;
     use std::path::Path;
     use serde_json::json;
-use crate::types::{Event, EventKind, KeySigner, PrivateKey};
+use crate::types::{Event, EventKind, KeySigner, PrivateKey, PreEvent, TagV3, Unixtime};
 use nostr_0_37_0::prelude::*;
     use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
     use crate::utils::{byte_array_to_hex_string, split_value_by_newline, value_to_string};
@@ -78,13 +78,13 @@ use nostr_0_37_0::prelude::*;
     #[test]
     fn test_generate_nostr_keys_from_commit_hash() {
         let commit_hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
-        let signer = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
+        let mut signer = generate_nostr_keys_from_commit_hash(commit_hash).unwrap();
         let expected_private_key_hex = format!("{:0>64}", commit_hash);
         let mut private_key = signer.export_private_key_in_hex("password", 1).unwrap().0;
         assert_eq!(private_key, expected_private_key_hex);
 
         let short_commit_hash = "12345";
-        let signer_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
+        let mut signer_short = generate_nostr_keys_from_commit_hash(short_commit_hash).unwrap();
         let expected_private_key_hex_short = format!("{:0>64}", short_commit_hash);
         let mut private_key_short = signer_short.export_private_key_in_hex("password", 1).unwrap().0;
         assert_eq!(private_key_short, expected_private_key_hex_short);
@@ -300,7 +300,7 @@ More details here.".to_string(), "some value".to_string()],
             signer: &KeySigner,
             content: &str,
             custom_tags: HashMap<String, Vec<String>>,
-        ) -> Result<(Event, PreEvent)> {
+        ) -> Result<(Event, PreEvent), anyhow::Error> {
             let mut tags = Vec::new();
             for (tag_name, tag_values) in custom_tags {
                 if !tag_values.is_empty() {
@@ -361,7 +361,7 @@ More details here.".to_string(), "some value".to_string()],
             signer: &KeySigner,
             content: &str,
             custom_tags: HashMap<String, Vec<String>>,
-        ) -> Result<(Event, PreEvent)> {
+        ) -> Result<(Event, PreEvent), anyhow::Error> {
             let mut tags = Vec::new();
             for (tag_name, tag_values) in custom_tags {
                 if !tag_values.is_empty() {

@@ -19,6 +19,8 @@ use std::net::TcpListener as StdTcpListener;
 //use actix_rt::net::TcpListener as ActixRtTcpListener;
 use async_std::net::TcpListener as AsyncStdTcpListener;
 
+use crate::types::{KeySigner, PrivateKey};
+
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
@@ -279,11 +281,12 @@ pub async fn async_find_available_port() -> u16 {
           .port()
 }
 
-pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
+pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<KeySigner> {
     let padded_commit_id = format!("{:0>64}", commit_id);
     info!("padded_commit_id:{:?}", padded_commit_id);
-    let keys = Keys::parse(&padded_commit_id);
-    Ok(keys.unwrap())
+    let private_key = PrivateKey::try_from_hex_string(&padded_commit_id)?;
+    let key_signer = KeySigner::from_private_key(private_key, "password", 1)?;
+    Ok(key_signer)
 }
 
 // Example usage (you would typically put this in a main function or a test)
