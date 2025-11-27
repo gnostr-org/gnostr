@@ -304,6 +304,7 @@ impl State {
         }
     }
 
+    /// Closes the currently active menu, reverting to the root menu.
     pub fn close_menu(&mut self) {
         self.pending_menu = root_menu(&self.config).map(PendingMenu::init)
     }
