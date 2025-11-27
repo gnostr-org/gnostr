@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use ratatui::prelude::*;
 
 use crate::gitui::{config::Config, items::TargetData, Res};

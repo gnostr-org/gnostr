@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::Res;
 use crate::gitui::gitui_error::Error;
 use ratatui::{backend::Backend, Terminal};

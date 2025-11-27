@@ -1,3 +1,6 @@
+#[allow(missing_docs)]`
+
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::borrow::Cow;
 use std::io::Read;
 use std::io::Write;
@@ -72,6 +75,8 @@ pub struct State {
 }
 
 impl State {
+    /// Creates a new `State` instance, initializing the application with the given repository, size, arguments, and configuration.
+    /// It sets up the initial screens, key bindings, and optionally a file watcher.
     pub fn create(
         repo: Rc<Repository>,
         size: Size,
@@ -126,6 +131,8 @@ impl State {
         Ok(state)
     }
 
+    /// Initializes the file watcher if enabled in the configuration and if untracked files are not hidden.
+    /// It returns `Some(FileWatcher)` if successful, or `None` if disabled or an error occurs.
     fn init_file_watcher(&mut self) -> Res<Option<FileWatcher>> {
         if !self.config.general.refresh_on_file_change.enabled {
             return Ok(None);
@@ -154,6 +161,7 @@ impl State {
         )
     }
 
+    /// Runs the main application loop, continuously updating the UI and handling events until the application quits.
     pub fn run(&mut self, term: &mut Term, max_tick_delay: Duration) -> Res<()> {
         while !self.quit {
             term.backend_mut().poll_event(max_tick_delay)?;
@@ -163,6 +171,8 @@ impl State {
         Ok(())
     }
 
+    /// Updates the application state based on events, file watcher changes, and pending commands.
+    /// It also triggers a redraw of the UI if necessary.
     pub fn update(&mut self, term: &mut Term) -> Res<()> {
         if term.backend_mut().poll_event(Duration::ZERO)? {
             let event = term.backend_mut().read_event()?;
@@ -186,6 +196,7 @@ impl State {
         Ok(())
     }
 
+    /// Handles a single `crossterm::event::Event`, processing key presses, resizes, and other events.
     pub fn handle_event(&mut self, term: &mut Term, event: Event) -> Res<()> {
         log::debug!("{:?}", event);
 
@@ -218,6 +229,7 @@ impl State {
         }
     }
 
+    /// Redraws the entire UI immediately if a screen is active.
     pub fn redraw_now(&mut self, term: &mut Term) -> Res<()> {
         if self.screens.last_mut().is_some() {
             term.draw(|frame| ui::ui(frame, self))
@@ -229,10 +241,12 @@ impl State {
         Ok(())
     }
 
+    /// Marks the UI as needing a redraw, which will be performed on the next `update` cycle.
     pub fn stage_redraw(&mut self) {
         self.needs_redraw = true;
     }
 
+    /// Handles a keyboard input event, matching it against registered key bindings.
     fn handle_key_input(&mut self, term: &mut Term, key: event::KeyEvent) -> Res<()> {
         let menu = match &self.pending_menu {
             None => Menu::Root,
@@ -260,6 +274,7 @@ impl State {
         Ok(())
     }
 
+    /// Handles a given `Op` (operation), executing its action based on the currently selected UI item.
     pub(crate) fn handle_op(&mut self, op: Op, term: &mut Term) -> Res<()> {
         let screen = self.screen();
         let target = if screen.is_empty() {
@@ -276,6 +291,7 @@ impl State {
         Ok(())
     }
 
+    /// Handles the result of an operation, logging errors to the command log.
     fn handle_result<T>(&mut self, result: Res<T>) -> Res<()> {
         match result {
             Ok(_) => Ok(()),
@@ -290,14 +306,17 @@ impl State {
         }
     }
 
+    /// Closes the currently active menu, reverting to the root menu.
     pub fn close_menu(&mut self) {
         self.pending_menu = root_menu(&self.config).map(PendingMenu::init)
     }
 
+    /// Returns a mutable reference to the currently active screen.
     pub fn screen_mut(&mut self) -> &mut Screen {
         self.screens.last_mut().expect("No screen")
     }
 
+    /// Returns an immutable reference to the currently active screen.
     pub fn screen(&self) -> &Screen {
         self.screens.last().expect("No screen")
     }
@@ -316,6 +335,7 @@ impl State {
 
     /// Runs a `Command` and handles its output.
     /// Will block awaiting its completion.
+    /// Runs a `Command` and handles its output, blocking until completion.
     pub fn run_cmd(&mut self, term: &mut Term, input: &[u8], cmd: Command) -> Res<()> {
         self.run_cmd_async(term, input, cmd)?;
         self.await_pending_cmd()?;
@@ -325,6 +345,7 @@ impl State {
 
     /// Runs a `Command` and handles its output asynchronously (if async commands are enabled).
     /// Will return `Ok(())` if one is already running.
+    /// Runs a `Command` asynchronously, returning immediately. If another command is already running, an error is returned.
     pub fn run_cmd_async(&mut self, term: &mut Term, input: &[u8], mut cmd: Command) -> Res<()> {
         cmd.env("CLICOLOR_FORCE", "1"); // No guarantee, but modern tools seem to implement this
 
@@ -361,6 +382,7 @@ impl State {
         Ok(())
     }
 
+    /// Awaits the completion of a pending asynchronous command.
     fn await_pending_cmd(&mut self) -> Res<()> {
         if let Some((child, _)) = &mut self.pending_cmd {
             child.wait().map_err(Error::CouldntAwaitCmd)?;
@@ -369,6 +391,7 @@ impl State {
     }
 
     /// Handles any pending_cmd in State without blocking. Returns `true` if a cmd was handled.
+    /// Checks and handles the completion of a pending asynchronous command without blocking.
     fn handle_pending_cmd(&mut self) -> Res<()> {
         let Some((ref mut child, ref mut log_rwlock)) = self.pending_cmd else {
             return Ok(());
@@ -389,6 +412,7 @@ impl State {
         Ok(())
     }
 
+    /// Runs a `Command` interactively, allowing user input and displaying output directly to the terminal.
     pub fn run_cmd_interactive(&mut self, term: &mut Term, mut cmd: Command) -> Res<()> {
         cmd.env("CLICOLOR_FORCE", "1"); // No guarantee, but modern tools seem to implement this
 
@@ -465,18 +489,21 @@ impl State {
         Ok(())
     }
 
+    /// Hides the currently active menu.
     pub fn hide_menu(&mut self) {
         if let Some(ref mut menu) = self.pending_menu {
             menu.is_hidden = true;
         }
     }
 
+    /// Unhides the currently active menu.
     pub fn unhide_menu(&mut self) {
         if let Some(ref mut menu) = self.pending_menu {
             menu.is_hidden = false;
         }
     }
 
+    /// Returns the currently selected revision (branch or commit ID) as an `Option<String>`.
     pub fn selected_rev(&self) -> Option<String> {
         match &self.screen().get_selected_item().target_data {
             Some(TargetData::Branch(branch)) => Some(branch.to_owned()),
@@ -485,6 +512,7 @@ impl State {
         }
     }
 
+    /// Displays a prompt to the user and returns their input. It can optionally hide the menu during the prompt.
     pub fn prompt(&mut self, term: &mut Term, params: &PromptParams) -> Res<String> {
         let prompt_text = if let Some(default) = (params.create_default_value)(self) {
             format!("{} (default {}):", params.prompt, default).into()

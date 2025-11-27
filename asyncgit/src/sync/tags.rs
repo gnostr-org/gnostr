@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     ops::Not,

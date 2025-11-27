@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::ffi::OsString;

@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::gitui::state::State;
 use ratatui::prelude::*;
 use ratatui::style::Stylize;

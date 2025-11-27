@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::RepositoryState;
 use scopetime::scope_time;
 

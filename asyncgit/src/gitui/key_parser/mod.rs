@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crossterm::event::{KeyCode, KeyModifiers};
 use nom::{
     branch::alt,

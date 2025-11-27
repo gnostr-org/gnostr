@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::{selected_rev, OpTrait};
 use crate::{
     gitui::items::TargetData,

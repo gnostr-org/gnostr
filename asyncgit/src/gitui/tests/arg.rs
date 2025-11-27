@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::gitui::menu::arg::{self, Arg};
 
 #[test]

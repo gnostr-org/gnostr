@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use super::OpTrait;
 use crate::{
     gitui::git::diff::PatchMode, gitui::items::TargetData, gitui::ops::Action, gitui::state::State,

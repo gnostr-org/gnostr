@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 mod bindings;
 /// pub mod cli;
 pub mod cli;

@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{BranchType, Commit, MergeOptions, Repository};
 use scopetime::scope_time;
 

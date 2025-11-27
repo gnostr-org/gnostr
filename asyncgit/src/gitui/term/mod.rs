@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::{gitui::gitui_error::Error, gitui::Res};
 use crossterm::{
     event::Event,

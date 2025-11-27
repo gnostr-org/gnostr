@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crate::gitui::config::Config;
 use crate::gitui::config::DiffHighlightConfig;
 use crate::gitui::config::SyntaxHighlightConfig;

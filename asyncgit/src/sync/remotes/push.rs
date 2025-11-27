@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use crossbeam_channel::Sender;
 use git2::{PackBuilderStage, PushOptions};
 use scopetime::scope_time;

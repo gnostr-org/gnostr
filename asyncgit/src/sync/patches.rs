@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use git2::{Diff, DiffLine, Patch, Repository};
 
 use super::diff::{get_diff_raw, DiffOptions, HunkHeader};

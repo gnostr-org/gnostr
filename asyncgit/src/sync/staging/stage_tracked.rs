@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::path::Path;
 
 use easy_cast::Conv;

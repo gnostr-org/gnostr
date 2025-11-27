@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{env, fs, path::Path, process::Command};
 
 use temp_dir::TempDir;

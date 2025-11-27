@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use gitu_diff::Status;
 
 use super::{confirm, Action, OpTrait};

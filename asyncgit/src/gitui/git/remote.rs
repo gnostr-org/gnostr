@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{ops::Deref, str};
 
 use git2::{Branch, Remote, Repository};

@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     cell::RefCell,
     path::{Path, PathBuf},

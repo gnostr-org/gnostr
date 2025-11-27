@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     cmp::Ordering,
     collections::{BinaryHeap, HashSet},

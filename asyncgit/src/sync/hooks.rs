@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 

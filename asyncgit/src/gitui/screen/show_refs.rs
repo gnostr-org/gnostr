@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{
     collections::{btree_map::Entry, BTreeMap},
     iter,

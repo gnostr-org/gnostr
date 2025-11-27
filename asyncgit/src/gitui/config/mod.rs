@@ -1,3 +1,4 @@
+//! <ADD A SHORT DESCRIPTION HERE>
 use std::{collections::BTreeMap, path::PathBuf};
 
 use crate::{gitui::gitui_error::Error, gitui::menu::Menu, gitui::ops::Op, gitui::Res};
