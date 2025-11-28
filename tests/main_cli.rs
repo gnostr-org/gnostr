@@ -607,6 +607,9 @@ mod tests {
         // Give the TUI a moment to initialize
         thread::sleep(Duration::from_secs(5));
 
+        // Capture the screenshot
+        let screenshot_path_result = screenshot::make_screenshot("test_run_tui_and_sleep_screenshot");
+
         // Terminate the child process gracefully
         child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
         child.wait().expect("Failed to wait for gnostr process");
@@ -614,10 +617,17 @@ mod tests {
         let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
         if log_file_path.exists() {
             let log_content = fs::read_to_string(log_file_path).unwrap();
-            println!("log_content for test_run_tui_and_sleep_copy: {}", log_content);
+            println!("log_content for test_run_tui_and_sleep_screenshot: {}", log_content);
         } else {
-            println!("log file not found for test_run_tui_and_sleep_copy");
+            println!("log file not found for test_run_tui_and_sleep_screenshot");
         }
+
+        // Assert that the screenshot was created
+        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        let screenshot_path = screenshot_path_result.unwrap();
+        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+        assert!(metadata.is_file(), "Screenshot is not a file");
+        assert!(metadata.len() > 0, "Screenshot file is empty");
 
         Ok(())
     }
