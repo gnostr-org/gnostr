@@ -108,11 +108,16 @@ mod tests {
                     let pids: Vec<&str> = pid_str.split('\n').collect();
                     for pid in pids {
                         if !pid.is_empty() {
+                            let signal = if $is_tui {
+                                "-SIGINT"
+                            } else {
+                                "-SIGTERM"
+                            };
                             Command::new("kill")
-                                .arg("-SIGINT")
+                                .arg(signal)
                                 .arg(pid)
                                 .spawn()
-                                .expect("Failed to send SIGINT to gnostr process");
+                                .expect("Failed to send signal to gnostr process");
                         }
                     }
                 }
