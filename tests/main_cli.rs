@@ -564,7 +564,6 @@ mod tests {
 
     #[test]
     #[serial]
-    #[cfg(target_os = "macos")]
     fn test_run_tui_and_sleep() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
@@ -595,7 +594,6 @@ mod tests {
 
     #[test]
     #[serial]
-    #[cfg(target_os = "macos")]
     fn test_run_tui_and_sleep_copy() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
