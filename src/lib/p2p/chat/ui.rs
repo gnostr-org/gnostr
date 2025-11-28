@@ -44,8 +44,8 @@ impl Drop for TerminalCleanup {
 
 #[derive(Default)]
 pub enum InputMode {
-    Normal,
     #[default]
+    Normal,
     Editing,
 }
 
