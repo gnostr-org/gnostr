@@ -29,6 +29,19 @@ use tui_input::Input;
 
 use crate::p2p::chat::msg;
 
+struct TerminalCleanup;
+
+impl Drop for TerminalCleanup {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(
+            io::stdout(),
+            LeaveAlternateScreen,
+            DisableMouseCapture
+        );
+    }
+}
+
 #[derive(Default)]
 pub enum InputMode {
     Normal,
@@ -85,6 +98,7 @@ impl App {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn Error>> {
+        let _cleanup_guard = TerminalCleanup;
         // setup terminal
         enable_raw_mode()?;
         let mut stdout = io::stdout();
@@ -94,15 +108,6 @@ impl App {
 
         // run app
         run_app(&mut terminal, self)?;
-
-        // restore terminal
-        disable_raw_mode()?;
-        execute!(
-            terminal.backend_mut(),
-            LeaveAlternateScreen,
-            DisableMouseCapture
-        )?;
-        terminal.show_cursor()?;
 
         Ok(())
     }
