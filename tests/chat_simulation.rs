@@ -10,9 +10,11 @@ mod tests {
     use test_utils::git::GitTestRepo;
     use test_utils::CliTester;
     use gnostr::utils::screenshot::make_screenshot;
+    use serial_test::serial;
 
     #[test]
     #[ignore]
+    #[serial]
     fn test_chat_simulation() -> Result<(), Box<dyn std::error::Error>> {
         // --- 1. Set up two separate git repositories ---
         let mut repo1 = GitTestRepo::new("main")?;
