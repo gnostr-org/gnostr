@@ -1,3 +1,5 @@
+.genkit
+tmpgit-**
 .gemini/tmp
 
 vendor/
