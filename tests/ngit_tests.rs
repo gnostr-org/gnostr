@@ -2,6 +2,7 @@ use gnostr::cli::NgitCommands;
 use gnostr::sub_commands::ngit::{ngit, NgitSubCommand};
 use gnostr::sub_commands::query::QuerySubCommand;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use serial_test::serial;
 use std::error::Error as StdError;
 
 // Helper function to create a dummy NgitSubCommand
@@ -15,6 +16,7 @@ fn create_dummy_ngit_subcommand(command: NgitCommands) -> NgitSubCommand {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_ngit_login_command() -> Result<(), Box<dyn StdError>> {
     let git_repo = test_utils::git::GitTestRepo::new("main")?;
     let mut p = test_utils::CliTester::new_from_dir(
@@ -35,6 +37,7 @@ async fn test_ngit_login_command() -> Result<(), Box<dyn StdError>> {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
     let mut git_repo = test_utils::git::GitTestRepo::new("main")?;
     git_repo.initial_commit()?;
@@ -56,6 +59,7 @@ async fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_ngit_send_command() -> Result<(), Box<dyn StdError>> {
     let mut git_repo = test_utils::git::GitTestRepo::new("main")?;
     git_repo.populate()?;
@@ -79,6 +83,7 @@ async fn test_ngit_send_command() -> Result<(), Box<dyn StdError>> {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
     let git_repo = test_utils::cli_tester_create_proposals()?;
 
@@ -89,6 +94,7 @@ async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
 }
 
 //#[tokio::test]
+#[serial]
 /*async */
 fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
     let (_originating_repo, test_repo) = 
@@ -111,6 +117,7 @@ fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
 }
 
 //#[tokio::test]
+#[serial]
 /*async */
 fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
     let (_originating_repo, test_repo) = 
@@ -134,6 +141,7 @@ fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_ngit_fetch_command() -> Result<(), Box<dyn StdError>> {
     let git_repo = test_utils::cli_tester_create_proposals()?;
 
@@ -144,6 +152,7 @@ async fn test_ngit_fetch_command() -> Result<(), Box<dyn StdError>> {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<(), Box<dyn StdError>> {
     let kinds_string = "1630,1632,1621,30618,1633,1631,1617,30617".to_string();
     let base_query_args = QuerySubCommand {

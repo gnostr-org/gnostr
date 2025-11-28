@@ -5,6 +5,7 @@ use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;
 use time::OffsetDateTime;
+use serial_test::serial;
 
 // Helper function to set up a temporary git repository for testing.
 fn setup_test_repo() -> (TempDir, Repository) {
@@ -50,6 +51,7 @@ fn setup_test_repo() -> (TempDir, Repository) {
 }
 
 #[test]
+#[serial]
 fn test_gitminer_new_ok() {
     let (_tmp_dir, repo) = setup_test_repo();
     let opts = Options {
@@ -71,6 +73,7 @@ fn test_gitminer_new_ok() {
 }
 
 #[test]
+#[serial]
 fn test_gitminer_new_fail_no_repo() {
     let tmp_dir = TempDir::new().unwrap();
     let repo_path = tmp_dir.path().join("non-existent-repo");
@@ -90,6 +93,7 @@ fn test_gitminer_new_fail_no_repo() {
 
 
 #[test]
+#[serial]
 //#[ignore]
 fn test_mine_commit_success() {
     println!("Setting up test repository...");

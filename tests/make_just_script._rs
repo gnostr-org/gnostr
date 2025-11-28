@@ -1,9 +1,11 @@
 use anyhow::Result;
+use serial_test::serial;
 use std::fs;
 use std::process::Command;
 use tempfile::tempdir;
 
 #[test]
+#[serial]
 fn test_makefile_generation() -> Result<()> {
     let temp_dir = tempdir()?;
     let temp_path = temp_dir.path();
@@ -40,6 +42,7 @@ fn test_makefile_generation() -> Result<()> {
 }
 
 #[test]
+#[serial]
 fn test_justfile_generation() -> Result<()> {
     let temp_dir = tempdir()?;
     let temp_path = temp_dir.path();

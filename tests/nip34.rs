@@ -1,8 +1,10 @@
 use std::error::Error;
+use serial_test::serial;
 
 use test_utils::CliTester;
 
 #[test]
+#[serial]
 fn test_nip34_repo_announcement() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -29,6 +31,7 @@ fn test_nip34_repo_announcement() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_repo_state() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -43,6 +46,7 @@ fn test_nip34_repo_state() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_patch() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -61,6 +65,7 @@ fn test_nip34_patch() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_pull_request() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -79,6 +84,7 @@ fn test_nip34_pull_request() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_issue() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -95,6 +101,7 @@ fn test_nip34_issue() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_status_open() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -110,6 +117,7 @@ fn test_nip34_status_open() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_status_applied() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -127,6 +135,7 @@ fn test_nip34_status_applied() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_status_closed() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -142,6 +151,7 @@ fn test_nip34_status_closed() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_status_draft() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",
@@ -157,6 +167,7 @@ fn test_nip34_status_draft() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+#[serial]
 fn test_nip34_repo_announcement_alternate() -> Result<(), Box<dyn Error>> {
     let mut p = CliTester::new([
         "nip34",

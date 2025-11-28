@@ -20,6 +20,7 @@ mod tests {
     use std::io::Write;
     use std::path::Path;
     use signal_child::Signalable;
+    use serial_test::serial;
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
@@ -69,6 +70,7 @@ mod tests {
     macro_rules! screenshot_test {
         ($name:ident, $subcommand:expr, $is_tui:expr) => {
             #[test]
+            #[serial]
             #[cfg(target_os = "macos")]
             fn $name() -> Result<(), Box<dyn Error>> {
                 let (_tmp_dir, repo) = setup_test_repo();

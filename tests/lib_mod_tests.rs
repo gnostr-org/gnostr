@@ -8,6 +8,7 @@ mod tests {
     
     
     use std::sync::Once;
+    use serial_test::serial;
 
     static INIT: Once = Once::new();
 
@@ -19,6 +20,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_dirs() {
         setup();
         let _project_dirs = get_dirs().unwrap();
@@ -27,6 +29,7 @@ mod tests {
     // These tests rely on external API calls, which can be flaky.
     // They primarily check if the functions return Ok and a non-empty string.
     #[test]
+    #[serial]
     fn test_get_relays_by_nip() {
         setup();
         let result = get_relays_by_nip("1");
@@ -35,6 +38,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_relays() {
         setup();
         let result = get_relays();
@@ -43,6 +47,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_relays_online() {
         setup();
         let result = get_relays_online();
@@ -51,6 +56,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_relays_public() {
         setup();
         let result = get_relays_public();
@@ -59,6 +65,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_relays_paid() {
         setup();
         let result = get_relays_paid();
@@ -67,6 +74,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_relays_offline() {
         setup();
         let result = get_relays_offline();
@@ -76,6 +84,7 @@ mod tests {
 
     // These tests rely on external API calls, which can be flaky.
     #[test]
+    #[serial]
     fn test_get_weeble_sync() {
         setup();
         let result = get_weeble_sync();
@@ -87,6 +96,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_wobble_sync() {
         setup();
         let result = get_wobble_sync();
@@ -97,6 +107,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_blockheight_sync() {
         setup();
         let result = get_blockheight_sync();
@@ -107,6 +118,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_blockhash() {
         setup();
         let result = get_blockhash();
@@ -115,6 +127,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_config_build_with_query() {
         setup();
         let args = vec!["program_name".to_string(), "test_query".to_string()];
@@ -123,6 +136,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_config_build_no_args_returns_err() {
         setup();
         let args = vec!["program_name".to_string()];

@@ -6,6 +6,7 @@ mod tests {
     use std::net::TcpListener;
     use std::process::Command;
     use gnostr::utils::find_available_port;
+    use serial_test::serial;
 
     const SERVER_TOML_TEMPLATE: &str = r#"
 name = "gnostr.org"
@@ -20,6 +21,7 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
 "#;
 
     #[test]
+    #[serial]
     #[should_panic]
     fn test_main_error_on_port_conflict() {
         let temp_dir = tempfile::tempdir().unwrap();
