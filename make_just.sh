@@ -157,6 +157,9 @@ cargo-test-types-nip_three_four: 	### 	cargo-test-types-nip34
 cargo-clippy-workspace: 	### 	cargo-clippy-workspace
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
 
+cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
+	cargo clippy --fix --workspace --all-targets --all-features -- -D warnings
+
 cargo-report: 	### 	cargo-report
 	@. \$(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1 -j \$(NPROC)
