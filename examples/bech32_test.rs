@@ -6,7 +6,7 @@ fn main() {
     println!("Decoding: {}", bech32_str);
     match PublicKey::from_bech32(bech32_str) {
         Ok(pubkey) => {
-            println!("Successfully decoded pubkey: {}", pubkey.to_string());
+            println!("Successfully decoded pubkey: {}", pubkey);
         }
         Err(e) => {
             println!("Failed to decode pubkey: {}", e);

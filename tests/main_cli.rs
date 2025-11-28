@@ -39,7 +39,7 @@ mod tests {
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
-    use gnostr_asyncgit::sync::RepoPath;
+    
     use git2::{Repository, Signature};
     use tempfile::TempDir;
 

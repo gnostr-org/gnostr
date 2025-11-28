@@ -125,7 +125,7 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Chat(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::chat::chat(
-                &mut sub_command_args.clone(),
+                &sub_command_args.clone(),
             )
             .await.map_err(|e| anyhow!("Error in chat subcommand: {}", e))
         }

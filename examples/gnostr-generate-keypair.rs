@@ -46,7 +46,7 @@ fn main() {
     #[cfg(debug_assertions)]
     //#[allow(unreachable_code)]
     #[cfg(debug_assertions)]
-    println!("");
+    println!();
 
     #[cfg(debug_assertions)]
     let iter = _buffer_max.chunks_exact(1);
@@ -87,7 +87,7 @@ fn main() {
     )
     .unwrap();
 
-    let verifying_key = signing_key_vec[2].verifying_key().clone();
+    let verifying_key = *signing_key_vec[2].verifying_key();
     let mut private_bech32 = private_key.as_bech32_string();
     let mut public_bech32 = public_key.as_bech32_string();
     println!(
