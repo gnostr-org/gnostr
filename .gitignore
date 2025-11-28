@@ -5,6 +5,9 @@ tmpgit-**
 vendor/
 test_screenshots/
 !test_screenshots/**.png
+!test_screenshots/*/**.png
+!test_screenshots/*/*/**.png
+!test_screenshots/*/*/*/**.png
 legit/src/empty/
 src/empty
 .gnostr/**.git
