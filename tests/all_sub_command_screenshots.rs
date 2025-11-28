@@ -116,8 +116,10 @@ mod tests {
                             Command::new("kill")
                                 .arg(signal)
                                 .arg(pid)
-                                .spawn()
+                                .status()
                                 .expect("Failed to send signal to gnostr process");
+                            // Give the TUI a moment to process the signal and restore the terminal
+                            thread::sleep(Duration::from_millis(500));
                         }
                     }
                 }
