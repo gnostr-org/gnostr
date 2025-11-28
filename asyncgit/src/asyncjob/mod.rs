@@ -2,7 +2,10 @@
 
 #![deny(clippy::expect_used)]
 
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex, RwLock,
+};
 
 use crossbeam_channel::Sender;
 
@@ -71,7 +74,7 @@ pub struct AsyncSingleJob<J: AsyncJob> {
     last: Arc<Mutex<Option<J>>>,
     progress: Arc<RwLock<J::Progress>>,
     sender: Sender<J::Notification>,
-    pending: Arc<Mutex<()>>,
+    pending: Arc<AtomicBool>,
 }
 
 impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
@@ -80,7 +83,7 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
         Self {
             next: Arc::new(Mutex::new(None)),
             last: Arc::new(Mutex::new(None)),
-            pending: Arc::new(Mutex::new(())),
+            pending: Arc::new(AtomicBool::new(false)),
             progress: Arc::new(RwLock::new(J::Progress::default())),
             sender,
         }
@@ -88,7 +91,7 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
 
     ///
     pub fn is_pending(&self) -> bool {
-        self.pending.try_lock().is_err()
+        self.pending.load(Ordering::SeqCst)
     }
 
     /// makes sure `next` is cleared and returns `true` if it actually
@@ -124,7 +127,16 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
     }
 
     fn check_for_job(&self) -> bool {
-        if self.is_pending() {
+        if self
+            .pending
+            .compare_exchange(
+                false,
+                true,
+                Ordering::SeqCst,
+                Ordering::Relaxed,
+            )
+            .is_err()
+        {
             return false;
         }
 
@@ -137,27 +149,26 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
             });
 
             return true;
+        } else {
+            self.pending.store(false, Ordering::SeqCst);
         }
 
         false
     }
 
     fn run_job(&self, mut task: J) -> Result<()> {
-        //limit the pending scope
-        {
-            let _pending = self.pending.lock()?;
+        let notification = task.run(RunParams {
+            progress: self.progress.clone(),
+            sender: self.sender.clone(),
+        })?;
 
-            let notification = task.run(RunParams {
-                progress: self.progress.clone(),
-                sender: self.sender.clone(),
-            })?;
-
-            if let Ok(mut last) = self.last.lock() {
-                *last = Some(task);
-            }
-
-            self.sender.send(notification)?;
+        if let Ok(mut last) = self.last.lock() {
+            *last = Some(task);
         }
+
+        self.sender.send(notification)?;
+
+        self.pending.store(false, Ordering::SeqCst);
 
         self.check_for_job();
 
