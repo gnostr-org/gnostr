@@ -97,6 +97,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_logging_flags_conflict() {
         // Test invalid combination: --debug and --logging
         let mut cmd_debug_logging = Command::new(cargo_bin("gnostr"));
@@ -128,6 +129,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_individual_logging_flags() -> Result<(), Box<dyn Error>> {
         let log_file_path = get_app_cache_path()?.join("gnostr.log");
         let _ = fs::remove_file(&log_file_path); // Clean up previous log file
@@ -160,6 +162,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_logging_flag_only() -> Result<(), Box<dyn Error>> {
         // Test valid: --logging only
         let mut cmd_logging_only = Command::new(cargo_bin("gnostr"));
@@ -172,6 +175,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_no_logging_flags() -> Result<(), Box<dyn Error>> {
         // Test valid: No logging flags
         let mut cmd_no_logging = Command::new(cargo_bin("gnostr"));
@@ -187,6 +191,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_hash_command_prints_hash_and_exits() -> Result<()> {
         let input_string = "test_string";
         let expected_hash = "4b641e9a923d1ea57e18fe41dcb543e2c4005c41ff210864a710b0fbb2654c11"; // SHA256 of "test_string"
@@ -203,6 +208,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_hash_command_with_debug_flag_prints_hash_and_exits() -> Result<()> {
         let log_file_path = get_app_cache_path()?.join("gnostr.log");
         let _ = fs::remove_file(&log_file_path); // Clean up previous log file
@@ -226,6 +232,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_subcommand_dispatch_tui_help() -> Result<()> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("tui").arg("--help");
@@ -240,6 +247,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_subcommand_dispatch_chat_help() -> Result<()> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("chat").arg("--help");
@@ -254,6 +262,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_legit_mine_default_command() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.workdir().unwrap().to_str().unwrap().to_string();
@@ -282,6 +291,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_main_with_gitdir_env_var() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
@@ -308,6 +318,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_main_with_gitdir_cli_arg() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
@@ -342,6 +353,7 @@ mod tests {
     //}
 
     #[test]
+    #[serial]
     #[cfg(target_os = "macos")]
     fn test_help_output_generates_screenshot() -> Result<(), Box<dyn Error>> {
         // First, verify the help command runs successfully.
@@ -366,6 +378,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     #[cfg(target_os = "macos")]
     fn test_run_gnostr_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
@@ -384,7 +397,7 @@ mod tests {
         let screenshot_path_result = screenshot::make_screenshot("gnostr_tui_run");
 
         // Terminate the child process gracefully
-        child.signal(signal_child::Signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
+        child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
         child.wait().expect("Failed to wait for gnostr process");
 
         // Assert that the screenshot was created
@@ -397,6 +410,7 @@ mod tests {
         Ok(())
     }
     #[test]
+    #[serial]
     #[cfg(target_os = "macos")]
     fn test_run_gnostr_chat_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
@@ -415,7 +429,7 @@ mod tests {
         let screenshot_path_result = screenshot::make_screenshot("gnostr_chat_run");
 
         // Terminate the child process gracefully
-        child.signal(signal_child::Signal::SIGINT).expect("Failed to send SIGINT to gnostr chat process");
+        child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr chat process");
         child.wait().expect("Failed to wait for gnostr chat process");
 
         // Assert that the screenshot was created
@@ -428,6 +442,7 @@ mod tests {
         Ok(())
     }
     #[test]
+    #[serial]
     #[cfg(target_os = "macos")]
     fn test_run_gnostr_ngit_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
@@ -446,7 +461,7 @@ mod tests {
         let screenshot_path_result = screenshot::make_screenshot("gnostr_ngit_run");
 
         // Terminate the child process gracefully
-        child.signal(signal_child::Signal::SIGINT).expect("Failed to send SIGINT to gnostr ngit process");
+        child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr ngit process");
         child.wait().expect("Failed to wait for gnostr ngit process");
 
         // Assert that the screenshot was created
@@ -460,6 +475,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_blockheight_flag_prints_a_number() -> Result<(), Box<dyn Error>> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("--blockheight");
@@ -470,6 +486,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_weeble_flag_prints_a_number() -> Result<(), Box<dyn Error>> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("--weeble");
@@ -480,6 +497,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_wobble_flag_prints_a_number() -> Result<(), Box<dyn Error>> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("--wobble");
@@ -523,6 +541,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_blockhash_flag_prints_a_hash() -> Result<(), Box<dyn Error>> {
         let mut cmd = Command::new(cargo_bin("gnostr"));
         cmd.arg("--blockhash");
