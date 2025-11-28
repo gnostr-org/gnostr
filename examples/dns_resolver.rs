@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let addresses_sys = dns_resolver_sys()?.clone();
-    if addresses_sys.len() < 1 {
+    if addresses_sys.is_empty() {
         println!("No IP addresses found for www.example.com.");
     } else {
         //println!("IP Addresses for www.example.com:");

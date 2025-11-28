@@ -12,7 +12,7 @@ pub fn handle_command() -> Result<bool, Box<dyn std::error::Error>> {
     let _ = args.next().unwrap();
     //gnostr-get-relays --nip <nip> ?
     if args.len() == 3 && args.peek().unwrap() == "--nip" || args.peek().unwrap() == "-n" {
-        let _ = String::from(args.next().unwrap());
+        let _ = args.next().unwrap();
         relays = get_relays_by_nip(&args.next().unwrap())?;
         output_type = args.next().expect("REASON");
         if output_type == "-h" || output_type == "--help" {
@@ -35,7 +35,7 @@ pub fn handle_command() -> Result<bool, Box<dyn std::error::Error>> {
         }
         std::process::exit(0);
     } else if args.len() == 2 && args.peek().unwrap() == "--nip" || args.peek().unwrap() == "-n" {
-        let _ = String::from(args.next().unwrap());
+        let _ = args.next().unwrap();
         relays = get_relays_by_nip(&args.next().unwrap())?;
         println!("{}", relays);
         std::process::exit(0);
@@ -101,7 +101,7 @@ fn get() {
     log::info!("{:?}", result.unwrap());
 }
 fn by_nip(nip: &str) {
-    let relays = get_relays_by_nip(&nip).clone();
+    let relays = get_relays_by_nip(nip).clone();
     print!("{}", relays.unwrap());
     std::process::exit(0);
 }
@@ -129,7 +129,7 @@ fn help(other: &str) {
     println!("       <json_relay_list>");
     println!("{} stripped [-s, --stripped]", crate_name.replace('_', "-"));
     println!("       <stripped_relay_list> <list_length>");
-    if other.len() > 0 {
+    if !other.is_empty() {
         print!("\n{} {} error!", crate_name, other);
     }
     process::exit(0);
