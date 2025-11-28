@@ -10,6 +10,26 @@ use gnostr_asyncgit::gitui;
 use std::path::Path;
 use std::process::Command;
 use which::which;
+use std::io;
+use crossterm::{
+    event::{DisableMouseCapture},
+    execute,
+    terminal::{disable_raw_mode, LeaveAlternateScreen},
+};
+
+
+struct TerminalCleanup;
+
+impl Drop for TerminalCleanup {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(
+            io::stdout(),
+            LeaveAlternateScreen,
+            DisableMouseCapture
+        );
+    }
+}
 
 #[cfg(not(test))]
 use crate::ssh::start;
@@ -150,6 +170,7 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
                 println!("{}", info);
             }
             GitCommands::Tui => {
+                let _cleanup_guard = TerminalCleanup;
                 let term = gnostr_asyncgit::gitui::term::backend();
                 let mut terminal = gnostr_asyncgit::gitui::term::Term::new(term)?;
                 gnostr_asyncgit::gitui::run(

@@ -35,6 +35,7 @@ mod tests {
     use std::time::Duration;
     use gnostr::utils::screenshot;
     use serial_test::serial;
+    use signal_child::Signalable;
 
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
@@ -382,8 +383,8 @@ mod tests {
         // Capture the screenshot
         let screenshot_path_result = screenshot::make_screenshot("gnostr_tui_run");
 
-        // Terminate the child process
-        child.kill().expect("Failed to kill gnostr process");
+        // Terminate the child process gracefully
+        child.signal(signal_child::Signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
         child.wait().expect("Failed to wait for gnostr process");
 
         // Assert that the screenshot was created
@@ -413,8 +414,8 @@ mod tests {
         // Capture the screenshot
         let screenshot_path_result = screenshot::make_screenshot("gnostr_chat_run");
 
-        // Terminate the child process
-        child.kill().expect("Failed to kill gnostr chat process");
+        // Terminate the child process gracefully
+        child.signal(signal_child::Signal::SIGINT).expect("Failed to send SIGINT to gnostr chat process");
         child.wait().expect("Failed to wait for gnostr chat process");
 
         // Assert that the screenshot was created
@@ -444,8 +445,8 @@ mod tests {
         // Capture the screenshot
         let screenshot_path_result = screenshot::make_screenshot("gnostr_ngit_run");
 
-        // Terminate the child process
-        child.kill().expect("Failed to kill gnostr ngit process");
+        // Terminate the child process gracefully
+        child.signal(signal_child::Signal::SIGINT).expect("Failed to send SIGINT to gnostr ngit process");
         child.wait().expect("Failed to wait for gnostr ngit process");
 
         // Assert that the screenshot was created
