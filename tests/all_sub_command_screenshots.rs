@@ -182,3 +182,12 @@ mod tests {
     // // screenshot_test!(test_list_run_screenshot, "list", true);
     // // screenshot_test!(test_pull_run_screenshot, "pull", true);
 }
+
+#[ctor::dtor]
+fn cleanup_terminal() {
+    let _ = crossterm::terminal::disable_raw_mode();
+    let _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::LeaveAlternateScreen
+    );
+}
