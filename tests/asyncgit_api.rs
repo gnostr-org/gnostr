@@ -5,6 +5,7 @@ use gnostr_asyncgit::sync::{
 };
 use gnostr_asyncgit::sync::status::{get_status, StatusItemType, StatusType};
 use git2::{Repository, Signature};
+use serial_test::serial;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
@@ -54,6 +55,7 @@ fn setup_test_repo() -> (TempDir, RepoPath) {
 }
 
 #[test]
+#[serial]
 fn test_get_head_commit() {
     let (_tmp_dir, repo_path) = setup_test_repo();
 
@@ -64,6 +66,7 @@ fn test_get_head_commit() {
 }
 
 #[test]
+#[serial]
 fn test_complex_git_workflow() {
     let (_tmp_dir, repo_path) = setup_test_repo();
     let repo_path_str = repo_path.gitpath();

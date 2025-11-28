@@ -6,8 +6,10 @@ mod tests {
     use gnostr::p2p::generate_close_peer_id;
     use libp2p::{Multiaddr, PeerId};
     use std::str::FromStr;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn test_network_kusama_bootnodes() {
         let bootnodes = Network::Kusama.bootnodes();
         assert!(!bootnodes.is_empty());
@@ -18,6 +20,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_network_polkadot_bootnodes() {
         let bootnodes = Network::Polkadot.bootnodes();
         assert!(!bootnodes.is_empty());
@@ -28,6 +31,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_network_ipfs_bootnodes() {
         let bootnodes = Network::Ipfs.bootnodes();
         assert!(!bootnodes.is_empty());
@@ -38,6 +42,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_network_ursa_bootnodes() {
         let bootnodes = Network::Ursa.bootnodes();
         assert!(!bootnodes.is_empty());
@@ -48,26 +53,31 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_network_kusama_protocol() {
         assert_eq!(Network::Kusama.protocol(), Some("/ksmcc3/kad".to_string()));
     }
 
     #[test]
+    #[serial]
     fn test_network_polkadot_protocol() {
         assert_eq!(Network::Polkadot.protocol(), Some("/dot/kad".to_string()));
     }
 
     #[test]
+    #[serial]
     fn test_network_ipfs_protocol() {
         assert_eq!(Network::Ipfs.protocol(), None);
     }
 
     #[test]
+    #[serial]
     fn test_network_ursa_protocol() {
         assert_eq!(Network::Ursa.protocol(), Some("/ursa/kad/0.0.1".to_string()));
     }
 
     #[test]
+    #[serial]
 	#[ignore]
     fn test_generate_ed25519_valid_keypair() {
         let keypair = generate_ed25519(Some(0));
@@ -77,6 +87,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
 	#[ignore]
     fn test_generate_ed25519_different_seeds_different_keypairs() {
         let keypair1 = generate_ed25519(Some(0));
@@ -85,6 +96,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_generate_close_peer_id_valid_peer_id() {
         let bytes = [0u8; 32];
         let peer_id = generate_close_peer_id(bytes, 32);
