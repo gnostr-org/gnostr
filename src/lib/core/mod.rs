@@ -1,3 +1,4 @@
+pub mod ui;
 use clap::Args;
 use gnostr_asyncgit::sync::RepoPath;
 use std::path::PathBuf;
