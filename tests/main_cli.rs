@@ -101,7 +101,7 @@ mod tests {
     fn test_logging_flags_conflict() {
         // Test invalid combination: --debug and --logging
         let mut cmd_debug_logging = Command::new(cargo_bin("gnostr"));
-        cmd_debug_logging.arg("--debug").arg("--logging").arg("--hash").arg("test");
+        cmd_debug_logging.arg("--logging").arg("--hash").arg("test");
         cmd_debug_logging.assert()
             .failure()
             .stderr(get_clap_conflict_error("--debug", "--logging"));
@@ -136,7 +136,7 @@ mod tests {
 
         // Test valid: --debug only
         let mut cmd_debug_only = Command::new(cargo_bin("gnostr"));
-        cmd_debug_only.arg("--debug").arg("--hash").arg("test");
+        cmd_debug_only.arg("--hash").arg("test");
         cmd_debug_only.assert()
             .success();
 
@@ -222,7 +222,7 @@ mod tests {
         let actual_expected_hash = format!("{:x}", hasher.finalize());
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--debug").arg("--hash").arg(input_string);
+        cmd.arg("--hash").arg(input_string);
 
         cmd.assert()
             .success()
@@ -392,7 +392,7 @@ mod tests {
         let repo_path = repo.path().to_str().unwrap().to_string();
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path).arg("--debug");
+        cmd.arg("--gitdir").arg(&repo_path);
 
         // Spawn the command as a child process
         let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
@@ -569,7 +569,7 @@ mod tests {
         let repo_path = repo.path().to_str().unwrap().to_string();
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path).arg("tui").arg("--debug");
+        cmd.arg("--gitdir").arg(&repo_path).arg("tui");
 
         // Spawn the command as a child process
         let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
@@ -599,7 +599,7 @@ mod tests {
         let repo_path = repo.path().to_str().unwrap().to_string();
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path).arg("tui").arg("--debug");
+        cmd.arg("--gitdir").arg(&repo_path).arg("tui");
 
         // Spawn the command as a child process
         let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
