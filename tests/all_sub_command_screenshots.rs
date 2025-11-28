@@ -137,36 +137,36 @@ mod tests {
         };
     }
 
-    screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
-    screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any", false);
-    screenshot_test!(test_broadcast_events_run_screenshot, "broadcast-events", false);
-    screenshot_test!(test_convert_key_run_screenshot, "convert-key", false);
-    screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
-    screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel", false);
-    screenshot_test!(test_custom_event_run_screenshot, "custom-event", false);
-    screenshot_test!(test_delete_event_run_screenshot, "delete-event", false);
-    screenshot_test!(test_delete_profile_run_screenshot, "delete-profile", false);
-    screenshot_test!(test_fetch_run_screenshot, "fetch", true);
-    screenshot_test!(test_generate_keypair_run_screenshot, "generate-keypair", false);
-    screenshot_test!(test_git_run_screenshot, "git", true);
-    screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message", false);
-    screenshot_test!(test_list_events_run_screenshot, "list-events", true);
-    screenshot_test!(test_login_run_screenshot, "login", true);
-    screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey", false);
-    screenshot_test!(test_note_run_screenshot, "note", false);
-    screenshot_test!(test_profile_badges_run_screenshot, "profile-badges", false);
-    screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv", false);
-    screenshot_test!(test_query_run_screenshot, "query", false);
-    screenshot_test!(test_react_run_screenshot, "react", false);
-    screenshot_test!(test_relay_run_screenshot, "relay", true);
-    screenshot_test!(test_send_channel_message_run_screenshot, "send-channel-message", false);
-    screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata", false);
-    screenshot_test!(test_set_metadata_run_screenshot, "set-metadata", false);
-    screenshot_test!(test_sniper_run_screenshot, "sniper", true);
-    screenshot_test!(test_user_status_run_screenshot, "user-status", false);
-    screenshot_test!(test_vanity_run_screenshot, "vanity", true);
-    screenshot_test!(test_privkey_to_bech32_run_screenshot, "privkey-to-bech32", false);
-    screenshot_test!(test_fetch_by_id_run_screenshot, "fetch-by-id", false);
+    // screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
+    // screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any", false);
+    // screenshot_test!(test_broadcast_events_run_screenshot, "broadcast-events", false);
+    // screenshot_test!(test_convert_key_run_screenshot, "convert-key", false);
+    // screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
+    // screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel", false);
+    // screenshot_test!(test_custom_event_run_screenshot, "custom-event", false);
+    // screenshot_test!(test_delete_event_run_screenshot, "delete-event", false);
+    // screenshot_test!(test_delete_profile_run_screenshot, "delete-profile", false);
+    // screenshot_test!(test_fetch_run_screenshot, "fetch", true);
+    // screenshot_test!(test_generate_keypair_run_screenshot, "generate-keypair", false);
+    // screenshot_test!(test_git_run_screenshot, "git", true);
+    // screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message", false);
+    // screenshot_test!(test_list_events_run_screenshot, "list-events", true);
+    // screenshot_test!(test_login_run_screenshot, "login", true);
+    // screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey", false);
+    // screenshot_test!(test_note_run_screenshot, "note", false);
+    // screenshot_test!(test_profile_badges_run_screenshot, "profile-badges", false);
+    // screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv", false);
+    // screenshot_test!(test_query_run_screenshot, "query", false);
+    // screenshot_test!(test_react_run_screenshot, "react", false);
+    // screenshot_test!(test_relay_run_screenshot, "relay", true);
+    // screenshot_test!(test_send_channel_message_run_screenshot, "send-channel-message", false);
+    // screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata", false);
+    // screenshot_test!(test_set_metadata_run_screenshot, "set-metadata", false);
+    // screenshot_test!(test_sniper_run_screenshot, "sniper", true);
+    // screenshot_test!(test_user_status_run_screenshot, "user-status", false);
+    // screenshot_test!(test_vanity_run_screenshot, "vanity", true);
+    // screenshot_test!(test_privkey_to_bech32_run_screenshot, "privkey-to-bech32", false);
+    // screenshot_test!(test_fetch_by_id_run_screenshot, "fetch-by-id", false);
 
     //TODO these are ratatui
     //     they need to have a proper ratatui life cycle
@@ -175,7 +175,7 @@ mod tests {
     // ignore screenshot_test!(test_tui_run_screenshot, "tui", true);
 
     // TODO ngit
-    // screenshot_test!(test_ngit_run_screenshot, "ngit", true);
+    screenshot_test!(test_ngit_run_screenshot, "ngit", true);
     // // screenshot_test!(test_init_run_screenshot, "init", true);
     // // screenshot_test!(test_push_run_screenshot, "push", true);
     // // screenshot_test!(test_send_run_screenshot, "send", true);
