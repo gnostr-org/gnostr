@@ -36,6 +36,7 @@ mod tests {
     use gnostr::utils::screenshot;
     use serial_test::serial;
     use signal_child::Signalable;
+    use gnostr::core::ui::TerminalCleanup;
 
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
@@ -481,6 +482,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_run_tui_and_sleep_screenshot() -> Result<(), Box<dyn Error>> {
+        let _cleanup_guard = TerminalCleanup;
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
 
