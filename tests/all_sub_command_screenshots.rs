@@ -67,7 +67,7 @@ mod tests {
     }
 
     macro_rules! screenshot_test {
-        ($name:ident, $subcommand:expr) => {
+        ($name:ident, $subcommand:expr, $is_tui:expr) => {
             #[test]
             #[cfg(target_os = "macos")]
             fn $name() -> Result<(), Box<dyn Error>> {
