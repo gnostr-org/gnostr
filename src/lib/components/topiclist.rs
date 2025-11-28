@@ -1034,8 +1034,8 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(2),       //0 topic
-                    Constraint::Length(2),       //1 squares
+                    Constraint::Min(2),       //0 topic
+                    Constraint::Min(2),       //1 squares
                     Constraint::Percentage(100), //2 tools view
                 ]
                 .as_ref(),
@@ -1044,7 +1044,7 @@ impl DrawableComponent for TopicList {
 
         let current_size = (
             area.width.saturating_sub(2),
-            area.height.saturating_sub(1) - right_chunks.get(1).unwrap().height - 2,
+            area.height.saturating_sub(1).saturating_sub(right_chunks.get(1).unwrap().height).saturating_sub(2),
         );
         self.current_size.set(Some(current_size));
 

@@ -561,4 +561,35 @@ mod tests {
             .stdout(predicates::str::is_match(r"^[a-f0-9]{64}$").unwrap());
         Ok(())
     }
+
+    #[test]
+    #[serial]
+    #[cfg(target_os = "macos")]
+    fn test_run_tui_and_sleep() -> Result<(), Box<dyn Error>> {
+        let (_tmp_dir, repo) = setup_test_repo();
+        let repo_path = repo.path().to_str().unwrap().to_string();
+
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--gitdir").arg(&repo_path).arg("tui").arg("--debug");
+
+        // Spawn the command as a child process
+        let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
+
+        // Give the TUI a moment to initialize
+        thread::sleep(Duration::from_secs(5));
+
+        // Terminate the child process gracefully
+        child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
+        child.wait().expect("Failed to wait for gnostr process");
+
+        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
+        if log_file_path.exists() {
+            let log_content = fs::read_to_string(log_file_path).unwrap();
+            println!("log_content for test_run_tui_and_sleep: {}", log_content);
+        } else {
+            println!("log file not found for test_run_tui_and_sleep");
+        }
+
+        Ok(())
+    }
 }
