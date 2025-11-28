@@ -329,9 +329,16 @@ mod tests {
 
         cmd.arg("--debug");
 
+        // A small delay to ensure logs are flushed
+        thread::sleep(Duration::from_secs(2));
+
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
             .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: \"{}\"", repo_path)));
+
+        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
+        let log_content = fs::read_to_string(log_file_path).unwrap();
+        println!("log_content: {}", log_content);
 
         Ok(())
     }
@@ -385,7 +392,7 @@ mod tests {
         let repo_path = repo.path().to_str().unwrap().to_string();
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path);
+        cmd.arg("--gitdir").arg(&repo_path).arg("--debug");
 
         // Spawn the command as a child process
         let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
@@ -399,6 +406,10 @@ mod tests {
         // Terminate the child process gracefully
         child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
         child.wait().expect("Failed to wait for gnostr process");
+
+        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
+        let log_content = fs::read_to_string(log_file_path).unwrap();
+        println!("log_content: {}", log_content);
 
         // Assert that the screenshot was created
         assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
