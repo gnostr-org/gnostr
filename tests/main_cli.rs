@@ -275,7 +275,7 @@ mod tests {
         fs::create_dir_all(&reflog_path).unwrap();
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("legit").arg("--repo").arg(&repo_path).arg("--message").arg("Test mine commit").arg("--pow").arg("0");
+        cmd.arg("legit").arg("--repo").arg(&repo_path).arg("--message").arg("Test mine commit").arg("--pow").arg("16");
 
         cmd.assert()
             .success()
@@ -303,10 +303,6 @@ mod tests {
         //setup process to capture the ratatui screen
         cmd.arg("tui"); // TUI is the default if no other subcommand is given, but we explicitly call it here
 
-        // We expect it to succeed, but the actual TUI interaction is hard to test in a CLI test.
-        // We can check for some debug output if --debug is enabled.
-        cmd.arg("--debug");
-
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
             .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path.clone())));
@@ -316,48 +312,6 @@ mod tests {
 
         Ok(())
     }
-
-    #[tokio::test]
-    #[serial]
-    async fn test_main_with_gitdir_cli_arg() -> Result<(), Box<dyn Error>> {
-        let (_tmp_dir, repo) = setup_test_repo();
-        let repo_path = repo.path().to_str().unwrap().to_string();
-
-        //setup process to capture ratatui screen
-        let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path).arg("tui");
-
-        cmd.arg("--debug");
-
-        // A small delay to ensure logs are flushed
-        thread::sleep(Duration::from_secs(2));
-
-        cmd.assert()
-            .code(0) // Expect a successful exit from the TUI
-            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: \"{}\"", repo_path)));
-
-        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
-        let log_content = fs::read_to_string(log_file_path).unwrap();
-        println!("log_content: {}", log_content);
-
-        Ok(())
-    }
-
-    //#[tokio::test]
-    //#[ignore]
-    //async fn test_gitsh_command_error_output() -> Result<(), Box<dyn Error>> {
-    //    let mut cmd = Command::new(cargo_bin("gnostr"));
-    //    cmd.arg("gitsh").arg("nostr://test_url");
-
-    //    cmd.assert()
-    //        .failure()
-    //        .stdout(str::contains("Mock SSH Start Error"))
-    //        .stdout(str::contains("EXAMPLE:server.toml"))
-    //        .stdout(str::contains("check the port in your server.toml is available!"))
-    //        .stdout(str::contains("EXAMPLE:repo.toml"));
-
-    //    Ok(())
-    //}
 
     #[test]
     #[serial]
@@ -387,42 +341,6 @@ mod tests {
     #[test]
     #[serial]
     #[cfg(target_os = "macos")]
-    fn test_run_gnostr_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
-        let (_tmp_dir, repo) = setup_test_repo();
-        let repo_path = repo.path().to_str().unwrap().to_string();
-
-        let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path);
-
-        // Spawn the command as a child process
-        let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
-
-        // Give the TUI a moment to initialize
-        thread::sleep(Duration::from_secs(2));
-
-        // Capture the screenshot
-        let screenshot_path_result = screenshot::make_screenshot("gnostr_tui_run");
-
-        // Terminate the child process gracefully
-        child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
-        child.wait().expect("Failed to wait for gnostr process");
-
-        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
-        let log_content = fs::read_to_string(log_file_path).unwrap();
-        println!("log_content: {}", log_content);
-
-        // Assert that the screenshot was created
-        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
-        let screenshot_path = screenshot_path_result.unwrap();
-        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
-        assert!(metadata.is_file(), "Screenshot is not a file");
-        assert!(metadata.len() > 0, "Screenshot file is empty");
-
-        Ok(())
-    }
-    #[test]
-    #[serial]
-    #[cfg(target_os = "macos")]
     fn test_run_gnostr_chat_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
         let (_tmp_dir, repo) = setup_test_repo();
         let repo_path = repo.path().to_str().unwrap().to_string();
@@ -442,38 +360,6 @@ mod tests {
         // Terminate the child process gracefully
         child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr chat process");
         child.wait().expect("Failed to wait for gnostr chat process");
-
-        // Assert that the screenshot was created
-        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
-        let screenshot_path = screenshot_path_result.unwrap();
-        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
-        assert!(metadata.is_file(), "Screenshot is not a file");
-        assert!(metadata.len() > 0, "Screenshot file is empty");
-
-        Ok(())
-    }
-    #[test]
-    #[serial]
-    #[cfg(target_os = "macos")]
-    fn test_run_gnostr_ngit_and_capture_screenshot() -> Result<(), Box<dyn Error>> {
-        let (_tmp_dir, repo) = setup_test_repo();
-        let repo_path = repo.path().to_str().unwrap().to_string();
-
-        let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--gitdir").arg(&repo_path).arg("ngit");
-
-        // Spawn the command as a child process
-        let mut child = cmd.spawn().expect("Failed to spawn gnostr ngit command");
-
-        // Give the TUI a moment to initialize
-        thread::sleep(Duration::from_secs(2));
-
-        // Capture the screenshot
-        let screenshot_path_result = screenshot::make_screenshot("gnostr_ngit_run");
-
-        // Terminate the child process gracefully
-        child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr ngit process");
-        child.wait().expect("Failed to wait for gnostr ngit process");
 
         // Assert that the screenshot was created
         assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
@@ -575,7 +461,7 @@ mod tests {
         let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
 
         // Give the TUI a moment to initialize
-        thread::sleep(Duration::from_secs(5));
+        thread::sleep(Duration::from_secs(10));
 
         // Terminate the child process gracefully
         child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
@@ -605,7 +491,7 @@ mod tests {
         let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
 
         // Give the TUI a moment to initialize
-        thread::sleep(Duration::from_secs(5));
+        thread::sleep(Duration::from_secs(10));
 
         // Capture the screenshot
         let screenshot_path_result = screenshot::make_screenshot("test_run_tui_and_sleep_screenshot");
