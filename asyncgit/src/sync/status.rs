@@ -281,20 +281,59 @@ pub fn get_status(
 	Ok(res)
 }
 
+/// discard all changes in the working directory
+pub fn discard_status(repo_path: &RepoPath) -> Result<bool> {
+	let repo = repo(repo_path)?;
+	let commit = repo.head()?.peel_to_commit()?;
+
+	repo.reset(commit.as_object(), git2::ResetType::Hard, None)?;
+
+	Ok(true)
+}
+
 #[cfg(test)]
 mod tests {
-	use std::{fs::File, io::Write, path::Path};
-
-	use tempfile::TempDir;
-
+	use super::*;
 	use crate::{
 		sync::{
+			commit, stage_add_file,
 			status::{get_status, StatusType},
-			tests::repo_init_bare,
+			tests::{repo_init, repo_init_bare},
 			RepoPath,
 		},
 		StatusItem, StatusItemType,
 	};
+	use std::{fs::File, io::Write, path::Path};
+	use tempfile::TempDir;
+
+	#[test]
+	fn test_discard_status() {
+		let file_path = Path::new("README.md");
+		let (_td, repo) = repo_init().unwrap();
+		let root = repo.path().parent().unwrap();
+		let repo_path: &RepoPath =
+			&root.as_os_str().to_str().unwrap().into();
+
+		let mut file = File::create(root.join(file_path)).unwrap();
+
+		// initial commit
+		stage_add_file(repo_path, file_path).unwrap();
+		commit(repo_path, "commit msg").unwrap();
+
+		writeln!(file, "Test for discard_status").unwrap();
+
+		let statuses =
+			get_status(repo_path, StatusType::WorkingDir, None)
+				.unwrap();
+		assert_eq!(statuses.len(), 1);
+
+		discard_status(repo_path).unwrap();
+
+		let statuses =
+			get_status(repo_path, StatusType::WorkingDir, None)
+				.unwrap();
+		assert_eq!(statuses.len(), 0);
+	}
 
 	#[test]
 	fn test_get_status_with_workdir() {
