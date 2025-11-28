@@ -67,18 +67,28 @@ mod tests {
     }
 
     macro_rules! screenshot_test {
-        ($name:ident, $subcommand:expr, $is_tui:expr) => {
+        ($name:ident, $subcommand:expr) => {
             #[test]
-            #[cfg(all(unix, not(feature = "sandboxing")))]
+            #[cfg(target_os = "macos")]
             fn $name() -> Result<(), Box<dyn Error>> {
                 let (_tmp_dir, repo) = setup_test_repo();
                 let repo_path = repo.path().to_str().unwrap().to_string();
+                let gnostr_bin = cargo_bin("gnostr");
 
-                let mut cmd = Command::new(cargo_bin("gnostr"));
-                cmd.arg("--gitdir").arg(&repo_path).arg($subcommand);
+                // Command to run gnostr in a new terminal window
+                let mut cmd = Command::new("open");
+                cmd.args([
+                    "-a",
+                    "Terminal",
+                    gnostr_bin.to_str().unwrap(),
+                    "--args",
+                    "--gitdir",
+                    &repo_path,
+                    $subcommand,
+                ]);
 
-                // Spawn the command as a child process
-                let mut child = cmd.spawn().expect("Failed to spawn gnostr command");
+                // Spawn the command
+                let mut child = cmd.spawn().expect("Failed to spawn gnostr command in new terminal");
 
                 // Give the TUI a moment to initialize
                 thread::sleep(Duration::from_secs(2));
@@ -86,11 +96,29 @@ mod tests {
                 // Capture the screenshot
                 let screenshot_path_result = screenshot::make_screenshot(concat!("gnostr_", $subcommand, "_run"));
 
-                // Terminate the child process
-                if $is_tui {
-                    child.interrupt().expect("Failed to send SIGINT to gnostr process");
+                // Find and kill the gnostr process
+                let output = Command::new("pgrep")
+                    .arg("-f")
+                    .arg(format!("gnostr --gitdir {}", repo_path))
+                    .output()
+                    .expect("Failed to run pgrep");
+
+                if !output.stdout.is_empty() {
+                    let pid_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    let pids: Vec<&str> = pid_str.split('\n').collect();
+                    for pid in pids {
+                        if !pid.is_empty() {
+                            Command::new("kill")
+                                .arg("-SIGINT")
+                                .arg(pid)
+                                .spawn()
+                                .expect("Failed to send SIGINT to gnostr process");
+                        }
+                    }
                 }
-                child.wait().expect("Failed to wait for gnostr process");
+
+                child.wait().expect("Failed to wait for open command");
+
 
                 // Assert that the screenshot was created
                 assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
