@@ -19,6 +19,7 @@ mod tests {
     use git2::{Repository, Signature};
     use std::io::Write;
     use std::path::Path;
+    use signal_child::Signalable;
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
@@ -66,9 +67,9 @@ mod tests {
     }
 
     macro_rules! screenshot_test {
-        ($name:ident, $subcommand:expr) => {
+        ($name:ident, $subcommand:expr, $is_tui:expr) => {
             #[test]
-            #[cfg(target_os = "macos")]
+            #[cfg(all(unix, not(feature = "sandboxing")))]
             fn $name() -> Result<(), Box<dyn Error>> {
                 let (_tmp_dir, repo) = setup_test_repo();
                 let repo_path = repo.path().to_str().unwrap().to_string();
@@ -86,7 +87,9 @@ mod tests {
                 let screenshot_path_result = screenshot::make_screenshot(concat!("gnostr_", $subcommand, "_run"));
 
                 // Terminate the child process
-                child.kill().expect("Failed to kill gnostr process");
+                if $is_tui {
+                    child.interrupt().expect("Failed to send SIGINT to gnostr process");
+                }
                 child.wait().expect("Failed to wait for gnostr process");
 
                 // Assert that the screenshot was created
@@ -101,48 +104,48 @@ mod tests {
         };
     }
 
-    screenshot_test!(test_award_badge_run_screenshot, "award-badge");
-    screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any");
-    screenshot_test!(test_broadcast_events_run_screenshot, "broadcast-events");
-    screenshot_test!(test_convert_key_run_screenshot, "convert-key");
-    screenshot_test!(test_create_badge_run_screenshot, "create-badge");
-    screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel");
-    screenshot_test!(test_custom_event_run_screenshot, "custom-event");
-    screenshot_test!(test_delete_event_run_screenshot, "delete-event");
-    screenshot_test!(test_delete_profile_run_screenshot, "delete-profile");
-    screenshot_test!(test_fetch_run_screenshot, "fetch");
-    screenshot_test!(test_generate_keypair_run_screenshot, "generate-keypair");
-    screenshot_test!(test_git_run_screenshot, "git");
-    screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message");
-    screenshot_test!(test_list_events_run_screenshot, "list-events");
-    screenshot_test!(test_login_run_screenshot, "login");
-    screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey");
-    screenshot_test!(test_note_run_screenshot, "note");
-    screenshot_test!(test_profile_badges_run_screenshot, "profile-badges");
-    screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv");
-    screenshot_test!(test_query_run_screenshot, "query");
-    screenshot_test!(test_react_run_screenshot, "react");
-    screenshot_test!(test_relay_run_screenshot, "relay");
-    screenshot_test!(test_send_channel_message_run_screenshot, "send-channel-message");
-    screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata");
-    screenshot_test!(test_set_metadata_run_screenshot, "set-metadata");
-    screenshot_test!(test_sniper_run_screenshot, "sniper");
-    screenshot_test!(test_user_status_run_screenshot, "user-status");
-    screenshot_test!(test_vanity_run_screenshot, "vanity");
-    screenshot_test!(test_privkey_to_bech32_run_screenshot, "privkey-to-bech32");
-    screenshot_test!(test_fetch_by_id_run_screenshot, "fetch-by-id");
+    screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
+    screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any", false);
+    screenshot_test!(test_broadcast_events_run_screenshot, "broadcast-events", false);
+    screenshot_test!(test_convert_key_run_screenshot, "convert-key", false);
+    screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
+    screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel", false);
+    screenshot_test!(test_custom_event_run_screenshot, "custom-event", false);
+    screenshot_test!(test_delete_event_run_screenshot, "delete-event", false);
+    screenshot_test!(test_delete_profile_run_screenshot, "delete-profile", false);
+    screenshot_test!(test_fetch_run_screenshot, "fetch", true);
+    screenshot_test!(test_generate_keypair_run_screenshot, "generate-keypair", false);
+    screenshot_test!(test_git_run_screenshot, "git", true);
+    screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message", false);
+    screenshot_test!(test_list_events_run_screenshot, "list-events", true);
+    screenshot_test!(test_login_run_screenshot, "login", true);
+    screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey", false);
+    screenshot_test!(test_note_run_screenshot, "note", false);
+    screenshot_test!(test_profile_badges_run_screenshot, "profile-badges", false);
+    screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv", false);
+    screenshot_test!(test_query_run_screenshot, "query", false);
+    screenshot_test!(test_react_run_screenshot, "react", false);
+    screenshot_test!(test_relay_run_screenshot, "relay", true);
+    screenshot_test!(test_send_channel_message_run_screenshot, "send-channel-message", false);
+    screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata", false);
+    screenshot_test!(test_set_metadata_run_screenshot, "set-metadata", false);
+    screenshot_test!(test_sniper_run_screenshot, "sniper", true);
+    screenshot_test!(test_user_status_run_screenshot, "user-status", false);
+    screenshot_test!(test_vanity_run_screenshot, "vanity", true);
+    screenshot_test!(test_privkey_to_bech32_run_screenshot, "privkey-to-bech32", false);
+    screenshot_test!(test_fetch_by_id_run_screenshot, "fetch-by-id", false);
 
     //TODO these are ratatui
     //     they need to have a proper ratatui life cycle
     //     and restore terminal when finished
-    // screenshot_test!(test_chat_run_screenshot, "chat");
-    // ignore screenshot_test!(test_tui_run_screenshot, "tui");
+    screenshot_test!(test_chat_run_screenshot, "chat", true);
+    // ignore screenshot_test!(test_tui_run_screenshot, "tui", true);
 
     // TODO ngit
-    // screenshot_test!(test_ngit_run_screenshot, "ngit");
-    // // screenshot_test!(test_init_run_screenshot, "init");
-    // // screenshot_test!(test_push_run_screenshot, "push");
-    // // screenshot_test!(test_send_run_screenshot, "send");
-    // // screenshot_test!(test_list_run_screenshot, "list");
-    // // screenshot_test!(test_pull_run_screenshot, "pull");
+    // screenshot_test!(test_ngit_run_screenshot, "ngit", true);
+    // // screenshot_test!(test_init_run_screenshot, "init", true);
+    // // screenshot_test!(test_push_run_screenshot, "push", true);
+    // // screenshot_test!(test_send_run_screenshot, "send", true);
+    // // screenshot_test!(test_list_run_screenshot, "list", true);
+    // // screenshot_test!(test_pull_run_screenshot, "pull", true);
 }
