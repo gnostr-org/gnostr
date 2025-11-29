@@ -13,8 +13,6 @@ use libp2p::kad::{
 use libp2p::ping;
 use libp2p::relay;
 use libp2p::{
-    core,
-    dns,
     noise,
     swarm::{NetworkBehaviour},
     tcp,
