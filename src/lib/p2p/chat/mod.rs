@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
-use git2::{Commit, ObjectType, Oid, Repository};
+use git2::{ObjectType, Repository};
 use crate::legit::command::create_event;
 use crate::queue::InternalEvent;
 use gnostr_asyncgit::sync::commit::SerializableCommit;
