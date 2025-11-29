@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Context, Result};
-use gnostr_relay::App;
 use std::path::PathBuf;
 use tokio::process::Command;
 use tracing::info;
