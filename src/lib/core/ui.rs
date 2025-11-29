@@ -32,6 +32,7 @@ pub struct TerminalCleanup;
 
 impl Drop for TerminalCleanup {
     fn drop(&mut self) {
+        println!("TerminalCleanup::drop called - restoring terminal");
         let _ = disable_raw_mode();
         let _ = execute!(
             io::stdout(),
