@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use cbc::{Decryptor, Encryptor};
 use cbc::cipher::{KeyInit, KeyIvInit, BlockEncryptMut, BlockDecryptMut};
 use block_padding::Pkcs7;
-use secp256k1::{ecdh, PublicKey, Secp256k1, SecretKey, XOnlyPublicKey};
+use secp256k1::{ecdh, Secp256k1, SecretKey, XOnlyPublicKey};
 use rand::RngCore;
 
 type Aes256CbcEncryptor = Encryptor<Aes256>;
