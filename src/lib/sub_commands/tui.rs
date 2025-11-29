@@ -448,7 +448,7 @@ pub async fn run_app(
                     .unwrap()
                     .as_secs();
                 path.push(format!("screenshot-{}.png", timestamp));
-                crate::utils::screenshot::make_screenshot(path.to_str().unwrap()).unwrap();
+                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap()).unwrap();
                 last_screenshot = Instant::now();
             }
         }
