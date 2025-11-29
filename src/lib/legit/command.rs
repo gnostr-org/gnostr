@@ -28,7 +28,7 @@ use gnostr_legit::{gitminer, gitminer::Gitminer};
 pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
 
     let _start = SystemTime::now();
-    let system_time = SystemTime::now();
+    let _system_time = SystemTime::now();
 
     let repo = Repository::open(&opts.repo).expect("Couldn't open repository");
 
