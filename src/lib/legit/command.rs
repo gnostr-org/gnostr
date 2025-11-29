@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::{io, time::{Duration, SystemTime}, error::Error as StdError};
 use tracing::{debug, info, error};
 use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
-use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
+use crate::utils::{parse_json, split_json_string};
 use std::process::Command;
 use gnostr_legit::{gitminer, gitminer::Gitminer};
 use std::any::type_name;
