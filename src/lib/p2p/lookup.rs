@@ -2,7 +2,6 @@ use ansi_term::Style;
 use futures::future::TryFutureExt;
 use futures::stream::StreamExt;
 use libp2p::core::transport::Transport;
-use libp2p::core::upgrade;
 use libp2p::core::ConnectedPoint;
 use libp2p::identify;
 use libp2p::identity::Keypair;
