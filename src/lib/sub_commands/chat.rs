@@ -8,10 +8,6 @@ use crate::p2p::chat::*;
  //migrate carefully
 use anyhow::Result;
 
-
-
-use nostr_sdk_0_37_0::Keys;
-
 use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
