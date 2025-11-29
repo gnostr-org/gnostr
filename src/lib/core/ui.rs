@@ -233,12 +233,12 @@ fn ui(f: &mut Frame, app: &App) {
 
         InputMode::Editing => {
             // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-            f.set_cursor(
+            f.set_cursor_position((
                 // Put cursor past the end of the input text
                 chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                 // Move one line down, from the border to the input line
                 chunks[1].y + 1,
-            )
+            ));
         }
     }
 
