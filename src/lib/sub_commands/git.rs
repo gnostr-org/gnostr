@@ -30,9 +30,6 @@ impl Drop for TerminalCleanup {
     }
 }
 
-#[cfg(not(test))]
-
-#[cfg(test)]
 mod mock_ssh {
     pub async fn start() -> Result<(), Box<dyn std::error::Error>> {
         // In test environment, always return an error for now

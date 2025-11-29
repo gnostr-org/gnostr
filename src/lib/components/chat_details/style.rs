@@ -8,7 +8,6 @@ pub enum Detail {
     Author,
     Date,
     Committer,
-    Sha,
     Message,
 }
 
@@ -25,11 +24,6 @@ pub fn style_detail<'a>(theme: &'a SharedTheme, field: &Detail) -> Span<'a> {
         ),
         Detail::Committer => Span::styled(
             Cow::from(strings::commit::chat_details_committer()),
-            theme.text(false, false),
-        ),
-        //
-        Detail::Sha => Span::styled(
-            Cow::from(strings::commit::chat_details_sha()),
             theme.text(false, false),
         ),
         Detail::Message => Span::styled(

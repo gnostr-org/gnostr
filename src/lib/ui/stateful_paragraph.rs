@@ -94,12 +94,13 @@ impl<'a> StatefulParagraph<'a> {
 
     // pub const fn style(mut self, style: Style) -> Self {
     // 	self.style = style;
-    // 	self
+    // 	sself
     // }
 
     // pub const fn alignment(mut self, alignment: Alignment) -> Self
-    // { 	self.alignment = alignment;
-    // 	self
+    // {
+    // 	sself.alignment = alignment;
+    // 	sself
     // }
 }
 
@@ -147,8 +148,7 @@ impl StatefulWidget for StatefulParagraph<'_> {
             if !end_reached && y >= state.scroll.y {
                 let mut x = get_line_offset(current_line_width, text_area.width, self.alignment);
                 for StyledGrapheme { symbol, style } in current_line {
-                    buf.get_mut(text_area.left() + x, text_area.top() + y - state.scroll.y)
-                        .set_symbol(if symbol.is_empty() {
+                    buf.cell_mut((text_area.left() + x, text_area.top() + y - state.scroll.y)).expect("Failed to get cell").set_symbol(if symbol.is_empty() {
                             // If the symbol is empty, the last char which
                             // rendered last time will leave on the
                             // line. It's a quick fix.

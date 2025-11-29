@@ -31,7 +31,7 @@ impl Delegation {
         );
         let mut hasher = Sha256::new();
         hasher.update(message.as_bytes());
-        let message_hash = Message::from_slice(&hasher.finalize()).unwrap();
+        let message_hash = Message::from_digest_slice(&hasher.finalize()).unwrap();
         let signature = secp.sign_schnorr(&message_hash, &keypair);
         Ok(format!(
             "delegation:{}:{}:{}",
@@ -72,7 +72,7 @@ pub fn verify(
     let message = format!("nostr:delegation:{}:{}", delegatee_pubkey, conditions);
     let mut hasher = Sha256::new();
     hasher.update(message.as_bytes());
-    let message_hash = Message::from_slice(&hasher.finalize()).unwrap();
+    let message_hash = Message::from_digest_slice(&hasher.finalize()).unwrap();
     let signature = Signature::from_slice(&hex::decode(signature_str)?)?;
     let delegator = XOnlyPublicKey::from_slice(&hex::decode(delegator_str)?)?;
     secp.verify_schnorr(&signature, &message_hash, &delegator)?;

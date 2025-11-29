@@ -53,8 +53,8 @@ impl DrawableComponent for TagListPopup {
             const PERCENT_SIZE: Size = Size::new(80, 50);
             const MIN_SIZE: Size = Size::new(60, 20);
 
-            let area = ui::centered_rect(PERCENT_SIZE.width, PERCENT_SIZE.height, f.size());
-            let area = ui::rect_inside(MIN_SIZE, f.size().into(), area);
+            let area = ui::centered_rect(PERCENT_SIZE.width, PERCENT_SIZE.height, f.area());
+            let area = ui::rect_inside(MIN_SIZE, f.area().into(), area);
             let area = area.intersection(rect);
 
             let tag_name_width = self.tags.as_ref().map_or(0, |tags| {

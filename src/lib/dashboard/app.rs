@@ -8,7 +8,7 @@ use ratatui::{
 use std::{
     error::Error,
     fmt::{self, Formatter},
-    time::{Duration, Instant},
+    time::{Duration},
 };
 
 pub struct Route {

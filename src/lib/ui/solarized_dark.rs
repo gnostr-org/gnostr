@@ -1,5 +1,4 @@
-use ratatui::style::{Color, Style};
-use ratatui::widgets::Paragraph;
+use ratatui::style::Color;
 
 pub struct SolarizedDark;
 
@@ -25,11 +24,4 @@ impl SolarizedDark {
     pub const GREEN: Color = Color::Rgb(133, 153, 0);
 }
 
-fn test_solarized_dark() -> Paragraph<'static> {
-    let my_paragraph = Paragraph::new("Hello, Solarized World!").style(
-        Style::default()
-            .fg(SolarizedDark::BASE2)
-            .bg(SolarizedDark::BASE03),
-    );
-    my_paragraph
-}
+

@@ -39,7 +39,7 @@ impl DrawableComponent for MsgPopup {
             return Ok(());
         }
 
-        let max_width = f.size().width.max(MINIMUM_WIDTH);
+        let max_width = f.area().width.max(MINIMUM_WIDTH);
 
         // determine the maximum width of text block
         let width = self
@@ -53,7 +53,7 @@ impl DrawableComponent for MsgPopup {
             .try_into()
             .expect("can't fail because we're clamping to u16 value");
 
-        let area = ui::centered_rect_absolute(width, POPUP_HEIGHT, f.size());
+        let area = ui::centered_rect_absolute(width, POPUP_HEIGHT, f.area());
 
         // Wrap lines and break words if there is not enough space
         let wrapped_msg =

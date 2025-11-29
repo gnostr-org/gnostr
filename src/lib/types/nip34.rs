@@ -92,7 +92,7 @@ impl UnsignedEvent {
         let id = hex::encode(event_id_bytes);
 
         let secp = secp256k1::Secp256k1::new();
-        let message = Message::from_slice(&event_id_bytes)?;
+        let message = Message::from_digest_slice(&event_id_bytes)?;
         let sig = secp.sign_schnorr(&message, &secret_key.keypair(&secp));
 
         Ok(Event {
@@ -192,7 +192,7 @@ mod tests {
         assert_eq!(actual_tags, expected_tags);
 
         let event_id_bytes = hex::decode(event.id).unwrap();
-        let message = Message::from_slice(&event_id_bytes).unwrap();
+        let message = Message::from_digest_slice(&event_id_bytes).unwrap();
         let signature = schnorr::Signature::from_slice(&hex::decode(event.sig).unwrap()).unwrap();
 
         secp.verify_schnorr(&signature, &message, &x_only_public_key)

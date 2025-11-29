@@ -6,19 +6,20 @@ mod tests {
     use git2::{Commit, Signature, Time};
     use std::borrow::Cow;
     use std::collections::HashSet;
-    
+
     use std::collections::HashMap;
     use std::path::Path;
     use serde_json::json;
-use nostr_sdk_0_37_0::prelude::*;
-use nostr_0_37_0::prelude::*;
-use nostr_sdk_0_37_0::EventBuilder; // Import EventBuilder
-    use nostr_sdk_0_37_0::Event; // Import Event
-    use nostr_sdk_0_37_0::Kind; // Import Kind
+    use nostr_sdk_0_37_0::prelude::*;
+    use nostr_0_37_0::prelude::*;
+
     use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
-    use crate::utils::{byte_array_to_hex_string, split_value_by_newline, value_to_string};
+    use crate::utils::{byte_array_to_hex_string, split_value_by_newline, value_to_string, generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
     use crate::legit::command::create_event_with_custom_tags;
     use crate::legit::command::create_event;
+
+    use gnostr_asyncgit::sync::commit::serialize_commit;
+    use gnostr_asyncgit::sync::commit::deserialize_commit;
 
 
     // Helper function to create a dummy git repository for testing

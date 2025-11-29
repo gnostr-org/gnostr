@@ -1,7 +1,7 @@
 use aes::Aes256;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use cbc::{Decryptor, Encryptor};
-use cbc::cipher::{KeyInit, KeyIvInit, BlockEncryptMut, BlockDecryptMut};
+use cbc::cipher::{KeyIvInit, BlockEncryptMut, BlockDecryptMut};
 use block_padding::Pkcs7;
 use secp256k1::{ecdh, Secp256k1, SecretKey, XOnlyPublicKey};
 use rand::RngCore;
@@ -15,7 +15,7 @@ pub fn encrypt(
     recipient_public_key: &XOnlyPublicKey,
     content: &str,
 ) -> Result<String, anyhow::Error> {
-    let secp = Secp256k1::new();
+    let _secp = Secp256k1::new();
 
     // NIP-04 specifies using the first 32 bytes of the sha256 of the shared secret point
     let shared_secret = ecdh::shared_secret_point(
@@ -49,7 +49,7 @@ pub fn decrypt(
     let iv = BASE64.decode(iv_base64)?;
     let encrypted_bytes = BASE64.decode(content_base64)?;
 
-    let secp = Secp256k1::new();
+    let _secp = Secp256k1::new();
     let shared_secret = ecdh::shared_secret_point(
         &sender_public_key.public_key(secp256k1::Parity::Even), // Simplified assumption
         recipient_private_key,
