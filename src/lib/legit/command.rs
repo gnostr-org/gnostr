@@ -1,7 +1,7 @@
 
 
 use anyhow::anyhow;
-use clap::{Args, Parser};
+use clap::Parser;
 use git2::{Commit, ObjectType, Oid, Repository, RepositoryState};
 use crate::queue::InternalEvent;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
