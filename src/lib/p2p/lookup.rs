@@ -25,7 +25,6 @@ use libp2p::{
 };
 use libp2p::swarm::SwarmEvent;
 use log::debug;
-use std::io;
 use std::str::FromStr;
 use std::time::Duration;
 use clap::{Parser, ValueEnum};
