@@ -18,7 +18,6 @@ use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
 use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
 
 pub mod msg;
