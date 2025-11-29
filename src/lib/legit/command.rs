@@ -47,7 +47,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
                     .expect("failed to execute process")
             };
 
-        let state = String::from_utf8(repo_state.stdout)
+        let _state = String::from_utf8(repo_state.stdout)
         .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
         .unwrap();
     }
