@@ -8,7 +8,7 @@ fn main() {
         if i == args.len() {
             process::exit(i.try_into().unwrap());
         } else {
-            if args.len() == 0 {
+            if args.is_empty() {
                 print!("args.len() = {}", 0);
             };
             if args.len() == 1 {
