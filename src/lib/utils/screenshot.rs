@@ -291,16 +291,16 @@ pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
     Ok(screenshot_path)
 }
 
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     #[ignore]
-    fn test_make_screenshot_macos() {
+    fn test_make_screenshot_cross_platform() {
         // This test now verifies that our new screenshot utility works correctly.
         let screenshot_path =
-            make_screenshot("self_test").expect("Failed to capture screenshot during self-test");
+            make_screenshot_cross_platform("self_test").expect("Failed to capture screenshot during self-test");
 
         // --- Verify ---
         let metadata =
@@ -312,7 +312,6 @@ mod tests {
         // DO NOT DELETE THE SCREEN SHOT!
     }
 }
-
 /// # Captures a screenshot for debugging purposes during a test.
 ///
 /// This function is designed to be called from other tests to capture the UI
