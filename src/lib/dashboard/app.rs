@@ -3,9 +3,8 @@
 
 use ratatui::{
     style::{Color, Modifier, Style},
-    widgets::{ListState, TableState},
+    widgets::ListState,
 };
-use tokio::sync::mpsc::Receiver;
 use std::{
     error::Error,
     fmt::{self, Formatter},

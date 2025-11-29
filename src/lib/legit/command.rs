@@ -1,51 +1,32 @@
-extern crate chrono;
+
 
 use anyhow::anyhow;
 use clap::{Args, Parser};
-use git2::{Commit, ObjectType, Oid, Repository};
+use git2::{Commit, ObjectType, Oid, Repository, RepositoryState};
 use crate::queue::InternalEvent;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::prelude::Tag;
-//use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::Value;
-//use sha2::Digest;
-//use tokio::time::Duration;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::{error::Error, time::Duration};
-
+use std::{io, time::{Duration, SystemTime}, error::Error as StdError};
 use tracing_subscriber::util::SubscriberInitExt;
-//use tracing::debug;
 use tracing::{debug, info, error};
-
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
 use gnostr_asyncgit::sync::commit::{SerializableCommit, serialize_commit, deserialize_commit};
 use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
-
 use std::process::Command;
-
-
-
+use gnostr_legit::{gitminer, gitminer::Gitminer};
 use std::any::type_name;
-use std::{io, thread};
-
-use gnostr_legit::gitminer::Gitminer;
-use git2::*;
-use sha2::Digest;
 
 
 
-use gnostr_legit::gitminer;
 
-fn type_of<T>(_: T) -> &'static str {
-    type_name::<T>()
-}
 
 pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
 
@@ -303,7 +284,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
-pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn Error>> {
+pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdError>> {
 
     // gnostr_legit_event
     let empty_hash_keys =

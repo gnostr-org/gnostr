@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]

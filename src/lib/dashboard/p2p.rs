@@ -3,7 +3,7 @@ use libp2p::{gossipsub, identify, kad, mdns, noise, ping, swarm::{NetworkBehavio
 use std::error::Error;
 use std::time::Duration;
 use tokio::{io, select};
-use tracing::{debug, warn};
+use tracing::debug;
 
 use super::app::P2pEvent;
 
