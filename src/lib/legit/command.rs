@@ -77,7 +77,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let mut miner = Gitminer::new(opts.clone()).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to start git miner: {}", e)))?;
     debug!("Gitminer options: {:?}", opts);
 
-    let hash = miner.mine().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to generate commit: {}", e)))?;
+    let _hash = miner.mine().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to generate commit: {}", e)))?;
 
     // Initiate gnostr_legit_event after GitMiner has finished.
     // gnostr_legit_event itself spawns tasks on the global runtime.
