@@ -312,3 +312,47 @@ mod tests {
         // DO NOT DELETE THE SCREEN SHOT!
     }
 }
+
+/// # Captures a screenshot for debugging purposes during a test.
+///
+/// This function is designed to be called from other tests to capture the UI
+/// state at a specific moment. The screenshot is saved in the `test_screenshots`
+/// directory with a filename that includes the provided context along with
+/// a timestamp.
+///
+/// ## Error Handling
+///
+/// This function will not fail the test if the screenshot cannot be taken;
+/// it will return an `Err` instead. The calling test can then decide how to
+/// handle the failure.
+///
+/// ## File Management
+///
+/// The screenshot file is not deleted after being taken, so it can be
+/// inspected after the test run.
+#[allow(dead_code)] // Allow dead code because this is primarily for testing/debugging
+pub fn make_screenshot_cross_platform(context: &str) -> io::Result<PathBuf> {
+    let mut screenshot_path = std::env::current_dir()?;
+    screenshot_path.push("test_screenshots");
+    // These values are specific to the gnostr project's test environment setup.
+    // They provide unique subdirectories for organizing screenshots.
+    let weeble = weeble::weeble().unwrap_or(0.0) as u64;
+    let wobble = wobble::wobble().unwrap_or(0.0) as u64;
+    let blockheight = blockheight::blockheight().unwrap_or(0.0) as u64;
+    screenshot_path.push(weeble.to_string());
+    screenshot_path.push(blockheight.to_string());
+    screenshot_path.push(wobble.to_string());
+    fs::create_dir_all(&screenshot_path)?;
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| io::Error::other(e.to_string()))?
+        .as_secs();
+
+    let filename = format!("test_screenshot_{}_{}.png", context, timestamp);
+    screenshot_path.push(&filename);
+
+    take_screenshot(screenshot_path.to_str().unwrap())?;
+
+    Ok(screenshot_path)
+}
