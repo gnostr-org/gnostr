@@ -46,7 +46,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
 use tokio_tungstenite::{accept_async, tungstenite};
 pub use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, error, warn};
+use tracing::warn;
 
 #[derive(Debug)]
 pub enum Error {
