@@ -2,7 +2,7 @@
 
 use anyhow::anyhow;
 use clap::Parser;
-use git2::{Commit, ObjectType, Oid, Repository, RepositoryState};
+use git2::{ObjectType, Repository, RepositoryState};
 use crate::queue::InternalEvent;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use libp2p::gossipsub;
