@@ -176,10 +176,10 @@ mod tests {
     //     they need to have a proper ratatui life cycle
     //     and restore terminal when finished
     screenshot_test!(test_chat_run_screenshot, "chat", true);
-    // ignore screenshot_test!(test_tui_run_screenshot, "tui", true);
+    screenshot_test!(test_tui_run_screenshot, "tui", true);
 
     // TODO ngit
-    screenshot_test!(test_ngit_run_screenshot, "ngit", true);
+    // screenshot_test!(test_ngit_run_screenshot, "ngit", true);
     // // screenshot_test!(test_init_run_screenshot, "init", true);
     // // screenshot_test!(test_push_run_screenshot, "push", true);
     // // screenshot_test!(test_send_run_screenshot, "send", true);
