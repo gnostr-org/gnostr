@@ -9,7 +9,7 @@ use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::prelude::Tag;
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
+
 use serde_json;
 use serde_json::Value;
 use std::borrow::Cow;
