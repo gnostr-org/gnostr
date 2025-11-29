@@ -20,7 +20,6 @@ use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
 use crate::utils::{parse_json, split_json_string};
 use std::process::Command;
 use gnostr_legit::{gitminer, gitminer::Gitminer};
-use std::any::type_name;
 
 
 
