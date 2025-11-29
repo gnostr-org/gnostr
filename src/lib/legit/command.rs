@@ -15,7 +15,6 @@ use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::{io, time::{Duration, SystemTime}, error::Error as StdError};
-use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info, error};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use gnostr_asyncgit::sync::commit::{SerializableCommit, serialize_commit, deserialize_commit};
