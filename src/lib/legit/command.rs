@@ -1,7 +1,6 @@
 
 
 use anyhow::anyhow;
-use clap::Parser;
 use git2::{ObjectType, Repository, RepositoryState};
 
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;

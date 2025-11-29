@@ -21,21 +21,23 @@ use futures::stream::StreamExt;
 use libp2p::{
     gossipsub,
     identify, identity,
-    kad::{
-        self,
-        store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
-    },
+    kad::
+        {
+            self,
+            store::{MemoryStore, MemoryStoreConfig},
+            Config as KadConfig,
+        },
     mdns, noise, ping, rendezvous,
     swarm::SwarmEvent,
     tcp, yamux, PeerId,
 };
-use std::{
-    env,
-    error::Error,
-    hash::{DefaultHasher, Hash, Hasher},
-    thread,
-};
+use std::
+    {
+        env,
+        error::Error,
+        hash::{DefaultHasher, Hash, Hasher},
+        thread,
+    };
 use tokio::time::Duration;
 use tokio::{io, select};
 use tracing::{debug, info, trace, warn};
@@ -64,7 +66,7 @@ pub async fn async_prompt(mempool_url: String) -> String {
     s.await.unwrap()
 }
 
-pub fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
+pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
     let mut close_bytes = [0u8; 32];
     close_bytes = bytes;
 

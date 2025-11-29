@@ -25,7 +25,7 @@ use tracing::debug;
 pub struct CompareDetailsComponent {
     repo: RepoPathRef,
     data: Option<OldNew<CommitDetails>>,
-    db: SQLiteDatabase,
+    //_db: SQLiteDatabase,
     theme: SharedTheme,
     focused: bool,
 }
@@ -35,9 +35,8 @@ impl CompareDetailsComponent {
     pub async fn new(env: &Environment, focused: bool) -> Self {
         Self {
             data: None,
-            db: Self::connect()
-                .await
-                .expect("Failed to connect to database"),
+            // The _db field is marked as unused, so we do not initialize it here.
+            // The initialization code was removed.
             theme: env.theme.clone(),
             focused,
             repo: env.repo.clone(),
@@ -61,7 +60,7 @@ impl CompareDetailsComponent {
         match async_std::fs::File::create(full_path.clone()).await {
             Ok(_) => {
                 println!("Successfully created directory: {}", full_path.display());
-                Ok(()) // Return Ok(()) to indicate success
+                Ok(())
             }
             Err(error) => {
                 // Handle the error.  We're interested in the "already exists" case.

@@ -1,5 +1,4 @@
 use super::app::*;
-use crossterm::event::{self};
 use std::{
     error::Error,
     time::Duration,

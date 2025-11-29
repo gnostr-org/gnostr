@@ -461,7 +461,7 @@ impl TopicList {
         remote_branches: Option<String>,
         theme: &Theme,
         width: usize, //width
-        now: DateTime<Local>,
+        _now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
         //
@@ -503,7 +503,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_time = if normal {
+        let _style_time = if normal {
             theme.commit_time(selected)
         } else {
             theme.commit_unhighlighted()
@@ -513,7 +513,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_tags = if normal {
+        let _style_tags = if normal {
             theme.tags(selected)
         } else {
             theme.commit_unhighlighted()
@@ -523,7 +523,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_msg = if normal {
+        let _style_msg = if normal {
             theme.text(true, selected)
         } else {
             theme.commit_unhighlighted()
@@ -553,7 +553,7 @@ impl TopicList {
             style_author,
         ));
 
-        let author = string_width_align(&e.author, author_width);
+        let _author = string_width_align(&e.author, author_width);
         // commit author
         //txt.push(Span::styled(author, style_author));
 
@@ -562,7 +562,7 @@ impl TopicList {
             //txt.push(Span::styled(tags, style_tags));
         }
 
-        if let Some(local_branches) = local_branches {
+        if let Some(_local_branches) = local_branches {
             //txt.push(Span::styled(local_branches, style_branches));
         }
         //git-remote-nostr helper
@@ -582,7 +582,7 @@ impl TopicList {
         remote_branches: Option<String>,
         theme: &Theme,
         width: usize, //width
-        now: DateTime<Local>,
+        _now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
         //
@@ -627,7 +627,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_time = if normal {
+        let _style_time = if normal {
             theme.commit_time(selected)
         } else {
             theme.commit_unhighlighted()
@@ -637,7 +637,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_tags = if normal {
+        let _style_tags = if normal {
             theme.tags(selected)
         } else {
             theme.commit_unhighlighted()
@@ -647,7 +647,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_msg = if normal {
+        let _style_msg = if normal {
             theme.text(true, selected)
         } else {
             theme.commit_unhighlighted()
@@ -690,7 +690,7 @@ impl TopicList {
             txt.push(splitter.clone());
         }
 
-        if let Some(local_branches) = local_branches {
+        if let Some(_local_branches) = local_branches {
             //txt.push(Span::styled(local_branches, style_branches));
             txt.push(splitter.clone());
         }

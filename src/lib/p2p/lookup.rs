@@ -1,7 +1,5 @@
 use ansi_term::Style;
-use futures::future::TryFutureExt;
 use futures::stream::StreamExt;
-use libp2p::core::transport::Transport;
 use libp2p::core::ConnectedPoint;
 use libp2p::identify;
 use libp2p::identity::Keypair;
@@ -88,7 +86,7 @@ impl LookupClient {
 
 
 
-            let (relay_transport, relay_client) = relay::client::new(local_peer_id);
+            let (_relay_transport, _relay_client) = relay::client::new(local_peer_id);
             let mut swarm = SwarmBuilder::with_existing_identity(local_key)
                 .with_async_std()
                 .with_tcp(

@@ -434,7 +434,7 @@ mod tests {
         //cmd.arg("--wobble");
         //cmd.assert()
         //    .success()
-        //    .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+        //    .stdout(predicates::str::is_match(r"^\d+$").unwrap());
         let _cleanup_guard = TerminalCleanup;
         Ok(())
     }
@@ -447,7 +447,7 @@ mod tests {
         //cmd.arg("--blockheight");
         //cmd.assert()
         //    .success()
-        //    .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+        //    .stdout(predicates::str::is_match(r"^\d+$").unwrap());
         let _cleanup_guard = TerminalCleanup;
         Ok(())
     }
@@ -456,11 +456,11 @@ mod tests {
     #[serial]
     fn test_weeble_flag_sets_env_var() -> Result<(), Box<dyn Error>> {
         let _cleanup_guard = TerminalCleanup;
-        //let mut cmd = Command::new(cargo_bin("gnostr"));
-        //cmd.arg("--weeble");
-        //cmd.assert()
-        //    .success()
-        //    .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+        let mut cmd = Command::new(cargo_bin("gnostr"));
+        cmd.arg("--weeble");
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::is_match(r"^\d+$").unwrap());
         let _cleanup_guard = TerminalCleanup;
         Ok(())
     }
@@ -473,7 +473,7 @@ mod tests {
         cmd.arg("--wobble");
         cmd.assert()
             .success()
-            .stdout(predicates::str::is_match(r"^\d+\.0$").unwrap());
+            .stdout(predicates::str::is_match(r"^\d+$").unwrap());
         let _cleanup_guard = TerminalCleanup;
         Ok(())
     }

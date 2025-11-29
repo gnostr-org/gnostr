@@ -116,7 +116,7 @@ impl DrawableComponent for ExternalChatPopup {
                     .collect::<Vec<Span>>(),
             );
 
-            let area = ui::centered_rect_absolute(25, 3, f.size());
+            let area = ui::centered_rect_absolute(25, 3, f.area());
             f.render_widget(Clear, area);
             f.render_widget(
                 Paragraph::new(txt)
