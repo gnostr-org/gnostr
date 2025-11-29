@@ -6,7 +6,6 @@ use crate::wobble;
 
 use anyhow::Result;
 use env_logger::Env;
-use gnostr_asyncgit::gitui;
 use std::path::Path;
 use std::process::Command;
 use which::which;
