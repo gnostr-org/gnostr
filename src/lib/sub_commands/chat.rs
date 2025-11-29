@@ -8,8 +8,6 @@ use crate::p2p::chat::*;
  //migrate carefully
 use anyhow::Result;
 
-use serde::ser::StdError;
-
 
 
 use nostr_sdk_0_37_0::Keys;
