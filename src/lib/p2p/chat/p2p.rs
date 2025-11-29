@@ -2,7 +2,7 @@ use futures::stream::StreamExt;
 use libp2p::{
     gossipsub,
     identify,
-    kad::{self, store::{self}, Config as KadConfig},
+    kad,
     mdns, noise, ping,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
