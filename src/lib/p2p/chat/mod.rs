@@ -6,7 +6,6 @@ use libp2p::gossipsub;
 use nostr_sdk_0_37_0::prelude::*;
 //use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 //use sha2::Digest;
