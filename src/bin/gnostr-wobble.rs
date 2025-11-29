@@ -157,11 +157,11 @@ mod tests {
     /// cargo test --bin gnostr-wobble -- --nocapture
     #[test]
     fn gnostr_wobble() {
-        print!("\nwobble:{}\n", wobble().unwrap().to_string());
-        print!("\nwobble_sync:{}\n", wobble_sync().unwrap().to_string());
+        print!("\nwobble:{}\n", wobble().unwrap());
+        print!("\nwobble_sync:{}\n", wobble_sync().unwrap());
         print!(
             "\nwobble_millis_sync:{}\n",
-            wobble_millis_sync().unwrap().to_string()
+            wobble_millis_sync().unwrap()
         );
     }
 
@@ -175,7 +175,7 @@ mod tests {
 
         // Ensure the runtime is functional by spawning a simple task.
         rt1.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-wobble:main test begin...");
                 main();
                 println!("\ngnostr-wobble:main test end...");
@@ -185,7 +185,7 @@ mod tests {
         });
         // Ensure the runtime is functional by spawning a simple task.
         rt2.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-wobble:main test begin...");
                 main();
                 println!("\ngnostr-wobble:main test end...");
@@ -194,7 +194,7 @@ mod tests {
             .unwrap();
         });
         rt1.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-wobble:main test begin...");
                 let _ = get_wobble_async().await;
                 println!("\ngnostr-wobble:main test end...");
@@ -203,7 +203,7 @@ mod tests {
             .unwrap();
         });
         rt1.block_on(async {
-            let _ = tokio::spawn(async {
+            tokio::spawn(async {
                 println!("gnostr-wobble:main test begin...");
                 let _ = get_wobble_sync();
                 println!("\ngnostr-wobble:main test end...");
