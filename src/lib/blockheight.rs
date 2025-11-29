@@ -1,6 +1,5 @@
 use crate::utils::{ureq_async, ureq_sync};
 use std::env;
-use std::time::SystemTime;
 
 pub fn check_curl() {
 
