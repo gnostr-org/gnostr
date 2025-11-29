@@ -1,5 +1,5 @@
 use ansi_term::Style;
-use futures::future::{Either, FutureExt, TryFutureExt};
+use futures::future::TryFutureExt;
 use futures::stream::StreamExt;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::core::transport::OrTransport;
