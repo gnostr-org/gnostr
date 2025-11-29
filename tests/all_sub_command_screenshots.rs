@@ -19,7 +19,7 @@ mod tests {
     use git2::{Repository, Signature};
     use std::io::Write;
     use std::path::Path;
-    use signal_child::Signalable;
+    
     use serial_test::serial;
 
     // Helper function to set up a temporary git repository for testing.
