@@ -8,7 +8,7 @@ use crate::p2p::chat::*;
  //migrate carefully
 use anyhow::Result;
 
-use tracing::{debug, Level};
+use tracing::Level;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
