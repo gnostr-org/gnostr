@@ -3,6 +3,7 @@ use std::{
     env,
     path::{Path, PathBuf},
     rc::Rc,
+    sync::{atomic::{AtomicBool, Ordering}, Arc},
 };
 
 use crate::weeble::weeble_sync;
@@ -89,6 +90,7 @@ pub struct App {
     // "Flags"
     requires_redraw: Cell<bool>,
     file_to_open: Option<String>,
+    quit_flag: Arc<AtomicBool>,
 }
 
 pub struct Environment {
@@ -130,6 +132,7 @@ impl App {
         input: Input,
         theme: Theme,
         key_config: KeyConfig,
+        quit_flag: Arc<AtomicBool>,
     ) -> Result<Self> {
         log::trace!("open repo at: {:?}", &repo);
 
@@ -203,6 +206,7 @@ impl App {
             repo: env.repo,
             repo_path_text,
             popup_stack: PopupStack::default(),
+            quit_flag,
         };
 
         app.set_tab(tab)?;
@@ -396,7 +400,7 @@ impl App {
 
     ///
     pub fn is_quit(&self) -> bool {
-        !matches!(self.do_quit, QuitState::None) || self.input.is_aborted()
+        !matches!(self.do_quit, QuitState::None) || self.input.is_aborted() || self.quit_flag.load(Ordering::SeqCst)
     }
 
     ///
