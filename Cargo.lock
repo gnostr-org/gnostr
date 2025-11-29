@@ -4399,10 +4399,10 @@ dependencies = [
  "gnostr-crawler",
  "gnostr-filetreelist",
  "gnostr-legit",
+ "gnostr-qr",
  "gnostr-query",
  "gnostr-relay",
  "gnostr-scopetime",
- "gnostr_qr",
  "hex",
  "hkdf",
  "hmac 0.12.1",
@@ -4640,6 +4640,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-qr"
+version = "1906.925289.572444"
+dependencies = [
+ "hex",
+ "image",
+ "qrcode",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "gnostr-query"
 version = "1906.925289.572444"
 dependencies = [
@@ -4688,16 +4698,6 @@ name = "gnostr-scopetime"
 version = "1906.925289.572444"
 dependencies = [
  "log 0.4.27",
-]
-
-[[package]]
-name = "gnostr_qr"
-version = "1906.925289.572444"
-dependencies = [
- "hex",
- "image",
- "qrcode",
- "sha2 0.10.9",
 ]
 
 [[package]]

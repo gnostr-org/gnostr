@@ -1,5 +1,5 @@
 [package]
-name = "gnostr_qr"
+name = "gnostr-qr"
 authors = ["gnostr admin@gnostr.org"]
 description = "gnostr_qr: part of the git+nostr workflow utility"
 homepage = "https://github.com/gnostr-org/gnostr"
