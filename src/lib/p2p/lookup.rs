@@ -25,7 +25,6 @@ use libp2p::{
 };
 use libp2p::swarm::SwarmEvent;
 use log::debug;
-use std::time::Duration;
 use clap::{Parser, ValueEnum};
 use crate::p2p::network_config::Network;
 use thiserror::Error;
