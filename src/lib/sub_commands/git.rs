@@ -31,7 +31,6 @@ impl Drop for TerminalCleanup {
 }
 
 #[cfg(not(test))]
-use crate::ssh::start;
 
 #[cfg(test)]
 mod mock_ssh {
