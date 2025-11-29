@@ -10,7 +10,6 @@ use serde_json;
 //use sha2::Digest;
 //use tokio::time::Duration;
 
-use std::fmt::Write;
 use std::{error::Error, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
