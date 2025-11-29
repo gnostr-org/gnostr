@@ -189,7 +189,7 @@ impl HelpPopup {
 
         let mut processed = 0_u16;
 
-        for (key, group) in &self.cmds.iter().group_by(|e| e.text.group) {
+        for (key, group) in &self.cmds.iter().chunk_by(|e| e.text.group) {
             txt.push(Line::from(Span::styled(
                 Cow::from(key.to_string()),
                 Style::default().add_modifier(Modifier::REVERSED),
