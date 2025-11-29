@@ -145,7 +145,7 @@ gnostr-legit = { path = "./legit", version = "1906.925289.572444" }
 gnostr-query = { version = "1906.925289.572444", path = "query" }
 gnostr-relay = { version = "1906.925289.572444", path = "relay", features = ["search"] }
 ##gnostr-types = { version = "0.7.6", path = "types" }
-gnostr_qr = { version = "1906.925289.572444", path = "qr" }
+gnostr-qr = { version = "1906.925289.572444", path = "qr" }
 hex = "0.4.3"
 hkdf = "0.12"
 hmac = "0.12"
