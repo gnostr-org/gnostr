@@ -155,7 +155,7 @@ pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_mes
 
 ///
 pub use relays::{
-    relays, relays_by_nip, relays_offline, relays_online, relays_paid, relays_public,
+    relays_all, relays_by_nip, relays_offline, relays_online, relays_paid,
 };
 
 ///
@@ -174,9 +174,9 @@ pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str> {
 /// get_relays <https://api.nostr.watch>
 /// pub fn get_relays() -> Result<String, &'static str>
 pub fn get_relays() -> Result<String, &'static str> {
-    let _relays_no_nl = relays().unwrap().to_string();
+    let _relays_no_nl = relays_all().unwrap().to_string();
 
-    Ok(format!("{}", relays().unwrap().to_string()))
+    Ok(format!("{}", relays_all().unwrap().to_string()))
 }
 /// get_relays_online <https://api.nostr.watch>
 /// pub fn get_relays_online() -> Result<String, &'static str>
@@ -188,9 +188,9 @@ pub fn get_relays_online() -> Result<String, &'static str> {
 /// get_relays_public <https://api.nostr.watch>
 /// pub fn get_relays_public() -> Result<String, &'static str>
 pub fn get_relays_public() -> Result<String, &'static str> {
-    let _relays_no_nl = relays_public().unwrap().to_string();
+    let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_public().unwrap().to_string()))
+    Ok(format!("{}", relays_online().unwrap().to_string()))
 }
 /// get_relays_paid <https://api.nostr.watch>
 /// pub fn get_relays_paid() -> Result<String, &'static str>

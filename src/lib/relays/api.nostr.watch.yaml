@@ -1,0 +1,918 @@
+openapi: 3.0.3
+info:
+  title: RelayVM REST API
+  description: HTTP REST interface to relay state aggregation
+  version: 0.1.0
+components:
+  schemas: {}
+paths:
+  /health/ping:
+    get:
+      tags:
+        - health
+      description: Health check with system metrics
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+    post:
+      tags:
+        - health
+      description: Health check with system metrics
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays:
+    get:
+      tags:
+        - relays
+      description: List all relay states with pagination (detailed format by default)
+      parameters:
+        - schema:
+            type: number
+            default: 50
+            maximum: 200
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: number
+            default: 0
+            minimum: 0
+          in: query
+          name: offset
+          required: false
+        - schema:
+            type: string
+            enum:
+              - url
+              - updated
+              - observationCount
+              - lastSeen
+            default: url
+          in: query
+          name: sortBy
+          required: false
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+          in: query
+          name: sortOrder
+          required: false
+        - schema:
+            type: string
+            enum:
+              - full
+              - detailed
+              - simple
+            default: detailed
+          in: query
+          name: format
+          required: false
+          description: "Response format: full (all attribution), detailed (default, no
+            attribution), simple (URLs only)"
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/state:
+    get:
+      tags:
+        - relays
+      description: Get state for a specific relay (detailed format by default)
+      parameters:
+        - schema:
+            type: string
+            format: uri
+          in: query
+          name: relayUrl
+          required: true
+        - schema:
+            type: string
+            enum:
+              - full
+              - detailed
+              - simple
+            default: detailed
+          in: query
+          name: format
+          required: false
+          description: "Response format: full (all attribution), detailed (default, no
+            attribution), simple (treated as detailed for single relay)"
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/search:
+    post:
+      tags:
+        - relays
+      description: Search relays with complex filters, pagination, and three-level
+        response shaping
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                network:
+                  type: string
+                nips:
+                  type: array
+                  items:
+                    type: number
+                software:
+                  type: object
+                  properties:
+                    family:
+                      type: string
+                    version:
+                      type: string
+                labels:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      namespace:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - namespace
+                      - value
+                maxLatency:
+                  type: object
+                  properties:
+                    open:
+                      type: number
+                    read:
+                      type: number
+                    write:
+                      type: number
+                minSupport:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                limit:
+                  type: number
+                  default: 100
+                  maximum: 500
+                offset:
+                  type: number
+                  default: 0
+                  minimum: 0
+                format:
+                  type: string
+                  enum:
+                    - full
+                    - detailed
+                    - simple
+                  default: detailed
+                  description: "Response format: full (all attribution), detailed (default, no
+                    attribution), simple (URLs only)"
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: authorization
+          required: false
+          description: 'Authorization header for paid routes. Formats: "L402
+            <macaroon>:<preimage>" or "Cashu <token>"'
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+        "402":
+          description: Payment Required when pricing applies. Returns 402 challenge headers.
+          headers:
+            WWW-Authenticate:
+              schema:
+                schema:
+                  type: string
+              description: L402 challenge
+            X-Cashu:
+              schema:
+                schema:
+                  type: string
+              description: Cashu P2PK challenge
+          content:
+            application/json:
+              schema:
+                description: Payment Required when pricing applies. Returns 402 challenge
+                  headers.
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Payment Required
+  /relays/nearby:
+    get:
+      tags:
+        - relays
+      description: Find relays near a geographic point
+      parameters:
+        - schema:
+            type: number
+            minimum: -90
+            maximum: 90
+          in: query
+          name: lat
+          required: true
+        - schema:
+            type: number
+            minimum: -180
+            maximum: 180
+          in: query
+          name: lon
+          required: true
+        - schema:
+            type: number
+            default: 100
+            minimum: 1
+          in: query
+          name: radius
+          required: false
+        - schema:
+            type: string
+            enum:
+              - full
+              - detailed
+              - simple
+              - compact
+            default: detailed
+          in: query
+          name: format
+          required: false
+          description: "Response format: full (all attribution), detailed (default,
+            aggregated), simple (URLs only), compact (deprecated)"
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/bbox:
+    get:
+      tags:
+        - relays
+      description: Find relays within a bounding box
+      parameters:
+        - schema:
+            type: number
+            minimum: -90
+            maximum: 90
+          in: query
+          name: sw.lat
+          required: true
+        - schema:
+            type: number
+            minimum: -180
+            maximum: 180
+          in: query
+          name: sw.lon
+          required: true
+        - schema:
+            type: number
+            minimum: -90
+            maximum: 90
+          in: query
+          name: ne.lat
+          required: true
+        - schema:
+            type: number
+            minimum: -180
+            maximum: 180
+          in: query
+          name: ne.lon
+          required: true
+        - schema:
+            type: string
+            enum:
+              - full
+              - detailed
+              - simple
+              - compact
+            default: detailed
+          in: query
+          name: format
+          required: false
+          description: "Response format: full (all attribution), detailed (default,
+            aggregated), simple (URLs only), compact (deprecated)"
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/labels:
+    get:
+      tags:
+        - relays
+      description: Get labels for a specific relay
+      parameters:
+        - schema:
+            type: string
+            format: uri
+          in: query
+          name: relayUrl
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: namespace
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/labels/list:
+    get:
+      tags:
+        - relays
+      description: List all available labels
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: namespace
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/by/label:
+    get:
+      tags:
+        - relays
+      description: Find relays with a specific label
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: namespace
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: value
+          required: true
+        - schema:
+            type: number
+            default: 100
+            maximum: 200
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: number
+            default: 0
+            minimum: 0
+          in: query
+          name: offset
+          required: false
+        - schema:
+            type: string
+            enum:
+              - full
+              - detailed
+              - simple
+              - compact
+            default: detailed
+          in: query
+          name: format
+          required: false
+          description: "Response format: full (all attribution), detailed (default,
+            aggregated), simple (URLs only), compact (deprecated)"
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/by/software:
+    get:
+      tags:
+        - relays
+      description: Get relays grouped by software family
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: family
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/by/network:
+    get:
+      tags:
+        - relays
+      description: Get relays grouped by network type
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/by/nip:
+    get:
+      tags:
+        - relays
+      description: Get relays grouped by NIP support
+      parameters:
+        - schema:
+            type: number
+          in: query
+          name: nip
+          required: false
+        - schema:
+            type: number
+            default: 0.5
+            minimum: 0
+            maximum: 1
+          in: query
+          name: minSupport
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/by/country:
+    get:
+      tags:
+        - relays
+      description: Get relays grouped by country
+      parameters:
+        - schema:
+            type: string
+            pattern: ^[A-Z]{2}$
+          in: query
+          name: countryCode
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/compare:
+    post:
+      tags:
+        - relays
+      description: Compare multiple relays side-by-side
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                relayUrls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  minItems: 1
+                  maxItems: 10
+              required:
+                - relayUrls
+        required: true
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: authorization
+          required: false
+          description: 'Authorization header. Formats: "L402 <macaroon>:<preimage>" or
+            "Cashu <token>". Example: L402 eyJ...:abcdef | Cashu cashuBeyJ...'
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+        "402":
+          description: Payment Required. Returns 402 challenge headers for supported
+            methods.
+          headers:
+            WWW-Authenticate:
+              schema:
+                schema:
+                  type: string
+                example: L402 macaroon="<base64url>", invoice="lnbc15000n1p..."
+              description: L402 challenge with macaroon and BOLT11 invoice
+            X-Cashu:
+              schema:
+                schema:
+                  type: string
+                example: eyJtaW50IjoiaHR0cHM6Ly9taW50LmV4YW1wbGUuY29tIiwiYW1vdW50TXNhdCI6NTAwMCwicDJwa1B1YmtleSI6Ij...
+              description: Cashu P2PK base64 challenge payload
+          content:
+            application/json:
+              schema:
+                description: Payment Required. Returns 402 challenge headers for supported
+                  methods.
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Payment Required
+  /relays/online:
+    post:
+      tags:
+        - relays
+      description: Get currently online relays with optional label filtering
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                onlineWindowSeconds:
+                  type: number
+                  minimum: 60
+                network:
+                  type: string
+                labels:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      namespace:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - namespace
+                      - value
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/offline:
+    post:
+      tags:
+        - relays
+      description: Get recently seen but currently offline relays with optional label
+        filtering
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                offlineSeenSeconds:
+                  type: number
+                  minimum: 60
+                offlineThresholdSeconds:
+                  type: number
+                  minimum: 60
+                network:
+                  type: string
+                labels:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      namespace:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - namespace
+                      - value
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /relays/dead:
+    post:
+      tags:
+        - relays
+      description: Get probably dead relays (not seen in a long time) with optional
+        label filtering
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deadThresholdSeconds:
+                  type: number
+                  minimum: 3600
+                network:
+                  type: string
+                labels:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      namespace:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - namespace
+                      - value
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /monitors/{pubkey}:
+    get:
+      tags:
+        - monitors
+      description: Get information about a specific monitor
+      parameters:
+        - schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+          in: path
+          name: pubkey
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /monitors:
+    get:
+      tags:
+        - monitors
+      description: List all monitors with pagination
+      parameters:
+        - schema:
+            type: number
+            default: 50
+            maximum: 200
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: number
+            default: 0
+            minimum: 0
+          in: query
+          name: offset
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /monitors/{pubkey}/analytics:
+    get:
+      tags:
+        - monitors
+      description: Get detailed reliability and coverage analytics for a specific monitor
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: includeRelayUrls
+          required: false
+        - schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+          in: path
+          name: pubkey
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+  /monitors/analytics:
+    get:
+      tags:
+        - monitors
+      description: Get detailed reliability and coverage analytics for all monitors
+      parameters:
+        - schema:
+            type: number
+            default: 100
+            minimum: 0
+            maximum: 1000
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: number
+            default: 0
+            minimum: 0
+          in: query
+          name: offset
+          required: false
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: includeRelayUrls
+          required: false
+        - schema:
+            type: string
+          in: header
+          name: authorization
+          required: false
+          description: 'Authorization header for paid routes. Formats: "L402
+            <macaroon>:<preimage>" or "Cashu <token>"'
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema: {}
+        "402":
+          description: Payment Required when pricing applies. Returns 402 challenge headers.
+          headers:
+            WWW-Authenticate:
+              schema:
+                schema:
+                  type: string
+              description: L402 challenge
+            X-Cashu:
+              schema:
+                schema:
+                  type: string
+              description: Cashu P2PK challenge
+          content:
+            application/json:
+              schema:
+                description: Payment Required when pricing applies. Returns 402 challenge
+                  headers.
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Payment Required
+  /policy:
+    get:
+      tags:
+        - policy
+      description: Get current aggregation policy
+      responses:
+        "200":
+          description: Default Response
+    post:
+      tags:
+        - policy
+      description: Update aggregation policy (requires authentication)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lookbackSeconds:
+                  type: number
+                  minimum: 60
+                quorum:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                labelQuorum:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                madScale:
+                  type: number
+                  minimum: 0
+      responses:
+        "200":
+          description: Default Response
+  /health/payments:
+    get:
+      tags:
+        - health
+      description: Payments gateway health (LND and Cashu backends)
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  featureEnabled:
+                    type: boolean
+                  lnd:
+                    type: object
+                    properties:
+                      grpc:
+                        type: object
+                        properties:
+                          configured:
+                            type: boolean
+                          ok:
+                            type: boolean
+                          reason:
+                            type: string
+                      rest:
+                        type: object
+                        properties:
+                          configured:
+                            type: boolean
+                          ok:
+                            type: boolean
+                          reason:
+                            type: string
+                  p2pk:
+                    type: object
+                    properties:
+                      configured:
+                        type: boolean
+                  metrics:
+                    type: object
+                    properties:
+                      challenges:
+                        type: object
+                        additionalProperties:
+                          type: number
+                      successes:
+                        type: object
+                        additionalProperties:
+                          type: number
+                      failures:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          byMethod:
+                            type: object
+                            additionalProperties:
+                              type: number
+                          byReason:
+                            type: object
+                            additionalProperties:
+                              type: number
+  /metrics:
+    get:
+      tags:
+        - health
+      description: Prometheus metrics (if payments-gateway metrics are available)
+      responses:
+        "200":
+          description: Default Response
+  /openapi.json:
+    get:
+      responses:
+        "200":
+          description: Default Response
+  /openapi.yaml:
+    get:
+      responses:
+        "200":
+          description: Default Response
+  /:
+    get:
+      responses:
+        "200":
+          description: Default Response
+servers:
+  - url: https://api.nostr.watch/v2
+    description: Production API
+tags:
+  - name: health
+    description: Health check endpoints
+  - name: relays
+    description: Relay state queries
+  - name: monitors
+    description: Monitor information
+  - name: policy
+    description: Policy management
+  - name: subscriptions
+    description: Relay state subscriptions

@@ -36,9 +36,8 @@ async fn test_ngit_login_command() -> Result<(), Box<dyn StdError>> {
     Ok(())
 }
 
-#[tokio::test]
 #[serial]
-async fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
+fn test_ngit_init_command() -> Result<(), Box<dyn StdError>> {
     let mut git_repo = test_utils::git::GitTestRepo::new("main")?;
     git_repo.initial_commit()?;
 
