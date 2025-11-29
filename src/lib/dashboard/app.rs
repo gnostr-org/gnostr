@@ -9,8 +9,6 @@ use tokio::sync::mpsc::Receiver;
 use std::{
     error::Error,
     fmt::{self, Formatter},
-    fs,
-    path::Path,
     time::{Duration, Instant},
 };
 
