@@ -24,7 +24,6 @@ use libp2p::{
     SwarmBuilder,
 };
 use libp2p::swarm::SwarmEvent;
-use libp2p_mplex as mplex;
 use log::debug;
 use std::io;
 use std::str::FromStr;
