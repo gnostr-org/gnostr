@@ -1,13 +1,5 @@
 use futures::stream::StreamExt;
-use libp2p::{
-    gossipsub,
-    identify,
-    kad::{self, store::{self}, Config as KadConfig},
-    mdns, noise, ping,
-    request_response::{self, ProtocolSupport},
-    swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, StreamProtocol,
-};
+use libp2p::{gossipsub, identify, kad, mdns, noise, ping, swarm::{NetworkBehaviour, SwarmEvent}, tcp, yamux,};
 use std::error::Error;
 use std::time::Duration;
 use tokio::{io, select};
