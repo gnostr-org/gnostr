@@ -212,7 +212,7 @@ fn ui(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         // .margin(2)
         .constraints([Constraint::Fill(5), Constraint::Length(3)].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
 
