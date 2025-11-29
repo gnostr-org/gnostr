@@ -100,17 +100,17 @@ async fn main() -> anyhow::Result<()> {
     }
     if gnostr_cli_args.weeble {
         let result = weeble::weeble();
-        print!("{:?}", result.unwrap());
+        print!("{}", result.unwrap());
         std::process::exit(0);
     }
     if gnostr_cli_args.wobble {
         let result = wobble::wobble();
-        print!("{:?}", result.unwrap());
+        print!("{}", result.unwrap());
         std::process::exit(0);
     }
     if gnostr_cli_args.blockheight {
         let result = blockheight::blockheight();
-        print!("{:?}", result.unwrap());
+        print!("{}", result.unwrap());
         std::process::exit(0);
     }
     if gnostr_cli_args.blockhash {
