@@ -1,6 +1,6 @@
 extern crate chrono;
 
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::anyhow;
 use clap::{Args, Parser};
 use git2::{Commit, ObjectType, Oid, Repository};
 use crate::queue::InternalEvent;
@@ -12,42 +12,36 @@ use nostr_sdk_0_37_0::prelude::Tag;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
+use serde_json::Value;
 //use sha2::Digest;
 //use tokio::time::Duration;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt::Write;
 use std::{error::Error, time::Duration};
-use tokio::{io as TokioIo, io::AsyncBufReadExt};
+
 use tracing_subscriber::util::SubscriberInitExt;
 //use tracing::debug;
 use tracing::{debug, info, error};
-use tracing_core::metadata::LevelFilter;
+
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 use gnostr_asyncgit::sync::commit::{SerializableCommit, serialize_commit, deserialize_commit};
 use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
 
 use std::process::Command;
-use chrono::offset::Utc;
-use chrono::DateTime;
-use std::io::{Result as IoResult};
-use std::env;
-use std::time::{SystemTime};
-use std::thread::sleep;
-use std::convert::TryInto;
+
+
+
 use std::any::type_name;
 use std::{io, thread};
-use argparse::{ArgumentParser,Store};
+
 use gnostr_legit::gitminer::Gitminer;
 use git2::*;
-use sha2::{Sha256, Digest};
-use pad::{PadStr, Alignment};
-use ::time::OffsetDateTime;
-use ::time::macros::datetime;
+use sha2::Digest;
 
-use gnostr_legit::{gitminer, repo, worker};
+
+
+use gnostr_legit::gitminer;
 
 fn type_of<T>(_: T) -> &'static str {
     type_name::<T>()
