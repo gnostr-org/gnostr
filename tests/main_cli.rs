@@ -29,7 +29,7 @@ mod tests {
     use std::fs::{self, File};
     use std::io::Write;
     use std::path::{Path, PathBuf};
-    use std::env;
+    
     use gnostr::cli::get_app_cache_path;
     use std::thread;
     use std::time::Duration;
