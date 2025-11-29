@@ -14,7 +14,6 @@
     unused_lifetimes,
     unused_labels,
     unused_extern_crates,
-    non_ascii_idents,
     keyword_idents,
     deprecated_in_future,
     unstable_features,

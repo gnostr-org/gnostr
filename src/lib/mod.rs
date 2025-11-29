@@ -1,3 +1,4 @@
+#![deny(non_ascii_idents)]
 //! gnostr: a git+nostr workflow utility and library
 //!
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
