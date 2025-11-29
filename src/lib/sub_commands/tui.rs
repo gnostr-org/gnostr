@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
+use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
 use crate::blockheight;
 use crate::weeble;
 use crate::wobble;
@@ -236,16 +237,22 @@ pub async fn tui(
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
-    debug!("233:tui:{:?}", sub_command_args);
-    //debug!("234:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
+    let quit_flag = Arc::new(AtomicBool::new(false));
+    let r = Arc::clone(&quit_flag);
+    ctrlc::set_handler(move || {
+        r.store(true, Ordering::SeqCst);
+    }).expect("Error setting Ctrl-C handler");
+
+    debug!("239:tui:{:?}", sub_command_args);
+    //debug!("240:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
 
     //TODO gnostr --gitdir
     //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
     if !valid_path(&gitdir) {
-        debug!("237:invalid path\nplease run gitui inside of a non-bare git repository");
+        debug!("243:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            debug!("241:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+            debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
             //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
             let repo_path: RepoPath = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
@@ -253,9 +260,9 @@ pub async fn tui(
                     .as_ref(),
             );
 
-            debug!("247:{:?}", repo_path);
+            debug!("253:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            debug!("251:{:?}", sub_command_args.gitdir);
+            debug!("257:{:?}", sub_command_args.gitdir);
         } else {
             debug!("GNOSTR_GITDIR NOT set case!");
             debug!("fork no return  case!");
@@ -349,6 +356,7 @@ pub async fn tui(
             updater,
             &mut terminal,
             cli.screenshots,
+            Arc::clone(&quit_flag),
         )
         .await
         .expect("");
@@ -382,6 +390,7 @@ pub async fn run_app(
     updater: Updater,
     terminal: &mut Terminal,
     screenshots: Option<u8>,
+    quit_flag: Arc<AtomicBool>,
 ) -> Result<QuitState, anyhow::Error> {
     let (tx_git, rx_git) = unbounded();
     let (tx_app, rx_app) = unbounded();
@@ -399,17 +408,17 @@ pub async fn run_app(
 
     let spinner_ticker = tick(SPINNER_INTERVAL);
 
-    let mut app = App::new(
-        RefCell::new(repo.clone()),
-        tx_git,
-        tx_app,
-        input.clone(),
-        theme,
-        key_config,
-    )
-    .await
-    .expect("402:App::new fail!");
-
+            let mut app = App::new(
+                RefCell::new(repo.clone()),
+                tx_git,
+                tx_app,
+                input.clone(),
+                theme,
+                key_config,
+                Arc::clone(&quit_flag),
+            )
+            .await
+            .expect("402:App::new fail!");
     let mut spinner = Spinner::default();
     let mut first_update = true;
 
@@ -503,7 +512,7 @@ pub async fn run_app(
             spinner.set_state(app.any_work_pending());
             spinner.draw(terminal)?;
 
-            if app.is_quit() {
+            if app.is_quit() || quit_flag.load(Ordering::SeqCst) {
                 break;
             }
         }
