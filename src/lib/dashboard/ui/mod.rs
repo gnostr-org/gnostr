@@ -1,5 +1,5 @@
 use super::app::*;
-use crossterm::event::{self, Event, KeyCode};
+use crossterm::event::{self};
 use std::{
     error::Error,
     time::Duration,
@@ -8,7 +8,6 @@ use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    text::Span,
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
