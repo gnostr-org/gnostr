@@ -5,7 +5,7 @@ use clap::Parser;
 use git2::{ObjectType, Repository, RepositoryState};
 
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use libp2p::gossipsub;
+
 use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::prelude::Tag;
 use once_cell::sync::OnceCell;
