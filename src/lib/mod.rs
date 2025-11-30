@@ -92,62 +92,37 @@ pub use types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
-//
 pub use nostr_sdk_0_19_1::prelude::rand;
-//
 pub use tokio::sync::mpsc::{Receiver, Sender};
 pub use tungstenite::Message;
 pub use zeroize::Zeroize;
 pub use types::nip44;
 //avoid?//upgrade?
 //pub use lightning;
-
 use anyhow::{anyhow, Result};
-///
 use directories::ProjectDirs;
-
-///
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-///
 pub const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
-
-///
 pub const GNOSTR_SHA256: [u8; 32] = [
     0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,
     0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, 0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06,
 ];
-
-///
 pub const DEFAULT_POW_DIFFICULTY: u8 = 4;
-
-///
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
     ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
 }
-
-///
 type Ws =
-    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-
-///
-pub mod reflog;
-///
+        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
+    pub mod reflog;
 pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message};
-
-///
 pub use relays::{
     relays_all, relays_by_nip, relays_offline, relays_online, relays_paid,
 };
-
-///
 pub mod watch_list;
-///
 pub use watch_list::*;
-
 //TODO
 /// get_relays_by_nip
 /// pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str>
