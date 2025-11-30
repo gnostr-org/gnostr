@@ -37,7 +37,6 @@ use crate::{
 const ELEMENTS_PER_LINE: usize = 9;
 const SLICE_SIZE: usize = 1200;
 
-///
 pub struct CommitList {
     repo: RepoPathRef,
     title: Box<str>,
@@ -59,8 +58,7 @@ pub struct CommitList {
 }
 
 impl CommitList {
-    ///
-    pub fn new(env: &Environment, title: &str) -> Self {
+        pub fn new(env: &Environment, title: &str) -> Self {
         Self {
             repo: env.repo.clone(),
             items: ItemBatch::default(),
@@ -82,58 +80,48 @@ impl CommitList {
         }
     }
 
-    ///
-    pub const fn tags(&self) -> Option<&Tags> {
+        pub const fn tags(&self) -> Option<&Tags> {
         self.tags.as_ref()
     }
 
-    ///
-    pub fn clear(&mut self) {
+        pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
     }
 
-    ///
-    pub fn copy_items(&self) -> Vec<CommitId> {
+        pub fn copy_items(&self) -> Vec<CommitId> {
         self.commits.iter().copied().collect_vec()
     }
 
-    ///
-    pub fn set_tags(&mut self, tags: Tags) {
+        pub fn set_tags(&mut self, tags: Tags) {
         self.tags = Some(tags);
     }
 
-    ///
-    pub fn selected_entry(&self) -> Option<&LogEntry> {
+        pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
             .iter()
             .nth(self.selection.saturating_sub(self.items.index_offset()))
     }
 
-    ///
-    pub fn marked_count(&self) -> usize {
+        pub fn marked_count(&self) -> usize {
         self.marked.len()
     }
 
-    ///
-    pub fn marked(&self) -> &[(usize, CommitId)] {
+        pub fn marked(&self) -> &[(usize, CommitId)] {
         &self.marked
     }
 
-    ///
-    pub fn clear_marked(&mut self) {
+        pub fn clear_marked(&mut self) {
         self.marked.clear();
     }
 
-    ///
-    pub fn marked_commits(&self) -> Vec<CommitId> {
+        pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
 
         commits
     }
 
-    ///
-    pub fn copy_commit_hash(&self) -> Result<()> {
+        pub fn copy_commit_hash(&self) -> Result<()> {
         let marked = self.marked.as_slice();
         let yank: Option<String> = match marked {
             [] => self
@@ -165,8 +153,7 @@ impl CommitList {
         Ok(())
     }
 
-    ///
-    #[allow(clippy::needless_pass_by_ref_mut)]
+        #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn checkout(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
             try_or_popup!(
@@ -187,8 +174,7 @@ impl CommitList {
         }
     }
 
-    ///
-    pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
+        pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
         self.local_branches.clear();
 
         for local_branch in local_branches {
@@ -199,8 +185,7 @@ impl CommitList {
         }
     }
 
-    ///
-    pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
+        pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
         self.remote_branches.clear();
 
         for remote_branch in remote_branches {
@@ -211,8 +196,7 @@ impl CommitList {
         }
     }
 
-    ///
-    pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
+        pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
         if commits != self.commits {
             self.items.clear();
             self.commits = commits;
@@ -220,8 +204,7 @@ impl CommitList {
         }
     }
 
-    ///
-    pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
+        pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
         let new_commits = !commits.is_empty();
         self.commits.extend(commits);
 
@@ -233,8 +216,7 @@ impl CommitList {
         }
     }
 
-    ///
-    pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
+        pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
         //note: set highlights to none if there is no highlight
         self.highlights = if highlighting.as_ref().is_some_and(|set| set.is_empty()) {
             None
@@ -247,8 +229,7 @@ impl CommitList {
         self.fetch_commits(true);
     }
 
-    ///
-    pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
+        pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         let index = self.commits.get_index_of(&id);
 
         if let Some(index) = index {
@@ -262,8 +243,7 @@ impl CommitList {
         }
     }
 
-    ///
-    pub fn highlighted_selection_info(&self) -> (usize, usize) {
+        pub fn highlighted_selection_info(&self) -> (usize, usize) {
         let amount = self
             .highlights
             .as_ref()

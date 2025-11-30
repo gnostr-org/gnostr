@@ -55,7 +55,7 @@ pub struct RevisionFilesComponent {
 }
 
 impl RevisionFilesComponent {
-    ///
+
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -73,7 +73,7 @@ impl RevisionFilesComponent {
         }
     }
 
-    ///
+
     pub fn set_commit(&mut self, commit: CommitId) -> Result<()> {
         self.show()?;
 
@@ -90,12 +90,12 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
-    ///
+
     pub const fn revision(&self) -> Option<&CommitInfo> {
         self.revision.as_ref()
     }
 
-    ///
+
     pub fn update(&mut self, ev: AsyncNotification) -> Result<()> {
         self.current_file.update(ev);
 
@@ -130,7 +130,7 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
-    ///
+
     pub fn any_work_pending(&self) -> bool {
         self.current_file.any_work_pending() || self.async_treefiles.is_pending()
     }
