@@ -2,7 +2,7 @@
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn new_branch_when_no_state_event_exists() -> Result<()> {
+async fn new_branch_when_no_state_event_exists() -> Result<(), E> {
     generate_repo_with_state_event().await?;
     Ok(())
 }
