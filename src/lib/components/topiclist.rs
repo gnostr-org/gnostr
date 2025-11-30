@@ -108,56 +108,56 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub const fn tags(&self) -> Option<&Tags> {
         self.tags.as_ref()
     }
 
-    ///
+
     pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
     }
 
-    ///
+
     pub fn copy_items(&self) -> Vec<CommitId> {
         self.commits.iter().copied().collect_vec()
     }
 
-    ///
+
     pub fn set_tags(&mut self, tags: Tags) {
         self.tags = Some(tags);
     }
 
-    ///
+
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
             .iter()
             .nth(self.selection.saturating_sub(self.items.index_offset()))
     }
 
-    ///
+
     pub fn marked_count(&self) -> usize {
         self.marked.len()
     }
 
-    ///
+
     pub fn marked(&self) -> &[(usize, CommitId)] {
         &self.marked
     }
 
-    ///
+
     pub fn clear_marked(&mut self) {
         self.marked.clear();
     }
 
-    ///
+
     pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
         commits
     }
 
-    ///
+
     pub fn copy_commit_hash(&self) -> Result<()> {
         let marked = self.marked.as_slice();
         let yank: Option<String> = match marked {
@@ -190,7 +190,7 @@ impl TopicList {
         Ok(())
     }
 
-    ///
+
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn checkout(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
@@ -214,7 +214,7 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
         self.local_branches.clear();
 
@@ -226,7 +226,7 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
         self.remote_branches.clear();
 
@@ -238,7 +238,7 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
         // methods
         // `copy_items`
@@ -256,7 +256,7 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
         let new_commits = !commits.is_empty();
         self.commits.extend(commits);
@@ -269,7 +269,7 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
         //note: set highlights to none if there is no highlight
         self.highlights = if highlighting.as_ref().is_some_and(|set| set.is_empty()) {
@@ -283,7 +283,7 @@ impl TopicList {
         self.fetch_commits(true);
     }
 
-    ///
+
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         let index = self.commits.get_index_of(&id);
 
@@ -298,7 +298,7 @@ impl TopicList {
         }
     }
 
-    ///
+
     pub fn highlighted_selection_info(&self) -> (usize, usize) {
         let amount = self
             .highlights
