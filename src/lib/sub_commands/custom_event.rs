@@ -23,7 +23,7 @@ pub struct CustomEventCommand {
     ///
     /// NIP-25: Reactions
     /// 
-    ///	React to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' with a 👍 emoji
+    ///    React to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' with a 👍 emoji
     /// 
     /// > gnostr custom-event -k 7 -r wss://relay.example.example.com -t "reference|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" -t "+"
     /// 
