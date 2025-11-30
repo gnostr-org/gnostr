@@ -1,6 +1,6 @@
 use std::env;
 
-use gnostr::types::{EventKind, NAddr, NostrBech32, UncheckedUrl, PublicKey, NostrUrl};
+use gnostr::types::{EventKind, NAddr, UncheckedUrl, PublicKey, NostrUrl};
 
 fn main() {
     let mut args = env::args();
@@ -36,7 +36,7 @@ fn main() {
     };
 
     let mut relays: Vec<UncheckedUrl> = Vec::new();
-    while let Some(r) = args.next() {
+    for r in args {
         relays.push(UncheckedUrl(r));
     }
 
