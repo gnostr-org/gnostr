@@ -131,7 +131,7 @@ impl DrawableComponent for Status {
 impl Status {
     accessors!(self, [index, index_wd, diff]);
 
-    ///
+    /// Create a new Status component.
     pub fn new(env: &Environment) -> Self {
         let repo_clone = env.repo.borrow().clone();
         Self {
@@ -316,7 +316,7 @@ impl Status {
         None
     }
 
-    ///
+    /// Update the status.
     pub fn update(&mut self) -> Result<()> {
         self.git_branch_name.lookup().map(Some).unwrap_or(None);
 
@@ -337,7 +337,7 @@ impl Status {
         Ok(())
     }
 
-    ///
+    /// Check if any async operations are pending.
     pub fn anything_pending(&self) -> bool {
         self.git_diff.is_pending()
             || self.git_status_stage.is_pending()
@@ -351,7 +351,7 @@ impl Status {
             sync::get_default_remote_for_push(&self.repo.borrow().clone()).is_ok();
     }
 
-    ///
+    /// Update git.
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if !self.is_visible() {
             return Ok(());
@@ -401,7 +401,7 @@ impl Status {
         Ok(())
     }
 
-    ///
+    /// Update the diff.
     pub fn update_diff(&mut self) -> Result<()> {
         if let Some((path, is_stage)) = self.selected_path() {
             let diff_type = if is_stage {
