@@ -340,7 +340,12 @@ pub fn setup_logging() -> Result<()> {
 }
 
 pub fn get_app_cache_path() -> Result<PathBuf> {
-    let mut path = dirs::cache_dir().ok_or_else(|| anyhow!("failed to find os cache dir."))?;
+    let mut path = if cfg!(target_os = "macos") {
+        dirs::home_dir().map(|h| h.join(".config"))
+    } else {
+        dirs::config_dir()
+    }
+    .ok_or_else(|| anyhow!("failed to find os cache dir."))?;
 
     path.push("gnostr");
     fs::create_dir_all(&path)?;
