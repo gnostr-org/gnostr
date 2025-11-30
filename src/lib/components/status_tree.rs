@@ -42,7 +42,7 @@ pub struct StatusTreeComponent {
 }
 
 impl StatusTreeComponent {
-    ///
+
     pub fn new(env: &Environment, title: &str, focus: bool) -> Self {
         Self {
             title: title.to_string(),
@@ -64,7 +64,7 @@ impl StatusTreeComponent {
         self.revision = revision;
     }
 
-    ///
+
     pub fn update(&mut self, list: &[StatusItem]) -> Result<()> {
         self.pending = false;
 
@@ -77,12 +77,12 @@ impl StatusTreeComponent {
         Ok(())
     }
 
-    ///
+
     pub fn selection(&self) -> Option<FileTreeItem> {
         self.tree.selected_item()
     }
 
-    ///
+
     pub fn selection_file(&self) -> Option<StatusItem> {
         self.tree.selected_item().and_then(|f| {
             if let FileTreeItemKind::File(f) = f.kind {
@@ -93,34 +93,34 @@ impl StatusTreeComponent {
         })
     }
 
-    ///
+
     pub fn show_selection(&mut self, show: bool) {
         self.show_selection = show;
     }
 
-    /// returns true if list is empty
+ returns true if list is empty
     pub fn is_empty(&self) -> bool {
         self.tree.is_empty()
     }
 
-    ///
+
     pub const fn file_count(&self) -> usize {
         self.tree.tree.file_count()
     }
 
-    ///
+
     pub fn set_title(&mut self, title: String) {
         self.title = title;
     }
 
-    ///
+
     pub fn clear(&mut self) -> Result<()> {
         self.current_hash = 0;
         self.pending = true;
         self.tree.update(&[])
     }
 
-    ///
+
     pub fn is_file_selected(&self) -> bool {
         self.tree
             .selected_item()
