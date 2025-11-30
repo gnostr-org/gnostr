@@ -83,7 +83,7 @@ impl Component for CreateBranchPopup {
 }
 
 impl CreateBranchPopup {
-    ///
+
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -100,14 +100,14 @@ impl CreateBranchPopup {
         }
     }
 
-    ///
+
     pub fn open(&mut self) -> Result<()> {
         self.show()?;
 
         Ok(())
     }
 
-    ///
+
     pub fn create_branch(&mut self) {
         let res = sync::create_branch(&self.repo.borrow(), self.input.get_text());
 
