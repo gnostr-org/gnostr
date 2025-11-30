@@ -14,14 +14,14 @@ impl<T> NotifyableMutex<T>
 where
     T: Send + Sync,
 {
-    ///
+
     pub fn new(start_value: T) -> Self {
         Self {
             data: Arc::new((Mutex::new(start_value), Condvar::new())),
         }
     }
 
-    ///
+
     pub fn wait(&self, condition: T)
     where
         T: PartialEq + Copy,
@@ -33,13 +33,13 @@ where
         drop(data);
     }
 
-    ///
+
     pub fn set_and_notify(&self, value: T) {
         *self.data.0.lock().expect("set err") = value;
         self.data.1.notify_one();
     }
 
-    ///
+
     pub fn get(&self) -> T
     where
         T: Copy,
