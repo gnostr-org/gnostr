@@ -55,7 +55,7 @@ pub struct Peer {
 
 impl std::fmt::Display for Peer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        print_key_value("PeerId", self.peer_id.clone(), f)?;
+        print_key_value("PeerId", self.peer_id, f)?;
         print_key_value("Protocol version", self.protocol_version.clone(), f)?;
         print_key_value("Agent version", self.agent_version.clone(), f)?;
         print_key_value("Observed address", self.observed_addr.clone(), f)?;

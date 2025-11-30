@@ -69,7 +69,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id.clone(), kad_store_config);
+            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(key.public().to_peer_id());
