@@ -96,7 +96,6 @@ pub use types::{
 pub use nostr_sdk_0_19_1::prelude::rand;
 //
 pub use tokio::sync::mpsc::{Receiver, Sender};
-///
 pub use tungstenite::Message;
 ///
 pub use zeroize::Zeroize;
