@@ -45,6 +45,15 @@ pub struct LegitSubCommand {
     kind: Option<u16>,
 }
 
+/// legit
+///
+/// # Panics
+///
+/// Panics if the local time offset cannot be determined.
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
         Some(LegitCommands::Login(args)) => login::launch(args).await?,
@@ -55,6 +64,7 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
         Some(LegitCommands::Push(args)) => push::launch(args).await?,
         Some(LegitCommands::Fetch(args)) => fetch::launch(args).await?,
         Some(LegitCommands::Mine) | None => {
+            #[allow(clippy::cast_possible_truncation)]
             let opts = gitminer::Options {
                 threads: sub_command_args.threads as u32,
                 target: sub_command_args.pow.clone().unwrap_or(sub_command_args.prefix.clone().unwrap_or_default()),

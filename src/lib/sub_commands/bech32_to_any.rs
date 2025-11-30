@@ -27,7 +27,7 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
                 "type": "Event Pointer",
                 "id": ne.id.as_hex_string(),
                 "relays": ne.relays.iter().map(|r| r.as_str().to_owned()).collect::<Vec<String>>(),
-                "kind": ne.kind.map(|k| Into::<u32>::into(k)),
+                "kind": ne.kind.map(Into::<u32>::into),
                 "author": ne.author.map(|a| a.as_hex_string()),
             }),
             NostrBech32::Id(id) => {

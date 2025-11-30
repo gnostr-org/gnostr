@@ -1,7 +1,7 @@
 pub mod config;
 pub mod git;
 pub mod site;
-pub mod ssh;
+pub mod server;
 pub mod state;
 pub mod utils;
 pub mod vars;
@@ -47,6 +47,6 @@ pub async fn start() -> anyhow::Result<()> {
     info!("Starting server on port {}...", port);
     #[cfg(not(target_os = "windows"))]
     let _ = sd_notify::notify(true, &[sd_notify::NotifyState::Ready]);
-    ssh::start_server(state).await?;
+    server::start_server(state).await?;
     Ok(())
 }

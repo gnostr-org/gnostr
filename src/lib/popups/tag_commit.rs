@@ -106,8 +106,7 @@ impl Component for TagCommitPopup {
 }
 
 impl TagCommitPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
             input: TextInputComponent::new(
@@ -124,8 +123,7 @@ impl TagCommitPopup {
         }
     }
 
-    ///
-    pub fn open(&mut self, id: CommitId) -> Result<()> {
+        pub fn open(&mut self, id: CommitId) -> Result<()> {
         self.commit_id = Some(id);
         self.show()?;
 

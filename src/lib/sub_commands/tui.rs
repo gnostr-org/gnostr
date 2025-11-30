@@ -71,16 +71,16 @@ pub enum SyntaxHighlightProgress {
 /// AsyncAppNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncAppNotification {
-    ///
+
     SyntaxHighlighting(SyntaxHighlightProgress),
 }
 
 /// AsyncNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncNotification {
-    ///
+
     App(AsyncAppNotification),
-    ///
+
     Git(AsyncGitNotification),
 }
 
@@ -238,6 +238,17 @@ pub fn set_panic_handlers() -> Result<()> {
     Ok(())
 }
 /// GNOSTR_TUI
+///
+/// # Panics
+///
+/// Panics if the ctrlc handler cannot be set.
+/// Panics if the terminal cannot be started.
+/// Panics if the app cannot be run.
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
+#[allow(clippy::too_many_lines)]
 pub async fn tui(
     mut sub_command_args: GnostrSubCommands,
     cli: &crate::cli::GnostrCli,
@@ -247,9 +258,11 @@ pub async fn tui(
 
     let quit_flag = Arc::new(AtomicBool::new(false));
     let r = Arc::clone(&quit_flag);
-    ctrlc::set_handler(move || {
+    if let Err(e) = ctrlc::set_handler(move || {
         r.store(true, Ordering::SeqCst);
-    }).expect("Error setting Ctrl-C handler");
+    }) {
+        log::error!("failed to set ctrlc handler: {e}");
+    }
 
     debug!("239:tui:{:?}", sub_command_args);
     //debug!("240:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
@@ -260,7 +273,7 @@ pub async fn tui(
     if !valid_path(&gitdir) {
         debug!("243:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
+            debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap());
             //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
             let repo_path: RepoPath = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
@@ -292,7 +305,13 @@ pub async fn tui(
 
     set_panic_handlers()?;
 
-    let mut terminal = start_terminal(io::stdout())/*.await*/.expect("");
+    let mut terminal = match start_terminal(io::stdout())/*.await*/ {
+        Ok(terminal) => terminal,
+        Err(e) => {
+            log::error!("failed to start terminal: {e}");
+            return Ok(());
+        }
+    };
     //let mut gitdir = sub_command_args.gitdir.clone().unwrap();
     let input = Input::new();
 
@@ -355,7 +374,7 @@ pub async fn tui(
     }
 
     loop {
-        let quit_state = run_app(
+        let quit_state = match Box::pin(run_app(
             app_start,
             gitdir.clone(),
             theme.clone(),
@@ -365,9 +384,15 @@ pub async fn tui(
             &mut terminal,
             cli.screenshots,
             Arc::clone(&quit_flag),
-        )
+        ))
         .await
-        .expect("");
+        {
+            Ok(quit_state) => quit_state,
+            Err(e) => {
+                log::error!("failed to run app: {e}");
+                return Ok(());
+            }
+        };
 
         match quit_state {
             QuitState::OpenSubmodule(p) => {
@@ -385,10 +410,14 @@ pub async fn tui(
 //    Ok(())
 //}
 
+/// # Panics
+///
+/// Panics if the app cannot be created.
+///
 /// # Errors
 ///
-/// Will return `Err` if `filename` does not exist or the user does not have
-/// permission to read it.
+/// Will return `Err` if the app fails to run.
+#[allow(clippy::too_many_lines)]
 pub async fn run_app(
     app_start: Instant,
     repo: RepoPath,
@@ -416,7 +445,7 @@ pub async fn run_app(
 
     let spinner_ticker = tick(SPINNER_INTERVAL);
 
-            let mut app = App::new(
+            let mut app = match App::new(
                 RefCell::new(repo.clone()),
                 tx_git,
                 tx_app,
@@ -425,8 +454,13 @@ pub async fn run_app(
                 key_config,
                 Arc::clone(&quit_flag),
             )
-            .await
-            .expect("402:App::new fail!");
+            .await {
+                Ok(app) => app,
+                Err(e) => {
+                    log::error!("failed to create app: {e}");
+                    return Err(e.into());
+                }
+            };
     let mut spinner = Spinner::default();
     let mut first_update = true;
 

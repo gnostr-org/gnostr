@@ -26,7 +26,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct PushTagsPopup {
     repo: RepoPathRef,
     visible: bool,
@@ -40,8 +39,7 @@ pub struct PushTagsPopup {
 }
 
 impl PushTagsPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
@@ -55,8 +53,7 @@ impl PushTagsPopup {
         }
     }
 
-    ///
-    pub fn push_tags(&mut self) -> Result<()> {
+        pub fn push_tags(&mut self) -> Result<()> {
         self.show()?;
         if need_username_password(&self.repo.borrow())? {
             let cred = extract_username_password(&self.repo.borrow())
@@ -82,8 +79,7 @@ impl PushTagsPopup {
         Ok(())
     }
 
-    ///
-    pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
+        pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::PushTags {
             self.update()?;
         }
@@ -91,8 +87,7 @@ impl PushTagsPopup {
         Ok(())
     }
 
-    ///
-    fn update(&mut self) -> Result<()> {
+        fn update(&mut self) -> Result<()> {
         self.pending = self.git_push.is_pending()?;
         self.progress = self.git_push.progress()?;
 
@@ -108,13 +103,11 @@ impl PushTagsPopup {
         Ok(())
     }
 
-    ///
-    pub const fn any_work_pending(&self) -> bool {
+        pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
-    pub fn get_progress(progress: &Option<PushTagsProgress>) -> (String, u8) {
+        pub fn get_progress(progress: &Option<PushTagsProgress>) -> (String, u8) {
         progress
             .as_ref()
             .map_or((strings::PUSH_POPUP_PROGRESS_NONE.into(), 0), |progress| {

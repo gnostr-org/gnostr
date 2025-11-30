@@ -58,7 +58,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     } else {
         info!("gnostr-relay not found. Attempting to install...");
         let install_status = Command::new("cargo")
-            .args(&["install", "gnostr-relay"]) //, "--path", "relay"])
+            .args(["install", "gnostr-relay"]) //, "--path", "relay"])
             .spawn()
             .context("Failed to spawn `cargo install gnostr-relay`")?
             .wait()

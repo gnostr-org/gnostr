@@ -125,44 +125,26 @@ pub enum InternalEvent {
     RenameBranch(String, String),
     /// SelectBranch
     SelectBranch,
-    ///
-    OpenExternalEditor(Option<String>),
-    ///
-    OpenExternalChat(Option<String>),
-    ///
-    Push(String, PushType, bool, bool),
-    ///
-    Pull(String),
-    ///
-    PushTags,
-    ///
-    OptionSwitched(AppOption),
-    ///
-    OpenFuzzyFinder(Vec<String>, FuzzyFinderTarget),
-    ///
-    OpenLogSearchPopup,
-    ///
-    FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
-    ///
-    FetchRemotes,
-    ///
-    OpenPopup(StackablePopupOpen),
-    ///
-    PopupStackPop,
-    ///
-    PopupStackPush(StackablePopupOpen),
-    ///
-    ViewSubmodules,
-    ///
-    OpenRepo {
+        OpenExternalEditor(Option<String>),
+        OpenExternalChat(Option<String>),
+        Push(String, PushType, bool, bool),
+        Pull(String),
+        PushTags,
+        OptionSwitched(AppOption),
+        OpenFuzzyFinder(Vec<String>, FuzzyFinderTarget),
+        OpenLogSearchPopup,
+        FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
+        FetchRemotes,
+        OpenPopup(StackablePopupOpen),
+        PopupStackPop,
+        PopupStackPush(StackablePopupOpen),
+        ViewSubmodules,
+        OpenRepo {
         path: PathBuf,
     },
-    ///
-    OpenResetPopup(CommitId),
-    ///
-    RewordCommit(CommitId),
-    ///
-    CommitSearch(LogFilterSearchOptions),
+        OpenResetPopup(CommitId),
+        RewordCommit(CommitId),
+        CommitSearch(LogFilterSearchOptions),
 }
 
 /// single threaded simple queue for components to communicate with

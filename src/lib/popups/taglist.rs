@@ -31,7 +31,6 @@ use crate::{
     ui::{self, Size},
 };
 
-///
 pub struct TagListPopup {
     repo: RepoPathRef,
     theme: SharedTheme,
@@ -248,8 +247,7 @@ impl TagListPopup {
         }
     }
 
-    ///
-    pub fn open(&mut self) -> Result<()> {
+        pub fn open(&mut self) -> Result<()> {
         self.table_state.get_mut().select(Some(0));
         self.show()?;
 
@@ -281,8 +279,7 @@ impl TagListPopup {
         Ok(())
     }
 
-    ///
-    pub fn update(&mut self, ev: AsyncNotification) {
+        pub fn update(&mut self, ev: AsyncNotification) {
         if matches!(ev, AsyncNotification::Git(AsyncGitNotification::RemoteTags)) {
             if let Some(job) = self.async_remote_tags.take_last() {
                 if let Some(Ok(missing_remote_tags)) = job.result() {
@@ -294,8 +291,7 @@ impl TagListPopup {
         }
     }
 
-    ///
-    pub fn any_work_pending(&self) -> bool {
+        pub fn any_work_pending(&self) -> bool {
         self.async_remote_tags.is_pending()
     }
 
@@ -317,8 +313,7 @@ impl TagListPopup {
         }
     }
 
-    ///
-    #[allow(clippy::needless_pass_by_ref_mut)]
+        #[allow(clippy::needless_pass_by_ref_mut)]
     fn move_selection(&mut self, scroll_type: ScrollType) -> bool {
         let mut table_state = self.table_state.take();
 
@@ -361,15 +356,13 @@ impl TagListPopup {
             .is_some()
     }
 
-    ///
-    fn get_rows(&self) -> Vec<Row<'_>> {
+        fn get_rows(&self) -> Vec<Row<'_>> {
         self.tags.as_ref().map_or_else(Vec::new, |tags| {
             tags.iter().map(|tag| self.get_row(tag)).collect()
         })
     }
 
-    ///
-    fn get_row(&self, tag: &TagWithMetadata) -> Row<'_> {
+        fn get_row(&self, tag: &TagWithMetadata) -> Row<'_> {
         const UPSTREAM_SYMBOL: &str = "\u{2191}";
         const ATTACHMENT_SYMBOL: &str = "@";
         const EMPTY_SYMBOL: &str = " ";

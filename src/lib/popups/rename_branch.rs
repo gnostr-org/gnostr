@@ -83,8 +83,7 @@ impl Component for RenameBranchPopup {
 }
 
 impl RenameBranchPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
@@ -101,8 +100,7 @@ impl RenameBranchPopup {
         }
     }
 
-    ///
-    pub fn open(&mut self, branch_ref: String, cur_name: String) -> Result<()> {
+        pub fn open(&mut self, branch_ref: String, cur_name: String) -> Result<()> {
         self.branch_ref = None;
         self.branch_ref = Some(branch_ref);
         self.input.set_text(cur_name);
@@ -111,8 +109,7 @@ impl RenameBranchPopup {
         Ok(())
     }
 
-    ///
-    pub fn rename_branch(&mut self) {
+        pub fn rename_branch(&mut self) {
         if let Some(br) = &self.branch_ref {
             let res = sync::rename_branch(&self.repo.borrow(), br, self.input.get_text());
 
