@@ -664,7 +664,9 @@ impl TopicList {
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(splitter.clone());
 
+        #[allow(unused_variables)]
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
+        #[allow(unused_variables)]
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
