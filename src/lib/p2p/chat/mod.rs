@@ -258,7 +258,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
         app.run().map_err(|e| anyhow!(e.to_string()))?;
 
-        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave))).await;
+        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
         std::thread::sleep(Duration::from_millis(500));
         Ok(())
     }).await?
