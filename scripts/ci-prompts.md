@@ -1,1 +1,1 @@
- 1. git push 2. run "which gh" and use gh utility to determine the related action that was just triggered 3. sleep 120 4. read the errors from the action 5. fix first error 6. cargo c -j8 7. cargo t -j8 8. git push 8. repeat
+ 1. git push 2. run "which gh" 3. use gh utility to determine the related action that was just triggered (ELAPSED column) 4. sleep 120 5. read the errors from the action 6. fix first error 7. cargo c -j8 8. cargo t -j8 9. git push 10. repeat
