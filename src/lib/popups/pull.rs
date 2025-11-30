@@ -32,7 +32,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct PullPopup {
     repo: RepoPathRef,
     visible: bool,
@@ -47,8 +46,7 @@ pub struct PullPopup {
 }
 
 impl PullPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
@@ -63,8 +61,7 @@ impl PullPopup {
         }
     }
 
-    ///
-    pub fn fetch(&mut self, branch: String) -> Result<()> {
+        pub fn fetch(&mut self, branch: String) -> Result<()> {
         self.branch = branch;
         self.show()?;
         if need_username_password_for_fetch(&self.repo.borrow())? {
@@ -93,13 +90,11 @@ impl PullPopup {
         Ok(())
     }
 
-    ///
-    pub const fn any_work_pending(&self) -> bool {
+        pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
-    pub fn update_git(&mut self, ev: AsyncGitNotification) {
+        pub fn update_git(&mut self, ev: AsyncGitNotification) {
         if self.is_visible() && ev == AsyncGitNotification::Pull {
             if let Err(error) = self.update() {
                 self.pending = false;
@@ -111,8 +106,7 @@ impl PullPopup {
         }
     }
 
-    ///
-    fn update(&mut self) -> Result<()> {
+        fn update(&mut self) -> Result<()> {
         self.pending = self.git_fetch.is_pending()?;
         self.progress = self.git_fetch.progress()?;
 
