@@ -37,7 +37,7 @@ pub struct ChatDetailsComponent {
 impl ChatDetailsComponent {
     accessors!(self, [single_details, compare_details, file_tree]);
 
-    ///
+
     pub async fn new(env: &Environment) -> Self {
         Self {
             single_details: DetailsComponent::new(env, false),
@@ -61,7 +61,7 @@ impl ChatDetailsComponent {
         )
     }
 
-    ///
+
     pub fn set_commits(
         &mut self,
         params: Option<CommitFilesParams>,
@@ -104,12 +104,12 @@ impl ChatDetailsComponent {
         Ok(())
     }
 
-    ///
+
     pub fn any_work_pending(&self) -> bool {
         self.git_commit_files.is_pending()
     }
 
-    ///
+
     pub const fn files(&self) -> &StatusTreeComponent {
         &self.file_tree
     }
