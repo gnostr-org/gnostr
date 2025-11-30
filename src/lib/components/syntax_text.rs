@@ -244,7 +244,7 @@ impl Component for SyntaxTextComponent {
         Ok(EventState::NotConsumed)
     }
 
-    ///
+
     fn focused(&self) -> bool {
         self.focused
     }
