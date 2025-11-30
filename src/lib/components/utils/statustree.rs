@@ -7,7 +7,6 @@ use super::filetree::{FileTreeItem, FileTreeItemKind, FileTreeItems, PathCollaps
 
 //TODO: use new `filetreelist` crate
 
-///
 #[derive(Default)]
 pub struct StatusTree {
     pub tree: FileTreeItems,
@@ -18,7 +17,6 @@ pub struct StatusTree {
     pub available_selections: Vec<usize>,
 }
 
-///
 #[derive(Copy, Clone, Debug)]
 pub enum MoveSelection {
     Up,
@@ -72,8 +70,7 @@ impl StatusTree {
 
     /// Return which indices can be selected, taking into account that
     /// some folders may be folded up into their parent
-    ///
-    /// It should be impossible to select a folder which has been
+        /// It should be impossible to select a folder which has been
     /// folded into its parent
     fn setup_available_selections(&self) -> Vec<usize> {
         // use the same algorithm as in filetree
@@ -124,8 +121,7 @@ impl StatusTree {
         idx
     }
 
-    ///
-    pub fn move_selection(&mut self, dir: MoveSelection) -> bool {
+        pub fn move_selection(&mut self, dir: MoveSelection) -> bool {
         self.selection.is_some_and(|selection| {
             let selection_change = match dir {
                 MoveSelection::Up => self.selection_updown(selection, true),
@@ -144,13 +140,11 @@ impl StatusTree {
         })
     }
 
-    ///
-    pub fn selected_item(&self) -> Option<FileTreeItem> {
+        pub fn selected_item(&self) -> Option<FileTreeItem> {
         self.selection.map(|i| self.tree[i].clone())
     }
 
-    ///
-    pub fn is_empty(&self) -> bool {
+        pub fn is_empty(&self) -> bool {
         self.tree.items().is_empty()
     }
 
