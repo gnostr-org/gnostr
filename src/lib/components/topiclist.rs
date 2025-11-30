@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
