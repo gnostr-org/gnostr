@@ -126,26 +126,26 @@ impl App {
     pub fn get_border_style_from_id(&self, id: ActiveBlock) -> Style {
         let style = Style::default();
         if id == self.route.active_block {
-            return style
+            style
                 .fg(Color::Magenta)
-                .add_modifier(Modifier::BOLD | Modifier::ITALIC);
+                .add_modifier(Modifier::BOLD | Modifier::ITALIC)
         } else if id == self.route.selected_block {
-            return style.fg(Color::Magenta); //.add_modifier(Modifier::BOLD);
+            style.fg(Color::Magenta) //.add_modifier(Modifier::BOLD);
         } else {
-            return style.fg(Color::Gray);
+            style.fg(Color::Gray)
         }
     }
 
     pub fn get_highlight_style_from_id(&self, id: ActiveBlock) -> Style {
         let style = Style::default();
         if id == self.route.active_block {
-            return style.fg(Color::Magenta);
+            style.fg(Color::Magenta)
         } else if id == self.route.selected_block {
-            return style
+            style
                 .fg(Color::Magenta)
-                .add_modifier(Modifier::BOLD | Modifier::ITALIC);
+                .add_modifier(Modifier::BOLD | Modifier::ITALIC)
         } else {
-            return style.fg(Color::Magenta);
+            style.fg(Color::Magenta)
         }
     }
 
