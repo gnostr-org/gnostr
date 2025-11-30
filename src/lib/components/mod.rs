@@ -40,7 +40,6 @@ pub use self::status_tree::StatusTreeComponent;
 use crate::ui::style::Theme;
 
 /// creates accessors for a list of components
-///
 /// allows generating code to make sure
 /// we always enumerate all components in both getter functions
 #[macro_export]
@@ -147,14 +146,12 @@ pub enum Direction {
     Down,
 }
 
-///
 #[derive(PartialEq, Eq)]
 pub enum CommandBlocking {
     Blocking,
     PassingOn,
 }
 
-///
 pub fn visibility_blocking<T: Component>(comp: &T) -> CommandBlocking {
     if comp.is_visible() {
         CommandBlocking::Blocking
@@ -163,13 +160,10 @@ pub fn visibility_blocking<T: Component>(comp: &T) -> CommandBlocking {
     }
 }
 
-///
 pub trait DrawableComponent {
-    ///
-    fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()>;
+        fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()>;
 }
 
-///
 #[derive(PartialEq, Eq)]
 pub enum EventState {
     Consumed,
@@ -201,31 +195,24 @@ impl From<bool> for EventState {
 
 /// base component trait
 pub trait Component {
-    ///
-    fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking;
+        fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking;
 
-    ///
-    fn event(&mut self, ev: &Event) -> Result<EventState>;
+        fn event(&mut self, ev: &Event) -> Result<EventState>;
 
-    ///
-    fn focused(&self) -> bool {
+        fn focused(&self) -> bool {
         false
     }
     /// focus/unfocus this component depending on param
     fn focus(&mut self, _focus: bool) {}
-    ///
-    fn is_visible(&self) -> bool {
+        fn is_visible(&self) -> bool {
         true
     }
-    ///
-    fn hide(&mut self) {}
-    ///
-    fn show(&mut self) -> Result<()> {
+        fn hide(&mut self) {}
+        fn show(&mut self) -> Result<()> {
         Ok(())
     }
 
-    ///
-    fn toggle_visible(&mut self) -> Result<()> {
+        fn toggle_visible(&mut self) -> Result<()> {
         if self.is_visible() {
             self.hide();
             Ok(())
