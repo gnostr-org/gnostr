@@ -33,7 +33,6 @@ use crate::{
     ui::{self, Size},
 };
 
-///
 pub struct BranchListPopup {
     repo: RepoPathRef,
     branches: Vec<BranchInfo>,
@@ -306,8 +305,7 @@ impl BranchListPopup {
         Ok(EventState::NotConsumed)
     }
 
-    ///
-    pub fn open(&mut self) -> Result<()> {
+        pub fn open(&mut self) -> Result<()> {
         self.show()?;
         self.update_branches()?;
 
@@ -344,8 +342,7 @@ impl BranchListPopup {
         Ok(())
     }
 
-    ///
-    pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
+        pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::Push {
             self.update_branches()?;
         }
@@ -425,8 +422,7 @@ impl BranchListPopup {
             .map(|b| b.top_commit)
     }
 
-    ///
-    fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
+        fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
         let new_selection = match scroll {
             ScrollType::Up => self.selection.saturating_add(1),
             ScrollType::Down => self.selection.saturating_sub(1),
@@ -543,8 +539,7 @@ impl BranchListPopup {
         Text::from(txt)
     }
 
-    ///
-    fn switch_to_selected_branch(&mut self) -> Result<()> {
+        fn switch_to_selected_branch(&mut self) -> Result<()> {
         if !self.valid_selection() {
             anyhow::bail!("no valid branch selected");
         }
