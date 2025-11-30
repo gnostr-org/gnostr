@@ -8,19 +8,19 @@
 ///
 #[cfg(test)]
 mod tests {
-    use std::process::Command;
-    use assert_cmd::cargo::cargo_bin;
-    use std::error::Error;
-    use gnostr::utils::screenshot;
+    
+    
+    
+    
     use std::fs;
-    use std::thread;
-    use std::time::Duration;
+    
+    
     use tempfile::TempDir;
     use git2::{Repository, Signature};
     use std::io::Write;
     use std::path::Path;
     
-    use serial_test::serial;
+    
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
