@@ -632,7 +632,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_author = if normal {
+        let _style_author = if normal {
             theme.commit_author(selected)
         } else {
             theme.commit_unhighlighted()

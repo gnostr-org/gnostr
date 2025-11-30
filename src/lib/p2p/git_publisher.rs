@@ -18,7 +18,7 @@ pub async fn run_git_publisher(args: &Args, swarm: &mut libp2p::Swarm<Behaviour>
                     let record = kad::Record {
                         key: key.clone(),
                         value: commit_id.into_bytes(),
-                        publisher: Some(swarm.local_peer_id().clone()),
+                        publisher: Some(*swarm.local_peer_id()),
                         expires: None,
                     };
                     swarm

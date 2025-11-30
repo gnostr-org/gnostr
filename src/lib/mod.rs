@@ -524,7 +524,7 @@ impl Probe {
                     RelayMessage::Auth(challenge) => {
                         eprintln!("{}: AUTH({})", PREFIXES.from_relay, challenge);
                     }
-                    RelayMessage::Event(sub, e) => {
+                    RelayMessage::Event(_sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
                         //#[cfg(debug_assertions)]
                         //eprintln!(
