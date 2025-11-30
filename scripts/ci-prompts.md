@@ -2,7 +2,7 @@
 2. run "which gh"
 3. use gh utility to determine the related action that was just triggered (ELAPSED column)
 4. sleep 120
-5. read the errors from the action gnostr-bot-matrix
+5. check status of 'gnostr-bot-matrix' action, if completed, read errors from it
 6. fix first error
 7. cargo c -j8
 8. cargo t -j8
