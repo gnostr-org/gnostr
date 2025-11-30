@@ -31,7 +31,7 @@ pub async fn evt_loop(
                 .heartbeat_interval(Duration::from_secs(10))
                 .validation_mode(gossipsub::ValidationMode::Strict)
                 .build()
-                .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+                .map_err(io::Error::other)?;
 
             let gossipsub = gossipsub::Behaviour::new(
                 gossipsub::MessageAuthenticity::Signed(key.clone()),
