@@ -16,21 +16,18 @@ use crate::notify_mutex::NotifyableMutex;
 static FAST_POLL_DURATION: Duration = Duration::from_millis(100);
 static SLOW_POLL_DURATION: Duration = Duration::from_millis(10000);
 
-///
 #[derive(Clone, Copy, Debug)]
 pub enum InputState {
     Paused,
     Polling,
 }
 
-///
 #[derive(Clone, Debug)]
 pub enum InputEvent {
     Input(Event),
     State(InputState),
 }
 
-///
 #[derive(Clone)]
 pub struct Input {
     desired_state: Arc<NotifyableMutex<bool>>,
@@ -46,8 +43,7 @@ impl Default for Input {
 }
 
 impl Input {
-    ///
-    pub fn new() -> Self {
+        pub fn new() -> Self {
         let (tx, rx) = unbounded();
 
         let desired_state = Arc::new(NotifyableMutex::new(true));
@@ -73,13 +69,11 @@ impl Input {
         }
     }
 
-    ///
-    pub fn receiver(&self) -> Receiver<InputEvent> {
+        pub fn receiver(&self) -> Receiver<InputEvent> {
         self.receiver.clone()
     }
 
-    ///
-    #[allow(clippy::needless_pass_by_ref_mut)]
+        #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn set_polling(&mut self, enabled: bool) {
         self.desired_state.set_and_notify(enabled);
     }
@@ -88,8 +82,7 @@ impl Input {
         self.desired_state.get()
     }
 
-    ///
-    pub fn is_state_changing(&self) -> bool {
+        pub fn is_state_changing(&self) -> bool {
         self.shall_poll() != self.current_state.load(Ordering::Relaxed)
     }
 
