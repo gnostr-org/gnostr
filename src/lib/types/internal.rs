@@ -1,3 +1,4 @@
+#![allow(clippy::print_with_newline)]
 use crate::blockheight::blockheight_sync;
 use crate::weeble::weeble_sync;
 use base64::Engine;
@@ -199,8 +200,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
             println!("IGNORING PONG")
         }
         Message::Close(_) => {
-            //println!("Closing");
-            return;
+            println!("Closing");
         }
         Message::Frame(_) => {
             println!("UNEXPECTED RAW WEBSOCKET FRAME")

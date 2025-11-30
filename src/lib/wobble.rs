@@ -10,7 +10,7 @@ pub fn wobble() -> Result<f64, ascii::AsciiChar> {
 /// pub fn wobble_sync() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn wobble_sync() -> Result<f64, ascii::AsciiChar> {
-    //! wobble = utc_secs % blockheight
+    // wobble = utc_secs % blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -27,7 +27,7 @@ pub fn wobble_sync() -> Result<f64, ascii::AsciiChar> {
 /// pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar>
 ///
 pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar> {
-    //! wobble = utc_secs % blockheight
+    // wobble = utc_secs % blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -45,7 +45,7 @@ pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar> {
 /// pub async fn wobble_async() -> Result<f64, ascii::AsciiChar>
 ///
 pub async fn wobble_async() -> Result<f64, ascii::AsciiChar> {
-    //! wobble = utc_secs / blockheight
+    // wobble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -62,7 +62,7 @@ pub async fn wobble_async() -> Result<f64, ascii::AsciiChar> {
 /// pub fn wobble_millis_async() -> Result<f64, ascii::AsciiChar>
 ///
 pub async fn wobble_millis_async() -> Result<f64, ascii::AsciiChar> {
-    //! wobble = utc_secs / blockheight
+    // wobble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");

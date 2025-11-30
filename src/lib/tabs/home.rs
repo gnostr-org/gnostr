@@ -60,7 +60,7 @@ enum LogSearch {
     Results(LogSearchResult),
 }
 
-///
+/// Chatlog
 pub struct Chatlog {
     repo: RepoPathRef,
     chat_details: ChatDetailsComponent,
@@ -78,7 +78,7 @@ pub struct Chatlog {
 }
 
 impl Chatlog {
-    ///
+    /// new
     pub async fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -97,14 +97,14 @@ impl Chatlog {
         }
     }
 
-    ///
+    /// handle_internal_event
     pub fn handle_internal_event(&mut self, event: InternalEvent) {
         if let InternalEvent::ChatMessage(msg) = event {
             self.list.handle_internal_event(InternalEvent::ChatMessage(msg));
         }
     }
 
-    ///
+    /// any_work_pending
     pub fn any_work_pending(&self) -> bool {
         self.git_log.is_pending()
             || self.is_search_pending()
@@ -118,7 +118,7 @@ impl Chatlog {
         matches!(self.search, LogSearch::Searching(_, _, _, _))
     }
 
-    ///
+    /// update
     pub fn update(&mut self) -> Result<()> {
         if self.is_visible() {
             if self.git_log.fetch()? == FetchStatus::Started {
@@ -141,7 +141,7 @@ impl Chatlog {
         Ok(())
     }
 
-    ///
+    /// update_git
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.visible {
             match ev {
@@ -187,7 +187,7 @@ impl Chatlog {
         commit.and_then(|commit| tags.and_then(|tags| tags.get(&commit).cloned()))
     }
 
-    ///
+    /// select_commit
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         self.list.select_commit(id)
     }

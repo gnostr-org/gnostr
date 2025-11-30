@@ -1,5 +1,9 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
 use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
 use crate::blockheight;
 use crate::weeble;
@@ -46,7 +50,7 @@ pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
 pub static TICK_INTERVAL: Duration = Duration::from_secs(5);
 pub static SPINNER_INTERVAL: Duration = Duration::from_millis(80);
 
-///
+/// QueueEvent
 #[derive(Clone)]
 pub enum QueueEvent {
     Tick,
@@ -56,18 +60,21 @@ pub enum QueueEvent {
     InputEvent(InputEvent),
 }
 
+/// SyntaxHighlightProgress
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SyntaxHighlightProgress {
     Progress,
     Done,
 }
 
+/// AsyncAppNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncAppNotification {
     ///
     SyntaxHighlighting(SyntaxHighlightProgress),
 }
 
+/// AsyncNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncNotification {
     ///
@@ -256,7 +263,7 @@ pub async fn tui(
             //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
             let repo_path: RepoPath = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
-                    .unwrap_or(env::var("HOME").unwrap().to_string() /*TODO*/)
+                    .unwrap_or(env::var("HOME").unwrap().clone() /*TODO*/)
                     .as_ref(),
             );
 
@@ -427,7 +434,7 @@ pub async fn run_app(
     let mut last_screenshot = Instant::now();
     loop {
         if let Some(interval) = screenshots {
-            if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
+            if last_screenshot.elapsed() >= Duration::from_secs(u64::from(interval)) {
                 let mut path = if let Some(workdir) = repo.workdir() {
                     let mut p = workdir.to_path_buf();
                     p.push(".gnostr");
@@ -447,7 +454,7 @@ pub async fn run_app(
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
                     .as_secs();
-                path.push(format!("screenshot-{}.png", timestamp));
+                path.push(format!("screenshot-{timestamp}.png"));
                 crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap()).unwrap();
                 last_screenshot = Instant::now();
             }

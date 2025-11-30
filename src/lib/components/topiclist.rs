@@ -622,7 +622,7 @@ impl TopicList {
         }
         txt.push(splitter.clone());
 
-        let style_hash = if normal {
+        let _style_hash = if normal {
             theme.commit_hash(selected)
         } else {
             theme.commit_unhighlighted()
