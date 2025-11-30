@@ -445,7 +445,7 @@ pub async fn run_app(
 
     let spinner_ticker = tick(SPINNER_INTERVAL);
 
-            let mut app = match App::new(
+            let mut app = match Box::pin(App::new(
                 RefCell::new(repo.clone()),
                 tx_git,
                 tx_app,
@@ -453,7 +453,7 @@ pub async fn run_app(
                 theme,
                 key_config,
                 Arc::clone(&quit_flag),
-            )
+            ))
             .await {
                 Ok(app) => app,
                 Err(e) => {
