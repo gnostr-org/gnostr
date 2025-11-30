@@ -42,7 +42,7 @@ pub struct SyntaxTextComponent {
 }
 
 impl SyntaxTextComponent {
-    ///
+
     pub fn new(env: &Environment) -> Self {
         Self {
             async_highlighting: AsyncSingleJob::new(env.sender_app.clone()),
@@ -56,7 +56,7 @@ impl SyntaxTextComponent {
         }
     }
 
-    ///
+
     pub fn update(&mut self, ev: AsyncNotification) {
         if let AsyncNotification::App(AsyncAppNotification::SyntaxHighlighting(progress)) = ev {
             match progress {
@@ -79,17 +79,17 @@ impl SyntaxTextComponent {
         }
     }
 
-    ///
+
     pub fn any_work_pending(&self) -> bool {
         self.async_highlighting.is_pending()
     }
 
-    ///
+
     pub fn clear(&mut self) {
         self.current_file = None;
     }
 
-    ///
+
     pub fn load_file(&mut self, path: String, item: &TreeFile) {
         let already_loaded = self
             .current_file
