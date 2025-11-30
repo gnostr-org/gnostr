@@ -15,6 +15,10 @@ license = "MIT"
 categories = ["concurrency", "asynchronous"]
 keywords = ["git"]
 
+[lib]
+name = "gnostr_asyncgit"
+path = "src/lib.rs"
+
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
