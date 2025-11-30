@@ -98,28 +98,23 @@ impl StatusTreeComponent {
         self.show_selection = show;
     }
 
- returns true if list is empty
     pub fn is_empty(&self) -> bool {
         self.tree.is_empty()
     }
-
 
     pub const fn file_count(&self) -> usize {
         self.tree.tree.file_count()
     }
 
-
     pub fn set_title(&mut self, title: String) {
         self.title = title;
     }
-
 
     pub fn clear(&mut self) -> Result<()> {
         self.current_hash = 0;
         self.pending = true;
         self.tree.update(&[])
     }
-
 
     pub fn is_file_selected(&self) -> bool {
         self.tree
