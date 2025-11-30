@@ -142,7 +142,7 @@ impl Component for CompareCommitsPopup {
 impl CompareCommitsPopup {
     accessors!(self, [diff, details]);
 
-    ///
+
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -157,7 +157,7 @@ impl CompareCommitsPopup {
         }
     }
 
-    ///
+
     pub fn open(&mut self, open: InspectCommitOpen) -> Result<()> {
         let compare_id = if let Some(compare_id) = open.compare_id {
             compare_id
@@ -174,12 +174,12 @@ impl CompareCommitsPopup {
         Ok(())
     }
 
-    ///
+
     pub fn any_work_pending(&self) -> bool {
         self.git_diff.is_pending() || self.details.any_work_pending()
     }
 
-    ///
+
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() {
             if ev == AsyncGitNotification::CommitFiles {
