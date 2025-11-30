@@ -1541,12 +1541,12 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
                     }),
                 ),
                 Relay::new(8056, None, None),
-            );
-
-            // // check relay had the right number of events
-            let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                let mut p = cli_tester_create_proposal(&git_repo);
-                expect_msgs_first(&mut p, true)?;
+                        );
+                        // // check relay had the right number of events
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                            let mut p = cli_tester_create_proposal(&git_repo);
+                            expect_msgs_first(&mut p, true)?;
+            
                 relay::expect_send_with_progress(
                     &mut p,
                     vec![
