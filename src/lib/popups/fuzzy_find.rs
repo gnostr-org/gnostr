@@ -39,7 +39,7 @@ pub struct FuzzyFindPopup {
 }
 
 impl FuzzyFindPopup {
-    ///
+
     pub fn new(env: &Environment) -> Self {
         let mut find_text = TextInputComponent::new(env, "", "start typing..", false)
             .with_input_type(InputType::Singleline);
