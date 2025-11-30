@@ -113,7 +113,6 @@ impl Ord for FileTreeItem {
     }
 }
 
-///
 #[derive(Default)]
 pub struct FileTreeItems {
     items: Vec<FileTreeItem>,
@@ -121,8 +120,7 @@ pub struct FileTreeItems {
 }
 
 impl FileTreeItems {
-    ///
-    pub(crate) fn new(list: &[StatusItem], collapsed: &BTreeSet<&String>) -> Result<Self> {
+        pub(crate) fn new(list: &[StatusItem], collapsed: &BTreeSet<&String>) -> Result<Self> {
         let mut items = Vec::with_capacity(list.len());
         let mut paths_added = BTreeSet::new();
 
@@ -142,23 +140,19 @@ impl FileTreeItems {
         })
     }
 
-    ///
-    pub(crate) const fn items(&self) -> &Vec<FileTreeItem> {
+        pub(crate) const fn items(&self) -> &Vec<FileTreeItem> {
         &self.items
     }
 
-    ///
-    pub(crate) fn len(&self) -> usize {
+        pub(crate) fn len(&self) -> usize {
         self.items.len()
     }
 
-    ///
-    pub const fn file_count(&self) -> usize {
+        pub const fn file_count(&self) -> usize {
         self.file_count
     }
 
-    ///
-    pub(crate) fn find_parent_index(&self, index: usize) -> usize {
+        pub(crate) fn find_parent_index(&self, index: usize) -> usize {
         let item_indent = &self.items[index].info.indent;
         let mut parent_index = index;
         while item_indent <= &self.items[parent_index].info.indent {

@@ -594,13 +594,7 @@ impl TopicList {
         let splitter_txt = Cow::from(symbol::EMPTY_SPACE);
         let splitter = Span::styled(
             splitter_txt,
-            if normal {
-                theme.text(true, false)
-                //Style::default()
-            } else {
-                theme.text(true, false)
-                //Style::default()
-            },
+            theme.text(true, false),
         );
 
         // marker
