@@ -177,7 +177,7 @@ impl App {
     }
 
     fn mv_up(&mut self) {
-        if (self.pos.1) as i32 - 1 >= 0 {
+        if (self.pos.1) as i32 > 0 {
             self.pos.1 -= 1;
         }
     }
@@ -199,7 +199,7 @@ impl App {
     }
 
     pub fn mv_left(&mut self) {
-        if (self.pos.0) as i32 - 1 >= 0 {
+        if (self.pos.0) as i32 > 0 {
             self.pos.0 -= 1;
         }
     }
@@ -234,6 +234,6 @@ impl App {
     }
 
     pub fn on_tick(&self) {
-        ()
+
     }
 }

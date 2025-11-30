@@ -80,17 +80,11 @@ pub mod watcher;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
 pub use base64::Engine;
-///
 pub use colorful::{Color, Colorful};
-///
 pub use futures_util::stream::FusedStream;
-///
 pub use futures_util::{SinkExt, StreamExt};
-///
 pub use http::Uri;
-///
 pub use lazy_static::lazy_static;
-///
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
@@ -99,7 +93,6 @@ pub use types::{
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
 //
-///
 pub use nostr_sdk_0_19_1::prelude::rand;
 //
 ///

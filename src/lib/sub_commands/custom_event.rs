@@ -130,10 +130,7 @@ pub struct CustomEventCommand {
     /// -- List preferred "grasp servers" for NIP-34 activities.
     ///
     /// > gnostr custom-event -k 10317 --tags "g|wss://grasp.example.com" --tags "g|wss://another-grasp.example.com"
-    ///
-    ///		///
-    ///
-	/// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
+    /// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
     #[arg(short, long, action = clap::ArgAction::Append)]
     tags: Vec<String>,
 
