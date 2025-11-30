@@ -16,7 +16,6 @@ use crate::{
     strings, ui,
 };
 
-///
 pub struct ConfirmPopup {
     target: Option<Action>,
     visible: bool,
@@ -89,8 +88,7 @@ impl Component for ConfirmPopup {
 }
 
 impl ConfirmPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             target: None,
             visible: false,
@@ -99,15 +97,13 @@ impl ConfirmPopup {
             key_config: env.key_config.clone(),
         }
     }
-    ///
-    pub fn open(&mut self, a: Action) -> Result<()> {
+        pub fn open(&mut self, a: Action) -> Result<()> {
         self.target = Some(a);
         self.show()?;
 
         Ok(())
     }
-    ///
-    pub fn confirm(&mut self) {
+        pub fn confirm(&mut self) {
         if let Some(a) = self.target.take() {
             self.queue.push(InternalEvent::ConfirmedAction(a));
         }
