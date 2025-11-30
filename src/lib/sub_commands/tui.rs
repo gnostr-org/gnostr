@@ -4,6 +4,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::if_not_else)]
 use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
 use crate::blockheight;
 use crate::weeble;
