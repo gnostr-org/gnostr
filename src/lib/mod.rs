@@ -1,6 +1,8 @@
+#![allow(unused_imports)]
 #![deny(non_ascii_idents)]
 //! gnostr: a git+nostr workflow utility and library
 //!
+
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
 pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
@@ -136,35 +138,35 @@ pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str> {
 pub fn get_relays() -> Result<String, &'static str> {
     let _relays_no_nl = relays_all().unwrap().to_string();
 
-    Ok(format!("{}", relays_all().unwrap().to_string()))
+    Ok(relays_all().unwrap().to_string())
 }
 /// get_relays_online <https://api.nostr.watch>
 /// pub fn get_relays_online() -> Result<String, &'static str>
 pub fn get_relays_online() -> Result<String, &'static str> {
     let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_online().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_public <https://api.nostr.watch>
 /// pub fn get_relays_public() -> Result<String, &'static str>
 pub fn get_relays_public() -> Result<String, &'static str> {
     let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_online().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_paid <https://api.nostr.watch>
 /// pub fn get_relays_paid() -> Result<String, &'static str>
 pub fn get_relays_paid() -> Result<String, &'static str> {
     let _relays_no_nl = relays_paid().unwrap().to_string();
 
-    Ok(format!("{}", relays_paid().unwrap().to_string()))
+    Ok(relays_paid().unwrap().to_string())
 }
 /// get_relays_offline <https://api.nostr.watch>
 /// pub fn get_relays_offline() -> Result<String, &'static str>
 pub fn get_relays_offline() -> Result<String, &'static str> {
     let _relays_no_nl = relays_offline().unwrap().to_string();
 
-    Ok(format!("{}", relays_offline().unwrap().to_string()))
+    Ok(relays_offline().unwrap().to_string())
 }
 
 /// weeble

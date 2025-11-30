@@ -37,7 +37,7 @@ pub struct ResetItem {
     pub path: String,
 }
 
-///
+/// Action
 #[derive(Debug)]
 pub enum Action {
     Reset(ResetItem),
@@ -59,19 +59,19 @@ pub enum Action {
 
 #[derive(Debug)]
 pub enum StackablePopupOpen {
-    ///
+    /// BlameFile
     BlameFile(BlameFileOpen),
-    ///
+    /// DisplayChat
     DisplayChat(DisplayChatOpen),
-    ///
+    /// FileRevLog
     FileRevlog(FileRevOpen),
-    ///
+    /// FileTree
     FileTree(FileTreeOpen),
-    ///
+    /// InspectChat
     InspectChat(InspectChatOpen),
-    ///
+    /// InspectCommit
     InspectCommit(InspectCommitOpen),
-    ///
+    /// CompareCommits
     CompareCommits(InspectCommitOpen),
 }
 
@@ -85,45 +85,45 @@ pub enum AppTabs {
     Stashlist,
 }
 
-///
+/// InternalEvent
 #[derive(Debug)]
 pub enum InternalEvent {
-    ///
+    /// ChatMessage
     ChatMessage(crate::p2p::chat::msg::Msg),
-    ///
+    /// ConfirmAction
     ConfirmAction(Action),
-    ///
+    /// ComfirmedAction
     ConfirmedAction(Action),
-    ///
+    /// ShowErrorMsg
     ShowErrorMsg(String),
-    ///
+    /// ShowInfoMsg
     ShowInfoMsg(String),
-    ///
+    /// Update
     Update(NeedsUpdate),
-    ///
+    /// StatusLastFileMoved
     StatusLastFileMoved,
     /// open commit msg input
-    //OpenCommit,
+    /// OpenCommit,
     OpenCommit,
-    //
+    /// OpenChat
     OpenChat,
-    ///
+    /// PopupStashing
     PopupStashing(StashingOptions),
-    ///
+    /// TabSwitchStatus
     TabSwitchStatus,
-    ///
+    /// TabSwitch
     TabSwitch(AppTabs),
-    ///
+    /// SelectCommitInRevlog
     SelectCommitInRevlog(CommitId),
-    ///
+    /// TagCommit
     TagCommit(CommitId),
-    ///
+    /// Tags
     Tags,
-    ///
+    /// CreateBranch
     CreateBranch,
-    ///
+    /// RenameBranch
     RenameBranch(String, String),
-    ///
+    /// SelectBranch
     SelectBranch,
     ///
     OpenExternalEditor(Option<String>),

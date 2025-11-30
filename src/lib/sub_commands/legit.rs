@@ -47,13 +47,13 @@ pub struct LegitSubCommand {
 
 pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-        Some(LegitCommands::Login(args)) => login::launch(&args).await?,
-        Some(LegitCommands::Init(args)) => init::launch(&args).await?,
-        Some(LegitCommands::Send(args)) => send::launch(&args, true).await?,
+        Some(LegitCommands::Login(args)) => login::launch(args).await?,
+        Some(LegitCommands::Init(args)) => init::launch(args).await?,
+        Some(LegitCommands::Send(args)) => send::launch(args, true).await?,
         Some(LegitCommands::List) => list::launch().await?,
         Some(LegitCommands::Pull) => pull::launch().await?,
-        Some(LegitCommands::Push(args)) => push::launch(&args).await?,
-        Some(LegitCommands::Fetch(args)) => fetch::launch(&args).await?,
+        Some(LegitCommands::Push(args)) => push::launch(args).await?,
+        Some(LegitCommands::Fetch(args)) => fetch::launch(args).await?,
         Some(LegitCommands::Mine) | None => {
             let opts = gitminer::Options {
                 threads: sub_command_args.threads as u32,

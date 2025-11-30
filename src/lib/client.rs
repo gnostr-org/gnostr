@@ -1486,8 +1486,8 @@ pub async fn fetching_with_report(
         if !animate {
             println!("no updates");
         }
-    } else if animate {
-        println!("updates: {report}");
+    //} else if animate {
+    //    println!("updates: {report}");
     } else {
         println!("updates: {report}");
     }
