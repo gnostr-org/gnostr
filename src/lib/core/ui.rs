@@ -120,7 +120,7 @@ fn run_app<B: Backend>(
     let mut last_screenshot = std::time::Instant::now();
 
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, app))?;
 
         if let Some(interval) = screenshots {
             if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
