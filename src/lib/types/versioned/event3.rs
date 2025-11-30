@@ -1,9 +1,4 @@
-use crate::types::id;
-use crate::types::{
-    Error, EventDelegation, EventKind, EventReference, Id, IntoVec, KeySigner, MilliSatoshi,
-    NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3, Unixtime,
-    ZapData, KeySecurity
-};
+use crate::types::{id::{self, Id}, Error, EventDelegation, EventKind, EventReference, IntoVec, KeySigner, MilliSatoshi, NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3, Unixtime, ZapData, KeySecurity};
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
