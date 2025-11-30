@@ -101,7 +101,7 @@ pub async fn create_event_with_custom_tags(
     keys: &Keys,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> Result<(Event, UnsignedEvent)> {
+) -> anyhow::Result<(Event, UnsignedEvent)> { // Changed return type
     let mut builder = EventBuilder::new(Kind::TextNote, content);
 
     for (tag_name, tag_values) in custom_tags {
@@ -153,123 +153,362 @@ pub async fn create_kind_event(
 
 
 pub async fn create_event(
+
+
     keys: Keys,
+
+
     custom_tags: HashMap<String, Vec<String>>,
+
+
     content: &str,
-) -> Result<Event> {
+
+
+) -> anyhow::Result<Event> { // Changed return type
+
+
     //let content = "Hello, Nostr with custom tags!";
 
+
+
+
+
     let (signed_event, _unsigned_event) = create_event_with_custom_tags(&keys, content, custom_tags).await?;
+
+
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
+
+
+
+
 
     let opts = Options::new().gossip(true);
+
+
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
+
+
     for relay in BOOTSTRAP_RELAYS.to_vec() {
+
+
         debug!("{}", relay);
+
+
         client.add_discovery_relay(relay).await.expect("");
+
+
     }
+
+
+
+
 
     // Connect to the relays.
+
+
     client.connect().await;
 
+
+
+
+
     // client.send_event - signed_event
-    client.send_event(signed_event.clone()).await?;
+
+
+    client.send_event(signed_event.clone()).await.map_err(|e| anyhow!("Failed to send event: {}", e))?; // Explicitly map to anyhow::Error
+
+
+
+
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
+
+
         info!("signed_event sent:\n{:?}", signed_event);
+
+
         debug!("signed_event.content: {}", signed_event.content);
+
+
         debug!("signed_event.pubkey: {}", signed_event.pubkey);
+
+
         debug!("signed_event.kind: {:?}", signed_event.kind);
+
+
         debug!("signed_event.tags: {:?}", signed_event.tags);
+
+
     
+
+
         //
+
+
     
+
+
         // Publish a text note
+
+
     let pubkey = keys.public_key();
 
+
+
+
+
     info!("pubkey={}", keys.public_key());
+
+
     let builder = EventBuilder::text_note(format!("gnostr:legit {}", pubkey))
+
+
         .tag(Tag::public_key(pubkey))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2 3 4 11 22 33 44".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2 3 4 11 22 33".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2 3 4 11 22".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2 3 4 11".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2 3 4".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2 3".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1 2".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
+
+
             "1".chars(),
+
+
         ))
+
+
         .tag(Tag::custom(
+
+
             TagKind::Custom(Cow::from("gnostr")),
-            "".chars(),
+
+
+            ""
+
+
+.chars(),
+
+
         ));
 
+
+
+
+
     //send from send_event_builder
+
+
     let output = client.send_event_builder(builder).await?;
+
+
     info!("Event ID: {}", output.to_bech32()?);
 
+
+
+
+
     info!("Sent to:");
+
+
     for url in output.success.into_iter() {
+
+
         info!("- {url}");
+
+
     }
+
+
+
+
 
     info!("Not sent to:");
+
+
     for (url, reason) in output.failed.into_iter() {
+
+
         info!("- {url}: {reason:?}");
+
+
     }
+
+
+
+
 
     // Get events
+
+
     let filter_one = Filter::new().author(pubkey).kind(Kind::TextNote).limit(10);
+
+
     let events = client
+
+
         .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
+
+
         .await?;
 
+
+
+
+
     for event in events.into_iter() {
+
+
         println!("{}", event.as_json());
+
+
     }
 
+
+
+
+
     // another filter
+
+
     let test_author_pubkey =
+
+
         PublicKey::parse("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet")?;
+
+
+
+
 
     info!("test_author_pubkey={}", test_author_pubkey);
 
+
+
+
+
     let filter_test_author = Filter::new()
+
+
         .author(test_author_pubkey)
+
+
         .kind(Kind::TextNote)
+
+
         .limit(10);
+
+
     let events = client
+
+
         .fetch_events(vec![filter_test_author], Some(Duration::from_secs(10)))
+
+
         .await?;
 
+
+
+
+
     for event in events.into_iter() {
+
+
         info!("test_author:\n\n{}", event.as_json());
+
+
     }
 
+
+
+
+
     Ok(signed_event)
+
+
 }
 
 
@@ -336,8 +575,13 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        if let Err(e) = create_event(padded_keys.clone(), custom_tags, &"gnostr-legit:event").await {
-            error!("Failed to create event: {}", e);
+        //send to create_event function with &"custom content"
+        let create_event_result = create_event(padded_keys.clone(), custom_tags, &"gnostr-legit:event").await;
+        println!("Commit-based create_event result:\n{:?}", create_event_result);
+
+        // The existing error logging for create_kind_event remains.
+        if let Err(e) = create_kind_event(&padded_keys, kind.unwrap_or(1), &serialized_commit_for_kind_event, HashMap::new()).await {
+            error!("Failed to create kind event: {:?}", e);
         }
 
         if let Err(e) = create_kind_event(&padded_keys, kind.unwrap_or(1), &serialized_commit_for_kind_event, HashMap::new()).await {
