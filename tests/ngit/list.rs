@@ -71,7 +71,7 @@ mod cannot_find_repo_event {
             let repo_event = generate_repo_ref_event();
             r56.events.push(repo_event.clone());
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+            let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                 let mut test_repo = GitTestRepo::without_repo_in_git_config();
                 test_repo.populate()?;
                 let mut p = CliTester::new_from_dir(&test_repo.dir, ["list"]);
@@ -172,7 +172,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             cli_tester_create_proposals()?;
 
                             let mut test_repo = GitTestRepo::default();
@@ -298,7 +298,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             cli_tester_create_proposals()?;
 
                             let mut test_repo = GitTestRepo::default();
@@ -502,7 +502,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             let mut originating_repo = cli_tester_create_proposals()?;
                             std::thread::sleep(std::time::Duration::from_millis(1000));
                             cli_tester_create_proposal(
@@ -737,7 +737,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             cli_tester_create_proposals()?;
 
                             let mut test_repo = GitTestRepo::default();
@@ -930,7 +930,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             let (_, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
@@ -1128,7 +1128,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             let (_, mut test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
@@ -1313,7 +1313,7 @@ mod when_main_branch_is_uptodate {
                         r55.events.push(generate_test_key_1_metadata_event("fred"));
                         r55.events.push(generate_test_key_1_relay_list_event());
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), ()> {
                             let (_, test_repo) =
                                 create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
