@@ -5,8 +5,6 @@
 pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
 pub mod bug_report;
-///  <https://docs.rs/gnostr/latest/gnostr/chat/index.html>
-
 ///  <https://docs.rs/gnostr/latest/gnostr/cli/index.html>
 pub mod cli;
 ///  <https://docs.rs/gnostr/latest/gnostr/cli_interactor/index.html>
@@ -79,8 +77,6 @@ pub mod utils;
 pub mod verify_keypair;
 ///  <https://docs.rs/gnostr/latest/gnostr/watcher/index.html>
 pub mod watcher;
-///
-
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
 ///

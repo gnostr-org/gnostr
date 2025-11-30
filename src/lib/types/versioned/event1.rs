@@ -1,3 +1,4 @@
+use crate::types::id;
 use crate::types::{
     Error, EventDelegation, EventKind, EventReference, Id, IntoVec, MilliSatoshi, NAddr,
     NostrBech32, NostrUrl, PublicKey, PublicKeyHex, RelayUrl, Signature, TagV1, Unixtime,
@@ -960,7 +961,9 @@ impl EventV1 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-            Some(unsafe { std::mem::transmute::<[u8; 32], types::id::Id>(arr) })
+use crate::types::id;
+
+            Some(unsafe { std::mem::transmute::<[u8; 32], id::Id>(arr) })
         } else {
             None
         }
