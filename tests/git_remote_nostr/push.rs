@@ -13,7 +13,7 @@ mod two_branches_in_batch_one_added_one_updated {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn updates_branch_on_git_server() -> Result<()> {
+    async fn updates_branch_on_git_server() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
