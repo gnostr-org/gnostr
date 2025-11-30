@@ -67,7 +67,7 @@ pub async fn async_prompt(mempool_url: String) -> String {
 }
 
 pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
-    let mut close_bytes = [0u8; 32];
+    let mut close_bytes;
     close_bytes = bytes;
 
     for (i, byte) in close_bytes.iter().enumerate() {
@@ -88,7 +88,7 @@ pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("262:{}", keypair.public().to_peer_id());
 
-    close_bytes[31] = bytes[31] ^ 0u8;
+    close_bytes[31] = bytes[31];
 
     for (i, byte) in close_bytes.iter().enumerate() {
         trace!("265:Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
@@ -127,7 +127,7 @@ pub async fn evt_loop(
         max_records: usize::MAX,
         max_value_bytes: usize::MAX,
     };
-    let _kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
+    let _kad_memstore = MemoryStore::with_config(peer_id, kad_store_config.clone());
 	let _kad_config = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
     let _message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
@@ -173,7 +173,7 @@ pub async fn evt_loop(
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id.clone(), kad_store_config);
+            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(key.public().to_peer_id());
