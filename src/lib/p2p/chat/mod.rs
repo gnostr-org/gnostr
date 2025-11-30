@@ -44,21 +44,21 @@ pub struct ChatCli {
         /*default_value = ""*/ //decide whether to allow env var $USER as default
     )]
     pub name: Option<String>,
-    ///
+
     #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
 		action = clap::ArgAction::Append,
 		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     pub nsec: Option<String>,
-    ///
+
     #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
     pub hash: Option<String>,
-    ///
+
     #[arg(long, value_name = "CHAT", help = "gnostr chat")]
     pub chat: Option<String>,
-    ///
+
     #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
     pub topic: Option<String>,
-    ///
+
     #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
 		action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
@@ -97,21 +97,21 @@ pub struct ChatCli {
 pub struct ChatSubCommands {
     //#[command(subcommand)]
     //command: ChatCommands,
-    ///// nsec or hex private key
+// nsec or hex private key
     #[arg(short, long, global = true)]
     pub nsec: Option<String>,
-    ///// password to decrypt nsec
+// password to decrypt nsec
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     #[arg(long, global = true)]
     pub name: Option<String>,
-    ///// chat topic
+// chat topic
     #[arg(long, global = true)]
     pub topic: Option<String>,
-    ///// chat hash
+// chat hash
     #[arg(long, global = true)]
     pub hash: Option<String>,
-    ///// disable spinner animations
+// disable spinner animations
     #[arg(long, action, default_value = "false")]
     pub disable_cli_spinners: bool,
     #[arg(long, action)]
@@ -212,8 +212,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let commit = obj.peel_to_commit()?;
         let commit_id = commit.id().to_string();
 
-        let mut app = ui::App::default();
-        app.topic = args.topic.unwrap_or_else(|| commit_id.to_string());
+        let mut app = ui::App {
+            topic: args.topic.unwrap_or_else(|| commit_id.to_string()),
+            ..Default::default()
+        };
 
         let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
         let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
@@ -227,7 +229,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             });
         });
 
-        let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
+        let topic = gossipsub::IdentTopic::new(app.topic.clone().to_string());
 
         global_rt().spawn(async move {
             evt_loop(input_rx, peer_tx, topic).await.unwrap();
@@ -256,7 +258,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
         app.run().map_err(|e| anyhow!(e.to_string()))?;
 
-        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
+        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave))).await;
         std::thread::sleep(Duration::from_millis(500));
         Ok(())
     }).await?
