@@ -5,11 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
-    format!(
-        "{}",
-        std::env::var("USER")
-            .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string()),
-    )
+    std::env::var("USER").unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string()).to_string()
 });
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub enum MsgKind {

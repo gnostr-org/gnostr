@@ -65,11 +65,7 @@ pub async fn handle_input_line(swarm: &mut libp2p::Swarm<super::behaviour::Behav
                         key.clone()
                     );
 
-                    let topic = gossipsub::IdentTopic::new(format!(
-                        "{}",
-                        std::str::from_utf8(record.key.as_ref()).unwrap_or("invalid utf8"),
-                    ));
-
+                                          let topic = gossipsub::IdentTopic::new(std::str::from_utf8(record.key.as_ref()).unwrap_or("invalid utf8").to_string());
                     println!("subscribe topic={}", topic.clone());
                     swarm
                         .behaviour_mut()
