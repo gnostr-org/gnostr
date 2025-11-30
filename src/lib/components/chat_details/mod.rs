@@ -1,4 +1,4 @@
-mod chat_details;
+
 mod details;
 mod style;
 use super::{
@@ -12,6 +12,7 @@ use crate::{
     strings,
 };
 use anyhow::Result;
+mod chat_details;
 use chat_details::CompareDetailsComponent;
 use details::DetailsComponent;
 use gnostr_asyncgit::{
