@@ -16,7 +16,7 @@ pub struct CustomEventCommand {
     ///
     /// NIP-10: Threaded Notes (Reply)
     /// 
-    ///	Reply to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
+    ///    Reply to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
     /// 
     /// > gnostr custom-event -k 1 -c "This is a reply." -r wss://relay.example.com -t "in_reply_to|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
     /// 
