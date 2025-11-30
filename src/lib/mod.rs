@@ -79,7 +79,6 @@ pub mod verify_keypair;
 pub mod watcher;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
-///
 pub use base64::Engine;
 ///
 pub use colorful::{Color, Colorful};

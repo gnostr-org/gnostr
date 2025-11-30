@@ -5,7 +5,6 @@ pub const REMOTELINK_MINOR_VERSION: u8 = 1;
 
 /// Used for read/write over the stream
 //const CHUNK_SIZE: usize = 64 * 1024;
-
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Messages {
