@@ -228,7 +228,7 @@ pub async fn evt_loop(
             // Get the current second
             let current_second = now.second();
 
-            if current_second % 2 != 0 {
+            if !current_second.is_multiple_of(2) {
                 debug!("Current second ({}) is odd!", current_second);
                 env::set_var("BLOCKHEIGHT", &blockheight_async().await);
                 env::set_var("BLOCKHASH", &blockhash_async().await);

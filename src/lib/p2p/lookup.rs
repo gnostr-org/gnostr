@@ -103,7 +103,7 @@ impl LookupClient {
 
                     // Create a Kademlia behaviour.
                     let store = MemoryStore::new(local_peer_id);
-                    let protocol_name = network.clone().and_then(|n| n.protocol()).unwrap_or_else(|| "/ipfs/kad/1.0.0".to_string());
+                    let protocol_name = network.and_then(|n| n.protocol()).unwrap_or_else(|| "/ipfs/kad/1.0.0".to_string());
                     let kademlia_config = libp2p::kad::Config::new(StreamProtocol::try_from_owned(protocol_name).unwrap());
                     let kademlia = libp2p::kad::Behaviour::with_config(local_peer_id, store, kademlia_config);
 
