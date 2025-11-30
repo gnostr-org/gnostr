@@ -470,10 +470,10 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         //send git gnostr event
         let output = client.send_event_builder(builder).await.expect("");
 
-        info!("Event ID: {}", output.id());
-        info!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
-        info!("Sent to: {:?}", output.success);
-        info!("Not sent to: {:?}", output.failed);
+        println!("Event ID: {}", output.id());
+        println!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+        println!("Sent to: {:?}", output.success);
+        println!("Not sent to: {:?}", output.failed);
     });
 
     Ok(())
