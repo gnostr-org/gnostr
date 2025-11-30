@@ -43,8 +43,8 @@ impl CompareDetailsComponent {
         }
     }
 
-    pub async fn create_directory_if_not_exists() -> Result<(), Box<dyn std::error::Error>> {
-        //use async_std::fs;
+            #[allow(dead_code)]
+            pub async fn create_directory_if_not_exists() -> Result<(), Box<dyn std::error::Error>> {        //use async_std::fs;
         //use async_std::fs::File;
         use async_std::io::ErrorKind;
         use async_std::path::{Path, PathBuf};
@@ -88,8 +88,8 @@ impl CompareDetailsComponent {
         }
     }
 
-    pub async fn connect() -> Result<SQLiteDatabase, Error> {
-        use async_std::path::{Path, PathBuf};
+            #[allow(dead_code)]
+            pub async fn connect() -> Result<SQLiteDatabase, Error> {        use async_std::path::{Path, PathBuf};
         let directory_to_check = ".git";
         if Path::new(directory_to_check).is_dir().await {
             debug!("The directory '{}' exists.", directory_to_check);
