@@ -67,7 +67,7 @@ pub struct CommitPopup {
 const FIRST_LINE_LIMIT: usize = 50;
 
 impl CommitPopup {
-    ///
+
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -84,7 +84,7 @@ impl CommitPopup {
         }
     }
 
-    ///
+
     pub fn update(&mut self) {
         self.git_branch_name.lookup().ok();
     }
