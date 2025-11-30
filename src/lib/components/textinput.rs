@@ -53,7 +53,7 @@ pub struct TextInputComponent {
 }
 
 impl TextInputComponent {
-    ///
+
     pub fn new(env: &Environment, title: &str, default_msg: &str, show_char_count: bool) -> Self {
         Self {
             msg: OnceCell::default(),
@@ -71,13 +71,13 @@ impl TextInputComponent {
         }
     }
 
-    ///
+
     pub const fn with_input_type(mut self, input_type: InputType) -> Self {
         self.input_type = input_type;
         self
     }
 
-    ///
+
     pub fn set_input_type(&mut self, input_type: InputType) {
         self.clear();
         self.input_type = input_type;
@@ -120,7 +120,7 @@ impl TextInputComponent {
         self.embed = true;
     }
 
-    ///
+
     pub fn enabled(&mut self, enable: bool) {
         self.selected = Some(enable);
     }
@@ -176,7 +176,7 @@ impl TextInputComponent {
         self.title = t;
     }
 
-    ///
+
     pub fn set_default_msg(&mut self, v: String) {
         self.default_msg = v;
         if self.is_visible() {
