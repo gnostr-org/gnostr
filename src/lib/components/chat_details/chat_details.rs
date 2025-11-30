@@ -31,7 +31,7 @@ pub struct CompareDetailsComponent {
 }
 
 impl CompareDetailsComponent {
-    ///
+
     pub async fn new(env: &Environment, focused: bool) -> Self {
         Self {
             data: None,
