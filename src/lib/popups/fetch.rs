@@ -27,7 +27,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct FetchPopup {
     repo: RepoPathRef,
     visible: bool,
@@ -41,8 +40,7 @@ pub struct FetchPopup {
 }
 
 impl FetchPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
             pending: false,
@@ -56,8 +54,7 @@ impl FetchPopup {
         }
     }
 
-    ///
-    pub fn fetch(&mut self) -> Result<()> {
+        pub fn fetch(&mut self) -> Result<()> {
         self.show()?;
         if need_username_password(&self.repo.borrow())? {
             let cred = extract_username_password(&self.repo.borrow())
@@ -83,20 +80,17 @@ impl FetchPopup {
             .spawn(AsyncFetchJob::new(self.repo.borrow().clone(), cred));
     }
 
-    ///
-    pub const fn any_work_pending(&self) -> bool {
+        pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
-    pub fn update_git(&mut self, ev: AsyncGitNotification) {
+        pub fn update_git(&mut self, ev: AsyncGitNotification) {
         if self.is_visible() && ev == AsyncGitNotification::Fetch {
             self.update();
         }
     }
 
-    ///
-    fn update(&mut self) {
+        fn update(&mut self) {
         self.pending = self.async_fetch.is_pending();
         self.progress = self.async_fetch.progress();
 
