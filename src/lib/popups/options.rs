@@ -40,7 +40,7 @@ pub struct OptionsPopup {
 }
 
 impl OptionsPopup {
-    ///
+
     pub fn new(env: &Environment) -> Self {
         Self {
             selection: AppOption::StatusShowUntracked,
