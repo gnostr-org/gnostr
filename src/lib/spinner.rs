@@ -10,7 +10,6 @@ use ratatui::{
 // '⡗', '⡏'];
 static SPINNER_CHARS: &[char] = &['⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽', '⣾'];
 
-///
 pub struct Spinner {
     idx: usize,
     active: bool,
@@ -34,8 +33,7 @@ impl Spinner {
         self.idx %= SPINNER_CHARS.len();
     }
 
-    ///
-    pub fn set_state(&mut self, active: bool) {
+        pub fn set_state(&mut self, active: bool) {
         self.active = active;
     }
 

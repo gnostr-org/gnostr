@@ -558,7 +558,7 @@ impl TopicList {
         //txt.push(Span::styled(author, style_author));
 
         // commit tags
-        if let Some(tags) = tags {
+        if let Some(_tags) = tags {
             //txt.push(Span::styled(tags, style_tags));
         }
 
@@ -604,7 +604,7 @@ impl TopicList {
         );
 
         // marker
-        if let Some(marked) = marked {
+        if let Some(_marked) = marked {
             //txt.push(Span::styled(
             //    Cow::from(if marked {
             //        //symbol::CIRCLED_G_STR //offset in home component

@@ -264,7 +264,7 @@ impl MessageStream {
             assert!(size < 0xffff_ffff_ffff);
             // TODO: Optimize
             self.data.resize(size as _, 0xff);
-            self.message = unsafe { std::mem::transmute(msg_type) };
+            self.message = unsafe { std::mem::transmute::<u8, crate::remote::messages::Messages>(msg_type) };
             self.state = State::ReadData;
         }
 

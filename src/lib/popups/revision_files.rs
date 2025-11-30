@@ -37,8 +37,7 @@ pub struct RevisionFilesPopup {
 }
 
 impl RevisionFilesPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             files: RevisionFilesComponent::new(env),
             visible: false,
@@ -48,8 +47,7 @@ impl RevisionFilesPopup {
         }
     }
 
-    ///
-    pub fn open(&mut self, request: FileTreeOpen) -> Result<()> {
+        pub fn open(&mut self, request: FileTreeOpen) -> Result<()> {
         self.files.set_commit(request.commit_id)?;
         self.open_request = Some(request);
         self.show()?;
@@ -57,13 +55,11 @@ impl RevisionFilesPopup {
         Ok(())
     }
 
-    ///
-    pub fn update(&mut self, ev: AsyncNotification) -> Result<()> {
+        pub fn update(&mut self, ev: AsyncNotification) -> Result<()> {
         self.files.update(ev)
     }
 
-    ///
-    pub fn any_work_pending(&self) -> bool {
+        pub fn any_work_pending(&self) -> bool {
         self.files.any_work_pending()
     }
 

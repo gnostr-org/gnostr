@@ -30,6 +30,11 @@ pub struct NgitSubCommand {
     pub disable_cli_spinners: bool,
 }
 
+/// ngit
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
         NgitCommands::Login(args) => login::launch(args).await?,

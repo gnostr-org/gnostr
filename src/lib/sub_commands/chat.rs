@@ -4,24 +4,37 @@
 //use crate::sub_commands::chat::Utc;
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
-use crate::p2p::chat::*;
+use crate::p2p::chat::ChatSubCommands;
  //migrate carefully
 use anyhow::Result;
 
 use tracing::Level;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
+/// chat
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     run(sub_command_args).await?;
     Ok(())
 }
 
+/// run
+///
+/// # Panics
+///
+/// Panics if the tracing directive cannot be parsed.
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
-    let sub_command_args = sub_command_args;
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
         env::set_var("USER", &name);
-    };
+    }
 
     let level = if sub_command_args.debug {
         Level::DEBUG

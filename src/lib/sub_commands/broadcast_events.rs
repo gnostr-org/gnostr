@@ -16,24 +16,15 @@ pub async fn broadcast_events(
     mut relays: Vec<String>,
     sub_command_args: &BroadcastEventsSubCommand,
 ) -> Result<()> {
-    let keys: Keys;
     if relays.is_empty() {
-        for relay in relays {
-            debug!("relay:{:?}", relay);
-        }
         relays = BOOTSTRAP_RELAYS.clone()
-    } else {
-        debug!("relays:{:?}", relays);
+    }
 
-        for relay in relays.clone() {
-            debug!("relay:{:?}", relay);
-        }
-    }
-    if nsec.is_none() {
-        keys = parse_private_key(None, false).await?;
+    let keys: Keys = if nsec.is_none() {
+        parse_private_key(None, false).await?
     } else {
-        keys = parse_private_key(nsec, false).await?;
-    }
+        parse_private_key(nsec, false).await?
+    };
 
     let client = create_client(&keys, relays.clone(), 0).await?;
 

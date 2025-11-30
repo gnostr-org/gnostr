@@ -33,8 +33,7 @@ impl Drop for TerminalCleanup {
 mod mock_ssh {
     pub async fn start() -> Result<(), Box<dyn std::error::Error>> {
         // In test environment, always return an error for now
-        Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        Err(Box::new(std::io::Error::other(
             "Mock SSH Start Error",
         )))
     }

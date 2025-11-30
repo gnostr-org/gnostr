@@ -31,7 +31,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 #[derive(PartialEq, Eq)]
 enum PushComponentModifier {
     None,
@@ -49,7 +48,6 @@ impl PushComponentModifier {
     }
 }
 
-///
 pub struct PushPopup {
     repo: RepoPathRef,
     modifier: PushComponentModifier,
@@ -66,8 +64,7 @@ pub struct PushPopup {
 }
 
 impl PushPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
@@ -84,8 +81,7 @@ impl PushPopup {
         }
     }
 
-    ///
-    pub fn push(
+        pub fn push(
         &mut self,
         branch: String,
         push_type: PushType,
@@ -149,8 +145,7 @@ impl PushPopup {
         Ok(())
     }
 
-    ///
-    pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
+        pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::Push {
             self.update()?;
         }
@@ -158,8 +153,7 @@ impl PushPopup {
         Ok(())
     }
 
-    ///
-    fn update(&mut self) -> Result<()> {
+        fn update(&mut self) -> Result<()> {
         self.pending = self.git_push.is_pending()?;
         self.progress = self.git_push.progress()?;
 
@@ -174,13 +168,11 @@ impl PushPopup {
         Ok(())
     }
 
-    ///
-    pub const fn any_work_pending(&self) -> bool {
+        pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
-    pub fn get_progress(progress: &Option<RemoteProgress>) -> (String, u8) {
+        pub fn get_progress(progress: &Option<RemoteProgress>) -> (String, u8) {
         progress
             .as_ref()
             .map_or((strings::PUSH_POPUP_PROGRESS_NONE.into(), 0), |progress| {

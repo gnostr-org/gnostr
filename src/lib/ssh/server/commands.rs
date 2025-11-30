@@ -75,7 +75,7 @@ impl Handler {
         }
 
         // Deny non-admins access to the config repo.
-        if !is_admin && repo_path == PathBuf::from(SERVER_CONFIG_REPO) {
+        if !is_admin && repo_path == std::path::Path::new(SERVER_CONFIG_REPO) {
             knob.error("Only admins are allowed to access this repository.")
                 .await?;
             knob.close().await?;
@@ -112,7 +112,7 @@ impl Handler {
             }
         }
 
-        if !new_repo && repo_path != PathBuf::from(SERVER_CONFIG_REPO) {
+        if !new_repo && repo_path != std::path::Path::new(SERVER_CONFIG_REPO) {
             let repo_config = load_repo_config(&repo_path).await?;
 
             // Access control.
@@ -170,7 +170,7 @@ impl Handler {
 
             // Rebuild.
             if command == GIT_PUSH_COMMAND && !new_repo {
-                if repo_path == PathBuf::from(SERVER_CONFIG_REPO) {
+                if repo_path == std::path::Path::new(SERVER_CONFIG_REPO) {
                     info!("Reloading server config...");
                     knob.info("Reloading server config...").await?;
                     state.lock().await.server_config = load_server_config(state.lock().await.config_path.clone()).await?;
