@@ -25,7 +25,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct ExternalEditorPopup {
     visible: bool,
     theme: SharedTheme,
@@ -33,8 +32,7 @@ pub struct ExternalEditorPopup {
 }
 
 impl ExternalEditorPopup {
-    ///
-    pub fn new(env: &Environment) -> Self {
+        pub fn new(env: &Environment) -> Self {
         Self {
             visible: false,
             theme: env.theme.clone(),
