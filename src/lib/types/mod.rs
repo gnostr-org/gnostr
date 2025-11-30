@@ -4,6 +4,9 @@
 
 //! This crate provides types for nostr protocol handling.
 
+#![warn(
+    missing_docs,
+)]
 #![deny(
     missing_debug_implementations,
     trivial_casts,
@@ -20,7 +23,7 @@
     single_use_lifetimes,
     //unsafe_code,
     unreachable_pub,
-    missing_docs,
+    //missing_docs,
     missing_copy_implementations
 )]
 #![deny(clippy::string_slice)]
