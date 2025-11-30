@@ -14,6 +14,7 @@ use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::{io, time::{Duration, SystemTime}, error::Error as StdError};
+use std::io::Write;
 use tracing::{debug, info, error};
 use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
 use crate::utils::{parse_json, split_json_string};
@@ -535,6 +536,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         //send to create_event function with &"custom content"
         let signed_event = create_event(empty_hash_keys, custom_tags, &"gnostr-legit:event").await;
         println!("signed_event:\n{:?}", signed_event);
+        io::stdout().flush().unwrap(); // Flush stdout
     });
 
     //initialize git repo
@@ -578,6 +580,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         //send to create_event function with &"custom content"
         let create_event_result = create_event(padded_keys.clone(), custom_tags, &"gnostr-legit:event").await;
         println!("Commit-based create_event result:\n{:?}", create_event_result);
+        io::stdout().flush().unwrap(); // Flush stdout
 
         // The existing error logging for create_kind_event remains.
         if let Err(e) = create_kind_event(&padded_keys, kind.unwrap_or(1), &serialized_commit_for_kind_event, HashMap::new()).await {
