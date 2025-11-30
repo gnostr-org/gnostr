@@ -43,7 +43,7 @@ pub use error::Error;
 mod event;
 pub use event::{Event, PreEvent, Rumor, ZapData};
 
-mod event_kind;
+pub mod event_kind;
 pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
 
 mod event_reference;
