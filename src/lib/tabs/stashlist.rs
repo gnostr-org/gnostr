@@ -23,7 +23,7 @@ pub struct StashList {
 }
 
 impl StashList {
-    ///
+    /// StashList new options.
     pub fn new(env: &Environment) -> Self {
         Self {
             visible: false,
@@ -34,7 +34,7 @@ impl StashList {
         }
     }
 
-    ///
+    /// Update the stash list.
     pub fn update(&mut self) -> Result<()> {
         if self.is_visible() {
             let stashes = sync::get_stashes(&self.repo.borrow())?;

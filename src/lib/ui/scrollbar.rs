@@ -18,7 +18,7 @@ pub enum Orientation {
     Horizontal,
 }
 
-///
+/// A scrollbar widget.
 struct Scrollbar {
     max: u16,
     pos: u16,

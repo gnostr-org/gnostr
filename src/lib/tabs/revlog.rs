@@ -59,7 +59,7 @@ enum LogSearch {
     Results(LogSearchResult),
 }
 
-///
+/// Represents the commit log view and its associated operations.
 pub struct Revlog {
     repo: RepoPathRef,
     commit_details: CommitDetailsComponent,
@@ -76,6 +76,7 @@ pub struct Revlog {
     theme: SharedTheme,
 }
 
+/// Implements methods for the Revlog struct.
 impl Revlog {
     ///
     pub fn new(env: &Environment) -> Self {
@@ -331,6 +332,7 @@ impl Revlog {
     }
 }
 
+/// Implements the drawing functionality for the Revlog component.
 impl DrawableComponent for Revlog {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
         let area = if self.is_in_search_mode() {

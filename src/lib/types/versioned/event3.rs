@@ -639,7 +639,7 @@ impl EventV3 {
             for tag in self.tags.iter() {
                 if tag.tagname() == "description" {
                     let request_string = tag.value();
-                    if let Ok(e) = serde_json::from_str::<EventV3>(&request_string) {
+                    if let Ok(e) = serde_json::from_str::<EventV3>(request_string) {
                         zap_request = Some(e);
                     }
                 }
@@ -1001,7 +1001,7 @@ impl EventV3 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-            Some(unsafe { std::mem::transmute(arr) })
+            Some(unsafe { std::mem::transmute::<[u8; 32], types::id::Id>(arr) })
         } else {
             None
         }
@@ -1140,7 +1140,7 @@ impl UnsignedEventV3 {
     ) -> UnsignedEventV3 {
         let tags = tags
             .into_iter()
-            .map(|tag_vec| TagV3(tag_vec))
+            .map(TagV3)
             .collect();
 
         UnsignedEventV3(PreEventV3 {
@@ -1154,7 +1154,7 @@ impl UnsignedEventV3 {
 
     pub(crate) fn sign(self, private_key: &secp256k1::SecretKey) -> Result<EventV3, Error> {
         let id = self.0.hash()?;
-        let signer = KeySigner::from_private_key(PrivateKey(private_key.clone(), KeySecurity::Medium), "", 1)?;
+        let signer = KeySigner::from_private_key(PrivateKey(*private_key, KeySecurity::Medium), "", 1)?;
         let sig = signer.sign_id(id)?;
         Ok(EventV3 {
             id,

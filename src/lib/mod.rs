@@ -215,21 +215,15 @@ pub fn get_weeble() -> Result<String, &'static str> {
 }
 /// pub fn get_weeble_sync() -> Result<String, &'static str>
 pub fn get_weeble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", weeble_sync().unwrap_or(0_f64).to_string()))
+    Ok(weeble_sync().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_weeble_async() -> Result<String, &'static str>
 pub async fn get_weeble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(weeble_async().await.unwrap_or(0_f64).to_string())
 }
 /// pub fn get_weeble_millis_async() -> Result<String, &'static str>
 pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(weeble_millis_async().await.unwrap_or(0_f64).to_string())
 }
 /// wobble
 /// pub fn get_wobble() -> Result<String, &'static str>
@@ -238,34 +232,28 @@ pub fn get_wobble() -> Result<String, &'static str> {
 }
 /// pub fn get_wobble_sync() -> Result<String, &'static str>
 pub fn get_wobble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", wobble_sync().unwrap_or(0_f64).to_string()))
+    Ok(wobble_sync().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_wobble_async() -> Result<String, &'static str>
 pub async fn get_wobble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(wobble_async().await.unwrap_or(0_f64).to_string())
 }
 /// pub fn get_wobble_millis_async() -> Result<String, &'static str>
 pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(wobble_millis_async().await.unwrap_or(0_f64).to_string())
 }
 
 /// pub fn get_blockheight_sync() -> Result<String, &'static str>
 pub fn get_blockheight_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
+    Ok(blockheight().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_blockheight_async() -> Result<String, &'static str>
 pub async fn get_blockheight_async() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight_async().await))
+    Ok(blockheight_async().await.to_string())
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    Ok(format!("{}", blockhash().unwrap().to_string()))
+    Ok(blockhash().unwrap().to_string())
 }
 
 /// pub fn hash_list()

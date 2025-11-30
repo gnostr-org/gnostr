@@ -96,7 +96,7 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     let mut padded: Vec<u8> = Vec::new();
     padded.extend_from_slice(&(len as u16).to_be_bytes());
     padded.extend_from_slice(unpadded.as_bytes());
-    padded.extend(std::iter::repeat(0).take(calc_padding(len) - len));
+    padded.extend(std::iter::repeat_n(0, calc_padding(len) - len));
     Ok(padded)
 }
 

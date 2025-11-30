@@ -960,7 +960,7 @@ impl EventV1 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-            Some(unsafe { std::mem::transmute(arr) })
+            Some(unsafe { std::mem::transmute::<[u8; 32], types::id::Id>(arr) })
         } else {
             None
         }
