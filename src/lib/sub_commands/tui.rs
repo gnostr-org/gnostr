@@ -458,7 +458,7 @@ pub async fn run_app(
                 Ok(app) => app,
                 Err(e) => {
                     log::error!("failed to create app: {e}");
-                    return Err(e.into());
+                    return Err(e);
                 }
             };
     let mut spinner = Spinner::default();
