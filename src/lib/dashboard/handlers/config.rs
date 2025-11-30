@@ -53,7 +53,9 @@ impl Default for FrontendConfig {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum CursorType {
+    #[default]
     User,
     Line,
     Block,
@@ -72,11 +74,7 @@ impl FromStr for CursorType {
     }
 }
 
-impl Default for CursorType {
-    fn default() -> Self {
-        Self::User
-    }
-}
+
 
 impl CompleteConfig {
     pub fn new() -> Result<Self, Error> {
