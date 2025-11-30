@@ -75,7 +75,7 @@ mod when_first_git_server_fails_ {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<()> {
+        async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
         // let source_path =
         // source_git_repo.dir.to_str().unwrap().to_string();
