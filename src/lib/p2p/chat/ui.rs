@@ -116,7 +116,7 @@ impl App {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     let tick_rate = Duration::from_millis(100);
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, app))?;
 
         if !event::poll(tick_rate)? {
             continue;

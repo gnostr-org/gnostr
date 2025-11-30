@@ -11,29 +11,27 @@ pub async fn run_git_publisher(args: &Args, swarm: &mut libp2p::Swarm<Behaviour>
     let path = args.flag_git_dir.as_ref().map_or(".", |s| &s[..]);
     let repo = Repository::discover(path)?;
     if let Ok(tag_names) = repo.tag_names(None) {
-        for tag_name_opt in tag_names.iter() {
-            if let Some(tag_name) = tag_name_opt {
-                if let Ok(commit_id) = get_commit_id_of_tag(&repo, tag_name) {
-                    let key = kad::RecordKey::new(&tag_name);
-                    let record = kad::Record {
-                        key: key.clone(),
-                        value: commit_id.into_bytes(),
-                        publisher: Some(*swarm.local_peer_id()),
-                        expires: None,
-                    };
-                    swarm
-                        .behaviour_mut()
-                        .kademlia
-                        .put_record(record, kad::Quorum::Majority)?;
-                    swarm
-                        .behaviour_mut()
-                        .kademlia
-                        .start_providing(key.clone())?;
+        for tag_name in tag_names.iter().flatten() {
+            if let Ok(commit_id) = get_commit_id_of_tag(&repo, tag_name) {
+                let key = kad::RecordKey::new(&tag_name);
+                let record = kad::Record {
+                    key: key.clone(),
+                    value: commit_id.into_bytes(),
+                    publisher: Some(*swarm.local_peer_id()),
+                    expires: None,
+                };
+                swarm
+                    .behaviour_mut()
+                    .kademlia
+                    .put_record(record, kad::Quorum::Majority)?;
+                swarm
+                    .behaviour_mut()
+                    .kademlia
+                    .start_providing(key.clone())?;
 
-                    let topic = gossipsub::IdentTopic::new(tag_name);
-                    debug!("subscribe topic={}", topic.clone());
-                    swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
-                }
+                let topic = gossipsub::IdentTopic::new(tag_name);
+                debug!("subscribe topic={}", topic.clone());
+                swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
             }
         }
     }
