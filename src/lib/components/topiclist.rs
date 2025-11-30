@@ -1,4 +1,3 @@
-#![allow(unused_variables)]
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
@@ -542,7 +541,9 @@ impl TopicList {
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(splitter.clone());
 
+        #[allow(unused_variables)]
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
+        #[allow(unused_variables)]
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
@@ -587,6 +588,7 @@ impl TopicList {
         marked: Option<bool>,
     ) -> Line<'a> {
         //
+        #[allow(clippy::if_same_then_else)]
         let mut txt: Vec<Span> =
             Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 });
 
