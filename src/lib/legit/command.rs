@@ -625,15 +625,13 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         debug!("tree:\n{}", tree.as_str().unwrap_or(""));
     }
     // Accessing parent commits (merge may be array)
-    if let Some(parent) = value.get("parents") {
-        if let Value::Array(arr) = parent {
+    if let Some(Value::Array(arr)) = value.get("parents") {
             if let Some(parent) = arr.first() {
                 debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
             }
             if let Some(parent) = arr.get(1) {
                 debug!("parent:\n{}", parent.as_str().unwrap_or(""));
             }
-        }
     }
     if let Some(author_name) = value.get("author_name") {
         debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));
@@ -705,7 +703,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         //let client = Client::new(keys);
         let client = Client::new(padded_keys.clone());
 
-        for relay in BOOTSTRAP_RELAYS.to_vec() {
+        for relay in BOOTSTRAP_RELAYS.iter().cloned() {
             debug!("{}", relay);
             client.add_relay(relay).await.expect("");
         }
