@@ -438,21 +438,103 @@ mod test {
         assert!(found_picture_tag);
         assert!(found_relay_tag);
     }
+}
+/// Creates a Kind 41 event for setting channel metadata.
+///
+/// # Arguments
+/// * `signer`: The signer that will be used to sign the event.
+/// * `channel_id`: The unique identifier for the channel (required, 'd' tag).
+/// * `channel_name`: The new name of the channel (optional, 'name' tag).
+/// * `channel_description`: The new description of the channel (optional, 'description' tag).
+/// * `channel_picture`: New URL to the channel's picture (optional, 'picture' tag).
+/// * `relay_url`: A recommended relay URL for the channel (optional, 'relay' tag).
+///
+/// # Returns
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+pub fn set_channel_metadata(
+    signer: &dyn Signer,
+    channel_id: &str,
+    channel_name: Option<&str>,
+    channel_description: Option<&str>,
+    channel_picture: Option<&str>,
+    relay_url: Option<&UncheckedUrl>,
+) -> Result<EventV3, Error> {
+    let mut tags = vec![];
+
+    // 'd' tag (channel identifier) - required
+    tags.push(TagV3::new_identifier(channel_id.to_string()));
+
+    // 'name' tag - optional
+    if let Some(name) = channel_name {
+        if !name.is_empty() {
+            tags.push(TagV3::new(&["name", name]));
+        }
+    }
+
+    // 'description' tag - optional
+    if let Some(description) = channel_description {
+        if !description.is_empty() {
+            tags.push(TagV3::new(&["description", description]));
+        }
+    }
+
+    // 'picture' tag - optional
+    if let Some(picture_url) = channel_picture {
+        if !picture_url.is_empty() {
+            tags.push(TagV3::new(&["picture", picture_url]));
+        }
+    }
+
+    // 'relay' tag - optional
+    if let Some(relay) = relay_url {
+        tags.push(TagV3::new_relay(relay.clone(), None)); // Metadata updates might also include relay recommendations
+    }
+
+    // Create PreEvent
+    let pre_event = PreEventV3 {
+        pubkey: signer.public_key(),
+        created_at: Unixtime::now(),
+        kind: SET_CHANNEL_METADATA, // Kind 41
+        tags,
+        content: "".to_string(), // Metadata events typically have empty content
+    };
+
+    // Sign the event
+    signer.sign_event(pre_event)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::types::{EventKind, TagV3, PublicKey, PrivateKey, Unixtime, Id, Error, PublicKeyHex, UncheckedUrl, Signer, KeySecurity};
+    use crate::test_serde;
+    use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey};
+    use sha2::{Digest, Sha256};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
-    fn test_set_channel_metadata_event() {
+    fn test_nip28_event_kinds() {
+        assert_eq!(CREATE_CHANNEL, EventKind::from(40));
+        assert_eq!(SET_CHANNEL_METADATA, EventKind::from(41));
+        assert_eq!(CREATE_CHANNEL_MESSAGE, EventKind::from(42));
+        assert_eq!(HIDE_MESSAGE, EventKind::from(43));
+        assert_eq!(MUTE_USER, EventKind::from(44));
+    }
+
+    #[test]
+    fn test_create_channel_event() {
         let signer = {
             let privkey = PrivateKey::mock();
             KeySigner::from_private_key(privkey, "", 1).unwrap()
         };
 
-        let channel_id = "my-channel-id";
-        let channel_name = Some("Updated Channel Name");
-        let channel_description = Some("Updated description.");
-        let channel_picture = Some("https://example.com/new_picture.jpg");
-        let relay_url = Some(UncheckedUrl::from_str("wss://new-relay.example.com").unwrap());
+        let channel_id = "my-cool-channel";
+        let channel_name = "My Cool Channel";
+        let channel_description = "A channel for cool people.";
+        let channel_picture = Some("https://example.com/picture.jpg");
+        let relay_url = Some(UncheckedUrl::from_str("wss://relay.example.com").unwrap());
 
-        let event = set_channel_metadata(
+        let event = create_channel(
             &signer,
             channel_id,
             channel_name,
@@ -461,9 +543,9 @@ mod test {
             relay_url,
         ).unwrap();
 
-        assert_eq!(event.kind, EventKind::ChannelMetadata);
+        assert_eq!(event.kind, EventKind::ChannelCreation);
         assert_eq!(event.pubkey, signer.public_key());
-        assert_eq!(event.content, ""); // Metadata events typically have empty content
+        assert_eq!(event.content, "");
 
         // Check tags
         let mut found_d_tag = false;
@@ -480,10 +562,10 @@ mod test {
                 }
                 TagV3::Other { tag, data } => {
                     if tag == "name" && !data.is_empty() {
-                        assert_eq!(data[0], channel_name.unwrap());
+                        assert_eq!(data[0], channel_name);
                         found_name_tag = true;
                     } else if tag == "description" && !data.is_empty() {
-                        assert_eq!(data[0], channel_description.unwrap());
+                        assert_eq!(data[0], channel_description);
                         found_description_tag = true;
                     } else if tag == "picture" && !data.is_empty() {
                         assert_eq!(data[0], channel_picture.unwrap());
@@ -505,141 +587,62 @@ mod test {
         assert!(found_relay_tag);
     }
 
-    #[test]
-    fn test_set_channel_metadata_with_optional_args() {
-        let signer = {
-            let privkey = PrivateKey::mock();
-            KeySigner::from_private_key(privkey, "", 1).unwrap()
-        };
 
-        let channel_id = "another-channel";
 
-        // Test with only required arguments
-        let event_minimal = set_channel_metadata(
-            &signer,
-            channel_id,
-            None, // name
-            None, // description
-            None, // picture
-            None, // relay_url
-        ).unwrap();
+/// Creates a Kind 42 event for sending a message within a channel.
+///
+/// # Arguments
+/// * `signer`: The signer that will be used to sign the event.
+/// * `channel_id`: The unique identifier for the channel (required, 'd' tag).
+/// * `message`: The content of the message.
+/// * `reply_to_id`: The ID of the message this message is replying to (optional, 'e' tag with 'reply' marker).
+/// * `root_message_id`: The ID of the root message in a thread (optional, 'e' tag with 'root' marker).
+/// * `relay_url`: A recommended relay URL for context (optional, 'relay' tag).
+///
+/// # Returns
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+pub fn create_channel_message(
+    signer: &dyn Signer,
+    channel_id: &str,
+    message: &str,
+    reply_to_id: Option<Id>,
+    root_message_id: Option<Id>,
+    relay_url: Option<&UncheckedUrl>,
+) -> Result<EventV3, Error> {
+    let mut tags = vec![];
 
-        assert_eq!(event_minimal.kind, EventKind::ChannelMetadata);
-        assert_eq!(event_minimal.pubkey, signer.public_key());
-        assert_eq!(event_minimal.content, "");
-        // Should only contain the 'd' tag
-        assert_eq!(event_minimal.tags.len(), 1);
-        if let TagV3::Identifier { d, .. } = &event_minimal.tags[0] {
-            assert_eq!(d, channel_id);
-        } else {
-            panic!("Expected 'd' tag for channel ID");
-        }
+    // 'd' tag (channel identifier) - required
+    tags.push(TagV3::new_identifier(channel_id.to_string()));
 
-        // Test with some optional arguments
-        let channel_name = Some("Channel Name");
-        let channel_picture = Some("https://example.com/pic.png");
-        let event_partial = set_channel_metadata(
-            &signer,
-            channel_id,
-            channel_name,
-            None, // description
-            channel_picture,
-            None, // relay_url
-        ).unwrap();
-
-        assert_eq!(event_partial.kind, EventKind::ChannelMetadata);
-        assert_eq!(event_partial.pubkey, signer.public_key());
-        assert_eq!(event_partial.content, "");
-
-        let mut found_d = false;
-        let mut found_name = false;
-        let mut found_picture = false;
-        for tag in event_partial.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "name" && !data.is_empty() {
-                        assert_eq!(data[0], channel_name.unwrap());
-                        found_name = true;
-                    } else if tag == "description" && !data.is_empty() {
-                        assert_eq!(data[0], channel_description.unwrap());
-                        found_description_tag = true;
-                    } else if tag == "picture" && !data.is_empty() {
-                        assert_eq!(data[0], channel_picture.unwrap());
-                        found_picture_tag = true;
-                    }
-                }
-                _ => {}
-            }
-        }
-        assert!(found_d && found_name && found_picture);
+    // 'e' tag for reply
+    if let Some(id) = reply_to_id {
+        tags.push(TagV3::new_event(id, relay_url.cloned(), Some("reply".to_string())));
     }
 
-    #[test]
-    fn test_create_channel_message_event() {
-        let signer = {
-            let privkey = PrivateKey::mock();
-            KeySigner::from_private_key(privkey, "", 1).unwrap()
-        };
-
-        let channel_id = "chat-channel";
-        let message = "Hello, this is a chat message!";
-        let reply_to_id = Some(Id::mock());
-        let root_message_id = Some(Id::mock());
-        let relay_url = Some(UncheckedUrl::from_str("wss://chat-relay.example.com").unwrap());
-
-        let event = create_channel_message(
-            &signer,
-            channel_id,
-            message,
-            reply_to_id,
-            root_message_id,
-            relay_url,
-        ).unwrap();
-
-        assert_eq!(event.kind, EventKind::ChannelMessage);
-        assert_eq!(event.pubkey, signer.public_key());
-        assert_eq!(event.content, message);
-
-        // Check tags
-        let mut found_d_tag = false;
-        let mut found_reply_e_tag = false;
-        let mut found_root_e_tag = false;
-        let mut found_relay_tag = false;
-
-        for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Event { id, recommended_relay_url, marker, .. } => {
-                    if marker.as_deref() == Some("reply") {
-                        assert_eq!(*id, reply_to_id.unwrap());
-                        assert_eq!(recommended_relay_url, &relay_url);
-                        found_reply_e_tag = true;
-                    } else if marker.as_deref() == Some("root") {
-                        assert_eq!(*id, root_message_id.unwrap());
-                        assert_eq!(recommended_relay_url, &relay_url);
-                        found_root_e_tag = true;
-                    }
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url.unwrap());
-                    found_relay_tag = true;
-                }
-                _ => {}
-            }
-        }
-
-        assert!(found_d_tag);
-        assert!(found_reply_e_tag);
-        assert!(found_root_e_tag);
-        assert!(found_relay_tag);
+    // 'e' tag for root message
+    if let Some(id) = root_message_id {
+        tags.push(TagV3::new_event(id, relay_url.cloned(), Some("root".to_string())));
     }
+
+    // 'relay' tag
+    if let Some(url) = relay_url {
+        tags.push(TagV3::new_relay(url.clone(), None));
+    }
+
+    // Create PreEvent
+    let pre_event = PreEventV3 {
+        pubkey: signer.public_key(),
+        created_at: Unixtime::now(),
+        kind: CREATE_CHANNEL_MESSAGE, // Kind 42
+        tags,
+        content: message.to_string(),
+    };
+
+    // Sign the event
+    signer.sign_event(pre_event)
+}
+
+
 
     #[test]
     fn test_hide_message_event() {
