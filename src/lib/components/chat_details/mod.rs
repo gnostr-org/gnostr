@@ -12,9 +12,9 @@ use crate::{
     strings,
 };
 use anyhow::Result;
-mod chat_details;
-use chat_details::CompareDetailsComponent;
+use self::details::CompareDetailsComponent;
 use details::DetailsComponent;
+use nostr_sdk_0_34_0::prelude::*;
 use gnostr_asyncgit::{
     sync::{commit_files::OldNew, CommitTags},
     AsyncCommitFiles, CommitFilesParams,
