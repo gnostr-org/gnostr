@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use gnostr::types::{
-    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05
+    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm
 };
 use tokio::sync::mpsc;
 
@@ -35,6 +35,18 @@ enum SubCommand {
         #[arg(short, long)]
         identifier: String,
     },
+    /// Send a direct message
+    SendDm {
+        #[arg(short, long)]
+        recipient: String,
+        #[arg(short, long)]
+        content: String,
+    },
+    /// Get direct messages
+    GetDms {
+        #[arg(short, long)]
+        private_key: String,
+    },
 }
 
 #[tokio::main]
@@ -51,6 +63,7 @@ async fn main() -> anyhow::Result<()> {
     client.connect_relay(relay_url).await?;
 
     let mut should_listen = true;
+    let mut signer_for_decryption: Option<KeySigner> = None;
 
     match args.command {
         SubCommand::Publish { content } => {
@@ -107,6 +120,44 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 println!("User {} not found at {}", user, domain);
             }
+        }
+        SubCommand::SendDm { recipient, content } => {
+            let signer =
+                KeySigner::from_private_key(PrivateKey::generate(), "", 1).unwrap();
+            let recipient_pk = PublicKey::try_from_hex_string(&recipient, true)?;
+            let encrypted_content = signer.encrypt(
+                &recipient_pk,
+                &content,
+                ContentEncryptionAlgorithm::Nip04,
+            )?;
+            let pubkey = signer.public_key();
+            let preevent = PreEventV3 {
+                pubkey,
+                created_at: Unixtime::now(),
+                kind: EventKind::EncryptedDirectMessage,
+                tags: vec![TagV3::new_pubkey(recipient_pk.into(), None, None)],
+                content: encrypted_content,
+            };
+            let id = preevent.hash()?;
+            let sig = signer.sign_id(id)?;
+            let event = EventV3 {
+                id,
+                pubkey: preevent.pubkey,
+                created_at: preevent.created_at,
+                kind: preevent.kind,
+                tags: preevent.tags,
+                content: preevent.content,
+                sig,
+            };
+            client.send_event(event).await?;
+        }
+        SubCommand::GetDms { private_key } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
+            let pubkey = signer.public_key();
+            println!("Subscribing to DMs for {}", pubkey.as_hex_string());
+            // TODO: client.subscribe_to_dms(pubkey).await;
+            signer_for_decryption = Some(signer);
         }
     }
 
