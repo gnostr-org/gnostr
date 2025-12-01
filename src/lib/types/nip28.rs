@@ -567,7 +567,10 @@ pub fn hide_message(
         }
     }
 
-    // 'relay' tag is handled by the 'e' tag, so no separate 'r' tag needed here.
+    // 'relay' tag - optional
+    if let Some(url) = relay_url {
+        tags.push(TagV3::new_relay(url.clone(), None));
+    }
 
     // Create PreEvent
     let pre_event = PreEventV3 {
@@ -614,7 +617,10 @@ pub fn mute_user(
         }
     }
 
-    // 'relay' tag is handled by the 'p' tag, so no separate 'r' tag needed here.
+    // 'relay' tag - optional
+    if let Some(url) = relay_url {
+        tags.push(TagV3::new_relay(url.clone(), None));
+    }
 
     // Create PreEvent
     let pre_event = PreEventV3 {
