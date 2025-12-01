@@ -1,3 +1,7 @@
+#![warn(
+    missing_docs,
+)]
+
 use anyhow::{anyhow, Result};
 use clap::{
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
@@ -52,23 +56,30 @@ use crate::sub_commands::query::QuerySubCommand;
 use crate::sub_commands::sniper;
 use crate::sub_commands::git;
 
+/// CliArgs
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct CliArgs {
+	/// theme
     pub theme: PathBuf,
+	/// repo_path
     pub repo_path: RepoPath,
+	/// notify_watch
     pub notify_watcher: bool,
 }
 
+/// LegitCli
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct LegitCli {
+	/// command
     #[command(subcommand)]
     pub command: Option<LegitCommands>,
 }
 
+/// LegitCommands
 #[derive(Subcommand, Debug)]
 pub enum LegitCommands {
     /// update cache with latest updates from nostr
@@ -90,10 +101,13 @@ pub enum LegitCommands {
     /// Mine a git commit with a given prefix
     Mine,
 }
+
+/// NgitCli
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitCli {
+	/// command
     #[command(subcommand)]
     pub command: NgitCommands,
     /// remote signer address
@@ -113,6 +127,7 @@ pub struct NgitCli {
     pub disable_cli_spinners: bool,
 }
 
+/// NgitCommands
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
     /// update cache with latest updates from nostr
@@ -135,21 +150,22 @@ pub enum NgitCommands {
     Query(QuerySubCommand),
 }
 
+/// GnostrCli
 #[derive(Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
 #[command(author, version, about, long_about = None)]
 pub struct GnostrCli {
-    //
+    /// command
     #[command(subcommand)]
     pub command: Option<GnostrCommands>,
-    ///
+    /// nsec
     #[arg(short, long,
         action = clap::ArgAction::Append,
         default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     pub nsec: Option<String>,
-    ///
+    /// hash
     #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
     pub hash: Option<String>,
     /// TODO handle gnostr tui --repo_path
@@ -159,6 +175,7 @@ pub struct GnostrCli {
         default_value = ".",
         help = "gnostr --workdir '<string>'"
     )]
+	/// workdir
     pub workdir: Option<String>,
     /// TODO handle gnostr tui --repo_path
     #[arg(
@@ -167,29 +184,30 @@ pub struct GnostrCli {
         default_value = ".",
         help = "gnostr --gitdir '<string>'"
     )]
+	/// gitdir
     pub gitdir: Option<RepoPath>,
-    ///
+    /// directory
     #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
     pub directory: Option<String>,
-    ///
+    /// theme
     #[arg(long, value_name = "THEME", help = "gnostr --theme '<string>'")]
     pub theme: Option<String>,
-    ///
+    /// watcher
     #[arg(long, value_name = "WATCHER", help = "gnostr --watcher '<string>'")]
     pub watcher: Option<String>,
-    ///
+    /// weeble
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub weeble: bool,
-    ///
+    /// blockheigh
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub blockheight: bool,
-    ///
+    /// wobble
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub wobble: bool,
-    ///
+    /// blockhash
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub blockhash: bool,
-    ///
+    ///  relays
     #[arg(short, long, action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string()])]
     pub relays: Vec<String>,
@@ -254,6 +272,7 @@ impl Default for GnostrCli {
     }
 }
 
+/// GnostrCommands
 #[derive(Subcommand)]
 pub enum GnostrCommands {
     /// Gnostr sub commands
@@ -320,7 +339,7 @@ pub enum GnostrCommands {
     FetchById(fetch_by_id::FetchByIdSubCommand),
         /// Relay sub commands
     Relay(relay::RelaySubCommand),
-    // Add the query subcommand here, using the new QuerySubCommand struct
+    /// Add the query subcommand here, using the new QuerySubCommand struct
     Query(QuerySubCommand),
     /// Git sub commands
     Git(git::GitSubCommand),
@@ -328,6 +347,7 @@ pub enum GnostrCommands {
     Nip34(crate::sub_commands::nip34::Nip34Command),
 }
 
+/// setup_logging
 pub fn setup_logging() -> Result<()> {
     let mut path = get_app_cache_path()?;
     path.push("gnostr.log");
@@ -339,6 +359,7 @@ pub fn setup_logging() -> Result<()> {
     Ok(())
 }
 
+/// get_app_cache_path
 pub fn get_app_cache_path() -> Result<PathBuf> {
     let mut path = if cfg!(target_os = "macos") {
         dirs::home_dir().map(|h| h.join(".config"))
@@ -352,6 +373,7 @@ pub fn get_app_cache_path() -> Result<PathBuf> {
     Ok(path)
 }
 
+/// get_app_config_path
 pub fn get_app_config_path() -> Result<PathBuf> {
     let mut path = if cfg!(target_os = "macos") {
         dirs::home_dir().map(|h| h.join(".config"))

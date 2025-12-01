@@ -46,30 +46,39 @@ pub use error::Error;
 mod event;
 pub use event::{Event, PreEvent, Rumor, ZapData};
 
+/// event_kind
 pub mod event_kind;
 pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
 
+/// event_reference
 mod event_reference;
 pub use event_reference::EventReference;
 
+/// filter
 mod filter;
 pub use filter::Filter;
 
+/// id
 mod id;
 pub use id::{Id, IdHex};
 
+/// identity
 mod identity;
 pub use identity::Identity;
 
+/// key_signer
 mod key_signer;
 pub use key_signer::KeySigner;
 
+/// metadata
 mod metadata;
 pub use metadata::Metadata;
 
+/// naddr
 mod naddr;
 pub use naddr::NAddr;
 
+/// nevent
 mod nevent;
 pub use nevent::NEvent;
 

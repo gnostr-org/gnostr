@@ -13,6 +13,7 @@ use crate::{
     strings,
 };
 
+/// CredComponent
 pub struct CredComponent {
     visible: bool,
     key_config: SharedKeyConfig,
@@ -22,6 +23,7 @@ pub struct CredComponent {
 }
 
 impl CredComponent {
+	/// new
         pub fn new(env: &Environment) -> Self {
         let key_config = env.key_config.clone();
         Self {
@@ -45,10 +47,12 @@ impl CredComponent {
         }
     }
 
+		/// set_cred
     pub fn set_cred(&mut self, cred: BasicAuthCredential) {
         self.cred = cred;
     }
 
+	/// get_cred
     pub const fn get_cred(&self) -> &BasicAuthCredential {
         &self.cred
     }
