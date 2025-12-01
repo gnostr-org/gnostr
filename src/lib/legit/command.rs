@@ -627,7 +627,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     // Accessing parent commits (merge may be array)
     if let Some(parent) = value.get("parents") {
         if let Value::Array(arr) = parent {
-            if let Some(parent) = arr.get(0) {
+            if let Some(parent) = arr.first() {
                 debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
             }
             if let Some(parent) = arr.get(1) {
