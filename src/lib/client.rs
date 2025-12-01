@@ -1748,6 +1748,7 @@ pub async fn send_events(
     Ok(())
 }
 
+#[allow(clippy::ptr_arg)]
 fn remove_trailing_slash(s: &String) -> String {
     match s.as_str().strip_suffix('/') {
         Some(s) => s,

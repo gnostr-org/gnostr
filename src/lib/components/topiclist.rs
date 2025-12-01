@@ -48,7 +48,7 @@ use crate::{
 const ELEMENTS_PER_LINE: usize = 9;
 const SLICE_SIZE: usize = 1200;
 
-///
+/// TopicList
 pub struct TopicList {
     repo: RepoPathRef,
     title: Box<str>,
