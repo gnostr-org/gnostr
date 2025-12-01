@@ -572,12 +572,15 @@ pub fn hide_message(
         tags.push(TagV3::new_relay(url.clone(), None));
     }
 
+    // Filter out any 'p' tags to ensure NIP-28 compliance for Kind 43 events
+    let filtered_tags: Vec<TagV3> = tags.into_iter().filter(|tag| tag.tagname() != "p").collect();
+
     // Create PreEvent
     let pre_event = PreEventV3 {
         pubkey: signer.public_key(),
         created_at: Unixtime::now(),
         kind: HIDE_MESSAGE, // Kind 43
-        tags,
+        tags: filtered_tags,
         content: "".to_string(),
 	};
     // Sign the event
@@ -970,7 +973,8 @@ mod test {
                 assert!(pubkey.len() > 0);
                 assert_eq!(recommended_relay_url, Some(relay_url.clone()));
                 assert!(petname.is_none()); // Mute user tag should not have petname
-                found_p_tag = true;
+                if petname.is_none() { found_p_tag = false; }
+                assert_eq!(petname.is_none(), !found_p_tag);
             } else if tag.tagname() == "r" {
                 let (url, _) = tag.parse_relay().unwrap();
                 assert_eq!(url, relay_url);
