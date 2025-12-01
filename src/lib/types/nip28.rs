@@ -520,6 +520,51 @@ pub fn set_channel_metadata(
     signer.sign_event(pre_event)
 }
 
+/// Parses a generic `EventV3` into a `ChannelMetadataEvent` if it matches Kind 41 and has valid tags.
+///
+/// # Arguments
+/// * `event`: The `EventV3` to parse.
+///
+/// # Returns
+/// A `Result` containing the `ChannelMetadataEvent` on success, or an `Error` if parsing fails or the event is not a valid Kind 41 event.
+pub fn parse_set_channel_metadata(event: &EventV3) -> Result<ChannelMetadataEvent, Error> {
+    if event.kind != SET_CHANNEL_METADATA {
+        return Err(Error::WrongEventKind);
+    }
+
+    let mut channel_id: Option<String> = None;
+    let mut channel_name: Option<String> = None;
+    let mut channel_description: Option<String> = None;
+    let mut channel_picture: Option<String> = None;
+    let mut relay_url: Option<UncheckedUrl> = None;
+
+    for tag in event.tags.iter() {
+        if let Ok(d) = tag.parse_identifier() {
+            channel_id = Some(d);
+        } else if tag.tagname() == "name" && !tag.value().is_empty() {
+            channel_name = Some(tag.value().to_string());
+        } else if tag.tagname() == "description" && !tag.value().is_empty() {
+            channel_description = Some(tag.value().to_string());
+        } else if tag.tagname() == "picture" && !tag.value().is_empty() {
+            channel_picture = Some(tag.value().to_string());
+        } else if let Ok((url, _)) = tag.parse_relay() {
+            relay_url = Some(url);
+        }
+    }
+
+    match channel_id {
+        Some(id) => Ok(ChannelMetadataEvent {
+            channel_id: id,
+            channel_name,
+            channel_description,
+            channel_picture,
+            relay_url,
+            pubkey: event.pubkey,
+        }),
+        None => Err(Error::AssertionFailed("Missing 'd' tag for channel ID.".to_string())),
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
