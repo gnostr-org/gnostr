@@ -1,8 +1,9 @@
 use clap::{Parser, Subcommand};
 use gnostr::queue::InternalEvent;
 use gnostr::types::{
-    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm
+    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id
 };
+use gnostr::types::nip9;
 use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
@@ -47,6 +48,13 @@ enum SubCommand {
     GetDms {
         #[arg(short, long)]
         private_key: String,
+    },
+    /// Delete an event
+    Delete {
+        #[arg(short, long)]
+        event_id: String,
+        #[arg(short, long)]
+        reason: Option<String>,
     },
 }
 
@@ -159,6 +167,20 @@ async fn main() -> anyhow::Result<()> {
             println!("Subscribing to DMs for {}", pubkey.as_hex_string());
             client.subscribe_to_dms(pubkey).await;
             signer_for_decryption = Some(signer);
+        }
+        SubCommand::Delete { event_id, reason } => {
+            let private_key = PrivateKey::generate();
+            let public_key = private_key.public_key();
+            let secret_key = private_key.as_secret_key();
+
+            let id = Id::try_from_hex_string(&event_id)?;
+            let event = nip9::delete(
+                vec![id],
+                reason.as_deref(),
+                &public_key.as_xonly_public_key(),
+                &secret_key,
+            );
+            client.send_event(event.into()).await?;
         }
     }
 
