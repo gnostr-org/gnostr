@@ -895,7 +895,8 @@ impl App {
             }
             InternalEvent::CommitSearch(options) => {
                 self.revlog.search(options);
-            }
+            },
+			InternalEvent::NostrEvent(_) | InternalEvent::NostrCommand(_) => todo!()
         };
 
         Ok(flags)

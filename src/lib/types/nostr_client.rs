@@ -1,0 +1,113 @@
+use anyhow::{anyhow, Result};
+use futures_util::{StreamExt, SinkExt, stream::{SplitSink, SplitStream}};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite};
+use tokio::net::TcpStream;
+use url::Url;
+use tokio::sync::mpsc;
+use crate::queue::{InternalEvent, Queue};
+use crate::types::versioned::event3::EventV3;
+use crate::types::versioned::client_message3::ClientMessageV3;
+use crate::types::{UncheckedUrl, ClientMessage, Filter, SubscriptionId, RelayMessage, EventKind, Unixtime}; // Added Filter, SubscriptionId, RelayMessage, EventKind, Unixtime
+use tracing::{debug, info, warn};
+use rand::Rng;
+
+use std::sync::{Arc, Mutex};
+
+type WsSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tungstenite::Message>;
+type WsStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
+
+#[derive(Clone, Debug)]
+pub struct NostrClient {
+    queue_tx: mpsc::Sender<InternalEvent>,
+    relay_sinks: Arc<Mutex<Vec<(UncheckedUrl, WsSink)>>>,
+}
+
+impl NostrClient {
+    pub fn new(queue_tx: mpsc::Sender<InternalEvent>) -> Self {
+        Self {
+            queue_tx,
+            relay_sinks: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+        pub async fn connect_relay(&mut self, url: UncheckedUrl) -> Result<()> {
+            info!("Connecting to Nostr relay: {}", url.0);
+            let (ws_stream, _) = tokio_tungstenite::connect_async(Url::parse(&url.0)?).await?;
+            info!("Connected to Nostr relay: {}", url.0);
+
+            let (sink, stream) = ws_stream.split();
+            self.spawn_listener_task(url.clone(), stream);
+            self.relay_sinks.lock().unwrap().push((url, sink));
+
+            Ok(())
+        }
+
+    fn spawn_listener_task(&self, url: UncheckedUrl, mut stream: WsStream) {
+        let queue_tx_clone = self.queue_tx.clone();
+
+        let _ = crate::p2p::chat::global_rt().spawn(async move {
+            while let Some(message_result) = stream.next().await {
+                match message_result {
+                    Ok(tungstenite::Message::Text(text)) => {
+                        debug!("Received from {}: {}", url.0, text);
+                        match serde_json::from_str::<RelayMessage>(&text) {
+                            Ok(RelayMessage::Event(_sub_id, event)) => {
+                                info!("Received Nostr event from {}: {:?}", url.0, event);
+                                if let Err(e) = queue_tx_clone.send(InternalEvent::NostrEvent(*event)).await {
+                                    warn!("Failed to send NostrEvent to queue: {}", e);
+                                }
+                            },
+                            Ok(other) => debug!("Received other relay message from {}: {:?}", url.0, other),
+                            Err(e) => warn!("Failed to parse relay message from {}: {}. Message: {}", url.0, e, text),
+                        }
+                    },
+                    Ok(other) => debug!("Received non-text message from {}: {:?}", url.0, other),
+                    Err(e) => {
+                        warn!("WebSocket error on {}: {}", url.0, e);
+                        break;
+                    }
+                }
+            }
+            info!("Relay listener for {} disconnected.", url.0);
+        });
+    }
+
+    
+
+        pub async fn send_event(&self, event: EventV3) -> Result<()> {
+            let client_message = ClientMessage::Event(Box::new(event));
+            let json = serde_json::to_string(&client_message)?;
+            let websocket_message = tungstenite::Message::Text(json);
+
+            let mut sinks = self.relay_sinks.lock().unwrap();
+            for (url, sink) in sinks.iter_mut() {
+                info!("Sending Nostr event to relay {}", url.0);
+                if let Err(e) = sink.send(websocket_message.clone()).await {
+                    warn!("Failed to send event to relay {}: {}", url.0, e);
+                }
+            }
+            Ok(())
+        }
+
+        pub async fn subscribe_to_channel(&self, channel_id: String) {
+            info!("Subscribing to Nostr channel: {}", channel_id);
+            
+            let mut filter = Filter::new();
+            filter.add_tag_value('d', channel_id.clone());
+            filter.add_event_kind(EventKind::ChannelMessage);
+            filter.since = Some(Unixtime::now());
+
+            let subscription_id = SubscriptionId(format!("channel:{}", channel_id));
+
+            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+            let json = serde_json::to_string(&client_message).unwrap();
+            let websocket_message = tungstenite::Message::Text(json);
+            
+            let mut sinks = self.relay_sinks.lock().unwrap();
+            for (url, sink) in sinks.iter_mut() {
+                if let Err(e) = sink.send(websocket_message.clone()).await {
+                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                }
+            }
+        }
+    }
