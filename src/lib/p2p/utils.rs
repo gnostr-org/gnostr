@@ -41,7 +41,5 @@ pub fn generate_ed25519(secret_key_seed: Option<u8>) -> identity::Keypair {
         trace!("\n");
     }
 
-    let keypair = 
-        identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length");
-    keypair
+        identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length")
 }
