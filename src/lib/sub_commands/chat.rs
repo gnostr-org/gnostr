@@ -3,6 +3,8 @@
 
 //use crate::sub_commands::chat::Utc;
 
+use crate::types::PrivateKey;
+
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::ChatSubCommands;
  //migrate carefully
@@ -31,9 +33,36 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 ///
 /// This function will return an error if the command fails.
 pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
-    if let Some(name) = sub_command_args.name.clone() {
-        use std::env;
-        env::set_var("USER", &name);
+    // Determine the username to set for the USER environment variable
+    let username_to_set: Option<String> = if let Some(name) = sub_command_args.name.clone() {
+        // If --name is provided, use it.
+        Some(name)
+    } else if let Some(nsec_hex) = sub_command_args.nsec.clone() {
+        // If --name is not provided, but --nsec is, try to derive the public key fingerprint.
+        match PrivateKey::try_from_hex_string(&nsec_hex) {
+            Ok(private_key) => {
+                let public_key = private_key.public_key();
+                Some(public_key.as_hex_string()) // Use hex string as fingerprint
+            }
+            Err(e) => {
+                // Log a warning if nsec is provided but invalid, but don't crash.
+                // The USER env var won't be set from nsec in this case.
+                tracing::warn!("Could not derive public key from --nsec due to error: {}. USER env var will not be set from nsec.", e);
+                None
+            }
+        }
+    } else {
+        // Neither --name nor --nsec was provided.
+        None
+    };
+
+    // Only set the USER environment variable if a username was successfully determined.
+    if let Some(user_name) = username_to_set {
+        if !user_name.is_empty() { // Ensure we don't set it to an empty string if derivation resulted in one (though unlikely with hex)
+            use std::env;
+            env::set_var("USER", &user_name);
+            tracing::debug!("USER environment variable set to: {}", user_name);
+        }
     }
 
     let level = if sub_command_args.debug {
