@@ -41,12 +41,13 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         gossipsub::MessageId::from(s.finish().to_string())
     };
 
+	#[allow(clippy::redundant_closure)]
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
         .message_id_fn(message_id_fn)
         .build()
-        .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+        .map_err(|msg| io::Error::other(msg))?;
 
     let swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()

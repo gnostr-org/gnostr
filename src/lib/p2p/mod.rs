@@ -146,11 +146,12 @@ pub async fn evt_loop(
         info!("message.topic.hash:\n{0:0}", message.topic.clone());
         gossipsub::MessageId::from(s.finish().to_string())
     };
+	#[allow(clippy::redundant_closure)]
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
         .build()
-        .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+        .map_err(|msg| io::Error::other(msg))?;
 
     let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
