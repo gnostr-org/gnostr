@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use gnostr::types::{
-    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3
+    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey
 };
 use tokio::sync::mpsc;
 
@@ -24,6 +24,11 @@ enum SubCommand {
     Channel {
         #[arg(short, long, default_value = "test")]
         id: String,
+    },
+    /// Subscribe to text notes
+    Subscribe {
+        #[arg(short, long)]
+        pubkey: Option<String>,
     },
 }
 
@@ -68,6 +73,16 @@ async fn main() -> anyhow::Result<()> {
         }
         SubCommand::Channel { id } => {
             client.subscribe_to_channel(id).await;
+        }
+        SubCommand::Subscribe { pubkey } => {
+            if let Some(pk_str) = pubkey {
+                let pk = PublicKey::try_from_hex_string(&pk_str, true)?;
+                println!("Subscribing to pubkey: {}", pk.as_hex_string());
+                client.subscribe(Some(pk)).await;
+            } else {
+                println!("Subscribing to all text notes");
+                client.subscribe(None).await;
+            }
         }
     }
 
