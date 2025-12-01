@@ -7,7 +7,7 @@ use tokio::sync::mpsc;
 use crate::queue::{InternalEvent, Queue};
 use crate::types::versioned::event3::EventV3;
 use crate::types::versioned::client_message3::ClientMessageV3;
-use crate::types::{UncheckedUrl, ClientMessage, Filter, SubscriptionId, RelayMessage, EventKind, Unixtime}; // Added Filter, SubscriptionId, RelayMessage, EventKind, Unixtime
+use crate::types::{UncheckedUrl, ClientMessage, Filter, SubscriptionId, RelayMessage, EventKind, Unixtime, PublicKey}; // Added PublicKey
 use tracing::{debug, info, warn};
 use rand::Rng;
 
@@ -72,7 +72,7 @@ impl NostrClient {
         });
     }
 
-    
+
 
         pub async fn send_event(&self, event: EventV3) -> Result<()> {
             let client_message = ClientMessage::Event(Box::new(event));
@@ -89,9 +89,37 @@ impl NostrClient {
             Ok(())
         }
 
+        pub async fn subscribe(&self, public_key: Option<PublicKey>) {
+            let subscription_id = if let Some(pk) = public_key {
+                info!("Subscribing to text notes from {}", pk.as_hex_string());
+                SubscriptionId(format!("notes:{}", pk.as_hex_string()))
+            } else {
+                info!("Subscribing to all text notes");
+                SubscriptionId("notes:all".to_string())
+            };
+
+            let mut filter = Filter::new();
+            if let Some(pk) = public_key {
+                filter.add_author(&pk.into());
+            }
+            filter.add_event_kind(EventKind::TextNote);
+            filter.since = Some(Unixtime::now());
+
+            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+            let json = serde_json::to_string(&client_message).unwrap();
+            let websocket_message = tungstenite::Message::Text(json);
+
+            let mut sinks = self.relay_sinks.lock().unwrap();
+            for (url, sink) in sinks.iter_mut() {
+                if let Err(e) = sink.send(websocket_message.clone()).await {
+                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                }
+            }
+        }
+
         pub async fn subscribe_to_channel(&self, channel_id: String) {
             info!("Subscribing to Nostr channel: {}", channel_id);
-            
+
             let mut filter = Filter::new();
             filter.add_tag_value('d', channel_id.clone());
             filter.add_event_kind(EventKind::ChannelMessage);
@@ -102,7 +130,7 @@ impl NostrClient {
             let client_message = ClientMessage::Req(subscription_id, vec![filter]);
             let json = serde_json::to_string(&client_message).unwrap();
             let websocket_message = tungstenite::Message::Text(json);
-            
+
             let mut sinks = self.relay_sinks.lock().unwrap();
             for (url, sink) in sinks.iter_mut() {
                 if let Err(e) = sink.send(websocket_message.clone()).await {
