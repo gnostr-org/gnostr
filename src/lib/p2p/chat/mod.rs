@@ -1,18 +1,21 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
+
 use crate::queue::InternalEvent;
+use self::msg::{Msg, MsgKind};
+use crate::types::{EventV3, Id, Signer, UncheckedUrl, Error};
+use crate::types::nip28::CREATE_CHANNEL_MESSAGE;
 use libp2p::gossipsub;
 //use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
-use serde_json;
+
 //use sha2::Digest;
 //use tokio::time::Duration;
 
-use std::{error::Error, time::Duration};
+use std::{error::Error as StdError, time::Duration};
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
-//use tracing::debug;
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
@@ -272,7 +275,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
 pub async fn input_loop(
     self_input: tokio::sync::mpsc::Sender<Vec<u8>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn StdError>> {
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     while let Some(line) = stdin.next_line().await? {
         let msg = Msg::default().set_content(line, 0);

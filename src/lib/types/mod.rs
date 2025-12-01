@@ -66,9 +66,12 @@ pub use id::{Id, IdHex};
 mod identity;
 pub use identity::Identity;
 
-/// key_signer
-mod key_signer;
+pub mod key_signer;
 pub use key_signer::KeySigner;
+
+/// NIP-28: Public Chat Channels
+pub mod nip28;
+pub use nip28::*;
 
 /// metadata
 mod metadata;
