@@ -528,7 +528,7 @@ pub fn create_channel_message(
         created_at: Unixtime::now(),
         kind: CREATE_CHANNEL_MESSAGE, // Kind 42
         tags,
-        content: "".to_string(),
+        content: message.to_string(),
 	};
     // Sign the event
     signer.sign_event(pre_event)
