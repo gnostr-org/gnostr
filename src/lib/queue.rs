@@ -5,6 +5,8 @@ use gnostr_asyncgit::{
     sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
 };
+use crate::types::{Id, UncheckedUrl};
+use crate::types::versioned::event3::EventV3;
 
 use crate::{
     components::FuzzyFinderTarget,
@@ -85,9 +87,34 @@ pub enum AppTabs {
     Stashlist,
 }
 
+/// Commands related to Nostr interactions
+#[derive(Debug)]
+pub enum NostrCommand {
+    /// Send a NIP-28 channel message
+    SendChannelMessage {
+        channel_id: String,
+        message: String,
+        reply_to_id: Option<crate::types::Id>,
+        root_message_id: Option<crate::types::Id>,
+        relay_url: Option<crate::types::UncheckedUrl>,
+    },
+    /// Create a NIP-28 channel
+    CreateChannel {
+        channel_id: String,
+        channel_name: String,
+        channel_description: String,
+        channel_picture: Option<String>,
+        relay_url: Option<crate::types::UncheckedUrl>,
+    },
+}
+
 /// InternalEvent
 #[derive(Debug)]
 pub enum InternalEvent {
+    /// Nostr event received from a relay
+    NostrEvent(EventV3),
+    /// Command to interact with Nostr
+    NostrCommand(NostrCommand),
     /// ChatMessage
     ChatMessage(crate::p2p::chat::msg::Msg),
     /// ConfirmAction

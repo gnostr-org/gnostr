@@ -159,7 +159,9 @@ pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
 /// NIP-44 related types and functionalities for secure direct messages.
 pub mod nip44;
+pub mod nostr_client; // Added
 pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
+pub use nostr_client::*; // Added
 
 #[cfg(test)]
 #[macro_export]
@@ -180,7 +182,7 @@ macro_rules! test_serde {
 // mod types;
 
 
-mod versioned;
+pub mod versioned;
 pub use versioned::{
     ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
     MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,
