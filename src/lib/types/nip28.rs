@@ -633,8 +633,8 @@ pub fn mute_user(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{EventKind, versioned::TagV3, PublicKey, PrivateKey, Unixtime, Id, Error, PublicKeyHex, UncheckedUrl, Signer, KeySecurity};
-	use crate::KeySigner;
+    use crate::types::{EventKind, TagV3, PublicKey, PrivateKey, Unixtime, Id, Error, PublicKeyHex, UncheckedUrl, Signer, KeySecurity};
+    use crate::KeySigner;
     use crate::test_serde;
     use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey};
     use sha2::{Digest, Sha256};
