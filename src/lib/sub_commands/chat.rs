@@ -42,7 +42,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
         match PrivateKey::try_from_hex_string(&nsec_hex) {
             Ok(private_key) => {
                 let public_key = private_key.public_key();
-                Some(public_key.as_hex_string()) // Use hex string as fingerprint
+                Some(public_key.as_hex_string().chars().take(8).collect()) // Use first 8 chars of public key hex as fingerprint
             }
             Err(e) => {
                 // Log a warning if nsec is provided but invalid, but don't crash.
