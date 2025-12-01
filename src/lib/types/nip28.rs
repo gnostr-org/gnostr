@@ -55,6 +55,23 @@ pub struct ChannelCreationEvent {
     pub pubkey: PublicKey,
 }
 
+/// Represents a parsed Kind 41 event for setting channel metadata.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChannelMetadataEvent {
+    /// The unique identifier for the channel (from 'd' tag).
+    pub channel_id: String,
+    /// The name of the channel (from 'name' tag, optional).
+    pub channel_name: Option<String>,
+    /// The description of the channel (from 'description' tag, optional).
+    pub channel_description: Option<String>,
+    /// URL to the channel's picture (from 'picture' tag, optional).
+    pub channel_picture: Option<String>,
+    /// A recommended relay URL for the channel (from 'relay' tag, optional).
+    pub relay_url: Option<UncheckedUrl>,
+    /// The public key of the event author.
+    pub pubkey: PublicKey,
+}
+
 /// Creates a Kind 40 event for creating a public channel.
 ///
 /// # Arguments
