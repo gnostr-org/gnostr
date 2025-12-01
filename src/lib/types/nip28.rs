@@ -3,7 +3,8 @@
 // NIP-28: Public Chat Channels
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
-use crate::types::event::{Event, PreEvent, Rumor, ZapData, EventV3};
+use crate::types::versioned::event3::PreEventV3;
+use crate::types::versioned::event3::EventV3;
 use crate::types::event_kind::{EventKind, EventKindOrRange};
 use crate::types::{Id, PublicKey, PublicKeyHex, Signature, TagV3, Unixtime, Error, Signer, KeySecurity, NAddr, NostrBech32, NostrUrl, UncheckedUrl};
 use secp256k1::{SecretKey, XOnlyPublicKey};
@@ -81,18 +82,18 @@ pub fn create_channel(
 
     // 'name' tag - optional
     if !channel_name.is_empty() {
-        tags.push(TagV3::new("name", channel_name));
+        tags.push(TagV3::new(&["name", channel_name]));
     }
 
     // 'description' tag - optional
     if !channel_description.is_empty() {
-        tags.push(TagV3::new("description", channel_description));
+        tags.push(TagV3::new(&["description", channel_description]));
     }
 
     // 'picture' tag - optional
     if let Some(picture_url) = channel_picture {
         if !picture_url.is_empty() {
-            tags.push(TagV3::new("picture", picture_url));
+            tags.push(TagV3::new(&["picture", picture_url]));
         }
     }
 
@@ -102,7 +103,7 @@ pub fn create_channel(
         tags.push(TagV3::new_relay(relay.clone(), None)); 
     }
 
-    // Create PreEventV3
+    // Create PreEvent
     let pre_event = PreEventV3 {
         pubkey: signer.public_key(),
         created_at: Unixtime::now(),
@@ -134,23 +135,16 @@ pub fn parse_channel_creation(event: &EventV3) -> Result<ChannelCreationEvent, E
     let mut relay_url: Option<UncheckedUrl> = None;
 
     for tag in event.tags.iter() {
-        match tag {
-            TagV3::Identifier { d, .. } => {
-                channel_id = Some(d.clone());
-            }
-            TagV3::Other { tag, data } => {
-                if tag == "name" && !data.is_empty() {
-                    channel_name = Some(data[0].clone());
-                } else if tag == "description" && !data.is_empty() {
-                    channel_description = Some(data[0].clone());
-                } else if tag == "picture" && !data.is_empty() {
-                    channel_picture = Some(data[0].clone());
-                }
-            }
-            TagV3::Reference { url, .. } => {
-                relay_url = Some(url.clone());
-            }
-            _ => {} // Ignore other tags for now
+        if let Ok(d) = tag.parse_identifier() {
+            channel_id = Some(d);
+        } else if tag.tagname() == "name" && !tag.value().is_empty() {
+            channel_name = Some(tag.value().to_string());
+        } else if tag.tagname() == "description" && !tag.value().is_empty() {
+            channel_description = Some(tag.value().to_string());
+        } else if tag.tagname() == "picture" && !tag.value().is_empty() {
+            channel_picture = Some(tag.value().to_string());
+        } else if let Ok((url, _)) = tag.parse_relay() {
+            relay_url = Some(url);
         }
     }
 
@@ -202,27 +196,22 @@ pub fn parse_channel_message(event: &EventV3) -> Result<ChannelMessageEvent, Err
     let mut relay_url: Option<UncheckedUrl> = None;
 
     for tag in event.tags.iter() {
-        match tag {
-            TagV3::Identifier { d, .. } => {
-                channel_id = Some(d.clone());
+        if let Ok(d) = tag.parse_identifier() {
+            channel_id = Some(d);
+        } else if let Ok((id, recommended_relay_url, marker)) = tag.parse_event() {
+            if marker.as_deref() == Some("reply") {
+                reply_to = Some(id);
+                // Store relay if present, prioritizing explicit relay tags on reply/root.
+                relay_url = recommended_relay_url;
+            } else if marker.as_deref() == Some("root") {
+                root_message = Some(id);
+                relay_url = recommended_relay_url; // Store relay if present
             }
-            TagV3::Event { id, recommended_relay_url, marker, .. } => {
-                if marker.as_deref() == Some("reply") {
-                    reply_to = Some(*id);
-                    // Store relay if present, prioritizing explicit relay tags on reply/root.
-                    relay_url = recommended_relay_url.clone(); 
-                } else if marker.as_deref() == Some("root") {
-                    root_message = Some(*id);
-                    relay_url = recommended_relay_url.clone(); // Store relay if present
-                }
+        } else if let Ok((url, _)) = tag.parse_relay() {
+            // If no explicit relay tag was found on reply/root, check for a standalone 'r' tag.
+            if relay_url.is_none() {
+                relay_url = Some(url);
             }
-            TagV3::Reference { url, .. } => {
-                // If no explicit relay tag was found on reply/root, check for a standalone 'r' tag.
-                if relay_url.is_none() {
-                    relay_url = Some(url.clone());
-                }
-            }
-            _ => {} // Ignore other tags
         }
     }
 
@@ -272,29 +261,21 @@ pub fn parse_hide_message(event: &EventV3) -> Result<HideMessageEvent, Error> {
     let mut relay_url: Option<UncheckedUrl> = None;
 
     for tag in event.tags.iter() {
-        match tag {
-            TagV3::Identifier { d, .. } => {
-                channel_id = Some(d.clone());
+        if let Ok(d) = tag.parse_identifier() {
+            channel_id = Some(d);
+        } else if let Ok((id, recommended_relay_url, _)) = tag.parse_event() {
+            // Assume the first 'e' tag is the message to hide.
+            if message_id_to_hide.is_none() {
+                message_id_to_hide = Some(id);
+                relay_url = recommended_relay_url;
             }
-            TagV3::Event { id, recommended_relay_url, .. } => {
-                // Assume the first 'e' tag is the message to hide.
-                if message_id_to_hide.is_none() {
-                    message_id_to_hide = Some(*id);
-                    relay_url = recommended_relay_url.clone();
-                }
+        } else if let Ok((url, _)) = tag.parse_relay() {
+            // Capture relay URL if not already set by an 'e' tag.
+            if relay_url.is_none() {
+                relay_url = Some(url);
             }
-            TagV3::Reference { url, .. } => {
-                // Capture relay URL if not already set by an 'e' tag.
-                if relay_url.is_none() {
-                    relay_url = Some(url.clone());
-                }
-            }
-            TagV3::Other { tag, data } => {
-                if tag == "reason" && !data.is_empty() {
-                    reason = Some(data[0].clone());
-                }
-            }
-            _ => {} // Ignore other tags
+        } else if tag.tagname() == "reason" && !tag.value().is_empty() {
+            reason = Some(tag.value().to_string());
         }
     }
 
@@ -344,27 +325,19 @@ pub fn parse_mute_user(event: &EventV3) -> Result<MuteUserEvent, Error> {
     let mut relay_url: Option<UncheckedUrl> = None;
 
     for tag in event.tags.iter() {
-        match tag {
-            TagV3::Identifier { d, .. } => {
-                channel_id = Some(d.clone());
+        if let Ok(d) = tag.parse_identifier() {
+            channel_id = Some(d);
+        } else if let Ok((pubkey, recommended_relay_url, _)) = tag.parse_pubkey() {
+            // NIP-28 specifies the 'p' tag for the muted user's public key.
+            user_pubkey = Some(pubkey);
+            relay_url = recommended_relay_url; // Capture relay if present
+        } else if let Ok((url, _)) = tag.parse_relay() {
+            // Capture relay URL if not already set by a 'p' tag.
+            if relay_url.is_none() {
+                relay_url = Some(url);
             }
-            TagV3::Pubkey { pubkey, recommended_relay_url, .. } => {
-                // NIP-28 specifies the 'p' tag for the muted user's public key.
-                user_pubkey = Some(pubkey.clone());
-                relay_url = recommended_relay_url.clone(); // Capture relay if present
-            }
-            TagV3::Reference { url, .. } => {
-                // Capture relay URL if not already set by a 'p' tag.
-                if relay_url.is_none() {
-                    relay_url = Some(url.clone());
-                }
-            }
-            TagV3::Other { tag, data } => {
-                if tag == "reason" && !data.is_empty() {
-                    reason = Some(data[0].clone());
-                }
-            }
-            _ => {} // Ignore other tags
+        } else if tag.tagname() == "reason" && !tag.value().is_empty() {
+            reason = Some(tag.value().to_string());
         }
     }
 
