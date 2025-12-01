@@ -207,8 +207,12 @@ async fn main() -> anyhow::Result<()> {
         SubCommand::RemoveContact { .. } => {
             // TODO
         }
-        SubCommand::GetContacts { .. } => {
-            // TODO
+        SubCommand::GetContacts { private_key } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
+            let pubkey = signer.public_key();
+            println!("Getting contacts for {}", pubkey.as_hex_string());
+            client.subscribe_to_contact_lists(pubkey).await;
         }
     }
 
@@ -223,7 +227,19 @@ async fn main() -> anyhow::Result<()> {
                             let decrypted = signer.decrypt(&event.pubkey, &event.content)?;
                             println!("DM from {}: {}", event.pubkey.as_hex_string(), decrypted);
                         }
-                    } else {
+                    } else if event.kind == EventKind::ContactList {
+                        println!("Contact list updated:");
+                        for tag in &event.tags {
+                            if tag.tagname() == "p" {
+                                let v: Vec<&str> = tag.value().split(' ').collect();
+                                let pubkey = v.get(0).unwrap_or(&"");
+                                let relay = v.get(1).unwrap_or(&"");
+                                let petname = v.get(2).unwrap_or(&"");
+                                println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
+                            }
+                        }
+                    }
+                    else {
                         println!("Received event: {:?}", event);
                     }
                 }
