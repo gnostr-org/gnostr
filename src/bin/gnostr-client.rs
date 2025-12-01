@@ -3,7 +3,10 @@ use gnostr::queue::InternalEvent;
 use gnostr::types::{
     EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id
 };
+use std::str::FromStr;
+use gnostr::types::nip2::{self, Contact};
 use gnostr::types::nip9;
+use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
@@ -59,6 +62,8 @@ enum SubCommand {
     /// Add a contact to your contact list
     AddContact {
         #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
         pubkey: String,
         #[arg(short, long)]
         relay_url: Option<String>,
@@ -67,6 +72,8 @@ enum SubCommand {
     },
     /// Remove a contact from your contact list
     RemoveContact {
+        #[arg(short, long)]
+        private_key: String,
         #[arg(short, long)]
         pubkey: String,
     },
@@ -201,11 +208,45 @@ async fn main() -> anyhow::Result<()> {
             );
             client.send_event(event.into()).await?;
         }
-        SubCommand::AddContact { .. } => {
-            // TODO
+        SubCommand::AddContact { private_key, pubkey, relay_url, petname } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let public_key = pk.public_key();
+            let secret_key = pk.as_secret_key();
+            
+            // TODO: Fetch current contact list
+            let mut contacts: Vec<Contact> = vec![];
+
+            let new_contact_pk = XOnlyPublicKey::from_str(&pubkey)?;
+            contacts.push(Contact {
+                public_key: new_contact_pk,
+                relay_url,
+                petname,
+            });
+
+            let event = nip2::set_contact_list(
+                contacts,
+                &public_key.as_xonly_public_key(),
+                &secret_key,
+            );
+            client.send_event(event.into()).await?;
         }
-        SubCommand::RemoveContact { .. } => {
-            // TODO
+        SubCommand::RemoveContact { private_key, pubkey } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let public_key = pk.public_key();
+            let secret_key = pk.as_secret_key();
+
+            // TODO: Fetch current contact list
+            let mut contacts: Vec<Contact> = vec![];
+
+            let remove_pk = XOnlyPublicKey::from_str(&pubkey)?;
+            contacts.retain(|c| c.public_key != remove_pk);
+
+            let event = nip2::set_contact_list(
+                contacts,
+                &public_key.as_xonly_public_key(),
+                &secret_key,
+            );
+            client.send_event(event.into()).await?;
         }
         SubCommand::GetContacts { private_key } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
