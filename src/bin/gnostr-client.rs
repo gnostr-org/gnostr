@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use gnostr::types::{
-    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey
+    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05
 };
 use tokio::sync::mpsc;
 
@@ -29,6 +29,11 @@ enum SubCommand {
     Subscribe {
         #[arg(short, long)]
         pubkey: Option<String>,
+    },
+    /// Resolve a NIP-05 identifier
+    Nip05 {
+        #[arg(short, long)]
+        identifier: String,
     },
 }
 
@@ -82,6 +87,22 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 println!("Subscribing to all text notes");
                 client.subscribe(None).await;
+            }
+        }
+        SubCommand::Nip05 { identifier } => {
+            let parts: Vec<&str> = identifier.split('@').collect();
+            if parts.len() != 2 {
+                println!("Invalid NIP-05 identifier");
+                return Ok(());
+            }
+            let user = parts[0];
+            let domain = parts[1];
+            let url = format!("https://{}/.well-known/nostr.json?name={}", domain, user);
+            let nip05: Nip05 = reqwest::get(&url).await?.json().await?;
+            if let Some(pubkey) = nip05.names.get(user) {
+                println!("Public key for {}: {}", identifier, pubkey);
+            } else {
+                println!("User {} not found at {}", user, domain);
             }
         }
     }
