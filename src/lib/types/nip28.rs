@@ -683,28 +683,23 @@ mod test {
         let mut found_relay_tag = false;
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "name" && !data.is_empty() {
-                        assert_eq!(data[0], channel_name);
-                        found_name_tag = true;
-                    } else if tag == "description" && !data.is_empty() {
-                        assert_eq!(data[0], channel_description);
-                        found_description_tag = true;
-                    } else if tag == "picture" && !data.is_empty() {
-                        assert_eq!(data[0], channel_picture.unwrap());
-                        found_picture_tag = true;
-                    }
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url);
-                    found_relay_tag = true;
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "name" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_name);
+                found_name_tag = true;
+            } else if tag.tagname() == "description" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_description);
+                found_description_tag = true;
+            } else if tag.tagname() == "picture" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_picture.unwrap());
+                found_picture_tag = true;
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
             }
         }
 
@@ -749,28 +744,23 @@ mod test {
         let mut found_relay_tag = false;
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "name" && !data.is_empty() {
-                        assert_eq!(data[0], channel_name.unwrap());
-                        found_name_tag = true;
-                    } else if tag == "description" && !data.is_empty() {
-                        assert_eq!(data[0], channel_description.unwrap());
-                        found_description_tag = true;
-                    } else if tag == "picture" && !data.is_empty() {
-                        assert_eq!(data[0], channel_picture.unwrap());
-                        found_picture_tag = true;
-                    }
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url);
-                    found_relay_tag = true;
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "name" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_name.unwrap());
+                found_name_tag = true;
+            } else if tag.tagname() == "description" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_description.unwrap());
+                found_description_tag = true;
+            } else if tag.tagname() == "picture" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_picture.unwrap());
+                found_picture_tag = true;
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
             }
         }
 
@@ -805,7 +795,8 @@ mod test {
         assert_eq!(event_minimal.content, "");
         // Should only contain the 'd' tag
         assert_eq!(event_minimal.tags.len(), 1);
-        if let TagV3::Identifier { d, .. } = &event_minimal.tags[0] {
+        if event_minimal.tags[0].tagname() == "d" {
+            let d = event_minimal.tags[0].parse_identifier().unwrap();
             assert_eq!(d, channel_id);
         } else {
             panic!("Expected 'd' tag for channel ID");
@@ -831,21 +822,16 @@ mod test {
         let mut found_name = false;
         let mut found_picture = false;
         for tag in event_partial.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "name" && !data.is_empty() {
-                        assert_eq!(data[0], channel_name.unwrap());
-                        found_name = true;
-                    } else if tag == "picture" && !data.is_empty() {
-                        assert_eq!(data[0], channel_picture.unwrap());
-                        found_picture = true;
-                    }
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d = true;
+            } else if tag.tagname() == "name" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_name.unwrap());
+                found_name = true;
+            } else if tag.tagname() == "picture" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), channel_picture.unwrap());
+                found_picture = true;
             }
         }
         assert!(found_d && found_name && found_picture);
@@ -884,27 +870,25 @@ mod test {
         let mut found_relay_tag = false;
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "e" {
+                let (id, recommended_relay_url, marker) = tag.parse_event().unwrap();
+                if marker.as_deref() == Some("reply") {
+                    assert_eq!(id, reply_to_id.unwrap());
+                    assert_eq!(recommended_relay_url, Some(relay_url.clone()));
+                    found_reply_e_tag = true;
+                } else if marker.as_deref() == Some("root") {
+                    assert_eq!(id, root_message_id.unwrap());
+                    assert_eq!(recommended_relay_url, Some(relay_url.clone()));
+                    found_root_e_tag = true;
                 }
-                TagV3::Event { id, recommended_relay_url, marker, .. } => {
-                    if marker.as_deref() == Some("reply") {
-                        assert_eq!(*id, reply_to_id.unwrap());
-                        assert_eq!(recommended_relay_url, &relay_url);
-                        found_reply_e_tag = true;
-                    } else if marker.as_deref() == Some("root") {
-                        assert_eq!(*id, root_message_id.unwrap());
-                        assert_eq!(recommended_relay_url, &relay_url);
-                        found_root_e_tag = true;
-                    }
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url);
-                    found_relay_tag = true;
-                }
-                _ => {}
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
             }
         }
 
@@ -945,27 +929,22 @@ mod test {
         let mut found_relay_tag = false;
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Event { id, recommended_relay_url, .. } => {
-                    assert_eq!(*id, message_id_to_hide);
-                    assert_eq!(recommended_relay_url, &relay_url);
-                    found_e_tag = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "reason" && !data.is_empty() {
-                        assert_eq!(data[0], reason.unwrap());
-                        found_reason_tag = true;
-                    }
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url);
-                    found_relay_tag = true;
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "e" {
+                let (id, recommended_relay_url, _) = tag.parse_event().unwrap();
+                assert_eq!(id, message_id_to_hide);
+                assert_eq!(recommended_relay_url, Some(relay_url.clone()));
+                found_e_tag = true;
+            } else if tag.tagname() == "reason" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), reason.unwrap());
+                found_reason_tag = true;
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
             }
         }
 
@@ -973,61 +952,26 @@ mod test {
         assert!(found_e_tag);
         assert!(found_reason_tag);
         assert!(found_relay_tag);
-    }
-
-    #[test]
-    fn test_mute_user_event() {
-        let signer = {
-            let privkey = PrivateKey::mock();
-            KeySigner::from_private_key(privkey, "", 1).unwrap()
-        };
-
-        let channel_id = "muted-channel";
-        let user_pubkey = PublicKey::mock_deterministic();
-        let reason = Some("trolling");
-        let relay_url = UncheckedUrl::from_str("wss://mute-relay.example.com");
-
-        let event = mute_user(
-            &signer,
-            channel_id,
-            &user_pubkey,
-            reason,
-            Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
-
-        assert_eq!(event.kind, EventKind::ChannelMuteUser);
-        assert_eq!(event.pubkey, signer.public_key());
-        assert_eq!(event.content, "");
-
-        // Check tags
-        let mut found_d_tag = false;
-        let mut found_p_tag = false;
-        let mut found_reason_tag = false;
-        let mut found_relay_tag = false;
+    //}
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Pubkey { pubkey, recommended_relay_url, petname, .. } => {
-                    assert_eq!(pubkey, &user_pubkey.into());
-                    assert_eq!(recommended_relay_url, &relay_url);
-                    assert!(petname.is_none()); // Mute user tag should not have petname
-                    found_p_tag = true;
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url);
-                    found_relay_tag = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "reason" && !data.is_empty() {
-                        assert_eq!(data[0], reason.unwrap());
-                        found_reason_tag = true;
-                    }
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "p" {
+                let (pubkey, recommended_relay_url, petname) = tag.parse_pubkey().unwrap();
+                assert_eq!(pubkey, user_pubkey);
+                assert_eq!(recommended_relay_url, Some(relay_url.clone()));
+                assert!(petname.is_none()); // Mute user tag should not have petname
+                found_p_tag = true;
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
+            } else if tag.tagname() == "reason" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), reason.unwrap());
+                found_reason_tag = true;
             }
         }
 
@@ -1168,14 +1112,14 @@ mod test {
         let channel_id = "secret-channel";
         let message_id_to_hide = Id::mock();
         let reason = Some("spam");
-        let relay_url = UncheckedUrl::from_str("wss://hide-relay.example.com");
+        let relay_url = UncheckedUrl::from_str("wss://hide-relay.example.com").unwrap();
 
         let event = hide_message(
             &signer,
             channel_id,
             &message_id_to_hide,
             reason,
-            Some(&relay_url).cloned().as_ref(),
+            Some(&relay_url),
         ).unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelHideMessage);
@@ -1189,27 +1133,22 @@ mod test {
         let mut found_relay_tag = false;
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Event { id, recommended_relay_url, .. } => {
-                    assert_eq!(*id, message_id_to_hide);
-                    assert_eq!(recommended_relay_url, &relay_url);
-                    found_e_tag = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "reason" && !data.is_empty() {
-                        assert_eq!(data[0], reason.unwrap());
-                        found_reason_tag = true;
-                    }
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, &relay_url); //more tests needed for &relay_url
-                    found_relay_tag = true;
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "e" {
+                let (id, recommended_relay_url, _) = tag.parse_event().unwrap();
+                assert_eq!(id, message_id_to_hide);
+                assert_eq!(recommended_relay_url, Some(relay_url.clone()));
+                found_e_tag = true;
+            } else if tag.tagname() == "reason" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), reason.unwrap());
+                found_reason_tag = true;
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
             }
         }
 
@@ -1292,7 +1231,7 @@ mod test {
             channel_id,
             &user_pubkey,
             reason,
-            Some(&relay_url).cloned().as_ref(),
+            Some(&relay_url),
         ).unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelMuteUser);
@@ -1306,28 +1245,23 @@ mod test {
         let mut found_relay_tag = false;
 
         for tag in event.tags.iter() {
-            match tag {
-                TagV3::Identifier { d, .. } => {
-                    assert_eq!(d, channel_id);
-                    found_d_tag = true;
-                }
-                TagV3::Pubkey { pubkey, recommended_relay_url, petname, .. } => {
-                    assert_eq!(pubkey, &user_pubkey.into());
-                    assert_eq!(recommended_relay_url, &relay_url);
-                    assert!(petname.is_none()); // Mute user tag should not have petname
-                    found_p_tag = true;
-                }
-                TagV3::Reference { url, .. } => {
-                    assert_eq!(url, relay_url);
-                    found_relay_tag = true;
-                }
-                TagV3::Other { tag, data } => {
-                    if tag == "reason" && !data.is_empty() {
-                        assert_eq!(data[0], reason.unwrap());
-                        found_reason_tag = true;
-                    }
-                }
-                _ => {}
+            if tag.tagname() == "d" {
+                let d = tag.parse_identifier().unwrap();
+                assert_eq!(d, channel_id);
+                found_d_tag = true;
+            } else if tag.tagname() == "p" {
+                let (pubkey, recommended_relay_url, petname) = tag.parse_pubkey().unwrap();
+                assert_eq!(pubkey, user_pubkey);
+                assert_eq!(recommended_relay_url, Some(relay_url.clone()));
+                assert!(petname.is_none()); // Mute user tag should not have petname
+                found_p_tag = true;
+            } else if tag.tagname() == "r" {
+                let (url, _) = tag.parse_relay().unwrap();
+                assert_eq!(url, relay_url);
+                found_relay_tag = true;
+            } else if tag.tagname() == "reason" && !tag.value().is_empty() {
+                assert_eq!(tag.value(), reason.unwrap());
+                found_reason_tag = true;
             }
         }
 
