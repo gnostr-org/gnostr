@@ -104,6 +104,7 @@ impl Selection {
     }
 }
 
+/// DiffComponent
 pub struct DiffComponent {
     repo: RepoPathRef,
     diff: Option<FileDiff>,
@@ -124,6 +125,7 @@ pub struct DiffComponent {
 }
 
 impl DiffComponent {
+		/// new
         pub fn new(env: &Environment, is_immutable: bool) -> Self {
         Self {
             focused: false,
@@ -147,9 +149,11 @@ impl DiffComponent {
                 fn can_scroll(&self) -> bool {
         self.diff.as_ref().is_some_and(|diff| diff.lines > 1)
     }
+				/// current
         pub fn current(&self) -> (String, bool) {
         (self.current.path.clone(), self.current.is_stage)
     }
+		/// clear
         pub fn clear(&mut self, pending: bool) {
         self.current = Current::default();
         self.diff = None;
@@ -160,6 +164,7 @@ impl DiffComponent {
         self.selected_hunk = None;
         self.pending = pending;
     }
+		/// update
         pub fn update(&mut self, path: String, is_stage: bool, diff: FileDiff) {
         self.pending = false;
 

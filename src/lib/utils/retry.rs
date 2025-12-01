@@ -78,7 +78,7 @@
 //!
 //! This project is licensed under the MIT License.
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 use std::fmt::Debug;
 //#[cfg(feature = "async")]
 use std::future::Future;

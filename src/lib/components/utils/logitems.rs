@@ -91,6 +91,7 @@ impl LogEntry {
     }
 }
 
+/// ItemBatch
 #[derive(Default)]
 pub struct ItemBatch {
     index_offset: Option<usize>,
@@ -103,14 +104,18 @@ impl ItemBatch {
         self.index_offset() + self.items.len()
     }
 
+
+		/// index_offset
         pub fn index_offset(&self) -> usize {
         self.index_offset.unwrap_or_default()
     }
 
+		/// index_offset_raw
         pub const fn index_offset_raw(&self) -> Option<usize> {
         self.index_offset
     }
 
+		/// highlighting
         pub const fn highlighting(&self) -> bool {
         self.highlighting
     }

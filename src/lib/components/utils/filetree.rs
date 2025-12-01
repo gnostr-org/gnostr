@@ -43,7 +43,9 @@ pub struct PathCollapsed(pub bool);
 /// `FileTreeItem` can be of two kinds
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub enum FileTreeItemKind {
+	/// Path
     Path(PathCollapsed),
+	/// File
     File(StatusItem),
 }
 

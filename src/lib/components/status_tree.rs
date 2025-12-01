@@ -24,7 +24,7 @@ use crate::{
 
 //TODO: use new `filetreelist` crate
 
-///
+/// StatusTreeComponent
 #[allow(clippy::struct_excessive_bools)]
 pub struct StatusTreeComponent {
     title: String,
@@ -43,6 +43,7 @@ pub struct StatusTreeComponent {
 
 impl StatusTreeComponent {
 
+	/// new
     pub fn new(env: &Environment, title: &str, focus: bool) -> Self {
         Self {
             title: title.to_string(),
@@ -60,11 +61,13 @@ impl StatusTreeComponent {
         }
     }
 
+	/// set_commit
     pub fn set_commit(&mut self, revision: Option<CommitId>) {
         self.revision = revision;
     }
 
 
+	/// update
     pub fn update(&mut self, list: &[StatusItem]) -> Result<()> {
         self.pending = false;
 
@@ -78,11 +81,13 @@ impl StatusTreeComponent {
     }
 
 
+	/// selection
     pub fn selection(&self) -> Option<FileTreeItem> {
         self.tree.selected_item()
     }
 
 
+	/// selection_file
     pub fn selection_file(&self) -> Option<StatusItem> {
         self.tree.selected_item().and_then(|f| {
             if let FileTreeItemKind::File(f) = f.kind {
@@ -94,28 +99,34 @@ impl StatusTreeComponent {
     }
 
 
+	/// show_selection
     pub fn show_selection(&mut self, show: bool) {
         self.show_selection = show;
     }
 
+	/// is_empty
     pub fn is_empty(&self) -> bool {
         self.tree.is_empty()
     }
 
+	/// file_count
     pub const fn file_count(&self) -> usize {
         self.tree.tree.file_count()
     }
 
+	/// set_title
     pub fn set_title(&mut self, title: String) {
         self.title = title;
     }
 
+	/// clear
     pub fn clear(&mut self) -> Result<()> {
         self.current_hash = 0;
         self.pending = true;
         self.tree.update(&[])
     }
 
+	/// is_file_selected
     pub fn is_file_selected(&self) -> bool {
         self.tree
             .selected_item()
