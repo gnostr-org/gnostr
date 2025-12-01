@@ -56,6 +56,25 @@ enum SubCommand {
         #[arg(short, long)]
         reason: Option<String>,
     },
+    /// Add a contact to your contact list
+    AddContact {
+        #[arg(short, long)]
+        pubkey: String,
+        #[arg(short, long)]
+        relay_url: Option<String>,
+        #[arg(short, long)]
+        petname: Option<String>,
+    },
+    /// Remove a contact from your contact list
+    RemoveContact {
+        #[arg(short, long)]
+        pubkey: String,
+    },
+    /// Get your contact list
+    GetContacts {
+        #[arg(short, long)]
+        private_key: String,
+    },
 }
 
 #[tokio::main]
@@ -181,6 +200,15 @@ async fn main() -> anyhow::Result<()> {
                 &secret_key,
             );
             client.send_event(event.into()).await?;
+        }
+        SubCommand::AddContact { .. } => {
+            // TODO
+        }
+        SubCommand::RemoveContact { .. } => {
+            // TODO
+        }
+        SubCommand::GetContacts { .. } => {
+            // TODO
         }
     }
 
