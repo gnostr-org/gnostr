@@ -117,6 +117,28 @@ impl NostrClient {
             }
         }
 
+        pub async fn subscribe_to_dms(&self, public_key: PublicKey) {
+            info!("Subscribing to DMs for {}", public_key.as_hex_string());
+            
+            let mut filter = Filter::new();
+            filter.add_tag_value('p', public_key.as_hex_string());
+            filter.add_event_kind(EventKind::EncryptedDirectMessage);
+            filter.since = Some(Unixtime::now());
+
+            let subscription_id = SubscriptionId(format!("dms:{}", public_key.as_hex_string()));
+
+            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+            let json = serde_json::to_string(&client_message).unwrap();
+            let websocket_message = tungstenite::Message::Text(json);
+            
+            let mut sinks = self.relay_sinks.lock().unwrap();
+            for (url, sink) in sinks.iter_mut() {
+                if let Err(e) = sink.send(websocket_message.clone()).await {
+                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                }
+            }
+        }
+
         pub async fn subscribe_to_channel(&self, channel_id: String) {
             info!("Subscribing to Nostr channel: {}", channel_id);
 
