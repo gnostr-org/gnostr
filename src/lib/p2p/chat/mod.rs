@@ -131,7 +131,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 }
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
-    let args = sub_command_args.clone();
+    let mut args = sub_command_args.clone();
 
     if let Some(hash) = args.hash.clone() {
         debug!("hash={}", hash);
@@ -210,6 +210,13 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let obj = head.resolve()?.peel(ObjectType::Commit)?;
         let commit = obj.peel_to_commit()?;
         let commit_id = commit.id().to_string();
+
+        // Use the padded commit ID as the default private key if --nsec is not provided.
+        let padded_commit_id = format!("{:0>64}", commit_id.clone());
+        if args.nsec.is_none() {
+            args.nsec = Some(padded_commit_id);
+            tracing::info!("Using Git commit ID as default private key (nsec).");
+        }
 
         let mut app = ui::App {
             topic: args.topic.unwrap_or_else(|| commit_id.to_string()),
