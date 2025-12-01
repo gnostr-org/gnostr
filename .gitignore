@@ -2,6 +2,8 @@
 tmpgit-**
 .gemini/tmp
 
+build_rs_cov.profraw
+
 vendor/
 test_screenshots/**/*.png
 legit/src/empty/
