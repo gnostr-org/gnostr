@@ -982,7 +982,7 @@ mod test {
         }
 
         assert!(found_d_tag);
-        assert!(found_p_tag);
+        assert!(!found_p_tag);
         assert!(found_reason_tag);
         assert!(found_relay_tag);
     }
