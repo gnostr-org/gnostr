@@ -50,6 +50,8 @@ async fn main() -> anyhow::Result<()> {
     let relay_url = UncheckedUrl(args.relay_url);
     client.connect_relay(relay_url).await?;
 
+    let mut should_listen = true;
+
     match args.command {
         SubCommand::Publish { content } => {
             println!("Publishing: {}", content);
@@ -90,6 +92,7 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         SubCommand::Nip05 { identifier } => {
+            should_listen = false;
             let parts: Vec<&str> = identifier.split('@').collect();
             if parts.len() != 2 {
                 println!("Invalid NIP-05 identifier");
@@ -107,10 +110,12 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    println!("Listening for events...");
+    if should_listen {
+        println!("Listening for events...");
 
-    while let Some(event) = rx.recv().await {
-        println!("Received event: {:?}", event);
+        while let Some(event) = rx.recv().await {
+            println!("Received event: {:?}", event);
+        }
     }
 
     Ok(())
