@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use gnostr::queue::InternalEvent;
 use gnostr::types::{
     EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm
 };
@@ -156,7 +157,7 @@ async fn main() -> anyhow::Result<()> {
             let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
             let pubkey = signer.public_key();
             println!("Subscribing to DMs for {}", pubkey.as_hex_string());
-            // TODO: client.subscribe_to_dms(pubkey).await;
+            client.subscribe_to_dms(pubkey).await;
             signer_for_decryption = Some(signer);
         }
     }
@@ -164,8 +165,20 @@ async fn main() -> anyhow::Result<()> {
     if should_listen {
         println!("Listening for events...");
 
-        while let Some(event) = rx.recv().await {
-            println!("Received event: {:?}", event);
+        while let Some(internal_event) = rx.recv().await {
+            match internal_event {
+                InternalEvent::NostrEvent(event) => {
+                    if event.kind == EventKind::EncryptedDirectMessage {
+                        if let Some(signer) = &signer_for_decryption {
+                            let decrypted = signer.decrypt(&event.pubkey, &event.content)?;
+                            println!("DM from {}: {}", event.pubkey.as_hex_string(), decrypted);
+                        }
+                    } else {
+                        println!("Received event: {:?}", event);
+                    }
+                }
+                _ => {}
+            }
         }
     }
 
