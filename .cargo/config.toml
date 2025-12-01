@@ -42,3 +42,5 @@ rustc-wrapper = "sccache"
 rustflags = [
 "-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
 ]
+[test]
+rustc-wrapper = "sccache"
