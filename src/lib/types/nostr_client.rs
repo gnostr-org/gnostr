@@ -30,17 +30,17 @@ impl NostrClient {
         }
     }
 
-        pub async fn connect_relay(&mut self, url: UncheckedUrl) -> Result<()> {
-            info!("Connecting to Nostr relay: {}", url.0);
-            let (ws_stream, _) = tokio_tungstenite::connect_async(Url::parse(&url.0)?).await?;
-            info!("Connected to Nostr relay: {}", url.0);
+    pub async fn connect_relay(&mut self, url: UncheckedUrl) -> Result<()> {
+        info!("Connecting to Nostr relay: {}", url.0);
+        let (ws_stream, _) = tokio_tungstenite::connect_async(Url::parse(&url.0)?).await?;
+        info!("Connected to Nostr relay: {}", url.0);
 
-            let (sink, stream) = ws_stream.split();
-            self.spawn_listener_task(url.clone(), stream);
-            self.relay_sinks.lock().unwrap().push((url, sink));
+        let (sink, stream) = ws_stream.split();
+        self.spawn_listener_task(url.clone(), stream);
+        self.relay_sinks.lock().unwrap().push((url, sink));
 
-            Ok(())
-        }
+        Ok(())
+    }
 
     fn spawn_listener_task(&self, url: UncheckedUrl, mut stream: WsStream) {
         let queue_tx_clone = self.queue_tx.clone();
@@ -74,112 +74,133 @@ impl NostrClient {
 
 
 
-        pub async fn send_event(&self, event: EventV3) -> Result<()> {
-            let client_message = ClientMessage::Event(Box::new(event));
-            let json = serde_json::to_string(&client_message)?;
-            let websocket_message = tungstenite::Message::Text(json);
+    pub async fn send_event(&self, event: EventV3) -> Result<()> {
+        let client_message = ClientMessage::Event(Box::new(event));
+        let json = serde_json::to_string(&client_message)?;
+        let websocket_message = tungstenite::Message::Text(json);
 
-            let mut sinks = self.relay_sinks.lock().unwrap();
-            for (url, sink) in sinks.iter_mut() {
-                info!("Sending Nostr event to relay {}", url.0);
-                if let Err(e) = sink.send(websocket_message.clone()).await {
-                    warn!("Failed to send event to relay {}: {}", url.0, e);
-                }
-            }
-            Ok(())
-        }
-
-        pub async fn subscribe(&self, public_key: Option<PublicKey>) {
-            let subscription_id = if let Some(pk) = public_key {
-                info!("Subscribing to text notes from {}", pk.as_hex_string());
-                SubscriptionId(format!("notes:{}", pk.as_hex_string()))
-            } else {
-                info!("Subscribing to all text notes");
-                SubscriptionId("notes:all".to_string())
-            };
-
-            let mut filter = Filter::new();
-            if let Some(pk) = public_key {
-                filter.add_author(&pk.into());
-            }
-            filter.add_event_kind(EventKind::TextNote);
-            filter.since = Some(Unixtime::now());
-
-            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
-            let json = serde_json::to_string(&client_message).unwrap();
-            let websocket_message = tungstenite::Message::Text(json);
-
-            let mut sinks = self.relay_sinks.lock().unwrap();
-            for (url, sink) in sinks.iter_mut() {
-                if let Err(e) = sink.send(websocket_message.clone()).await {
-                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
-                }
+        let mut sinks = self.relay_sinks.lock().unwrap();
+        for (url, sink) in sinks.iter_mut() {
+            info!("Sending Nostr event to relay {}", url.0);
+            if let Err(e) = sink.send(websocket_message.clone()).await {
+                warn!("Failed to send event to relay {}: {}", url.0, e);
             }
         }
+        Ok(())
+    }
 
-        pub async fn subscribe_to_dms(&self, public_key: PublicKey) {
-            info!("Subscribing to DMs for {}", public_key.as_hex_string());
-            
-            let mut filter = Filter::new();
-            filter.add_tag_value('p', public_key.as_hex_string());
-            filter.add_event_kind(EventKind::EncryptedDirectMessage);
-            filter.since = Some(Unixtime::now());
+    pub async fn subscribe(&self, public_key: Option<PublicKey>) {
+        let subscription_id = if let Some(pk) = public_key {
+            info!("Subscribing to text notes from {}", pk.as_hex_string());
+            SubscriptionId(format!("notes:{}", pk.as_hex_string()))
+        } else {
+            info!("Subscribing to all text notes");
+            SubscriptionId("notes:all".to_string())
+        };
 
-            let subscription_id = SubscriptionId(format!("dms:{}", public_key.as_hex_string()));
-
-            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
-            let json = serde_json::to_string(&client_message).unwrap();
-            let websocket_message = tungstenite::Message::Text(json);
-            
-            let mut sinks = self.relay_sinks.lock().unwrap();
-            for (url, sink) in sinks.iter_mut() {
-                if let Err(e) = sink.send(websocket_message.clone()).await {
-                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
-                }
-            }
+        let mut filter = Filter::new();
+        if let Some(pk) = public_key {
+            filter.add_author(&pk.into());
         }
+        filter.add_event_kind(EventKind::TextNote);
+        filter.since = Some(Unixtime::now());
 
-        pub async fn subscribe_to_contact_lists(&self, public_key: PublicKey) {
-            info!("Subscribing to contact lists for {}", public_key.as_hex_string());
-            
-            let mut filter = Filter::new();
-            filter.add_author(&public_key.into());
-            filter.add_event_kind(EventKind::ContactList);
-            filter.limit = Some(1);
+        let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+        let json = serde_json::to_string(&client_message).unwrap();
+        let websocket_message = tungstenite::Message::Text(json);
 
-            let subscription_id = SubscriptionId(format!("contacts:{}", public_key.as_hex_string()));
-
-            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
-            let json = serde_json::to_string(&client_message).unwrap();
-            let websocket_message = tungstenite::Message::Text(json);
-            
-            let mut sinks = self.relay_sinks.lock().unwrap();
-            for (url, sink) in sinks.iter_mut() {
-                if let Err(e) = sink.send(websocket_message.clone()).await {
-                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
-                }
-            }
-        }
-
-        pub async fn subscribe_to_channel(&self, channel_id: String) {
-            info!("Subscribing to Nostr channel: {}", channel_id);
-
-            let mut filter = Filter::new();
-            filter.add_tag_value('d', channel_id.clone());
-            filter.add_event_kind(EventKind::ChannelMessage);
-            filter.since = Some(Unixtime::now());
-
-            let subscription_id = SubscriptionId(format!("channel:{}", channel_id));
-
-            let client_message = ClientMessage::Req(subscription_id, vec![filter]);
-            let json = serde_json::to_string(&client_message).unwrap();
-            let websocket_message = tungstenite::Message::Text(json);
-
-            let mut sinks = self.relay_sinks.lock().unwrap();
-            for (url, sink) in sinks.iter_mut() {
-                if let Err(e) = sink.send(websocket_message.clone()).await {
-                     warn!("Failed to send REQ to relay {}: {}", url.0, e);
-                }
+        let mut sinks = self.relay_sinks.lock().unwrap();
+        for (url, sink) in sinks.iter_mut() {
+            if let Err(e) = sink.send(websocket_message.clone()).await {
+                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
             }
         }
     }
+
+    pub async fn subscribe_to_dms(&self, public_key: PublicKey) {
+        info!("Subscribing to DMs for {}", public_key.as_hex_string());
+
+        let mut filter = Filter::new();
+        filter.add_tag_value('p', public_key.as_hex_string());
+        filter.add_event_kind(EventKind::EncryptedDirectMessage);
+        filter.since = Some(Unixtime::now());
+
+        let subscription_id = SubscriptionId(format!("dms:{}", public_key.as_hex_string()));
+
+        let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+        let json = serde_json::to_string(&client_message).unwrap();
+        let websocket_message = tungstenite::Message::Text(json);
+
+        let mut sinks = self.relay_sinks.lock().unwrap();
+        for (url, sink) in sinks.iter_mut() {
+            if let Err(e) = sink.send(websocket_message.clone()).await {
+                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+            }
+        }
+    }
+
+    pub async fn subscribe_to_contact_lists(&self, public_key: PublicKey) {
+        info!("Subscribing to contact lists for {}", public_key.as_hex_string());
+
+        let mut filter = Filter::new();
+        filter.add_author(&public_key.into());
+        filter.add_event_kind(EventKind::ContactList);
+        filter.limit = Some(1);
+
+        let subscription_id = SubscriptionId(format!("contacts:{}", public_key.as_hex_string()));
+
+        let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+        let json = serde_json::to_string(&client_message).unwrap();
+        let websocket_message = tungstenite::Message::Text(json);
+
+        let mut sinks = self.relay_sinks.lock().unwrap();
+        for (url, sink) in sinks.iter_mut() {
+            if let Err(e) = sink.send(websocket_message.clone()).await {
+                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+            }
+        }
+    }
+
+    pub async fn subscribe_to_channel(&self, channel_id: String) {
+        info!("Subscribing to Nostr channel: {}", channel_id);
+
+        let mut filter = Filter::new();
+        filter.add_tag_value('d', channel_id.clone());
+        filter.add_event_kind(EventKind::ChannelMessage);
+        filter.since = Some(Unixtime::now());
+
+        let subscription_id = SubscriptionId(format!("channel:{}", channel_id));
+
+        let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+        let json = serde_json::to_string(&client_message).unwrap();
+        let websocket_message = tungstenite::Message::Text(json);
+
+        let mut sinks = self.relay_sinks.lock().unwrap();
+        for (url, sink) in sinks.iter_mut() {
+            if let Err(e) = sink.send(websocket_message.clone()).await {
+                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+            }
+        }
+    }
+
+    pub async fn subscribe_to_marketplace(&self) {
+        info!("Subscribing to marketplace events");
+
+        let mut filter = Filter::new();
+        filter.add_event_kind(EventKind::MarketplaceUi);
+        filter.since = Some(Unixtime::now());
+
+        let subscription_id = SubscriptionId("marketplace".to_string());
+
+        let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+        let json = serde_json::to_string(&client_message).unwrap();
+        let websocket_message = tungstenite::Message::Text(json);
+
+        let mut sinks = self.relay_sinks.lock().unwrap();
+        for (url, sink) in sinks.iter_mut() {
+            if let Err(e) = sink.send(websocket_message.clone()).await {
+                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+            }
+        }
+    }
+}
