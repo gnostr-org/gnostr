@@ -4,7 +4,7 @@
 
 //! This crate provides types for nostr protocol handling.
 
-#![warn(
+#![allow(
     missing_docs,
 )]
 #![deny(
