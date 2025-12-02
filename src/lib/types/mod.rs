@@ -89,6 +89,8 @@ pub use nevent::NEvent;
 pub mod nip0;
 /// NIP-02: Contact List and Petnames
 pub mod nip2;
+/// NIP-03: OpenTimestamps Attestations for Events
+pub mod nip3;
 /// NIP-04: Encrypted Direct Message
 pub mod nip4;
 /// NIP-06: Basic key derivation from mnemonic seed phrase
