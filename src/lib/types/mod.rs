@@ -99,6 +99,8 @@ pub mod nip6;
 pub mod nip9;
 /// NIP-10: Text Notes and Threads
 pub mod nip10;
+/// NIP-13: Proof of Work
+pub mod nip13;
 /// NIP-15: End of Stored Events Notice
 pub mod nip15;
 /// NIP-26: Delegation
