@@ -1,12 +1,13 @@
 use clap::{Parser, Subcommand};
 use gnostr::queue::InternalEvent;
 use gnostr::types::{
-    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id
+    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id, Rumor
 };
 use std::str::FromStr;
 use gnostr::types::nip2::{self, Contact};
 use gnostr::types::nip9;
 use gnostr::types::nip26;
+use gnostr::types::nip59;
 use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;
 
@@ -121,6 +122,13 @@ enum SubCommand {
         until: Option<u64>,
         #[arg(short, long)]
         since: Option<u64>,
+    },
+    /// Send a NIP-17 private direct message
+    SendNip17Dm {
+        #[arg(short, long)]
+        recipient: String,
+        #[arg(short, long)]
+        content: String,
     },
 }
 
@@ -404,6 +412,33 @@ async fn main() -> anyhow::Result<()> {
                 sig,
             };
             client.send_event(event).await?;
+        }
+        SubCommand::SendNip17Dm { recipient, content } => {
+            let sender_private_key = PrivateKey::generate();
+            let recipient_pk = PublicKey::try_from_hex_string(&recipient, true)?;
+
+            let rumor = Rumor {
+                id: Id::default(), // This will be replaced by the create_seal function
+                pubkey: sender_private_key.public_key(),
+                created_at: Unixtime::now(),
+                kind: EventKind::TextNote, // NIP-17 says Kind 14 for chat messages, but NIP-59 wraps generic rumors. Use TextNote for the inner rumor.
+                tags: vec![],
+                content: content,
+            };
+
+            let seal_event = nip59::create_seal(
+                rumor,
+                &sender_private_key,
+                &recipient_pk,
+            )?;
+
+            let gift_wrap_event = nip59::create_gift_wrap(
+                seal_event,
+                &sender_private_key,
+                &recipient_pk,
+            )?;
+
+            client.send_event(gift_wrap_event).await?;
         }
     }
 

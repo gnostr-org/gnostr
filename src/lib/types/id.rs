@@ -14,6 +14,12 @@ use std::fmt;
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct Id(pub [u8; 32]);
 
+impl Default for Id {
+    fn default() -> Self {
+        Id([0; 32])
+    }
+}
+
 impl Id {
     /// Render into a hexadecimal string
     ///
