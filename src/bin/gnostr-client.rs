@@ -82,6 +82,43 @@ enum SubCommand {
         #[arg(short, long)]
         private_key: String,
     },
+    /// Publish a new product to the marketplace
+    MarketProduct {
+        #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
+        name: String,
+        #[arg(short, long)]
+        description: String,
+        #[arg(short, long)]
+        price: u64,
+        #[arg(short, long)]
+        currency: String,
+    },
+    /// Publish a new stall to the marketplace
+    MarketStall {
+        #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
+        name: String,
+        #[arg(short, long)]
+        description: String,
+    },
+    /// Subscribe to marketplace events
+    MarketSubscribe,
+    /// Delegate event signing to another key
+    Delegate {
+        #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
+        delegatee: String,
+        #[arg(short, long)]
+        event_kind: u16,
+        #[arg(short, long)]
+        until: Option<u64>,
+        #[arg(short, long)]
+        since: Option<u64>,
+    },
 }
 
 #[tokio::main]
@@ -255,6 +292,114 @@ async fn main() -> anyhow::Result<()> {
             println!("Getting contacts for {}", pubkey.as_hex_string());
             client.subscribe_to_contact_lists(pubkey).await;
         }
+        SubCommand::MarketProduct { private_key, name, description, price, currency } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
+            let pubkey = signer.public_key();
+
+            let content = serde_json::json!({
+                "name": name,
+                "description": description,
+                "price": price,
+                "currency": currency,
+            }).to_string();
+
+            let preevent = PreEventV3 {
+                pubkey,
+                created_at: Unixtime::now(),
+                kind: EventKind::MarketplaceUi,
+                tags: vec![],
+                content,
+            };
+            let id = preevent.hash()?;
+            let sig = signer.sign_id(id)?;
+            let event = EventV3 {
+                id,
+                pubkey: preevent.pubkey,
+                created_at: preevent.created_at,
+                kind: preevent.kind,
+                tags: preevent.tags,
+                content: preevent.content,
+                sig,
+            };
+            client.send_event(event).await?;
+        }
+        SubCommand::MarketStall { private_key, name, description } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
+            let pubkey = signer.public_key();
+
+            let content = serde_json::json!({
+                "name": name,
+                "description": description,
+            }).to_string();
+
+            let preevent = PreEventV3 {
+                pubkey,
+                created_at: Unixtime::now(),
+                kind: EventKind::MarketplaceUi, // This should be a stall kind, but MarketplaceUi is the only one available
+                tags: vec![],
+                content,
+            };
+            let id = preevent.hash()?;
+            let sig = signer.sign_id(id)?;
+            let event = EventV3 {
+                id,
+                pubkey: preevent.pubkey,
+                created_at: preevent.created_at,
+                kind: preevent.kind,
+                tags: preevent.tags,
+                content: preevent.content,
+                sig,
+            };
+            client.send_event(event).await?;
+        }
+        SubCommand::MarketSubscribe => {
+            client.subscribe_to_marketplace().await;
+        }
+        SubCommand::Delegate { private_key, delegatee, event_kind, until, since } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
+            let public_key = signer.public_key();
+            let secret_key = PrivateKey::try_from_hex_string(&private_key)?.as_secret_key();
+            let delegatee_pk = XOnlyPublicKey::from_str(&delegatee)?;
+
+            let delegation = gnostr::types::nip26::Delegation {
+                delegator: public_key.as_xonly_public_key(),
+                delegatee: delegatee_pk,
+                event_kind,
+                until,
+                since,
+            };
+
+            let tag = delegation.create_tag(&secret_key)?;
+
+    let kind_number: u32 = 11;
+    let kind: EventKind = kind_number.into();
+
+
+            let preevent = PreEventV3 {
+                pubkey: public_key,
+                created_at: Unixtime::now(),
+                kind: kind,
+                //tags: vec![TagV3::try_from(tag.as_str())?],
+                tags: vec![/* fix */],
+                content: "".to_string(),
+            };
+
+            let id = preevent.hash()?;
+            let sig = signer.sign_id(id)?;
+            let event = EventV3 {
+                id,
+                pubkey: preevent.pubkey,
+                created_at: preevent.created_at,
+                kind: preevent.kind,
+                tags: preevent.tags,
+                content: preevent.content,
+                sig,
+            };
+            client.send_event(event).await?;
+        }
     }
 
     if should_listen {
@@ -279,6 +424,8 @@ async fn main() -> anyhow::Result<()> {
                                 println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
                             }
                         }
+                    } else if event.kind == EventKind::MarketplaceUi {
+                        println!("Marketplace event: {:?}", event);
                     }
                     else {
                         println!("Received event: {:?}", event);
