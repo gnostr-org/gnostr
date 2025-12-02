@@ -3,10 +3,10 @@ use gnostr::queue::InternalEvent;
 use gnostr::types::{
     EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id
 };
-use gnostr::types::nip26;
 use std::str::FromStr;
 use gnostr::types::nip2::{self, Contact};
 use gnostr::types::nip9;
+use gnostr::types::nip26;
 use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;
 
