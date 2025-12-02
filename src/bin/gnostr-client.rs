@@ -3,9 +3,11 @@ use gnostr::queue::InternalEvent;
 use gnostr::types::{
     EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id, Rumor
 };
+use gnostr::types::Signature;
 use std::str::FromStr;
 use gnostr::types::nip2::{self, Contact};
 use gnostr::types::nip9;
+use gnostr::types::nip18;
 use gnostr::types::nip26;
 use gnostr::types::nip59;
 use secp256k1::XOnlyPublicKey;
@@ -129,6 +131,20 @@ enum SubCommand {
         recipient: String,
         #[arg(short, long)]
         content: String,
+    },
+    /// Repost a text note (kind 1)
+    RepostTextNote {
+        #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
+        event_id: String,
+    },
+    /// Repost any generic event (kind other than 1)
+    RepostGeneric {
+        #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
+        event_id: String,
     },
 }
 
@@ -440,6 +456,38 @@ async fn main() -> anyhow::Result<()> {
 
             client.send_event(gift_wrap_event).await?;
         }
+        SubCommand::RepostTextNote { private_key, event_id } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            // TODO: Fetch the event to be reposted. For now, create a dummy event.
+            println!("Reposting text note {}", event_id);
+            let dummy_event = EventV3 {
+                id: Id::try_from_hex_string(&event_id)?,
+                pubkey: pk.public_key(),
+                created_at: Unixtime::now(),
+                kind: EventKind::TextNote,
+                sig: Signature::zeroes(),
+                content: "".to_string(),
+                tags: vec![],
+            };
+            let repost_event = nip18::create_repost_text_note(&dummy_event, &pk.public_key().as_xonly_public_key(), &pk.as_secret_key())?;
+            client.send_event(repost_event).await?;
+        }
+        SubCommand::RepostGeneric { private_key, event_id } => {
+            let pk = PrivateKey::try_from_hex_string(&private_key)?;
+            // TODO: Fetch the event to be reposted. For now, create a dummy event.
+            println!("Reposting generic event {}", event_id);
+            let dummy_event = EventV3 {
+                id: Id::try_from_hex_string(&event_id)?,
+                pubkey: pk.public_key(),
+                created_at: Unixtime::now(),
+                kind: EventKind::TextNote, // Assume TextNote for dummy
+                sig: Signature::zeroes(),
+                content: "".to_string(),
+                tags: vec![],
+            };
+            let repost_event = nip18::create_generic_repost(&dummy_event, &pk.public_key().as_xonly_public_key(), &pk.as_secret_key())?;
+            client.send_event(repost_event).await?;
+        }
     }
 
     if should_listen {
@@ -452,17 +500,6 @@ async fn main() -> anyhow::Result<()> {
                         if let Some(signer) = &signer_for_decryption {
                             let decrypted = signer.decrypt(&event.pubkey, &event.content)?;
                             println!("DM from {}: {}", event.pubkey.as_hex_string(), decrypted);
-                        }
-                    } else if event.kind == EventKind::ContactList {
-                        println!("Contact list updated:");
-                        for tag in &event.tags {
-                            if tag.tagname() == "p" {
-                                let v: Vec<&str> = tag.value().split(' ').collect();
-                                let pubkey = v.get(0).unwrap_or(&"");
-                                let relay = v.get(1).unwrap_or(&"");
-                                let petname = v.get(2).unwrap_or(&"");
-                                println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
-                            }
                         }
                     } else if event.kind == EventKind::ContactList {
                         println!("Contact list updated:");

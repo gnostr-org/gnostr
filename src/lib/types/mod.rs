@@ -103,6 +103,8 @@ pub mod nip10;
 pub mod nip13;
 /// NIP-15: End of Stored Events Notice
 pub mod nip15;
+/// NIP-18: Reposts
+pub mod nip18;
 /// NIP-26: Delegation
 pub mod nip26;
 pub mod nip34;

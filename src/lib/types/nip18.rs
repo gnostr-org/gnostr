@@ -13,8 +13,8 @@ pub fn create_repost_text_note(
 ) -> Result<Event, crate::types::Error> {
     let content = serde_json::to_string(reposted_event)?;
     let tags = vec![
-        Tag::new_event(reposted_event.id, None, None).as_vec(),
-        Tag::new_pubkey(reposted_event.pubkey, None, None).as_vec(),
+        Tag::new_event(reposted_event.id, None, None).0,
+        Tag::new_pubkey(reposted_event.pubkey, None, None).0,
     ];
     let unsigned_event = UnsignedEvent::new(public_key, 6, tags, content);
     Ok(unsigned_event.sign(private_key).unwrap())
@@ -28,9 +28,9 @@ pub fn create_generic_repost(
 ) -> Result<Event, crate::types::Error> {
     let content = serde_json::to_string(reposted_event)?;
     let tags = vec![
-        Tag::new_event(reposted_event.id, None, None).as_vec(),
-        Tag::new_pubkey(reposted_event.pubkey, None, None).as_vec(),
-        Tag::new_kind(reposted_event.kind).as_vec(),
+        Tag::new_event(reposted_event.id, None, None).0,
+        Tag::new_pubkey(reposted_event.pubkey, None, None).0,
+        Tag::new_kind(reposted_event.kind).0,
     ];
     let unsigned_event = UnsignedEvent::new(public_key, 16, tags, content);
     Ok(unsigned_event.sign(private_key).unwrap())
