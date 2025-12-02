@@ -350,6 +350,10 @@ tracing-subscriber = "0.3.18"
 tungstenite = { version = "0.21.0", features = ["native-tls"] }
 url = "2.2.2"
 
+[workspace.metadata.dist]
+# Allow the CI file to differ from what cargo-dist would generate
+allow-dirty = ["ci"]
+
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
@@ -360,6 +364,7 @@ strip = true
 codegen-units = 1
 incremental = false
 panic = "abort"
+allow-dirty = true
 
 [profile.dev]
 debug = 0
