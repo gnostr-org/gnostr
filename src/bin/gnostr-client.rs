@@ -360,9 +360,10 @@ async fn main() -> anyhow::Result<()> {
         }
         SubCommand::Delegate { private_key, delegatee, event_kind, until, since } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
-            let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
+            let signer = KeySigner::from_private_key(pk.clone(), "", 1).unwrap();
             let public_key = signer.public_key();
-            let secret_key = PrivateKey::try_from_hex_string(&private_key)?.as_secret_key();
+            let secret_key = pk.as_secret_key();
+
             let delegatee_pk = XOnlyPublicKey::from_str(&delegatee)?;
 
             let delegation = nip26::Delegation {
