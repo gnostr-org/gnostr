@@ -123,6 +123,7 @@ impl NostrClient {
         let mut filter = Filter::new();
         filter.add_tag_value('p', public_key.as_hex_string());
         filter.add_event_kind(EventKind::EncryptedDirectMessage);
+        filter.add_event_kind(EventKind::GiftWrap);
         filter.since = Some(Unixtime::now());
 
         let subscription_id = SubscriptionId(format!("dms:{}", public_key.as_hex_string()));
