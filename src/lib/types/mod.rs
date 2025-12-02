@@ -106,6 +106,8 @@ pub mod nip15;
 /// NIP-26: Delegation
 pub mod nip26;
 pub mod nip34;
+/// NIP-59: Gift Wrap
+pub mod nip59;
 mod nip05;
 pub use nip05::Nip05;
 
