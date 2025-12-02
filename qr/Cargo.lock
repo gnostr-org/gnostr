@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_qr"
-version = "1906.925289.572444"
+version = "1905.926180.332424"
 dependencies = [
  "hex",
  "image",

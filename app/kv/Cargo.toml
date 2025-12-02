@@ -1,6 +1,6 @@
 [package]
 name = "nostr-kv"
-version = "1906.925289.572444"
+version = "1905.926180.332424"
 description = "Lmdb api for nostr-db"
 keywords = ["lmdb"]
 exclude = [".gitignore"]

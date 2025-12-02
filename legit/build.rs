@@ -475,7 +475,7 @@ fn get_git_hash() -> String {
 
 fn main() {
     println!("cargo:rerun-if-changed=src/empty");
-    make_empty();
+    //_make_empty();
     // _sync_nip44_vectors();
 
     if env::var("RUSTC_WRAPPER").is_ok() {
@@ -492,7 +492,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
 
-    make_empty();
+    //_make_empty();
 
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
@@ -789,7 +789,7 @@ fn musl_install_pkg_config() {
     // Common build logic can go here
 }
 
-fn make_empty() {
+fn _make_empty() {
     let target_path = Path::new("src/empty");
 
     // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
