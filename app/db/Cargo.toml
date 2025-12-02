@@ -1,6 +1,6 @@
 [package]
 name = "nostr-db"
-version = "1906.925289.572444"
+version = "1905.926180.332424"
 description = "Nostr event database"
 keywords = ["nostr", "db", "lmdb"]
 exclude = [".gitignore"]

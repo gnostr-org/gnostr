@@ -257,6 +257,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Run sccache-cache
+        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Set Rust caching env vars
+        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
       - name: Install cached dist
         uses: actions/download-artifact@v4
         with:

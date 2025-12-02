@@ -125,7 +125,7 @@ dirs = "5.0.1"
 duration-str = { version = "0.11.2", default-features = false }
 easy-cast = "0.5"
 env_logger = "0.11"
-filetreelist = { package = "gnostr-filetreelist", path = "./filetreelist", version = "1906.925289.572444" }
+filetreelist = { version = "1905.926180.332424", package = "gnostr-filetreelist", path = "filetreelist" }
 
 flume = "0.10"
 futures = "0.3.28"
@@ -139,13 +139,13 @@ git2 = "0.20.1" ## asyncgit ^0.19
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { path = "asyncgit", version = "1906.925289.572444", default-features = false }
-gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
-gnostr-legit = { path = "./legit", version = "1906.925289.572444" }
-gnostr-query = { version = "1906.925289.572444", path = "query" }
-gnostr-relay = { version = "1906.925289.572444", path = "relay", features = ["search"] }
+gnostr-asyncgit = { version = "1905.926180.332424", default-features = false }
+gnostr-crawler = { version = "1905.926180.332424", path = "crawler" }
+gnostr-legit = { version = "1905.926180.332424", path = "legit" }
+gnostr-query = { version = "1905.926180.332424", path = "query" }
+gnostr-relay = { version = "1905.926180.332424", path = "relay", features = ["search"] }
 ##gnostr-types = { version = "0.7.6", path = "types" }
-gnostr-qr = { version = "1906.925289.572444", path = "qr" }
+gnostr_qr = { version = "1905.926180.332424", path = "qr" }
 hex = "0.4.3"
 hkdf = "0.12"
 hmac = "0.12"
@@ -245,7 +245,7 @@ russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
 scopeguard = "1.2"
-scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1906.925289.572444" }
+scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1905.926180.332424" }
 scrypt = "0.11.0"
 #rand = "0.8"
 #rand_core = "0.6"

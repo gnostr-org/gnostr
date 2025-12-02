@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-query"
-version = "1906.925289.572444"
+version = "1905.926180.332424"
 authors = ["gnostr-org <admin@gnostr.org>"]
 description = "gnostr-query: retrieve nostr events."
 repository = "https://github.com/gnostr-org/gnostr-query.git"
@@ -23,7 +23,7 @@ path = "src/main.rs"
 
 clap = { version = "4", features = ["derive"] }
 futures = "0.3"
-gnostr-crawler = { version = "1906.925289.572444", path = "../crawler" }
+gnostr-crawler = { version = "1905.926180.332424", path = "../crawler" }
 log = "0.4.27"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

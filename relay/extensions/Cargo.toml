@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-extensions"
-version = "1906.925289.572444"
+version = "1905.926180.332424"
 description = "gostr-relay extensions."
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
