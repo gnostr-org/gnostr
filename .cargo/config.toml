@@ -38,7 +38,7 @@ rustflags = [
 ]
 [release]
 #target-dir = ".release"
-rustc-wrapper = "sccache"
+#rustc-wrapper = "sccache"
 rustflags = [
 "-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
 ]
