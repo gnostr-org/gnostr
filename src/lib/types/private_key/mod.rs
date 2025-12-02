@@ -59,6 +59,7 @@ impl TryFrom<u8> for KeySecurity {
 
 /// This is a private key which is to be kept secret and is used to prove identity
 #[allow(missing_debug_implementations)]
+#[derive(Clone)]
 pub struct PrivateKey(pub secp256k1::SecretKey, pub KeySecurity);
 
 impl Default for PrivateKey {
