@@ -464,6 +464,29 @@ async fn main() -> anyhow::Result<()> {
                                 println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
                             }
                         }
+                    } else if event.kind == EventKind::ContactList {
+                        println!("Contact list updated:");
+                        for tag in &event.tags {
+                            if tag.tagname() == "p" {
+                                let v: Vec<&str> = tag.value().split(' ').collect();
+                                let pubkey = v.get(0).unwrap_or(&"");
+                                let relay = v.get(1).unwrap_or(&"");
+                                let petname = v.get(2).unwrap_or(&"");
+                                println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
+                            }
+                        }
+                    } else if event.kind == EventKind::GiftWrap {
+                        if let Some(signer) = &signer_for_decryption {
+                            // Unwrap GiftWrap to get the Seal
+                            let seal_json = signer.decrypt(&event.pubkey, &event.content)?;
+                            let seal_event: EventV3 = serde_json::from_str(&seal_json)?;
+
+                            // Unwrap Seal to get the Rumor
+                            let rumor_json = signer.decrypt(&seal_event.pubkey, &seal_event.content)?;
+                            let rumor: Rumor = serde_json::from_str(&rumor_json)?;
+
+                            println!("NIP-17 DM from {}: {}", seal_event.pubkey.as_hex_string(), rumor.content);
+                        }
                     } else if event.kind == EventKind::MarketplaceUi {
                         println!("Marketplace event: {:?}", event);
                     }
