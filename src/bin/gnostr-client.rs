@@ -25,6 +25,8 @@ enum SubCommand {
     Publish {
         #[arg(short, long)]
         content: String,
+        #[arg(long)]
+        subject: Option<String>,
     },
     /// Subscribe to a channel
     Channel {
@@ -139,16 +141,22 @@ async fn main() -> anyhow::Result<()> {
     let mut signer_for_decryption: Option<KeySigner> = None;
 
     match args.command {
-        SubCommand::Publish { content } => {
+        SubCommand::Publish { content, subject } => {
             println!("Publishing: {}", content);
             let signer =
                 KeySigner::from_private_key(PrivateKey::generate(), "", 1).unwrap();
             let pubkey = signer.public_key();
+            
+            let mut tags = vec![];
+            if let Some(s) = subject {
+                tags.push(TagV3(vec!["subject".to_string(), s]));
+            }
+
             let preevent = PreEventV3 {
                 pubkey,
                 created_at: Unixtime::now(),
                 kind: EventKind::TextNote,
-                tags: vec![],
+                tags,
                 content,
             };
             let id = preevent.hash()?;
