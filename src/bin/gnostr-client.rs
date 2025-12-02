@@ -3,6 +3,7 @@ use gnostr::queue::InternalEvent;
 use gnostr::types::{
     EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id
 };
+use gnostr::types::nip26;
 use std::str::FromStr;
 use gnostr::types::nip2::{self, Contact};
 use gnostr::types::nip9;
@@ -364,7 +365,7 @@ async fn main() -> anyhow::Result<()> {
             let secret_key = PrivateKey::try_from_hex_string(&private_key)?.as_secret_key();
             let delegatee_pk = XOnlyPublicKey::from_str(&delegatee)?;
 
-            let delegation = gnostr::types::nip26::Delegation {
+            let delegation = nip26::Delegation {
                 delegator: public_key.as_xonly_public_key(),
                 delegatee: delegatee_pk,
                 event_kind,
@@ -374,17 +375,12 @@ async fn main() -> anyhow::Result<()> {
 
             let tag = delegation.create_tag(&secret_key)?;
 
-    let kind_number: u32 = 11;
-    let kind: EventKind = kind_number.into();
-
-
             let preevent = PreEventV3 {
                 pubkey: public_key,
                 created_at: Unixtime::now(),
-                kind: kind,
-                //tags: vec![TagV3::try_from(tag.as_str())?],
-                tags: vec![/* fix */],
-                content: "".to_string(),
+                kind: EventKind::TextNote, // NIP-26 is a tag, not a kind. Using TextNote as placeholder.
+                tags: vec![TagV3(tag.split(' ').map(|s| s.to_string()).collect())],
+                content: "Delegation proof".to_string(),
             };
 
             let id = preevent.hash()?;
