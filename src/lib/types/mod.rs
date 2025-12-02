@@ -97,6 +97,8 @@ pub mod nip4;
 pub mod nip6;
 /// NIP-09: Event Deletion
 pub mod nip9;
+/// NIP-10: Text Notes and Threads
+pub mod nip10;
 /// NIP-15: End of Stored Events Notice
 pub mod nip15;
 /// NIP-26: Delegation
