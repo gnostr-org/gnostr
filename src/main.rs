@@ -10,9 +10,8 @@ use sha2::{Digest, Sha256};
 use std::env;
 use tracing::{debug, /*info, */trace};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::FmtSubscriber;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-//use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 use anyhow::anyhow; // Import the anyhow macro
 
@@ -60,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
         let subscriber = Registry::default()
             .with(fmt::layer().with_writer(std::io::stdout))
             .with(filter);
-        let _ = subscriber.try_init();
+        let _ = subscriber.init();
     };
 
     let env_args: Vec<String> = env::args().collect();
