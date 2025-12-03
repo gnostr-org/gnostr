@@ -228,7 +228,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             None => PathBuf::from("."), //TODO $HOME/.gnostr
         };
 
-        let mut repo = Repository::discover(search_path)?;
+        let repo = Repository::discover(search_path)?;
         let head = repo.head()?;
         let obj = head.resolve()?.peel(ObjectType::Commit)?;
         let commit = obj.peel_to_commit()?;
