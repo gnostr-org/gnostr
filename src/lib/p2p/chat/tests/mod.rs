@@ -27,7 +27,7 @@ mod tests {
         let repo = Repository::init(path).unwrap();
         {
             let mut index = repo.index().unwrap();
-            let oid = index.write_tree().unwrap();
+            let _oid = index.write_tree().unwrap();
             let signature = Signature::new("Test User", "test@example.com", &Time::new(123456789, 0)).unwrap();
             let tree_builder = repo.treebuilder(None).unwrap();
             let tree_oid = tree_builder.write().unwrap();
