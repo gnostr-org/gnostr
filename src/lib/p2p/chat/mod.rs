@@ -6,14 +6,14 @@ use crate::queue::InternalEvent;
 use self::msg::{Msg, MsgKind};
 use crate::types::{EventV3, Id, Signer, UncheckedUrl, Error};
 use crate::types::nip28::CREATE_CHANNEL_MESSAGE;
+use gnostr_asyncgit::sync::RepoPath;
 use libp2p::gossipsub;
-//use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
 
-//use sha2::Digest;
-//use tokio::time::Duration;
-
 use std::{error::Error as StdError, time::Duration};
+use std::path::PathBuf;
+//use async_std::path::PathBuf;
+
 use tokio::{io, io::AsyncBufReadExt};
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info};
@@ -125,6 +125,16 @@ pub struct ChatSubCommands {
     /// Send a single message to a topic and exit
     #[arg(long, global = true, requires = "topic")]
     pub oneshot: Option<String>,
+    /// workdir
+    pub workdir: Option<String>,
+    #[arg(
+        long,
+        value_name = "GITDIR",
+        default_value = ".",
+        help = "gnostr --gitdir '<string>'"
+    )]
+    /// gitdir
+    pub gitdir: Option<RepoPath>,
 }
 
 //async tasks
@@ -157,16 +167,14 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
     let filter = EnvFilter::default()
         .add_directive(level.into())
-        .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-        .add_directive("nostr_relay_pool=off".parse().unwrap())
-        .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
-        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        .add_directive("gnostr::message=off".parse().unwrap())
-        .add_directive("gnostr::nostr_proto=off".parse().unwrap());
+        .add_directive("hickory_proto=off".parse().unwrap())
+        .add_directive("hickory_proto::rr=off".parse().unwrap())
+        .add_directive("hickory_proto::rr::record_data=off".parse().unwrap())
+        .add_directive("libp2p_mdns=off".parse().unwrap())
+        //.add_directive("gnostr::p2p=off".parse().unwrap())
+        //.add_directive("gnostr::p2p::chat=off".parse().unwrap())
+        //.add_directive("gnostr::p2p::chat::p2p=off".parse().unwrap())
+        .add_directive("gnostr::message=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(fmt::layer().with_writer(std::io::stdout))
@@ -208,7 +216,19 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     }
 
     tokio::task::spawn_blocking(move || {
-        let repo = Repository::discover(".")?;
+
+        let search_path: PathBuf = match &args.gitdir {
+            Some(repo_path) => {
+                match repo_path {
+                    RepoPath::Path(p) => p.clone(), 
+                    _ => panic!("Unsupported RepoPath variant"), 
+                }
+            },
+            // If no gitdir arg was provided, default to current directory "."
+            None => PathBuf::from("."), //TODO $HOME/.gnostr
+        };
+
+        let mut repo = Repository::discover(search_path)?;
         let head = repo.head()?;
         let obj = head.resolve()?.peel(ObjectType::Commit)?;
         let commit = obj.peel_to_commit()?;
@@ -216,9 +236,19 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
         // Use the padded commit ID as the default private key if --nsec is not provided.
         let padded_commit_id = format!("{:0>64}", commit_id.clone());
+
+        // TODO use padded_commit_id to generate nostr public_key
+        // TODO use gnostr::types to create nip0 metadata for the specific padded_commit_id
+		// TODO metadata uses 
+		//
+		// p 
+		// -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4"
+		// b 
+        // -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png"
+		//
         if args.nsec.is_none() {
             args.nsec = Some(padded_commit_id);
-            tracing::info!("Using Git commit ID as default private key (nsec).");
+            tracing::info!("Using args.nsec  as default private key {:#?}.", args.nsec);
         }
 
         let mut app = ui::App {
