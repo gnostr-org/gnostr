@@ -599,7 +599,7 @@ mod when_main_branch_is_uptodate {
                     let (originating_repo, mut test_repo) = prep_and_run().await?;
                     assert_eq!(
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_4)?,
-                        test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
+                        &mut test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
                             &mut test_repo,
                             FEATURE_BRANCH_NAME_4
                         )?)?,
