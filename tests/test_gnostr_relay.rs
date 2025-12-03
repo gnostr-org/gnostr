@@ -17,7 +17,7 @@ mod tests {
     use std::sync::Arc;
 
 
-    fn create_test_app_instance(test_name: &str) -> Result<(GnostrRelayApp, String)> {
+    fn create_test_app_instance(_test_name: &str) -> Result<(GnostrRelayApp, String)> {
         // Create a temporary config file
         let config_file = NamedTempFile::with_suffix(".toml").expect("Failed to create temp config file");
         let config_path = config_file.path().to_str().unwrap().to_owned();

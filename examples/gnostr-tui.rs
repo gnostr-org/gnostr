@@ -58,8 +58,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //replace gnostr tui --gitdir
         //std::process::exit(0);
     }
-    args.workdir.is_some();
-    args.directory.is_some();
+    let _ = args.workdir.is_some();
+    let _ = args.directory.is_some();
 
     // Post event
     match &args.command {

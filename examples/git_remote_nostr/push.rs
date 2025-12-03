@@ -513,7 +513,7 @@ fn report_on_transfer_progress(
     total: usize,
     bytes: usize,
     start_time: &Instant,
-    end_time: &Option<Instant>,
+    end_time: Option<&Instant>,
 ) -> Option<String> {
     if total == 0 {
         return None;
@@ -626,7 +626,7 @@ impl<'a> PushReporter<'a> {
             total,
             bytes,
             &self.start_time.unwrap(),
-            &self.end_time,
+            self.end_time.as_ref(),
         ) {
             let existing_lines = self.count_all_existing_lines();
             if report.contains("100%") {
@@ -925,14 +925,14 @@ async fn get_merged_status_events(
                                     signer,
                                     repo_ref,
                                     &get_event_from_cache_by_id(git_repo, &proposal_id).await?,
-                                    &if let Some(revision_id) = revision_id {
+                                    if let Some(revision_id) = revision_id {
                                         Some(
                                             get_event_from_cache_by_id(git_repo, &revision_id)
                                                 .await?,
                                         )
                                     } else {
                                         None
-                                    },
+                                    }.as_ref(),
                                     &commit_hash,
                                     commit_event.id(),
                                 )
@@ -951,7 +951,7 @@ async fn create_merge_status(
     signer: &NostrSigner,
     repo_ref: &RepoRef,
     proposal: &Event,
-    revision: &Option<Event>,
+    revision: Option<&Event>,
     merge_commit: &Sha1Hash,
     merged_patch: EventId,
 ) -> Result<Event> {

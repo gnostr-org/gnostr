@@ -200,7 +200,7 @@ fn fetch_from_git_server(
 fn report_on_transfer_progress(
     progress_stats: &Progress<'_>,
     start_time: &Instant,
-    end_time: &Option<Instant>,
+    end_time: Option<&Instant>,
 ) -> Vec<String> {
     let mut report = vec![];
     let total = progress_stats.total_objects() as f64;
@@ -348,7 +348,7 @@ impl<'a> FetchReporter<'a> {
         }
         let existing_lines = self.just_count_transfer_progress();
         let updated =
-            report_on_transfer_progress(progress_stats, &self.start_time.unwrap(), &self.end_time);
+            report_on_transfer_progress(progress_stats, &self.start_time.unwrap(), self.end_time.as_ref());
         if self.transfer_progress_msgs.len() <= updated.len() {
             if self.end_time.is_none() && updated.first().is_some_and(|f| f.contains("100%")) {
                 self.end_time = Some(Instant::now());

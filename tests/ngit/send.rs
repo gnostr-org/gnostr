@@ -52,7 +52,7 @@ mod when_commits_behind_ask_to_proceed {
     #[test]
     #[cfg(feature = "expensive_tests")]
     fn asked_with_default_no() -> Result<()> {
-        let mut test_repo = prep_test_repo()?;
+        let test_repo = prep_test_repo()?;
 
         let mut p = CliTester::new_from_dir(&test_repo.dir, ["send", "HEAD~2"]);
         expect_confirm_prompt(&mut p)?;
@@ -63,7 +63,7 @@ mod when_commits_behind_ask_to_proceed {
     #[test]
     #[cfg(feature = "expensive_tests")]
     fn when_response_is_false_aborts() -> Result<()> {
-        let mut test_repo = prep_test_repo()?;
+        let test_repo = prep_test_repo()?;
 
         let mut p = CliTester::new_from_dir(&test_repo.dir, ["send", "HEAD~2"]);
 
@@ -77,7 +77,7 @@ mod when_commits_behind_ask_to_proceed {
     #[serial]
     #[cfg(feature = "expensive_tests")]
     fn when_response_is_true_proceeds() -> Result<()> {
-        let mut test_repo = prep_test_repo()?;
+        let test_repo = prep_test_repo()?;
 
         let mut p = CliTester::new_from_dir(&test_repo.dir, ["send", "HEAD~2"]);
         expect_confirm_prompt(&mut p)?.succeeds_with(Some(true))?;
