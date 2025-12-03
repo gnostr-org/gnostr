@@ -1,10 +1,13 @@
 use std::collections::HashSet;
+use gnostr::Event;
+use nostr_0_32_0::Kind;
 use git2::Oid;
 use test_utils::CliTester;
 use anyhow::Context;
-
-use nostr_sdk_0_34_0::prelude::*;
-
+use crate::clone_git_repo_with_nostr_url;
+use crate::cli_expect_nostr_fetch;
+use crate::get_nostr_remote_url;
+use test_utils::relay;
 
 #[tokio::test]
 #[serial]
