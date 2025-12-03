@@ -160,7 +160,7 @@ mod with_state_announcement {
     }
     mod when_announcement_doesnt_match_git_server {
 
-        
+
 
         #[tokio::test]
         #[serial]

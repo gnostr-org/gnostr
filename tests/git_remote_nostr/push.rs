@@ -1,3 +1,10 @@
+use std::collections::HashSet;
+use git2::Oid;
+use test_utils::CliTester;
+use anyhow::Context;
+
+use nostr_sdk_0_34_0::prelude::*;
+
 
 #[tokio::test]
 #[serial]
@@ -32,7 +39,8 @@ mod two_branches_in_batch_one_added_one_updated {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -92,7 +100,7 @@ mod two_branches_in_batch_one_added_one_updated {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn remote_refs_updated_in_local_git() -> Result<()> {
+    async fn remote_refs_updated_in_local_git() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
@@ -111,7 +119,8 @@ mod two_branches_in_batch_one_added_one_updated {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -146,7 +155,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 git_repo
                     .git_repo
                     .find_reference("refs/remotes/nostr/main")?
-                    .peel_to_commit()?
+                    .peel_to_commit()? 
                     .id(),
                 main_commit_id,
             );
@@ -155,7 +164,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 git_repo
                     .git_repo
                     .find_reference("refs/remotes/nostr/vnext")?
-                    .peel_to_commit()?
+                    .peel_to_commit()? 
                     .id(),
                 vnext_commit_id
             );
@@ -182,7 +191,7 @@ mod two_branches_in_batch_one_added_one_updated {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn prints_git_helper_ok_respose() -> Result<()> {
+        async fn prints_git_helper_ok_respose() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
@@ -201,7 +210,8 @@ mod two_branches_in_batch_one_added_one_updated {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -252,8 +262,7 @@ mod two_branches_in_batch_one_added_one_updated {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event(
-    ) -> Result<()> {
+    async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
@@ -272,7 +281,8 @@ mod two_branches_in_batch_one_added_one_updated {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -340,7 +350,7 @@ mod two_branches_in_batch_one_added_one_updated {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn existing_state_event_published_in_nostr_state_event() -> Result<()> {
+    async fn existing_state_event_published_in_nostr_state_event() -> Result<(), E> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
         let git_repo = prep_git_repo()?;
@@ -360,7 +370,8 @@ mod two_branches_in_batch_one_added_one_updated {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
             state_event.clone(),
         ];
 
@@ -392,7 +403,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 git_repo
                     .git_repo
                     .find_reference("refs/remotes/nostr/main")?
-                    .peel_to_commit()?
+                    .peel_to_commit()? 
                     .id(),
                 main_commit_id,
             );
@@ -401,7 +412,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 git_repo
                     .git_repo
                     .find_reference("refs/remotes/nostr/vnext")?
-                    .peel_to_commit()?
+                    .peel_to_commit()? 
                     .id(),
                 vnext_commit_id
             );
@@ -450,7 +461,7 @@ mod two_branches_in_batch_one_added_one_updated {
                 vec!["refs/heads/main".to_string(), main_commit_id.to_string()],
                 vec![
                     "refs/heads/example-branch".to_string(),
-                    example_branch_commit_id.to_string()
+                    example_branch_commit_id.to_string(),
                 ],
                 vec!["refs/heads/vnext".to_string(), vnext_commit_id.to_string()],
             ]),
@@ -465,7 +476,7 @@ mod delete_one_branch {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn deletes_branch_on_git_server() -> Result<()> {
+    async fn deletes_branch_on_git_server() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
 
         git_repo.create_branch("vnext")?;
@@ -482,7 +493,8 @@ mod delete_one_branch {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -501,9 +513,7 @@ mod delete_one_branch {
             assert_eq!(
                 source_git_repo
                     .git_repo
-                    .find_reference("refs/heads/vnext")?
-                    .peel_to_commit()?
-                    .id(),
+                    .find_reference("refs/heads/vnext")?,
                 vnext_commit_id
             );
 
@@ -538,7 +548,7 @@ mod delete_one_branch {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn remote_refs_updated_in_local_git() -> Result<()> {
+    async fn remote_refs_updated_in_local_git() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
 
         git_repo.create_branch("vnext")?;
@@ -559,7 +569,8 @@ mod delete_one_branch {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -578,9 +589,7 @@ mod delete_one_branch {
             assert_eq!(
                 git_repo
                     .git_repo
-                    .find_reference("refs/remotes/nostr/vnext")?
-                    .peel_to_commit()?
-                    .id(),
+                    .find_reference("refs/remotes/nostr/vnext")?,
                 vnext_commit_id
             );
 
@@ -614,7 +623,7 @@ mod delete_one_branch {
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
-    async fn prints_git_helper_ok_respose() -> Result<()> {
+    async fn prints_git_helper_ok_respose() -> Result<(), E> {
         let git_repo = prep_git_repo()?;
 
         git_repo.create_branch("vnext")?;
@@ -635,7 +644,8 @@ mod delete_one_branch {
                 .dir
                 .to_str()
                 .unwrap()
-                .to_string()]),
+                .to_string()
+            ]),
         ];
         // fallback (51,52) user write (53, 55) repo (55, 56) blaster
         // (57)
@@ -681,7 +691,7 @@ mod delete_one_branch {
         #[tokio::test]
         #[serial]
         #[cfg(feature = "expensive_tests")]
-        async fn state_event_updated_and_branch_deleted_and_ok_printed() -> Result<()> {
+        async fn state_event_updated_and_branch_deleted_and_ok_printed() -> Result<(), E> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
             let git_repo = prep_git_repo()?;
@@ -694,7 +704,8 @@ mod delete_one_branch {
                     .dir
                     .to_str()
                     .unwrap()
-                    .to_string()]),
+                    .to_string()
+                ]),
                 state_event.clone(),
             ];
 
@@ -764,7 +775,7 @@ mod delete_one_branch {
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-            async fn existing_state_event_updated_and_ok_printed() -> Result<()> {
+            async fn existing_state_event_updated_and_ok_printed() -> Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
                 {
@@ -784,7 +795,8 @@ mod delete_one_branch {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                     state_event.clone(),
                 ];
 
@@ -854,7 +866,7 @@ mod delete_one_branch {
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
+async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<(), E> {
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let second_source_git_repo = GitTestRepo::duplicate(&source_git_repo)?;
 
@@ -892,7 +904,7 @@ async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
         p.send_line("push refs/heads/main:refs/heads/main")?;
         p.send_line("")?;
         p.expect("ok refs/heads/main\r\n")?;
-        p.expect_eventually("\r\n\r\n")?;
+        p.expect_eventually("\r\n\r\r\n")?;
         p.exit()?;
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;
@@ -927,7 +939,7 @@ async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<()> {
+async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<(), E> {
     //
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1056,8 +1068,9 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
             .find(|t| t.as_vec().len().eq(&4) && t.as_vec()[3].eq("mention"))
             .unwrap()
             .as_vec()[1],
-        "status mentions proposal tip event \r\nmerge status:\r\n{}\r\nproposal tip:\r\n{}",
+        "status mentions proposal tip event \r\nmerge status:\r\n{}",
         merge_status.as_json(),
+        "proposal tip:\r\n{}",
         proposal_tip.as_json(),
     );
 
@@ -1069,8 +1082,9 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
             .find(|t| t.is_root())
             .unwrap()
             .as_vec()[1],
-        "status tags proposal id as root \r\nmerge status:\r\n{}\r\nproposal:\r\n{}",
+        "status tags proposal id as root \r\nmerge status:\r\n{}",
         merge_status.as_json(),
+        "proposal:\r\n{}",
         proposal.as_json(),
     );
 
@@ -1080,7 +1094,7 @@ async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> 
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn push_2_commits_to_existing_proposal() -> Result<()> {
+    async fn push_2_commits_to_existing_proposal() -> Result<(), E> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -1227,7 +1241,7 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn force_push_creates_proposal_revision() -> Result<()> {
+    async fn force_push_creates_proposal_revision() -> Result<(), E> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -1383,7 +1397,7 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn push_new_pr_branch_creates_proposal() -> Result<()> {
+    async fn push_new_pr_branch_creates_proposal() -> Result<(), E> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -1402,7 +1416,7 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
     let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
     let branch_name = "pr/my-new-proposal";
 
-    let cli_tester_handle = std::thread::spawn(move || -> Result<String> {
+    let cli_tester_handle = std::thread::spawn(move || -> Result<String, E> {
         let mut git_repo = clone_git_repo_with_nostr_url()?;
         git_repo.delete_dir_on_drop = false;
         git_repo.create_branch(branch_name)?;
@@ -1469,7 +1483,7 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
 
     assert!(
         proposal.content.contains("[PATCH 1/2]"),
-        "proposal root labeled with[PATCH 1/2] event: {proposal:?}",
+        "proposal root labeled with[PATCH 1/2] event: {proposal:?}"
     );
 
     assert_eq!(
