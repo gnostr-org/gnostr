@@ -413,6 +413,7 @@ fn run_git_checkout_pr(suffix: String, repo_path: &Path) -> Result<String> {
     Ok(branch_name)
 }
 
+#[allow(dead_code)]
 static REPO_TOML: &str = r###"#'''
 name = "gnostr-gnit-server"
 public = true
@@ -420,6 +421,7 @@ members = ["gnostr", "gnostr-user"]
 failed_push_message = "Issues and patches can be emailed to admin@gnostr.org"
 "###;
 
+#[allow(dead_code)]
 static SERVER_TOML: &str = r###"#
 
 name = "gnostr.org"
