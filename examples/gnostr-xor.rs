@@ -59,7 +59,7 @@ fn main() {
     println!("{}", fbs);
 
     let mut sec = DEFAULT_SEC;
-    sec == DEFAULT_SEC;
+    let _ = sec == DEFAULT_SEC;
     let args_vector: Vec<String> = env::args().collect();
 
     #[allow(unreachable_code)]
