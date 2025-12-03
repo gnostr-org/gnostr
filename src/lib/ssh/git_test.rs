@@ -11,7 +11,7 @@ mod tests {
     #[ignore]
     async fn test_git_operations() -> anyhow::Result<()> {
         // 1. Setup: Create a bare server repository
-        let server_dir = tempdir().context("Failed to create server tempdir")?;
+        let _server_dir = tempdir().context("Failed to create server tempdir")?;
         let mut initial_repo = test_utils::git::GitTestRepo::new("main")?;
         File::create(initial_repo.dir.join("initial.txt"))
             .context("Failed to create initial.txt")?;
@@ -22,7 +22,7 @@ mod tests {
 
         // 2. Client 1: Clone, commit, and push
         let client1_dir = tempdir().context("Failed to create client1 tempdir")?;
-        let client1_repo_path = client1_dir.path().join("client1");
+        let _client1_repo_path = client1_dir.path().join("client1");
         let mut client1_test_repo = test_utils::git::GitTestRepo::duplicate(
             &server_repo
         ).context("Failed to clone server repo to client1")?;
@@ -41,7 +41,7 @@ mod tests {
 
         // 3. Client 2: Clone, commit, and push
         let client2_dir = tempdir().context("Failed to create client2 tempdir")?;
-        let client2_repo_path = client2_dir.path().join("client2");
+        let _client2_repo_path = client2_dir.path().join("client2");
         let mut client2_test_repo = test_utils::git::GitTestRepo::duplicate(
             &server_repo
         ).context("Failed to clone server repo to client2")?;
