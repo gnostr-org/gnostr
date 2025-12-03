@@ -79,7 +79,7 @@ pub async fn launch(
             .await?
             .iter()
             .find(|e| {
-                is_event_proposal_root_for_branch(e, &branch_name, &logged_in_public_key)
+                is_event_proposal_root_for_branch(e, &branch_name, logged_in_public_key.as_ref())
                     .unwrap_or(false)
             })
             .context("cannot find proposal that matches the current branch name")?
