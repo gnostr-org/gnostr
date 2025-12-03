@@ -8,7 +8,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey};
 /// Generate a Proof of Work event
 pub fn generate_pow_event(
     content: String,
-    mut tags: Vec<Vec<String>>,
+    tags: Vec<Vec<String>>,
     difficulty: u8,
     public_key: &XOnlyPublicKey,
     private_key: &SecretKey,
