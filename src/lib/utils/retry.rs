@@ -489,7 +489,7 @@ mod test {
     }
 
     //#[cfg(feature = "async")]
-    async fn to_retry_async(n: usize) -> Result<(), std::io::Error> {
+    async fn to_retry_async(_n: usize) -> Result<(), std::io::Error> {
         Err(std::io::Error::new(
             std::io::ErrorKind::Other,
             "generic error",
