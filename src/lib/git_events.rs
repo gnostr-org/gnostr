@@ -638,7 +638,7 @@ fn get_event_parent_id(event: &nostr_0_34_1::Event) -> Result<String> {
 pub fn is_event_proposal_root_for_branch(
     e: &Event,
     branch_name_or_refstr: &str,
-    logged_in_user: &Option<PublicKey>,
+    logged_in_user: Option<&PublicKey>,
 ) -> Result<bool> {
     let branch_name = branch_name_or_refstr.replace("refs/heads/", "");
     Ok(event_to_cover_letter(e).is_ok_and(|cl| {
