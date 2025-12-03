@@ -111,6 +111,7 @@ fn main() {
     println!("Automation complete.");
 }
 
+#[allow(dead_code)]
 fn close_window(window_id: String) -> io::Result<()> {
     // Using `saving no` prevents the confirmation dialog when a process is running.
     let close_script = format!(
