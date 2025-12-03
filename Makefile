@@ -116,8 +116,8 @@ cargo-clippy-workspace: 	### 	cargo-clippy-workspace
 	cargo +nightly clippy --workspace --all-targets --all-features -- -D warnings
 
 cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
-	cargo +nightly clippy --fix --workspace --all-targets -- -D warnings
-	cargo +nightly clippy --fix --workspace --all-targets --all-features -- -D warnings
+	cargo +nightly clippy --fix --workspace --all-targets -- -D warnings --allow-dirty
+	cargo +nightly clippy --fix --workspace --all-targets --all-features -- -D warnings --allow-dirty
 
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
