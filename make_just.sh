@@ -155,9 +155,11 @@ cargo-test-types-nip_three_four: 	### 	cargo-test-types-nip34
 	cargo test -j \$(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
 
 cargo-clippy-workspace: 	### 	cargo-clippy-workspace
+	cargo +nightly clippy --workspace --all-targets -- -D warnings
 	cargo +nightly clippy --workspace --all-targets --all-features -- -D warnings
 
 cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
+	cargo +nightly clippy --fix --workspace --all-targets -- -D warnings
 	cargo +nightly clippy --fix --workspace --all-targets --all-features -- -D warnings
 
 cargo-report: 	### 	cargo-report
