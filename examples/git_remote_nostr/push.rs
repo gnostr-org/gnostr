@@ -26,9 +26,9 @@ use gnostr::{
     login::{self, get_curent_user},
     repo_ref, repo_state,
 };
-use nostr_0_34_1::nips::nip10::Marker;
-use nostr_sdk_0_34_0::{
-    hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId, Kind, PublicKey, Tag,
+use nostr_0_34_1::{
+    hashes::sha1::Hash as Sha1Hash, nips::nip10::Marker, Event, EventBuilder, EventId, Kind,
+    PublicKey, Tag,
 };
 use nostr_signer_0_34_0::NostrSigner;
 use repo_ref::RepoRef;
@@ -182,7 +182,7 @@ pub async fn run_push(
             let tip_of_pushed_branch = git_repo.get_commit_or_tip_of_reference(from)?;
 
             if let Some((_, (proposal, patches))) =
-                find_proposal_and_patches_by_branch_name(to, &all_proposals, &current_user)
+                find_proposal_and_patches_by_branch_name(to, &all_proposals, current_user.as_ref())
             {
                 if [repo_ref.maintainers.clone(), vec![proposal.author()]]
                     .concat()
@@ -966,7 +966,7 @@ async fn create_merge_status(
     }
     sign_event(
         EventBuilder::new(
-            nostr_0_34_1::event::Kind::GitStatusApplied,
+            Kind::GitStatusApplied,
             String::new(),
             [
                 vec![
