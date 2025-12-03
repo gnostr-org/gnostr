@@ -3,6 +3,8 @@ use futures::join;
 use nostr_sdk_0_34_0::Kind;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
+use serial_test::serial;
+
 #[test]
 #[cfg(feature = "expensive_tests")]
 fn when_no_main_or_master_branch_return_error() -> Result<()> {
@@ -17,6 +19,7 @@ fn when_no_main_or_master_branch_return_error() -> Result<()> {
 // TODO when commits in origin/master - test ask to proceed
 mod when_commits_behind_ask_to_proceed {
     use super::*;
+    use serial_test::serial;
 
     fn prep_test_repo() -> Result<GitTestRepo> {
         let mut test_repo = GitTestRepo::default();

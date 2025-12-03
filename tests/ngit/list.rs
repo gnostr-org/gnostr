@@ -586,7 +586,7 @@ mod when_main_branch_is_uptodate {
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
                     assert_eq!(
-                        get_proposal_branch_name(&test_repo, FEATURE_BRANCH_NAME_4)?,
+                        get_proposal_branch_name(&mut test_repo, FEATURE_BRANCH_NAME_4)?,
                         test_repo.get_checked_out_branch_name()?,
                     );
                     Ok(())
@@ -600,7 +600,7 @@ mod when_main_branch_is_uptodate {
                     assert_eq!(
                         originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_4)?,
                         test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
-                            &test_repo,
+                            &mut test_repo,
                             FEATURE_BRANCH_NAME_4
                         )?)?,
                     );

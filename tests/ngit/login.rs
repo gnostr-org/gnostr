@@ -2,6 +2,8 @@ use anyhow::Result;
 use git::GitTestRepo;
 use test_utils::*;
 
+use serial_test::serial;
+
 static EXPECTED_NSEC_PROMPT: &str = "login with nostr address / nsec";
 static EXPECTED_LOCAL_REPOSITORY_PROMPT: &str = "just for this repository?";
 static EXPECTED_REQUIRE_PASSWORD_PROMPT: &str = "require password?";
@@ -9,7 +11,7 @@ static EXPECTED_SET_PASSWORD_PROMPT: &str = "encrypt with password";
 static EXPECTED_SET_PASSWORD_CONFIRM_PROMPT: &str = "confirm password";
 
 fn standard_first_time_login_encrypting_nsec() -> Result<CliTester> {
-    let mut test_repo = GitTestRepo::default();
+    let test_repo = GitTestRepo::default();
     let mut p = CliTester::new_from_dir(&test_repo.dir, ["login", "--offline"]);
 
     p.expect_input_eventually(EXPECTED_NSEC_PROMPT)?
