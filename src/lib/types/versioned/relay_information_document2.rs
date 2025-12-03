@@ -424,15 +424,50 @@ mod test {
 
     #[test]
     fn test_relay_information_document_json() {
-        let json = r##"{ "name": "A Relay", "description": null, "myfield": [1,2], "supported_nips": [11,12], "retention": [
-    { "kinds": [0, 1, [5, 7], [40, 49]], "time": 3600 },
-    { "kinds": [[40000, 49999]], "time": 100 },
-    { "kinds": [[30000, 39999]], "count": 1000 },
-    { "time": 3600, "count": 10000 }
-  ] }"##;
+        let json = r##"{
+            "name": "A Relay",
+            "description": null,
+            "myfield": [1,2],
+            "supported_nips": [11,12],
+            "retention": [
+                { "kinds": [0, 1, [5, 7], [40, 49]], "time": 3600 },
+                { "kinds": [[40000, 49999]], "time": 100 },
+                { "kinds": [[30000, 39999]], "count": 1000 },
+                { "time": 3600, "count": 10000 }
+            ],
+            "relay_countries": ["CA", "US"],
+            "language_tags": ["en", "br"],
+            "tags":[],
+            "other": { "misc_data": "value" }
+        }"##;
+
         let rid: RelayInformationDocumentV2 = serde_json::from_str(json).unwrap();
         let json2 = serde_json::to_value(&rid).unwrap();
-        let expected_json2: Value = serde_json::from_str(r##"{"name":"A Relay","supported_nips":[11,12],"retention":[{"kinds":[0,1,[5,7],[40,49]],"time":3600},{"kinds":[[40000,49999]],"time":100},{"kinds":[[30000,39999]],"count":1000},{"time":3600,"count":10000}],"myfield":[1,2]}"##).unwrap();
+
+        let expected_json2: serde_json::Value = serde_json::from_str(r##"{
+            "name": "A Relay",
+            "description": null,
+            "pubkey": null,
+            "contact": null,
+            "supported_nips": [11, 12],
+            "software": null,
+            "version": null,
+            "limitation": null,
+            "retention": [
+                { "kinds": [0, 1, [5, 7], [40, 49]], "time": 3600 },
+                { "kinds": [[40000, 49999]], "time": 100 },
+                { "kinds": [[30000, 39999]], "count": 1000 },
+                { "time": 3600, "count": 10000 }
+            ],
+            "relay_countries": ["CA", "US"],
+            "language_tags": ["en", "br"],
+            "tags": [],
+            "posting_policy": null,
+            "payments_url": null,
+            "fees": null,
+            "other": { "misc_data": "value" }
+        }"##).unwrap();
+
         assert_eq!(json2, expected_json2);
     }
 }
