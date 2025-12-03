@@ -2,7 +2,6 @@ use anyhow::Result;
 use futures::join;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
-use serial_test::serial;
 
 mod when_main_is_checked_out {
     
