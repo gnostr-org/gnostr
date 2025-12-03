@@ -962,12 +962,12 @@ git commit --allow-empty -m "initial commit"
     //    );
     //}
 
-    let _ = git_commit(dir_path);
+    let _ = _git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
 }
 
-fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
+fn _git_commit(dir_path: &Path) -> Result<(), io::Error> {
     // 1. Convert Path to &str safely using .ok_or_else()
     // This converts the Option<&str> to a Result<&str, io::Error>.
     // If the path is invalid UTF-8 (None), it generates a custom io::Error
