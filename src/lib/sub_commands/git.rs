@@ -583,7 +583,7 @@ mod tests {
         let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
         let suffix = "feature";
-        let expected_branch_name = format!(
+        let _expected_branch_name = format!(
             "{}/{}/{}/{}/{}-{}",
             weeble, blockheight, wobble, parent_head, current_head, suffix
         );
@@ -639,7 +639,7 @@ mod tests {
         let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
         let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
-        let expected_branch_name = format!(
+        let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}",
             weeble, blockheight, wobble, parent_head, current_head
         );
@@ -696,7 +696,7 @@ mod tests {
         let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
         let suffix = "fix";
-        let expected_branch_name = format!(
+        let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}-{}",
             weeble, blockheight, wobble, parent_head, current_head, suffix
         );
