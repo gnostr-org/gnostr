@@ -55,7 +55,7 @@ fn clone_git_repo_with_nostr_url() -> Result<GitTestRepo> {
     std::fs::create_dir(path.clone())?;
     CliTester::new_git_with_remote_helper_from_dir(&path, ["clone", &get_nostr_remote_url()?, "."])
         .expect_end_eventually_and_print()?;
-    let mut test_repo = GitTestRepo::open(&path)?;
+    let test_repo = GitTestRepo::open(&path)?;
     set_git_nostr_login_config(&test_repo)?;
     Ok(test_repo)
 }
