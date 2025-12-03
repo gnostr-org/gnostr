@@ -954,6 +954,7 @@ impl TopicList {
             }
         }
     }
+	#[allow(dead_code)]
     fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
