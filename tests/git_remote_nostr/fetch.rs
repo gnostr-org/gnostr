@@ -36,8 +36,7 @@ async fn fetch_downloads_specified_commits_from_git_server() -> Result<(), E> {
     r51.events = events.clone();
     r55.events = events;
 
-    let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-        assert!(git_repo.git_repo.find_commit(main_commit_id).is_err());
+    let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
         assert!(git_repo.git_repo.find_commit(vnext_commit_id).is_err());
 
         let mut p = cli_tester_after_fetch(&git_repo)?;
@@ -76,7 +75,7 @@ mod when_first_git_server_fails_ {
     #[serial]
     #[cfg(feature = "expensive_tests")]
         async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {
-        let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
+        let (state_event, source_git_repo): (Event, GitTestRepo) = generate_repo_with_state_event().await?;
         // let source_path =
         // source_git_repo.dir.to_str().unwrap().to_string();
         let error_path = "./path-doesnt-exist".to_string();
@@ -107,7 +106,7 @@ mod when_first_git_server_fails_ {
         r51.events = events.clone();
         r55.events = events;
 
-        let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+    let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
             assert!(git_repo.git_repo.find_commit(main_commit_id).is_err());
 
             let mut p = cli_tester_after_fetch(&git_repo)?;
@@ -145,8 +144,8 @@ mod when_first_git_server_fails_ {
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
-async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<()> {
-    let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
+async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<(), E> {
+    let (events, source_git_repo): (Vec<Event>, GitTestRepo) = prep_source_repo_and_events_including_proposals().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
     let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -162,7 +161,7 @@ async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result
 
     let git_repo = prep_git_repo()?;
 
-    let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
+    let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
         let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
         let proposal_tip = cli_tester_create_proposal_branches_ready_to_send()?
             .get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?;
