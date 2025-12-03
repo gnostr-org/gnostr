@@ -1,4 +1,3 @@
-use serial_test::serial;
 
 #[tokio::test]
 #[serial]
