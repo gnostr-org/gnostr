@@ -8,9 +8,11 @@ use gnostr::weeble;
 use gnostr::wobble;
 use sha2::{Digest, Sha256};
 use std::env;
-use tracing::{debug, trace};
+use tracing::{debug, info, trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use tracing_subscriber::util::SubscriberInitExt;
 
 use anyhow::anyhow; // Import the anyhow macro
 
@@ -22,10 +24,10 @@ async fn main() -> anyhow::Result<()> {
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
     let app_cache = get_app_cache_path();
-    if gnostr_cli_args.logging {
-        let logging = setup_logging();
-        debug!("{:?}", logging);
-    };
+    //if gnostr_cli_args.logging {
+    //    let logging = setup_logging();
+    //    debug!("{:?}", logging);
+    //};
     let level = if gnostr_cli_args.debug {
         LevelFilter::DEBUG
     } else if gnostr_cli_args.trace {
@@ -37,15 +39,39 @@ async fn main() -> anyhow::Result<()> {
     } else {
         LevelFilter::OFF
     };
+
+    let filter = EnvFilter::default()
+        .add_directive(level.into())
+        .add_directive("hickory_proto=off".parse().unwrap())
+        .add_directive("hickory_proto::rr=off".parse().unwrap())
+        .add_directive("hickory_proto::rr::record_data=off".parse().unwrap())
+        .add_directive("libp2p_mdns=off".parse().unwrap())
+        //.add_directive("gnostr::p2p=off".parse().unwrap())
+        .add_directive("libp2p=off".parse().unwrap())
+        .add_directive("mio=off".parse().unwrap())
+        //.add_directive("gnostr::p2p::chat=off".parse().unwrap())
+        //.add_directive("gnostr::p2p::chat::p2p=off".parse().unwrap())
+        .add_directive("gnostr::message=off".parse().unwrap());
+
+    if gnostr_cli_args.logging {
+        let logging = setup_logging();
+        debug!("{:?}", logging);
+	} else {
+        let subscriber = Registry::default()
+            .with(fmt::layer().with_writer(std::io::stdout))
+            .with(filter);
+        let _ = subscriber.try_init();
+    };
+
     let env_args: Vec<String> = env::args().collect();
     for arg in &env_args {
         debug!("40:arg={:?}", arg);
     }
 
     if env_args.contains(&String::from("--gitdir")) {
-        debug!("44:The --gitdir argument was found!");
+        debug!("main::72:The --gitdir argument was found!");
     } else {
-        debug!("46:The --gitdir argument was not found.");
+        debug!("main::72:The --gitdir argument was not found.");
     }
 
     let mut gitdir_value: Option<String> = None;
@@ -62,20 +88,25 @@ async fn main() -> anyhow::Result<()> {
 
     match gitdir_value.clone() {
         Some(value) => {
-            debug!("63:The --gitdir value is: {}", value);
+            debug!("main:91:The --gitdir value is: {}", value);
             let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
-            debug!("main:73:repo_path={:?}", repo_path);
+            debug!("main:93:repo_path={:?}", repo_path);
             // Convert the RepoPath to an OsStr reference
             let path_os_str = repo_path.as_path().as_os_str();
 
             // Now set the environment variable
             env::set_var("GNOSTR_GITDIR", path_os_str);
         }
-        None => debug!("72:The --gitdir argument was not found or has no value."),
+        None => {
+			//OBJECTIVE to let sub services like "gnostr chat" to run outside of repos
+			//TODO check if use home dir has $HOME/gnostr if not then create
+            //THEN env::set_var("GNOSTR_GITDIR", $HOME/.gnostr);
+			debug!("72:The --gitdir argument was not found or has no value.")
+		},
     }
 
-    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    //let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
+    //tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     trace!("{:?}", app_cache);
 
     // These if statements don't return anything, which is fine as long as the match statement returns Result.
