@@ -2,7 +2,6 @@ use anyhow::Result;
 use git::GitTestRepo;
 use test_utils::*;
 
-use serial_test::serial;
 
 static EXPECTED_NSEC_PROMPT: &str = "login with nostr address / nsec";
 static EXPECTED_LOCAL_REPOSITORY_PROMPT: &str = "just for this repository?";
@@ -61,7 +60,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let mut test_repo = GitTestRepo::default();
+                        let test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -101,7 +100,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let mut test_repo = GitTestRepo::default();
+                        let test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -426,7 +425,7 @@ mod with_relays {
                         );
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let mut test_repo = GitTestRepo::default();
+                            let test_repo = GitTestRepo::default();
                             let mut p = CliTester::new_from_dir(
                                 &test_repo.dir,
                                 ["login", "--nsec", TEST_KEY_1_NSEC],
@@ -483,7 +482,7 @@ mod with_relays {
                         );
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let mut test_repo = GitTestRepo::default();
+                            let test_repo = GitTestRepo::default();
                             CliTester::new_from_dir(
                                 &test_repo.dir,
                                 [
@@ -551,7 +550,7 @@ mod with_relays {
                         );
 
                         let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                            let mut test_repo = GitTestRepo::default();
+                            let test_repo = GitTestRepo::default();
                             let mut p = CliTester::new_from_dir(
                                 &test_repo.dir,
                                 [
@@ -603,7 +602,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let mut test_repo = GitTestRepo::default();
+                        let test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -667,7 +666,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let mut test_repo = GitTestRepo::default();
+                        let test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                         p.expect_input(EXPECTED_NSEC_PROMPT)?
@@ -735,7 +734,7 @@ mod with_relays {
                     );
 
                     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                        let mut test_repo = GitTestRepo::default();
+                        let test_repo = GitTestRepo::default();
                         let mut p = CliTester::new_from_dir(
                             &test_repo.dir,
                             [
@@ -791,7 +790,7 @@ mod with_relays {
                 );
 
                 let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     let mut p = CliTester::new_from_dir(&test_repo.dir, ["login"]);
 
                     p.expect_input(EXPECTED_NSEC_PROMPT)?
