@@ -847,7 +847,7 @@ mod tests {
 
         #[test]
         fn save_git_config_item_returns_ok() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "testvalue", false)?;
             Ok(())
@@ -855,7 +855,7 @@ mod tests {
 
         #[test]
         fn get_git_config_item_returns_item_just_saved() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "testvalue", false)?;
             assert_eq!(
@@ -869,7 +869,7 @@ mod tests {
 
         #[test]
         fn get_git_config_item_returns_none_if_not_present() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             assert_eq!(
                 git_repo.get_git_config_item("test.item", Some(false))?,
@@ -880,7 +880,7 @@ mod tests {
 
         #[test]
         fn get_git_config_item_empty_string_returns_empty_string_instead_of_none() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "", false)?;
             assert_eq!(
@@ -892,7 +892,7 @@ mod tests {
 
         #[test]
         fn remove_local_git_config_item() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "testvalue", false)?;
             assert!(git_repo.remove_git_config_item("test.item", false)?);
@@ -905,7 +905,7 @@ mod tests {
 
         #[test]
         fn remove_git_config_item_returns_false_if_item_wasnt_set() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             assert!(!(git_repo.remove_git_config_item("test.item", false)?));
             Ok(())
