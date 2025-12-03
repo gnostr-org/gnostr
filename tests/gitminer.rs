@@ -65,11 +65,12 @@ fn test_gitminer_new_ok() {
 
     let miner_result = Gitminer::new(opts);
     assert!(miner_result.is_ok());
-    let miner = miner_result.unwrap();
+    let _miner = miner_result.unwrap();
 
     // `author` field is private, so we can't assert it directly.
     // We can assert the public `relays` field.
-    // assert_eq!(miner.relays, "wss://relay.example.com");
+    //assert_eq!(_miner.repo, "wss://relay.example.com");
+    //assert_eq!(_miner.repo, "wss://relay.example.com");
 }
 
 #[test]
@@ -97,7 +98,7 @@ fn test_gitminer_new_fail_no_repo() {
 //#[ignore]
 fn test_mine_commit_success() {
     println!("Setting up test repository...");
-    let (repo_path_str, repo) = setup_test_repo();
+    let (_repo_path_str, repo) = setup_test_repo();
     let repo_path_str = repo.path().to_str().unwrap().to_string().replace(".git","");
     println!("Test repository path: {}", repo_path_str);
 

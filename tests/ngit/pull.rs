@@ -2,6 +2,8 @@ use anyhow::Result;
 use futures::join;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
+ use serial_test::serial;
+
 mod when_main_is_checked_out {
     
 
@@ -299,7 +301,7 @@ mod when_branch_is_checked_out {
             let (originating_repo, test_repo) = prep_and_run().await?;
             assert_eq!(
                 originating_repo.get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?,
-                test_repo.get_tip_of_local_branch(&get_proposal_branch_name(
+                test_repo.get_tip_of_local_branch(&mut get_proposal_branch_name(
                     &test_repo,
                     FEATURE_BRANCH_NAME_1
                 )?)?,

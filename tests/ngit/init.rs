@@ -1,6 +1,8 @@
 use anyhow::Result;
 use test_utils::*;
 
+use serial_test::serial;
+
 fn expect_msgs_first(p: &mut CliTester) -> Result<()> {
     p.expect("searching for profile...\r\n")?;
     p.expect("logged in as fred\r\n")?;

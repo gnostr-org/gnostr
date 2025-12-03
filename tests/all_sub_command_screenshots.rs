@@ -67,7 +67,7 @@ mod tests {
         (tmp_dir, repo)
     }
 
-    macro_rules! screenshot_test {
+    macro_rules! _screenshot_test {
         ($name:ident, $subcommand:expr, $is_tui:expr) => {
             #[test]
             #[serial]
