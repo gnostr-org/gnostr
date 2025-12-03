@@ -85,7 +85,7 @@ pub async fn run_fetch(
 
         for (refstr, oid) in fetch_batch {
             if let Some((_, (_, patches))) =
-                find_proposal_and_patches_by_branch_name(&refstr, &open_proposals, &current_user)
+                find_proposal_and_patches_by_branch_name(&refstr, &open_proposals, current_user.as_ref())
             {
                 if !git_repo.does_commit_exist(&oid)? {
                     let mut patches_ancestor_first = patches.clone();
