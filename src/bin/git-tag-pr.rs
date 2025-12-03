@@ -101,7 +101,7 @@ mod tests {
 
         let expected_tag_name = format!("pr/{}.{}.{}-{}", weeble, blockheight, wobble, suffix);
         println!("expected_tag_name={}", expected_tag_name);
-        let created_tag = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble, repo_path)?;
+        let _created_tag = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble, repo_path)?;
 
         // Verify the tag was created
         let tag_list_output = Command::new("git").arg("tag").arg("-l").arg(&expected_tag_name).output().unwrap().stdout;
