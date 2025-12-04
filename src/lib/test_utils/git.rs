@@ -126,34 +126,34 @@ impl GitTestRepo {
 				.bare(true)
 				.mkpath(true),
 		)?;
-	}
-
-	pub fn clone_repo(existing_repo: &PathBuf) -> Result<Self> {
-        // clone existing to a temp repo
-		let tmp_repo = Self::duplicate(existing_repo)?;
-		// add bare as a remote and push branches
-		let mut remote = tmp_repo
-			.git_repo
-			.remote("tmp", path.to_str().unwrap())?;
-		let refspecs = tmp_repo
-			.git_repo
-			.branches(Some(git2::BranchType::Local))?
-			.filter_map(|b| b.ok())
-			.map(|(b, _)| {
-				format!(
-					"refs/heads/{}:refs/heads/{}"
-					,b.name().unwrap().unwrap()
-					,b.name().unwrap().unwrap()
-				)
-			})
-			.collect::<Vec<String>>();
-		remote.push(&refspecs, None)?;
-		// TODO: push tags
 		Ok(Self {
 			dir: path,
 			git_repo,
 			delete_dir_on_drop: true,
 		})
+	}
+
+	pub fn clone_repo(existing_repo: &GitTestRepo) -> Result<Self> {
+		let bare_repo = Self::recreate_as_bare(existing_repo)?;
+		// add bare as a remote and push branches
+		let mut remote = existing_repo
+			.git_repo
+			.remote("tmp", bare_repo.dir.to_str().unwrap())?;
+		let refspecs = existing_repo
+			.git_repo
+			.branches(Some(git2::BranchType::Local))?
+			.filter_map(|b| b.ok())
+			.map(|(b, _)| {
+				format!(
+					"refs/heads/{}:refs/heads/{}",
+					b.name().unwrap().unwrap(),
+					b.name().unwrap().unwrap()
+				)
+			})
+			.collect::<Vec<String>>();
+		remote.push(&refspecs, None)?;
+		// TODO: push tags
+		Ok(bare_repo)
 	}
 
     pub fn initial_commit(&mut self) -> Result<Oid> {
@@ -462,13 +462,14 @@ mod tests {
 
 	
 
-			let cloned_repo = GitTestRepo::clone_repo(&original_repo.dir)?;		assert!(cloned_repo.dir.exists());
+			let cloned_repo = GitTestRepo::clone_repo(&original_repo)?;		assert!(cloned_repo.dir.exists());
 		assert_ne!(original_repo.dir, cloned_repo.dir);
 
+		let repo_to_verify_clone = GitTestRepo::clone_repo(&cloned_repo)?;
 		let original_content = fs::read_to_string(original_repo.dir.join("test.txt"))?;
-		let cloned_content = fs::read_to_string(cloned_repo.dir.join("test.txt"))?;
+		let cloned_content = fs::read_to_string(repo_to_verify_clone.dir.join("test.txt"))?;
 		assert_eq!(original_content, cloned_content);
-		assert_eq!(original_repo.git_repo.head()?.peel_to_commit()?.id(), cloned_repo.git_repo.head()?.peel_to_commit()?.id());
+		assert_eq!(original_repo.git_repo.head()?.peel_to_commit()?.id(), repo_to_verify_clone.git_repo.head()?.peel_to_commit()?.id());
 
 		Ok(())
 	}
