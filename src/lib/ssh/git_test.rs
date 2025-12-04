@@ -12,18 +12,18 @@ mod tests {
     async fn test_git_operations() -> anyhow::Result<()> {
         // 1. Setup: Create a bare server repository
         let _server_dir = tempdir().context("Failed to create server tempdir")?;
-        let mut initial_repo = test_utils::git::GitTestRepo::new("main")?;
+        let mut initial_repo = crate::test_utils::git::GitTestRepo::new("main")?;
         File::create(initial_repo.dir.join("initial.txt"))
             .context("Failed to create initial.txt")?;
         initial_repo.stage_and_commit("Initial commit").context("Failed to make initial commit")?;
         
-        let server_repo = test_utils::git::GitTestRepo::recreate_as_bare(&initial_repo)?;
+        let server_repo = crate::test_utils::git::GitTestRepo::recreate_as_bare(&initial_repo)?;
         server_repo.git_repo.set_head("refs/heads/main")?;
 
         // 2. Client 1: Clone, commit, and push
         let client1_dir = tempdir().context("Failed to create client1 tempdir")?;
         let _client1_repo_path = client1_dir.path().join("client1");
-        let mut client1_test_repo = test_utils::git::GitTestRepo::duplicate(
+        let mut client1_test_repo = crate::test_utils::git::GitTestRepo::duplicate(
             &server_repo
         ).context("Failed to clone server repo to client1")?;
         
@@ -42,7 +42,7 @@ mod tests {
         // 3. Client 2: Clone, commit, and push
         let client2_dir = tempdir().context("Failed to create client2 tempdir")?;
         let _client2_repo_path = client2_dir.path().join("client2");
-        let mut client2_test_repo = test_utils::git::GitTestRepo::duplicate(
+        let mut client2_test_repo = crate::test_utils::git::GitTestRepo::duplicate(
             &server_repo
         ).context("Failed to clone server repo to client2")?;
 

@@ -465,9 +465,9 @@ pub fn save_repo_config_to_yaml(
 
 #[cfg(test)]
 mod tests {
-    use test_utils::*;
 
     use super::*;
+    use crate::test_utils::*;
 
     async fn create() -> nostr_0_34_1::Event {
         RepoRef {
