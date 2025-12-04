@@ -375,7 +375,7 @@ comma = "1.0"
 regex = "1"
 #tempfile = "3"
 thiserror = "1.0.34"
-which = "5.0"
+#which = "5.0"
 ##gnostr has a gnostr::ws library that is a copy of simple-websockets
 ##replace the dependency below
 ## gnostr = { path = "../" }
