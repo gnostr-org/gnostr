@@ -113,14 +113,14 @@ jobs:
 
 
 
-      - name: Restore target
-        if: ${{ !env.ACT }}
-        id: cache-target-restore
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      #- name: Restore target
+      #  if: ${{ !env.ACT }}
+      #  id: cache-target-restore
+      #  uses: actions/cache/restore@v3
+      #  with:
+      #    path: |
+      #      target
+      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - uses: actions/checkout@v4
         with:
@@ -171,19 +171,25 @@ jobs:
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
         run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: runner.os == 'macos'
+        if: runner.os != 'windows'
 
       - name: brew tap nostorg/nostr
         run: brew tap nostorg/nostr || true
-        if: runner.os == 'macos'
+        if: runner.os != 'windows'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
         run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: runner.os == 'macos'
+        if: runner.os != 'windows'
 
       - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
         run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: runner.os == 'macos'
+        if: runner.os != 'windows'
+
+      - name: powershell install gnostr
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
+        if: runner.os == 'windows'
+
 
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
