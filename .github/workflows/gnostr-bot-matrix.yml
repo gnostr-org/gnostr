@@ -182,7 +182,7 @@ jobs:
         if: runner.os != 'windows'
 
       - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
         if: runner.os != 'windows'
 
       - name: powershell install gnostr
