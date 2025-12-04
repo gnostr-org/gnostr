@@ -66,15 +66,15 @@ pub enum Message {
 impl Message {
     fn into_tungstenite(self) -> tungstenite::Message {
         match self {
-            Self::Text(text) => tungstenite::Message::Text(text),
-            Self::Binary(bytes) => tungstenite::Message::Binary(bytes),
+            Self::Text(text) => tungstenite::Message::Text(text.into()),
+            Self::Binary(bytes) => tungstenite::Message::Binary(bytes.into()),
         }
     }
 
     fn from_tungstenite(message: tungstenite::Message) -> Option<Self> {
         match message {
-            tungstenite::Message::Binary(bytes) => Some(Self::Binary(bytes)),
-            tungstenite::Message::Text(text) => Some(Self::Text(text)),
+            tungstenite::Message::Binary(bytes) => Some(Self::Binary(bytes.to_vec())),
+            tungstenite::Message::Text(text) => Some(Self::Text(text.to_string())),
             _ => None,
         }
     }

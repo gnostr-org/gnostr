@@ -69,6 +69,8 @@ pub mod strings;
 pub mod sub_commands;
 ///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
 pub mod tabs;
+///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
+pub mod test_utils;
 ///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
 pub mod types;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
@@ -96,7 +98,10 @@ pub use types::{
 };
 pub use nostr_sdk_0_19_1::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
-pub use tungstenite::Message;
+pub use tokio_tungstenite::tungstenite::Message;
+pub use tokio_tungstenite::WebSocketStream;
+pub use tokio_tungstenite::connect_async;
+//use tokio_tungstenite::WebSocketStream;
 pub use zeroize::Zeroize;
 pub use types::nip44;
 //avoid?//upgrade?
@@ -441,7 +446,7 @@ impl Probe {
         loop {
             tokio::select! {
                 _ = ping_timer.tick() => {
-                    let msg = Message::Ping(vec![0x1]);
+                    let msg = Message::Ping(vec![0x1].into());
                     self.send(&mut websocket, msg).await?;
                 },
                 local_message = self.from_main.recv() => {
@@ -449,19 +454,19 @@ impl Probe {
                         Some(Command::PostEvent(event)) => {
                             let client_message = ClientMessage::Event(Box::new(event));
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::Auth(event)) => {
                             let client_message = ClientMessage::Auth(Box::new(event));
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::FetchEvents(subid, filters)) => {
                             let client_message = ClientMessage::Req(subid, filters);
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::Exit) => {

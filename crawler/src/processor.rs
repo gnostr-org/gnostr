@@ -2,7 +2,7 @@ use crate::pubkeys::PubKeys;
 use crate::stats::Stats;
 //use log::{debug, info};
 
-use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
+use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp, TagStandard};
 use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
@@ -45,7 +45,7 @@ impl Processor {
 
     #[allow(dead_code)]
     fn age(t: Timestamp) -> i64 {
-        Timestamp::now().as_i64() - t.as_i64()
+        Timestamp::now().as_u64() as i64 - t.as_u64() as i64
     }
 
     pub fn handle_event(&mut self, event: &Event) {
@@ -137,8 +137,8 @@ impl Processor {
                 // count p tags
                 //let mut cnt = 0;
                 for t in &event.tags {
-                    if let Tag::PubKey(pk, _s) = t {
-                        self.pubkeys.add(pk);
+                    if let Some(TagStandard::PublicKey { public_key, .. }) = t.as_standardized() {
+                        self.pubkeys.add(public_key);
                         //cnt += 1;
                     }
                 }

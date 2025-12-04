@@ -13,7 +13,7 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
-use std::str;
+use std::str::{self, FromStr};
 use tracing::{debug, error};
 
 use serde::{Deserialize, Serialize};
@@ -154,21 +154,22 @@ pub fn run(args: &CliArgs) -> Result<()> {
     //println!("{:?}", args.arg_nsec.clone());
     let _run_async = async {
         let opts = Options::new(); //.wait_for_send(true);
-        let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-        let relay_client = Client::new_with_opts(&app_keys, opts);
+        let secret_key = SecretKey::from_bech32(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+        let app_keys = Keys::new(secret_key);
+        let relay_client = Client::with_opts(&app_keys, opts);
         let _ = relay_client
-            .publish_text_note("run:async:11<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:11<--------------------------<<<<<", [])
             .await;
         let _ = relay_client
-            .publish_text_note("run:async:22<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:22<--------------------------<<<<<", [])
             .await;
         let _ = relay_client
-            .publish_text_note("run:async:33<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:33<--------------------------<<<<<", [])
             .await;
         let _ = relay_client
-            .publish_text_note("run:async:44<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:44<--------------------------<<<<<", [])
             .await;
-        let _ = relay_client.publish_text_note("#gnostr", &[]).await;
+        let _ = relay_client.publish_text_note("#gnostr", []).await;
     };
 
     // Prepare the revwalk based on CLI parameters
@@ -302,7 +303,7 @@ pub fn run(args: &CliArgs) -> Result<()> {
     //}
 
     //println!("{:?}", args.arg_nsec.clone());
-    let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+    let app_keys = Keys::from_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor);
     let _run_async = relay_manager.run(vec![

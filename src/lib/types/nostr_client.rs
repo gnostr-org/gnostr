@@ -1,8 +1,9 @@
 use anyhow::{anyhow, Result};
 use futures_util::{StreamExt, SinkExt, stream::{SplitSink, SplitStream}};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite};
+use tokio_tungstenite::connect_async;
 use tokio::net::TcpStream;
-use url::Url;
+
 use tokio::sync::mpsc;
 use crate::queue::{InternalEvent, Queue};
 use crate::types::versioned::event3::EventV3;
@@ -13,7 +14,7 @@ use rand::Rng;
 
 use std::sync::{Arc, Mutex};
 
-type WsSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tungstenite::Message>;
+type WsSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;
 type WsStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
 #[derive(Clone, Debug)]
@@ -32,7 +33,7 @@ impl NostrClient {
 
     pub async fn connect_relay(&mut self, url: UncheckedUrl) -> Result<()> {
         info!("Connecting to Nostr relay: {}", url.0);
-        let (ws_stream, _) = tokio_tungstenite::connect_async(Url::parse(&url.0)?).await?;
+        let (ws_stream, _) = connect_async(&url.0).await?;
         info!("Connected to Nostr relay: {}", url.0);
 
         let (sink, stream) = ws_stream.split();
@@ -48,7 +49,7 @@ impl NostrClient {
         let _ = crate::p2p::chat::global_rt().spawn(async move {
             while let Some(message_result) = stream.next().await {
                 match message_result {
-                    Ok(tungstenite::Message::Text(text)) => {
+                    Ok(tokio_tungstenite::tungstenite::Message::Text(text)) => {
                         debug!("Received from {}: {}", url.0, text);
                         match serde_json::from_str::<RelayMessage>(&text) {
                             Ok(RelayMessage::Event(_sub_id, event)) => {
@@ -77,7 +78,7 @@ impl NostrClient {
     pub async fn send_event(&self, event: EventV3) -> Result<()> {
         let client_message = ClientMessage::Event(Box::new(event));
         let json = serde_json::to_string(&client_message)?;
-        let websocket_message = tungstenite::Message::Text(json);
+        let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
@@ -107,7 +108,7 @@ impl NostrClient {
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter]);
         let json = serde_json::to_string(&client_message).unwrap();
-        let websocket_message = tungstenite::Message::Text(json);
+        let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
@@ -130,7 +131,7 @@ impl NostrClient {
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter]);
         let json = serde_json::to_string(&client_message).unwrap();
-        let websocket_message = tungstenite::Message::Text(json);
+        let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
@@ -152,7 +153,7 @@ impl NostrClient {
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter]);
         let json = serde_json::to_string(&client_message).unwrap();
-        let websocket_message = tungstenite::Message::Text(json);
+        let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
@@ -174,7 +175,7 @@ impl NostrClient {
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter]);
         let json = serde_json::to_string(&client_message).unwrap();
-        let websocket_message = tungstenite::Message::Text(json);
+        let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
@@ -195,7 +196,7 @@ impl NostrClient {
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter]);
         let json = serde_json::to_string(&client_message).unwrap();
-        let websocket_message = tungstenite::Message::Text(json);
+        let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
