@@ -58,7 +58,8 @@ async fn test_message_conversion() {
 async fn test_websocket_connection_and_message_echo() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
-    let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+    let token = tokio_util::sync::CancellationToken::new();
+    let event_hub = launch_from_listener(listener.into_std().unwrap(), token.clone()).expect("Failed to launch websocket server");
 
     // Give the server a moment to start
     tokio::time::sleep(Duration::from_secs(1)).await;
@@ -111,7 +112,8 @@ async fn test_websocket_connection_and_message_echo() {
 async fn test_event_hub_drain() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
-    let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+    let token = tokio_util::sync::CancellationToken::new();
+    let event_hub = launch_from_listener(listener.into_std().unwrap(), token.clone()).expect("Failed to launch websocket server");
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     let _client1 = connect_websocket_client(port).await;
@@ -130,7 +132,8 @@ async fn test_event_hub_drain() {
 async fn test_event_hub_next_event() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
-    let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+    let token = tokio_util::sync::CancellationToken::new();
+    let event_hub = launch_from_listener(listener.into_std().unwrap(), token.clone()).expect("Failed to launch websocket server");
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     let _client = connect_websocket_client(port).await;
@@ -144,7 +147,8 @@ async fn test_event_hub_next_event() {
 async fn test_responder_client_id() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
-    let event_hub = launch_from_listener(listener.into_std().unwrap()).expect("Failed to launch websocket server");
+    let token = tokio_util::sync::CancellationToken::new();
+    let event_hub = launch_from_listener(listener.into_std().unwrap(), token.clone()).expect("Failed to launch websocket server");
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     let _client_ws = connect_websocket_client(port).await;
