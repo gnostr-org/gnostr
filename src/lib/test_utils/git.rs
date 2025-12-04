@@ -126,7 +126,9 @@ impl GitTestRepo {
 				.bare(true)
 				.mkpath(true),
 		)?;
+	}
 
+	pub fn clone_repo(existing_repo: &PathBuf) -> Result<Self> {
         // clone existing to a temp repo
 		let tmp_repo = Self::duplicate(existing_repo)?;
 		// add bare as a remote and push branches
