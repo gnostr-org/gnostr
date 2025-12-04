@@ -7,8 +7,8 @@
 mod tests {
     use std::thread;
     use std::time::Duration;
-    use test_utils::git::GitTestRepo;
-    use test_utils::CliTester;
+    use gnostr::test_utils::git::GitTestRepo;
+    use gnostr::test_utils::CliTester;
     use gnostr::utils::screenshot::make_screenshot;
     use serial_test::serial;
 

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::join;
-use test_utils::{git::GitTestRepo, relay::Relay, *};
+use crate::test_utils::{git::GitTestRepo, relay::Relay, *};
 
 
 mod when_main_is_checked_out {

@@ -395,7 +395,7 @@ mod tests {
 
 	#[test]
 	fn methods_do_not_throw() -> Result<()> {
-		let repo = GitTestRepo::new("main")?;
+		let mut repo = GitTestRepo::new("main")?;
 
 		repo.populate()?;
 		repo.create_branch("feature")?;
@@ -429,7 +429,7 @@ mod tests {
 
 	#[test]
 	fn test_git_test_repo_duplicate() -> Result<()> {
-		let original_repo = GitTestRepo::new("main")?;
+		let mut original_repo = GitTestRepo::new("main")?;
 		original_repo.populate()?;
 		fs::write(original_repo.dir.join("test.txt"), "original content")?;
 		original_repo.stage_and_commit("add test.txt")?;
