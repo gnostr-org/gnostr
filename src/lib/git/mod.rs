@@ -836,11 +836,10 @@ fn extract_sig_from_patch_tags<'a>(
 
 #[cfg(test)]
 mod tests {
+
     use std::fs;
-
-    use test_utils::{generate_repo_ref_event, git::GitTestRepo};
-
     use super::*;
+    use crate::test_utils::{generate_repo_ref_event, git::GitTestRepo};
 
     mod git_config_item_local {
         use super::*;
@@ -1628,9 +1627,8 @@ mod tests {
 
     mod create_commit_from_patch {
 
-        use test_utils::TEST_KEY_1_SIGNER;
-
         use super::*;
+        use crate::test_utils::TEST_KEY_1_SIGNER;
         use crate::{git_events::generate_patch_event, repo_ref::RepoRef};
 
         async fn generate_patch_from_head_commit(
@@ -1666,9 +1664,9 @@ mod tests {
         }
 
         mod patch_created_as_commit_with_matching_id {
-            use test_utils::git::joe_signature;
 
             use super::*;
+            use crate::test_utils::git::joe_signature;
 
             #[tokio::test]
             async fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature(
@@ -1776,9 +1774,9 @@ mod tests {
     }
 
     mod apply_patch_chain {
-        use test_utils::TEST_KEY_1_SIGNER;
 
         use super::*;
+        use crate::test_utils::TEST_KEY_1_SIGNER;
         use crate::{git_events::generate_cover_letter_and_patch_events, repo_ref::RepoRef};
 
         static BRANCH_NAME: &str = "add-example-feature";

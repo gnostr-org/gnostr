@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(Message::from_tungstenite(tungstenite_binary).unwrap(), binary_msg);
 
         // Test unsupported message type
-        let ping_msg = tungstenite::Message::Ping(vec![1]);
+        let ping_msg = tungstenite::Message::Ping(vec![1].into());
         assert!(Message::from_tungstenite(ping_msg).is_none());
     }
 
@@ -417,7 +417,7 @@ mod tests {
 
         // Send a message from client to server
         let client_message = "Hello from client".to_string();
-        client_ws.send(tungstenite::Message::Text(client_message.clone())).await.unwrap();
+        client_ws.send(tungstenite::Message::Text(client_message.clone().into())).await.unwrap();
 
         // Verify message event on server side
         let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Message event in time") {
