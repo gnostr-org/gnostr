@@ -126,6 +126,7 @@ impl GitTestRepo {
 				.bare(true)
 				.mkpath(true),
 		)?;
+                //TODO push existing_repo into this repo
 		Ok(Self {
 			dir: path,
 			git_repo,
