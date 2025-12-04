@@ -159,7 +159,7 @@ jobs:
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: runner.os != 'windows'
+        if: runner.os == 'macos'
 
       - name: linuxbrew
         run: |
