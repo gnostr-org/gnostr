@@ -4367,6 +4367,7 @@ dependencies = [
  "clipboard",
  "colored",
  "colorful",
+ "comma",
  "comrak",
  "config",
  "console 0.15.11",
@@ -4474,6 +4475,7 @@ dependencies = [
  "simplelog",
  "speedy",
  "ssh-key",
+ "strip-ansi-escapes",
  "struct-patch",
  "structopt",
  "syntect",
@@ -4481,7 +4483,6 @@ dependencies = [
  "tempfile",
  "tera",
  "terminal_size 0.3.0",
- "test_utils",
  "textwrap 0.16.2",
  "thiserror 1.0.69",
  "thread-priority",
@@ -4490,7 +4491,7 @@ dependencies = [
  "tiny-hderive",
  "tmux_interface",
  "tokio",
- "tokio-tungstenite 0.21.0",
+ "tokio-tungstenite 0.28.0",
  "tokio-util",
  "toml 0.7.8",
  "tracing",
@@ -4499,7 +4500,6 @@ dependencies = [
  "trust-dns-resolver",
  "tui-input",
  "tui-textarea",
- "tungstenite 0.21.0",
  "two-face",
  "unicode-normalization",
  "unicode-segmentation",
@@ -4508,7 +4508,8 @@ dependencies = [
  "ureq",
  "url",
  "urlencoding",
- "which",
+ "which 5.0.0",
+ "which 6.0.3",
  "zeroize",
 ]
 
@@ -4593,7 +4594,8 @@ dependencies = [
  "git2",
  "indicatif 0.14.0",
  "log 0.4.27",
- "nostr-sdk 0.19.1",
+ "nostr 0.34.1",
+ "nostr-sdk 0.34.0",
  "predicates 3.1.3",
  "rand 0.7.3",
  "regex",
@@ -10307,20 +10309,6 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.22.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf4ef73721ac7bcd79b2b315da7779d8fc09718c6b3d2d1b2d94850eb8c18432"
-dependencies = [
- "log 0.4.27",
- "ring 0.17.9",
- "rustls-pki-types",
- "rustls-webpki 0.102.8",
- "subtle 2.6.1",
- "zeroize",
-]
-
-[[package]]
-name = "rustls"
 version = "0.23.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df51b5869f3a441595eac5e8ff14d486ff285f7b8c0df8770e49c3b56351f0f0"
@@ -10359,17 +10347,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b6275d1ee7a1cd780b64aca7726599a1dbc893b1e64144529e55c3c2f745765"
 dependencies = [
  "ring 0.17.9",
- "untrusted 0.9.0",
-]
-
-[[package]]
-name = "rustls-webpki"
-version = "0.102.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64ca1bc8749bd4cf37b5ce386cc146580777b4e8572c7b97baf22c83f444bee9"
-dependencies = [
- "ring 0.17.9",
- "rustls-pki-types",
  "untrusted 0.9.0",
 ]
 
@@ -11750,35 +11727,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
-name = "test_utils"
-version = "1905.926180.332424"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "comma",
- "dialoguer 0.10.4",
- "directories",
- "expectrl",
- "futures",
- "futures-util",
- "git2",
- "gnostr",
- "nostr 0.34.1",
- "nostr-database 0.34.0",
- "nostr-sdk 0.34.0",
- "nostr-sqlite",
- "once_cell",
- "rand 0.8.5",
- "regex",
- "strip-ansi-escapes",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite 0.28.0",
- "tungstenite 0.20.1",
-]
-
-[[package]]
 name = "textwrap"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12053,17 +12001,6 @@ dependencies = [
 
 [[package]]
 name = "tokio-rustls"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "775e0c0f0adb3a2f22a00c4745d728b479985fc15ee7ca6a2608388c5569860f"
-dependencies = [
- "rustls 0.22.4",
- "rustls-pki-types",
- "tokio",
-]
-
-[[package]]
-name = "tokio-rustls"
 version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e727b36a1a0e8b74c376ac2211e40c2c8af09fb4013c60d910495810f008e9b"
@@ -12128,22 +12065,6 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c83b561d025642014097b66e6c1bb422783339e0909e4429cde4749d1990bc38"
-dependencies = [
- "futures-util",
- "log 0.4.27",
- "rustls 0.22.4",
- "rustls-pki-types",
- "tokio",
- "tokio-rustls 0.25.0",
- "tungstenite 0.21.0",
- "webpki-roots 0.26.10",
-]
-
-[[package]]
-name = "tokio-tungstenite"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6989540ced10490aaf14e6bad2e3d33728a2813310a0c71d1574304c49631cd"
@@ -12182,8 +12103,14 @@ checksum = "d25a406cddcc431a75d3d9afc6a7c0f7428d4891dd973e4d54c56b46127bf857"
 dependencies = [
  "futures-util",
  "log 0.4.27",
+ "native-tls",
+ "rustls 0.23.26",
+ "rustls-pki-types",
  "tokio",
+ "tokio-native-tls",
+ "tokio-rustls 0.26.2",
  "tungstenite 0.28.0",
+ "webpki-roots 0.26.10",
 ]
 
 [[package]]
@@ -12763,48 +12690,6 @@ dependencies = [
 
 [[package]]
 name = "tungstenite"
-version = "0.20.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e3dac10fd62eaf6617d3a904ae222845979aec67c615d1c842b4002c7666fb9"
-dependencies = [
- "byteorder",
- "bytes",
- "data-encoding",
- "http 0.2.12",
- "httparse",
- "log 0.4.27",
- "rand 0.8.5",
- "sha1",
- "thiserror 1.0.69",
- "url",
- "utf-8",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ef1a641ea34f399a848dea702823bbecfb4c486f911735368f1f137cb8257e1"
-dependencies = [
- "byteorder",
- "bytes",
- "data-encoding",
- "http 1.3.1",
- "httparse",
- "log 0.4.27",
- "native-tls",
- "rand 0.8.5",
- "rustls 0.22.4",
- "rustls-pki-types",
- "sha1",
- "thiserror 1.0.69",
- "url",
- "utf-8",
- "webpki-roots 0.26.10",
-]
-
-[[package]]
-name = "tungstenite"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e2e2ce1e47ed2994fd43b04c8f618008d4cabdd5ee34027cf14f9d918edd9c8"
@@ -12854,7 +12739,10 @@ dependencies = [
  "http 1.3.1",
  "httparse",
  "log 0.4.27",
+ "native-tls",
  "rand 0.9.1",
+ "rustls 0.23.26",
+ "rustls-pki-types",
  "sha1",
  "thiserror 2.0.12",
  "utf-8",
@@ -13455,6 +13343,19 @@ checksum = "471d1c1645d361eb782a1650b1786a8fb58dd625e681a04c09f5ff7c8764a7b0"
 dependencies = [
  "hashbrown 0.14.5",
  "once_cell",
+]
+
+[[package]]
+name = "which"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bf3ea8596f3a0dd5980b46430f2058dfe2c36a27ccfbb1845d6fbfcd9ba6e14"
+dependencies = [
+ "either",
+ "home",
+ "once_cell",
+ "rustix 0.38.44",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
