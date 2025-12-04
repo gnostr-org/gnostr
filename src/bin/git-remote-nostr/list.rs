@@ -333,7 +333,7 @@ mod tests {
                 let res = p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
-                    gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
+                    relay::shutdown_relay(8000 + p)?;
                 }
                 assert_eq!(
                     res.split("\r\n")
@@ -414,7 +414,7 @@ mod tests {
                     let res = p.expect_eventually("\r\n\r\n")?;
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
-                        gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
+                        relay::shutdown_relay(8000 + p)?;
                     }
                     assert_eq!(
                         res.split("\r\n")
@@ -511,10 +511,15 @@ mod tests {
                     let res = p.expect_eventually("\r\n\r\n")?;
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
-                        gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
+                        relay::shutdown_relay(8000 + p)?;
                     }
                     assert_eq!(
                         res.split("\r\n")
+                            .map(|e| e.to_string())
+                            .collect::<HashSet<String>>(),
+                        HashSet::from([
+                            "@refs/heads/main HEAD".to_string(),
+                            format!("{} refs/heads/main", main_original_commit_id),
                             format!("{} refs/heads/example-branch", example_commit_id),
                         ]),
                     );
