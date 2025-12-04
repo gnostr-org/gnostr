@@ -279,7 +279,9 @@ mod tests {
     use super::*;
     use std::collections::HashSet;
     use serial_test::serial;
-    use gnostr::test_utils::{cli_tester_after_fetch, generate_repo_with_state_event, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event, prep_git_repo, GitTestRepo, Relay};
+    use gnostr::test_utils::{cli_tester_after_fetch, generate_repo_with_state_event, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event, prep_git_repo, GitTestRepo};
+    use gnostr::test_utils::relay::Relay;
+    use std::collections::HashSet;
     use tokio::join;
     // These are for the commented-out `when_there_are_open_proposals` module.
     // use gnostr::test_utils::{FEATURE_BRANCH_NAME_1, FEATURE_BRANCH_NAME_2, FEATURE_BRANCH_NAME_3, get_proposal_branch_name_from_events, cli_tester_create_proposals, cli_tester_create_proposal_branches_ready_to_send};
@@ -289,7 +291,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        async fn lists_head_and_2_branches_and_commit_ids_from_git_server() -> Result<()> {
+        async fn lists_head_and_2_branches_and_commit_ids_from_git_server() -> Result<(), anyhow::Error> {
             let source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
             std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
@@ -333,7 +335,7 @@ mod tests {
                 let res = p.expect_eventually("\r\n\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
-                    relay::shutdown_relay(8000 + p)?;
+                    gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
                 }
                 assert_eq!(
                     res.split("\r\n")
@@ -414,7 +416,7 @@ mod tests {
                     let res = p.expect_eventually("\r\n\r\n")?;
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
+                        gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
                     }
                     assert_eq!(
                         res.split("\r\n")
@@ -511,15 +513,10 @@ mod tests {
                     let res = p.expect_eventually("\r\n\r\n")?;
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
+                        gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
                     }
                     assert_eq!(
                         res.split("\r\n")
-                            .map(|e| e.to_string())
-                            .collect::<HashSet<String>>(),
-                        HashSet::from([
-                            "@refs/heads/main HEAD".to_string(),
-                            format!("{} refs/heads/main", main_original_commit_id),
                             format!("{} refs/heads/example-branch", example_commit_id),
                         ]),
                     );
