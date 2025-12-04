@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::join;
-use test_utils::{git::GitTestRepo, relay::Relay, *};
+use crate::test_utils::{git::GitTestRepo, relay::Relay, *};
 
 #[cfg(feature = "expensive_tests")]
 async fn prep_proposals_repo_and_repo_with_proposal_pulled_and_checkedout(

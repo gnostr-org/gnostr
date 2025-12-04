@@ -1,4 +1,4 @@
-use crate::ws::{Message, Responder, launch_from_listener, Error};
+use crate::ws::{Event, Message, Responder, launch_from_listener, Error};
 use tokio_tungstenite::{tungstenite, MaybeTlsStream, WebSocketStream};
 use tokio::net::TcpStream;
 use futures_util::StreamExt;
@@ -39,17 +39,17 @@ async fn test_message_conversion() {
     // Test Text message
     let text_msg = Message::Text("Hello".to_string());
     let tungstenite_text = text_msg.clone().into_tungstenite();
-    assert!(matches!(tungstenite_text, tokio_tungstenite::Message::Text(_)));
+    assert!(matches!(tungstenite_text, Message::Text(_)));
     assert_eq!(Message::from_tungstenite(tungstenite_text).unwrap(), text_msg);
 
     // Test Binary message
     let binary_msg = Message::Binary(vec![1, 2, 3]);
     let tungstenite_binary = binary_msg.clone().into_tungstenite();
-    assert!(matches!(tungstenite_binary, tokio_tungstenite::Message::Binary(_)));
+    assert!(matches!(tungstenite_binary, crate::ws::Message::Binary(_)));
     assert_eq!(Message::from_tungstenite(tungstenite_binary).unwrap(), binary_msg);
 
     // Test unsupported message type
-    let ping_msg = tokio_tungstenite::Message::Ping(vec![1]);
+    let ping_msg = crate::ws::Message::Ping(vec![1].into());
     assert!(Message::from_tungstenite(ping_msg).is_none());
 }
 
@@ -65,17 +65,17 @@ async fn test_websocket_connection_and_message_echo() {
     let mut client_ws = connect_websocket_client(port).await;
 
     // Verify connection event
-    let (client_id, responder) = match event_hub.poll_async().await {
+    let (client_id, responder) = match event_hub.0.poll_async().await {
         Event::Connect(id, resp) => (id, resp),
         _ => panic!("Expected Connect event"),
     };
 
     // Send a message from client to server
     let client_message = "Hello from client".to_string();
-    client_ws.send(tokio_tungstenite::Message::Text(client_message.clone())).await.unwrap();
+    client_ws.send(crate::ws::Message::Text(client_message.clone().into())).await.unwrap();
 
     // Verify message event on server side
-    let received_message = match event_hub.poll_async().await {
+    let received_message = match event_hub.0.poll_async().await {
         Event::Message(id, msg) => {
             assert_eq!(id, client_id);
             msg
@@ -89,7 +89,7 @@ async fn test_websocket_connection_and_message_echo() {
     // Verify message received by client
     let response = client_ws.next().await.unwrap().unwrap();
     match response {
-        tokio_tungstenite::Message::Text(text) => assert_eq!(text, client_message),
+        crate::ws::Message::Text(text) => assert_eq!(text, client_message),
         _ => panic!("Expected text message back"),
     }
 
@@ -100,7 +100,7 @@ async fn test_websocket_connection_and_message_echo() {
     assert!(client_close_frame);
 
     // Verify disconnect event on server side
-    match event_hub.poll_async().await {
+    match event_hub.0.poll_async().await {
         Event::Disconnect(id) => assert_eq!(id, client_id),
         _ => panic!("Expected Disconnect event after Responder.close()"),
     };
@@ -118,11 +118,11 @@ async fn test_event_hub_drain() {
 
     tokio::time::sleep(Duration::from_millis(100)).await; // Allow connections to register
 
-    let events = event_hub.drain();
+    let events = event_hub.0.drain();
     assert_eq!(events.len(), 2); // Two connect events
     assert!(events.iter().all(|e| matches!(e, Event::Connect(_, _))));
 
-    assert!(event_hub.is_empty());
+    assert!(event_hub.0.is_empty());
 }
 
 #[tokio::test]
@@ -135,8 +135,8 @@ async fn test_event_hub_next_event() {
     let _client = connect_websocket_client(port).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    assert!(event_hub.next_event().is_some()); // Connect event
-    assert!(event_hub.next_event().is_none()); // No more events
+    assert!(event_hub.0.next_event().is_some()); // Connect event
+    assert!(event_hub.0.next_event().is_none()); // No more events
 }
 
 #[tokio::test]
@@ -147,7 +147,7 @@ async fn test_responder_client_id() {
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     let _client_ws = connect_websocket_client(port).await;
-    let (client_id, responder) = match event_hub.poll_async().await {
+    let (client_id, responder) = match event_hub.0.poll_async().await {
         Event::Connect(id, resp) => (id, resp),
         _ => panic!("Expected Connect event"),
     };

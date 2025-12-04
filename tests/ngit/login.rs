@@ -1,6 +1,6 @@
 use anyhow::Result;
 use git::GitTestRepo;
-use test_utils::*;
+use crate::test_utils::*;
 
 
 static EXPECTED_NSEC_PROMPT: &str = "login with nostr address / nsec";
@@ -32,7 +32,7 @@ fn standard_first_time_login_encrypting_nsec() -> Result<CliTester> {
 mod with_relays {
     use anyhow::Ok;
     use futures::join;
-    use test_utils::relay::{shutdown_relay, ListenerReqFunc, Relay};
+    use crate::test_utils::relay::{shutdown_relay, ListenerReqFunc, Relay};
 
     use super::*;
 

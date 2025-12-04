@@ -225,10 +225,10 @@ impl NBReader {
     /// ```
     /// # use std::io::Cursor;
     /// //use super::*;
-    /// use test_utils::session::ReadUntil;
-    /// use test_utils::reader::NBReader;
-    /// use test_utils::session::Options;
-    /// use test_utils::reader::Regex;
+    /// use crate::test_utils::session::ReadUntil;
+    /// use crate::test_utils::reader::NBReader;
+    /// use crate::test_utils::session::Options;
+    /// use crate::test_utils::reader::Regex;
     ///
     /// // instead of a Cursor you would put your process output or file here
     /// let f = Cursor::new("Hello, miss!\n\

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::join;
 use nostr_sdk_0_34_0::Kind;
-use test_utils::{git::GitTestRepo, relay::Relay, *};
+use crate::test_utils::{git::GitTestRepo, relay::Relay, *};
 
 
 #[test]
