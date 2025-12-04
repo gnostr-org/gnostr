@@ -282,7 +282,7 @@ mod tests {
     use crate::test_utils::{cli_tester_after_fetch, generate_repo_with_state_event, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event, prep_git_repo, GitTestRepo, Relay};
     use tokio::join;
     // These are for the commented-out `when_there_are_open_proposals` module.
-    // use gnostr::test_utils::{FEATURE_BRANCH_NAME_1, FEATURE_BRANCH_NAME_2, FEATURE_BRANCH_NAME_3, get_proposal_branch_name_from_events, cli_tester_create_proposals, cli_tester_create_proposal_branches_ready_to_send};
+    use crate::test_utils::{FEATURE_BRANCH_NAME_1, FEATURE_BRANCH_NAME_2, FEATURE_BRANCH_NAME_3, get_proposal_branch_name_from_events, cli_tester_create_proposals, cli_tester_create_proposal_branches_ready_to_send};
 
     mod without_state_announcement {
 
