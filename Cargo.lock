@@ -4508,8 +4508,7 @@ dependencies = [
  "ureq",
  "url",
  "urlencoding",
- "which 5.0.0",
- "which 6.0.3",
+ "which",
  "zeroize",
 ]
 
@@ -13343,19 +13342,6 @@ checksum = "471d1c1645d361eb782a1650b1786a8fb58dd625e681a04c09f5ff7c8764a7b0"
 dependencies = [
  "hashbrown 0.14.5",
  "once_cell",
-]
-
-[[package]]
-name = "which"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bf3ea8596f3a0dd5980b46430f2058dfe2c36a27ccfbb1845d6fbfcd9ba6e14"
-dependencies = [
- "either",
- "home",
- "once_cell",
- "rustix 0.38.44",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
