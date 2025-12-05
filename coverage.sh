@@ -27,6 +27,8 @@ echo "Generating coverage report..."
 PROJECT_NAME=$(grep -m 1 '^name = ' Cargo.toml | sed -E 's/name = "([^"]+)"/\\1/')
 # Replace hyphens with underscores for the binary name
 BINARY_NAME=${PROJECT_NAME//-/_}
+# Replace hyphens with underscores for the binary name
+BINARY_NAME=${PROJECT_NAME//-/_}
 
 
 # The main binary for coverage analysis
