@@ -59,7 +59,7 @@ llvm-profdata merge -sparse -o $PROFRAW_DIR/default.profdata $PROFRAW_DIR/*.prof
 
 # Use llvm-cov to generate the report
 BINARY_PATH=target/debug/$BINARY_NAME
-llvm-cov show $BINARY_PATH \
+llvm-cov show $OBJECTS \
     --instr-profile=$PROFRAW_DIR/default.profdata \
     --format=html \
     --output-dir=./coverage \
