@@ -1232,7 +1232,8 @@ mod tests {
         relay::Relay,
         {CliTester, FEATURE_BRANCH_NAME_1},
     };
-    use nostr_0_34_1::Event;
+    use nostr_0_34_1::{Event, Kind};
+    use std::collections::HashSet;
 
     type E = anyhow::Error;
 
@@ -1247,6 +1248,10 @@ mod tests {
 
     mod integration_tests {
         use super::*;
+        use gnostr::test_utils::{git_remote::*, relay};
+        use gnostr::client::STATE_KIND;
+        use git2::Oid;
+        use nostr_sdk::JsonUtil;
 
         #[tokio::test]
         #[serial]
@@ -1256,6 +1261,9 @@ mod tests {
             Ok(())
         }
         mod two_branches_in_batch_one_added_one_updated {
+            use super::*;
+            use gnostr::test_utils::git_remote::*;
+            use gnostr::test_utils::relay;
 
 
             #[tokio::test]
@@ -1594,7 +1602,7 @@ mod tests {
             async fn existing_state_event_published_in_nostr_state_event() -> AnyhowResult<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
-                let git_repo = prep_git_repo()?;
+                let mut git_repo = prep_git_repo()?;
                 let example_branch_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
 
                 std::fs::write(git_repo.dir.join("new.md"), "some content")?;
@@ -1711,6 +1719,9 @@ mod tests {
             }
         }
         mod delete_one_branch {
+            use super::*;
+            use gnostr::test_utils::git_remote::*;
+            use gnostr::test_utils::relay;
 
 
             #[tokio::test]
@@ -1926,6 +1937,8 @@ mod tests {
             }
 
             mod when_existing_state_event {
+                use super::*;
+                use gnostr::client::STATE_KIND;
 
 
                 #[tokio::test]
