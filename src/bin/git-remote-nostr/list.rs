@@ -1,7 +1,7 @@
 use core::str;
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Result, Error};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
@@ -426,7 +426,7 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move ||  Result<(), Error> {
+                let cli_tester_handle = std::thread::spawn(move ||  Result<(), E> {
                     let mut p = cli_tester_after_fetch(&git_repo)?;
                     p.send_line("list")?;
                     p.expect(
@@ -469,6 +469,7 @@ mod tests {
         mod when_announcement_doesnt_match_git_server {
 
             use futures::join;
+            use gnostr::test_utils::git_remote::cli_tester_after_fetch;
             use gnostr::test_utils::git_remote::generate_repo_with_state_event;
             use gnostr::test_utils::generate_test_key_1_relay_list_event;
             use gnostr::test_utils::generate_test_key_1_metadata_event;

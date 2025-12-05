@@ -1944,6 +1944,8 @@ mod tests {
                 use gnostr::client::STATE_KIND;
 
 
+                use anyhow::Context;
+
                 #[tokio::test]
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
@@ -2027,7 +2029,10 @@ mod tests {
 
                 mod already_deleted_on_git_server {
 
+
+                    use anyhow::Context;
                     use futures::join;
+                    use gnostr::test_utils::generate_repo_ref_event_with_git_server;
                     use gnostr::test_utils::git_remote::prep_git_repo;
                     use gnostr::test_utils::git_remote::cli_tester_after_nostr_fetch_and_sent_list_for_push_responds;
                     use gnostr::test_utils::generate_test_key_1_relay_list_event;
