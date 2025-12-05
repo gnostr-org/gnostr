@@ -26,6 +26,8 @@ RUSTFLAGS="-C instrument-coverage" cargo build --all-features
 # 4. Run tests to generate coverage data
 echo "Running tests..."
 RUSTFLAGS="-C instrument-coverage" cargo test --all-features -- --nocapture
+## RUSTFLAGS="-C instrument-coverage" cargo test --skip "push::tests::integration_tests::" --all-features -- --nocapture
+
 
 # 5. Process coverage data and generate report
 echo "Generating coverage report..."
