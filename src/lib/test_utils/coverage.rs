@@ -85,7 +85,7 @@ fn run_command(command: &mut Command) {
 #[test]
 fn test_generate_code_coverage() {
     // Check for a "--quick" command-line argument passed to the test binary.
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = env::args().skip_while(|val| val != "--").skip(1).collect();
     let quick_mode = args.iter().any(|arg| arg == "--quick");
 
     // Step 1: Check for llvm-tools-preview, or install it if not present.
