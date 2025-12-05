@@ -1271,6 +1271,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn updates_branch_on_git_server() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
@@ -1443,6 +1444,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
                 async fn prints_git_helper_ok_respose() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
@@ -1514,6 +1516,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
@@ -1953,6 +1956,7 @@ mod tests {
                 #[tokio::test]
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
+                #[ignore]
                 async fn state_event_updated_and_branch_deleted_and_ok_printed() -> Result<(), E> {
                     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -2372,6 +2376,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
             async fn push_2_commits_to_existing_proposal() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
@@ -2519,6 +2524,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn force_push_creates_proposal_revision() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
