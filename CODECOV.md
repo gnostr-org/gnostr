@@ -2,6 +2,14 @@
 
 This document describes how to generate code coverage reports for this project without relying on third-party services.
 
+## Prerequisites
+
+Before you can generate coverage reports, you need to install the necessary LLVM tools. You can do this by adding the `llvm-tools-preview` component using `rustup`:
+
+```bash
+rustup component add llvm-tools-preview
+```
+
 ## 1. Enable Coverage Instrumentation
 
 Set the `RUSTFLAGS` environment variable to enable coverage instrumentation during the build process.
