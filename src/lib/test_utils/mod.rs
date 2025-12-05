@@ -278,10 +278,19 @@ pub struct CliTester {
 #[cfg(unix)]
 use expectrl::process::unix::Signal;
 
+#[cfg(unix)]
 impl Drop for CliTester {
     fn drop(&mut self) {
         // Ensure the child process is killed when the CliTester is dropped.
         let _ = self.expectrl_session.get_process_mut().kill(Signal::SIGKILL);
+    }
+}
+
+#[cfg(windows)]
+impl Drop for CliTester {
+    fn drop(&mut self) {
+        // Ensure the child process is killed when the CliTester is dropped.
+        let _ = self.expectrl_session.get_process_mut().kill();
     }
 }
 
