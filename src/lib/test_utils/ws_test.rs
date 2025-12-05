@@ -159,3 +159,28 @@ async fn test_responder_client_id() {
     };
     assert_eq!(responder.client_id(), client_id);
 }
+
+#[tokio::test]
+async fn test_websocket_connection_and_message_echo() {
+    let listener = find_available_listener().await;
+    let port = listener.local_addr().unwrap().port();
+    let token = tokio_util::sync::CancellationToken::new();
+    let (event_hub, _, _) = launch_from_listener(listener.into_std().unwrap(), token.clone()).expect("Failed to launch websocket server");
+
+    // Give the server a moment to start
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
+    let mut client_ws = connect_websocket_client(port).await;
+
+    // Verify connection event
+    let (client_id, responder) = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Connect event in time") {
+        Event::Connect(id, resp) => {
+            println!("Received expected Connect event. Got a tuple containing client_id (u64): {} and a Responder.", id);
+            (id, resp)
+        },
+        other => {
+            println!("Received unexpected event: {:?}", other);
+            panic!("Expected a Connect event to get the (u64, Responder) tuple, but got a different event.");
+        }
+    };
+}
