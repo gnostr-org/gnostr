@@ -1,3 +1,5 @@
+test-cli-expect-output.txt
+
 .genkit
 tmpgit-**
 .gemini/tmp
