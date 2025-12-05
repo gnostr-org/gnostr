@@ -411,13 +411,13 @@ mod tests {
     use anyhow::Result as AnyhowResult;
     use futures::join;
     use nostr_0_34_1::Event;
-    use crate::git_remote_nostr_test_utils::{
-        cli_tester_after_fetch, cli_tester_create_proposal_branches_ready_to_send,
-        generate_repo_with_state_event, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events, prep_git_repo,
-        prep_git_repo_minus_1_commit, prep_source_repo_and_events_including_proposals, relay::Relay,
-        GitTestRepo, FEATURE_BRANCH_NAME_1,
-    };
+    use gnostr::test_utils::*;//{
+    //    cli_tester_after_fetch, cli_tester_create_proposal_branches_ready_to_send,
+    //    generate_repo_with_state_event, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+    //    generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events, prep_git_repo,
+    //    prep_git_repo_minus_1_commit, prep_source_repo_and_events_including_proposals,
+    //    relay, git::GitTestRepo, FEATURE_BRANCH_NAME_1,
+    //};
 
     type E = anyhow::Error;
 

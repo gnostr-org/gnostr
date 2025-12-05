@@ -63,19 +63,23 @@ pub enum Message {
     Binary(Vec<u8>),
 }
 
-impl Message {
-    fn into_tungstenite(self) -> tungstenite::Message {
-        match self {
-            Self::Text(text) => tungstenite::Message::Text(text.into()),
-            Self::Binary(bytes) => tungstenite::Message::Binary(bytes.into()),
+impl From<Message> for tungstenite::Message {
+    fn from(msg: Message) -> Self {
+        match msg {
+            Message::Text(text) => tungstenite::Message::Text(text.into()),
+            Message::Binary(bytes) => tungstenite::Message::Binary(bytes.into()),
         }
     }
+}
 
-    fn from_tungstenite(message: tungstenite::Message) -> Option<Self> {
-        match message {
-            tungstenite::Message::Binary(bytes) => Some(Self::Binary(bytes.to_vec())),
-            tungstenite::Message::Text(text) => Some(Self::Text(text.to_string())),
-            _ => None,
+impl TryFrom<tungstenite::Message> for Message {
+    type Error = ();
+
+    fn try_from(msg: tungstenite::Message) -> Result<Self, Self::Error> {
+        match msg {
+            tungstenite::Message::Binary(bytes) => Ok(Self::Binary(bytes.to_vec())),
+            tungstenite::Message::Text(text) => Ok(Self::Text(text.to_string())),
+            _ => Err(()),
         }
     }
 }
@@ -291,7 +295,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
         while let Ok(event) = resp_rx.recv_async().await {
             match event {
                 ResponderCommand::Message(message) => {
-                    if (outgoing.send(message.into_tungstenite()).await).is_err() {
+                    if (outgoing.send(message.into()).await).is_err() {
                         let _ = outgoing.close().await;
                         return Ok(());
                     }
@@ -315,7 +319,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
     let events = async move {
         while let Some(message) = incoming.next().await {
             if let Ok(tungstenite_msg) = message {
-                if let Some(msg) = Message::from_tungstenite(tungstenite_msg) {
+                if let Ok(msg) = Message::try_from(tungstenite_msg) {
                     event_tx2
                         .send(Event::Message(id, msg))
                         .unwrap_or_else(|e| warn!("Failed to send Message event: {}", e));
@@ -382,19 +386,22 @@ mod tests {
     async fn test_message_conversion() {
         // Test Text message
         let text_msg = Message::Text("Hello".to_string());
-        let tungstenite_text = text_msg.clone().into_tungstenite();
+        let tungstenite_text: tungstenite::Message = text_msg.clone().into();
         assert!(matches!(tungstenite_text, tungstenite::Message::Text(_)));
-        assert_eq!(Message::from_tungstenite(tungstenite_text).unwrap(), text_msg);
+        assert_eq!(Message::try_from(tungstenite_text).unwrap(), text_msg);
 
         // Test Binary message
         let binary_msg = Message::Binary(vec![1, 2, 3]);
-        let tungstenite_binary = binary_msg.clone().into_tungstenite();
+        let tungstenite_binary: tungstenite::Message = binary_msg.clone().into();
         assert!(matches!(tungstenite_binary, tungstenite::Message::Binary(_)));
-        assert_eq!(Message::from_tungstenite(tungstenite_binary).unwrap(), binary_msg);
+        assert_eq!(
+            Message::try_from(tungstenite_binary).unwrap(),
+            binary_msg
+        );
 
         // Test unsupported message type
         let ping_msg = tungstenite::Message::Ping(vec![1].into());
-        assert!(Message::from_tungstenite(ping_msg).is_none());
+        assert!(Message::try_from(ping_msg).is_err());
     }
 
     #[tokio::test]
