@@ -49,7 +49,7 @@ fi
 
 
 # Use llvm-profdata to merge the raw profile data
-llvm-profdata merge -sparse *.profraw -o default.profdata
+find . -name "*.profraw" | xargs llvm-profdata merge -sparse -o default.profdata
 
 # Use llvm-cov to generate the report
 llvm-cov show $BINARY_PATH \
