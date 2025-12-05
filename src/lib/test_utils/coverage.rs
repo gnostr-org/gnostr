@@ -45,12 +45,20 @@ use std::path::Path;
 /// Checks if a command is available in the system's PATH by trying to run it
 /// with the `--version` flag.
 fn command_exists(command: &str) -> bool {
-    Command::new(command)
+    println!("Checking for command: '{}'...", command);
+    let result = Command::new(command)
         .arg("--version")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_or(false, |status| status.success())
+        .map_or(false, |status| status.success());
+
+    if result {
+        println!("'{}' found.", command);
+    } else {
+        println!("'{}' not found.", command);
+    }
+    result
 }
 
 /// A helper function to execute a shell command, print its output, and panic if it fails.
