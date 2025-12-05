@@ -1,10 +1,11 @@
+#[allow(unused_imports)]
 use crate::processor::Processor;
 use crate::relays::Relays;
 use crate::CliArgs;
 use crate::APP_SECRET_KEY;
 use nostr_sdk::{
     prelude::{
-        Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, Tag, Timestamp,
+        Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, /*Tag, */Timestamp,
         Url, TagStandard
     },
     RelayMessage, RelayStatus,
