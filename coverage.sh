@@ -58,7 +58,7 @@ llvm-cov show $BINARY_PATH \
     --output-dir=coverage \
     --show-line-counts-or-regions \
     --show-instantiations \
-    --show-missing-regions \
+    --show-regions \
     --Xdemangler=rustfilt
 
 # Also show a summary in the terminal
