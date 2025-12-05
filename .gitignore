@@ -1,3 +1,6 @@
+**.profraw
+**/**.profraw
+
 test-cli-expect-output.txt
 
 .genkit
