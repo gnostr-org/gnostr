@@ -19,8 +19,6 @@ use gnostr::{
 use nostr_0_34_1::hashes::sha1::Hash as Sha1Hash;
 use repo_ref::RepoRef;
 
-use serial_test::{self, serial};
-
 use crate::{
     git::Repo,
     utils::{
