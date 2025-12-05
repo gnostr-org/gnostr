@@ -1,13 +1,3 @@
-## [source.crates-io]
-## replace-with = "vendored-sources"
-## 
-## [source."git+https://github.com/DanConwayDev/simple-websockets?branch=auto-release-port"]
-## git = "https://github.com/DanConwayDev/simple-websockets"
-## branch = "auto-release-port"
-## replace-with = "vendored-sources"
-## 
-## [source.vendored-sources]
-## directory = "vendor"
 # .cargo/config.toml
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-elf-gcc"
