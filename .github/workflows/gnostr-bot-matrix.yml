@@ -185,6 +185,10 @@ jobs:
         run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
         if: runner.os != 'windows'
 
+      - name: brew install cargo-llvm-cov cargo-llvm-lines
+        run: brew install cargo-llvm-cov cargo-llvm-lines || true
+        if: runner.os != 'windows'
+
       - name: powershell install gnostr
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
