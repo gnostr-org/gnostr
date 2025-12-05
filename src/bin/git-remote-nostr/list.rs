@@ -341,7 +341,7 @@ mod tests {
             r51.events = events.clone();
             r55.events = events;
 
-            let cli_tester_handle = std::thread::spawn(move || ->  Result<(), anyhow::Error> {
+            let cli_tester_handle = std::thread::spawn(move || {
                 let mut p = cli_tester_after_fetch(&git_repo)?;
                 p.send_line("list")?;
                 p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
@@ -352,18 +352,17 @@ mod tests {
                 for p in [51, 52, 53, 55, 56, 57] {
                     gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
                 }
-                assert_eq!(
-                    res.split("\r\n")
-                        .map(|e| e.to_string())
-                        .collect::<HashSet<String>>(),
-                    HashSet::from([
-                        "@refs/heads/main HEAD".to_string(),
-                        format!("{} refs/heads/main", main_commit_id),
-                        format!("{} refs/heads/vnext", vnext_commit_id),
-                    ]),
-                );
-                Ok(())
-            });
+                        assert_eq!(
+                            res.split("\r\n")
+                                .map(|e| e.to_string())
+                                .collect::<HashSet<String>>(),
+                            HashSet::from([
+                                "@refs/heads/main HEAD".to_string(),
+                                format!("{} refs/heads/main", main_commit_id),
+                                format!("{} refs/heads/vnext", vnext_commit_id),
+                            ]),
+                        );
+                        Ok::<(), anyhow::Error>(())            });
             // launch relays
             let _ = join!(
                 r51.listen_until_close(),
@@ -427,7 +426,7 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move ||  Result<(), E> {
+                let cli_tester_handle = std::thread::spawn(move || {
                     let mut p = cli_tester_after_fetch(&git_repo)?;
                     p.send_line("list")?;
                     p.expect(
@@ -452,7 +451,7 @@ mod tests {
                         ]),
                     );
 
-                    Ok(())
+                    Ok::<(), E>(())
                 });
                 // launch relays
                 let _ = join!(
@@ -480,6 +479,7 @@ mod tests {
             use gnostr::test_utils::generate_repo_ref_event_with_git_server;
             use gnostr::test_utils::relay::Relay;
             use serial_test::serial;
+            use std::collections::HashSet;
 
             #[tokio::test]
             #[serial]
@@ -491,7 +491,7 @@ mod tests {
 
                 {
                     // add commit to main on git server
-                    let tmp_repo = GitTestRepo::clone_repo(&source_git_repo)?;
+                    let mut tmp_repo = GitTestRepo::clone_repo(&source_git_repo)?;
                     std::fs::write(tmp_repo.dir.join("commitx.md"), "some content")?;
                     tmp_repo.stage_and_commit("commitx.md")?;
                     let mut remote = tmp_repo.git_repo.find_remote("origin")?;
@@ -526,7 +526,7 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), anyhow::Error> {
+                let cli_tester_handle = std::thread::spawn(move || {
                     let mut p = cli_tester_after_fetch(&git_repo)?;
                     p.send_line("list")?;
                     p.expect(
@@ -558,7 +558,7 @@ mod tests {
                             format!("{} refs/heads/example-branch", example_commit_id),
                         ]),
                     );
-                    Ok(())
+                    Ok::<(), E>(())
                 });
                 // launch relays
                 let _ = join!(

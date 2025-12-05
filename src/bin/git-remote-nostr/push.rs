@@ -1767,7 +1767,7 @@ mod tests {
                     assert_eq!(
                         source_git_repo
                             .git_repo
-                            .find_reference("refs/heads/vnext")?,
+                            .find_reference("refs/heads/vnext")?.target().unwrap(),
                         vnext_commit_id
                     );
 
@@ -1843,7 +1843,7 @@ mod tests {
                     assert_eq!(
                         git_repo
                             .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")?,
+                            .find_reference("refs/remotes/nostr/vnext")?.target().unwrap(),
                         vnext_commit_id
                     );
 
@@ -2044,6 +2044,7 @@ mod tests {
                     use gnostr::test_utils::git_remote::generate_repo_with_state_event;
                     use gnostr::test_utils::generate_test_key_1_metadata_event;
                     use serial_test::serial;
+                    use std::collections::HashSet;
 
                     #[tokio::test]
                     #[serial]
@@ -2513,7 +2514,9 @@ mod tests {
 
         #[tokio::test]
         #[cfg(feature = "expensive_tests")]
-            async fn force_push_creates_proposal_revision() -> Result<(String, String), E> {
+
+
+            async fn force_push_creates_proposal_revision() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -2534,7 +2537,7 @@ mod tests {
             let cli_tester_handle = std::thread::spawn(move || -> Result<(String, String), E> {
                 let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
 
-                let git_repo = clone_git_repo_with_nostr_url()?;
+                let mut git_repo = clone_git_repo_with_nostr_url()?;
                 let oid = git_repo.checkout_remote_branch(&branch_name)?;
                 // remove last commit
                 git_repo.checkout("main")?;
@@ -2668,7 +2671,7 @@ mod tests {
 
         #[tokio::test]
         #[cfg(feature = "expensive_tests")]
-            async fn push_new_pr_branch_creates_proposal() -> Result<String, E> {
+            async fn push_new_pr_branch_creates_proposal() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
