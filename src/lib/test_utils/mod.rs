@@ -26,6 +26,8 @@ pub mod error;
 pub mod reader;
 pub mod ws_test;
 
+pub type E = anyhow::Error;
+
 #[cfg(test)]
 pub mod tests;
 

@@ -414,13 +414,11 @@ mod tests {
         generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
         generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
     };
+    use gnostr::test_utils::E;
     use gnostr::test_utils::{git::GitTestRepo, git_remote::*, relay};
     use nostr_0_34_1::Event;
 
     use crate::fetch::FetchReporter;
-
-
-    type E = anyhow::Error;
 
     fn pass_through_fetch_reporter_proces_remote_msg(msgs: Vec<&str>) -> Vec<String> {
         let term = console::Term::stdout();
@@ -613,12 +611,17 @@ mod tests {
     }
 
     mod integration_tests {
+
         use super::*;
+        use serial_test::serial;
+        use gnostr::test_utils::relay::Relay;
+        use gnostr::test_utils::FEATURE_BRANCH_NAME_1;
+
         #[tokio::test]
         #[serial]
         #[cfg(feature = "expensive_tests")]
-        async fn fetch_downloads_specified_commits_from_git_server() -> AnyhowResult<(), E> {
-            let source_git_repo = prep_git_repo()?;
+        async fn fetch_downloads_specified_commits_from_git_server() -> Result<(), E> {
+            let mut source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
@@ -651,7 +654,7 @@ mod tests {
             r51.events = events.clone();
             r55.events = events;
 
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+            let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
                 assert!(git_repo.git_repo.find_commit(vnext_commit_id).is_err());
 
                 let mut p = cli_tester_after_fetch(&git_repo)?;
@@ -685,11 +688,24 @@ mod tests {
 
         mod when_first_git_server_fails_ {
 
+            use futures::join;
+            use gnostr::test_utils::generate_repo_ref_event_with_git_server;
+            use gnostr::test_utils::generate_test_key_1_relay_list_event;
+            use gnostr::test_utils::git_remote::prep_git_repo_minus_1_commit;
+            use gnostr::test_utils::generate_test_key_1_metadata_event;
+            use gnostr::test_utils::relay;
+            use gnostr::test_utils::relay::Relay;
+            use gnostr::test_utils::git_remote::generate_repo_with_state_event;
+            use gnostr::test_utils::git::GitTestRepo;
+            use gnostr::test_utils::git_remote::cli_tester_after_fetch;
+            use gnostr::test_utils::E;
+            use nostr_0_34_1::Event;
+            use serial_test::serial;
 
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-                async fn fetch_downloads_speficied_commits_from_second_git_server() -> AnyhowResult<(), E> {
+                async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {
                 let (state_event, source_git_repo): (Event, GitTestRepo) = generate_repo_with_state_event().await?;
                 // let source_path =
                 // source_git_repo.dir.to_str().unwrap().to_string();
@@ -721,7 +737,7 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+            let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
                     assert!(git_repo.git_repo.find_commit(main_commit_id).is_err());
 
                     let mut p = cli_tester_after_fetch(&git_repo)?;
@@ -760,7 +776,7 @@ mod tests {
         #[tokio::test]
         #[serial]
         #[cfg(feature = "expensive_tests")]
-        async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> AnyhowResult<(), E> {
+        async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<(), E> {
             let (events, source_git_repo): (Vec<Event>, GitTestRepo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -777,7 +793,7 @@ mod tests {
 
             let git_repo = prep_git_repo()?;
 
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+            let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
                 let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
                 let proposal_tip = cli_tester_create_proposal_branches_ready_to_send()?
                     .get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?;

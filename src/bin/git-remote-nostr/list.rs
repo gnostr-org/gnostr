@@ -379,11 +379,18 @@ mod tests {
     }
     mod with_state_announcement {
 
-
-
         mod when_announcement_matches_git_server {
 
-
+            use crate::list::tests::Relay;
+            use futures::join;
+            use gnostr::test_utils::generate_test_key_1_relay_list_event;
+            use gnostr::test_utils::generate_test_key_1_metadata_event;
+            use gnostr::test_utils::git_remote::prep_git_repo;
+            use gnostr::test_utils::git_remote::generate_repo_with_state_event;
+            use gnostr::test_utils::generate_repo_ref_event_with_git_server;
+            use gnostr::test_utils::git_remote::cli_tester_after_fetch;
+            use serial_test::serial;
+            use std::collections::HashSet;
 
             #[tokio::test]
             #[serial]
@@ -419,7 +426,7 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move ||  Result<(), anyhow::Error> {
+                let cli_tester_handle = std::thread::spawn(move ||  Result<(), Error> {
                     let mut p = cli_tester_after_fetch(&git_repo)?;
                     p.send_line("list")?;
                     p.expect(
@@ -461,7 +468,14 @@ mod tests {
         }
         mod when_announcement_doesnt_match_git_server {
 
-
+            use futures::join;
+            use gnostr::test_utils::git_remote::generate_repo_with_state_event;
+            use gnostr::test_utils::generate_test_key_1_relay_list_event;
+            use gnostr::test_utils::generate_test_key_1_metadata_event;
+            use gnostr::test_utils::git_remote::prep_git_repo;
+            use gnostr::test_utils::generate_repo_ref_event_with_git_server;
+            use gnostr::test_utils::relay::Relay;
+            use serial_test::serial;
 
             #[tokio::test]
             #[serial]
