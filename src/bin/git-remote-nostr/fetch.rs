@@ -805,7 +805,7 @@ mod tests {
                 p.send_line("")?;
                 p.expect(format!("fetching {source_path} over filesystem...\r\n").as_str())?;
                 // expect no errors
-                p.expect_after_whitespace("\r\n")?;
+                p.expect_after_whitespace("\r\n\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
                     relay::shutdown_relay(8000 + p)?;
