@@ -114,8 +114,7 @@ impl GitTestRepo {
 	}
 
 	pub fn recreate_as_bare(
-		existing_repo: &GitTestRepo,
-	) -> Result<Self> {
+		        _existing_repo: &GitTestRepo,	) -> Result<Self> {
 		// create bare repo
 		let path = current_dir()?
 			.join(format!("tmpgit-{}", rand::random::<u64>()));

@@ -21,7 +21,7 @@ pub fn get_nostr_remote_url() -> Result<String> {
         ],
     }
     .to_bech32()?;
-    Ok(format!("nostr://{{naddr}}"))
+    Ok(format!("nostr://{naddr}"))
 }
 
 pub fn prep_git_repo() -> Result<GitTestRepo> {
