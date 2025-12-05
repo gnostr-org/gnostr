@@ -36,24 +36,24 @@ async fn connect_websocket_client(port: u16) -> WebSocketStream<MaybeTlsStream<T
     }
 }
 
-    #[tokio::test]
-    async fn test_message_conversion() {
-        // Test Text message
-        let text_msg = Message::Text("Hello".to_string());
-        let tungstenite_text: tungstenite::Message = text_msg.clone().into();
-        assert!(matches!(tungstenite_text, tungstenite::Message::Text(_)));
-        assert_eq!(Message::try_from(tungstenite_text).unwrap(), text_msg);
+#[tokio::test]
+async fn test_message_conversion() {
+    // Test Text message
+    let text_msg = Message::Text("Hello".to_string());
+    let tungstenite_text: tungstenite::Message = text_msg.clone().into();
+    assert!(matches!(tungstenite_text, tungstenite::Message::Text(_)));
+    assert_eq!(Message::try_from(tungstenite_text).unwrap(), text_msg);
 
-        // Test Binary message
-        let binary_msg = Message::Binary(vec![1, 2, 3]);
-        let tungstenite_binary: tungstenite::Message = binary_msg.clone().into();
-        assert!(matches!(tungstenite_binary, tungstenite::Message::Binary(_)));
-        assert_eq!(Message::try_from(tungstenite_binary).unwrap(), binary_msg);
+    // Test Binary message
+    let binary_msg = Message::Binary(vec![1, 2, 3]);
+    let tungstenite_binary: tungstenite::Message = binary_msg.clone().into();
+    assert!(matches!(tungstenite_binary, tungstenite::Message::Binary(_)));
+    assert_eq!(Message::try_from(tungstenite_binary).unwrap(), binary_msg);
 
-        // Test unsupported message type
-        let ping_msg = tungstenite::Message::Ping(vec![1].into());
-        assert!(Message::try_from(ping_msg).is_err());
-    }
+    // Test unsupported message type
+    let ping_msg = tungstenite::Message::Ping(vec![1].into());
+    assert!(Message::try_from(ping_msg).is_err());
+}
 
 #[tokio::test]
 async fn test_find_available_listener_and_connect_websocket_client() {
