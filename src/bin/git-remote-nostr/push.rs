@@ -2515,10 +2515,9 @@ mod tests {
         }
 
         #[tokio::test]
+        #[serial]
         #[cfg(feature = "expensive_tests")]
-
-
-            async fn force_push_creates_proposal_revision() -> Result<(), E> {
+        async fn force_push_creates_proposal_revision() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -2672,6 +2671,7 @@ mod tests {
         }
 
         #[tokio::test]
+        #[serial]
         #[cfg(feature = "expensive_tests")]
             async fn push_new_pr_branch_creates_proposal() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
