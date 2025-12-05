@@ -11,6 +11,9 @@ set -e
 echo "Installing llvm-tools-preview..."
 rustup component add llvm-tools-preview
 
+echo "Installing rustfilt..."
+cargo install rustfilt || true
+
 # 2. Clean previous build artifacts
 if [ "$1" == "clean" ]; then
     cargo clean
@@ -51,7 +54,7 @@ fi
 # Use llvm-profdata to merge the raw profile data
 PROFRAW_DIR="./coverage_tmp"
 mkdir -p $PROFRAW_DIR
-find . -name "*.profraw" -exec mv {} $PROFRAW_DIR/ \;
+find . -maxdepth 1 -name "*.profraw" -exec mv {} $PROFRAW_DIR/ \;
 llvm-profdata merge -sparse -o $PROFRAW_DIR/default.profdata $PROFRAW_DIR/*.profraw
 
 # Use llvm-cov to generate the report
