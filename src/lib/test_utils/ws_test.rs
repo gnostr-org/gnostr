@@ -7,6 +7,7 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 // Helper to find an available port and return a bound TcpListener
+#[allow(unused)]
 async fn find_available_listener() -> tokio::net::TcpListener {
     for port in 8081..9000 {
         if let Ok(listener) = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await {
@@ -16,6 +17,7 @@ async fn find_available_listener() -> tokio::net::TcpListener {
     panic!("No available port found");
 }
 
+#[allow(unused)]
 async fn connect_websocket_client(port: u16) -> WebSocketStream<MaybeTlsStream<TcpStream>> {
     let addr = format!("ws://127.0.0.1:{}", port);
     loop {
