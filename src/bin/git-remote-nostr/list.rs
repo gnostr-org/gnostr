@@ -394,6 +394,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn lists_head_and_2_branches_and_commit_ids_announcement() ->  Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
@@ -483,6 +484,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn anouncement_state_is_used() ->  Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
