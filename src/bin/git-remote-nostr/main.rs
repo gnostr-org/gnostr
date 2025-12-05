@@ -44,9 +44,6 @@ mod push;
 
 mod utils;
 
-mod git_remote_nostr_test_utils;
-
-
 
 #[tokio::main]
 

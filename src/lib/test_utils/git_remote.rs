@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use futures::join;
 use nostr_0_34_1::nips::nip01::Coordinate;
 use nostr_sdk_0_34_0::{secp256k1::rand, Kind, ToBech32};
-use gnostr::test_utils::{git::GitTestRepo, *};
+use super::{git::GitTestRepo, *};
 
 pub static NOSTR_REMOTE_NAME: &str = "nostr";
 pub static STATE_KIND: nostr_0_34_1::Kind = Kind::Custom(30618);
@@ -113,12 +113,12 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
     ];
     // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
     let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-        relay::Relay::new(8051, None, None),
-        relay::Relay::new(8052, None, None),
-        relay::Relay::new(8053, None, None),
-        relay::Relay::new(8055, None, None),
-        relay::Relay::new(8056, None, None),
-        relay::Relay::new(8057, None, None),
+        super::relay::Relay::new(8051, None, None),
+        super::relay::Relay::new(8052, None, None),
+        super::relay::Relay::new(8053, None, None),
+        super::relay::Relay::new(8055, None, None),
+        super::relay::Relay::new(8056, None, None),
+        super::relay::Relay::new(8057, None, None),
     );
     r51.events = events.clone();
     r55.events = events;
@@ -131,7 +131,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
         p.expect_eventually("\r\n\r\n")?;
         p.exit()?;
         for p in [51, 52, 53, 55, 56, 57] {
-            relay::shutdown_relay(8000 + p)?;
+            super::relay::shutdown_relay(8000 + p)?;
         }
         Ok(())
     });
@@ -185,12 +185,12 @@ pub async fn prep_source_repo_and_events_including_proposals(
     ];
     // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
     let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-        relay::Relay::new(8051, None, None),
-        relay::Relay::new(8052, None, None),
-        relay::Relay::new(8053, None, None),
-        relay::Relay::new(8055, None, None),
-        relay::Relay::new(8056, None, None),
-        relay::Relay::new(8057, None, None),
+        super::relay::Relay::new(8051, None, None),
+        super::relay::Relay::new(8052, None, None),
+        super::relay::Relay::new(8053, None, None),
+        super::relay::Relay::new(8055, None, None),
+        super::relay::Relay::new(8056, None, None),
+        super::relay::Relay::new(8057, None, None),
     );
     r51.events = events.clone();
     r55.events = events;
@@ -198,7 +198,7 @@ pub async fn prep_source_repo_and_events_including_proposals(
     let cli_tester_handle = std::thread::spawn(move || -> Result<()> {
         cli_tester_create_proposals()?;
         for p in [51, 52, 53, 55, 56, 57] {
-            relay::shutdown_relay(8000 + p)?;
+            super::relay::shutdown_relay(8000 + p)?;
         }
         Ok(())
     });

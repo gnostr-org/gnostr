@@ -8,10 +8,10 @@ use std::{
 use anyhow::{Context, Result, bail, ensure};
 use dialoguer::theme::{ColorfulTheme, Theme};
 use futures::executor::block_on;
-use git::GitTestRepo;
 use nostr_0_34_1::{self, Kind, Tag, nips::nip65::RelayMetadata};
 use nostr_database_0_34_0::{nostr, NostrDatabase, Order};
-use nostr_sdk_0_34_0::{Client, NostrSigner, TagStandard, serde_json};
+use crate::test_utils::git::GitTestRepo;
+use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use once_cell::sync::Lazy;
 use expectrl::{session::{Session, OsSession}, Expect, Eof};
@@ -20,6 +20,7 @@ use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
 pub mod git;
+pub mod git_remote;
 pub mod relay;
 pub mod error;
 pub mod reader;
