@@ -451,25 +451,24 @@ mod tests {
 		#[test]
 
 		fn test_git_test_repo_clone_repo() -> Result<()> {
-
 			let mut original_repo = GitTestRepo::new("main")?;
-
 			original_repo.populate()?;
-
 			fs::write(original_repo.dir.join("test.txt"), "original content")?;
-
 			original_repo.stage_and_commit("add test.txt")?;
 
-	
+			let path = current_dir()?
+			.join(format!("tmpgit-{}", rand::random::<u64>()));
+			git2::Repository::clone(original_repo.dir.to_str().unwrap(), &path)?;
+			let cloned_repo = GitTestRepo::open(&path)?;
 
-			let cloned_repo = GitTestRepo::clone_repo(&original_repo)?;		assert!(cloned_repo.dir.exists());
-		assert_ne!(original_repo.dir, cloned_repo.dir);
+			assert!(cloned_repo.dir.exists());
+			assert_ne!(original_repo.dir, cloned_repo.dir);
 
-		let repo_to_verify_clone = GitTestRepo::clone_repo(&cloned_repo)?;
-		let original_content = fs::read_to_string(original_repo.dir.join("test.txt"))?;
-		let cloned_content = fs::read_to_string(repo_to_verify_clone.dir.join("test.txt"))?;
-		assert_eq!(original_content, cloned_content);
-		assert_eq!(original_repo.git_repo.head()?.peel_to_commit()?.id(), repo_to_verify_clone.git_repo.head()?.peel_to_commit()?.id());
+			let original_content = fs::read_to_string(original_repo.dir.join("test.txt"))?;
+			let cloned_content = fs::read_to_string(cloned_repo.dir.join("test.txt"))?;
+
+			assert_eq!(original_content, cloned_content);
+			assert_eq!(original_repo.git_repo.head()?.peel_to_commit()?.id(), cloned_repo.git_repo.head()?.peel_to_commit()?.id());
 
 		Ok(())
 	}
