@@ -101,7 +101,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
     let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
     source_git_repo
         .git_repo
-        .branch("example-branch", &example_branch_tip, true)?;    let example_commit_id = source_git_repo
+        .branch("example-branch", &source_git_repo.git_repo.find_commit(example_branch_tip)?, true)?;    let example_commit_id = source_git_repo
         .get_tip_of_local_branch("example-branch")?.to_string();
     let events = vec![
         generate_test_key_1_metadata_event("fred"),
