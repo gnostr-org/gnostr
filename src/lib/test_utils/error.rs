@@ -19,6 +19,12 @@ pub enum Error {
         timeout: time::Duration,
     },
 
+    #[error("Unmatched Error: Expected {} but got \"{}\"", .expected, .got)]
+    Unmatched {
+        expected: String,
+        got: String,
+    },
+
     #[error("The provided program name is empty.")]
     EmptyProgramName,
 

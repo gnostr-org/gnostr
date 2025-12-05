@@ -1,6 +1,5 @@
 //! Unblocking reader which supports waiting for strings/regexes and EOF to be present
 
-use crate::test_utils::error::Error;
 pub use regex::Regex;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
@@ -133,16 +132,15 @@ impl NBReader {
         let (tx, rx) = channel();
 
         // spawn a thread which reads one char and sends it to tx
-        thread::spawn(move || -> Result<(), Error> {
+        thread::spawn(move || -> Result<(), Box<dyn std::error::Error + Send>> {
             let mut reader = BufReader::new(f);
             let mut byte = [0u8];
             let mut in_escape_code = false;
 
             loop {
                 match reader.read(&mut byte) {
-                    Ok(0) => {
-                        tx.send(Ok(PipedChar::EOF))
-                            .map_err(|_| Error::MpscSendError)?;
+                            Ok(0) => {
+                                tx.send(Ok(PipedChar::EOF)).ok();
                         break;
                     }
                     Ok(_) => {
@@ -153,13 +151,15 @@ impl NBReader {
                                 in_escape_code = false;
                             }
                         } else {
-                            tx.send(Ok(PipedChar::Char(byte[0])))
-                                .map_err(|_| Error::MpscSendError)?;
+                            if tx.send(Ok(PipedChar::Char(byte[0]))).is_err() {
+                                break;
+                            }
                         }
                     }
                     Err(error) => {
-                        tx.send(Err(PipeError::IO(error)))
-                            .map_err(|_| Error::MpscSendError)?;
+                        if tx.send(Err(PipeError::IO(error))).is_err() {
+                            break;
+                        }
                     }
                 }
             }
@@ -178,7 +178,7 @@ impl NBReader {
     }
 
     /// reads all available chars from the read channel and stores them in self.buffer
-    fn read_into_buffer(&mut self) -> Result<(), Error> {
+    fn read_into_buffer(&mut self) -> Result<(), Box<dyn std::error::Error + Send>> {
         if self.eof {
             return Ok(());
         }
@@ -225,11 +225,7 @@ impl NBReader {
     /// ```
     /// # use std::io::Cursor;
     /// //use super::*;
-    /// use crate::test_utils::session::ReadUntil;
-    /// use crate::test_utils::reader::NBReader;
-    /// use crate::test_utils::session::Options;
-    /// use crate::test_utils::reader::Regex;
-    ///
+    /// use gnostr::test_utils::reader::{NBReader, Options, ReadUntil, Regex};    ///
     /// // instead of a Cursor you would put your process output or file here
     /// let f = Cursor::new("Hello, miss!\n\
     ///                         What do you mean: 'miss'?");
@@ -250,7 +246,7 @@ impl NBReader {
     /// assert_eq!("?", &until_end);
     /// ```
     ///
-    pub fn read_until(&mut self, needle: &ReadUntil) -> Result<(String, String), Error> {
+    pub fn read_until(&mut self, needle: &ReadUntil) -> Result<(String, String), Box<dyn std::error::Error + Send>> {
         let start = time::Instant::now();
 
         loop {
@@ -266,17 +262,17 @@ impl NBReader {
             // we don't know the reason of eof yet, so we provide an empty string
             // this will be filled out in session::exp()
             if self.eof {
-                return Err(Error::EOF {
+                return Err(Box::new(super::error::Error::EOF {
                     expected: needle.to_string(),
                     got: self.buffer.clone(),
                     exit_code: None,
-                });
+                }));
             }
 
             // ran into timeout
             if let Some(timeout) = self.timeout {
                 if start.elapsed() > timeout {
-                    return Err(Error::Timeout {
+                    return Err(Box::new(super::error::Error::Timeout {
                         expected: needle.to_string(),
                         got: self
                             .buffer
@@ -285,7 +281,7 @@ impl NBReader {
                             .replace('\r', "`\\r`")
                             .replace('\u{1b}', "`^`"),
                         timeout,
-                    });
+                    }));
                 }
             }
             // nothing matched: wait a little
@@ -309,6 +305,7 @@ impl NBReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::error::Error;
 
     #[test]
     fn test_expect_melon() {
@@ -322,8 +319,16 @@ mod tests {
         // check for EOF
         match r.read_until(&ReadUntil::NBytes(10)) {
             Ok(_) => panic!(),
-            Err(Error::EOF { .. }) => {}
-            Err(_) => panic!(),
+            Err(e) => {
+                if let Some(err) = e.downcast_ref::<Error>() {
+                    match err {
+                        Error::EOF { .. } => {}
+                        _ => panic!("wrong error variant"),
+                    }
+                } else {
+                    panic!("wrong error type");
+                }
+            }
         }
     }
 
