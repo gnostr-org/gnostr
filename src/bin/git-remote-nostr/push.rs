@@ -1220,24 +1220,24 @@ impl BuildRepoState for RepoState {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use anyhow::Result as AnyhowResult;
     use futures::join;
+    use gnostr::test_utils::{
+        generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+    };
+    use gnostr::test_utils::{
+        git::GitTestRepo,
+        git_remote::*,
+        relay::Relay,
+        {CliTester, FEATURE_BRANCH_NAME_1},
+    };
     use nostr_0_34_1::Event;
-    use gnostr::test_utils::*;//{
-    //    cli_expect_nostr_fetch, cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-    //    clone_git_repo_with_nostr_url, generate_repo_with_state_event, generate_repo_ref_event_with_git_server,
-    //    generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-    //    get_nostr_remote_url, get_proposal_branch_name_from_events, prep_git_repo,
-    //    prep_source_repo_and_events_including_proposals,
-    //};
-    use gnostr::test_utils::{relay::Relay, CliTester, git::GitTestRepo, FEATURE_BRANCH_NAME_1};
 
     type E = anyhow::Error;
 
-    mod refspec_to_from_to {
-        use super::*;
-
+    mod refspec_to_from_to_tests {
+        use crate::push::refspec_to_from_to;
         #[test]
         fn trailing_plus_stripped() {
             let (from, _) = refspec_to_from_to("+testing:testingb").unwrap();
