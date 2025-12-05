@@ -20,6 +20,15 @@
 //! Upon successful execution, a detailed HTML report will be available in the `coverage/`
 //! directory, and a summary will be printed to the terminal.
 //!
+//! ## Quick Mode
+//!
+//! For faster runs when you haven't made significant changes, you can skip the `cargo clean`
+//! step by passing the `--quick` flag:
+//!
+//! ```bash
+//! cargo test --features coverage -- --nocapture --quick
+//! ```
+//!
 //! ## Dependencies
 //!
 //! This script relies on `llvm-profdata` and `llvm-cov`, which are part of the `llvm-tools-preview`
@@ -64,7 +73,7 @@ fn run_command(command: &mut Command) {
 /// for the code coverage workflow. It performs the following steps:
 ///
 /// 1. Ensures `llvm-tools-preview` is installed.
-/// 2. Cleans the project.
+/// 2. Cleans the project (can be skipped with `--quick`).
 /// 3. Builds the project with coverage instrumentation.
 /// 4. Runs tests to generate raw coverage data.
 /// 5. Parses `Cargo.toml` to find the binary name.
@@ -75,6 +84,10 @@ fn run_command(command: &mut Command) {
 /// 10. Asserts that the report was created successfully.
 #[test]
 fn test_generate_code_coverage() {
+    // Check for a "--quick" command-line argument passed to the test binary.
+    let args: Vec<String> = env::args().collect();
+    let quick_mode = args.iter().any(|arg| arg == "--quick");
+
     // Step 1: Check for llvm-tools-preview, or install it if not present.
     // This is required for `llvm-profdata` and `llvm-cov`.
     if !command_exists("llvm-profdata") || !command_exists("llvm-cov") {
@@ -82,9 +95,13 @@ fn test_generate_code_coverage() {
         run_command(Command::new("rustup").args(&["component", "add", "llvm-tools-preview"]));
     }
 
-    // Step 2: Clean previous build artifacts to ensure a fresh build.
-    println!("Cleaning project...");
-    run_command(Command::new("cargo").arg("clean"));
+    // Step 2: Clean previous build artifacts, unless in quick mode.
+    if !quick_mode {
+        println!("Cleaning project...");
+        run_command(Command::new("cargo").arg("clean"));
+    } else {
+        println!("Skipping 'cargo clean' due to --quick flag.");
+    }
 
     // Step 3: Build the project with coverage instrumentation enabled.
     // The `-C instrument-coverage` flag tells rustc to generate coverage data.
@@ -138,12 +155,13 @@ fn test_generate_code_coverage() {
 
     // Step 8: Generate a detailed HTML report.
     println!("Generating HTML report...");
+    let coverage_dir = env::current_dir().unwrap().join("coverage");
     let mut html_report_cmd = Command::new("llvm-cov");
     html_report_cmd.arg("show")
         .args(&objects)
         .arg("--instr-profile=default.profdata")
         .arg("--format=html")
-        .arg("--output-dir=coverage")
+        .arg("--output-dir").arg(&coverage_dir)
         .arg("--show-line-counts-or-regions")
         .arg("--show-instantiations")
         .arg("--show-missing-regions");
@@ -166,6 +184,6 @@ fn test_generate_code_coverage() {
 
 
     // Step 10: Final assertions to confirm the report was generated.
-    assert!(Path::new("./coverage").exists(), "Coverage directory was not created.");
-    assert!(Path::new("./coverage/index.html").exists(), "HTML report (index.html) was not generated.");
+    assert!(coverage_dir.exists(), "Coverage directory was not created.");
+    assert!(coverage_dir.join("index.html").exists(), "HTML report (index.html) was not generated.");
 }
