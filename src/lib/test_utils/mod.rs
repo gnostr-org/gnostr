@@ -26,6 +26,9 @@ pub mod error;
 pub mod reader;
 pub mod ws_test;
 
+#[cfg(test)]
+pub mod tests;
+
 pub static TEST_KEY_1_NSEC: &str =
 	"nsec1ppsg5sm2aexq06juxmu9evtutr6jkwkhp98exxxvwamhru9lyx9s3rwseq";
 pub static TEST_KEY_1_SK_HEX: &str = "08608a436aee4c07ea5c36f85cb17c58f52b3ad7094f9318cc777771f0bf218b";

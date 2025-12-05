@@ -1,4 +1,4 @@
-use gnostr::utils::screenshot::take_screenshot;
+use crate::utils::screenshot::take_screenshot;
 use std::fs;
 use std::path::Path;
 

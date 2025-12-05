@@ -30,13 +30,13 @@ mod tests {
     use std::io::Write;
     use std::path::{Path, PathBuf};
     
-    use gnostr::cli::get_app_cache_path;
+    use crate::cli::get_app_cache_path;
     use std::thread;
     use std::time::Duration;
-    use gnostr::utils::screenshot;
+    use crate::utils::screenshot;
     use serial_test::serial;
     use signal_child::Signalable;
-    use gnostr::core::ui::TerminalCleanup;
+    use crate::core::ui::TerminalCleanup;
 
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
@@ -511,7 +511,7 @@ mod tests {
         child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
         child.wait().expect("Failed to wait for gnostr process");
 
-        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
+        let log_file_path = crate::cli::get_app_cache_path().unwrap().join("gnostr.log");
         if log_file_path.exists() {
             let log_content = fs::read_to_string(log_file_path).unwrap();
             println!("log_content for test_run_tui_and_sleep: {}", log_content);
@@ -546,7 +546,7 @@ mod tests {
         child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr process");
         child.wait().expect("Failed to wait for gnostr process");
 
-        let log_file_path = gnostr::cli::get_app_cache_path().unwrap().join("gnostr.log");
+        let log_file_path = crate::cli::get_app_cache_path().unwrap().join("gnostr.log");
         if log_file_path.exists() {
             let log_content = fs::read_to_string(log_file_path).unwrap();
             println!("log_content for test_run_tui_and_sleep_screenshot: {}", log_content);

@@ -1,7 +1,7 @@
 use std::error::Error;
 use serial_test::serial;
 
-use gnostr::test_utils::CliTester;
+use crate::test_utils::CliTester;
 
 #[test]
 #[serial]

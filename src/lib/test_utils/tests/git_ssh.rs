@@ -5,7 +5,7 @@ mod tests {
     use std::io::Write;
     use std::net::TcpListener;
     use std::process::Command;
-    use gnostr::utils::find_available_port;
+    use crate::utils::find_available_port;
     use serial_test::serial;
 
     const SERVER_TOML_TEMPLATE: &str = r#"
