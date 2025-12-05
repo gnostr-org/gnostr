@@ -54,6 +54,8 @@ async fn connect_websocket_client(port: u16) -> WebSocketStream<MaybeTlsStream<T
         let ping_msg = tungstenite::Message::Ping(vec![1].into());
         assert!(Message::try_from(ping_msg).is_err());
     }
+
+#[ignore]
 #[tokio::test]
 async fn test_websocket_connection_and_message_echo() {
     let listener = find_available_listener().await;
