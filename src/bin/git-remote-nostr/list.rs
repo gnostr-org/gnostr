@@ -276,13 +276,20 @@ fn get_ahead_behind(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::collections::HashSet;
+
+    use futures::join;
+    use gnostr::test_utils::{
+        cli_tester_create_proposal_branches_ready_to_send, cli_tester_create_proposals,
+        generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+    };
+    use gnostr::test_utils::{
+        git::GitTestRepo, git_remote::*, relay::Relay, FEATURE_BRANCH_NAME_1,
+        FEATURE_BRANCH_NAME_2, FEATURE_BRANCH_NAME_3,
+    };
     use serial_test::serial;
-    use gnostr::test_utils::*;//{cli_tester_after_fetch, generate_repo_with_state_event, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event, prep_git_repo, git::GitTestRepo, relay::{self, Relay}};
-    use tokio::join;
-    // These are for the commented-out `when_there_are_open_proposals` module.
-    //use gnostr::test_utils::{FEATURE_BRANCH_NAME_1, FEATURE_BRANCH_NAME_2, FEATURE_BRANCH_NAME_3, get_proposal_branch_name_from_events, cli_tester_create_proposals, cli_tester_create_proposal_branches_ready_to_send};
+
 
     mod without_state_announcement {
 
