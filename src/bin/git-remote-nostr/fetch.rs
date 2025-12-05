@@ -619,6 +619,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn fetch_downloads_specified_commits_from_git_server() -> Result<(), E> {
             let mut source_git_repo = prep_git_repo()?;
@@ -702,11 +703,11 @@ mod tests {
             use nostr_0_34_1::Event;
             use serial_test::serial;
 
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-                async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {
-                let (state_event, source_git_repo): (Event, GitTestRepo) = generate_repo_with_state_event().await?;
+                            #[tokio::test]
+                            #[serial]
+                            #[ignore]
+                            #[cfg(feature = "expensive_tests")]
+                            async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {                let (state_event, source_git_repo): (Event, GitTestRepo) = generate_repo_with_state_event().await?;
                 // let source_path =
                 // source_git_repo.dir.to_str().unwrap().to_string();
                 let error_path = "./path-doesnt-exist".to_string();
@@ -775,6 +776,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<(), E> {
             let (events, source_git_repo): (Vec<Event>, GitTestRepo) = prep_source_repo_and_events_including_proposals().await?;

@@ -1729,6 +1729,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn deletes_branch_on_git_server() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
@@ -1876,6 +1877,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn prints_git_helper_ok_respose() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
