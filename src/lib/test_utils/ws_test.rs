@@ -55,9 +55,8 @@ async fn connect_websocket_client(port: u16) -> WebSocketStream<MaybeTlsStream<T
         assert!(Message::try_from(ping_msg).is_err());
     }
 
-#[ignore]
 #[tokio::test]
-async fn test_websocket_connection_and_message_echo() {
+async fn test_find_available_listener_and_connect_websocket_client() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
     let token = tokio_util::sync::CancellationToken::new();
