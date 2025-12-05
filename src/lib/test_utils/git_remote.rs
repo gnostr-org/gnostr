@@ -96,10 +96,12 @@ pub fn cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
 pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, GitTestRepo)> {
     let mut git_repo = prep_git_repo()?;
     git_repo.create_branch("example-branch")?;
+    let example_branch_tip = git_repo.get_tip_of_local_branch("example-branch")?;
     let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string();
-    // TODO recreate_as_bare isn't creating other branches
     let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-    let example_commit_id = source_git_repo
+    source_git_repo
+        .git_repo
+        .branch("example-branch", &example_branch_tip, true)?;    let example_commit_id = source_git_repo
         .get_tip_of_local_branch("example-branch")?.to_string();
     let events = vec![
         generate_test_key_1_metadata_event("fred"),
