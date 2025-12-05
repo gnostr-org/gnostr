@@ -1,7 +1,7 @@
-use gnostr::cli::NgitCommands;
-use gnostr::sub_commands::ngit::{ngit, NgitSubCommand};
-use gnostr::sub_commands::query::QuerySubCommand;
-use gnostr::test_utils;
+use crate::cli::NgitCommands;
+use crate::sub_commands::ngit::{ngit, NgitSubCommand};
+use crate::sub_commands::query::QuerySubCommand;
+use crate::test_utils;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use serial_test::serial;
 use std::error::Error as StdError;

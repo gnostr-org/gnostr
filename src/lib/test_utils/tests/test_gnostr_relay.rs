@@ -12,7 +12,7 @@ mod tests {
     use anyhow::Result;
     use std::fs;
     use tempfile::NamedTempFile;
-    use gnostr::utils::retry::GnostrRetry;
+    use crate::utils::retry::GnostrRetry;
     use tokio::sync::Mutex as TokioMutex;
     use std::sync::Arc;
 
@@ -65,9 +65,9 @@ mod tests {
         }).await.expect("Failed to connect to websocket after retries");
 
         // Send a ping and expect a pong
-        ws_stream.send(Message::Ping(vec![1, 2, 3])).await?;
+        ws_stream.send(Message::Ping(vec![1, 2, 3].into())).await?;
         let msg = ws_stream.next().await.unwrap()?;
-        assert_eq!(msg, Message::Pong(vec![1, 2, 3]));
+        assert_eq!(msg, Message::Pong(vec![1, 2, 3].into()));
 
         srv.stop().await;
         Ok(())
@@ -105,7 +105,7 @@ mod tests {
         let event_json = json!(["EVENT", event]).to_string();
 
         // Send event
-        ws_stream.lock().await.send(Message::Text(event_json.clone())).await?;
+        ws_stream.lock().await.send(Message::Text(event_json.clone().into())).await?;
 
         // Expect OK message
         let msg = {
@@ -126,7 +126,7 @@ mod tests {
 
         // Send REQ to retrieve event
         let filter_json = json!(["REQ", "sub1", {"ids": [event.id]}]).to_string();
-        ws_stream.lock().await.send(Message::Text(filter_json)).await?;
+        ws_stream.lock().await.send(Message::Text(filter_json.into())).await?;
 
         // Expect EVENT message
         let msg = {

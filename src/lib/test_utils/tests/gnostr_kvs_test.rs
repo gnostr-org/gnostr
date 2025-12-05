@@ -1,9 +1,9 @@
 
 #[cfg(test)]
 mod tests {
-    use gnostr::p2p::network_config::{Network};
-    use gnostr::p2p::utils::{generate_ed25519};
-    use gnostr::p2p::generate_close_peer_id;
+    use crate::p2p::network_config::{Network};
+    use crate::p2p::utils::{generate_ed25519};
+    use crate::p2p::generate_close_peer_id;
     use libp2p::{Multiaddr, PeerId};
     use std::str::FromStr;
     use serial_test::serial;

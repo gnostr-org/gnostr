@@ -12,7 +12,7 @@ mod tests {
     use assert_cmd::cargo::cargo_bin;
     use std::error::Error;
     use assert_cmd::assert::OutputAssertExt;
-    use gnostr::utils::screenshot;
+    use crate::utils::screenshot;
     use std::fs;
 
     macro_rules! screenshot_test {
