@@ -383,6 +383,7 @@ mod tests {
 
             use crate::list::tests::Relay;
             use futures::join;
+            use gnostr::test_utils::E;
             use gnostr::test_utils::generate_test_key_1_relay_list_event;
             use gnostr::test_utils::generate_test_key_1_metadata_event;
             use gnostr::test_utils::git_remote::prep_git_repo;
@@ -395,7 +396,7 @@ mod tests {
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-            async fn lists_head_and_2_branches_and_commit_ids_announcement() ->  Result<(), anyhow::Error> {
+            async fn lists_head_and_2_branches_and_commit_ids_announcement() ->  Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
                 let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -469,6 +470,8 @@ mod tests {
         mod when_announcement_doesnt_match_git_server {
 
             use futures::join;
+            use gnostr::test_utils::E;
+            use gnostr::test_utils::git::GitTestRepo;
             use gnostr::test_utils::git_remote::cli_tester_after_fetch;
             use gnostr::test_utils::git_remote::generate_repo_with_state_event;
             use gnostr::test_utils::generate_test_key_1_relay_list_event;
@@ -481,7 +484,7 @@ mod tests {
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-            async fn anouncement_state_is_used() ->  Result<(), anyhow::Error> {
+            async fn anouncement_state_is_used() ->  Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
                 let source_path = source_git_repo.dir.to_str().unwrap().to_string();
                 let main_original_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
