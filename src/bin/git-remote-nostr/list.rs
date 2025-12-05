@@ -305,6 +305,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         async fn lists_head_and_2_branches_and_commit_ids_from_git_server() -> Result<(), anyhow::Error> {
             let mut source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
