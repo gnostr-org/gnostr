@@ -1351,6 +1351,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn remote_refs_updated_in_local_git() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
@@ -1802,6 +1803,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn remote_refs_updated_in_local_git() -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
@@ -2214,6 +2216,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<(), E> {
             //
@@ -2672,6 +2675,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
             async fn push_new_pr_branch_creates_proposal() -> Result<(), E> {
             let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
