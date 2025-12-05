@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+## TODO make less brittle and cross platform
 export PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin:$PATH"
 
 set -e
@@ -20,11 +21,11 @@ if [ "$1" == "clean" ]; then
 fi
 # 3. Build the project with coverage instrumentation
 echo "Building with coverage instrumentation..."
-RUSTFLAGS="-C instrument-coverage" cargo build
+RUSTFLAGS="-C instrument-coverage" cargo build --all-features
 
 # 4. Run tests to generate coverage data
 echo "Running tests..."
-RUSTFLAGS="-C instrument-coverage" cargo test
+RUSTFLAGS="-C instrument-coverage" cargo test --all-features -- --nocapture
 
 # 5. Process coverage data and generate report
 echo "Generating coverage report..."
