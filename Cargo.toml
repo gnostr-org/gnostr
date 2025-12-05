@@ -385,3 +385,8 @@ strip-ansi-escapes = "0.2.0"
 #expectrl = "0.8.0"
 #tokio-tungstenite = "0.28.0"
 futures-util = "0.3.31"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
