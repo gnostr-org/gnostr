@@ -127,11 +127,15 @@ jobs:
           fetch-depth: '0'
           #fetch-tags: 'false'
 
-      - run: |
+      - name: coverage.sh
+        shell: bash
+        run: |
           cargo clean || true
           printenv || true
 
-      - run: |
+      - name: coverage.sh
+        shell: bash
+        run: |
           ./coverage.sh ${{ matrix.rustup }} || true
 
       - run: |
