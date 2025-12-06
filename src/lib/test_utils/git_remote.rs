@@ -104,7 +104,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
         .branch("example-branch", &source_git_repo.git_repo.find_commit(example_branch_tip)?, true)?;
     
     // Push all branches from git_repo to source_git_repo to ensure full history is present
-    let mut remote = source_git_repo.git_repo.remote("origin")?;
+    let mut remote = source_git_repo.git_repo.remote("origin", source_git_repo.dir.to_str().unwrap())?;
     let mut push_options = git2::PushOptions::new();
     remote.push(&["refs/heads/*:refs/heads/*"], Some(&mut push_options))?;
 
