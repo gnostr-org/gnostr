@@ -97,6 +97,8 @@ pub async fn run_push(
         }
     };
 
+    let refspecs_for_nostr_state = git_server_refspecs.clone();
+
     let (rejected_refspecs, remote_refspecs) = create_rejected_refspecs_and_remotes_refspecs(
         &term,
         git_repo,
@@ -150,8 +152,8 @@ pub async fn run_push(
         }
     }
 
-    if !git_server_refspecs.is_empty() {
-        let new_state = generate_updated_state(git_repo, &existing_state, &git_server_refspecs)?;
+    if !refspecs_for_nostr_state.is_empty() {
+        let new_state = generate_updated_state(git_repo, &existing_state, &refspecs_for_nostr_state)?;
 
         let new_repo_state =
             RepoState::build(repo_ref.identifier.clone(), new_state, &signer).await?;
