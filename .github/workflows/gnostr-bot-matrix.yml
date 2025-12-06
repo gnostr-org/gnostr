@@ -91,26 +91,28 @@ jobs:
       ##      ~/.rustup
       ##    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
-      - name: Restore cargo
-        id: cache-cargo-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+      ##- name: Restore cargo
+      ##  id: cache-cargo-restore
+      ##  uses: actions/cache/restore@v3
+      ##  if: ${{ !env.ACT }}
+      ##  with:
+      ##    path: |
+      ##      ~/.cargo
+      ##    key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
-      - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rustup }}
-          # components: rustfmt, clippy
-          # targets: wasm32-unknown-unknown
+      ##- name: Install Rust toolchain
+      ##  uses: actions-rust-lang/setup-rust-toolchain@v1
+      ##  with:
+      ##    toolchain: ${{ matrix.rustup }}
+      ##    # components: rustfmt, clippy
+      ##    # targets: wasm32-unknown-unknown
 
 
       - run: |
           rustup default ${{ matrix.rustup }}
 
+      - run: |
+          ./coverage.sh ${{ matrix.rustup }}
 
 
       #- name: Restore target
