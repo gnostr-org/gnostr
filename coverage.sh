@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## TODO make less brittle and cross platform
-export PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin:$PATH"
+export PATH="$HOME/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin:$PATH"
 
 set -x
 
