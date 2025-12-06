@@ -7,30 +7,30 @@ rustflags = [
     "-C", "link-arg=/STACK:4000000", "-Adead_code", "-Aunused_variable", "-Awarnings", "-Ctarget-cpu=native", "-Aclippy::all"
 ]
 
-# Settings for Unix-like systems (Linux, macOS) would go here:
-[target.'cfg(any(target_os = "linux", target_os = "macos"))']
-rustflags = [
-    "-Adead_code", "-Awarnings", "-Ctarget-cpu=native", "-Aclippy::all"
-]
+# # Settings for Unix-like systems (Linux, macOS) would go here:
+# [target.'cfg(any(target_os = "linux", target_os = "macos"))']
+# rustflags = [
+#     "-Adead_code", "-Awarnings", "-Ctarget-cpu=native", "-Aclippy::all"
+# ]
 
-[build]
+#[build]
 #target-dir = ".build"
-rustc-wrapper = "sccache"
-rustflags = [
-"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
-]
+# rustc-wrapper = "sccache"
+# rustflags = [
+# "-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
+# ]
 
 [check]
 #target-dir = ".check"
 rustc-wrapper = "sccache"
-rustflags = [
-"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
-]
+#rustflags = [
+#"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
+#]
 [release]
 #target-dir = ".release"
 #rustc-wrapper = "sccache"
-rustflags = [
-"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
-]
-[test]
-rustc-wrapper = "sccache"
+#rustflags = [
+#"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
+#]
+# [test]
+# rustc-wrapper = "sccache"
