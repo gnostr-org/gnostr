@@ -44,7 +44,7 @@ mod mock_ssh {
 use mock_ssh::start;
 
 #[derive(Parser, Debug, Clone)]
-#[clap(
+#[command(
     about = "A tool for interacting with git repositories.",
     help_template = "\
 {about-with-newline}

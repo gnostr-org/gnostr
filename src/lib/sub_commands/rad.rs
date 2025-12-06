@@ -2,7 +2,7 @@ use clap::Parser;
 use anyhow::Result;
 
 #[derive(Parser, Debug, Clone)]
-#[clap(
+#[command(
     about = "A tool for interacting with the Radicle network.",
     help_template = "\
 {about-with-newline}

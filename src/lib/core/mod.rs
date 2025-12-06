@@ -15,7 +15,7 @@ pub struct GnostrSubCommands {
     #[arg(long = "gitdir")]
     pub gitdir: Option<RepoPath>,
     /// Enable notify_watcher
-    #[clap(
+    #[arg(
         long,
         value_name = "NOTIFY_WATCHER",
         help = "gnostr --notify_watcher",

@@ -213,9 +213,9 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
         use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 
         #[derive(Parser)]
-        #[clap(name = "gnostr", about = "A test CLI for gnostr")]
+        #[command(name = "gnostr", about = "A test CLI for gnostr")]
         struct Cli {
-            #[clap(subcommand)]
+            #[command(subcommand)]
             command: Commands,
         }
 

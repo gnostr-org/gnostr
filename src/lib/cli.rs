@@ -216,31 +216,31 @@ pub struct GnostrCli {
     pub difficulty_target: u8,
 
     /// Take screenshots at a given interval in seconds. The interval defaults to 1 second.
-    #[clap(long, value_name = "INTERVAL_SECONDS", num_args = 0..=1, default_missing_value = "1")]
+    #[arg(long, value_name = "INTERVAL_SECONDS", num_args = 0..=1, default_missing_value = "1")]
     pub screenshots: Option<u8>,
 
     /// Enable info logging
-    #[clap(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false", conflicts_with = "logging")]
     pub info: bool,
 
     /// Enable debug logging
-    #[clap(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false", conflicts_with = "logging")]
     pub debug: bool,
 
     /// Enable trace logging
-    #[clap(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false", conflicts_with = "logging")]
     pub trace: bool,
 
     /// Enable warn logging
-    #[clap(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false", conflicts_with = "logging")]
     pub warn: bool,
 
     /// Generate bugreport
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value = "false")]
     pub bugreport: bool,
 
     /// Enable logging
-    #[clap(long, default_value = "false", conflicts_with = "info", conflicts_with = "debug", conflicts_with = "trace", conflicts_with = "warn")]
+    #[arg(long, default_value = "false", conflicts_with = "info", conflicts_with = "debug", conflicts_with = "trace", conflicts_with = "warn")]
     pub logging: bool,
 }
 

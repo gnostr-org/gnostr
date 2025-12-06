@@ -66,7 +66,7 @@ pub struct ChatCli {
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
     pub relays: Vec<String>,
     /// Enable debug logging
-    #[clap(
+    #[arg(
         long,
         value_name = "DEBUG",
         help = "gnostr --debug",
@@ -74,7 +74,7 @@ pub struct ChatCli {
     )]
     pub debug: bool,
     /// Enable info logging
-    #[clap(
+    #[arg(
         long,
         value_name = "INFO",
         help = "gnostr --info",
@@ -82,7 +82,7 @@ pub struct ChatCli {
     )]
     pub info: bool,
     /// Enable trace logging
-    #[clap(
+    #[arg(
         long,
         value_name = "TRACE",
         help = "gnostr --trace",

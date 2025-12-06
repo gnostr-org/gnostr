@@ -3,36 +3,36 @@ use std::path::PathBuf;
 
 use libp2p::Multiaddr;
 #[derive(Parser, Debug)]
-#[clap(name = "libp2p file sharing example")]
+#[command(name = "libp2p file sharing example")]
 pub struct Opt {
     /// Fixed value to generate deterministic peer ID.
-    #[clap(long)]
+    #[arg(long)]
     pub secret_key_seed: Option<u8>,
 
-    #[clap(long)]
+    #[arg(long)]
     pub peer: Option<Multiaddr>,
 
-    #[clap(long)]
+    #[arg(long)]
     pub listen_address: Option<Multiaddr>,
 
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub argument: CliArgument,
 }
 
 #[derive(Debug, Parser)]
 pub enum CliArgument {
     Provide {
-        #[clap(long)]
+        #[arg(long)]
         path: PathBuf,
-        #[clap(long)]
+        #[arg(long)]
         name: String,
     },
     Get {
-        #[clap(long)]
+        #[arg(long)]
         name: String,
     },
     Kv {
-        #[clap(long)]
+        #[arg(long)]
         get: Option<String>,
     },
 }
