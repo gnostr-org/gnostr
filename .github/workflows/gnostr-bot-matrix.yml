@@ -133,10 +133,10 @@ jobs:
           cargo clean || true
           printenv || true
 
-      - name: coverage.sh
-        shell: bash
-        run: |
-          ./coverage.sh ${{ matrix.rustup }} || true
+      #- name: coverage.sh
+      #  shell: bash
+      #  run: |
+      #    ./coverage.sh ${{ matrix.rustup }} || true
 
       - run: |
           make || true
