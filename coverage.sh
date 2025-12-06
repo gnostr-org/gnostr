@@ -64,6 +64,7 @@ find $PROFRAW_DIR -name "*.profraw" -print0 | xargs -0 llvm-profdata merge -spar
 BINARY_PATH=target/debug/$BINARY_NAME
 echo "OBJECTS: $OBJECTS"
 llvm-cov show $OBJECTS \
+    --ignore-filename-regex ".*cargo/registry.*" \
     --instr-profile=$PROFRAW_DIR/default.profdata \
     --format=html \
     --output-dir=./coverage \
