@@ -1173,16 +1173,14 @@ mod tests {
         fn simple_patch_matches_string() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.initial_commit()?;
-            let root_oid = test_repo.git_repo.head()?.peel_to_commit()?.id();
-            
             fs::write(test_repo.dir.join("t2.md"), "some content1")?;
             let oid = test_repo.stage_and_commit("add t2.md")?;
-
             let git_repo = Repo::from_path(&test_repo.dir)?;
+            let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
             assert_eq!(
                 format!("\
-From {root_oid} Mon Sep 17 00:00:00 2001\n\
+From {parent_oid} Mon Sep 17 00:00:00 2001\n\
 From: Joe Bloggs <joe.bloggs@pm.me>\n\
 Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
 Subject: [PATCH] add t2.md\n\
@@ -1213,16 +1211,14 @@ libgit2 1.9.1\n\
         fn series_count() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.initial_commit()?;
-            let root_oid = test_repo.git_repo.head()?.peel_to_commit()?.id();
-
             fs::write(test_repo.dir.join("t2.md"), "some content1")?;
             let oid = test_repo.stage_and_commit("add t2.md")?;
-
             let git_repo = Repo::from_path(&test_repo.dir)?;
+            let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
             assert_eq!(
                 format!("\
-From {root_oid} Mon Sep 17 00:00:00 2001\n\
+From {parent_oid} Mon Sep 17 00:00:00 2001\n\
 From: Joe Bloggs <joe.bloggs@pm.me>\n\
 Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
 Subject: [PATCH 3/5] add t2.md\n\
