@@ -28,7 +28,7 @@ fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 #[derive(Parser, Debug, Clone)]
 pub struct SniperArgs {
     /// The minimum NIP version to filter relays by.
-    #[clap(short, long, default_value = "1")]
+    #[arg(short, long, default_value = "1")]
     nip_lower: i32,
     // The second argument from the original main function was commented out,
     // so we'll omit it here unless it's explicitly needed.

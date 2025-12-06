@@ -29,7 +29,7 @@ pub struct SendArgs {
     /// commits to send as proposal; like in `git format-patch` eg.
     /// HEAD~2
     pub(crate) since_or_range: String,
-    #[clap(long, value_parser, num_args = 0.., value_delimiter = ' ')]
+    #[arg(long, value_parser, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
     pub(crate) in_reply_to: Vec<String>,
@@ -37,9 +37,9 @@ pub struct SendArgs {
     #[arg(long, action)]
     pub(crate) no_cover_letter: bool,
     /// optional cover letter title
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub(crate) title: Option<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// optional cover letter description
     pub(crate) description: Option<String>,
     pub(crate) disable_cli_spinners: bool,

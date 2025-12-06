@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 #[derive(Parser, Debug, Clone)]
 pub struct Bech32ToAnySubCommand {
     /// Bech32 string to convert
-    #[clap(name = "BECH32_STRING")]
+    #[arg(name = "BECH32_STRING")]
     pub bech32_string: String,
 }
 

@@ -27,19 +27,19 @@ impl std::fmt::Display for LogLevel {
 #[derive(clap::Parser, Debug, Clone)]
 pub struct RelaySubCommand {
     /// Path to the configuration file.
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub config: Option<PathBuf>,
 
     /// Path to the data directory.
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub data: Option<PathBuf>,
 
     /// Watch for configuration file changes.
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub watch: bool,
 
     /// Set the logging level.
-    #[clap(long, value_enum, default_value_t = LogLevel::Info)]
+    #[arg(long, value_enum, default_value_t = LogLevel::Info)]
     pub logging: LogLevel,
 }
 //TODO web actix runtime

@@ -6,7 +6,7 @@ use zeroize::Zeroize;
 #[derive(Parser, Debug, Clone)]
 pub struct PrivkeyToBech32SubCommand {
     /// Private key in hex format. If not provided, it will be prompted securely.
-    #[clap(name = "PRIVATE_KEY_HEX", required = false)]
+    #[arg(name = "PRIVATE_KEY_HEX", required = false)]
     pub privkey_hex: Option<String>,
 }
 

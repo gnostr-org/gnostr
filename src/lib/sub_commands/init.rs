@@ -18,43 +18,43 @@ use crate::{
 
 #[derive(Debug, clap::Args)]
 pub struct InitArgs {
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// name of repository
     pub title: Option<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// optional description
     pub description: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// git server url users can clone from
     pub clone_url: Vec<String>,
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, value_parser, num_args = 1..)]
     /// homepage
     pub web: Vec<String>,
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, value_parser, num_args = 1..)]
     /// relays contributors push patches and comments to
     pub relays: Vec<String>,
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, value_parser, num_args = 1..)]
     /// npubs of other maintainers
     pub other_maintainers: Vec<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// usually root commit but will be more recent commit for forks
     pub earliest_unique_commit: Option<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// shortname with no spaces or special characters
     pub identifier: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// shortname with no spaces or special characters
     pub disable_cli_spinners: bool,
-    #[clap(long)]
+    #[arg(long)]
     /// shortname with no spaces or special characters
     pub password: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// shortname with no spaces or special characters
     pub nsec: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// shortname with no spaces or special characters
     pub bunker_app_key: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// shortname with no spaces or special characters
     pub bunker_uri: Option<String>,
 }

@@ -1174,8 +1174,9 @@ mod tests {
             let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
             assert_eq!(
+                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
                 format!("\
-From {parent_oid} Mon Sep 17 00:00:00 2001\n\
+From {} Mon Sep 17 00:00:00 2001\n\
 From: Joe Bloggs <joe.bloggs@pm.me>\n\
 Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
 Subject: [PATCH] add t2.md\n\
@@ -1196,8 +1197,7 @@ No newline at end of file\n\
 --\n\
 libgit2 1.9.1\n\
 \n\
-"),
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
+", parent_oid.to_string())
             );
             Ok(())
         }
@@ -1212,8 +1212,9 @@ libgit2 1.9.1\n\
             let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
             assert_eq!(
+                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
                 format!("\
-From {parent_oid} Mon Sep 17 00:00:00 2001\n\
+From {} Mon Sep 17 00:00:00 2001\n\
 From: Joe Bloggs <joe.bloggs@pm.me>\n\
 Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
 Subject: [PATCH 3/5] add t2.md\n\
@@ -1234,8 +1235,7 @@ No newline at end of file\n\
 --\n\
 libgit2 1.9.1\n\
 \n\
-"),
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
+", parent_oid.to_string())
             );
             Ok(())
         }
