@@ -21,11 +21,11 @@ if [ "$1" == "clean" ]; then
 fi
 # 3. Build the project with coverage instrumentation
 echo "Building with coverage instrumentation..."
-RUSTFLAGS="-C instrument-coverage" cargo build --all-features
+RUSTFLAGS="-C instrument-coverage" cargo build
 
 # 4. Run tests to generate coverage data
 echo "Running tests..."
-RUSTFLAGS="-C instrument-coverage" cargo test --all-features -- --nocapture
+RUSTFLAGS="-C instrument-coverage" cargo test -- --nocapture
 ## RUSTFLAGS="-C instrument-coverage" cargo test --skip "push::tests::integration_tests::" --all-features -- --nocapture
 
 
@@ -58,7 +58,23 @@ fi
 PROFRAW_DIR="./coverage_tmp"
 mkdir -p $PROFRAW_DIR
 find . -maxdepth 1 -name "*.profraw" -exec mv {} $PROFRAW_DIR/ \;
-find $PROFRAW_DIR -name "*.profraw" -print0 | xargs -0 llvm-profdata merge -sparse -o $PROFRAW_DIR/default.profdata
+echo "Checking PROFRAW_DIR: $PROFRAW_DIR"
+if [ -d "$PROFRAW_DIR" ]; then
+    echo "PROFRAW_DIR exists."
+    ls -l $PROFRAW_DIR
+    FIRST_PROFRAW=$(find $PROFRAW_DIR -name "*.profraw" | head -n 1)
+    if [ -n "$FIRST_PROFRAW" ]; then
+        echo "First profraw file size: $(du -h "$FIRST_PROFRAW")"
+        cat "$FIRST_PROFRAW"
+    else
+        echo "No .profraw files found in $PROFRAW_DIR."
+    fi
+else
+    echo "PROFRAW_DIR does not exist."
+fi
+
+find "$PROFRAW_DIR" -name "*.profraw" -print0 | xargs -0 llvm-profdata merge -sparse -o "$PROFRAW_DIR"/default.profdata
+
 
 # Use llvm-cov to generate the report
 BINARY_PATH=target/debug/$BINARY_NAME
@@ -74,10 +90,10 @@ llvm-cov show $OBJECTS \
     --Xdemangler=rustfilt
 
 # Also show a summary in the terminal
-llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex ".*cargo/registry.*" > /dev/null
+llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex ".*cargo/registry.*"
 
 echo "Coverage report generated in the 'coverage' directory."
 echo "Open coverage/index.html to view the report."
 
 # Clean up temporary profile data directory
-rm -rf $PROFRAW_DIR
+# rm -rf $PROFRAW_DIR
