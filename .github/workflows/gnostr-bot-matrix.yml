@@ -135,6 +135,9 @@ jobs:
           printenv || true
 
       - run: |
+          ./coverage.sh ${{ matrix.rustup }} || true
+
+      - run: |
           make || true
 
       - run: |
@@ -282,7 +285,7 @@ jobs:
       - name: 🚀 cargo check -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
-          cargo +nightly check -j8 && echo "✅" || echo "❌"
+          cargo check -j8 && echo "✅" || echo "❌"
 
       - name: 🚀 cargo install -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
