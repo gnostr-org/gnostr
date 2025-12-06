@@ -632,43 +632,38 @@ impl RepoActions for Repo {
         Ok(applied_oid)
     }
     fn parse_starting_commits(&self, starting_commits: &str) -> Result<Vec<Sha1Hash>> {
+        let mut revwalk = self.git_repo.revwalk()?;
+        revwalk.simplify_first_parent()?; // Simplify history to follow only first parent
+
         let revspec = self
             .git_repo
             .revparse(starting_commits)
             .context("specified value not in a valid format")?;
-        if revspec.mode().is_no_single() {
-            let (ahead, _) = self
-                .get_commits_ahead_behind(
-                    &oid_to_sha1(
-                        &revspec
-                            .from()
-                            .context("cannot get starting commit from specified value")?
-                            .id(),
-                    ),
-                    &self
-                        .get_head_commit()
-                        .context("cannot get head commit with gitlib2")?,
-                )
-                .context("specified commit is not an ancestor of current head")?;
-            Ok(ahead)
-        } else if revspec.mode().is_range() {
-            let (ahead, _) = self
-                .get_commits_ahead_behind(
-                    &oid_to_sha1(
-                        &revspec
-                            .from()
-                            .context("cannot get starting commit of range from specified value")?
-                            .id(),
-                    ),
-                    &oid_to_sha1(
-                        &revspec
-                            .to()
-                            .context("cannot get end of range commit from specified value")?
-                            .id(),
-                    ),
-                )
-                .context("specified commit is not an ancestor of current head")?;
-            Ok(ahead)
+
+        if revspec.mode().contains(git2::RevparseMode::SINGLE) {
+            let commit_oid = revspec
+                .from()
+                .context("cannot get starting commit from specified value")?
+                .id();
+            revwalk.push(commit_oid)?;
+            Ok(revwalk.map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?) 
+        } else if revspec.mode().contains(git2::RevparseMode::RANGE) {
+            let from_oid = revspec
+                .from()
+                .context("cannot get starting commit of range from specified value")?
+                .id();
+            let to_oid = revspec
+                .to()
+                .context("cannot get end of range commit from specified value")?
+                .id();
+
+            revwalk.push(to_oid)?;
+            revwalk.hide(from_oid)?;
+
+            // Collect commits and reverse them to get in chronological order (oldest first)
+            let mut commits: Vec<Sha1Hash> = revwalk.map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?;
+            commits.reverse();
+            Ok(commits)
         } else {
             bail!("specified value not in a supported format")
         }
@@ -2139,11 +2134,12 @@ libgit2 1.9.1\n\
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                let root_commit = git_repo.get_root_commit()?;
+                let head_commit_of_main = git_repo.get_tip_of_branch("main")?;
+                let expected_commit = git_repo.get_commit_parent(&head_commit_of_main)?;
 
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![root_commit],
+                    vec![expected_commit],
                 );
                 Ok(())
             }
@@ -2154,9 +2150,14 @@ libgit2 1.9.1\n\
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
+                let head_commit = git_repo.get_head_commit()?;
+                
+                // When on a branch ahead of main, HEAD~1 should return the parent of the current HEAD
+                let expected_commit = git_repo.get_commit_parent(&head_commit)?;
+
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![str_to_sha1("82ff2bcc9aa94d1bd8faee723d4c8cc190d6061c")?],
+                    vec![expected_commit],
                 );
                 Ok(())
             }
@@ -2171,14 +2172,16 @@ libgit2 1.9.1\n\
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                let head_commit = git_repo.get_head_commit()?;
-                let parent_commit = git_repo.get_commit_parent(&head_commit)?;
+                let main_head_commit = git_repo.get_tip_of_branch("main")?;
+                let main_parent_commit = git_repo.get_commit_parent(&main_head_commit)?;
+                let main_grandparent_commit = git_repo.get_commit_parent(&main_parent_commit)?;
 
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~2")?,
                     vec![
-                        head_commit,
-                        parent_commit,
+                        main_head_commit,
+                        main_parent_commit,
+                        main_grandparent_commit,
                     ],
                 );
                 Ok(())
@@ -2193,16 +2196,18 @@ libgit2 1.9.1\n\
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
-                let head_commit = git_repo.get_head_commit()?;
-                let parent1_commit = git_repo.get_commit_parent(&head_commit)?;
-                let parent2_commit = git_repo.get_commit_parent(&parent1_commit)?;
+                let feature_head_commit = git_repo.get_head_commit()?;
+                let feature_parent1_commit = git_repo.get_commit_parent(&feature_head_commit)?;
+                let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
+                let feature_parent3_commit = git_repo.get_commit_parent(&feature_parent2_commit)?;
 
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~3")?,
                     vec![
-                        head_commit,
-                        parent1_commit,
-                        parent2_commit,
+                        feature_head_commit,
+                        feature_parent1_commit,
+                        feature_parent2_commit,
+                        feature_parent3_commit,
                     ],
                 );
                 Ok(())
@@ -2218,28 +2223,17 @@ libgit2 1.9.1\n\
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                let head_commit = git_repo.get_head_commit()?;
-                let parent1_commit = git_repo.get_commit_parent(&head_commit)?;
-                let parent2_commit = git_repo.get_commit_parent(&parent1_commit)?;
-
-                // In populate_with_test_branch, the commits are:
-                // root -> t1.md -> t2.md (main branch)
-                //             \ -> f1.md -> f2.md -> f3.md (add-example-feature branch)
-                // So, in main branch, the commits are root, t1.md, t2.md
-                // The range "af474d8..a23e6b0" refers to specific commits in the feature branch
-
-                // To make this dynamic, we need to get the OIDs for t2.md, t1.md, and root from the main branch
-                // since we checked out main.
-                let t2_oid = git_repo.get_tip_of_branch("main")?;
-                let t1_oid = git_repo.get_commit_parent(&t2_oid)?;
-                let root_oid = git_repo.get_commit_parent(&t1_oid)?;
+                let feature_head_commit = git_repo.get_tip_of_branch("add-example-feature")?;
+                let feature_parent1_commit = git_repo.get_commit_parent(&feature_head_commit)?;
+                let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
+                let main_head_commit = git_repo.get_tip_of_branch("main")?;
 
                 assert_eq!(
-                    git_repo.parse_starting_commits(&format!("{t1_oid}..{t2_oid}"))?,
+                    git_repo.parse_starting_commits(&format!("{main_head_commit}..{feature_head_commit}"))?,
                     vec![
-                        t2_oid,
-                        t1_oid,
-                        root_oid,
+                        feature_head_commit,
+                        feature_parent1_commit,
+                        feature_parent2_commit,
                     ],
                 );
                 Ok(())
