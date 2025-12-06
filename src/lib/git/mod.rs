@@ -2222,12 +2222,28 @@ libgit2 1.9.1\n\
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
+                let head_commit = git_repo.get_head_commit()?;
+                let parent1_commit = git_repo.get_commit_parent(&head_commit)?;
+                let parent2_commit = git_repo.get_commit_parent(&parent1_commit)?;
+
+                // In populate_with_test_branch, the commits are:
+                // root -> t1.md -> t2.md (main branch)
+                //             \ -> f1.md -> f2.md -> f3.md (add-example-feature branch)
+                // So, in main branch, the commits are root, t1.md, t2.md
+                // The range "af474d8..a23e6b0" refers to specific commits in the feature branch
+
+                // To make this dynamic, we need to get the OIDs for t2.md, t1.md, and root from the main branch
+                // since we checked out main.
+                let t2_oid = git_repo.get_tip_of_branch("main")?;
+                let t1_oid = git_repo.get_commit_parent(&t2_oid)?;
+                let root_oid = git_repo.get_commit_parent(&t1_oid)?;
+
                 assert_eq!(
-                    git_repo.parse_starting_commits("af474d8..a23e6b0")?,
+                    git_repo.parse_starting_commits(&format!("{t1_oid}..{t2_oid}"))?,
                     vec![
-                        str_to_sha1("a23e6b05aaeb7d1471b4a838b51f337d5644eeb0")?,
-                        str_to_sha1("7ab82116068982671a8111f27dc10599172334b2")?,
-                        str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?,
+                        t2_oid,
+                        t1_oid,
+                        root_oid,
                     ],
                 );
                 Ok(())
