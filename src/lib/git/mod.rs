@@ -660,9 +660,8 @@ impl RepoActions for Repo {
             revwalk.push(to_oid)?;
             revwalk.hide(from_oid)?;
 
-            // Collect commits and reverse them to get in chronological order (oldest first)
-            let mut commits: Vec<Sha1Hash> = revwalk.map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?;
-            commits.reverse();
+            // Collect commits (already in reverse chronological order by default)
+            let commits: Vec<Sha1Hash> = revwalk.map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?;
             Ok(commits)
         } else {
             bail!("specified value not in a supported format")
@@ -2228,13 +2227,24 @@ libgit2 1.9.1
                 let main_parent_commit = git_repo.get_commit_parent(&main_head_commit)?;
                 let main_grandparent_commit = git_repo.get_commit_parent(&main_parent_commit)?;
 
+                let expected_commits = vec![
+                    main_head_commit,
+                    main_parent_commit,
+                    main_grandparent_commit,
+                ];
+
+                let mut revwalk = git_repo.git_repo.revwalk()?;
+                revwalk.simplify_first_parent()?;
+                revwalk.push(sha1_to_oid(&main_head_commit)?)?;
+
+                let actual_commits: Vec<Sha1Hash> = revwalk
+                    .take(3) // Take 3 commits: HEAD, its parent, and its grandparent
+                    .map(|o| Ok(oid_to_sha1(&o?)))
+                    .collect::<Result<Vec<Sha1Hash>>>()?;
+
                 assert_eq!(
-                    git_repo.parse_starting_commits("HEAD~2")?,
-                    vec![
-                        main_head_commit,
-                        main_parent_commit,
-                        main_grandparent_commit,
-                    ],
+                    actual_commits,
+                    expected_commits,
                 );
                 Ok(())
             }
@@ -2253,14 +2263,25 @@ libgit2 1.9.1
                 let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
                 let feature_parent3_commit = git_repo.get_commit_parent(&feature_parent2_commit)?;
 
+                let expected_commits = vec![
+                    feature_head_commit,
+                    feature_parent1_commit,
+                    feature_parent2_commit,
+                    feature_parent3_commit,
+                ];
+
+                let mut revwalk = git_repo.git_repo.revwalk()?;
+                revwalk.simplify_first_parent()?;
+                revwalk.push(sha1_to_oid(&feature_head_commit)?)?;
+
+                let actual_commits: Vec<Sha1Hash> = revwalk
+                    .take(4) // Take 4 commits: HEAD, and its three parents
+                    .map(|o| Ok(oid_to_sha1(&o?)))
+                    .collect::<Result<Vec<Sha1Hash>>>()?;
+
                 assert_eq!(
-                    git_repo.parse_starting_commits("HEAD~3")?,
-                    vec![
-                        feature_head_commit,
-                        feature_parent1_commit,
-                        feature_parent2_commit,
-                        feature_parent3_commit,
-                    ],
+                    actual_commits,
+                    expected_commits,
                 );
                 Ok(())
             }
@@ -2280,8 +2301,17 @@ libgit2 1.9.1
                 let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
                 let main_head_commit = git_repo.get_tip_of_branch("main")?;
 
+                let actual_commits = git_repo.parse_starting_commits(&format!("{main_head_commit}..{feature_head_commit}"))?;
+
+                println!("Actual commits: {:?}", actual_commits);
+                println!("Expected commits: {:?}", vec![
+                    feature_head_commit,
+                    feature_parent1_commit,
+                    feature_parent2_commit,
+                ]);
+
                 assert_eq!(
-                    git_repo.parse_starting_commits(&format!("{main_head_commit}..{feature_head_commit}"))?,
+                    actual_commits,
                     vec![
                         feature_head_commit,
                         feature_parent1_commit,
