@@ -2143,9 +2143,11 @@ libgit2 1.9.1\n\
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
+                let root_commit = git_repo.get_root_commit()?;
+
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?],
+                    vec![root_commit],
                 );
                 Ok(())
             }
