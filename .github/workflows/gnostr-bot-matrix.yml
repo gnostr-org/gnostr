@@ -122,12 +122,13 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          #submodules: 'true'
           set-safe-directory: 'true'
           fetch-depth: '0'
-          fetch-tags: 'false'
+          #fetch-tags: 'false'
 
       - run: |
+          cargo clean || true
           printenv || true
 
       - run: |
