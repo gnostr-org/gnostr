@@ -26,7 +26,7 @@ pub struct NgitSubCommand {
     ///// password to decrypt nsec
     #[arg(short, long, global = true)]
     pub password: Option<String>,
-    #[arg(long, action)]
+    #[arg(long)]
     pub disable_cli_spinners: bool,
 }
 

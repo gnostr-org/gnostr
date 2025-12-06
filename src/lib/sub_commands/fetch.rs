@@ -14,7 +14,7 @@ use crate::{
 #[derive(clap::Args, Debug, Clone)]
 pub struct FetchArgs {
     /// address pointer to repo announcement
-    #[arg(long, action)]
+    #[arg(long)]
     pub repo: Vec<String>,
 }
 

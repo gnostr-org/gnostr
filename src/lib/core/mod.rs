@@ -37,13 +37,13 @@ pub struct GnostrSubCommands {
     #[arg(long, global = true)]
     pub hash: Option<String>,
     ///// disable spinner animations
-    #[arg(long, action, default_value = "false")]
+    #[arg(long, default_value_t = false)]
     pub disable_cli_spinners: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub info: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub debug: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub trace: bool,
 }
 
