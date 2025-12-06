@@ -58,7 +58,7 @@ fi
 PROFRAW_DIR="./coverage_tmp"
 mkdir -p $PROFRAW_DIR
 find . -maxdepth 1 -name "*.profraw" -exec mv {} $PROFRAW_DIR/ \;
-llvm-profdata merge -sparse -o $PROFRAW_DIR/default.profdata $PROFRAW_DIR/*.profraw
+find $PROFRAW_DIR -name "*.profraw" -print0 | xargs -0 llvm-profdata merge -sparse -o $PROFRAW_DIR/default.profdata
 
 # Use llvm-cov to generate the report
 BINARY_PATH=target/debug/$BINARY_NAME
