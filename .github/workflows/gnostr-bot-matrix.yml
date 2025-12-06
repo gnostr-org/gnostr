@@ -127,7 +127,7 @@ jobs:
           fetch-depth: '0'
           #fetch-tags: 'false'
 
-      - name: coverage.sh
+      - name: cargo clean
         shell: bash
         run: |
           cargo clean || true
