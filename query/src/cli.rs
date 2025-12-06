@@ -44,7 +44,7 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .short('g')
                 .long("generic")
                 .value_names(["tag", "value"])
-                .number_of_values(2)
+                .num_args(2)
                 .help("Generic tag query: #<tag>: value"),
         )
         .arg(
