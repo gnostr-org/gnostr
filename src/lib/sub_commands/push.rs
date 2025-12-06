@@ -22,7 +22,7 @@ use crate::{
 
 #[derive(Debug, clap::Args, Clone)]
 pub struct PushArgs {
-    #[arg(long, action)]
+    #[arg(long)]
     /// send proposal revision from checked out proposal branch
     pub force: bool,
     pub disable_cli_spinners: bool,

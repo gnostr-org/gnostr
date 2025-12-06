@@ -29,7 +29,7 @@ pub struct SendArgs {
     /// commits to send as proposal; like in `git format-patch` eg.
     /// HEAD~2
     pub(crate) since_or_range: String,
-    #[arg(long, value_parser, num_args = 0.., value_delimiter = ' ')]
+    #[arg(long, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
     pub(crate) in_reply_to: Vec<String>,

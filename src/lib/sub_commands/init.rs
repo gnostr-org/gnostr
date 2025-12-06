@@ -27,13 +27,12 @@ pub struct InitArgs {
     #[arg(long)]
     /// git server url users can clone from
     pub clone_url: Vec<String>,
-    #[arg(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, num_args = 1..)]
     /// homepage
     pub web: Vec<String>,
-    #[arg(short, long, value_parser, num_args = 1..)]
-    /// relays contributors push patches and comments to
+    #[arg(short, long, num_args = 1..)]
     pub relays: Vec<String>,
-    #[arg(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, num_args = 1..)]
     /// npubs of other maintainers
     pub other_maintainers: Vec<String>,
     #[arg(long)]

@@ -11,10 +11,10 @@ use crate::{
 #[derive(clap::Args, Debug, Clone)]
 pub struct LoginArgs {
     /// don't fetch user metadata and relay list from relays
-    #[arg(long, action)]
+    #[arg(long)]
     pub offline: bool,
     /// Disable spinners for a cleaner output
-    #[arg(long, action, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     pub disable_cli_spinners: bool,
     /// Password to decrypt nsec
     pub password: Option<String>,

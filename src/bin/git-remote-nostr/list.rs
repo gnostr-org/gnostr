@@ -1,7 +1,7 @@
 use core::str;
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result, Error};
+use anyhow::{anyhow, Context, Result/*, Error*/};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
