@@ -74,7 +74,7 @@ llvm-cov show $OBJECTS \
     --Xdemangler=rustfilt
 
 # Also show a summary in the terminal
-llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata > /dev/null
+llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex ".*cargo/registry.*" > /dev/null
 
 echo "Coverage report generated in the 'coverage' directory."
 echo "Open coverage/index.html to view the report."
