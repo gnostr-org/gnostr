@@ -2197,12 +2197,16 @@ libgit2 1.9.1\n\
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
+                let head_commit = git_repo.get_head_commit()?;
+                let parent1_commit = git_repo.get_commit_parent(&head_commit)?;
+                let parent2_commit = git_repo.get_commit_parent(&parent1_commit)?;
+
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~3")?,
                     vec![
-                        str_to_sha1("82ff2bcc9aa94d1bd8faee723d4c8cc190d6061c")?,
-                        str_to_sha1("a23e6b05aaeb7d1471b4a838b51f337d5644eeb0")?,
-                        str_to_sha1("7ab82116068982671a8111f27dc10599172334b2")?,
+                        head_commit,
+                        parent1_commit,
+                        parent2_commit,
                     ],
                 );
                 Ok(())
