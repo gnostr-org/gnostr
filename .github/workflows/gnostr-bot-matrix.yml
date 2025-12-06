@@ -111,10 +111,6 @@ jobs:
       - run: |
           rustup default ${{ matrix.rustup }}
 
-      - run: |
-          ./coverage.sh ${{ matrix.rustup }}
-
-
       #- name: Restore target
       #  if: ${{ !env.ACT }}
       #  id: cache-target-restore
