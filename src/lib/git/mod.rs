@@ -1212,34 +1212,38 @@ libgit2 1.9.1\n\
         #[test]
         fn series_count() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
-            let oid = test_repo.populate()?;
+            test_repo.initial_commit()?;
+            let root_oid = test_repo.git_repo.head()?.peel_to_commit()?.id();
+
+            fs::write(test_repo.dir.join("t2.md"), "some content1")?;
+            let oid = test_repo.stage_and_commit("add t2.md")?;
 
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
             assert_eq!(
-                "\
-                From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
-                From: Joe Bloggs <joe.bloggs@pm.me>\n\
-                Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
-                Subject: [PATCH 3/5] add t2.md\n\
-                \n\
-                ---\n \
-                t2.md | 1 +\n \
-                1 file changed, 1 insertion(+)\n \
-                create mode 100644 t2.md\n\
-                \n\
-                diff --git a/t2.md b/t2.md\n\
-                new file mode 100644\n\
-                index 0000000..a66525d\n\
-                --- /dev/null\n\
-                +++ b/t2.md\n\
-                @@ -0,0 +1 @@\n\
-                +some content1\n\\ \
-                No newline at end of file\n\
-                --\n\
-                libgit2 1.9.1\n\
-                \n\
-                ",
+                format!("\
+From {root_oid} Mon Sep 17 00:00:00 2001\n\
+From: Joe Bloggs <joe.bloggs@pm.me>\n\
+Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
+Subject: [PATCH 3/5] add t2.md\n\
+\n\
+---\n \
+t2.md | 1 +\n \
+1 file changed, 1 insertion(+)\n \
+create mode 100644 t2.md\n\
+\n\
+diff --git a/t2.md b/t2.md\n\
+new file mode 100644\n\
+index 0000000..a66525d\n\
+--- /dev/null\n\
++++ b/t2.md\n\
+@@ -0,0 +1 @@\n\
++some content1\n\\ \
+No newline at end of file\n\
+--\n\
+libgit2 1.9.1\n\
+\n\
+"),
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
             );
             Ok(())
