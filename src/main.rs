@@ -430,5 +430,37 @@ async fn main() -> anyhow::Result<()> {
             // Call tui with default commands and propagate its result
             sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default(), &gnostr_cli_args).await.map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
+
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory; // Required for `into_iter()`
+
+    #[test]
+    fn test_cli_parsing_default() {
+        // Simulate an empty command line call, e.g., just "gnostr"
+        let args = vec!["gnostr".to_string()];
+        let cli = GnostrCli::try_parse_from(args).expect("Failed to parse default CLI arguments");
+        // Assert some default values or that parsing succeeded
+        assert!(!cli.debug);
+        assert!(!cli.trace);
+        assert!(!cli.info);
+        assert!(!cli.warn);
+        assert!(!cli.logging);
+        assert!(cli.command.is_none());
+    }
+
+    #[test]
+    fn test_cli_parsing_debug_flag() {
+        // Simulate calling "gnostr --debug"
+        let args = vec!["gnostr".to_string(), "--debug".to_string()];
+        let cli = GnostrCli::try_parse_from(args).expect("Failed to parse --debug flag");
+        assert!(cli.debug);
+        assert!(!cli.trace);
+        assert!(!cli.info);
+        assert!(!cli.warn);
     }
 }
