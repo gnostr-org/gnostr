@@ -2301,17 +2301,8 @@ libgit2 1.9.1
                 let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
                 let main_head_commit = git_repo.get_tip_of_branch("main")?;
 
-                let actual_commits = git_repo.parse_starting_commits(&format!("{main_head_commit}..{feature_head_commit}"))?;
-
-                println!("Actual commits: {:?}", actual_commits);
-                println!("Expected commits: {:?}", vec![
-                    feature_head_commit,
-                    feature_parent1_commit,
-                    feature_parent2_commit,
-                ]);
-
                 assert_eq!(
-                    actual_commits,
+                    git_repo.parse_starting_commits(&format!("{main_head_commit}..{feature_head_commit}"))?,
                     vec![
                         feature_head_commit,
                         feature_parent1_commit,
