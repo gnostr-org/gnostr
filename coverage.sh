@@ -83,8 +83,8 @@ llvm-cov show $OBJECTS \
     --Xdemangler=rustfilt
 
 # Also show a summary in the terminal
-echo "Executing: llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex \".*cargo/registry.*\""
-llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex ".*cargo/registry.*"
+echo "Executing: llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex \".*cargo/registry.*|/rustc/.*\""
+llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex ".*cargo/registry.*|/rustc/.*"
 
 echo "Coverage report generated in the 'coverage' directory."
 echo "Open coverage/index.html to view the report."
