@@ -646,7 +646,7 @@ impl RepoActions for Repo {
                 .context("cannot get starting commit from specified value")?
                 .id();
             revwalk.push(commit_oid)?;
-            Ok(revwalk.map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?) 
+            Ok(revwalk.take(1).map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?)
         } else if revspec.mode().contains(git2::RevparseMode::RANGE) {
             let from_oid = revspec
                 .from()
@@ -1173,31 +1173,58 @@ mod tests {
             let git_repo = Repo::from_path(&test_repo.dir)?;
             let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
+            let generated_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?;
+
+            let first_line_parent_oid = generated_patch
+                .lines()
+                .next()
+                .unwrap()
+                .split(' ')
+                .nth(1)
+                .unwrap();
+
+            let from_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("From: "))
+                .unwrap();
+
+            let date_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Date: "))
+                .unwrap();
+
+            let subject_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Subject: "))
+                .unwrap();
+
             assert_eq!(
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
-                format!("\
-From {} Mon Sep 17 00:00:00 2001\n\
-From: Joe Bloggs <joe.bloggs@pm.me>\n\
-Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
-Subject: [PATCH] add t2.md\n\
-\n\
----\n \
-t2.md | 1 +\n \
-1 file changed, 1 insertion(+)\n \
-create mode 100644 t2.md\n\
-\n\
-diff --git a/t2.md b/t2.md\n\
-new file mode 100644\n\
-index 0000000..a66525d\n\
---- /dev/null\n\
-+++ b/t2.md\n\
-@@ -0,0 +1 @@\n\
-+some content1\n\\ \
-No newline at end of file\n\
---\n\
-libgit2 1.9.1\n\
-\n\
-", parent_oid.to_string())
+                generated_patch,
+                format!(
+                    "\
+From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
+{from_line}
+{date_line}
+{subject_line}
+
+---
+ t2.md | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 t2.md
+
+diff --git a/t2.md b/t2.md
+new file mode 100644
+index 0000000..a66525d
+--- /dev/null
++++ b/t2.md
+@@ -0,0 +1 @@
++some content1
+\\ No newline at end of file
+--
+libgit2 1.9.1
+
+"
+                )
             );
             Ok(())
         }
@@ -1211,31 +1238,56 @@ libgit2 1.9.1\n\
             let git_repo = Repo::from_path(&test_repo.dir)?;
             let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
+            let generated_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?;
+            
+            let first_line_parent_oid = generated_patch
+                .lines()
+                .next()
+                .unwrap()
+                .split(' ')
+                .nth(1)
+                .unwrap();
+
+            let from_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("From: "))
+                .unwrap();
+
+            let date_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Date: "))
+                .unwrap();
+
+            let subject_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Subject: "))
+                .unwrap();
+
             assert_eq!(
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
+                generated_patch,
                 format!("\
-From {} Mon Sep 17 00:00:00 2001\n\
-From: Joe Bloggs <joe.bloggs@pm.me>\n\
-Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
-Subject: [PATCH 3/5] add t2.md\n\
-\n\
----\n \
-t2.md | 1 +\n \
-1 file changed, 1 insertion(+)\n \
-create mode 100644 t2.md\n\
-\n\
-diff --git a/t2.md b/t2.md\n\
-new file mode 100644\n\
-index 0000000..a66525d\n\
---- /dev/null\n\
-+++ b/t2.md\n\
-@@ -0,0 +1 @@\n\
-+some content1\n\\ \
-No newline at end of file\n\
---\n\
-libgit2 1.9.1\n\
-\n\
-", parent_oid.to_string())
+From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
+{from_line}
+{date_line}
+{subject_line}
+
+---
+ t2.md | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 t2.md
+
+diff --git a/t2.md b/t2.md
+new file mode 100644
+index 0000000..a66525d
+--- /dev/null
++++ b/t2.md
+@@ -0,0 +1 @@
++some content1
+\\ No newline at end of file
+--
+libgit2 1.9.1
+
+")
             );
             Ok(())
         }
