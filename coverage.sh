@@ -7,15 +7,20 @@ set -x
 
 set -e
 
+echo "Current PATH: $PATH"
+which llvm-profdata || echo "llvm-profdata not found in PATH"
+which llvm-cov || echo "llvm-cov not found in PATH"
 
 # This script automates the process of generating code coverage reports for the Rust project.
+
+rustup default
 
 # 1. Install necessary dependencies
 echo "Installing llvm-tools-preview..."
 rustup component add llvm-tools-preview
 
 echo "Installing rustfilt..."
-cargo install rustfilt || true
+cargo +nightly install rustfilt || true
 
 # 2. Clean previous build artifacts
 if [ "$1" == "clean" ]; then
@@ -23,11 +28,11 @@ if [ "$1" == "clean" ]; then
 fi
 # 3. Build the project with coverage instrumentation
 echo "Building with coverage instrumentation..."
-RUSTFLAGS="-C instrument-coverage" cargo build
+RUSTFLAGS="-C instrument-coverage" cargo +nightly build
 
 # 4. Run tests to generate coverage data
 echo "Running tests..."
-RUSTFLAGS="-C instrument-coverage" cargo test -- --nocapture
+RUSTFLAGS="-C instrument-coverage" cargo +nightly test --all-features -- --nocapture
 ## RUSTFLAGS="-C instrument-coverage" cargo test --skip "push::tests::integration_tests::" --all-features -- --nocapture
 
 
@@ -58,29 +63,16 @@ fi
 
 # Use llvm-profdata to merge the raw profile data
 PROFRAW_DIR="./coverage_tmp"
-mkdir -p $PROFRAW_DIR
-find . -maxdepth 1 -name "*.profraw" -exec mv {} $PROFRAW_DIR/ \;
-echo "Checking PROFRAW_DIR: $PROFRAW_DIR"
-if [ -d "$PROFRAW_DIR" ]; then
-    echo "PROFRAW_DIR exists."
-    ls -l $PROFRAW_DIR
-    FIRST_PROFRAW=$(find $PROFRAW_DIR -name "*.profraw" | head -n 1)
-    if [ -n "$FIRST_PROFRAW" ]; then
-        echo "First profraw file size: $(du -h "$FIRST_PROFRAW")"
-        cat "$FIRST_PROFRAW"
-    else
-        echo "No .profraw files found in $PROFRAW_DIR."
-    fi
-else
-    echo "PROFRAW_DIR does not exist."
-fi
+mkdir -p "$PROFRAW_DIR"
+find . -maxdepth 1 -name "*.profraw" -exec mv {} "$PROFRAW_DIR"/ \;
 
+echo "Executing: llvm-profdata merge -sparse -o \"$PROFRAW_DIR\"/default.profdata $(find "$PROFRAW_DIR" -name "*.profraw")"
 find "$PROFRAW_DIR" -name "*.profraw" -print0 | xargs -0 llvm-profdata merge -sparse -o "$PROFRAW_DIR"/default.profdata
-
 
 # Use llvm-cov to generate the report
 BINARY_PATH=target/debug/$BINARY_NAME
 echo "OBJECTS: $OBJECTS"
+echo "Executing: llvm-cov show $OBJECTS --ignore-filename-regex \".*cargo/registry.*\" --instr-profile=$PROFRAW_DIR/default.profdata --format=html --output-dir=./coverage --show-line-counts-or-regions --show-instantiations --show-regions --Xdemangler=rustfilt"
 llvm-cov show $OBJECTS \
     --ignore-filename-regex ".*cargo/registry.*" \
     --instr-profile=$PROFRAW_DIR/default.profdata \
@@ -92,6 +84,7 @@ llvm-cov show $OBJECTS \
     --Xdemangler=rustfilt
 
 # Also show a summary in the terminal
+echo "Executing: llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex \".*cargo/registry.*\""
 llvm-cov report $OBJECTS --instr-profile=$PROFRAW_DIR/default.profdata --ignore-filename-regex ".*cargo/registry.*"
 
 echo "Coverage report generated in the 'coverage' directory."
