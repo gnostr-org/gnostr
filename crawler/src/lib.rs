@@ -105,7 +105,7 @@ pub struct CliArgs {
     //#[clap(name = "pat", long = "grep")]
     ///// pattern to filter commit messages by
     //flag_grep: Option<String>,
-    #[arg(name = "dir", long = "git-dir")]
+    #[arg(value_name = "dir", long = "git-dir")]
     /// alternative git directory to use
     flag_git_dir: Option<String>,
     //#[clap(name = "skip", long)]
@@ -132,14 +132,14 @@ pub struct CliArgs {
     //#[clap(name = "min-parents")]
     ///// specify a minimum number of parents for a commit
     //flag_min_parents: Option<usize>,
-    #[arg(name = "patch", long, short)]
+    #[arg(value_name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[arg(name = "nsec", default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
+    #[arg(value_name = "nsec", default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
     arg_nsec: Option<String>,
-    #[arg(name = "commit")]
+    #[arg(value_name = "commit")]
     arg_commit: Vec<String>,
-    #[arg(name = "spec", last = true)]
+    #[arg(value_name = "spec", last = true)]
     arg_spec: Vec<String>,
 }
 
