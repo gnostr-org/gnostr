@@ -34,7 +34,7 @@ pub struct SendArgs {
     /// version and/or events / npubs to tag as mentions
     pub(crate) in_reply_to: Vec<String>,
     /// don't prompt for a cover letter
-    #[arg(long, action)]
+    #[arg(long)]
     pub(crate) no_cover_letter: bool,
     /// optional cover letter title
     #[arg(short, long)]
