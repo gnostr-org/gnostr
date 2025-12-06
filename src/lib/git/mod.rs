@@ -2175,11 +2175,14 @@ libgit2 1.9.1\n\
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
+                let head_commit = git_repo.get_head_commit()?;
+                let parent_commit = git_repo.get_commit_parent(&head_commit)?;
+
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~2")?,
                     vec![
-                        str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?,
-                        str_to_sha1("af474d8d271490e5c635aad337abdc050034b16a")?,
+                        head_commit,
+                        parent_commit,
                     ],
                 );
                 Ok(())
