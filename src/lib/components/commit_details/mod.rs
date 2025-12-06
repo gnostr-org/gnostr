@@ -211,7 +211,7 @@ impl DrawableComponent for CommitDetailsComponent {
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "209:commit_details/mod.rs:chat widget!!!!! {} {} w:{},h:{}",
+                    "214:commit_details/mod.rs:chat widget!!!!! {} {} w:{},h:{}",
                     strings::commit::details_message_title(&self.key_config,),
                     strings::commit::details_message_title(&self.key_config,),
                     chunks[2].width,

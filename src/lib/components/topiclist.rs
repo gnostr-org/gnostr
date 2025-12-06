@@ -20,8 +20,8 @@ use tui_input::Input;
 
 #[derive(Default)]
 pub enum InputMode {
-    Normal,
     #[default]
+    Normal,
     Editing,
 }
 
@@ -214,7 +214,7 @@ impl TopicList {
             );
         }
     }
-	/// comment
+    /// comment
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn comment(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
@@ -752,16 +752,16 @@ impl TopicList {
                 None
             };
 
-            //txt.push("topiclist:695:text".into());
-            txt.push(
-                format!(
-                    "{}/{}/{}",
-                    env::var("WEEBLE").unwrap(),
-                    env::var("BLOCKHEIGHT").unwrap(),
-                    env::var("WOBBLE").unwrap()
-                )
-                .into(), //wobble_sync().unwrap()).into()
-            );
+            //txt.push("topiclist:755:text".into());
+            //txt.push(
+            //    format!(
+            //        "{}/{}/{}",
+            //        env::var("WEEBLE").unwrap(),
+            //        env::var("BLOCKHEIGHT").unwrap(),
+            //        env::var("WOBBLE").unwrap()
+            //    )
+            //    .into(), //wobble_sync().unwrap()).into()
+            //);
             //get_detail_to_add
             txt.push(self.get_detail_to_add(
                 e,
@@ -774,7 +774,7 @@ impl TopicList {
                 now,
                 marked,
             ));
-            txt.push("topiclist:708:text".into());
+            txt.push("topiclist:777:text".into());
         }
 
         txt
@@ -954,7 +954,8 @@ impl TopicList {
             }
         }
     }
-	#[allow(dead_code)]
+    //#[allow(dead_code)]
+    //this is commit history list
     fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
@@ -1041,10 +1042,10 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(3),       //help and tools height
-                    Constraint::Length(3),       //timer
-                    Constraint::Percentage(100), //table
-                    Constraint::Length(3),       //chat input
+                    Constraint::Length(5),       //nip34 top box
+                    Constraint::Length(3),       //additional info
+                    Constraint::Percentage(100), //table //commit detail hidden
+                    Constraint::Length(0),       //chat input //last in - bottom
                 ]
                 .as_ref(),
             )
@@ -1054,8 +1055,8 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Min(2),       //0 topic
-                    Constraint::Min(2),       //1 squares
+                    Constraint::Min(0),          //0 topic
+                    Constraint::Min(0),          //1 squares
                     Constraint::Percentage(100), //2 tools view
                 ]
                 .as_ref(),
@@ -1078,7 +1079,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            "topiclist.rs:984: {} {}/{} ",
+            "topiclist.rs:1082: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -1091,13 +1092,14 @@ impl DrawableComponent for TopicList {
             .block(
                 Block::default()
                     .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
-                    .title(Span::styled(
-                        format!(
-                            "self.get_topic_text:pubkey--->{:>}<---",
-                            title.as_str().to_owned(),
-                        ),
-                        self.theme.title(true),
-                    ))
+                    //nip34 event info
+                    //.title(Span::styled(
+                    //    format!(
+                    //        "1097:self.get_topic_text:pubkey--->{:>}<---",
+                    //        title.as_str().to_owned(),
+                    //    ),
+                    //    self.theme.title(true),
+                    //))
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
@@ -1112,22 +1114,37 @@ impl DrawableComponent for TopicList {
             .block(
                 Block::default()
                     .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
-                    .title(Span::styled(
-                        format!(
-                            "1032:more_detail--->{:>}<---",
-                            title.as_str().to_owned(),
-                        ),
-                        self.theme.title(true),
-                    ))
+                    //nip34 event info
+                    //.title(Span::styled(
+                    //    format!(
+                    //        "1118:more_detail--->{:>}<---",
+                    //        title.as_str().to_owned(),
+                    //    ),
+                    //    self.theme.title(true),
+                    //))
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
             left_chunks[1],
         );
 
+
+        //TODO
         let chat_history_height = left_chunks[2].height as usize;
+        let chat_history_width = left_chunks[2].width as usize;
+        //f.render_widget(
+        //    Paragraph::new(self.get_chat_history_text(chat_history_height))
+        //        .block(
+        //            Block::default()
+        //                .borders(Borders::ALL)
+        //                .title("Chat History")
+        //                .border_style(self.theme.block(false)),
+        //        )
+        //        .alignment(Alignment::Left),
+        //    left_chunks[2],
+        //);
         f.render_widget(
-            Paragraph::new(self.get_chat_history_text(chat_history_height))
+            Paragraph::new(self.get_chat_text(chat_history_height, chat_history_width))
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
@@ -1166,11 +1183,25 @@ impl DrawableComponent for TopicList {
 impl Component for TopicList {
     fn event(&mut self, ev: &crossterm::event::Event) -> Result<EventState> {
         if let crossterm::event::Event::Key(k) = ev {
+
+            //we respond to some key events reguardless of where we are in the life cycle
+
             if k.code == crossterm::event::KeyCode::Char('c')
                 && k.modifiers.contains(crossterm::event::KeyModifiers::CONTROL)
             {
                 return Ok(EventState::Consumed);
             }
+            if k.code == crossterm::event::KeyCode::Char('i') {
+                        self.input_mode = InputMode::Editing;
+                        self.input.reset();
+                        return Ok(EventState::Consumed);
+                    }
+
+            if k.code == crossterm::event::KeyCode::Esc {
+                        self.input_mode = InputMode::Normal;
+                        self.input.reset();
+                        return Ok(EventState::Consumed);
+                    }
 
             let selection_changed = match self.input_mode {
                 InputMode::Normal => {
@@ -1200,7 +1231,12 @@ impl Component for TopicList {
                         self.comment();
                         true
                     } else if key_match(k, self.key_config.keys.enter) {
-                        self.input_mode = InputMode::Editing;
+                        //dont activate chat text input just because selection_changed
+                        //self.input_mode = InputMode::Editing;
+                        false
+                    } else if key_match(k, self.key_config.keys.exit_popup) {
+                        //always escape chat text input mode
+                        self.input_mode = InputMode::Normal;
                         false
                     } else {
                         false
