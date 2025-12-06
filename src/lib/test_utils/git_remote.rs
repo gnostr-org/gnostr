@@ -112,6 +112,8 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
 
     let example_commit_id = source_git_repo
         .get_tip_of_local_branch("example-branch")?.to_string();
+    println!("DEBUG: main_commit_id: {}", main_commit_id);
+    println!("DEBUG: example_commit_id: {}", example_commit_id);
     let events = vec![
         generate_test_key_1_metadata_event("fred"),
         generate_test_key_1_relay_list_event(),
