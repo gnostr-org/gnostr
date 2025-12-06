@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 ## TODO make less brittle and cross platform
-export PATH="$(rustup run nightly rustc --print=target-libdir)/../bin:$PATH"
+RUST_TOOLCHAIN=${1:-nightly} # Default to nightly, allow override via first argument
+export PATH="$(rustup run "$RUST_TOOLCHAIN" rustc --print=target-libdir)/../bin:$PATH"
 
 set -x
 
@@ -13,26 +14,24 @@ which llvm-cov || echo "llvm-cov not found in PATH"
 
 # This script automates the process of generating code coverage reports for the Rust project.
 
-rustup default
-
 # 1. Install necessary dependencies
 echo "Installing llvm-tools-preview..."
-rustup component add llvm-tools-preview
+rustup +$RUST_TOOLCHAIN component add llvm-tools-preview
 
 echo "Installing rustfilt..."
-cargo +nightly install rustfilt || true
+cargo +$RUST_TOOLCHAIN install rustfilt || true
 
 # 2. Clean previous build artifacts
 if [ "$1" == "clean" ]; then
-    cargo clean
+    cargo +$RUST_TOOLCHAIN clean
 fi
 # 3. Build the project with coverage instrumentation
 echo "Building with coverage instrumentation..."
-RUSTFLAGS="-C instrument-coverage" cargo +nightly build
+RUSTFLAGS="-C instrument-coverage" cargo +$RUST_TOOLCHAIN build
 
 # 4. Run tests to generate coverage data
 echo "Running tests..."
-RUSTFLAGS="-C instrument-coverage" cargo +nightly test --all-features -- --nocapture
+RUSTFLAGS="-C instrument-coverage" cargo +$RUST_TOOLCHAIN test --all-features -- --nocapture
 ## RUSTFLAGS="-C instrument-coverage" cargo test --skip "push::tests::integration_tests::" --all-features -- --nocapture
 
 
