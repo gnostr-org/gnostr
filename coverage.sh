@@ -62,6 +62,7 @@ find $PROFRAW_DIR -name "*.profraw" -print0 | xargs -0 llvm-profdata merge -spar
 
 # Use llvm-cov to generate the report
 BINARY_PATH=target/debug/$BINARY_NAME
+echo "OBJECTS: $OBJECTS"
 llvm-cov show $OBJECTS \
     --instr-profile=$PROFRAW_DIR/default.profdata \
     --format=html \
