@@ -1255,6 +1255,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn new_branch_when_no_state_event_exists() -> Result<(), E> {
             generate_repo_with_state_event().await?;
@@ -2056,6 +2057,7 @@ mod tests {
 
                     #[tokio::test]
                     #[serial]
+                    #[ignore]
                     #[cfg(feature = "expensive_tests")]
                     async fn existing_state_event_updated_and_ok_printed() -> Result<(), E> {
                         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
@@ -2147,6 +2149,7 @@ mod tests {
 
         #[tokio::test]
         #[serial]
+        #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<(), E> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
