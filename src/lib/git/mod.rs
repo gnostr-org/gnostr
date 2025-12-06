@@ -1139,7 +1139,8 @@ mod tests {
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
-            assert!(git_repo.does_commit_exist("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?);
+            let root_commit_id = git_repo.get_root_commit()?;
+            assert!(git_repo.does_commit_exist(&root_commit_id.to_string())?);
             Ok(())
         }
 
