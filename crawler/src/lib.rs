@@ -36,7 +36,7 @@ use crate::processor::BOOTSTRAP_RELAY2;
 const CONCURRENT_REQUESTS: usize = 16;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
@@ -49,19 +49,19 @@ pub enum Commands {
         /// The NIP number to search for (e.g., 1)
         nip: i32,
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Runs the watch mode to monitor relays and print their metadata
     Watch {
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Lists relays that are likely to support NIP-34 (Git collaboration)
     Nip34 {
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
 }
@@ -105,7 +105,7 @@ pub struct CliArgs {
     //#[clap(name = "pat", long = "grep")]
     ///// pattern to filter commit messages by
     //flag_grep: Option<String>,
-    #[clap(name = "dir", long = "git-dir")]
+    #[arg(name = "dir", long = "git-dir")]
     /// alternative git directory to use
     flag_git_dir: Option<String>,
     //#[clap(name = "skip", long)]
@@ -132,17 +132,14 @@ pub struct CliArgs {
     //#[clap(name = "min-parents")]
     ///// specify a minimum number of parents for a commit
     //flag_min_parents: Option<usize>,
-    #[clap(name = "patch", long, short)]
+    #[arg(name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[clap(
-        name = "nsec",
-        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    )]
+    #[arg(name = "nsec", default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
     arg_nsec: Option<String>,
-    #[clap(name = "commit")]
+    #[arg(name = "commit")]
     arg_commit: Vec<String>,
-    #[clap(name = "spec", last = true)]
+    #[arg(name = "spec", last = true)]
     arg_spec: Vec<String>,
 }
 
