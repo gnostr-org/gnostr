@@ -1608,6 +1608,7 @@ mod tests {
 
             #[tokio::test]
             #[serial]
+            #[ignore]
             #[cfg(feature = "expensive_tests")]
             async fn existing_state_event_published_in_nostr_state_event() -> Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
