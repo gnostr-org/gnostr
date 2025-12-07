@@ -23,7 +23,7 @@ pub fn create_seal(
         vec![],
         encrypted_content,
     );
-    Ok(unsigned_event.sign(&private_key.as_secret_key())?)
+    unsigned_event.sign(&private_key.as_secret_key())
 }
 
 /// Create a Gift Wrap event (kind 1059) which wraps a Seal
@@ -45,5 +45,5 @@ pub fn create_gift_wrap(
         tags,
         encrypted_content,
     );
-    Ok(unsigned_event.sign(&private_key.as_secret_key())?)
+    unsigned_event.sign(&private_key.as_secret_key())
 }
