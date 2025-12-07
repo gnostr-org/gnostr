@@ -240,7 +240,7 @@ async fn main() -> anyhow::Result<()> {
                 pubkey,
                 created_at: Unixtime::now(),
                 kind: EventKind::EncryptedDirectMessage,
-                tags: vec![TagV3::new_pubkey(recipient_pk.into(), None, None)],
+                tags: vec![TagV3::new_pubkey(recipient_pk, None, None)],
                 content: encrypted_content,
             };
             let id = preevent.hash()?;
@@ -276,7 +276,7 @@ async fn main() -> anyhow::Result<()> {
                 &public_key.as_xonly_public_key(),
                 &secret_key,
             );
-            client.send_event(event.into()).await?;
+            client.send_event(event).await?;
         }
         SubCommand::AddContact { private_key, pubkey, relay_url, petname } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
@@ -298,7 +298,7 @@ async fn main() -> anyhow::Result<()> {
                 &public_key.as_xonly_public_key(),
                 &secret_key,
             );
-            client.send_event(event.into()).await?;
+            client.send_event(event).await?;
         }
         SubCommand::RemoveContact { private_key, pubkey } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
@@ -316,7 +316,7 @@ async fn main() -> anyhow::Result<()> {
                 &public_key.as_xonly_public_key(),
                 &secret_key,
             );
-            client.send_event(event.into()).await?;
+            client.send_event(event).await?;
         }
         SubCommand::GetContacts { private_key } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
@@ -439,7 +439,7 @@ async fn main() -> anyhow::Result<()> {
                 created_at: Unixtime::now(),
                 kind: EventKind::TextNote, // NIP-17 says Kind 14 for chat messages, but NIP-59 wraps generic rumors. Use TextNote for the inner rumor.
                 tags: vec![],
-                content: content,
+                content,
             };
 
             let seal_event = nip59::create_seal(
@@ -494,44 +494,41 @@ async fn main() -> anyhow::Result<()> {
         println!("Listening for events...");
 
         while let Some(internal_event) = rx.recv().await {
-            match internal_event {
-                InternalEvent::NostrEvent(event) => {
-                    if event.kind == EventKind::EncryptedDirectMessage {
-                        if let Some(signer) = &signer_for_decryption {
-                            let decrypted = signer.decrypt(&event.pubkey, &event.content)?;
-                            println!("DM from {}: {}", event.pubkey.as_hex_string(), decrypted);
-                        }
-                    } else if event.kind == EventKind::ContactList {
-                        println!("Contact list updated:");
-                        for tag in &event.tags {
-                            if tag.tagname() == "p" {
-                                let v: Vec<&str> = tag.value().split(' ').collect();
-                                let pubkey = v.get(0).unwrap_or(&"");
-                                let relay = v.get(1).unwrap_or(&"");
-                                let petname = v.get(2).unwrap_or(&"");
-                                println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
-                            }
-                        }
-                    } else if event.kind == EventKind::GiftWrap {
-                        if let Some(signer) = &signer_for_decryption {
-                            // Unwrap GiftWrap to get the Seal
-                            let seal_json = signer.decrypt(&event.pubkey, &event.content)?;
-                            let seal_event: EventV3 = serde_json::from_str(&seal_json)?;
-
-                            // Unwrap Seal to get the Rumor
-                            let rumor_json = signer.decrypt(&seal_event.pubkey, &seal_event.content)?;
-                            let rumor: Rumor = serde_json::from_str(&rumor_json)?;
-
-                            println!("NIP-17 DM from {}: {}", seal_event.pubkey.as_hex_string(), rumor.content);
-                        }
-                    } else if event.kind == EventKind::MarketplaceUi {
-                        println!("Marketplace event: {:?}", event);
+            if let InternalEvent::NostrEvent(event) = internal_event {
+                if event.kind == EventKind::EncryptedDirectMessage {
+                    if let Some(signer) = &signer_for_decryption {
+                        let decrypted = signer.decrypt(&event.pubkey, &event.content)?;
+                        println!("DM from {}: {}", event.pubkey.as_hex_string(), decrypted);
                     }
-                    else {
-                        println!("Received event: {:?}", event);
+                } else if event.kind == EventKind::ContactList {
+                    println!("Contact list updated:");
+                    for tag in &event.tags {
+                        if tag.tagname() == "p" {
+                            let v: Vec<&str> = tag.value().split(' ').collect();
+                            let pubkey = v.first().unwrap_or(&"");
+                            let relay = v.get(1).unwrap_or(&"");
+                            let petname = v.get(2).unwrap_or(&"");
+                            println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
+                        }
                     }
+                } else if event.kind == EventKind::GiftWrap {
+                    if let Some(signer) = &signer_for_decryption {
+                        // Unwrap GiftWrap to get the Seal
+                        let seal_json = signer.decrypt(&event.pubkey, &event.content)?;
+                        let seal_event: EventV3 = serde_json::from_str(&seal_json)?;
+
+                        // Unwrap Seal to get the Rumor
+                        let rumor_json = signer.decrypt(&seal_event.pubkey, &seal_event.content)?;
+                        let rumor: Rumor = serde_json::from_str(&rumor_json)?;
+
+                        println!("NIP-17 DM from {}: {}", seal_event.pubkey.as_hex_string(), rumor.content);
+                    }
+                } else if event.kind == EventKind::MarketplaceUi {
+                    println!("Marketplace event: {:?}", event);
                 }
-                _ => {}
+                else {
+                    println!("Received event: {:?}", event);
+                }
             }
         }
     }
