@@ -276,19 +276,12 @@ fn get_ahead_behind(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
+    
 
-    use futures::join;
-    use gnostr::test_utils::{
-        cli_tester_create_proposal_branches_ready_to_send, cli_tester_create_proposals,
-        generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-    };
-    use gnostr::test_utils::{
-        git::GitTestRepo, git_remote::*, relay::Relay, FEATURE_BRANCH_NAME_1,
-        FEATURE_BRANCH_NAME_2, FEATURE_BRANCH_NAME_3,
-    };
-    use serial_test::serial;
+    
+    
+    use gnostr::test_utils::relay::Relay;
+    
 
 
     mod without_state_announcement {
@@ -380,17 +373,17 @@ mod tests {
 
         mod when_announcement_matches_git_server {
 
-            use crate::list::tests::Relay;
-            use futures::join;
-            use gnostr::test_utils::E;
-            use gnostr::test_utils::generate_test_key_1_relay_list_event;
-            use gnostr::test_utils::generate_test_key_1_metadata_event;
-            use gnostr::test_utils::git_remote::prep_git_repo;
-            use gnostr::test_utils::git_remote::generate_repo_with_state_event;
-            use gnostr::test_utils::generate_repo_ref_event_with_git_server;
-            use gnostr::test_utils::git_remote::cli_tester_after_fetch;
-            use serial_test::serial;
-            use std::collections::HashSet;
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
             #[tokio::test]
             #[serial]
@@ -469,18 +462,18 @@ mod tests {
         }
         mod when_announcement_doesnt_match_git_server {
 
-            use futures::join;
-            use gnostr::test_utils::E;
-            use gnostr::test_utils::git::GitTestRepo;
-            use gnostr::test_utils::git_remote::cli_tester_after_fetch;
-            use gnostr::test_utils::git_remote::generate_repo_with_state_event;
-            use gnostr::test_utils::generate_test_key_1_relay_list_event;
-            use gnostr::test_utils::generate_test_key_1_metadata_event;
-            use gnostr::test_utils::git_remote::prep_git_repo;
-            use gnostr::test_utils::generate_repo_ref_event_with_git_server;
-            use gnostr::test_utils::relay::Relay;
-            use serial_test::serial;
-            use std::collections::HashSet;
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
             #[tokio::test]
             #[serial]
