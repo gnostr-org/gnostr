@@ -29,7 +29,7 @@ use crate::{
     },
     keys::{key_match, SharedKeyConfig},
     queue::{Action, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
-    strings, try_or_popup,
+    strings, strings::symbol, try_or_popup,
     ui::{self, Size},
 };
 
@@ -337,6 +337,12 @@ impl BranchListPopup {
                     .position(|b| b.name.ends_with("/HEAD"))
                     .map(|idx| self.branches.remove(idx));
             }
+            self.branches
+                .iter()
+                .position(|b| !b.name.contains("pr/"))
+                .map(|idx| self.branches.remove(idx));
+
+
             self.set_selection(self.selection)?;
         }
         Ok(())
@@ -457,14 +463,15 @@ impl BranchListPopup {
 
     /// Get branches to display
     fn get_text(&self, theme: &SharedTheme, width_available: u16, height: usize) -> Text<'_> {
-        const UPSTREAM_SYMBOL: char = '\u{2191}';
-        const TRACKING_SYMBOL: char = '\u{2193}';
+        const UPSTREAM_SYMBOL: char = '\u{2191}'; // up arrow
+        const TRACKING_SYMBOL: char = '\u{2193}'; // down arrow
         const HEAD_SYMBOL: char = '*';
         const EMPTY_SYMBOL: char = ' ';
         const THREE_DOTS: &str = "...";
         const THREE_DOTS_LENGTH: usize = THREE_DOTS.len(); // "..."
         const COMMIT_HASH_LENGTH: usize = 8;
         const IS_HEAD_STAR_LENGTH: usize = 3; // "*  "
+        const IS_GNOSTR_PR: &str = symbol::CIRCLED_G_STR;
 
         let branch_name_length: usize = width_available as usize * 40 / 100;
         // commit message takes up the remaining width
@@ -482,44 +489,57 @@ impl BranchListPopup {
             .take(height)
             .enumerate()
         {
-            let mut commit_message = displaybranch.top_commit_message.clone();
-            if commit_message.len() > commit_message_length {
-                commit_message
-                    .unicode_truncate(commit_message_length.saturating_sub(THREE_DOTS_LENGTH));
-                commit_message += THREE_DOTS;
-            }
 
-            let mut branch_name = displaybranch.name.clone();
-            if branch_name.len() > branch_name_length.saturating_sub(THREE_DOTS_LENGTH) {
-                branch_name = branch_name
-                    .unicode_truncate(branch_name_length.saturating_sub(THREE_DOTS_LENGTH))
-                    .0
-                    .to_string();
-                branch_name += THREE_DOTS;
-            }
-
-            let selected = (self.selection as usize - self.scroll.get_top()) == i;
-
-            let is_head = displaybranch
-                .local_details()
-                .is_some_and(|details| details.is_head);
-            let is_head_str = if is_head { HEAD_SYMBOL } else { EMPTY_SYMBOL };
-            let upstream_tracking_str = match displaybranch.details {
-                BranchDetails::Local(LocalBranch { has_upstream, .. }) if has_upstream => {
-                    UPSTREAM_SYMBOL
+            //if displaybranch.name.starts_with("pr") {
+                let mut commit_message = displaybranch.top_commit_message.clone();
+                if commit_message.len() > commit_message_length {
+                    commit_message
+                        .unicode_truncate(commit_message_length.saturating_sub(THREE_DOTS_LENGTH));
+                    commit_message += THREE_DOTS;
                 }
-                BranchDetails::Remote(RemoteBranch { has_tracking, .. }) if has_tracking => {
-                    TRACKING_SYMBOL
-                }
-                _ => EMPTY_SYMBOL,
-            };
+
+                let mut branch_name = displaybranch.name.clone();
+
+                    //
+
+                    if branch_name.len() > branch_name_length.saturating_sub(THREE_DOTS_LENGTH) {
+                        branch_name = branch_name
+                            .unicode_truncate(branch_name_length.saturating_sub(THREE_DOTS_LENGTH))
+                            .0
+                            .to_string();
+                        branch_name += THREE_DOTS;
+                    }
+
+
+                    //TODO detect nip34 events
+                    if branch_name.starts_with("pr") {
+                        branch_name = IS_GNOSTR_PR.to_owned() + "  " + &branch_name;
+                    }
+
+                    
+                    let selected = (self.selection as usize - self.scroll.get_top()) == i;
+
+                    let is_head = displaybranch
+                        .local_details()
+                        .is_some_and(|details| details.is_head);
+                    let is_head_str = if is_head { HEAD_SYMBOL } else { EMPTY_SYMBOL };
+                    let upstream_tracking_str = match displaybranch.details {
+                        BranchDetails::Local(LocalBranch { has_upstream, .. }) if has_upstream => {
+                            UPSTREAM_SYMBOL
+                        }
+                        BranchDetails::Remote(RemoteBranch { has_tracking, .. }) if has_tracking => {
+                            TRACKING_SYMBOL
+                        }
+                        _ => EMPTY_SYMBOL,
+                    };
+                //};
 
             let span_prefix = Span::styled(
                 format!("{is_head_str}{upstream_tracking_str} "),
                 theme.commit_author(selected),
             );
             let span_hash = Span::styled(
-                format!("{} ", displaybranch.top_commit.get_short_string()),
+                format!("{} ", displaybranch.top_commit),//.get_short_string()),
                 theme.commit_hash(selected),
             );
             let span_msg = Span::styled(commit_message.to_string(), theme.text(true, selected));
@@ -532,10 +552,11 @@ impl BranchListPopup {
                 span_prefix,
                 span_name,
                 span_hash,
-                span_msg,
+                //span_msg,
             ]));
         }
 
+        //};
         Text::from(txt)
     }
 
