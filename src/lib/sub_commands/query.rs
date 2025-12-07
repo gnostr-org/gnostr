@@ -75,16 +75,8 @@ pub struct QuerySubCommand {
 /// Handles the 'query' subcommand functionality.
 /// It takes the parsed command-line arguments and executes the query.
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
-    debug!("Launching query subcommand with args: {:?}", args);
-    debug!("Launching query subcommand with args: {:?}", args);
 
     let (filt, limit_check) = build_filter_map(args)?;
-
-    // ConfigBuilder usage from original main.
-    // These values might need to be configurable or passed from the main app.
-    // For now, using defaults similar to the original bin.
-    debug!("Building gnostr_query config.");
-    debug!("Building gnostr_query config.");
     let _config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
@@ -120,9 +112,6 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
             .collect()
     };
 
-    debug!("Sending query to relays: {:?}", relays);
-    debug!("Sending query to relays: {:?}", relays);
-    // Convert the error from gnostr_query::send to anyhow::Error before propagating
     let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check)).await
         .map_err(|e| {
             error!("Failed to send query: {}", e);
@@ -138,13 +127,10 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
         json_result.push(element);
     }
 
-    // In a library function, we should just print and return Ok(()).
-    // The exit code logic is usually handled by the main binary.
     for element in json_result {
-        print!("{}", element); // output to terminal
+        print!("{}", element);
     }
 
-    debug!("Query subcommand finished successfully.");
     Ok(())
 }
 
@@ -224,8 +210,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
     if let Some(search_vec) = &args.search {
         if !search_vec.is_empty() {
             let search_string = "search".to_string();
-            // The original bin code only used the first element of search if multiple were provided.
-            // Let's stick to that behavior.
             let val = search_vec[0].clone();
             debug!("Applying search filter: {}", val);
             filt.insert(search_string, json!(val));
