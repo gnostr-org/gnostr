@@ -150,10 +150,8 @@ impl NBReader {
                             if char::from(byte[0]).is_alphabetic() {
                                 in_escape_code = false;
                             }
-                        } else {
-                            if tx.send(Ok(PipedChar::Char(byte[0]))).is_err() {
-                                break;
-                            }
+                        } else if tx.send(Ok(PipedChar::Char(byte[0]))).is_err() {
+                            break;
                         }
                     }
                     Err(error) => {
