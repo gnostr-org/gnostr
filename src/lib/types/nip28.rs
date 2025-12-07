@@ -611,7 +611,7 @@ pub fn mute_user(
     tags.push(TagV3::new_identifier(channel_id.to_string()));
 
     // 'p' tag for the user to mute
-    tags.push(TagV3::new_pubkey(user_pubkey.clone(), relay_url.cloned(), None));
+    tags.push(TagV3::new_pubkey(*user_pubkey, relay_url.cloned(), None));
 
     // 'reason' tag - optional
     if let Some(r) = reason {
