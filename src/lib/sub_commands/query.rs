@@ -12,8 +12,15 @@ pub struct QuerySubCommand {
     /// Filter by author public keys (comma-separated).
     #[arg(long)]
     pub authors: Option<String>,
+
     /// Filter by event IDs (comma-separated).
-    #[arg(long, short)]
+    ///
+    /// The argument supports a complex command expansion pattern:
+    ///
+    /// gnostr query -i
+    ///     $(gnostr bech32-to-any
+    ///     note1wx60lqwu2h8wdyn6t2r74whuwum0r3q4px3258pfnusnpx3pcumqwauly3 | jq .[] | sed 's/\"//g')
+    #[arg(long, short = 'i', value_name = "EVENT_IDS")]
     pub ids: Option<String>,
     /// Maximum number of events to return.
     #[arg(long, default_value = "1")]
