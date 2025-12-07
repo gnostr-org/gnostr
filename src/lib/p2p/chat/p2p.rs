@@ -101,7 +101,7 @@ pub async fn evt_loop(
                 // content-address messages.
                 // No two messages of the same content will be propagated.
                 .build()
-                .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+                .map_err(|msg| io::Error::other(msg))?;
             // Temporary hack because `build` does not return a proper `std::error::Error`.
 
             // build a gossipsub network behaviour
