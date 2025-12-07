@@ -96,6 +96,7 @@ impl Theme {
             })
     }
 
+    // fn text
     pub fn text(&self, enabled: bool, selected: bool) -> Style {
         match (enabled, selected) {
             (false, false) => Style::default().fg(self.disabled_fg),
@@ -301,14 +302,14 @@ impl Default for Theme {
     fn default() -> Self {
         Self {
             //selected_tab: Color::White,
-            selected_tab: Color::Gray,
+            selected_tab: Color::Reset,
             command_fg: Color::White,
             selection_bg: Color::Magenta,
-            selection_fg: Color::White,
+            selection_fg: Color::Reset,
             cmdbar_bg: Color::Reset,
             cmdbar_extra_lines_bg: Color::Reset,
-            disabled_fg: Color::Gray,
-            //disabled_fg: Color::Reset,
+            //disabled_fg: Color::Gray,
+            disabled_fg: Color::Reset,
             diff_line_add: Color::Green,
             diff_line_delete: Color::Red,
             diff_file_added: Color::LightGreen,
@@ -322,7 +323,7 @@ impl Default for Theme {
             push_gauge_bg: Color::Reset,
             push_gauge_fg: Color::Reset,
             tag_fg: Color::LightMagenta,
-            branch_fg: Color::LightYellow,
+            branch_fg: Color::Reset,
             line_break: "¶".to_string(),
             block_title_focused: Color::Reset,
         }
