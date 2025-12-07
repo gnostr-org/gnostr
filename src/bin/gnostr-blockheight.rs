@@ -138,8 +138,6 @@ use futures::executor::block_on;
 ///
 /// print!("{}",blockheight.unwrap());
 
-use log::debug;
-
 async fn print_blockheight() {
     #[cfg(debug_assertions)]
     let start = std::time::SystemTime::now()
