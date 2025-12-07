@@ -161,9 +161,22 @@ pub struct GnostrCli {
     #[command(subcommand)]
     pub command: Option<GnostrCommands>,
     /// nsec
-    #[arg(short, long,
+    #[arg(
+        short = 'n',
+        long = "nsec",
         action = clap::ArgAction::Append,
-        default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+        default_value = "0000000000000000000000000000000000000000000000000000000000000001",
+        help = "nostr secret key",
+        long_help = r#"
+    Filter by event IDs (comma-separated).
+
+    The argument supports complex command expansion patterns:
+
+    gnostr --nsec $(gnostr --hash "key_material_to_sha256") \
+    note \
+    -c "text note"
+    "#
+    )]
     pub nsec: Option<String>,
     /// hash
     #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
