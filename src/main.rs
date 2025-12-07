@@ -59,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
         let subscriber = Registry::default()
             .with(fmt::layer().with_writer(std::io::stdout))
             .with(filter);
-        let _ = subscriber.init();
+        subscriber.init();
     };
 
     let env_args: Vec<String> = env::args().collect();
