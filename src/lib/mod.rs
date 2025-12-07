@@ -19,8 +19,6 @@ pub mod clipboard;
 pub mod cmdbar;
 ///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
 pub mod components;
-///  <https://docs.rs/gnostr/latest/gnostr/dashboard/index.html>
-pub mod dashboard;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
