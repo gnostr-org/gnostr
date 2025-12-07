@@ -280,6 +280,9 @@ pub struct CliTester {
 #[cfg(unix)]
 use expectrl::process::unix::Signal;
 
+#[cfg(windows)]
+use expectrl::{session::{Session, OsSession}, Expect, Eof, process::Process};
+
 #[cfg(unix)]
 impl Drop for CliTester {
     fn drop(&mut self) {
