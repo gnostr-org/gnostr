@@ -74,10 +74,10 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         opts.message = [message.to_string()].to_vec();
     }
 
-    let mut miner = Gitminer::new(opts.clone()).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to start git miner: {}", e)))?;
+    let mut miner = Gitminer::new(opts.clone()).map_err(|e| io::Error::other(format!("Failed to start git miner: {}", e)))?;
     debug!("Gitminer options: {:?}", opts);
 
-    let _hash = miner.mine().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to generate commit: {}", e)))?;
+    let _hash = miner.mine().map_err(|e| io::Error::other(format!("Failed to generate commit: {}", e)))?;
 
     // Initiate gnostr_legit_event after GitMiner has finished.
     // gnostr_legit_event itself spawns tasks on the global runtime.
@@ -90,7 +90,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         Err(e) => {
             eprintln!("Error initiating gnostr_legit_event: {}", e);
             // Convert the error to an io::Error.
-            Err(io::Error::new(io::ErrorKind::Other, e.to_string()))
+            Err(io::Error::other(e.to_string()))
         }
     }
 }
@@ -651,7 +651,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
     //split the commit message into a Vec<String>
     if let Some(message) = value.get("message") {
-        let parts = split_json_string(&message, "\n");
+        let parts = split_json_string(message, "\n");
         for part in parts {
             debug!("\n{}", part);
         }
