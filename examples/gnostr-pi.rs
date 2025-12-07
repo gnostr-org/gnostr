@@ -36,7 +36,7 @@ fn main() {
         }
     if (args.len() - 1) == 1 {
         let depth = u64::from_str(&args[1]).unwrap() * 5 + 1;
-        calculate_pi_digits_impl(depth as u64);
+        calculate_pi_digits_impl(depth);
         process::exit(0);
     }
     if (args.len() - 1) == 2 {
@@ -47,10 +47,10 @@ fn main() {
 
         if offset <= 1 {
             //TODO handle negative offset simular to gnostr-pi.c
-            calculate_pi_digits_impl(depth as u64);
+            calculate_pi_digits_impl(depth);
             process::exit(0);
         } else {
-            calculate_pi_digits_with_offset_impl(depth as u64, offset as u64);
+            calculate_pi_digits_with_offset_impl(depth, offset);
         }
 
         process::exit(0);
