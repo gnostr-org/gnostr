@@ -12,13 +12,9 @@ use std::fmt;
     AsMut, AsRef, Clone, Copy, Debug, Deref, Eq, From, Hash, Into, Ord, PartialEq, PartialOrd,
 )]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
+#[derive(Default)]
 pub struct Id(pub [u8; 32]);
 
-impl Default for Id {
-    fn default() -> Self {
-        Id([0; 32])
-    }
-}
 
 impl Id {
     /// Render into a hexadecimal string
