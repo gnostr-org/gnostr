@@ -801,12 +801,13 @@ impl TopicList {
         let mut txt: Vec<Line> = Vec::with_capacity(height);
         let _now = Local::now();
         let any_marked = !self.marked.is_empty();
-        for (_idx, e) in self
+        //for (_idx, e) in self
+        for e in self
             .items
             .iter()
             .skip(self.scroll_top.get())
             .take(height)
-            .enumerate()
+        //    .enumerate()
         {
             let _tags = self
                 .tags
