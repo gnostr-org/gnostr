@@ -12,16 +12,38 @@ pub struct QuerySubCommand {
     /// Filter by author public keys (comma-separated).
     #[arg(long)]
     pub authors: Option<String>,
+    #[arg(
+        short = 'i',
+        long = "ids",
+        value_name = "EVENT_IDS",
+        help = "Filter by event IDs (comma-separated).",
+        // This is the important part: a multi-line, verbatim example string
+        long_help = r#"
+    Filter by event IDs (comma-separated).
 
-    /// Filter by event IDs (comma-separated).
-    ///
-    /// The argument supports a complex command expansion pattern:
-    ///
-    /// gnostr query -i
-    ///     $(gnostr bech32-to-any
-    ///     note1wx60lqwu2h8wdyn6t2r74whuwum0r3q4px3258pfnusnpx3pcumqwauly3 | jq .[] | sed 's/\"//g')
-    #[arg(long, short = 'i', value_name = "EVENT_IDS")]
+    The argument supports complex command expansion patterns:
+
+    gnostr query -i $(gnostr bech32-to-any \
+    note1wx60lqwu2h8wdyn6t2r74whuwum0r3q4px3258pfnusnpx3pcumqwauly3 | \
+    jq .[] | sed 's/\"//g')
+
+    gnostr query -i \
+    $(gnostr bech32-to-any \
+    $(gnostr note -c "test" | \
+    jq .[] | sed 's/\"//g') | \
+    jq .[] | sed 's/\"//g')
+
+    gnostr query -i \
+    $(gnostr bech32-to-any \
+    $(gnostr --nsec $(gnostr --blockhash) \
+    note -c "test" | \
+    jq .[] | sed 's/\"//g') | \
+    jq .[] | sed 's/\"//g')
+
+    "#
+    )]
     pub ids: Option<String>,
+
     /// Maximum number of events to return.
     #[arg(long, default_value = "1")]
     pub limit: Option<i32>,
