@@ -126,6 +126,7 @@
 //! 
 //! async reqwest to <https://mempool.space/api/blocks/tip/height>
 use futures::executor::block_on;
+use tracing::debug;
 ///
 /// weeble = (std::time::SystemTime::UNIX_EPOCH (seconds) / bitcoin-blockheight)
 ///
