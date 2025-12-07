@@ -796,32 +796,32 @@ impl TopicList {
     }
 
     // displayed above get_detail_text
-    fn get_topic_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
-        let selection = self.relative_selection();
+    fn get_topic_text(&self, height: usize, _width: usize) -> Vec<Line<'_>> {
+        let _selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
-        let now = Local::now();
+        let _now = Local::now();
         let any_marked = !self.marked.is_empty();
-        for (idx, e) in self
+        for (_idx, e) in self
             .items
             .iter()
             .skip(self.scroll_top.get())
             .take(height)
             .enumerate()
         {
-            let tags = self
+            let _tags = self
                 .tags
                 .as_ref()
                 .and_then(|t| t.get(&e.id))
                 .map(|tags| tags.iter().map(|t| format!("<{}>", t.name)).join(" "));
 
-            let local_branches = self.local_branches.get(&e.id).map(|local_branch| {
+            let _local_branches = self.local_branches.get(&e.id).map(|local_branch| {
                 local_branch
                     .iter()
                     .map(|local_branch| format!("{{{0}}}", local_branch.name))
                     .join(" ")
             });
 
-            let marked = if any_marked {
+            let _marked = if any_marked {
                 self.is_marked(&e.id)
             } else {
                 None
@@ -830,14 +830,14 @@ impl TopicList {
             //get_entry_to_add
             //txt.push(self.get_entry_to_add(
             //    e,
-            //    idx + self.scroll_top.get() == selection,
-            //    tags,
-            //    local_branches,
+            //    _idx + self.scroll_top.get() == _selection,
+            //    _tags,
+            //    _local_branches,
             //    self.remote_branches_string(e),
             //    &self.theme,
-            //    width - 6_usize,
-            //    now,
-            //    marked,
+            //    _width - 6_usize,
+            //    _now,
+            //    _marked,
             //));
             txt.push("topiclist:840:text".into());
         }
@@ -1099,7 +1099,7 @@ impl DrawableComponent for TopicList {
             selection,
         ));
 
-        let title = format!(
+        let _title = format!(
             "topiclist.rs:1100: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
@@ -1117,7 +1117,7 @@ impl DrawableComponent for TopicList {
                     //.title(Span::styled(
                     //    format!(
                     //        "1097:self.get_topic_text:pubkey--->{:>}<---",
-                    //        title.as_str().to_owned(),
+                    //        _title.as_str().to_owned(),
                     //    ),
                     //    self.theme.title(true),
                     //))
