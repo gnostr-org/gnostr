@@ -228,28 +228,32 @@ impl TopicList {
     }
 
 
-	/// set_local_branches
+    /// set_local_branches
     pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
         self.local_branches.clear();
 
         for local_branch in local_branches {
-            self.local_branches
-                .entry(local_branch.top_commit)
-                .or_default()
-                .push(local_branch);
+            if local_branch.name.contains("pr") {
+                self.local_branches
+                    .entry(local_branch.top_commit)
+                    .or_default()
+                    .push(local_branch);
+            }
         }
     }
 
 
-	/// set_remote_branches
+    /// set_remote_branches
     pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
         self.remote_branches.clear();
 
         for remote_branch in remote_branches {
-            self.remote_branches
-                .entry(remote_branch.top_commit)
-                .or_default()
-                .push(remote_branch);
+            if remote_branch.name.contains("pr") {
+                self.remote_branches
+                    .entry(remote_branch.top_commit)
+                    .or_default()
+                    .push(remote_branch);
+            }
         }
     }
 
@@ -478,7 +482,7 @@ impl TopicList {
         selected: bool,
         tags: Option<String>,
         local_branches: Option<String>,
-        remote_branches: Option<String>,
+        remote_branches: Option<String>, //detect branch names with pr/WEEBLE/BLOCKHEIGHT/WOBBLE nip34 etc
         theme: &Theme,
         width: usize, //width
         _now: DateTime<Local>,
@@ -583,12 +587,13 @@ impl TopicList {
             //txt.push(Span::styled(tags, style_tags));
         }
 
+        //TODO detect branch pr/WEEBLE/BLOCKHEIGHT/WOBBLE etc for nip34
         if let Some(_local_branches) = local_branches {
-            //txt.push(Span::styled(local_branches, style_branches));
+            txt.push(Span::styled(_local_branches, style_branches));
         }
         //git-remote-nostr helper
-        if let Some(remote_branches) = remote_branches {
-            txt.push(Span::styled(remote_branches, style_branches));
+        if let Some(_remote_branches) = remote_branches {
+            txt.push(Span::styled(_remote_branches, style_branches));
         }
 
         Line::from(txt)
@@ -619,6 +624,7 @@ impl TopicList {
             theme.text(true, false),
         );
 
+        //nip34 indication for push
         // marker
         if let Some(_marked) = marked {
             //txt.push(Span::styled(
@@ -636,7 +642,7 @@ impl TopicList {
             //    theme.log_marker(selected),
             //));
         }
-        txt.push(splitter.clone());
+        //txt.push(splitter.clone());
 
         let _style_hash = if normal {
             theme.commit_hash(selected)
@@ -679,7 +685,9 @@ impl TopicList {
         //    format!("{} ", &truncate_chars(&e.keys, 64 as usize)),
         //    style_hash,
         //));
-        txt.push(splitter.clone());
+
+        //txt.push(splitter.clone());
+
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(splitter.clone());
 
@@ -709,7 +717,7 @@ impl TopicList {
         }
 
         if let Some(_local_branches) = local_branches {
-            //txt.push(Span::styled(local_branches, style_branches));
+            txt.push(Span::styled(_local_branches, style_branches));
             txt.push(splitter.clone());
         }
         //git-remote-nostr helper
@@ -752,7 +760,7 @@ impl TopicList {
                 None
             };
 
-            //txt.push("topiclist:755:text".into());
+            txt.push("topiclist:757:text".into());
             //txt.push(
             //    format!(
             //        "{}/{}/{}",
@@ -1106,9 +1114,10 @@ impl DrawableComponent for TopicList {
             left_chunks[0],
         );
 
+        //format nip34 info
         f.render_widget(
             Paragraph::new(self.get_detail_text(
-                10_usize * topic_height_in_lines,
+                /*10_usize * */topic_height_in_lines,
                 (current_size.0 - 6) as usize,
             ))
             .block(
