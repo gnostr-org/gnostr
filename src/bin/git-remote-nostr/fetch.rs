@@ -407,16 +407,12 @@ fn fetch_from_git_server_url(
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Result as AnyhowResult;
-    use futures::join;
-    use gnostr::test_utils::{
-        self, cli_tester_create_proposal_branches_ready_to_send,
-        generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-    };
-    use gnostr::test_utils::E;
-    use gnostr::test_utils::{git::GitTestRepo, git_remote::*, relay};
-    use nostr_0_34_1::Event;
+    
+    
+    
+    
+    
+    
 
     use crate::fetch::FetchReporter;
 
@@ -612,10 +608,10 @@ mod tests {
 
     mod integration_tests {
 
-        use super::*;
-        use serial_test::serial;
-        use gnostr::test_utils::relay::Relay;
-        use gnostr::test_utils::FEATURE_BRANCH_NAME_1;
+        
+        
+        
+        
 
         #[tokio::test]
         #[serial]
@@ -689,19 +685,19 @@ mod tests {
 
         mod when_first_git_server_fails_ {
 
-            use futures::join;
-            use gnostr::test_utils::generate_repo_ref_event_with_git_server;
-            use gnostr::test_utils::generate_test_key_1_relay_list_event;
-            use gnostr::test_utils::git_remote::prep_git_repo_minus_1_commit;
-            use gnostr::test_utils::generate_test_key_1_metadata_event;
-            use gnostr::test_utils::relay;
-            use gnostr::test_utils::relay::Relay;
-            use gnostr::test_utils::git_remote::generate_repo_with_state_event;
-            use gnostr::test_utils::git::GitTestRepo;
-            use gnostr::test_utils::git_remote::cli_tester_after_fetch;
-            use gnostr::test_utils::E;
-            use nostr_0_34_1::Event;
-            use serial_test::serial;
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
                             #[tokio::test]
                             #[serial]
