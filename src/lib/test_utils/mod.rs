@@ -292,7 +292,7 @@ impl Drop for CliTester {
 impl Drop for CliTester {
     fn drop(&mut self) {
         // Ensure the child process is killed when the CliTester is dropped.
-        let _ = self.expectrl_session.get_process_mut().kill();
+        let _ = self.expectrl_session.get_process_mut().terminate();
     }
 }
 
