@@ -110,32 +110,32 @@ impl TopicList {
     }
 
 
-	/// tags
+    /// tags
     pub const fn tags(&self) -> Option<&Tags> {
         self.tags.as_ref()
     }
 
 
-	/// clear
+    /// clear
     pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
     }
 
 
-	/// copy_items
+    /// copy_items
     pub fn copy_items(&self) -> Vec<CommitId> {
         self.commits.iter().copied().collect_vec()
     }
 
 
-	/// set_tags
+    /// set_tags
     pub fn set_tags(&mut self, tags: Tags) {
         self.tags = Some(tags);
     }
 
 
-	/// selected_entry
+    /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
             .iter()
@@ -143,32 +143,32 @@ impl TopicList {
     }
 
 
-	/// marked_count
+    /// marked_count
     pub fn marked_count(&self) -> usize {
         self.marked.len()
     }
 
 
-	/// marked
+    /// marked
     pub fn marked(&self) -> &[(usize, CommitId)] {
         &self.marked
     }
 
 
-	/// clear_marked
+    /// clear_marked
     pub fn clear_marked(&mut self) {
         self.marked.clear();
     }
 
 
-	/// marked_commits
+    /// marked_commits
     pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
         commits
     }
 
 
-	/// copy_commit_hash
+    /// copy_commit_hash
     pub fn copy_commit_hash(&self) -> Result<()> {
         let marked = self.marked.as_slice();
         let yank: Option<String> = match marked {
@@ -202,7 +202,7 @@ impl TopicList {
     }
 
 
-	/// checkout
+    /// checkout
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn checkout(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
@@ -214,9 +214,12 @@ impl TopicList {
             );
         }
     }
+
+
     /// comment
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn comment(&mut self) {
+        //TODO nostr reaction comment
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
             try_or_popup!(
                 self,
@@ -233,7 +236,7 @@ impl TopicList {
         self.local_branches.clear();
 
         for local_branch in local_branches {
-            if local_branch.name.contains("pr") {
+            if local_branch.name.starts_with("pr") {
                 self.local_branches
                     .entry(local_branch.top_commit)
                     .or_default()
@@ -258,7 +261,7 @@ impl TopicList {
     }
 
 
-	/// set_commits
+    /// set_commits
     pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
         // methods
         // `copy_items`
@@ -277,7 +280,7 @@ impl TopicList {
     }
 
 
-	/// refresh_extend_data
+    /// refresh_extend_data
     pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
         let new_commits = !commits.is_empty();
         self.commits.extend(commits);
@@ -291,7 +294,7 @@ impl TopicList {
     }
 
 
-	/// set_highlighted
+    /// set_highlighted
     pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
         //note: set highlights to none if there is no highlight
         self.highlights = if highlighting.as_ref().is_some_and(|set| set.is_empty()) {
@@ -306,7 +309,7 @@ impl TopicList {
     }
 
 
-	/// select_commit
+    /// select_commit
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         let index = self.commits.get_index_of(&id);
 
@@ -322,7 +325,7 @@ impl TopicList {
     }
 
 
-	/// highlighted_selection_info
+    /// highlighted_selection_info
     pub fn highlighted_selection_info(&self) -> (usize, usize) {
         let amount = self
             .highlights
@@ -332,6 +335,7 @@ impl TopicList {
         (self.highlighted_selection.unwrap_or_default(), amount)
     }
 
+    /// set_hightlighted_selection_index
     fn set_highlighted_selection_index(&mut self) {
         self.highlighted_selection = self.highlights.as_ref().and_then(|highlights| {
             highlights
@@ -359,6 +363,7 @@ impl TopicList {
             .unwrap_or_default()
     }
 
+    /// move_selection
     fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
         let needs_update = if self.items.highlighting() {
             self.move_selection_highlighting(scroll)?
@@ -369,6 +374,7 @@ impl TopicList {
         Ok(needs_update)
     }
 
+    /// move_selection_highlighting
     fn move_selection_highlighting(&mut self, scroll: ScrollType) -> Result<bool> {
         let (current_index, selection_max) = self.highlighted_selection_info();
 
@@ -578,6 +584,7 @@ impl TopicList {
             style_author,
         ));
 
+        //detect author by nostr pubkey if possible
         let _author = string_width_align(&e.author, author_width);
         // commit author
         //txt.push(Span::styled(author, style_author));
@@ -760,7 +767,7 @@ impl TopicList {
                 None
             };
 
-            txt.push("topiclist:757:text".into());
+            //txt.push("topiclist:757:text".into());
             //txt.push(
             //    format!(
             //        "{}/{}/{}",
@@ -787,6 +794,8 @@ impl TopicList {
 
         txt
     }
+
+    // displayed above get_detail_text
     fn get_topic_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
@@ -819,17 +828,18 @@ impl TopicList {
             };
 
             //get_entry_to_add
-            txt.push(self.get_entry_to_add(
-                e,
-                idx + self.scroll_top.get() == selection,
-                tags,
-                local_branches,
-                self.remote_branches_string(e),
-                &self.theme,
-                width - 6_usize,
-                now,
-                marked,
-            ));
+            //txt.push(self.get_entry_to_add(
+            //    e,
+            //    idx + self.scroll_top.get() == selection,
+            //    tags,
+            //    local_branches,
+            //    self.remote_branches_string(e),
+            //    &self.theme,
+            //    width - 6_usize,
+            //    now,
+            //    marked,
+            //));
+            txt.push("topiclist:840:text".into());
         }
 
         txt
@@ -1026,7 +1036,8 @@ impl TopicList {
         }
         Vec::new()
     }
-	/// handle_internal_event
+
+    /// handle_internal_event
     pub fn handle_internal_event(&mut self, event: InternalEvent) {
         if let InternalEvent::ChatMessage(msg) = event {
             if let Some(history) = self.chat_histories.get_mut(&msg.commit_id) {
@@ -1050,22 +1061,24 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(5),       //nip34 top box
-                    Constraint::Length(3),       //additional info
-                    Constraint::Percentage(100), //table //commit detail hidden
-                    Constraint::Length(0),       //chat input //last in - bottom
+                    Constraint::Length(5),       //0 nip34 top box
+                    Constraint::Length(3),       //1 additional info
+                    Constraint::Percentage(50),  //2 table //commit detail hidden
+                    Constraint::Percentage(50),  //3 table //chat_history
+                    Constraint::Length(3),       //4 chat input //last in - bottom
                 ]
                 .as_ref(),
             )
             .split(chunks[0]);
 
+        //commit_details
         let right_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
                 [
                     Constraint::Min(0),          //0 topic
                     Constraint::Min(0),          //1 squares
-                    Constraint::Percentage(100), //2 tools view
+                    Constraint::Percentage(50), //2 tools view
                 ]
                 .as_ref(),
             )
@@ -1087,7 +1100,7 @@ impl DrawableComponent for TopicList {
         ));
 
         let title = format!(
-            "topiclist.rs:1082: {} {}/{} ",
+            "topiclist.rs:1100: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -1139,21 +1152,22 @@ impl DrawableComponent for TopicList {
 
 
         //TODO
-        let chat_history_height = left_chunks[2].height as usize;
-        let chat_history_width = left_chunks[2].width as usize;
-        //f.render_widget(
-        //    Paragraph::new(self.get_chat_history_text(chat_history_height))
-        //        .block(
-        //            Block::default()
-        //                .borders(Borders::ALL)
-        //                .title("Chat History")
-        //                .border_style(self.theme.block(false)),
-        //        )
-        //        .alignment(Alignment::Left),
-        //    left_chunks[2],
-        //);
+        let chat_history_height = left_chunks[3].height as usize;
+        let chat_history_width = left_chunks[3].width as usize;
         f.render_widget(
             Paragraph::new(self.get_chat_text(chat_history_height, chat_history_width))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Commit History")
+                        .border_style(self.theme.block(false)),
+                )
+                .alignment(Alignment::Left),
+            left_chunks[2],
+        );
+
+        f.render_widget(
+            Paragraph::new(self.get_chat_history_text(chat_history_height))
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
@@ -1161,7 +1175,7 @@ impl DrawableComponent for TopicList {
                         .border_style(self.theme.block(false)),
                 )
                 .alignment(Alignment::Left),
-            left_chunks[2],
+            left_chunks[3],
         );
 
         // Chat input
@@ -1174,14 +1188,14 @@ impl DrawableComponent for TopicList {
             })
             .scroll((0, scroll as u16))
             .block(Block::default().borders(Borders::ALL).title("Input"));
-        f.render_widget(input, left_chunks[3]);
+        f.render_widget(input, left_chunks[4]);
 
         match self.input_mode {
             InputMode::Normal => {}
             InputMode::Editing => {
                 f.set_cursor_position((
-                    left_chunks[3].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                    left_chunks[3].y + 1,
+                    left_chunks[4].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                    left_chunks[4].y + 1,
                 ))
             }
         }
