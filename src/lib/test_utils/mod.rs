@@ -14,7 +14,7 @@ use crate::test_utils::git::GitTestRepo;
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use once_cell::sync::Lazy;
-use expectrl::{session::{Session, OsSession}, Expect, Eof};
+use expectrl::{session::{Session, OsSession}, Expect, Eof, process};
 use std::io::Write;
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
@@ -292,7 +292,7 @@ impl Drop for CliTester {
 impl Drop for CliTester {
     fn drop(&mut self) {
         // Ensure the child process is killed when the CliTester is dropped.
-        let _ = self.expectrl_session.get_process_mut().terminate();
+        let _ = self.expectrl_session.get_process_mut().kill();
     }
 }
 
