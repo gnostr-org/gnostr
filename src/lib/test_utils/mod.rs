@@ -14,7 +14,7 @@ use crate::test_utils::git::GitTestRepo;
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use once_cell::sync::Lazy;
-use expectrl::{session::{Session, OsSession}, Expect, Eof, process};
+use expectrl::{session::{Session, OsSession}, Expect, Eof, process::Process};
 use std::io::Write;
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
