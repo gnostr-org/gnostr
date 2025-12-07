@@ -296,7 +296,6 @@ impl Drop for CliTester {
     }
 }
 
-#[cfg(unix)]
 impl CliTester {
 
 	pub fn expect_input(
