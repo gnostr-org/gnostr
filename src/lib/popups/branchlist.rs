@@ -542,7 +542,7 @@ impl BranchListPopup {
                 format!("{} ", displaybranch.top_commit),//.get_short_string()),
                 theme.commit_hash(selected),
             );
-            let span_msg = Span::styled(commit_message.to_string(), theme.text(true, selected));
+            let _span_msg = Span::styled(commit_message.to_string(), theme.text(true, selected));
             let span_name = Span::styled(
                 format!("{branch_name:branch_name_length$} "),
                 theme.branch(selected, is_head),
@@ -552,7 +552,7 @@ impl BranchListPopup {
                 span_prefix,
                 span_name,
                 span_hash,
-                //span_msg,
+                _span_msg,
             ]));
         }
 
