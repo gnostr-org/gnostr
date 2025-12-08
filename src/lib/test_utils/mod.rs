@@ -295,8 +295,7 @@ impl Drop for CliTester {
     fn drop(&mut self) {
         // Ensure the child process is killed when the CliTester is dropped.
         let pid = self.expectrl_session.get_process_mut().pid();
-        // Using the winapi-based process killer added by the user.
-        let _ = crate::ws::windows_process_killer::kill_process_by_pid(pid);
+        let _ = crate::utils::windows::kill_process_by_pid(pid);
     }
 }
 
