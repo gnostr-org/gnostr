@@ -145,6 +145,7 @@ jobs:
           cargo search gnostr --limit 100
 
       - run: |
+          cpan install Locale::Maketext::Simple
           cargo install cargo-binstall -j8 || cargo binstall cargo-binstall -f || true
 
       - run: |
