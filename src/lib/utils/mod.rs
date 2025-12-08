@@ -2,6 +2,8 @@ pub mod pwd;
 pub mod retry;
 pub mod screenshot;
 
+pub mod windows;
+
 use log::{debug, error, info};
 use nostr_sdk_0_32_0::prelude::*;
 use serde_json;
