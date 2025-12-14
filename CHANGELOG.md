@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.28.0] - 2025-12-14
+
 **discard changes on checkout**
 ![discard-changes-on-checkout](assets/discard-changes-on-checkout.png)
 
@@ -49,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * overwrites committer on amend of unsigned commits [[@cruessler](https://github.com/cruessler)] ([#2784](https://github.com/gitui-org/gitui/issues/2784))
 * Updated project links to point to `gitui-org` instead of `extrawurst`  [[@vasleymus](https://github.com/vasleymus)] ([#2538](https://github.com/gitui-org/gitui/pull/2538))
 
-## [0.27.0] - 2024-01-14
+## [0.27.0] - 2025-01-14
 
 **new: manage remotes**
 
