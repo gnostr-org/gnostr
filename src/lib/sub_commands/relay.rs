@@ -1,7 +1,18 @@
 use anyhow::{anyhow, Context, Result};
+use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::process::Command;
-use tracing::info;
+use tracing::{debug, info};
+
+#[derive(Debug, Deserialize)]
+struct DataConfig {
+    path: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GnostrConfig {
+    data: Option<DataConfig>,
+}
 
 #[derive(clap::ValueEnum, Clone, Debug, Copy)]
 pub enum LogLevel {
@@ -45,6 +56,46 @@ pub struct RelaySubCommand {
 //TODO web actix runtime
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Start relay server with args: {:?}", args);
+
+    let mut final_config_path: Option<PathBuf> = None;
+    let mut final_data_path: Option<PathBuf> = None;
+
+    // Determine the configuration file path
+    if let Some(config_arg_path) = args.config {
+        final_config_path = Some(config_arg_path);
+    } else {
+        let default_config_file = PathBuf::from("config/gnostr.toml");
+        if default_config_file.exists() {
+            debug!("Using default config file: {:?}", default_config_file);
+            final_config_path = Some(default_config_file);
+        }
+    }
+
+    // If a config file is determined, try to load it to get default data path
+    if let Some(config_path) = &final_config_path {
+        if let Ok(config_content) = tokio::fs::read_to_string(config_path).await {
+            match toml::from_str::<GnostrConfig>(&config_content) {
+                Ok(gnostr_config) => {
+                    if let Some(data_config) = gnostr_config.data {
+                        if let Some(data_path_from_config) = data_config.path {
+                            debug!("Data path from config file: {:?}", data_path_from_config);
+                            final_data_path = Some(data_path_from_config);
+                        }
+                    }
+                }
+                Err(e) => {
+                    // Log the error but don't fail, continue with other defaults/args
+                    info!("Failed to parse config file {:?}: {}", config_path, e);
+                }
+            }
+        }
+    }
+
+    // Override data path if provided by command line args
+    if let Some(data_arg_path) = args.data {
+        debug!("Overriding data path with command line argument: {:?}", data_arg_path);
+        final_data_path = Some(data_arg_path);
+    }
 
     // Check if gnostr-relay is installed
     let which_output = Command::new("which")
@@ -91,10 +142,10 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Running gnostr-relay from: {}", gnostr_relay_path);
 
     let mut cmd = Command::new(gnostr_relay_path);
-    if let Some(config_path) = args.config {
+    if let Some(config_path) = final_config_path {
         cmd.arg("--config").arg(config_path);
     }
-    if let Some(data_path) = args.data {
+    if let Some(data_path) = final_data_path {
         cmd.arg("--data").arg(data_path);
     }
     if args.watch {

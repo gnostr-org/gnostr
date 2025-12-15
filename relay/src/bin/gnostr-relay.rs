@@ -23,8 +23,17 @@ async fn main() -> Result<()> {
 
     local_set
         .run_until(async move {
+            let config_file_path = "config/gnostr.toml";
+            let setting_path = if std::path::Path::new(config_file_path).exists() {
+                info!("Load config from file: {}", config_file_path);
+                Some(config_file_path)
+            } else {
+                info!("Config file not found: {}, loading default config.", config_file_path);
+                None
+            };
+
             let app_data = gnostr_relay::App::create(
-                Some("config/gnostr.toml"),
+                setting_path,
                 true,
                 Some("NOSTR".to_owned()),
                 None,
