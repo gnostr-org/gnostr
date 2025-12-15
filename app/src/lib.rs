@@ -36,7 +36,7 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 /// gui options
 #[derive(Debug, Clone, Parser)]
 pub struct GuiOpts {
-    /// GnostrApp events data directory path. The "gnostr.toml" default setting is "data/events"
+    /// gnostr-app events data directory path. The "gnostr.toml" default setting is "data/events"
     #[arg(value_name = "PATH", default_value = ".")]
     pub path: PathBuf,
 }
