@@ -58,7 +58,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Start relay server with args: {:?}", args);
 
     let mut final_config_path: Option<PathBuf> = None;
-    let mut final_data_path: Option<PathBuf> = None;
+    let mut _final_data_path: Option<PathBuf> = None;
 
     // Determine the configuration file path
     if let Some(config_arg_path) = args.config {
@@ -79,7 +79,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
                     if let Some(data_config) = gnostr_config.data {
                         if let Some(data_path_from_config) = data_config.path {
                             debug!("Data path from config file: {:?}", data_path_from_config);
-                            final_data_path = Some(data_path_from_config);
+                            _final_data_path = Some(data_path_from_config);
                         }
                     }
                 }
@@ -94,7 +94,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     // Override data path if provided by command line args
     if let Some(data_arg_path) = args.data {
         debug!("Overriding data path with command line argument: {:?}", data_arg_path);
-        final_data_path = Some(data_arg_path);
+        _final_data_path = Some(data_arg_path);
     }
 
     // Check if gnostr-relay is installed
@@ -142,15 +142,15 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Running gnostr-relay from: {}", gnostr_relay_path);
 
     let mut cmd = Command::new(gnostr_relay_path);
-    if let Some(config_path) = final_config_path {
-        cmd.arg("--config").arg(config_path);
-    }
-    if let Some(data_path) = final_data_path {
-        cmd.arg("--data").arg(data_path);
-    }
-    if args.watch {
-        cmd.arg("--watch");
-    }
+    //if let Some(config_path) = final_config_path {
+    //    cmd.arg("--config").arg(config_path);
+    //}
+    //if let Some(data_path) = final_data_path {
+    //    cmd.arg("--data").arg(data_path);
+    //}
+    //if args.watch {
+    //    cmd.arg("--watch");
+    //}
     cmd.arg("--logging").arg(args.logging.to_string());
 
     let status = cmd
