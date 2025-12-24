@@ -23,22 +23,40 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         rustup: [stable, nightly]
+        toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
-      fail-fast: false
+      fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: actions/checkout@v3
+      - name: Cache Cargo registry and Git dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: Cache Cargo build target
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Run sccache-cache only on non-release runs
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'release'
         uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Set Rust caching env vars only on non-release runs
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
         run: |
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
           # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
 
       - name: Calculate Odd/Even Status
         shell: bash
@@ -138,17 +156,31 @@ jobs:
       #  run: |
       #    ./coverage.sh ${{ matrix.rustup }} || true
 
-      - run: |
+      - name: make
+        shell: bash
+        run: |
           make || true
 
-      - run: |
+      - name: cargo search gnostr --limit 100
+        shell: bash
+        run: |
           cargo search gnostr --limit 100
 
-      - run: |
-          cpan install Locale::Maketext::Simple
-          cargo install cargo-binstall -j8 || cargo binstall cargo-binstall -f || true
+      - name: Install cargo-binstall
+        shell: bash
+        run: |
+          for i in {1..5}; do
+            curl --retry 10 -L --proto '=https' --tlsv1.2 -sSf -O https://github.com/cargo-bins/cargo-binstall/releases/download/v1.3.0/cargo-binstall-universal-apple-darwin.zip && break || sleep 10
+          done
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
+
+      - name: cargo install cargo-binstall
+        shell: bash
+        run: |
+          cpan install Locale::Maketext::Simple || true
 
       - run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.sh | sh || \
           cargo-binstall --force --no-confirm gnostr
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
@@ -219,20 +251,20 @@ jobs:
           set-metadata \
           -n gnostr-bot \
           -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
-          -t "$GITHUB_REPOSITORY" \
-          -t "$GITHUB_WORKFLOW" \
-          -t "$GITHUB_WORKFLOW_SHA" \
-          -t "$GITHUB_WORKFLOW_REF" \
-          -t "$GITHUB_REF" \
-          -t "$GITHUB_RUN_ID" \
-          -t "gnostr-bot" \
-          -t "$GITHUB_REPOSITORY_OWNER" \
-          -t "$(date +%s)" \
-          -t "$RUNNER_ENVIRONMENT" \
-          -t "$RUNNER_OS" \
-          -t "$(gnostr-weeble)" \
-          -t "$(gnostr-blockheight)" \
-          -t "$(gnostr-wobble)" \
+          -e "$GITHUB_REPOSITORY" \
+          -e "$GITHUB_WORKFLOW" \
+          -e "$GITHUB_WORKFLOW_SHA" \
+          -e "$GITHUB_WORKFLOW_REF" \
+          -e "$GITHUB_REF" \
+          -e "$GITHUB_RUN_ID" \
+          -e "gnostr-bot" \
+          -e "$GITHUB_REPOSITORY_OWNER" \
+          -e "$(date +%s)" \
+          -e "$RUNNER_ENVIRONMENT" \
+          -e "$RUNNER_OS" \
+          -e "$(gnostr-weeble)" \
+          -e "$(gnostr-blockheight)" \
+          -e "$(gnostr-wobble)" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         #if: matrix.os == 'macos-latest'
@@ -395,8 +427,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query -i $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on cancelled
@@ -429,8 +461,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query -i $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on success
@@ -464,8 +496,8 @@ jobs:
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query -i $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       #- name: Save rustup
