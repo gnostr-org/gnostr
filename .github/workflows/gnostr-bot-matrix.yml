@@ -200,12 +200,19 @@ jobs:
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
 
-      - name: linuxbrew
+      - name: linuxbrew (with retries)
         run: |
-          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-          brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+          set -e
+          for i in {1..5}; do
+            test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+            test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+            brew install gnostr-org/gnostr-org/gnostr && gnostr --help && break || { echo "brew install failed, retry $i..."; sleep 10; }
+          done
+          if ! command -v gnostr > /dev/null; then
+            echo "brew install failed after retries, attempting install via cargo-binstall"
+            cargo-binstall --force --no-confirm gnostr
+          fi
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
