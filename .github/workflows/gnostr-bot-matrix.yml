@@ -387,13 +387,26 @@ jobs:
           echo "Cleanup attempt finished."
         continue-on-error: true
 
-      - name: Get Current Job Log URL
-        uses: Tiryoh/gha-jobid-action@v1.4.0
-        id: jobs
-        if: ${{ !env.ACT }}
-        with:
-          job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
-          per_page: 50 # input matrix size here if it is larger than 30
+
+      - name: Get Job Info
+        run: |
+          GITHUB_API="/repos/${INPUT_REPOSITORY}/actions/runs/${INPUT_RUN_ID}/jobs"
+          JOBINFO="$(curl --get -Ss -H "Authorization: ***" ... "${GITHUB_API_URL}${GITHUB_API}?per_page=${INPUT_PER_PAGE}")"
+          echo "Available jobs:"
+          echo "$JOBINFO" | jq '.jobs[].name'
+          eval "$(echo "$JOBINFO" | jq -r --arg job_name "${INPUT_JOB_NAME}" '.jobs | map(select(.name == $job_name)) | .[0] | @sh "JOB_ID=\(.id) HTML_URL=\(.html_url)"')"
+          if [ -z "$JOB_ID" ] || [ "$JOB_ID" = "null" ]; then
+            echo "Could not find job with name: '$INPUT_JOB_NAME'"
+            exit 1
+          fi
+
+      #- name: Get Current Job Log URL
+      #  uses: Tiryoh/gha-jobid-action@v1.4.0
+      #  id: jobs
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
+      #    per_page: 50 # input matrix size here if it is larger than 30
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
 
