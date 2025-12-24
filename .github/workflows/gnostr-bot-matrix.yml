@@ -388,6 +388,10 @@ jobs:
         continue-on-error: true
 
 
+      - name: Debug GITHUB_API_URL
+        run: |
+          echo "GITHUB_API_URL: ${{ env.GITHUB_API_URL }}"
+
       - name: Get Job Info
         run: |
           GITHUB_API="/repos/${INPUT_REPOSITORY}/actions/runs/${INPUT_RUN_ID}/jobs"
