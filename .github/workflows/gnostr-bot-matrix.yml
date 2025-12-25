@@ -147,10 +147,9 @@ jobs:
           fetch-depth: '0'
           #fetch-tags: 'false'
 
-      - name: cargo clean
+      - name: printenv
         shell: bash
         run: |
-          cargo clean || true
           printenv || true
 
       #- name: coverage.sh
@@ -329,10 +328,10 @@ jobs:
             gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
         #if: matrix.os == 'macos-latest'
 
-      - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
-        run: |
-          cargo clean && echo "✅" || echo "❌"
+      #- name: 🌙 UTC second is ODD
+      #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
+      #  run: |
+      #    cargo clean && echo "✅" || echo "❌"
 
       - name: 🚀 cargo check -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
