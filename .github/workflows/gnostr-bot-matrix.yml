@@ -21,6 +21,8 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
+      PERL_MM_USE_DEFAULT: 1
+      PERL_CANARY_STABLE_PV: 1
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
