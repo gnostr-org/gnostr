@@ -233,12 +233,23 @@ docker-shared: 	### 	docker container with volumes
 	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v $HOME:$HOME gnostr:latest
 
 gh-act-run-all: 	### 	gh-act-run-all
-	gh extension install nektos/gh-act
+	gh extension install nektos/gh-act || true
 	gh act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || \
 	act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+
 gnostr-bot-matrix: 	### 	gnostr-bot-matrix
-	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || \
-	gh act -vv --container-architecture linux/amd64 -W .github/workflows/gnostr-bot-matrix.yml
+	gh extension install nektos/gh-act || true
+	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || \
+	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64
+
+gnostr-bot-macos: 	### 	gnostr-bot-macos
+	gh extension install nektos/gh-act || true
+	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || \
+	   act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
+gnostr-bot-macos-intel: 	### 	gnostr-bot-macos
+	gh extension install nektos/gh-act || true
+	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || \
+	   act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
