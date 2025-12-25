@@ -269,7 +269,8 @@ jobs:
       - name: create set-metadata kind 0
         shell: bash
         run: |
-          gnostr -d ${{ env.POW }} \
+          gnostr \
+          -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '')" \
           set-metadata \
@@ -298,10 +299,11 @@ jobs:
         shell: bash
         run: |
           gnostr -V
-          EVENT=$(gnostr --nsec "$(gnostr --hash \"$GITHUB_REPOSITORY_ID)\"" \
+          EVENT=$(gnostr \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
+            --nsec "$(gnostr --hash '')" \
             custom-event \
             -k 1 \
             -c "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
@@ -324,7 +326,7 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE;
-            gnostr query -i $EVENT -r wss://relay.damus.io;
+            gnostr query -i $EVENT -r ${{ env.DAMUS }};
             echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
