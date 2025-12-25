@@ -274,6 +274,7 @@ jobs:
           -e "$GITHUB_WORKFLOW_REF" \
           -e "$GITHUB_REF" \
           -e "$GITHUB_RUN_ID" \
+          -e "gnostr" \
           -e "gnostr-bot" \
           -e "$GITHUB_REPOSITORY_OWNER" \
           -e "$(date +%s)" \
@@ -449,6 +450,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
@@ -483,6 +485,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
@@ -517,6 +520,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
