@@ -24,6 +24,7 @@ jobs:
       PERL_MM_USE_DEFAULT: 1
       PERL_CANARY_STABLE_PV: 1
       DEBIAN_FRONTEND: noninteractive
+      NONINTERACTIVE: 1
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
@@ -205,25 +206,31 @@ jobs:
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
 
-
-      - name: brew install
-        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: runner.os == 'macos'
-
-      - name: linuxbrew (with retries)
+      - name: Ensure Homebrew is installed
         run: |
-          set -e
-          for i in {1..5}; do
+          if ! command -v brew &> /dev/null; then
+            echo "Brew not found, installing..."
+            NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            # Setup path only if we just installed it
             test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
             test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-            brew install gnostr-org/gnostr-org/gnostr && gnostr --help && break || { echo "brew install failed, retry $i..."; sleep 10; }
+          fi
+        if: runner.os == 'macOS' || runner.os == 'Linux'
+
+      - name: Install gnostr (with retries)
+        run: |
+          # Ensure brew is in the current shell path
+          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+          for i in {1..5}; do
+            brew install gnostr-org/gnostr-org/gnostr && break || { echo "Retry $i..."; sleep 10; }
           done
+
           if ! command -v gnostr > /dev/null; then
-            echo "brew install failed after retries, attempting install via cargo-binstall"
+            echo "Brew failed, falling back to cargo-binstall"
             cargo-binstall --force --no-confirm gnostr
           fi
-        if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
         run: brew tap gnostr-org/homebrew-gnostr-org || true
