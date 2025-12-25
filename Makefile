@@ -1,3 +1,4 @@
+ACT_VERBOSE ?= 
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 ifeq ($(TAG),)
 TAG := v$(shell cat Cargo.toml | grep 'version = "' | head -n 1 | sed 's/version = "\(.*\)".*/\1/')
@@ -191,18 +192,18 @@ docker-shared: 	### 	docker container with volumes
 
 gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act || true
-	gh act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+	gh act ${ACT_VERBOSE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
 
 gnostr-bot-matrix: 	### 	gnostr-bot-matrix
 	gh extension install nektos/gh-act || true
-	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64
+	gh act ${ACT_VERBOSE} -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64
 
 gnostr-bot-macos: 	### 	gnostr-bot-macos
 	gh extension install nektos/gh-act || true
-	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || 	   act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
+	gh act ${ACT_VERBOSE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
 gnostr-bot-macos-intel: 	### 	gnostr-bot-macos
 	gh extension install nektos/gh-act || true
-	gh act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act -vv -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
+	gh act ${ACT_VERBOSE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
