@@ -148,10 +148,9 @@ jobs:
           fetch-depth: '0'
           #fetch-tags: 'false'
 
-      - name: cargo clean
+      - name: printenv
         shell: bash
         run: |
-          cargo clean || true
           printenv || true
 
       #- name: coverage.sh
