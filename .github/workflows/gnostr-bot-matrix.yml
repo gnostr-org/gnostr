@@ -273,8 +273,10 @@ jobs:
           -r ${{ env.DAMUS }} \
           --nsec "$(gnostr --hash '')" \
           set-metadata \
-          -n gnostr-bot \
-          -a "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
+          -n "#gnostr" \
+          -a "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" \
+          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
+          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" \
           -e "$GITHUB_REPOSITORY" \
           -e "$GITHUB_WORKFLOW" \
           -e "$GITHUB_WORKFLOW_SHA" \
@@ -289,18 +291,7 @@ jobs:
           -e "$RUNNER_OS" \
           -e "$(gnostr --weeble)" \
           -e "$(gnostr --blockheight)" \
-          -e "$(gnostr --wobble)" \
-          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
-          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
-        #if: matrix.os == 'macos-latest'
-
-      - name: gnostr ngit fetch
-        shell: bash
-        run: |
-          git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
-          gnostr ngit --help
-          #gnostr ngit --nsec $(gnostr --hash "") list
-          gnostr ngit --nsec $(gnostr --hash $GITHUB_REPOSITORY_ID) fetch 2>/dev/null
+          -e "$(gnostr --wobble)" || true
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
@@ -320,6 +311,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
@@ -330,10 +322,10 @@ jobs:
             -t "$(gnostr --wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} && echo && \
-            gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
+            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            export NOTE=$NOTE;
+            gnostr query -i $EVENT -r wss://relay.damus.io;
+            echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
       #- name: 🌙 UTC second is ODD
@@ -351,6 +343,33 @@ jobs:
         shell: bash
         run: |
           cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
+          gnostr nip34 --help
+          gnostr nip34 repo-announcement --help
+          gnostr nip34 repo-state --help
+          gnostr nip34 patch --help
+          gnostr nip34 pull-request --help
+          gnostr nip34 issue --help
+          gnostr nip34 status --help
+
+      - name: gnostr ngit fetch
+        shell: bash
+        run: |
+          git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+          gnostr ngit --help
+          #gnostr ngit --nsec $(gnostr --hash "") list
+          gnostr ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
+        if: ${{ !env.ACT }}
+
+
+
+
+
+
+
+
+
+
+
 
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
@@ -390,6 +409,8 @@ jobs:
       - run: |
          make gnostr-chat &
          make gnostr-chat &
+         gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
+         gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
          sleep 5 # Wait for services to start
          gnostr query --limit 100
 
