@@ -186,7 +186,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.sh | sh || \
           cargo-binstall --force --no-confirm gnostr
 
-      - run: sudo apt-get install build-essential procps curl file git
+      - run: sudo apt-get -y install build-essential procps curl file git
         if: matrix.os == 'ubuntu-latest'
 
       #- run: cargo install sccache --force -j8
