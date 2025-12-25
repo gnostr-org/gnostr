@@ -196,6 +196,14 @@ jobs:
       #  if: runner.os == 'windows'
 
 
+      - name: Install Strawberry Perl
+        run: choco install strawberryperl
+        if: runner.os == 'windows'
+      - name: Install Perl modules
+        run: perl -MCPAN -e "install Locale::Maketext::Simple"
+        if: runner.os == 'windows'
+
+
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
