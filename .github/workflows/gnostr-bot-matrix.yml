@@ -177,10 +177,22 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-      - name: cargo install cargo-binstall
+      - name: Install OpenSSL (Windows)
+        run: |
+          choco install openssl.light -y
+        if: runner.os == 'Windows'
+
+      - name: Set up OpenSSL environment
         shell: bash
         run: |
-          cpan install Locale::Maketext::Simple || true
+          echo "OPENSSL_DIR=C:\\Program Files\\OpenSSL-Win64" >> $GITHUB_ENV
+          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+        if: runner.os == 'Windows'
+
+      - name: cpan Locale::Maketext::Simple
+        shell: bash
+        run: |
+          cpan Locale::Maketext::Simple || true
 
       - run: |
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.sh | sh || \
