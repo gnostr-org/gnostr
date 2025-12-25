@@ -264,7 +264,7 @@ jobs:
         run: |
           gnostr -d ${{ env.POW }} \
           -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
+          --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
           set-metadata \
           -n gnostr-bot \
           -a "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
@@ -274,6 +274,7 @@ jobs:
           -e "$GITHUB_WORKFLOW_REF" \
           -e "$GITHUB_REF" \
           -e "$GITHUB_RUN_ID" \
+          -e "gnostr" \
           -e "gnostr-bot" \
           -e "$GITHUB_REPOSITORY_OWNER" \
           -e "$(date +%s)" \
@@ -292,14 +293,14 @@ jobs:
           git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
           gnostr ngit --help
           #gnostr ngit --nsec $(gnostr --hash "") list
-          gnostr ngit --nsec $(gnostr --hash "") fetch 2>/dev/null 
+          gnostr ngit --nsec $(gnostr --hash $GITHUB_REPOSITORY_ID) fetch 2>/dev/null
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
         shell: bash
         run: |
           gnostr -V
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -436,7 +437,7 @@ jobs:
         if: failure()
         run: |
           echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -449,6 +450,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
@@ -470,7 +472,7 @@ jobs:
         if: cancelled()
         run: |
           echo "A previous step cancelled! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -483,6 +485,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
@@ -504,7 +507,7 @@ jobs:
         if: success()
         run: |
           echo "A previous step succeeded! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
+          EVENT=$(gnostr --nsec "$(gnostr --hash $GITHUB_REPOSITORY_ID)" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
@@ -517,6 +520,7 @@ jobs:
             -t "$GITHUB_WORKFLOW_REF" \
             -t "$GITHUB_REF" \
             -t "$GITHUB_RUN_ID" \
+            -t "gnostr" \
             -t "gnostr-bot" \
             -t "$GITHUB_REPOSITORY_OWNER" \
             -t "$(date +%s)" \
