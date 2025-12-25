@@ -46,6 +46,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
+      - name: Install Locale::Maketext::Simple for Ubuntu
+        run: sudo apt-get update && sudo apt-get install -y liblocale-maketext-simple-perl
+        if: runner.os == 'Linux'
       - name: Cache Cargo build target
         uses: actions/cache@v3
         with:
@@ -227,6 +230,10 @@ jobs:
             test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
             test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           fi
+        if: runner.os == 'macOS' || runner.os == 'Linux'
+
+      - name: Install Perl via Homebrew
+        run: brew install perl
         if: runner.os == 'macOS' || runner.os == 'Linux'
 
       - name: Install gnostr (with retries)
