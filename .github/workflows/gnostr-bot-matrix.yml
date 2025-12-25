@@ -265,7 +265,7 @@ jobs:
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
           set-metadata \
           -n gnostr-bot \
-          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+          -a "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
           -e "$GITHUB_REPOSITORY" \
           -e "$GITHUB_WORKFLOW" \
           -e "$GITHUB_WORKFLOW_SHA" \
@@ -277,9 +277,9 @@ jobs:
           -e "$(date +%s)" \
           -e "$RUNNER_ENVIRONMENT" \
           -e "$RUNNER_OS" \
-          -e "$(gnostr-weeble)" \
-          -e "$(gnostr-blockheight)" \
-          -e "$(gnostr-wobble)" \
+          -e "$(gnostr --weeble)" \
+          -e "$(gnostr --blockheight)" \
+          -e "$(gnostr --wobble)" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         #if: matrix.os == 'macos-latest'
@@ -303,7 +303,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+            -c "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
@@ -315,9 +315,9 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
+            -t "$(gnostr --weeble)" \
+            -t "$(gnostr --blockheight)" \
+            -t "$(gnostr --wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
@@ -452,9 +452,9 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
+            -t "$(gnostr --weeble)" \
+            -t "$(gnostr --blockheight)" \
+            -t "$(gnostr --wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
@@ -486,9 +486,9 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
+            -t "$(gnostr --weeble)" \
+            -t "$(gnostr --blockheight)" \
+            -t "$(gnostr --wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
@@ -520,9 +520,9 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
+            -t "$(gnostr --weeble)" \
+            -t "$(gnostr --blockheight)" \
+            -t "$(gnostr --wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
             echo EVENT=$EVENT && \
