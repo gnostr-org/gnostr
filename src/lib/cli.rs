@@ -179,7 +179,7 @@ pub struct GnostrCli {
     )]
     pub nsec: Option<String>,
     /// hash
-    #[arg(long, value_name = "HASH", help = "gnostr --hash '<string>'")]
+    #[arg(long, help = "gnostr --hash <string>")]
     pub hash: Option<String>,
     /// TODO handle gnostr tui --repo_path
     #[arg(
