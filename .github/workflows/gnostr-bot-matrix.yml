@@ -231,6 +231,7 @@ jobs:
             echo "Brew failed, falling back to cargo-binstall"
             cargo-binstall --force --no-confirm gnostr
           fi
+        if: runner.os != 'windows'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
         run: brew tap gnostr-org/homebrew-gnostr-org || true
