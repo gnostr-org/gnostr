@@ -1,15 +1,12 @@
 use anyhow::anyhow;
 use git2::{ObjectType, Repository, RepositoryState};
-
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-
-use nostr_sdk_0_37_0::prelude::Tag;
-use nostr_sdk_0_37_0::prelude::*;
+use crate::types::{Event, PreEvent, EventKind, KeySigner, PrivateKey, PublicKey, Unixtime, Tag, UncheckedUrl, Signer};
+use crate::types::nostr_client;
 use once_cell::sync::OnceCell;
-
-use crate::utils::{parse_json, split_json_string};
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
-use gnostr_legit::{gitminer, gitminer::Gitminer};
+use crate::utils::{parse_json, split_json_string};
+use gnostr_legit::gitminer;
 use serde_json;
 use serde_json::Value;
 use std::borrow::Cow;
@@ -94,70 +91,111 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
 }
 
 pub async fn create_event_with_custom_tags(
-    keys: &Keys,
+    keys: &KeySigner,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> anyhow::Result<(Event, UnsignedEvent)> {
-    // Changed return type
-    let mut builder = EventBuilder::new(Kind::TextNote, content);
-
+) -> anyhow::Result<(Event, PreEvent)> {
+    let mut tags = Vec::new();
     for (tag_name, tag_values) in custom_tags {
         info!("tag_name={:?}", tag_name);
         info!("tag_values={:?}", tag_values);
-        //pops &tag_values[0]
-        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
-        builder = builder.tag(tag);
+        // Use the first value for now, similar to how nostr_sdk's Tag::parse might behave in this context
+        if let Some(value) = tag_values.get(0) {
+            tags.push(Tag::new_untyped(&tag_name, value));
+        }
     }
 
-    let unsigned_event = builder.build(keys.public_key()); // Build the unsigned event
-    let signed_event = unsigned_event
-        .clone()
-        .sign(keys)
-        .await
-        .map_err(|e| anyhow!("Failed to sign event: {}", e))?;
-    Ok((signed_event, unsigned_event))
+    let pre_event = PreEvent {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::TextNote,
+        tags,
+        content: content.to_string(),
+    };
+
+    let id = pre_event.hash().unwrap();
+    let sig = keys.sign_id(id).unwrap();
+
+    let signed_event = Event {
+        id,
+        pubkey: pre_event.pubkey,
+        created_at: pre_event.created_at,
+        kind: pre_event.kind,
+        tags: pre_event.tags.clone(), // Clone tags for the signed event
+        content: pre_event.content.clone(), // Clone content for the signed event
+        sig,
+    };
+
+    Ok((signed_event, pre_event))
 }
 
 pub async fn create_unsigned_event(
-    keys: &Keys,
+    keys: &KeySigner,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> anyhow::Result<UnsignedEvent> {
-    let mut builder = EventBuilder::new(Kind::TextNote, content);
-
+) -> anyhow::Result<PreEvent> {
+    let mut tags = Vec::new();
     for (tag_name, tag_values) in custom_tags {
-        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
-        builder = builder.tag(tag);
+        if let Some(value) = tag_values.get(0) {
+            tags.push(Tag::new_untyped(&tag_name, value));
+        }
     }
 
-    let unsigned_event = builder.build(keys.public_key());
-    Ok(unsigned_event)
+    let pre_event = PreEvent {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::TextNote,
+        tags,
+        content: content.to_string(),
+    };
+    Ok(pre_event)
 }
 
 pub async fn create_kind_event(
-    keys: &Keys,
+    keys: &KeySigner,
     kind: u16,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> anyhow::Result<(Event, UnsignedEvent)> {
-    let mut builder = EventBuilder::new(Kind::Custom(kind), content);
-
+) -> anyhow::Result<(Event, PreEvent)> {
+    let mut tags = Vec::new();
     for (tag_name, tag_values) in custom_tags {
-        let tag: Tag = Tag::parse([&tag_name, &tag_values[0]]).unwrap();
-        builder = builder.tag(tag);
+        if let Some(value) = tag_values.get(0) {
+            tags.push(Tag::new_untyped(&tag_name, value));
+        }
     }
 
-    let unsigned_event = builder.build(keys.public_key());
-    let signed_event = unsigned_event.clone().sign(keys);
-    Ok((signed_event.await?, unsigned_event))
+    let pre_event = PreEvent {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::from(kind as u32),
+        tags,
+        content: content.to_string(),
+    };
+
+    let id = pre_event.hash().unwrap();
+    let sig = keys.sign_id(id).unwrap();
+
+    let signed_event = Event {
+        id,
+        pubkey: pre_event.pubkey,
+        created_at: pre_event.created_at,
+        kind: pre_event.kind,
+        tags: pre_event.tags.clone(),
+        content: pre_event.content.clone(),
+        sig,
+    };
+
+    Ok((signed_event, pre_event))
 }
 
 pub async fn create_event(
-    keys: Keys,
+
+    keys: KeySigner,
 
     custom_tags: HashMap<String, Vec<String>>,
 
     content: &str,
+
 ) -> anyhow::Result<Event> {
     // Changed return type
 
@@ -168,26 +206,21 @@ pub async fn create_event(
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
-    let opts = Options::new().gossip(true);
+    let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
+    let client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
 
-    let client = Client::builder().signer(keys.clone()).opts(opts).build();
-
-    for relay in BOOTSTRAP_RELAYS.iter().clone() {
+    for relay in BOOTSTRAP_RELAYS.iter().cloned() {
         debug!("{}", relay);
-
-        client.add_discovery_relay(relay).await.expect("");
+        client.connect_relay(UncheckedUrl(relay.to_string())).await?;
     }
 
     // Connect to the relays.
-
     client.connect().await;
 
     // client.send_event - signed_event
-
     client
         .send_event(signed_event.clone())
-        .await
-        .map_err(|e| anyhow!("Failed to send event: {}", e))?; // Explicitly map to anyhow::Error
+        .await?;
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
@@ -195,7 +228,7 @@ pub async fn create_event(
 
     debug!("signed_event.content: {}", signed_event.content);
 
-    debug!("signed_event.pubkey: {}", signed_event.pubkey);
+    debug!("signed_event.pubkey: {}", signed_event.pubkey.as_hex_string());
 
     debug!("signed_event.kind: {:?}", signed_event.kind);
 
@@ -205,89 +238,81 @@ pub async fn create_event(
 
     // Publish a text note
 
-    let pubkey = keys.public_key();
+    let pubkey_keys = keys.public_key();
+    info!("pubkey={}", pubkey_keys.public_key().as_hex_string());
 
-    info!("pubkey={}", keys.public_key());
+    let mut tags: Vec<Tag> = Vec::new();
+    tags.push(Tag::new_pubkey(pubkey_keys, None, None));
+    tags.push(Tag::new(&["gnostr", "1 2 3 4 11 22 33 44"]));
+    tags.push(Tag::new(&["gnostr", "1 2 3 4 11 22 33"]));
+    tags.push(Tag::new(&["gnostr", "1 2 3 4 11 22"]));
+    tags.push(Tag::new(&["gnostr", "1 2 3 4 11"]));
+    tags.push(Tag::new(&["gnostr", "1 2 3 4"]));
+    tags.push(Tag::new(&["gnostr", "1 2 3"]));
+    tags.push(Tag::new(&["gnostr", "1 2"]));
+    tags.push(Tag::new(&["gnostr", "1"]));
+    tags.push(Tag::new(&["gnostr", ""]));
 
-    let builder = EventBuilder::text_note(format!("gnostr:legit {}", pubkey))
-        .tag(Tag::public_key(pubkey))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11 22 33 44".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11 22 33".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11 22".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4 11".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3 4".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2 3".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1 2".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "1".chars(),
-        ))
-        .tag(Tag::custom(
-            TagKind::Custom(Cow::from("gnostr")),
-            "".chars(),
-        ));
+    let pre_event = PreEvent {
+        pubkey: pubkey_keys,
+        created_at: Unixtime::now(),
+        kind: EventKind::TextNote,
+        tags: tags,
+        content: format!("gnostr:legit {}", pubkey_keys).to_string(),
+    };
 
-    //send from send_event_builder
+    let id = pre_event.hash().unwrap();
+    let sig = keys.sign_id(id).unwrap();
 
-    let output = client.send_event_builder(builder).await?;
+    let text_note_event = Event {
+        id,
+        pubkey: pre_event.pubkey,
+        created_at: pre_event.created_at,
+        kind: pre_event.kind,
+        tags: pre_event.tags,
+        content: pre_event.content,
+        sig,
+    };
 
-    info!("Event ID: {}", output.to_bech32()?);
+    let output_send_event = client.send_event(text_note_event.clone()).await?;
+
+    info!("Event ID: {}", output_send_event.id.as_bech32_string());
 
     info!("Sent to:");
 
-    for url in output.success.into_iter() {
+    for url in output_send_event.success.into_iter() {
         info!("- {url}");
     }
 
     info!("Not sent to:");
 
-    for (url, reason) in output.failed.into_iter() {
+    for (url, reason) in output_send_event.failed.into_iter() {
         info!("- {url}: {reason:?}");
     }
 
-    // Get events
-
-    let filter_one = Filter::new().author(pubkey).kind(Kind::TextNote).limit(10);
+    let filter_one = crate::types::Filter::new()
+        .author(pubkey_keys)
+        .kind(crate::types::EventKind::TextNote)
+        .limit(10);
 
     let events = client
         .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
         .await?;
 
     for event in events.into_iter() {
-        println!("{}", event.as_json());
+        println!("{}", serde_json::to_string_pretty(&event)?);
     }
 
     // another filter
 
     let test_author_pubkey =
-        PublicKey::parse("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet")?;
+        crate::types::PublicKey::try_from_bech32_string("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet").unwrap();
 
-    info!("test_author_pubkey={}", test_author_pubkey);
+    info!("test_author_pubkey={}", test_author_pubkey.as_bech32_string());
 
-    let filter_test_author = Filter::new()
+    let filter_test_author = crate::types::Filter::new()
         .author(test_author_pubkey)
-        .kind(Kind::TextNote)
+        .kind(crate::types::EventKind::TextNote)
         .limit(10);
 
     let events = client
@@ -295,7 +320,7 @@ pub async fn create_event(
         .await?;
 
     for event in events.into_iter() {
-        info!("test_author:\n\n{}", event.as_json());
+        info!("test_author:\n\n{}", serde_json::to_string_pretty(&event)?);
     }
 
     Ok(signed_event)
@@ -309,8 +334,9 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 
 pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdError>> {
     // gnostr_legit_event
-    let empty_hash_keys =
-        Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
+    let empty_hash_private_key =
+        PrivateKey::try_from_hex_string("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
+    let empty_hash_keys = KeySigner::from_private_key(empty_hash_private_key, "", 1).unwrap();
 
     //create a HashMap of custom_tags
     //used to insert commit tags
@@ -502,25 +528,45 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         //info!("keys.public_key():\n{}", keys.public_key());
 
         //parse keys from sha256 hash
-        let padded_keys = Keys::parse(padded_commit_id).unwrap();
+        let padded_private_key = PrivateKey::try_from_hex_string(&padded_commit_id).unwrap();
+        let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();
         //create nostr client with commit based keys
         //let client = Client::new(keys);
-        let client = Client::new(padded_keys.clone());
+        let client = crate::types::nostr_client::Client::new(padded_keys.clone());
 
         for relay in BOOTSTRAP_RELAYS.iter().cloned() {
             debug!("{}", relay);
-            client.add_relay(relay).await.expect("");
+            client.connect_relay(UncheckedUrl(relay.to_string())).await?;
         }
         client.connect().await;
 
         //build git gnostr event
-        let builder = EventBuilder::text_note(serialized_commit.clone());
+        let pre_event = PreEvent {
+            pubkey: padded_keys.public_key(),
+            created_at: Unixtime::now(),
+            kind: EventKind::TextNote,
+            tags: vec![],
+            content: serialized_commit.clone(),
+        };
+
+        let id = pre_event.hash().unwrap();
+        let sig = padded_keys.sign_id(id).unwrap();
+
+        let git_gnostr_event = Event {
+            id,
+            pubkey: pre_event.pubkey,
+            created_at: pre_event.created_at,
+            kind: pre_event.kind,
+            tags: pre_event.tags,
+            content: pre_event.content,
+            sig,
+        };
 
         //send git gnostr event
-        let output = client.send_event_builder(builder).await.expect("");
+        let output = client.send_event(git_gnostr_event.clone()).await.expect("");
 
-        println!("Event ID: {}", output.id());
-        println!("Event ID BECH32: {}", output.id().to_bech32().expect(""));
+        println!("Event ID: {}", output.id.as_hex_string());
+        println!("Event ID BECH32: {}", output.id.as_bech32_string());
         println!("Sent to: {:?}", output.success);
         println!("Not sent to: {:?}", output.failed);
     });
