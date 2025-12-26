@@ -48,7 +48,7 @@ struct RepoAnnouncementCommand {
     #[arg(long, action = clap::ArgAction::Append)]
     maintainers: Vec<String>,
     /// Root commit
-    #[arg(long)]
+    #[arg(long, default_value = "4b825dc642cb6eb9a060e54bf8d69288fbee4904")]
     root_commit: String,
     /// Hashtags
     #[arg(long, action = clap::ArgAction::Append)]
