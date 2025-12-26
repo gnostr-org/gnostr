@@ -126,9 +126,9 @@ impl NostrClient {
         let filter = {
             let mut f = Filter::new();
             if let Some(pk) = public_key {
-                f.add_author(&pk.into());
+                let _ = f.add_author(&pk.into());
             }
-            f.add_event_kind(EventKind::TextNote);
+            let _ = f.add_event_kind(EventKind::TextNote);
             f.since = Some(Unixtime::now());
             f
         };
