@@ -405,8 +405,6 @@ impl fmt::Display for RelayInformationDocumentV2 {
     }
 }
 
-
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -444,7 +442,8 @@ mod test {
         let rid: RelayInformationDocumentV2 = serde_json::from_str(json).unwrap();
         let json2 = serde_json::to_value(&rid).unwrap();
 
-        let expected_json2: serde_json::Value = serde_json::from_str(r##"{
+        let expected_json2: serde_json::Value = serde_json::from_str(
+            r##"{
             "name": "A Relay",
             "description": null,
             "pubkey": null,
@@ -466,7 +465,9 @@ mod test {
             "payments_url": null,
             "fees": null,
             "other": { "misc_data": "value" }
-        }"##).unwrap();
+        }"##,
+        )
+        .unwrap();
 
         assert_eq!(json2, expected_json2);
     }
