@@ -325,11 +325,6 @@ jobs:
         run: |
           cargo clean && echo "✅" || echo "❌"
 
-      - name: 🚀 cargo check -j8
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        run: |
-          cargo check -j8 && echo "✅" || echo "❌"
-
       - name: 🚀 cargo install -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
@@ -351,58 +346,6 @@ jobs:
           #gnostr ngit --nsec $(gnostr --hash "") list
           gnostr ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
         if: ${{ !env.ACT }}
-
-
-
-
-
-
-
-
-
-
-
-
-      - name: 🚀 cargo test
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          if command -v apt-get &> /dev/null; then \
-          sudo apt-get update && \
-          sudo apt-get install -y \
-          libxcb1-dev \
-          libxcb-render0-dev \
-          libxcb-shape0-dev \
-          libxcb-xfixes0-dev; \
-          else echo 'apt-get not found, trying yum'; \
-          if command -v yum &> /dev/null; \
-          then sudo yum install -y libxcb \
-          libxcb-devel \
-          libxcb-render-devel \
-          libxcb-shape-devel \
-          libxcb-xfixes-devel; \
-          else echo \
-          'Neither apt-get nor yum found. Please install libxcb development libraries manually.';\
-          fi;\
-          fi;
-        if: matrix.os != 'windows-latest' && matrix.os != 'macos-latest'
-
-
-      - name: Set OpenSSL environment variables
-        run: |
-          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL-Win64\lib" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL-Win64\include" >> $GITHUB_ENV
-          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
-        if: runner.os == 'windows'
-
-
-      - name: 🚀 cargo test
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
-        if: runner.os != 'windows'
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
@@ -436,7 +379,6 @@ jobs:
           echo "Cleanup attempt finished."
         continue-on-error: true
 
-
       - name: Debug GITHUB_API_URL
         run: |
           echo "GITHUB_API_URL: ${{ env.GITHUB_API_URL }}"
@@ -453,13 +395,6 @@ jobs:
             exit 1
           fi
 
-      #- name: Get Current Job Log URL
-      #  uses: Tiryoh/gha-jobid-action@v1.4.0
-      #  id: jobs
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
-      #    per_page: 50 # input matrix size here if it is larger than 30
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
 
@@ -568,15 +503,6 @@ jobs:
             gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr query -i $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
-
-      #- name: Save rustup
-      #  id: cache-rustup-save
-      #  uses: actions/cache/save@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
 
       - name: Save cargo
         id: cache-cargo-save
