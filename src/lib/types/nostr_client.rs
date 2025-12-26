@@ -92,13 +92,25 @@ impl NostrClient {
         let json = serde_json::to_string(&client_message)?;
         let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
-        let mut sinks = self.relay_sinks.lock().unwrap();
-        for (url, sink) in sinks.iter_mut() {
+        // Temporarily take ownership of the sinks from the Mutex
+        let mut sinks_to_send = {
+            let mut sinks_guard = self.relay_sinks.lock().unwrap();
+            sinks_guard.drain(..).collect::<Vec<_>>()
+        };
+
+        for (url, mut sink) in sinks_to_send.iter_mut() {
             info!("Sending Nostr event to relay {}", url.0);
             if let Err(e) = sink.send(websocket_message.clone()).await {
                 warn!("Failed to send event to relay {}: {}", url.0, e);
             }
         }
+
+        // Put the sinks back into the Mutex, preserving their state (e.g., if one failed it's still here)
+        {
+            let mut sinks_guard = self.relay_sinks.lock().unwrap();
+            sinks_guard.extend(sinks_to_send.drain(..));
+        }
+
         Ok(())
     }
 
