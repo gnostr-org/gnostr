@@ -3,6 +3,7 @@ use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use crate::types::Event;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")
@@ -28,6 +29,7 @@ pub enum MsgKind {
     GitCommitHeader,
     GitCommitBody,
     GitCommitTime,
+    NostrEvent,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,6 +64,12 @@ impl Msg {
 
     pub fn set_commit_id(mut self, commit_id: CommitId) -> Self {
         self.commit_id = commit_id;
+        self
+    }
+
+    pub fn set_nostr_event(mut self, event: Event) -> Self {
+        self.kind = MsgKind::NostrEvent;
+        self.content = vec![serde_json::to_string(&event).unwrap_or_default()];
         self
     }
 
@@ -297,6 +305,15 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 .iter()
                 .map(|i| format!("{}", i)),
             ),
+            NostrEvent => Line::default().spans(vec![
+                Span::styled(
+                    "[Nostr Event]".to_string(),
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                m.content[0].clone().into(),
+            ]),
         }
     }
 }
@@ -379,6 +396,9 @@ impl Display for Msg {
                     "{{\"time\": \"{}\"}} {}",
                     self.content[0], self.content[1]
                 )
+            }
+            MsgKind::NostrEvent => {
+                write!(f, "[Nostr Event] {}", self.content[0])
             }
         }
     }
