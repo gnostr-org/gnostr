@@ -33,8 +33,8 @@ pub struct ChangesComponent {
 }
 
 impl ChangesComponent {
-	/// new
-        pub fn new(env: &Environment, title: &str, focus: bool, is_working_dir: bool) -> Self {
+    /// new
+    pub fn new(env: &Environment, title: &str, focus: bool, is_working_dir: bool) -> Self {
         Self {
             files: StatusTreeComponent::new(env, title, focus),
             is_working_dir,
@@ -45,20 +45,20 @@ impl ChangesComponent {
         }
     }
 
-		/// set_items
-        pub fn set_items(&mut self, list: &[StatusItem]) -> Result<()> {
+    /// set_items
+    pub fn set_items(&mut self, list: &[StatusItem]) -> Result<()> {
         self.files.show()?;
         self.files.update(list)?;
         Ok(())
     }
 
-		/// selection
-        pub fn selection(&self) -> Option<FileTreeItem> {
+    /// selection
+    pub fn selection(&self) -> Option<FileTreeItem> {
         self.files.selection()
     }
 
-		/// focus_select
-        pub fn focus_select(&mut self, focus: bool) {
+    /// focus_select
+    pub fn focus_select(&mut self, focus: bool) {
         self.files.focus(focus);
         self.files.show_selection(focus);
     }
@@ -68,8 +68,8 @@ impl ChangesComponent {
         self.files.is_empty()
     }
 
-	/// is_file_selected
-        pub fn is_file_selected(&self) -> bool {
+    /// is_file_selected
+    pub fn is_file_selected(&self) -> bool {
         self.files.is_file_selected()
     }
 
@@ -140,7 +140,7 @@ impl ChangesComponent {
         Ok(())
     }
 
-	/// dispatch_reset_workdir
+    /// dispatch_reset_workdir
     #[allow(clippy::needless_pass_by_ref_mut)]
     fn dispatch_reset_workdir(&mut self) -> bool {
         if let Some(tree_item) = self.selection() {
@@ -154,7 +154,7 @@ impl ChangesComponent {
         false
     }
 
-	/// add_to_ignore
+    /// add_to_ignore
     #[allow(clippy::needless_pass_by_ref_mut)]
     fn add_to_ignore(&mut self) -> bool {
         if let Some(tree_item) = self.selection() {
@@ -175,7 +175,7 @@ impl ChangesComponent {
 }
 
 impl DrawableComponent for ChangesComponent {
-	/// draw
+    /// draw
     fn draw(&self, f: &mut Frame, r: Rect) -> Result<()> {
         self.files.draw(f, r)?;
 
@@ -184,7 +184,7 @@ impl DrawableComponent for ChangesComponent {
 }
 
 impl Component for ChangesComponent {
-	/// commands
+    /// commands
     fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking {
         self.files.commands(out, force_all);
 
