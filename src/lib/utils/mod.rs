@@ -267,18 +267,19 @@ pub fn strip_trailing_newline(input: &str) -> &str {
 }
 
 pub fn find_available_port() -> u16 {
-      StdTcpListener::bind("127.0.0.1:0")
-          .unwrap()
-          .local_addr()
-          .unwrap()
-          .port()
+    StdTcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
 }
 pub async fn async_find_available_port() -> u16 {
-      AsyncStdTcpListener::bind("127.0.0.1:0")
-          .await.unwrap()
-          .local_addr()
-          .unwrap()
-          .port()
+    AsyncStdTcpListener::bind("127.0.0.1:0")
+        .await
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
 }
 
 pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
@@ -299,7 +300,6 @@ mod tests {
     fn setup_logging() {
         let _ = env_logger::builder().is_test(true).try_init();
     }
-
 
     #[tokio::test]
     async fn test_ureq_async_success() {
@@ -413,9 +413,11 @@ mod tests {
 
     #[test]
     fn test_split_value_by_newline_string() {
-        let json_value = serde_json::json!("line1
+        let json_value = serde_json::json!(
+            "line1
 line2
-line3");
+line3"
+        );
         let result = split_value_by_newline(&json_value);
         assert!(result.is_some());
         let lines = result.unwrap();
@@ -490,14 +492,16 @@ line3");
 
     #[tokio::test]
     async fn test_parse_private_key_some_nsec() {
-        let nsec_key = "nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3".to_string();
+        let nsec_key =
+            "nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3".to_string();
         let keys = parse_private_key(Some(nsec_key), false).await.unwrap();
         assert!(keys.secret_key().is_ok());
     }
 
     #[tokio::test]
     async fn test_parse_private_key_some_hex() {
-        let hex_key = "bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4".to_string();
+        let hex_key =
+            "bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4".to_string();
         let keys = parse_private_key(Some(hex_key), false).await.unwrap();
         assert!(keys.secret_key().is_ok());
     }
@@ -547,65 +551,76 @@ line3");
         let current_millisecs = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs_f64() * 1000.0;
+            .as_secs_f64()
+            * 1000.0;
         assert!((current_millisecs - millisecs).abs() < 5000.0); // Within 5 seconds
     }
 
-//    #[test]
-//    #[serial]
-//    #[ignore] //TODO fix flaky test
-//    fn test_get_current_working_dir() -> std::io::Result<()> {
-//        let original_cwd = env::current_dir()?;
-//        println!("Original CWD: {:?}", original_cwd);
-//
-//        // Manually create a temporary directory
-//        let unique_name = format!("test_temp_dir_{}", get_epoch_millisecs());
-//        let temp_dir_path = env::temp_dir().join(unique_name);
-//        println!("Attempting to create temporary directory: {:?}", temp_dir_path);
-//        std::fs::create_dir_all(&temp_dir_path)?;
-//        println!("Successfully created temporary directory: {:?}", temp_dir_path);
-//        std::thread::sleep(std::time::Duration::from_secs(1));
-//
-//        // // Ensure the directory exists and is a directory before changing to it
-//        // if !temp_dir_path.exists() {
-//        //     println!("Error: Manually created temporary directory does not exist: {:?}", temp_dir_path);
-//        // }
-//        // if !temp_dir_path.is_dir() {
-//        //     println!("Error: Manually created temporary path is not a directory: {:?}", temp_dir_path);
-//        // }
-//
-//        // env::set_current_dir(&temp_dir_path)?;
-//        // println!("Changed CWD to temporary directory: {:?}", env::current_dir()?);
-//
-//        let cwd = get_current_working_dir();
-//        println!("Result of get_current_working_dir(): {:?}", cwd);
-//
-//        assert!(cwd.is_ok());
-//        let path = cwd.unwrap();
-//        assert_eq!(std::fs::canonicalize(&path)?, std::fs::canonicalize(&temp_dir_path)?);
-//
-//        assert!(path.is_dir());
-//        println!("Asserted that returned path {:?} matches temp dir path {:?}", path, temp_dir_path);
-//        println!("Asserted that returned path {:?} is a directory", path);
-//
-//        // Clean up the manually created directory
-//        env::set_current_dir(&original_cwd)?;
-//        println!("Restored CWD to original: {:?}", env::current_dir()?);
-//        std::fs::remove_dir_all(&temp_dir_path)?;
-//        println!("Cleaned up temporary directory: {:?}", temp_dir_path);
-//        Ok(())
-//    }
+    //    #[test]
+    //    #[serial]
+    //    #[ignore] //TODO fix flaky test
+    //    fn test_get_current_working_dir() -> std::io::Result<()> {
+    //        let original_cwd = env::current_dir()?;
+    //        println!("Original CWD: {:?}", original_cwd);
+    //
+    //        // Manually create a temporary directory
+    //        let unique_name = format!("test_temp_dir_{}", get_epoch_millisecs());
+    //        let temp_dir_path = env::temp_dir().join(unique_name);
+    //        println!("Attempting to create temporary directory: {:?}", temp_dir_path);
+    //        std::fs::create_dir_all(&temp_dir_path)?;
+    //        println!("Successfully created temporary directory: {:?}", temp_dir_path);
+    //        std::thread::sleep(std::time::Duration::from_secs(1));
+    //
+    //        // // Ensure the directory exists and is a directory before changing to it
+    //        // if !temp_dir_path.exists() {
+    //        //     println!("Error: Manually created temporary directory does not exist: {:?}", temp_dir_path);
+    //        // }
+    //        // if !temp_dir_path.is_dir() {
+    //        //     println!("Error: Manually created temporary path is not a directory: {:?}", temp_dir_path);
+    //        // }
+    //
+    //        // env::set_current_dir(&temp_dir_path)?;
+    //        // println!("Changed CWD to temporary directory: {:?}", env::current_dir()?);
+    //
+    //        let cwd = get_current_working_dir();
+    //        println!("Result of get_current_working_dir(): {:?}", cwd);
+    //
+    //        assert!(cwd.is_ok());
+    //        let path = cwd.unwrap();
+    //        assert_eq!(std::fs::canonicalize(&path)?, std::fs::canonicalize(&temp_dir_path)?);
+    //
+    //        assert!(path.is_dir());
+    //        println!("Asserted that returned path {:?} matches temp dir path {:?}", path, temp_dir_path);
+    //        println!("Asserted that returned path {:?} is a directory", path);
+    //
+    //        // Clean up the manually created directory
+    //        env::set_current_dir(&original_cwd)?;
+    //        println!("Restored CWD to original: {:?}", env::current_dir()?);
+    //        std::fs::remove_dir_all(&temp_dir_path)?;
+    //        println!("Cleaned up temporary directory: {:?}", temp_dir_path);
+    //        Ok(())
+    //    }
 
     #[test]
     fn test_strip_trailing_newline_lf() {
-        assert_eq!(strip_trailing_newline("hello
-"), "hello");
+        assert_eq!(
+            strip_trailing_newline(
+                "hello
+"
+            ),
+            "hello"
+        );
     }
 
     #[test]
     fn test_strip_trailing_newline_crlf() {
-        assert_eq!(strip_trailing_newline("hello
-"), "hello");
+        assert_eq!(
+            strip_trailing_newline(
+                "hello
+"
+            ),
+            "hello"
+        );
     }
 
     #[test]
