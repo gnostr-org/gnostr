@@ -349,7 +349,7 @@ jobs:
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
-      - run: |
+        run: |
          make gnostr-chat &
          make gnostr-chat &
          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
