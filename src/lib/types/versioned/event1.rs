@@ -1,4 +1,8 @@
-use crate::types::{id::{self, Id}, Error, EventDelegation, EventKind, EventReference, IntoVec, MilliSatoshi, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, RelayUrl, Signature, TagV1, Unixtime, ZapDataV1};
+use crate::types::{
+    id::{self, Id},
+    Error, EventDelegation, EventKind, EventReference, IntoVec, MilliSatoshi, NAddr, NostrBech32,
+    NostrUrl, PublicKey, PublicKeyHex, RelayUrl, Signature, TagV1, Unixtime, ZapDataV1,
+};
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
@@ -956,7 +960,7 @@ impl EventV1 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-use crate::types::id;
+            use crate::types::id;
 
             Some(unsafe { std::mem::transmute::<[u8; 32], id::Id>(arr) })
         } else {
