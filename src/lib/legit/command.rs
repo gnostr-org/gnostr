@@ -296,10 +296,10 @@ pub async fn create_event(
 
     info!("test_author_pubkey={}", test_author_pubkey.as_bech32_string());
 
-    let filter_test_author = crate::types::Filter::new()
+    let mut filter_test_author = crate::types::Filter::new()
         .add_author(&test_author_pubkey.into())
-        .add_event_kind(crate::types::EventKind::TextNote)
-        .limit(10);
+        .add_event_kind(crate::types::EventKind::TextNote);
+    filter_test_author.limit = Some(10);
 
     // let events = client
     //     .fetch_events(vec![filter_test_author], Some(Duration::from_secs(10)))
