@@ -5,11 +5,14 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::if_not_else)]
-use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
 use crate::blockheight;
 use crate::weeble;
 use crate::wobble;
 use std::env;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 use crate::app::App;
 use crate::app::QuitState;
@@ -71,14 +74,12 @@ pub enum SyntaxHighlightProgress {
 /// AsyncAppNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncAppNotification {
-
     SyntaxHighlighting(SyntaxHighlightProgress),
 }
 
 /// AsyncNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncNotification {
-
     App(AsyncAppNotification),
 
     Git(AsyncGitNotification),
@@ -190,7 +191,7 @@ pub fn select_event(
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
 /// permission to read it.
-pub /*async*/fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
+pub fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
     let backend = CrosstermBackend::new(buf);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
@@ -445,22 +446,23 @@ pub async fn run_app(
 
     let spinner_ticker = tick(SPINNER_INTERVAL);
 
-            let mut app = match Box::pin(App::new(
-                RefCell::new(repo.clone()),
-                tx_git,
-                tx_app,
-                input.clone(),
-                theme,
-                key_config,
-                Arc::clone(&quit_flag),
-            ))
-            .await {
-                Ok(app) => app,
-                Err(e) => {
-                    log::error!("failed to create app: {e}");
-                    return Err(e);
-                }
-            };
+    let mut app = match Box::pin(App::new(
+        RefCell::new(repo.clone()),
+        tx_git,
+        tx_app,
+        input.clone(),
+        theme,
+        key_config,
+        Arc::clone(&quit_flag),
+    ))
+    .await
+    {
+        Ok(app) => app,
+        Err(e) => {
+            log::error!("failed to create app: {e}");
+            return Err(e);
+        }
+    };
     let mut spinner = Spinner::default();
     let mut first_update = true;
 
@@ -490,7 +492,8 @@ pub async fn run_app(
                     .unwrap()
                     .as_secs();
                 path.push(format!("screenshot-{timestamp}.png"));
-                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap()).unwrap();
+                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap())
+                    .unwrap();
                 last_screenshot = Instant::now();
             }
         }

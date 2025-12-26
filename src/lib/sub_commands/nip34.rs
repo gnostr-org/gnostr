@@ -228,10 +228,7 @@ async fn repo_announcement(
             TagKind::Custom(Cow::from("clone")),
             vec![args.clone_url.clone()],
         ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("relays")),
-            args.relays.clone(),
-        ),
+        Tag::custom(TagKind::Custom(Cow::from("relays")), args.relays.clone()),
         Tag::custom(
             TagKind::Custom(Cow::from("r")),
             vec![args.root_commit.clone()],
@@ -249,7 +246,8 @@ async fn repo_announcement(
         ));
     }
 
-    let event = EventBuilder::new(Kind::Custom(30617), "", tags).to_pow_event(&keys, difficulty_target)?;
+    let event =
+        EventBuilder::new(Kind::Custom(30617), "", tags).to_pow_event(&keys, difficulty_target)?;
 
     let event_id = client.send_event(event).await?;
 
@@ -286,7 +284,8 @@ async fn repo_state(
         }
     }
 
-    let event = EventBuilder::new(Kind::Custom(30618), "", tags).to_pow_event(&keys, difficulty_target)?;
+    let event =
+        EventBuilder::new(Kind::Custom(30618), "", tags).to_pow_event(&keys, difficulty_target)?;
 
     let event_id = client.send_event(event).await?;
 
@@ -309,10 +308,7 @@ async fn patch(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let tags = vec![
-        Tag::custom(
-            TagKind::Custom(Cow::from("a")),
-            vec![args.repo.clone()],
-        ),
+        Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
         Tag::custom(
             TagKind::Custom(Cow::from("commit")),
             vec![args.commit.clone()],
@@ -347,10 +343,7 @@ async fn pull_request(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let tags = vec![
-        Tag::custom(
-            TagKind::Custom(Cow::from("a")),
-            vec![args.repo.clone()],
-        ),
+        Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
         Tag::custom(
             TagKind::Custom(Cow::from("subject")),
             vec![args.subject.clone()],
@@ -365,8 +358,8 @@ async fn pull_request(
         ),
     ];
 
-    let event = EventBuilder::new(Kind::Custom(1618), "", tags)
-        .to_pow_event(&keys, difficulty_target)?;
+    let event =
+        EventBuilder::new(Kind::Custom(1618), "", tags).to_pow_event(&keys, difficulty_target)?;
 
     let event_id = client.send_event(event).await?;
 
@@ -389,10 +382,7 @@ async fn issue(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let tags = vec![
-        Tag::custom(
-            TagKind::Custom(Cow::from("a")),
-            vec![args.repo.clone()],
-        ),
+        Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
         Tag::custom(
             TagKind::Custom(Cow::from("subject")),
             vec![args.subject.clone()],
@@ -430,10 +420,7 @@ async fn status(
                     TagKind::Custom(Cow::from("e")),
                     vec![args.event_id.clone(), "root".to_string()],
                 ),
-                Tag::custom(
-                    TagKind::Custom(Cow::from("a")),
-                    vec![args.repo.clone()],
-                ),
+                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
             ],
         ),
         StatusSubCommand::Applied(args) => (
@@ -443,10 +430,7 @@ async fn status(
                     TagKind::Custom(Cow::from("e")),
                     vec![args.event_id.clone(), "root".to_string()],
                 ),
-                Tag::custom(
-                    TagKind::Custom(Cow::from("a")),
-                    vec![args.repo.clone()],
-                ),
+                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
                 Tag::custom(
                     TagKind::Custom(Cow::from("applied-as-commits")),
                     args.applied_as_commits.clone(),
@@ -460,10 +444,7 @@ async fn status(
                     TagKind::Custom(Cow::from("e")),
                     vec![args.event_id.clone(), "root".to_string()],
                 ),
-                Tag::custom(
-                    TagKind::Custom(Cow::from("a")),
-                    vec![args.repo.clone()],
-                ),
+                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
             ],
         ),
         StatusSubCommand::Draft(args) => (
@@ -473,26 +454,16 @@ async fn status(
                     TagKind::Custom(Cow::from("e")),
                     vec![args.event_id.clone(), "root".to_string()],
                 ),
-                Tag::custom(
-                    TagKind::Custom(Cow::from("a")),
-                    vec![args.repo.clone()],
-                ),
+                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
             ],
         ),
     };
 
-        let event = EventBuilder::new(kind, "", tags).to_pow_event(&keys, difficulty_target)?;
+    let event = EventBuilder::new(kind, "", tags).to_pow_event(&keys, difficulty_target)?;
 
-    
+    let event_id = client.send_event(event).await?;
 
-        let event_id = client.send_event(event).await?;
+    println!("{}", event_id.to_bech32()?);
 
-    
-
-        println!("{}", event_id.to_bech32()?);
-
-    
-
-        Ok(())
-
-    }
+    Ok(())
+}
