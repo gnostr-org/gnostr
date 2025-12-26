@@ -86,11 +86,12 @@ impl Filter {
     }
 
     /// Add an EventKind to the filter
-    pub fn add_event_kind(&mut self, event_kind: EventKind) {
+    pub fn add_event_kind(&mut self, event_kind: EventKind) -> &mut Self {
         if self.kinds.contains(&event_kind) {
-            return;
+            return self;
         }
         self.kinds.push(event_kind);
+        self
     }
 
     /// Delete an EventKind from the filter
