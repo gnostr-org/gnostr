@@ -138,10 +138,19 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          #submodules: 'true'
+          # Fetches all history for all branches and tags
+          # Required for tools like 'git describe' or semantic versioning
+          fetch-depth: 0
+
+          # Ensures the workspace is added to git's safe.directory config
+          # Crucial for avoiding "dubious ownership" errors in containerized builds
           set-safe-directory: 'true'
-          fetch-depth: '0'
-          #fetch-tags: 'false'
+
+          # Optional: Uncomment if you need git submodules
+          # submodules: 'true'
+
+          # Optional: Uncomment if you want to explicitly disable tag fetching
+          # fetch-tags: 'false'
 
       - name: printenv
         shell: bash
