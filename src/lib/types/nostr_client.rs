@@ -1,20 +1,27 @@
 use anyhow::{anyhow, Result};
-use futures_util::{StreamExt, SinkExt, stream::{SplitSink, SplitStream}};
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite};
-use tokio_tungstenite::connect_async;
+use futures_util::{
+    stream::{SplitSink, SplitStream},
+    SinkExt, StreamExt,
+};
 use tokio::net::TcpStream;
+use tokio_tungstenite::connect_async;
+use tokio_tungstenite::{tungstenite, MaybeTlsStream, WebSocketStream};
 
-use tokio::sync::mpsc;
 use crate::queue::{InternalEvent, Queue};
-use crate::types::versioned::event3::EventV3;
 use crate::types::versioned::client_message3::ClientMessageV3;
-use crate::types::{UncheckedUrl, ClientMessage, Filter, SubscriptionId, RelayMessage, EventKind, Unixtime, PublicKey}; // Added PublicKey
-use tracing::{debug, info, warn};
+use crate::types::versioned::event3::EventV3;
+use crate::types::{
+    ClientMessage, EventKind, Filter, PublicKey, RelayMessage, SubscriptionId, UncheckedUrl,
+    Unixtime,
+}; // Added PublicKey
 use rand::Rng;
+use tokio::sync::mpsc;
+use tracing::{debug, info, warn};
 
 use std::sync::{Arc, Mutex};
 
-type WsSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;
+type WsSink =
+    SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;
 type WsStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
 #[derive(Clone, Debug)]
@@ -54,14 +61,21 @@ impl NostrClient {
                         match serde_json::from_str::<RelayMessage>(&text) {
                             Ok(RelayMessage::Event(_sub_id, event)) => {
                                 info!("Received Nostr event from {}: {:?}", url.0, event);
-                                if let Err(e) = queue_tx_clone.send(InternalEvent::NostrEvent(*event)).await {
+                                if let Err(e) =
+                                    queue_tx_clone.send(InternalEvent::NostrEvent(*event)).await
+                                {
                                     warn!("Failed to send NostrEvent to queue: {}", e);
                                 }
-                            },
-                            Ok(other) => debug!("Received other relay message from {}: {:?}", url.0, other),
-                            Err(e) => warn!("Failed to parse relay message from {}: {}. Message: {}", url.0, e, text),
+                            }
+                            Ok(other) => {
+                                debug!("Received other relay message from {}: {:?}", url.0, other)
+                            }
+                            Err(e) => warn!(
+                                "Failed to parse relay message from {}: {}. Message: {}",
+                                url.0, e, text
+                            ),
                         }
-                    },
+                    }
                     Ok(other) => debug!("Received non-text message from {}: {:?}", url.0, other),
                     Err(e) => {
                         warn!("WebSocket error on {}: {}", url.0, e);
@@ -72,8 +86,6 @@ impl NostrClient {
             info!("Relay listener for {} disconnected.", url.0);
         });
     }
-
-
 
     pub async fn send_event(&self, event: EventV3) -> Result<()> {
         let client_message = ClientMessage::Event(Box::new(event));
@@ -113,7 +125,7 @@ impl NostrClient {
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
             if let Err(e) = sink.send(websocket_message.clone()).await {
-                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                warn!("Failed to send REQ to relay {}: {}", url.0, e);
             }
         }
     }
@@ -136,13 +148,16 @@ impl NostrClient {
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
             if let Err(e) = sink.send(websocket_message.clone()).await {
-                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                warn!("Failed to send REQ to relay {}: {}", url.0, e);
             }
         }
     }
 
     pub async fn subscribe_to_contact_lists(&self, public_key: PublicKey) {
-        info!("Subscribing to contact lists for {}", public_key.as_hex_string());
+        info!(
+            "Subscribing to contact lists for {}",
+            public_key.as_hex_string()
+        );
 
         let mut filter = Filter::new();
         filter.add_author(&public_key.into());
@@ -158,7 +173,7 @@ impl NostrClient {
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
             if let Err(e) = sink.send(websocket_message.clone()).await {
-                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                warn!("Failed to send REQ to relay {}: {}", url.0, e);
             }
         }
     }
@@ -180,7 +195,7 @@ impl NostrClient {
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
             if let Err(e) = sink.send(websocket_message.clone()).await {
-                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                warn!("Failed to send REQ to relay {}: {}", url.0, e);
             }
         }
     }
@@ -201,7 +216,7 @@ impl NostrClient {
         let mut sinks = self.relay_sinks.lock().unwrap();
         for (url, sink) in sinks.iter_mut() {
             if let Err(e) = sink.send(websocket_message.clone()).await {
-                 warn!("Failed to send REQ to relay {}: {}", url.0, e);
+                warn!("Failed to send REQ to relay {}: {}", url.0, e);
             }
         }
     }
