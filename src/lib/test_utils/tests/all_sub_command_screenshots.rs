@@ -8,19 +8,13 @@
 ///
 #[cfg(test)]
 mod tests {
-    
-    
-    
-    
+
     use std::fs;
-    
-    
-    use tempfile::TempDir;
+
     use git2::{Repository, Signature};
     use std::io::Write;
     use std::path::Path;
-    
-    
+    use tempfile::TempDir;
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
@@ -32,7 +26,9 @@ mod tests {
         let mut config = repo.config().unwrap();
         config.set_str("user.name", "Test User").unwrap();
         config.set_str("user.email", "test@example.com").unwrap();
-        config.set_str("gnostr.relays", "wss://relay.example.com").unwrap();
+        config
+            .set_str("gnostr.relays", "wss://relay.example.com")
+            .unwrap();
 
         // Create an initial commit
         {
@@ -61,7 +57,12 @@ mod tests {
             .unwrap();
 
             // Ensure the working directory is clean after the initial commit
-            repo.reset(repo.head().unwrap().peel_to_commit().unwrap().as_object(), git2::ResetType::Hard, None).unwrap();
+            repo.reset(
+                repo.head().unwrap().peel_to_commit().unwrap().as_object(),
+                git2::ResetType::Hard,
+                None,
+            )
+            .unwrap();
         }
 
         (tmp_dir, repo)
@@ -90,13 +91,16 @@ mod tests {
                 ]);
 
                 // Spawn the command
-                let mut child = cmd.spawn().expect("Failed to spawn gnostr command in new terminal");
+                let mut child = cmd
+                    .spawn()
+                    .expect("Failed to spawn gnostr command in new terminal");
 
                 // Give the TUI a moment to initialize
                 thread::sleep(Duration::from_secs(2));
 
                 // Capture the screenshot
-                let screenshot_path_result = screenshot::make_screenshot(concat!("gnostr_", $subcommand, "_run"));
+                let screenshot_path_result =
+                    screenshot::make_screenshot(concat!("gnostr_", $subcommand, "_run"));
 
                 // Find and kill the gnostr process
                 let output = Command::new("pgrep")
@@ -110,11 +114,7 @@ mod tests {
                     let pids: Vec<&str> = pid_str.split('\n').collect();
                     for pid in pids {
                         if !pid.is_empty() {
-                            let signal = if $is_tui {
-                                "-SIGINT"
-                            } else {
-                                "-SIGTERM"
-                            };
+                            let signal = if $is_tui { "-SIGINT" } else { "-SIGTERM" };
                             Command::new("kill")
                                 .arg(signal)
                                 .arg(pid)
@@ -128,15 +128,18 @@ mod tests {
 
                 child.wait().expect("Failed to wait for open command");
 
-
                 // Assert that the screenshot was created
-                assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+                assert!(
+                    screenshot_path_result.is_ok(),
+                    "Failed to capture screenshot."
+                );
                 let screenshot_path = screenshot_path_result.unwrap();
-                let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+                let metadata =
+                    fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
                 assert!(metadata.is_file(), "Screenshot is not a file");
                 assert!(metadata.len() > 0, "Screenshot file is empty");
 
-				cleanup_terminal();
+                cleanup_terminal();
 
                 Ok(())
             }
@@ -192,8 +195,5 @@ mod tests {
 #[ctor::dtor]
 fn cleanup_terminal() {
     let _ = crossterm::terminal::disable_raw_mode();
-    let _ = crossterm::execute!(
-        std::io::stdout(),
-        crossterm::terminal::LeaveAlternateScreen
-    );
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::LeaveAlternateScreen);
 }

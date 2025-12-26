@@ -1,10 +1,10 @@
+use std::borrow::Cow;
+use std::fs;
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::thread;
 use std::time::Duration;
-use std::path::PathBuf;
-use std::fs;
-use tmux_interface::{Tmux, NewSession, SendKeys, CapturePane, KillSession};
-use std::borrow::Cow;
-use std::process::{Command, Stdio};
+use tmux_interface::{CapturePane, KillSession, NewSession, SendKeys, Tmux};
 
 fn is_tmux_installed() -> bool {
     Command::new("which")
@@ -29,7 +29,7 @@ fn test_capture_tmux() {
     ]
     .iter()
     .collect();
-    
+
     // Start a new detached tmux session
     let new_session = NewSession {
         detached: true,
@@ -38,7 +38,10 @@ fn test_capture_tmux() {
     };
     let tmux_output = Tmux::with_command(new_session).output().unwrap();
     if !tmux_output.status().success() {
-        panic!("Failed to start tmux session: {}", String::from_utf8_lossy(&tmux_output.stderr()));
+        panic!(
+            "Failed to start tmux session: {}",
+            String::from_utf8_lossy(&tmux_output.stderr())
+        );
     }
 
     // Send a simple echo command
@@ -49,7 +52,10 @@ fn test_capture_tmux() {
     };
     let tmux_output = Tmux::with_command(send_keys_cmd).output().unwrap();
     if !tmux_output.status().success() {
-        panic!("Failed to send command to tmux session: {}", String::from_utf8_lossy(&tmux_output.stderr()));
+        panic!(
+            "Failed to send command to tmux session: {}",
+            String::from_utf8_lossy(&tmux_output.stderr())
+        );
     }
 
     let send_keys_enter = SendKeys {
@@ -59,7 +65,10 @@ fn test_capture_tmux() {
     };
     let tmux_output = Tmux::with_command(send_keys_enter).output().unwrap();
     if !tmux_output.status().success() {
-        panic!("Failed to send Enter to tmux session: {}", String::from_utf8_lossy(&tmux_output.stderr()));
+        panic!(
+            "Failed to send Enter to tmux session: {}",
+            String::from_utf8_lossy(&tmux_output.stderr())
+        );
     }
 
     // Wait for the command to execute
@@ -72,11 +81,14 @@ fn test_capture_tmux() {
     };
     let captured = Tmux::with_command(capture_pane).output().unwrap();
     if !captured.status().success() {
-        panic!("Failed to capture tmux pane: {}", String::from_utf8_lossy(&captured.stderr()));
+        panic!(
+            "Failed to capture tmux pane: {}",
+            String::from_utf8_lossy(&captured.stderr())
+        );
     }
-    
+
     fs::write(&screenshot_path, captured.stdout()).expect("Failed to write screenshot to file");
-    
+
     // Kill the tmux session
     let kill_session = KillSession {
         target_session: Some(Cow::from(session_name)),
@@ -84,7 +96,10 @@ fn test_capture_tmux() {
     };
     let tmux_output = Tmux::with_command(kill_session).output().unwrap();
     if !tmux_output.status().success() {
-        panic!("Failed to kill tmux session: {}", String::from_utf8_lossy(&tmux_output.stderr()));
+        panic!(
+            "Failed to kill tmux session: {}",
+            String::from_utf8_lossy(&tmux_output.stderr())
+        );
     }
 
     // Verify that the screenshot was created

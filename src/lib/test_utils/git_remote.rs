@@ -1,10 +1,10 @@
 use std::{collections::HashSet, env::current_dir};
 
+use super::{git::GitTestRepo, *};
 use anyhow::{Context, Result};
 use futures::join;
 use nostr_0_34_1::nips::nip01::Coordinate;
 use nostr_sdk_0_34_0::{secp256k1::rand, Kind, ToBech32};
-use super::{git::GitTestRepo, *};
 
 pub static NOSTR_REMOTE_NAME: &str = "nostr";
 pub static STATE_KIND: nostr_0_34_1::Kind = Kind::Custom(30618);
@@ -99,19 +99,24 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
     let example_branch_tip = git_repo.get_tip_of_local_branch("example-branch")?;
     let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string();
     let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-    source_git_repo
-        .git_repo
-        .branch("example-branch", &source_git_repo.git_repo.find_commit(example_branch_tip)?, true)?;
-    
+    source_git_repo.git_repo.branch(
+        "example-branch",
+        &source_git_repo.git_repo.find_commit(example_branch_tip)?,
+        true,
+    )?;
+
     // Push all branches from git_repo to source_git_repo to ensure full history is present
     {
-        let mut remote = source_git_repo.git_repo.remote("origin", source_git_repo.dir.to_str().unwrap())?;
+        let mut remote = source_git_repo
+            .git_repo
+            .remote("origin", source_git_repo.dir.to_str().unwrap())?;
         let mut push_options = git2::PushOptions::new();
         remote.push(&["refs/heads/*:refs/heads/*"], Some(&mut push_options))?;
     }
 
     let example_commit_id = source_git_repo
-        .get_tip_of_local_branch("example-branch")?.to_string();
+        .get_tip_of_local_branch("example-branch")?
+        .to_string();
     println!("DEBUG: main_commit_id: {}", main_commit_id);
     println!("DEBUG: example_commit_id: {}", example_commit_id);
     let events = vec![
@@ -121,8 +126,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
             .dir
             .to_str()
             .unwrap()
-            .to_string()
-        ]),
+            .to_string()]),
     ];
     // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
     let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (

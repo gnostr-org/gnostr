@@ -1,5 +1,5 @@
-use std::error::Error;
 use serial_test::serial;
+use std::error::Error;
 
 use crate::test_utils::CliTester;
 

@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod tests {
+    use crate::utils::find_available_port;
+    use serial_test::serial;
     use std::env;
     use std::fs::File;
     use std::io::Write;
     use std::net::TcpListener;
     use std::process::Command;
-    use crate::utils::find_available_port;
-    use serial_test::serial;
 
     const SERVER_TOML_TEMPLATE: &str = r#"
 name = "gnostr.org"
@@ -33,7 +33,12 @@ public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaBogLsfsOkKIpZEZYa3Ee+wFaax
 
         // Create a dummy server.toml
         let mut file = File::create("server.toml").unwrap();
-        writeln!(file, "{}", &SERVER_TOML_TEMPLATE.replace("{}", &port.to_string())).unwrap();
+        writeln!(
+            file,
+            "{}",
+            &SERVER_TOML_TEMPLATE.replace("{}", &port.to_string())
+        )
+        .unwrap();
         drop(file);
 
         let binary_path = env::current_exe()

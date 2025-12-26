@@ -1,12 +1,11 @@
-
 #[cfg(test)]
 mod tests {
-    use crate::p2p::network_config::{Network};
-    use crate::p2p::utils::{generate_ed25519};
     use crate::p2p::generate_close_peer_id;
+    use crate::p2p::network_config::Network;
+    use crate::p2p::utils::generate_ed25519;
     use libp2p::{Multiaddr, PeerId};
-    use std::str::FromStr;
     use serial_test::serial;
+    use std::str::FromStr;
 
     #[test]
     #[serial]
@@ -15,8 +14,16 @@ mod tests {
         assert!(!bootnodes.is_empty());
         // Check a sample bootnode
         let (addr, peer_id) = &bootnodes[0];
-        assert_eq!(addr, &"/dns/p2p.cc3-0.kusama.network/tcp/30100".parse::<Multiaddr>().unwrap());
-        assert_eq!(peer_id, &PeerId::from_str("12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd").unwrap());
+        assert_eq!(
+            addr,
+            &"/dns/p2p.cc3-0.kusama.network/tcp/30100"
+                .parse::<Multiaddr>()
+                .unwrap()
+        );
+        assert_eq!(
+            peer_id,
+            &PeerId::from_str("12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd").unwrap()
+        );
     }
 
     #[test]
@@ -26,8 +33,16 @@ mod tests {
         assert!(!bootnodes.is_empty());
         // Check a sample bootnode
         let (addr, peer_id) = &bootnodes[0];
-        assert_eq!(addr, &"/dns/p2p.cc1-1.polkadot.network/tcp/30100".parse::<Multiaddr>().unwrap());
-        assert_eq!(peer_id, &PeerId::from_str("12D3KooWAtx477KzC8LwqLjWWUG6WF4Gqp2eNXmeqAG98ehAMWYH").unwrap());
+        assert_eq!(
+            addr,
+            &"/dns/p2p.cc1-1.polkadot.network/tcp/30100"
+                .parse::<Multiaddr>()
+                .unwrap()
+        );
+        assert_eq!(
+            peer_id,
+            &PeerId::from_str("12D3KooWAtx477KzC8LwqLjWWUG6WF4Gqp2eNXmeqAG98ehAMWYH").unwrap()
+        );
     }
 
     #[test]
@@ -37,8 +52,14 @@ mod tests {
         assert!(!bootnodes.is_empty());
         // Check a sample bootnode
         let (addr, peer_id) = &bootnodes[0];
-        assert_eq!(addr, &"/ip4/104.131.131.82/tcp/4001".parse::<Multiaddr>().unwrap());
-        assert_eq!(peer_id, &PeerId::from_str("QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ").unwrap());
+        assert_eq!(
+            addr,
+            &"/ip4/104.131.131.82/tcp/4001".parse::<Multiaddr>().unwrap()
+        );
+        assert_eq!(
+            peer_id,
+            &PeerId::from_str("QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ").unwrap()
+        );
     }
 
     #[test]
@@ -48,8 +69,16 @@ mod tests {
         assert!(!bootnodes.is_empty());
         // Check a sample bootnode
         let (addr, peer_id) = &bootnodes[0];
-        assert_eq!(addr, &"/dns/bootstrap-node-0.ursa.earth/tcp/6009".parse::<Multiaddr>().unwrap());
-        assert_eq!(peer_id, &PeerId::from_str("12D3KooWDji7xMLia6GAsyr4oiEFD2dd3zSryqNhfxU3Grzs1r9p").unwrap());
+        assert_eq!(
+            addr,
+            &"/dns/bootstrap-node-0.ursa.earth/tcp/6009"
+                .parse::<Multiaddr>()
+                .unwrap()
+        );
+        assert_eq!(
+            peer_id,
+            &PeerId::from_str("12D3KooWDji7xMLia6GAsyr4oiEFD2dd3zSryqNhfxU3Grzs1r9p").unwrap()
+        );
     }
 
     #[test]
@@ -73,12 +102,15 @@ mod tests {
     #[test]
     #[serial]
     fn test_network_ursa_protocol() {
-        assert_eq!(Network::Ursa.protocol(), Some("/ursa/kad/0.0.1".to_string()));
+        assert_eq!(
+            Network::Ursa.protocol(),
+            Some("/ursa/kad/0.0.1".to_string())
+        );
     }
 
     #[test]
     #[serial]
-	#[ignore]
+    #[ignore]
     fn test_generate_ed25519_valid_keypair() {
         let keypair = generate_ed25519(Some(0));
         // A simple check to ensure a keypair is generated.
@@ -88,11 +120,14 @@ mod tests {
 
     #[test]
     #[serial]
-	#[ignore]
+    #[ignore]
     fn test_generate_ed25519_different_seeds_different_keypairs() {
         let keypair1 = generate_ed25519(Some(0));
         let keypair2 = generate_ed25519(Some(1));
-        assert_ne!(keypair1.public().to_peer_id(), keypair2.public().to_peer_id());
+        assert_ne!(
+            keypair1.public().to_peer_id(),
+            keypair2.public().to_peer_id()
+        );
     }
 
     #[test]

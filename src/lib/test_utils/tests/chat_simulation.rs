@@ -5,12 +5,12 @@
 ///
 #[cfg(test)]
 mod tests {
-    use std::thread;
-    use std::time::Duration;
     use crate::test_utils::git::GitTestRepo;
     use crate::test_utils::CliTester;
     use crate::utils::screenshot::make_screenshot;
     use serial_test::serial;
+    use std::thread;
+    use std::time::Duration;
 
     #[test]
     #[ignore]

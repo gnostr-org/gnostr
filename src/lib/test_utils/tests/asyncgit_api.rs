@@ -1,10 +1,9 @@
-
-use gnostr_asyncgit::sync::{
-    self, create_branch, get_commit_details, get_head,
-    stage_add_file, checkout_branch, get_head_tuple, RepoPath,
-};
-use gnostr_asyncgit::sync::status::{get_status, StatusItemType, StatusType};
 use git2::{Repository, Signature};
+use gnostr_asyncgit::sync::status::{get_status, StatusItemType, StatusType};
+use gnostr_asyncgit::sync::{
+    self, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
+    stage_add_file, RepoPath,
+};
 use serial_test::serial;
 use std::fs::{self, File};
 use std::io::Write;
@@ -36,19 +35,25 @@ fn setup_test_repo() -> (TempDir, RepoPath) {
         repo.find_tree(oid).unwrap().id()
     };
     let tree = repo.find_tree(tree_id).unwrap();
-    let _commit_id = repo.commit(
-        Some("HEAD"),
-        &signature,
-        &signature,
-        "Initial commit",
-        &tree,
-        &[],
-    )
-    .unwrap();
+    let _commit_id = repo
+        .commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            "Initial commit",
+            &tree,
+            &[],
+        )
+        .unwrap();
 
     // Set the initial branch to main
     let head = repo.head().unwrap();
-    repo.branch("main", &repo.find_commit(head.target().unwrap()).unwrap(), true).unwrap();
+    repo.branch(
+        "main",
+        &repo.find_commit(head.target().unwrap()).unwrap(),
+        true,
+    )
+    .unwrap();
     repo.set_head("refs/heads/main").unwrap();
 
     (tmp_dir, RepoPath::Path(repo_path))
@@ -86,7 +91,6 @@ fn test_complex_git_workflow() {
     assert_eq!(status[0].path, "test.txt");
     assert_eq!(status[0].status, StatusItemType::New);
 
-
     //INSERT gnostr legit commit creation here
     let mut cmd = std::process::Command::new("gnostr");
     cmd.arg("legit")
@@ -99,7 +103,6 @@ fn test_complex_git_workflow() {
     assert!(output.status.success());
 
     // we will fix stashing and popping later
-
 
     // 4. Unstage the file and then stash the changes
     sync::reset_stage(&repo_path, "test.txt").unwrap();
@@ -129,4 +132,3 @@ fn test_complex_git_workflow() {
     let head = get_head_tuple(&repo_path).unwrap();
     assert_eq!(head.name, "refs/heads/main");
 }
-

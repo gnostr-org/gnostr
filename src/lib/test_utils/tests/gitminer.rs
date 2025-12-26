@@ -1,11 +1,11 @@
+use git2::{Oid, Repository, Signature};
 use gnostr_legit::gitminer::{Gitminer, Options};
-use git2::{Repository, Signature, Oid};
+use serial_test::serial;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;
 use time::OffsetDateTime;
-use serial_test::serial;
 
 // Helper function to set up a temporary git repository for testing.
 fn setup_test_repo() -> (TempDir, Repository) {
@@ -13,12 +13,14 @@ fn setup_test_repo() -> (TempDir, Repository) {
     let repo_path = tmp_dir.path();
     let repo = Repository::init(repo_path).unwrap();
 
-	println!("repo {}", repo_path.display());
+    println!("repo {}", repo_path.display());
     // Configure user name and email
     let mut config = repo.config().unwrap();
     config.set_str("user.name", "Test User").unwrap();
     config.set_str("user.email", "test@example.com").unwrap();
-    config.set_str("gnostr.relays", "wss://relay.example.com").unwrap();
+    config
+        .set_str("gnostr.relays", "wss://relay.example.com")
+        .unwrap();
 
     // Create an initial commit
     {
@@ -92,14 +94,18 @@ fn test_gitminer_new_fail_no_repo() {
     assert_eq!(miner_result.err(), Some("Failed to open repository"));
 }
 
-
 #[test]
 #[serial]
 //#[ignore]
 fn test_mine_commit_success() {
     println!("Setting up test repository...");
     let (_repo_path_str, repo) = setup_test_repo();
-    let repo_path_str = repo.path().to_str().unwrap().to_string().replace(".git","");
+    let repo_path_str = repo
+        .path()
+        .to_str()
+        .unwrap()
+        .to_string()
+        .replace(".git", "");
     println!("Test repository path: {}", repo_path_str);
 
     let opts = Options {
@@ -128,8 +134,14 @@ fn test_mine_commit_success() {
     // Verify the commit exists in the repo
     let oid = Oid::from_str(&commit_hash).unwrap();
     let commit = repo.find_commit(oid).unwrap();
-    assert_eq!(commit.message().unwrap().lines().next().unwrap(), "Mined commit");
-    println!("Verified commit message: '{}'", commit.message().unwrap().lines().next().unwrap());
+    assert_eq!(
+        commit.message().unwrap().lines().next().unwrap(),
+        "Mined commit"
+    );
+    println!(
+        "Verified commit message: '{}'",
+        commit.message().unwrap().lines().next().unwrap()
+    );
 
     // Verify that .gnostr directories and files were created
     let repo_path = Path::new(&repo_path_str);
