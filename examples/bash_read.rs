@@ -1,7 +1,6 @@
 use expectrl::{session::Session, Expect, Regex};
-use std::process::Command;
 use std::io::BufRead;
-
+use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut p = Session::spawn(Command::new("bash"))?;
@@ -34,7 +33,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for _ in 0..5 {
         // times out if one ping takes longer than 2s
         let duration = p.expect(Regex("[0-9. ]+ ms"))?;
-        println!("Roundtrip time: {}", std::str::from_utf8(duration.get(0).unwrap())?);
+        println!(
+            "Roundtrip time: {}",
+            std::str::from_utf8(duration.get(0).unwrap())?
+        );
     }
     p.send_line("\x03")?;
     Ok(())
