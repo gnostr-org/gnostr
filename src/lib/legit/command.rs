@@ -278,7 +278,7 @@ pub async fn create_event(
 
     let filter_one = crate::types::Filter::new()
         .add_author(&pubkey_keys.into())
-        .kind(crate::types::EventKind::TextNote)
+        .add_event_kind(crate::types::EventKind::TextNote)
         .limit(10);
 
     // let events = client
@@ -298,7 +298,7 @@ pub async fn create_event(
 
     let filter_test_author = crate::types::Filter::new()
         .add_author(&test_author_pubkey.into())
-        .kind(crate::types::EventKind::TextNote)
+        .add_event_kind(crate::types::EventKind::TextNote)
         .limit(10);
 
     // let events = client
