@@ -176,10 +176,13 @@ impl NostrClient {
             public_key.as_hex_string()
         );
 
-        let mut filter = Filter::new();
-        filter.add_author(&public_key.into())
-              .add_event_kind(EventKind::ContactList);
-        filter.limit = Some(1);
+        let filter = {
+            let mut f = Filter::new();
+            f.add_author(&public_key.into())
+             .add_event_kind(EventKind::ContactList);
+            f.limit = Some(1);
+            f
+        };
 
         let subscription_id = SubscriptionId(format!("contacts:{}", public_key.as_hex_string()));
 
