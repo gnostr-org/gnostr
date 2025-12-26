@@ -238,7 +238,7 @@ pub async fn create_event(
     // Publish a text note
 
     let pubkey_keys = keys.public_key();
-    info!("pubkey={}", pubkey_keys.public_key().as_hex_string());
+    info!("pubkey={}", pubkey_keys.as_hex_string());
 
     let mut tags: Vec<Tag> = Vec::new();
     tags.push(Tag::new_pubkey(pubkey_keys, None, None));
@@ -257,7 +257,7 @@ pub async fn create_event(
         created_at: Unixtime::now(),
         kind: EventKind::TextNote,
         tags: tags,
-        content: format!("gnostr:legit {}", pubkey_keys.public_key().as_hex_string()).to_string(),
+        content: format!("gnostr:legit {}", pubkey_keys.as_hex_string()).to_string(),
     };
 
     let id = pre_event.hash().unwrap();
@@ -277,7 +277,7 @@ pub async fn create_event(
     info!("Text note event sent successfully.");
 
     let filter_one = crate::types::Filter::new()
-        .add_author(pubkey_keys.public_key())
+        .add_author(&pubkey_keys.public_key().into())
         .kind(crate::types::EventKind::TextNote)
         .limit(10);
 
@@ -297,7 +297,7 @@ pub async fn create_event(
     info!("test_author_pubkey={}", test_author_pubkey.as_bech32_string());
 
     let filter_test_author = crate::types::Filter::new()
-        .add_author(test_author_pubkey)
+        .add_author(&test_author_pubkey.into())
         .kind(crate::types::EventKind::TextNote)
         .limit(10);
 
@@ -525,7 +525,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             debug!("{}", relay);
             client.connect_relay(UncheckedUrl(relay.to_string())).await?;
         }
-        client.connect().await;
+    
 
         //build git gnostr event
         let pre_event = PreEvent {

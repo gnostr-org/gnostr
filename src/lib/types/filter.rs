@@ -71,10 +71,11 @@ impl Filter {
     }
 
     /// Add a PublicKey to the filter
-    pub fn add_author(&mut self, public_key_hex: &PublicKeyHex) {
+    pub fn add_author(&mut self, public_key_hex: &PublicKeyHex) -> &mut Self {
         if !self.authors.contains(public_key_hex) {
             self.authors.push(public_key_hex.to_owned());
         }
+        self
     }
 
     /// Delete a PublicKey from the filter
