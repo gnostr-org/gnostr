@@ -1,32 +1,20 @@
+use crate::p2p::network_config::Network;
 use ansi_term::Style;
 use futures::stream::StreamExt;
 use libp2p::core::ConnectedPoint;
 use libp2p::identify;
 use libp2p::identity::Keypair;
 use libp2p::kad::ProgressStep;
-use libp2p::kad::{
-    store::MemoryStore, GetClosestPeersOk,
-    QueryResult,
-};
+use libp2p::kad::{store::MemoryStore, GetClosestPeersOk, QueryResult};
 use libp2p::ping;
 use libp2p::relay;
+use libp2p::swarm::SwarmEvent;
 use libp2p::{
-    noise,
-    swarm::{NetworkBehaviour},
-    tcp,
-    yamux,
-    Multiaddr,
-    PeerId,
-    Swarm,
-    StreamProtocol,
+    noise, swarm::NetworkBehaviour, tcp, yamux, Multiaddr, PeerId, StreamProtocol, Swarm,
     SwarmBuilder,
 };
-use libp2p::swarm::SwarmEvent;
 use log::debug;
-use crate::p2p::network_config::Network;
 use thiserror::Error;
-
-
 
 fn print_key(k: &str, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     writeln!(f, "{}:", Style::new().bold().paint(k))
@@ -84,48 +72,51 @@ impl LookupClient {
 
         //println!("Local peer id: {local_peer_id}");
 
+        let (_relay_transport, _relay_client) = relay::client::new(local_peer_id);
+        let mut swarm = SwarmBuilder::with_existing_identity(local_key)
+            .with_async_std()
+            .with_tcp(
+                tcp::Config::default(),
+                noise::Config::new,
+                yamux::Config::default,
+            )
+            .unwrap()
+            .with_quic()
+            .with_relay_client(noise::Config::new, yamux::Config::default)
+            .unwrap()
+            .with_behaviour(|key, relay_client| {
+                let local_peer_id = PeerId::from(key.public());
 
+                // Create a Kademlia behaviour.
+                let store = MemoryStore::new(local_peer_id);
+                let protocol_name = network
+                    .and_then(|n| n.protocol())
+                    .unwrap_or_else(|| "/ipfs/kad/1.0.0".to_string());
+                let kademlia_config = libp2p::kad::Config::new(
+                    StreamProtocol::try_from_owned(protocol_name).unwrap(),
+                );
+                let kademlia =
+                    libp2p::kad::Behaviour::with_config(local_peer_id, store, kademlia_config);
 
-            let (_relay_transport, _relay_client) = relay::client::new(local_peer_id);
-            let mut swarm = SwarmBuilder::with_existing_identity(local_key)
-                .with_async_std()
-                .with_tcp(
-                    tcp::Config::default(),
-                    noise::Config::new,
-                    yamux::Config::default,
-                )
-                .unwrap()
-                .with_quic()
-                .with_relay_client(noise::Config::new, yamux::Config::default)
-                .unwrap()
-                .with_behaviour(|key, relay_client| {
-                    let local_peer_id = PeerId::from(key.public());
+                let ping = ping::Behaviour::new(ping::Config::new());
 
-                    // Create a Kademlia behaviour.
-                    let store = MemoryStore::new(local_peer_id);
-                    let protocol_name = network.and_then(|n| n.protocol()).unwrap_or_else(|| "/ipfs/kad/1.0.0".to_string());
-                    let kademlia_config = libp2p::kad::Config::new(StreamProtocol::try_from_owned(protocol_name).unwrap());
-                    let kademlia = libp2p::kad::Behaviour::with_config(local_peer_id, store, kademlia_config);
+                let user_agent =
+                    "substrate-node/v2.0.0-e3245d49d-x86_64-linux-gnu (unknown)".to_string();
+                let proto_version = "/substrate/1.0".to_string();
+                let identify = identify::Behaviour::new(
+                    identify::Config::new(proto_version, key.public())
+                        .with_agent_version(user_agent),
+                );
 
-                    let ping = ping::Behaviour::new(ping::Config::new());
-
-                    let user_agent =
-                        "substrate-node/v2.0.0-e3245d49d-x86_64-linux-gnu (unknown)".to_string();
-                    let proto_version = "/substrate/1.0".to_string();
-                    let identify = identify::Behaviour::new(
-                        identify::Config::new(proto_version, key.public())
-                            .with_agent_version(user_agent),
-                    );
-
-                    LookupBehaviour {
-                        kademlia,
-                        ping,
-                        identify,
-                        relay: relay_client,
-                    }
-                })
-                .unwrap()
-                .build();
+                LookupBehaviour {
+                    kademlia,
+                    ping,
+                    identify,
+                    relay: relay_client,
+                }
+            })
+            .unwrap()
+            .build();
 
         if let Some(network) = network {
             for (addr, peer_id) in network.bootnodes() {
@@ -279,5 +270,3 @@ struct LookupBehaviour {
     pub(crate) identify: identify::Behaviour,
     relay: relay::client::Behaviour,
 }
-
-

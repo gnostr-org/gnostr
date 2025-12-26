@@ -1,7 +1,7 @@
 pub mod config;
 pub mod git;
-pub mod site;
 pub mod server;
+pub mod site;
 pub mod state;
 pub mod utils;
 pub mod vars;

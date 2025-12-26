@@ -5,9 +5,9 @@ use reqwest::Url;
 
 // https://api.nostr.watch/v2/#get/openapijson
 // let client = reqwest::Client::new();
-// 
+//
 // let request = client.get("https://api.nostr.watch/v2/openapi.json");
-// 
+//
 // let response = request.send().await?;
 
 fn _get_relays_from_url_path(path: &str) -> Result<String> {

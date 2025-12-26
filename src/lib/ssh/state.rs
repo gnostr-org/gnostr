@@ -1,6 +1,6 @@
-use std::path::PathBuf;
-use crate::ssh::config::server::{load_server_config, ServerConfig};
 use crate::ssh::config::repo::{load_repo_config_from_path, RepoConfig};
+use crate::ssh::config::server::{load_server_config, ServerConfig};
+use std::path::PathBuf;
 
 pub struct State {
     pub server_config: ServerConfig,

@@ -1,83 +1,81 @@
-
-
 use anyhow::anyhow;
 use git2::{ObjectType, Repository, RepositoryState};
 
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 
-use nostr_sdk_0_37_0::prelude::*;
 use nostr_sdk_0_37_0::prelude::Tag;
+use nostr_sdk_0_37_0::prelude::*;
 use once_cell::sync::OnceCell;
 
+use crate::utils::{parse_json, split_json_string};
+use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
+use gnostr_legit::{gitminer, gitminer::Gitminer};
 use serde_json;
 use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::{io, time::{Duration, SystemTime}, error::Error as StdError};
 use std::io::Write;
-use tracing::{debug, info, error};
-use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
-use crate::utils::{parse_json, split_json_string};
 use std::process::Command;
-use gnostr_legit::{gitminer, gitminer::Gitminer};
-
-
-
-
+use std::{
+    error::Error as StdError,
+    io,
+    time::{Duration, SystemTime},
+};
+use tracing::{debug, error, info};
 
 pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
-
     let _start = SystemTime::now();
     let _system_time = SystemTime::now();
 
     let repo = Repository::open(&opts.repo).expect("Couldn't open repository");
 
     if repo.state() != RepositoryState::Clean {
-        let repo_state =
-            if cfg!(target_os = "windows") {
+        let repo_state = if cfg!(target_os = "windows") {
             Command::new("cmd")
-                    .args(["/C", "git status"])
-                    .output()
-                    .expect("failed to execute process")
-            } else {
+                .args(["/C", "git status"])
+                .output()
+                .expect("failed to execute process")
+        } else {
             Command::new("sh")
-                    .arg("-c")
-                    .arg("gnostr-git diff")
-                    .output()
-                    .expect("failed to execute process")
-            };
+                .arg("-c")
+                .arg("gnostr-git diff")
+                .output()
+                .expect("failed to execute process")
+        };
 
         let _state = String::from_utf8(repo_state.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
+            .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+            .unwrap();
     }
 
-    // GEMINI we need to handle --kind flag from ../sub_commands/legit.rs 
+    // GEMINI we need to handle --kind flag from ../sub_commands/legit.rs
     if opts.message.is_empty() {
-        let output =
-            if cfg!(target_os = "windows") {
+        let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
-                    .args(["/C", "git status"])
-                    .output()
-                    .expect("failed to execute process")
-            } else {
+                .args(["/C", "git status"])
+                .output()
+                .expect("failed to execute process")
+        } else {
             Command::new("sh")
-                    .arg("-c")
-                    .arg("git diff")
-                    .output()
-                    .expect("failed to execute process")
-            };
+                .arg("-c")
+                .arg("git diff")
+                .output()
+                .expect("failed to execute process")
+        };
 
         let message = String::from_utf8(output.stdout)
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-        .unwrap();
+            .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
+            .unwrap();
         opts.message = [message.to_string()].to_vec();
     }
 
-    let mut miner = Gitminer::new(opts.clone()).map_err(|e| io::Error::other(format!("Failed to start git miner: {}", e)))?;
+    let mut miner = Gitminer::new(opts.clone())
+        .map_err(|e| io::Error::other(format!("Failed to start git miner: {}", e)))?;
     debug!("Gitminer options: {:?}", opts);
 
-    let _hash = miner.mine().map_err(|e| io::Error::other(format!("Failed to generate commit: {}", e)))?;
+    let _hash = miner
+        .mine()
+        .map_err(|e| io::Error::other(format!("Failed to generate commit: {}", e)))?;
 
     // Initiate gnostr_legit_event after GitMiner has finished.
     // gnostr_legit_event itself spawns tasks on the global runtime.
@@ -95,14 +93,12 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     }
 }
 
-
-
-
 pub async fn create_event_with_custom_tags(
     keys: &Keys,
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
-) -> anyhow::Result<(Event, UnsignedEvent)> { // Changed return type
+) -> anyhow::Result<(Event, UnsignedEvent)> {
+    // Changed return type
     let mut builder = EventBuilder::new(Kind::TextNote, content);
 
     for (tag_name, tag_values) in custom_tags {
@@ -114,7 +110,11 @@ pub async fn create_event_with_custom_tags(
     }
 
     let unsigned_event = builder.build(keys.public_key()); // Build the unsigned event
-    let signed_event = unsigned_event.clone().sign(keys).await.map_err(|e| anyhow!("Failed to sign event: {}", e))?;
+    let signed_event = unsigned_event
+        .clone()
+        .sign(keys)
+        .await
+        .map_err(|e| anyhow!("Failed to sign event: {}", e))?;
     Ok((signed_event, unsigned_event))
 }
 
@@ -152,367 +152,154 @@ pub async fn create_kind_event(
     Ok((signed_event.await?, unsigned_event))
 }
 
-
 pub async fn create_event(
-
-
     keys: Keys,
-
 
     custom_tags: HashMap<String, Vec<String>>,
 
-
     content: &str,
-
-
-) -> anyhow::Result<Event> { // Changed return type
-
+) -> anyhow::Result<Event> {
+    // Changed return type
 
     //let content = "Hello, Nostr with custom tags!";
 
-
-
-
-
-    let (signed_event, _unsigned_event) = create_event_with_custom_tags(&keys, content, custom_tags).await?;
-
+    let (signed_event, _unsigned_event) =
+        create_event_with_custom_tags(&keys, content, custom_tags).await?;
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
-
-
-
-
 
     let opts = Options::new().gossip(true);
 
-
     let client = Client::builder().signer(keys.clone()).opts(opts).build();
 
-
     for relay in BOOTSTRAP_RELAYS.iter().clone() {
-
-
         debug!("{}", relay);
 
-
         client.add_discovery_relay(relay).await.expect("");
-
-
     }
-
-
-
-
 
     // Connect to the relays.
 
-
     client.connect().await;
-
-
-
-
 
     // client.send_event - signed_event
 
-
-    client.send_event(signed_event.clone()).await.map_err(|e| anyhow!("Failed to send event: {}", e))?; // Explicitly map to anyhow::Error
-
-
-
-
+    client
+        .send_event(signed_event.clone())
+        .await
+        .map_err(|e| anyhow!("Failed to send event: {}", e))?; // Explicitly map to anyhow::Error
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
+    info!("signed_event sent:\n{:?}", signed_event);
 
-        info!("signed_event sent:\n{:?}", signed_event);
+    debug!("signed_event.content: {}", signed_event.content);
 
+    debug!("signed_event.pubkey: {}", signed_event.pubkey);
 
-        debug!("signed_event.content: {}", signed_event.content);
+    debug!("signed_event.kind: {:?}", signed_event.kind);
 
+    debug!("signed_event.tags: {:?}", signed_event.tags);
 
-        debug!("signed_event.pubkey: {}", signed_event.pubkey);
+    //
 
-
-        debug!("signed_event.kind: {:?}", signed_event.kind);
-
-
-        debug!("signed_event.tags: {:?}", signed_event.tags);
-
-
-    
-
-
-        //
-
-
-    
-
-
-        // Publish a text note
-
+    // Publish a text note
 
     let pubkey = keys.public_key();
 
-
-
-
-
     info!("pubkey={}", keys.public_key());
 
-
     let builder = EventBuilder::text_note(format!("gnostr:legit {}", pubkey))
-
-
         .tag(Tag::public_key(pubkey))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2 3 4 11 22 33 44".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2 3 4 11 22 33".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2 3 4 11 22".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2 3 4 11".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2 3 4".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2 3".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1 2".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
             "1".chars(),
-
-
         ))
-
-
         .tag(Tag::custom(
-
-
             TagKind::Custom(Cow::from("gnostr")),
-
-
-            ""
-
-
-.chars(),
-
-
+            "".chars(),
         ));
-
-
-
-
 
     //send from send_event_builder
 
-
     let output = client.send_event_builder(builder).await?;
-
 
     info!("Event ID: {}", output.to_bech32()?);
 
-
-
-
-
     info!("Sent to:");
 
-
     for url in output.success.into_iter() {
-
-
         info!("- {url}");
-
-
     }
-
-
-
-
 
     info!("Not sent to:");
 
-
     for (url, reason) in output.failed.into_iter() {
-
-
         info!("- {url}: {reason:?}");
-
-
     }
-
-
-
-
 
     // Get events
 
-
     let filter_one = Filter::new().author(pubkey).kind(Kind::TextNote).limit(10);
 
-
     let events = client
-
-
         .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
-
-
         .await?;
 
-
-
-
-
     for event in events.into_iter() {
-
-
         println!("{}", event.as_json());
-
-
     }
-
-
-
-
 
     // another filter
 
-
     let test_author_pubkey =
-
-
         PublicKey::parse("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet")?;
-
-
-
-
 
     info!("test_author_pubkey={}", test_author_pubkey);
 
-
-
-
-
     let filter_test_author = Filter::new()
-
-
         .author(test_author_pubkey)
-
-
         .kind(Kind::TextNote)
-
-
         .limit(10);
 
-
     let events = client
-
-
         .fetch_events(vec![filter_test_author], Some(Duration::from_secs(10)))
-
-
         .await?;
 
-
-
-
-
     for event in events.into_iter() {
-
-
         info!("test_author:\n\n{}", event.as_json());
-
-
     }
 
-
-
-
-
     Ok(signed_event)
-
-
 }
-
-
 
 //async tasks
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
@@ -521,7 +308,6 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 }
 
 pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdError>> {
-
     // gnostr_legit_event
     let empty_hash_keys =
         Keys::parse("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
@@ -578,16 +364,34 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
         //send to create_event function with &"custom content"
-        let create_event_result = create_event(padded_keys.clone(), custom_tags, "gnostr-legit:event").await;
-        println!("Commit-based create_event result:\n{:?}", create_event_result);
+        let create_event_result =
+            create_event(padded_keys.clone(), custom_tags, "gnostr-legit:event").await;
+        println!(
+            "Commit-based create_event result:\n{:?}",
+            create_event_result
+        );
         io::stdout().flush().unwrap(); // Flush stdout
 
         // The existing error logging for create_kind_event remains.
-        if let Err(e) = create_kind_event(&padded_keys, kind.unwrap_or(1), &serialized_commit_for_kind_event, HashMap::new()).await {
+        if let Err(e) = create_kind_event(
+            &padded_keys,
+            kind.unwrap_or(1),
+            &serialized_commit_for_kind_event,
+            HashMap::new(),
+        )
+        .await
+        {
             error!("Failed to create kind event: {:?}", e);
         }
 
-        if let Err(e) = create_kind_event(&padded_keys, kind.unwrap_or(1), &serialized_commit_for_kind_event, HashMap::new()).await {
+        if let Err(e) = create_kind_event(
+            &padded_keys,
+            kind.unwrap_or(1),
+            &serialized_commit_for_kind_event,
+            HashMap::new(),
+        )
+        .await
+        {
             error!("Failed to create kind event: {:?}", e);
         }
     });
@@ -626,12 +430,12 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     }
     // Accessing parent commits (merge may be array)
     if let Some(Value::Array(arr)) = value.get("parents") {
-            if let Some(parent) = arr.first() {
-                debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
-            }
-            if let Some(parent) = arr.get(1) {
-                debug!("parent:\n{}", parent.as_str().unwrap_or(""));
-            }
+        if let Some(parent) = arr.first() {
+            debug!("parent:\n{}", parent.as_str().unwrap_or("initial commit"));
+        }
+        if let Some(parent) = arr.get(1) {
+            debug!("parent:\n{}", parent.as_str().unwrap_or(""));
+        }
     }
     if let Some(author_name) = value.get("author_name") {
         debug!("author_name:\n{}", author_name.as_str().unwrap_or(""));

@@ -280,7 +280,6 @@ impl Component for BlameFilePopup {
 }
 
 impl BlameFilePopup {
-
     pub fn new(env: &Environment, title: &str) -> Self {
         Self {
             title: String::from(title),
@@ -316,7 +315,6 @@ impl BlameFilePopup {
         }
     }
 
-
     pub fn open(&mut self, open: BlameFileOpen) -> Result<()> {
         self.open_request = Some(open.clone());
         self.params = Some(BlameParams {
@@ -333,7 +331,6 @@ impl BlameFilePopup {
 
         Ok(())
     }
-
 
     pub const fn any_work_pending(&self) -> bool {
         self.blame.is_some() && !matches!(self.blame, Some(BlameProcess::Result(_)))
@@ -412,7 +409,6 @@ impl BlameFilePopup {
         }
     }
 
-
     fn get_title(&self) -> String {
         match (
             self.any_work_pending(),
@@ -442,7 +438,6 @@ impl BlameFilePopup {
             _ => format!("{} -- <no blame available>", self.title),
         }
     }
-
 
     fn get_rows(&self, width: usize) -> Vec<Row<'_>> {
         self.blame

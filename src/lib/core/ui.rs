@@ -33,11 +33,7 @@ impl Drop for TerminalCleanup {
     fn drop(&mut self) {
         println!("TerminalCleanup::drop called - restoring terminal");
         let _ = disable_raw_mode();
-        let _ = execute!(
-            io::stdout(),
-            LeaveAlternateScreen,
-            DisableMouseCapture
-        );
+        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
     }
 }
 
@@ -132,7 +128,8 @@ fn run_app<B: Backend>(
                     .unwrap()
                     .as_secs();
                 path.push(format!("screenshot-{}.png", timestamp));
-                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap()).unwrap();
+                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap())
+                    .unwrap();
                 last_screenshot = std::time::Instant::now();
             }
         }
@@ -184,7 +181,8 @@ fn run_app<B: Backend>(
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default().set_content(app.input.value().to_owned(), 0);
+                            let m =
+                                msg::Msg::default().set_content(app.input.value().to_owned(), 0);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);

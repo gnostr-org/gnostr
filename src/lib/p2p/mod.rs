@@ -1,16 +1,16 @@
-pub mod command_handler;
-pub mod kvs;
-pub mod opt;
-pub mod chat;
-pub mod network_config;
+pub mod args;
 pub mod behaviour;
-pub mod utils;
+pub mod chat;
+pub mod command_handler;
+pub mod event_handler;
 pub mod git_integration;
 pub mod git_publisher;
-pub mod swarm_builder;
-pub mod args;
-pub mod event_handler;
+pub mod kvs;
 pub mod lookup;
+pub mod network_config;
+pub mod opt;
+pub mod swarm_builder;
+pub mod utils;
 
 use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
@@ -19,30 +19,27 @@ use crate::p2p::chat::ChatSubCommands;
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub,
-    identify, identity,
-    kad::
-        {
-            self,
-            store::{MemoryStore, MemoryStoreConfig},
-            Config as KadConfig,
-        },
+    gossipsub, identify, identity,
+    kad::{
+        self,
+        store::{MemoryStore, MemoryStoreConfig},
+        Config as KadConfig,
+    },
     mdns, noise, ping, rendezvous,
     swarm::SwarmEvent,
     tcp, yamux, PeerId,
 };
-use std::
-    {
-        env,
-        error::Error,
-        hash::{DefaultHasher, Hash, Hasher},
-        thread,
-    };
+use serde_json;
+use std::{
+    env,
+    error::Error,
+    hash::{DefaultHasher, Hash, Hasher},
+    thread,
+};
 use tokio::time::Duration;
 use tokio::{io, select};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
-use serde_json;
 
 //const TOPIC: &str = "gnostr";
 
@@ -84,7 +81,7 @@ pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
             trace!("\n");
         }
     }
-    let mut keypair = 
+    let mut keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("262:{}", keypair.public().to_peer_id());
 
@@ -103,7 +100,7 @@ pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
         trace!("");
     }
 
-    keypair = 
+    keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("292:{}", keypair.public().to_peer_id());
     keypair.public().to_peer_id()
@@ -116,7 +113,8 @@ pub async fn evt_loop(
     recv: tokio::sync::mpsc::Sender<Msg>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
-    let keypair: identity::Keypair = crate::p2p::utils::generate_ed25519(args.nsec.clone().map(|s| s.as_bytes()[0]));
+    let keypair: identity::Keypair =
+        crate::p2p::utils::generate_ed25519(args.nsec.clone().map(|s| s.as_bytes()[0]));
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);
@@ -128,7 +126,7 @@ pub async fn evt_loop(
         max_value_bytes: usize::MAX,
     };
     let _kad_memstore = MemoryStore::with_config(peer_id, kad_store_config.clone());
-	let _kad_config = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
+    let _kad_config = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
     let _message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
         message.data.hash(&mut s);
@@ -146,7 +144,7 @@ pub async fn evt_loop(
         info!("message.topic.hash:\n{0:0}", message.topic.clone());
         gossipsub::MessageId::from(s.finish().to_string())
     };
-	#[allow(clippy::redundant_closure)]
+    #[allow(clippy::redundant_closure)]
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
@@ -160,8 +158,8 @@ pub async fn evt_loop(
             noise::Config::new,
             yamux::Config::default,
         )?
-        .with_quic() 
-        .with_dns()? 
+        .with_quic()
+        .with_dns()?
         .with_behaviour(|key| {
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
@@ -205,7 +203,7 @@ pub async fn evt_loop(
                     key.public().to_peer_id(),
                 )?,
             })
-        })? 
+        })?
         .build();
 
     // subscribes to our topic
@@ -279,7 +277,7 @@ pub async fn evt_loop(
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                     }
                 },
-                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message { 
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
                     message,
@@ -302,7 +300,7 @@ pub async fn evt_loop(
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
                 }
-                _ => {} 
+                _ => {}
             }
         }
         debug!("p2p.rs:end loop");

@@ -27,8 +27,8 @@ pub enum InputMode {
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use super::CommandText;
-use crate::utils::truncate_chars;
 use crate::p2p::chat::msg::Msg;
+use crate::utils::truncate_chars;
 use crate::{
     app::Environment,
     components::{
@@ -109,12 +109,10 @@ impl TopicList {
         }
     }
 
-
     /// tags
     pub const fn tags(&self) -> Option<&Tags> {
         self.tags.as_ref()
     }
-
 
     /// clear
     pub fn clear(&mut self) {
@@ -122,18 +120,15 @@ impl TopicList {
         self.commits.clear();
     }
 
-
     /// copy_items
     pub fn copy_items(&self) -> Vec<CommitId> {
         self.commits.iter().copied().collect_vec()
     }
 
-
     /// set_tags
     pub fn set_tags(&mut self, tags: Tags) {
         self.tags = Some(tags);
     }
-
 
     /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
@@ -142,31 +137,26 @@ impl TopicList {
             .nth(self.selection.saturating_sub(self.items.index_offset()))
     }
 
-
     /// marked_count
     pub fn marked_count(&self) -> usize {
         self.marked.len()
     }
-
 
     /// marked
     pub fn marked(&self) -> &[(usize, CommitId)] {
         &self.marked
     }
 
-
     /// clear_marked
     pub fn clear_marked(&mut self) {
         self.marked.clear();
     }
-
 
     /// marked_commits
     pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
         commits
     }
-
 
     /// copy_commit_hash
     pub fn copy_commit_hash(&self) -> Result<()> {
@@ -201,7 +191,6 @@ impl TopicList {
         Ok(())
     }
 
-
     /// checkout
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn checkout(&mut self) {
@@ -214,7 +203,6 @@ impl TopicList {
             );
         }
     }
-
 
     /// comment
     #[allow(clippy::needless_pass_by_ref_mut)]
@@ -230,7 +218,6 @@ impl TopicList {
         }
     }
 
-
     /// set_local_branches
     pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
         self.local_branches.clear();
@@ -245,7 +232,6 @@ impl TopicList {
         }
     }
 
-
     /// set_remote_branches
     pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
         self.remote_branches.clear();
@@ -259,7 +245,6 @@ impl TopicList {
             }
         }
     }
-
 
     /// set_commits
     pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
@@ -279,7 +264,6 @@ impl TopicList {
         }
     }
 
-
     /// refresh_extend_data
     pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
         let new_commits = !commits.is_empty();
@@ -292,7 +276,6 @@ impl TopicList {
             self.fetch_commits(false);
         }
     }
-
 
     /// set_highlighted
     pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
@@ -308,7 +291,6 @@ impl TopicList {
         self.fetch_commits(true);
     }
 
-
     /// select_commit
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         let index = self.commits.get_index_of(&id);
@@ -323,7 +305,6 @@ impl TopicList {
 			);
         }
     }
-
 
     /// highlighted_selection_info
     pub fn highlighted_selection_info(&self) -> (usize, usize) {
@@ -495,7 +476,8 @@ impl TopicList {
         marked: Option<bool>,
     ) -> Line<'a> {
         #[allow(clippy::if_same_then_else)]
-        let mut txt: Vec<Span> = Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 });
+        let mut txt: Vec<Span> =
+            Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 });
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
 
@@ -626,10 +608,7 @@ impl TopicList {
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
 
         let splitter_txt = Cow::from(symbol::EMPTY_SPACE);
-        let splitter = Span::styled(
-            splitter_txt,
-            theme.text(true, false),
-        );
+        let splitter = Span::styled(splitter_txt, theme.text(true, false));
 
         //nip34 indication for push
         // marker
@@ -802,11 +781,7 @@ impl TopicList {
         let _now = Local::now();
         let any_marked = !self.marked.is_empty();
         //for (_idx, e) in self
-        for e in self
-            .items
-            .iter()
-            .skip(self.scroll_top.get())
-            .take(height)
+        for e in self.items.iter().skip(self.scroll_top.get()).take(height)
         //    .enumerate()
         {
             let _tags = self
@@ -1044,7 +1019,8 @@ impl TopicList {
             if let Some(history) = self.chat_histories.get_mut(&msg.commit_id) {
                 history.push(msg.to_string());
             } else {
-                self.chat_histories.insert(msg.commit_id, vec![msg.to_string()]);
+                self.chat_histories
+                    .insert(msg.commit_id, vec![msg.to_string()]);
             }
         }
     }
@@ -1062,11 +1038,11 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(5),       //0 nip34 top box
-                    Constraint::Length(3),       //1 additional info
-                    Constraint::Percentage(50),  //2 table //commit detail hidden
-                    Constraint::Percentage(50),  //3 table //chat_history
-                    Constraint::Length(3),       //4 chat input //last in - bottom
+                    Constraint::Length(5),      //0 nip34 top box
+                    Constraint::Length(3),      //1 additional info
+                    Constraint::Percentage(50), //2 table //commit detail hidden
+                    Constraint::Percentage(50), //3 table //chat_history
+                    Constraint::Length(3),      //4 chat input //last in - bottom
                 ]
                 .as_ref(),
             )
@@ -1077,8 +1053,8 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Min(0),          //0 topic
-                    Constraint::Min(0),          //1 squares
+                    Constraint::Min(0),         //0 topic
+                    Constraint::Min(0),         //1 squares
                     Constraint::Percentage(50), //2 tools view
                 ]
                 .as_ref(),
@@ -1087,7 +1063,10 @@ impl DrawableComponent for TopicList {
 
         let current_size = (
             area.width.saturating_sub(2),
-            area.height.saturating_sub(1).saturating_sub(right_chunks.get(1).unwrap().height).saturating_sub(2),
+            area.height
+                .saturating_sub(1)
+                .saturating_sub(right_chunks.get(1).unwrap().height)
+                .saturating_sub(2),
         );
         self.current_size.set(Some(current_size));
 
@@ -1131,7 +1110,7 @@ impl DrawableComponent for TopicList {
         //format nip34 info
         f.render_widget(
             Paragraph::new(self.get_detail_text(
-                /*10_usize * */topic_height_in_lines,
+                /*10_usize * */ topic_height_in_lines,
                 (current_size.0 - 6) as usize,
             ))
             .block(
@@ -1150,7 +1129,6 @@ impl DrawableComponent for TopicList {
             .alignment(Alignment::Left),
             left_chunks[1],
         );
-
 
         //TODO
         let chat_history_height = left_chunks[3].height as usize;
@@ -1193,12 +1171,10 @@ impl DrawableComponent for TopicList {
 
         match self.input_mode {
             InputMode::Normal => {}
-            InputMode::Editing => {
-                f.set_cursor_position((
-                    left_chunks[4].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                    left_chunks[4].y + 1,
-                ))
-            }
+            InputMode::Editing => f.set_cursor_position((
+                left_chunks[4].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                left_chunks[4].y + 1,
+            )),
         }
         Ok(())
     }
@@ -1207,25 +1183,25 @@ impl DrawableComponent for TopicList {
 impl Component for TopicList {
     fn event(&mut self, ev: &crossterm::event::Event) -> Result<EventState> {
         if let crossterm::event::Event::Key(k) = ev {
-
             //we respond to some key events reguardless of where we are in the life cycle
 
             if k.code == crossterm::event::KeyCode::Char('c')
-                && k.modifiers.contains(crossterm::event::KeyModifiers::CONTROL)
+                && k.modifiers
+                    .contains(crossterm::event::KeyModifiers::CONTROL)
             {
                 return Ok(EventState::Consumed);
             }
             if k.code == crossterm::event::KeyCode::Char('i') {
-                        self.input_mode = InputMode::Editing;
-                        self.input.reset();
-                        return Ok(EventState::Consumed);
-                    }
+                self.input_mode = InputMode::Editing;
+                self.input.reset();
+                return Ok(EventState::Consumed);
+            }
 
             if k.code == crossterm::event::KeyCode::Esc {
-                        self.input_mode = InputMode::Normal;
-                        self.input.reset();
-                        return Ok(EventState::Consumed);
-                    }
+                self.input_mode = InputMode::Normal;
+                self.input.reset();
+                return Ok(EventState::Consumed);
+            }
 
             let selection_changed = match self.input_mode {
                 InputMode::Normal => {

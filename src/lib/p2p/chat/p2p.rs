@@ -1,9 +1,6 @@
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub,
-    identify,
-    kad,
-    mdns, noise, ping,
+    gossipsub, identify, kad, mdns, noise, ping,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, StreamProtocol,
@@ -15,11 +12,7 @@ use tracing::{debug, warn};
 
 use ureq::Agent;
 
-
-
 use crate::p2p::kvs::{FileRequest, FileResponse};
-
-
 
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {

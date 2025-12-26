@@ -52,7 +52,6 @@ pub struct LogSearchPopupPopup {
 }
 
 impl LogSearchPopupPopup {
-
     pub fn new(env: &Environment) -> Self {
         let mut find_text = TextInputComponent::new(env, "", "search text", false)
             .with_input_type(InputType::Singleline);

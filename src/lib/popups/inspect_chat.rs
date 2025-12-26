@@ -230,7 +230,6 @@ impl InspectChatPopup {
     //accessors!(self, [diff, details]);
     accessors!(self, [diff, details]);
 
-
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -245,7 +244,6 @@ impl InspectChatPopup {
         }
     }
 
-
     pub fn open(&mut self, open: InspectChatOpen) -> Result<()> {
         self.open_request = Some(open);
         self.show()?;
@@ -253,11 +251,9 @@ impl InspectChatPopup {
         Ok(())
     }
 
-
     pub fn any_work_pending(&self) -> bool {
         self.git_diff.is_pending() || self.details.any_work_pending()
     }
-
 
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() {

@@ -1,6 +1,5 @@
 use libp2p::{
-    gossipsub,
-    identify, identity,
+    gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -41,7 +40,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         gossipsub::MessageId::from(s.finish().to_string())
     };
 
-	#[allow(clippy::redundant_closure)]
+    #[allow(clippy::redundant_closure)]
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
@@ -57,7 +56,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             yamux::Config::default,
         )?
         .with_quic()
-        .with_dns()? 
+        .with_dns()?
         .with_behaviour(move |key| {
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
@@ -102,7 +101,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                     key.public().to_peer_id(),
                 )?,
             })
-        })? 
+        })?
         .build();
 
     Ok(swarm)

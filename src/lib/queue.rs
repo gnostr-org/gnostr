@@ -1,12 +1,12 @@
 use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
 
+use crate::types::versioned::event3::EventV3;
+use crate::types::{Id, UncheckedUrl};
 use bitflags::bitflags;
 use gnostr_asyncgit::{
     sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
 };
-use crate::types::{Id, UncheckedUrl};
-use crate::types::versioned::event3::EventV3;
 
 use crate::{
     components::FuzzyFinderTarget,
@@ -152,26 +152,26 @@ pub enum InternalEvent {
     RenameBranch(String, String),
     /// SelectBranch
     SelectBranch,
-        OpenExternalEditor(Option<String>),
-        OpenExternalChat(Option<String>),
-        Push(String, PushType, bool, bool),
-        Pull(String),
-        PushTags,
-        OptionSwitched(AppOption),
-        OpenFuzzyFinder(Vec<String>, FuzzyFinderTarget),
-        OpenLogSearchPopup,
-        FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
-        FetchRemotes,
-        OpenPopup(StackablePopupOpen),
-        PopupStackPop,
-        PopupStackPush(StackablePopupOpen),
-        ViewSubmodules,
-        OpenRepo {
+    OpenExternalEditor(Option<String>),
+    OpenExternalChat(Option<String>),
+    Push(String, PushType, bool, bool),
+    Pull(String),
+    PushTags,
+    OptionSwitched(AppOption),
+    OpenFuzzyFinder(Vec<String>, FuzzyFinderTarget),
+    OpenLogSearchPopup,
+    FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
+    FetchRemotes,
+    OpenPopup(StackablePopupOpen),
+    PopupStackPop,
+    PopupStackPush(StackablePopupOpen),
+    ViewSubmodules,
+    OpenRepo {
         path: PathBuf,
     },
-        OpenResetPopup(CommitId),
-        RewordCommit(CommitId),
-        CommitSearch(LogFilterSearchOptions),
+    OpenResetPopup(CommitId),
+    RewordCommit(CommitId),
+    CommitSearch(LogFilterSearchOptions),
 }
 
 /// single threaded simple queue for components to communicate with

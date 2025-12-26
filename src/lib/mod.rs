@@ -19,6 +19,8 @@ pub mod clipboard;
 pub mod cmdbar;
 ///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
 pub mod components;
+///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
+pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
@@ -27,8 +29,6 @@ pub mod git;
 pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
-///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
-pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
@@ -89,19 +89,19 @@ pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
+pub use nostr_sdk_0_19_1::prelude::rand;
+pub use tokio::sync::mpsc::{Receiver, Sender};
+pub use tokio_tungstenite::connect_async;
+pub use tokio_tungstenite::tungstenite::Message;
+pub use tokio_tungstenite::WebSocketStream;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
 pub use types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
-pub use nostr_sdk_0_19_1::prelude::rand;
-pub use tokio::sync::mpsc::{Receiver, Sender};
-pub use tokio_tungstenite::tungstenite::Message;
-pub use tokio_tungstenite::WebSocketStream;
-pub use tokio_tungstenite::connect_async;
 //use tokio_tungstenite::WebSocketStream;
-pub use zeroize::Zeroize;
 pub use types::nip44;
+pub use zeroize::Zeroize;
 //avoid?//upgrade?
 //pub use lightning;
 use anyhow::{anyhow, Result};
@@ -120,12 +120,10 @@ pub fn get_dirs() -> Result<ProjectDirs> {
     ))
 }
 type Ws =
-        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-    pub mod reflog;
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
+pub mod reflog;
 pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message};
-pub use relays::{
-    relays_all, relays_by_nip, relays_offline, relays_online, relays_paid,
-};
+pub use relays::{relays_all, relays_by_nip, relays_offline, relays_online, relays_paid};
 pub mod watch_list;
 pub use watch_list::*;
 //TODO

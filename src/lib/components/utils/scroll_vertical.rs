@@ -21,7 +21,7 @@ impl Default for VerticalScroll {
 }
 
 impl VerticalScroll {
-	/// new
+    /// new
     pub const fn new() -> Self {
         Self {
             top: Cell::new(0),
@@ -29,17 +29,17 @@ impl VerticalScroll {
         }
     }
 
-	/// get_top
+    /// get_top
     pub fn get_top(&self) -> usize {
         self.top.get()
     }
 
-	/// reset
+    /// reset
     pub fn reset(&self) {
         self.top.set(0);
     }
 
-	/// move_top
+    /// move_top
     pub fn move_top(&self, move_type: ScrollType) -> bool {
         let old = self.top.get();
         let max = self.max_top.get();
@@ -63,7 +63,7 @@ impl VerticalScroll {
         true
     }
 
-	/// move_area_to_visible
+    /// move_area_to_visible
     pub fn move_area_to_visible(&self, height: usize, start: usize, end: usize) {
         let top = self.top.get();
         let bottom = top + height;
@@ -83,7 +83,7 @@ impl VerticalScroll {
         }
     }
 
-	/// update
+    /// update
     pub fn update(&self, selection: usize, selection_max: usize, visual_height: usize) -> usize {
         let new_top = calc_scroll_top(self.get_top(), visual_height, selection, selection_max);
         self.top.set(new_top);
@@ -98,12 +98,12 @@ impl VerticalScroll {
         new_top
     }
 
-	/// update_no_selection
+    /// update_no_selection
     pub fn update_no_selection(&self, line_count: usize, visual_height: usize) -> usize {
         self.update(self.get_top(), line_count, visual_height)
     }
 
-	/// draw
+    /// draw
     pub fn draw(&self, f: &mut Frame, r: Rect, theme: &SharedTheme) {
         draw_scrollbar(
             f,

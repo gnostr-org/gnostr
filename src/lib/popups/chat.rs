@@ -67,7 +67,6 @@ pub struct ChatPopup {
 const FIRST_LINE_LIMIT: usize = 50;
 
 impl ChatPopup {
-
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -83,7 +82,6 @@ impl ChatPopup {
             verify: true,
         }
     }
-
 
     pub fn update(&mut self) {
         self.git_branch_name.lookup().ok();

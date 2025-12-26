@@ -33,7 +33,7 @@ impl Spinner {
         self.idx %= SPINNER_CHARS.len();
     }
 
-        pub fn set_state(&mut self, active: bool) {
+    pub fn set_state(&mut self, active: bool) {
         self.active = active;
     }
 

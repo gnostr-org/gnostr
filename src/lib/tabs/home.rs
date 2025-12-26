@@ -100,7 +100,8 @@ impl Chatlog {
     /// handle_internal_event
     pub fn handle_internal_event(&mut self, event: InternalEvent) {
         if let InternalEvent::ChatMessage(msg) = event {
-            self.list.handle_internal_event(InternalEvent::ChatMessage(msg));
+            self.list
+                .handle_internal_event(InternalEvent::ChatMessage(msg));
         }
     }
 
