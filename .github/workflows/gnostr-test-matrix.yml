@@ -355,14 +355,12 @@ jobs:
           echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
           echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL-Win64\lib" >> $GITHUB_ENV
           echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL-Win64\include" >> $GITHUB_ENV
-          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
         if: runner.os == 'windows'
 
       - name: 🚀 cargo test -j8 --all-features -- --no-capture
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
           cargo test -j8 --all-features -- --no-capture && echo "✅" || echo "❌"
-        if: runner.os != 'windows'
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
