@@ -123,13 +123,15 @@ impl NostrClient {
             SubscriptionId("notes:all".to_string())
         };
 
-        let mut filter = Filter::new();
-        if let Some(pk) = public_key {
-            filter.add_author(&pk.into())
-                  .add_event_kind(EventKind::TextNote);
-        } else {
-            filter.add_event_kind(EventKind::TextNote);
-        }
+        let filter = {
+            let mut f = Filter::new();
+            if let Some(pk) = public_key {
+                f.add_author(&pk.into());
+            }
+            f.add_event_kind(EventKind::TextNote);
+            f.since = Some(Unixtime::now());
+            f
+        };
         let client_message = ClientMessage::Req(subscription_id, vec![filter.clone()]);
         let json = serde_json::to_string(&client_message).unwrap();
         let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
