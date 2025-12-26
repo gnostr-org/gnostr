@@ -284,7 +284,8 @@ jobs:
           -e "$RUNNER_OS" \
           -e "$(gnostr --weeble)" \
           -e "$(gnostr --blockheight)" \
-          -e "$(gnostr --wobble)" || true
+          -e "$(gnostr --wobble)" \
+          --hex || true
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
