@@ -174,8 +174,8 @@ impl NostrClient {
         );
 
         let mut filter = Filter::new();
-        filter.add_author(&public_key.into());
-        filter.add_event_kind(EventKind::ContactList);
+        filter.add_author(&public_key.into())
+              .add_event_kind(EventKind::ContactList);
         filter.limit = Some(1);
 
         let subscription_id = SubscriptionId(format!("contacts:{}", public_key.as_hex_string()));
