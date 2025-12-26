@@ -7,7 +7,7 @@ use crate::types::PrivateKey;
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::ChatSubCommands;
- //migrate carefully
+//migrate carefully
 use anyhow::Result;
 
 use tracing::Level;
@@ -58,7 +58,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
 
     // Only set the USER environment variable if a username was successfully determined.
     if let Some(user_name) = username_to_set {
-        if !user_name.is_empty() { // Ensure we don't set it to an empty string if derivation resulted in one (though unlikely with hex)
+        if !user_name.is_empty() {
+            // Ensure we don't set it to an empty string if derivation resulted in one (though unlikely with hex)
             use std::env;
             env::set_var("USER", &user_name);
             tracing::debug!("USER environment variable set to: {}", user_name);
