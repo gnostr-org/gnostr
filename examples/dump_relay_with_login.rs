@@ -1,5 +1,5 @@
-use gnostr::{Command, Probe};
 use gnostr::types::{Filter, RelayMessage};
+use gnostr::{Command, Probe};
 use std::env;
 
 #[tokio::main]
