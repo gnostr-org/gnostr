@@ -374,37 +374,43 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     );
 
     global_rt().spawn(async move {
-        //send to create_event function with &"custom content"
-        //send to create_event function with &"custom content"
-        let create_event_result =
-            create_event(padded_keys.clone(), custom_tags, "gnostr-legit:event").await;
-        println!(
-            "Commit-based create_event result:\n{:?}",
-            create_event_result
-        );
-        io::stdout().flush().unwrap(); // Flush stdout
+        let result: anyhow::Result<()> = async {
+            //send to create_event function with &"custom content"
+            //send to create_event function with &"custom content"
+            let create_event_result =
+                create_event(padded_keys.clone(), custom_tags, "gnostr-legit:event").await?;
+            println!(
+                "Commit-based create_event result:\n{:?}",
+                create_event_result
+            );
+            io::stdout().flush().unwrap(); // Flush stdout
 
-        // The existing error logging for create_kind_event remains.
-        if let Err(e) = create_kind_event(
-            &padded_keys,
-            kind.unwrap_or(1),
-            &serialized_commit_for_kind_event,
-            HashMap::new(),
-        )
-        .await
-        {
-            error!("Failed to create kind event: {:?}", e);
-        }
+            // The existing error logging for create_kind_event remains.
+            if let Err(e) = create_kind_event(
+                &padded_keys,
+                kind.unwrap_or(1),
+                &serialized_commit_for_kind_event,
+                HashMap::new(),
+            )
+            .await
+            {
+                error!("Failed to create kind event: {:?}", e);
+            }
 
-        if let Err(e) = create_kind_event(
-            &padded_keys,
-            kind.unwrap_or(1),
-            &serialized_commit_for_kind_event,
-            HashMap::new(),
-        )
-        .await
-        {
-            error!("Failed to create kind event: {:?}", e);
+            if let Err(e) = create_kind_event(
+                &padded_keys,
+                kind.unwrap_or(1),
+                &serialized_commit_for_kind_event,
+                HashMap::new(),
+            )
+            .await
+            {
+                error!("Failed to create kind event: {:?}", e);
+            }
+            Ok(())
+        }.await;
+        if let Err(e) = result {
+            error!("Error in gnostr_legit_event spawned task: {:?}", e);
         }
     });
 
