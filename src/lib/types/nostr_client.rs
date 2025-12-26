@@ -147,11 +147,14 @@ impl NostrClient {
     pub async fn subscribe_to_dms(&self, public_key: PublicKey) {
         info!("Subscribing to DMs for {}", public_key.as_hex_string());
 
-        let mut filter = Filter::new();
-        filter.add_tag_value('p', public_key.as_hex_string());
-        filter.add_event_kind(EventKind::EncryptedDirectMessage)
-              .add_event_kind(EventKind::GiftWrap);
-        filter.since = Some(Unixtime::now());
+        let filter = {
+            let mut f = Filter::new();
+            f.add_tag_value('p', public_key.as_hex_string());
+            f.add_event_kind(EventKind::EncryptedDirectMessage)
+             .add_event_kind(EventKind::GiftWrap);
+            f.since = Some(Unixtime::now());
+            f
+        };
 
         let subscription_id = SubscriptionId(format!("dms:{}", public_key.as_hex_string()));
 
