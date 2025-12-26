@@ -201,10 +201,13 @@ impl NostrClient {
     pub async fn subscribe_to_channel(&self, channel_id: String) {
         info!("Subscribing to Nostr channel: {}", channel_id);
 
-        let mut filter = Filter::new();
-        filter.add_tag_value('d', channel_id.clone());
-        filter.add_event_kind(EventKind::ChannelMessage);
-        filter.since = Some(Unixtime::now());
+        let filter = {
+            let mut f = Filter::new();
+            f.add_tag_value('d', channel_id.clone());
+            f.add_event_kind(EventKind::ChannelMessage);
+            f.since = Some(Unixtime::now());
+            f
+        };
 
         let subscription_id = SubscriptionId(format!("channel:{}", channel_id));
 
