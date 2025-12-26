@@ -1,8 +1,8 @@
 #[cfg(test)]
 use crate::test_serde;
 
-use super::{EventKind, Id, PublicKey, UncheckedUrl};
 use super::Error;
+use super::{EventKind, Id, PublicKey, UncheckedUrl};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};

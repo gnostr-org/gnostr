@@ -1,6 +1,6 @@
 //! NIP-34 implementation for creating git-related events.
 
-use crate::{blockheight, blockhash, weeble, wobble};
+use crate::{blockhash, blockheight, weeble, wobble};
 use secp256k1::{Message, SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -42,7 +42,12 @@ pub struct UnsignedEvent {
 
 impl UnsignedEvent {
     /// Create a new unsigned event.
-    pub fn new(pubkey: &XOnlyPublicKey, kind: u16, mut tags: Vec<Vec<String>>, content: String) -> Self {
+    pub fn new(
+        pubkey: &XOnlyPublicKey,
+        kind: u16,
+        mut tags: Vec<Vec<String>>,
+        content: String,
+    ) -> Self {
         let created_at = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -127,8 +132,8 @@ pub enum Nip34Kind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use secp256k1::{schnorr, Secp256k1};
     use rand::rngs::OsRng;
+    use secp256k1::{schnorr, Secp256k1};
 
     fn test_event_creation(kind: Nip34Kind, mut tags: Vec<Vec<String>>, content: String) {
         let secp = Secp256k1::new();
@@ -204,9 +209,18 @@ mod tests {
         let tags = vec![
             vec!["d".to_string(), "gnostr".to_string()],
             vec!["name".to_string(), "gnostr".to_string()],
-            vec!["description".to_string(), "A git implementation on nostr".to_string()],
-            vec!["web".to_string(), "https://github.com/gnostr-org/gnostr".to_string()],
-            vec!["clone".to_string(), "https://github.com/gnostr-org/gnostr.git".to_string()],
+            vec![
+                "description".to_string(),
+                "A git implementation on nostr".to_string(),
+            ],
+            vec![
+                "web".to_string(),
+                "https://github.com/gnostr-org/gnostr".to_string(),
+            ],
+            vec![
+                "clone".to_string(),
+                "https://github.com/gnostr-org/gnostr.git".to_string(),
+            ],
             vec!["relays".to_string(), "wss://relay.damus.io".to_string()],
         ];
         test_event_creation(Nip34Kind::RepoAnnouncement, tags, "".to_string());
@@ -265,7 +279,11 @@ mod tests {
     #[test]
     fn test_status_open() {
         let tags = vec![
-            vec!["e".to_string(), "event_id_of_issue".to_string(), "root".to_string()],
+            vec![
+                "e".to_string(),
+                "event_id_of_issue".to_string(),
+                "root".to_string(),
+            ],
             vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
         ];
         test_event_creation(Nip34Kind::StatusOpen, tags, "".to_string());
@@ -274,9 +292,16 @@ mod tests {
     #[test]
     fn test_status_applied() {
         let tags = vec![
-            vec!["e".to_string(), "event_id_of_patch".to_string(), "root".to_string()],
+            vec![
+                "e".to_string(),
+                "event_id_of_patch".to_string(),
+                "root".to_string(),
+            ],
             vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-            vec!["applied-as-commits".to_string(), "commit1,commit2".to_string()],
+            vec![
+                "applied-as-commits".to_string(),
+                "commit1,commit2".to_string(),
+            ],
         ];
         test_event_creation(Nip34Kind::StatusApplied, tags, "".to_string());
     }
@@ -284,7 +309,11 @@ mod tests {
     #[test]
     fn test_status_closed() {
         let tags = vec![
-            vec!["e".to_string(), "event_id_of_pr".to_string(), "root".to_string()],
+            vec![
+                "e".to_string(),
+                "event_id_of_pr".to_string(),
+                "root".to_string(),
+            ],
             vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
         ];
         test_event_creation(Nip34Kind::StatusClosed, tags, "".to_string());
@@ -293,7 +322,11 @@ mod tests {
     #[test]
     fn test_status_draft() {
         let tags = vec![
-            vec!["e".to_string(), "event_id_of_patch".to_string(), "root".to_string()],
+            vec![
+                "e".to_string(),
+                "event_id_of_patch".to_string(),
+                "root".to_string(),
+            ],
             vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
         ];
         test_event_creation(Nip34Kind::StatusDraft, tags, "".to_string());
@@ -303,7 +336,10 @@ mod tests {
     fn test_user_grasp_list() {
         let tags = vec![
             vec!["g".to_string(), "wss://grasp.example.com".to_string()],
-            vec!["g".to_string(), "wss://another-grasp.example.com".to_string()],
+            vec![
+                "g".to_string(),
+                "wss://another-grasp.example.com".to_string(),
+            ],
         ];
         test_event_creation(Nip34Kind::UserGraspList, tags, "".to_string());
     }

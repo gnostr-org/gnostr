@@ -1,5 +1,5 @@
-use super::{EventKind, PublicKey, Signature, Unixtime};
 use super::Error;
+use super::{EventKind, PublicKey, Signature, Unixtime};
 use serde::de::Error as DeError;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer};
@@ -159,8 +159,8 @@ impl Visitor<'_> for DelegationConditionsVisitor {
 mod test {
     use super::*;
     use crate::test_serde;
-    use crate::{KeySigner, Signer, Tag};
     use crate::types::PrivateKey;
+    use crate::{KeySigner, Signer, Tag};
 
     test_serde! {DelegationConditions, test_delegation_conditions_serde}
 

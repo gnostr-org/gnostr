@@ -4,9 +4,7 @@
 
 //! This crate provides types for nostr protocol handling.
 
-#![allow(
-    missing_docs,
-)]
+#![allow(missing_docs)]
 #![deny(
     missing_debug_implementations,
     trivial_casts,
@@ -87,16 +85,7 @@ pub use nevent::NEvent;
 
 /// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
 pub mod nip0;
-/// NIP-02: Contact List and Petnames
-pub mod nip2;
-/// NIP-03: OpenTimestamps Attestations for Events
-pub mod nip3;
-/// NIP-04: Encrypted Direct Message
-pub mod nip4;
-/// NIP-06: Basic key derivation from mnemonic seed phrase
-pub mod nip6;
-/// NIP-09: Event Deletion
-pub mod nip9;
+mod nip05;
 /// NIP-10: Text Notes and Threads
 pub mod nip10;
 /// NIP-13: Proof of Work
@@ -105,12 +94,21 @@ pub mod nip13;
 pub mod nip15;
 /// NIP-18: Reposts
 pub mod nip18;
+/// NIP-02: Contact List and Petnames
+pub mod nip2;
 /// NIP-26: Delegation
 pub mod nip26;
+/// NIP-03: OpenTimestamps Attestations for Events
+pub mod nip3;
 pub mod nip34;
+/// NIP-04: Encrypted Direct Message
+pub mod nip4;
 /// NIP-59: Gift Wrap
 pub mod nip59;
-mod nip05;
+/// NIP-06: Basic key derivation from mnemonic seed phrase
+pub mod nip6;
+/// NIP-09: Event Deletion
+pub mod nip9;
 pub use nip05::Nip05;
 
 mod nostr_url;
@@ -190,7 +188,6 @@ macro_rules! test_serde {
 }
 
 // mod types;
-
 
 pub mod versioned;
 pub use versioned::{
@@ -335,7 +332,6 @@ pub fn add_subject_to_tags_if_missing(existing_tags: &mut Vec<Tag>, subject: Str
         existing_tags.push(Tag::new_subject(subject));
     }
 }
-
 
 #[cfg(test)]
 mod test {

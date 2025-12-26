@@ -4,7 +4,6 @@
 use crate::types::event::{Event, UnsignedEvent};
 use secp256k1::XOnlyPublicKey;
 
-
 /// A contact
 #[derive(Debug, Clone)]
 pub struct Contact {

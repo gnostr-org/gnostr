@@ -1,3 +1,5 @@
+#[cfg(test)]
+use crate::test_serde;
 use serde::de::Error as DeError;
 use serde::de::{Deserializer, Visitor};
 use serde::ser::Serializer;
@@ -5,8 +7,6 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
 use std::convert::From;
-#[cfg(test)]
-use crate::test_serde;
 
 use std::fmt;
 

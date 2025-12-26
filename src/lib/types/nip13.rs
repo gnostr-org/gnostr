@@ -21,12 +21,7 @@ pub fn generate_pow_event(
             nonce.to_string(),
             difficulty.to_string(),
         ]);
-        let unsigned_event = UnsignedEvent::new(
-            public_key,
-            1,
-            temp_tags,
-            content.clone(),
-        );
+        let unsigned_event = UnsignedEvent::new(public_key, 1, temp_tags, content.clone());
         let event = unsigned_event.sign(private_key).unwrap();
         if crate::types::get_leading_zero_bits(&event.id.0) >= difficulty {
             return event;

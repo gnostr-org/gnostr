@@ -15,7 +15,6 @@ use std::fmt;
 #[derive(Default)]
 pub struct Id(pub [u8; 32]);
 
-
 impl Id {
     /// Render into a hexadecimal string
     ///
