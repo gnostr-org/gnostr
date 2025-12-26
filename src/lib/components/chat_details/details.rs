@@ -11,10 +11,10 @@ use ratatui::{
 };
 use sync::CommitTags;
 
-use log::debug;
 use gnostr_asyncgit::sync::commit_files::OldNew;
-use nostr_sqlite_0_34_0::{Error, SQLiteDatabase};
+use log::debug;
 use nostr_sdk_0_34_0::prelude::*;
+use nostr_sqlite_0_34_0::{Error, SQLiteDatabase};
 
 use super::style::Detail;
 use crate::{
@@ -46,7 +46,6 @@ pub struct DetailsComponent {
 type WrappedCommitMessage<'a> = (Vec<Cow<'a, str>>, Vec<Cow<'a, str>>);
 
 impl DetailsComponent {
-
     pub fn new(env: &Environment, focused: bool) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -379,7 +378,6 @@ impl Component for DetailsComponent {
     }
 }
 
-
 pub struct CompareDetailsComponent {
     repo: RepoPathRef,
     data: Option<OldNew<CommitDetails>>,
@@ -389,7 +387,6 @@ pub struct CompareDetailsComponent {
 }
 
 impl CompareDetailsComponent {
-
     pub async fn new(env: &Environment, focused: bool) -> Self {
         Self {
             data: None,
@@ -401,8 +398,9 @@ impl CompareDetailsComponent {
         }
     }
 
-            #[allow(dead_code)]
-            pub async fn create_directory_if_not_exists() -> Result<(), Box<dyn std::error::Error>> {        //use async_std::fs;
+    #[allow(dead_code)]
+    pub async fn create_directory_if_not_exists() -> Result<(), Box<dyn std::error::Error>> {
+        //use async_std::fs;
         //use async_std::fs::File;
         use async_std::io::ErrorKind;
         use async_std::path::{Path, PathBuf};
@@ -446,8 +444,9 @@ impl CompareDetailsComponent {
         }
     }
 
-            #[allow(dead_code)]
-            pub async fn connect() -> Result<SQLiteDatabase, Error> {        use async_std::path::{Path, PathBuf};
+    #[allow(dead_code)]
+    pub async fn connect() -> Result<SQLiteDatabase, Error> {
+        use async_std::path::{Path, PathBuf};
         let directory_to_check = ".git";
         if Path::new(directory_to_check).is_dir().await {
             debug!("The directory '{}' exists.", directory_to_check);
