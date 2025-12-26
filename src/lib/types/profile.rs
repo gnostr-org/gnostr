@@ -1,5 +1,7 @@
-#[cfg(test)]use crate::test_serde;use crate::types::{PublicKey, UncheckedUrl};
 use super::Error;
+#[cfg(test)]
+use crate::test_serde;
+use crate::types::{PublicKey, UncheckedUrl};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
