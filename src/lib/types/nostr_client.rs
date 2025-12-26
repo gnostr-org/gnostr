@@ -196,8 +196,8 @@ impl NostrClient {
         info!("Subscribing to Nostr channel: {}", channel_id);
 
         let mut filter = Filter::new();
-        filter.add_tag_value('d', channel_id.clone());
-        filter.add_event_kind(EventKind::ChannelMessage);
+        filter.add_tag_value('d', channel_id.clone())
+              .add_event_kind(EventKind::ChannelMessage);
         filter.since = Some(Unixtime::now());
 
         let subscription_id = SubscriptionId(format!("channel:{}", channel_id));
