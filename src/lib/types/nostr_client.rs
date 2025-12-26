@@ -125,9 +125,11 @@ impl NostrClient {
 
         let mut filter = Filter::new();
         if let Some(pk) = public_key {
-            filter.add_author(&pk.into());
+            filter.add_author(&pk.into())
+                  .add_event_kind(EventKind::TextNote);
+        } else {
+            filter.add_event_kind(EventKind::TextNote);
         }
-        filter.add_event_kind(EventKind::TextNote);
         filter.since = Some(Unixtime::now());
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter]);
