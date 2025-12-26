@@ -38,6 +38,7 @@ pub struct Msg {
     pub content: Vec<String>,
     pub kind: MsgKind,
     pub commit_id: CommitId,
+    pub nostr_event: Option<Event>,
 }
 
 impl Default for Msg {
@@ -47,6 +48,7 @@ impl Default for Msg {
             content: vec!["".to_string(), "".to_string()],
             kind: MsgKind::Chat,
             commit_id: CommitId::new(Oid::zero()),
+            nostr_event: None,
         }
     }
 }
@@ -70,6 +72,7 @@ impl Msg {
     pub fn set_nostr_event(mut self, event: Event) -> Self {
         self.kind = MsgKind::NostrEvent;
         self.content = vec![serde_json::to_string(&event).unwrap_or_default()];
+        self.nostr_event = Some(event);
         self
     }
 

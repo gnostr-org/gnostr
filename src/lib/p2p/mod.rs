@@ -16,6 +16,7 @@ use crate::blockhash::blockhash_async;
 use crate::blockheight::blockheight_async;
 use crate::p2p::chat::msg::{Msg, MsgKind};
 use crate::p2p::chat::ChatSubCommands;
+use crate::types::Event;
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
@@ -287,12 +288,27 @@ pub async fn evt_loop(
                         String::from_utf8_lossy(&message.data),
                     );
                     match serde_json::from_slice::<Msg>(&message.data) {
-                        Ok(msg) => {
+                        Ok(mut msg) => {
+                            if msg.kind == MsgKind::NostrEvent {
+                                match serde_json::from_str::<Event>(&msg.content[0]) {
+                                    Ok(event) => {
+                                        debug!("Deserialized Nostr Event: {:?}", event);
+                                        msg.nostr_event = Some(event.clone()); // Store the deserialized event
+                                        // For now, let's just re-serialize it back into content for display
+                                        msg = msg.set_content(format!("Nostr Event: {}", event.id.as_hex_string()), 0);
+                                    },
+                                    Err(e) => {
+                                        warn!("Error deserializing Nostr event from message content: {e:?}");
+                                        msg = msg.set_content(format!("Error processing Nostr Event: {e:?}"), 0);
+                                        msg.kind = MsgKind::System;
+                                    }
+                                }
+                            }
                             recv.send(msg).await?;
                         },
                         Err(e) => {
                             warn!("Error deserializing message: {e:?}");
-                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0_usize).set_kind(MsgKind::System);
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(MsgKind::System);
                             recv.send(m).await?;
                         }
                     }
