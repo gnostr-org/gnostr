@@ -387,11 +387,22 @@ jobs:
           fi;
         if: matrix.os != 'windows-latest' && matrix.os != 'macos-latest'
 
+
+      - name: Set OpenSSL environment variables
+        run: |
+          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL-Win64\lib" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL-Win64\include" >> $GITHUB_ENV
+          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
+        if: runner.os == 'windows'
+
+
       - name: 🚀 cargo test
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
+        if: runner.os != 'windows'
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
