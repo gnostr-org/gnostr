@@ -189,7 +189,7 @@ dep-graph: 	### 	dep-graph
 	@cargo  -j \$(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
 
 gnostr-chat: 	## 	gnostr-chat
-	cargo  b -j \$(NPROC) --bin gnostr
+	cargo b -vv -j \$(NPROC) --bin gnostr
 	./target/debug/gnostr chat --topic gnostr --name "\$(shell gnostr-weeble)/\$(shell gnostr-blockheight)/\$(shell gnostr-wobble):\$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
