@@ -363,6 +363,11 @@ jobs:
           cargo test -j8 --all-features -- --no-capture && echo "✅" || echo "❌"
         if: runner.os != 'windows'
 
+      - name: 🌙 UTC second is ODD
+        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
+        run: |
+          cargo test -j8 -- --ignored && echo "✅" || echo "❌"
+
       - name: 🚀 cargo install -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
@@ -375,30 +380,6 @@ jobs:
           gnostr nip34 pull-request --help
           gnostr nip34 issue --help
           gnostr nip34 status --help
-
-
-
-
-      - name: Set OpenSSL environment variables
-        run: |
-          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL-Win64\lib" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL-Win64\include" >> $GITHUB_ENV
-          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
-        if: runner.os == 'windows'
-
-
-      - name: 🚀 cargo test
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          cargo test -j8 -- --nocapture && echo "✅" ## || echo "❌"
-        if: runner.os != 'windows'
-
-      - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
-        run: |
-          cargo test -j8 -- --ignored && echo "✅" || echo "❌"
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
         if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
@@ -418,7 +399,6 @@ jobs:
           Stop-Process -Name "git-remote-nostr" -ErrorAction SilentlyContinue || true
           echo "Cleanup attempt finished."
         continue-on-error: true
-
 
       - name: Debug GITHUB_API_URL
         run: |
