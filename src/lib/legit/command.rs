@@ -276,10 +276,10 @@ pub async fn create_event(
     let output_send_event = client.send_event(text_note_event.clone()).await?;
     info!("Text note event sent successfully.");
 
-    let filter_one = crate::types::Filter::new()
+    let mut filter_one = crate::types::Filter::new()
         .add_author(&pubkey_keys.into())
-        .add_event_kind(crate::types::EventKind::TextNote)
-        .limit(10);
+        .add_event_kind(crate::types::EventKind::TextNote);
+    filter_one.limit = Some(10);
 
     // let events = client
     //     .fetch_events(vec![filter_one], Some(Duration::from_secs(10)))
