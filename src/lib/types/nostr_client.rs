@@ -201,8 +201,8 @@ impl NostrClient {
 
         let filter = {
             let mut f = Filter::new();
-            f.add_tag_value('d', channel_id.clone());
-            f.add_event_kind(EventKind::ChannelMessage);
+            let _ = f.add_tag_value('d', channel_id.clone());
+            let _ = f.add_event_kind(EventKind::ChannelMessage);
             f.since = Some(Unixtime::now());
             f
         };
