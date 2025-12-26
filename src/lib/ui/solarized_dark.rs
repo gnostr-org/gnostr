@@ -23,5 +23,3 @@ impl SolarizedDark {
     pub const CYAN: Color = Color::Rgb(42, 161, 152);
     pub const GREEN: Color = Color::Rgb(133, 153, 0);
 }
-
-
