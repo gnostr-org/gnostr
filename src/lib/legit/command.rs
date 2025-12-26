@@ -208,7 +208,7 @@ pub async fn create_event(
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
     let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-    let client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
+    let mut client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
 
     for relay in BOOTSTRAP_RELAYS.iter().cloned() {
         debug!("{}", relay);
