@@ -297,7 +297,8 @@ pub async fn create_event(
 
     info!("test_author_pubkey={}", test_author_pubkey.as_bech32_string());
 
-    let mut filter_test_author = crate::types::Filter::new()
+    let mut filter_test_author = crate::types::Filter::new();
+    filter_test_author
         .add_author(&test_author_pubkey.into())
         .add_event_kind(crate::types::EventKind::TextNote);
     filter_test_author.limit = Some(10);
