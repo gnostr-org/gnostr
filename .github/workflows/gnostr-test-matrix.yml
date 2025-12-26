@@ -1,4 +1,4 @@
-name: gnostr-bot-matrix
+name: gnostr-test-matrix
 
 # Controls when the action will run.
 on:
