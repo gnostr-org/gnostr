@@ -11,6 +11,16 @@ pub struct KeySigner {
     private_key: Option<PrivateKey>,
 }
 
+impl Clone for KeySigner {
+    fn clone(&self) -> Self {
+        Self {
+            encrypted_private_key: self.encrypted_private_key.clone(),
+            public_key: self.public_key,
+            private_key: self.private_key.clone(),
+        }
+    }
+}
+
 impl fmt::Debug for KeySigner {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("KeySigner")
