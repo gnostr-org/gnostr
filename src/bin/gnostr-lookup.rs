@@ -1,8 +1,8 @@
-use gnostr::p2p::lookup::{LookupClient, LookupError};
 use clap::Parser;
-use libp2p::{Multiaddr, PeerId};
-use gnostr::p2p::network_config::Network;
 use futures::future::{FutureExt, TryFutureExt};
+use gnostr::p2p::lookup::{LookupClient, LookupError};
+use gnostr::p2p::network_config::Network;
+use libp2p::{Multiaddr, PeerId};
 
 #[derive(Debug, Parser)]
 #[command(name = "gnostr-lookup", about = "Lookup libp2p nodes.")]
@@ -19,11 +19,7 @@ enum Opt {
         #[arg(long)]
         peer_id: PeerId,
         /// Network of the peer.
-        #[arg(
-        long,
-        value_enum,
-        default_value = "ipfs",
-        )]
+        #[arg(long, value_enum, default_value = "ipfs")]
         network: Network,
     },
 }
