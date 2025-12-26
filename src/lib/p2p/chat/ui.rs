@@ -202,7 +202,7 @@ fn ui(f: &mut Frame, app: &App) {
     let messages: Vec<ListItem> = msgs[0..app.msgs_scroll.min(msgs.len())]
         .iter()
         .rev()
-        .map(|m| ListItem::new(Line::from(m)))
+        .flat_map(|m| m.to_lines().into_iter().map(ListItem::new))
         .take(height as usize)
         .collect();
     let messages = List::new(messages)
