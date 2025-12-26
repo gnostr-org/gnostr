@@ -1,7 +1,7 @@
 use core::str;
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result/*, Error*/};
+use anyhow::{anyhow, Context, Result /*, Error*/};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
@@ -34,8 +34,7 @@ pub async fn run_list(
     decoded_nostr_url: &NostrUrlDecoded,
     for_push: bool,
 ) -> Result<HashMap<String, HashMap<String, String>>> {
-    let nostr_state =
-        (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
+    let nostr_state = (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
 
     let term = console::Term::stderr();
 
@@ -276,20 +275,13 @@ fn get_ahead_behind(
 
 #[cfg(test)]
 mod tests {
-    
-
-    
-    
-    
-    
-
 
     mod without_state_announcement {
 
         use futures_util::join;
         use gnostr::test_utils::generate_repo_ref_event_with_git_server;
-        use gnostr::test_utils::generate_test_key_1_relay_list_event;
         use gnostr::test_utils::generate_test_key_1_metadata_event;
+        use gnostr::test_utils::generate_test_key_1_relay_list_event;
         use gnostr::test_utils::git_remote::cli_tester_after_fetch;
         use gnostr::test_utils::git_remote::prep_git_repo;
         use gnostr::test_utils::relay::Relay;
@@ -299,7 +291,8 @@ mod tests {
         #[tokio::test]
         #[serial]
         #[ignore]
-        async fn lists_head_and_2_branches_and_commit_ids_from_git_server() -> Result<(), anyhow::Error> {
+        async fn lists_head_and_2_branches_and_commit_ids_from_git_server(
+        ) -> Result<(), anyhow::Error> {
             let mut source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
             std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
@@ -337,7 +330,9 @@ mod tests {
             let cli_tester_handle = std::thread::spawn(move || {
                 let mut p = cli_tester_after_fetch(&git_repo)?;
                 p.send_line("list")?;
-                p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
+                p.expect(
+                    format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
+                )?;
                 p.expect("list: connecting...\r\n\r\r\r")?;
                 // println!("{}", p.expect_eventually("\r\n\r\n")?);
                 let res = p.expect_eventually("\r\n\r\n")?;
@@ -345,17 +340,18 @@ mod tests {
                 for p in [51, 52, 53, 55, 56, 57] {
                     gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
                 }
-                        assert_eq!(
-                            res.split("\r\n")
-                                .map(|e| e.to_string())
-                                .collect::<HashSet<String>>(),
-                            HashSet::from([
-                                "@refs/heads/main HEAD".to_string(),
-                                format!("{} refs/heads/main", main_commit_id),
-                                format!("{} refs/heads/vnext", vnext_commit_id),
-                            ]),
-                        );
-                        Ok::<(), anyhow::Error>(())            });
+                assert_eq!(
+                    res.split("\r\n")
+                        .map(|e| e.to_string())
+                        .collect::<HashSet<String>>(),
+                    HashSet::from([
+                        "@refs/heads/main HEAD".to_string(),
+                        format!("{} refs/heads/main", main_commit_id),
+                        format!("{} refs/heads/vnext", vnext_commit_id),
+                    ]),
+                );
+                Ok::<(), anyhow::Error>(())
+            });
             // launch relays
             let _ = join!(
                 r51.listen_until_close(),
@@ -373,28 +369,17 @@ mod tests {
 
         mod when_announcement_matches_git_server {
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-
             #[tokio::test]
             #[serial]
             #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn lists_head_and_2_branches_and_commit_ids_announcement() ->  Result<(), E> {
+            async fn lists_head_and_2_branches_and_commit_ids_announcement() -> Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
                 let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
                 let main_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
-                let example_commit_id = source_git_repo.get_tip_of_local_branch("example-branch")?;
+                let example_commit_id =
+                    source_git_repo.get_tip_of_local_branch("example-branch")?;
 
                 let git_repo = prep_git_repo()?;
                 let events = vec![
@@ -424,7 +409,8 @@ mod tests {
                     let mut p = cli_tester_after_fetch(&git_repo)?;
                     p.send_line("list")?;
                     p.expect(
-                        format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
+                        format!("fetching {} ref list over filesystem...\r\n", source_path)
+                            .as_str(),
                     )?;
                     p.expect("list: connecting...\r\n\r\r\r")?;
                     // println!("{}",
@@ -462,24 +448,11 @@ mod tests {
         }
         mod when_announcement_doesnt_match_git_server {
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-
             #[tokio::test]
             #[serial]
             #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn anouncement_state_is_used() ->  Result<(), E> {
+            async fn anouncement_state_is_used() -> Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
                 let source_path = source_git_repo.dir.to_str().unwrap().to_string();
                 let main_original_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
@@ -495,7 +468,8 @@ mod tests {
 
                 let main_updated_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
                 assert_ne!(main_original_commit_id, main_updated_commit_id);
-                let example_commit_id = source_git_repo.get_tip_of_local_branch("example-branch")?;
+                let example_commit_id =
+                    source_git_repo.get_tip_of_local_branch("example-branch")?;
 
                 let git_repo = prep_git_repo()?;
                 let events = vec![
@@ -525,7 +499,8 @@ mod tests {
                     let mut p = cli_tester_after_fetch(&git_repo)?;
                     p.send_line("list")?;
                     p.expect(
-                        format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
+                        format!("fetching {} ref list over filesystem...\r\n", source_path)
+                            .as_str(),
                     )?;
                     p.expect("list: connecting...\r\n\r\r\r")?;
                     p.expect(
@@ -677,4 +652,3 @@ mod tests {
         //}
     }
 }
-
