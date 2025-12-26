@@ -98,7 +98,7 @@ impl NostrClient {
             sinks_guard.drain(..).collect::<Vec<_>>()
         };
 
-        for (url, mut sink) in sinks_to_send.iter_mut() {
+        for (url, sink) in sinks_to_send.iter_mut() {
             info!("Sending Nostr event to relay {}", url.0);
             if let Err(e) = sink.send(websocket_message.clone()).await {
                 warn!("Failed to send event to relay {}: {}", url.0, e);
