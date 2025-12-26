@@ -1,7 +1,7 @@
+use crate::types::Error;
 use crate::types::{
     DelegationConditions, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
 };
-use crate::types::Error;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
