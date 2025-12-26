@@ -1,13 +1,11 @@
-#![warn(
-    missing_docs,
-)]
+#![warn(missing_docs)]
 
 use anyhow::{anyhow, Result};
 use clap::{
     /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
 };
- // Corrected import path for ArgMatches
+// Corrected import path for ArgMatches
 use gnostr_asyncgit::sync::RepoPath;
 use simplelog::{Config, LevelFilter, WriteLogger};
 use std::{
@@ -17,55 +15,55 @@ use std::{
 };
 
 // Import individual sub_commands modules directly
-use crate::sub_commands::fetch;
-use crate::sub_commands::init;
-use crate::sub_commands::send;
-use crate::sub_commands::push;
-use crate::sub_commands::login;
-use crate::sub_commands::legit;
-use crate::sub_commands::ngit;
-use crate::sub_commands::set_metadata;
-use crate::sub_commands::note;
-use crate::sub_commands::publish_contactlist_csv;
+use crate::sub_commands::award_badge;
+use crate::sub_commands::bech32_to_any;
+use crate::sub_commands::broadcast_events;
+use crate::sub_commands::convert_key;
+use crate::sub_commands::create_badge;
+use crate::sub_commands::create_public_channel;
+use crate::sub_commands::custom_event;
 use crate::sub_commands::delete_event;
 use crate::sub_commands::delete_profile;
-use crate::sub_commands::react;
-use crate::sub_commands::list_events;
-use crate::sub_commands::generate_keypair;
-use crate::sub_commands::convert_key;
-use crate::sub_commands::vanity;
-use crate::sub_commands::create_public_channel;
-use crate::sub_commands::set_channel_metadata;
-use crate::sub_commands::send_channel_message;
-use crate::sub_commands::hide_public_channel_message;
-use crate::sub_commands::mute_publickey;
-use crate::sub_commands::broadcast_events;
-use crate::sub_commands::create_badge;
-use crate::sub_commands::award_badge;
-use crate::sub_commands::profile_badges;
-use crate::sub_commands::custom_event;
-use crate::sub_commands::user_status;
-use crate::sub_commands::bech32_to_any;
-use crate::sub_commands::privkey_to_bech32;
+use crate::sub_commands::fetch;
 use crate::sub_commands::fetch_by_id;
+use crate::sub_commands::generate_keypair;
+use crate::sub_commands::hide_public_channel_message;
+use crate::sub_commands::init;
+use crate::sub_commands::legit;
+use crate::sub_commands::list_events;
+use crate::sub_commands::login;
+use crate::sub_commands::mute_publickey;
+use crate::sub_commands::ngit;
+use crate::sub_commands::note;
+use crate::sub_commands::privkey_to_bech32;
+use crate::sub_commands::profile_badges;
+use crate::sub_commands::publish_contactlist_csv;
+use crate::sub_commands::push;
+use crate::sub_commands::react;
+use crate::sub_commands::send;
+use crate::sub_commands::send_channel_message;
+use crate::sub_commands::set_channel_metadata;
+use crate::sub_commands::set_metadata;
+use crate::sub_commands::user_status;
+use crate::sub_commands::vanity;
 // Import the new relay subcommand module
 use crate::sub_commands::relay;
 // Import the new QuerySubCommand struct
 use crate::sub_commands::query::QuerySubCommand;
 // Import the sniper subcommand module
-use crate::sub_commands::sniper;
 use crate::sub_commands::git;
+use crate::sub_commands::sniper;
 
 /// CliArgs
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct CliArgs {
-	/// theme
+    /// theme
     pub theme: PathBuf,
-	/// repo_path
+    /// repo_path
     pub repo_path: RepoPath,
-	/// notify_watch
+    /// notify_watch
     pub notify_watcher: bool,
 }
 
@@ -74,7 +72,7 @@ pub struct CliArgs {
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct LegitCli {
-	/// command
+    /// command
     #[command(subcommand)]
     pub command: Option<LegitCommands>,
 }
@@ -107,7 +105,7 @@ pub enum LegitCommands {
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitCli {
-	/// command
+    /// command
     #[command(subcommand)]
     pub command: NgitCommands,
     /// remote signer address
@@ -188,7 +186,7 @@ pub struct GnostrCli {
         default_value = ".",
         help = "gnostr --workdir '<string>'"
     )]
-	/// workdir
+    /// workdir
     pub workdir: Option<String>,
     /// TODO handle gnostr tui --repo_path
     #[arg(
@@ -197,7 +195,7 @@ pub struct GnostrCli {
         default_value = ".",
         help = "gnostr --gitdir '<string>'"
     )]
-	/// gitdir
+    /// gitdir
     pub gitdir: Option<RepoPath>,
     /// directory
     #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
@@ -253,7 +251,14 @@ pub struct GnostrCli {
     pub bugreport: bool,
 
     /// Enable logging
-    #[arg(long, default_value = "false", conflicts_with = "info", conflicts_with = "debug", conflicts_with = "trace", conflicts_with = "warn")]
+    #[arg(
+        long,
+        default_value = "false",
+        conflicts_with = "info",
+        conflicts_with = "debug",
+        conflicts_with = "trace",
+        conflicts_with = "warn"
+    )]
     pub logging: bool,
 }
 
@@ -261,7 +266,9 @@ impl Default for GnostrCli {
     fn default() -> Self {
         Self {
             command: None,
-            nsec: Some("0000000000000000000000000000000000000000000000000000000000000001".to_string()),
+            nsec: Some(
+                "0000000000000000000000000000000000000000000000000000000000000001".to_string(),
+            ),
             hash: None,
             workdir: Some(".".to_string()),
             gitdir: Some(".".into()),
@@ -272,7 +279,10 @@ impl Default for GnostrCli {
             blockheight: false,
             wobble: false,
             blockhash: false,
-            relays: vec!["wss://relay.damus.io".to_string(), "wss://nos.lol".to_string()],
+            relays: vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://nos.lol".to_string(),
+            ],
             difficulty_target: 0,
             screenshots: None,
             info: false,
@@ -327,9 +337,7 @@ pub enum GnostrCommands {
     /// Send a message to a public channel
     SendChannelMessage(send_channel_message::SendChannelMessageSubCommand),
     /// Hide a message in a public chat room
-    HidePublicChannelMessage(
-        hide_public_channel_message::HidePublicChannelMessageSubCommand,
-    ),
+    HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
     /// Mute a public key
     MutePublicKey(mute_publickey::MutePublickeySubCommand),
     /// Broadcast events from file
@@ -350,7 +358,7 @@ pub enum GnostrCommands {
     PrivkeyToBech32(privkey_to_bech32::PrivkeyToBech32SubCommand),
     /// Fetch an event by ID
     FetchById(fetch_by_id::FetchByIdSubCommand),
-        /// Relay sub commands
+    /// Relay sub commands
     Relay(relay::RelaySubCommand),
     /// Add the query subcommand here, using the new QuerySubCommand struct
     Query(QuerySubCommand),
