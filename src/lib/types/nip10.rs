@@ -14,7 +14,11 @@ pub fn create_reply(
 ) -> Event {
     let tags = vec![
         vec!["e".to_string(), root_id.as_hex_string(), "root".to_string()],
-        vec!["e".to_string(), replied_to_id.as_hex_string(), "reply".to_string()],
+        vec![
+            "e".to_string(),
+            replied_to_id.as_hex_string(),
+            "reply".to_string(),
+        ],
     ];
     let unsigned_event = UnsignedEvent::new(public_key, 1, tags, content);
     unsigned_event.sign(private_key).unwrap()

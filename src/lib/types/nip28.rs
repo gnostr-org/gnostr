@@ -3,16 +3,18 @@
 // NIP-28: Public Chat Channels
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
-use crate::types::versioned::event3::PreEventV3;
-use crate::types::versioned::event3::EventV3;
 use crate::types::event_kind::{EventKind, EventKindOrRange};
-use crate::types::{Id, PublicKey, PublicKeyHex, Signature, TagV3, Unixtime, Error, Signer, KeySecurity, NAddr, NostrBech32, NostrUrl, UncheckedUrl};
+use crate::types::versioned::event3::EventV3;
+use crate::types::versioned::event3::PreEventV3;
+use crate::types::{
+    Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
+    Signer, TagV3, UncheckedUrl, Unixtime,
+};
 use secp256k1::{SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use std::str::FromStr;
 use std::collections::HashSet;
-
+use std::str::FromStr;
 
 /// Event Kind 40: Create channel
 /// Used to create a public chat channel, including initial metadata like name, description, and picture.
@@ -117,7 +119,7 @@ pub fn create_channel(
     // 'relay' tag - optional
     if let Some(relay) = relay_url {
         // NIP-28 doesn't explicitly define a marker for channel creation relay, so use None.
-        tags.push(TagV3::new_relay(relay.clone(), None)); 
+        tags.push(TagV3::new_relay(relay.clone(), None));
     }
 
     // Create PreEvent
@@ -174,7 +176,9 @@ pub fn parse_channel_creation(event: &EventV3) -> Result<ChannelCreationEvent, E
             relay_url,
             pubkey: event.pubkey,
         }),
-        None => Err(Error::AssertionFailed("Missing 'd' tag for channel ID.".to_string())),
+        None => Err(Error::AssertionFailed(
+            "Missing 'd' tag for channel ID.".to_string(),
+        )),
     }
 }
 
@@ -241,7 +245,9 @@ pub fn parse_channel_message(event: &EventV3) -> Result<ChannelMessageEvent, Err
             pubkey: event.pubkey,
             relay_url,
         }),
-        None => Err(Error::AssertionFailed("Missing 'd' tag for channel ID.".to_string())),
+        None => Err(Error::AssertionFailed(
+            "Missing 'd' tag for channel ID.".to_string(),
+        )),
     }
 }
 
@@ -304,8 +310,12 @@ pub fn parse_hide_message(event: &EventV3) -> Result<HideMessageEvent, Error> {
             relay_url,
             pubkey: event.pubkey,
         }),
-        (None, _) => Err(Error::AssertionFailed("Missing 'd' tag for channel ID.".to_string())),
-        (_, None) => Err(Error::AssertionFailed("Missing 'e' tag for message ID.".to_string())),
+        (None, _) => Err(Error::AssertionFailed(
+            "Missing 'd' tag for channel ID.".to_string(),
+        )),
+        (_, None) => Err(Error::AssertionFailed(
+            "Missing 'e' tag for message ID.".to_string(),
+        )),
     }
 }
 
@@ -366,8 +376,12 @@ pub fn parse_mute_user(event: &EventV3) -> Result<MuteUserEvent, Error> {
             relay_url,
             pubkey: event.pubkey,
         }),
-        (None, _) => Err(Error::AssertionFailed("Missing 'd' tag for channel ID.".to_string())),
-        (_, None) => Err(Error::AssertionFailed("Missing 'p' tag for user public key.".to_string())),
+        (None, _) => Err(Error::AssertionFailed(
+            "Missing 'd' tag for channel ID.".to_string(),
+        )),
+        (_, None) => Err(Error::AssertionFailed(
+            "Missing 'p' tag for user public key.".to_string(),
+        )),
     }
 }
 
@@ -476,11 +490,11 @@ pub fn parse_set_channel_metadata(event: &EventV3) -> Result<ChannelMetadataEven
             relay_url,
             pubkey: event.pubkey,
         }),
-        None => Err(Error::AssertionFailed("Missing 'd' tag for channel ID.".to_string())),
+        None => Err(Error::AssertionFailed(
+            "Missing 'd' tag for channel ID.".to_string(),
+        )),
     }
 }
-
-
 
 /// Creates a Kind 42 event for sending a message within a channel.
 ///
@@ -509,12 +523,20 @@ pub fn create_channel_message(
 
     // 'e' tag for reply
     if let Some(id) = reply_to_id {
-        tags.push(TagV3::new_event(id, relay_url.cloned(), Some("reply".to_string())));
+        tags.push(TagV3::new_event(
+            id,
+            relay_url.cloned(),
+            Some("reply".to_string()),
+        ));
     }
 
     // 'e' tag for root message
     if let Some(id) = root_message_id {
-        tags.push(TagV3::new_event(id, relay_url.cloned(), Some("root".to_string())));
+        tags.push(TagV3::new_event(
+            id,
+            relay_url.cloned(),
+            Some("root".to_string()),
+        ));
     }
 
     // 'relay' tag
@@ -529,7 +551,7 @@ pub fn create_channel_message(
         kind: CREATE_CHANNEL_MESSAGE, // Kind 42
         tags,
         content: message.to_string(),
-	};
+    };
     // Sign the event
     signer.sign_event(pre_event)
 }
@@ -558,7 +580,11 @@ pub fn hide_message(
     tags.push(TagV3::new_identifier(channel_id.to_string()));
 
     // 'e' tag for the message to hide
-    tags.push(TagV3::new_event(*message_id_to_hide, relay_url.cloned(), None));
+    tags.push(TagV3::new_event(
+        *message_id_to_hide,
+        relay_url.cloned(),
+        None,
+    ));
 
     // 'reason' tag - optional
     if let Some(r) = reason {
@@ -573,7 +599,10 @@ pub fn hide_message(
     }
 
     // Filter out any 'p' tags to ensure NIP-28 compliance for Kind 43 events
-    let filtered_tags: Vec<TagV3> = tags.into_iter().filter(|tag| tag.tagname() != "p").collect();
+    let filtered_tags: Vec<TagV3> = tags
+        .into_iter()
+        .filter(|tag| tag.tagname() != "p")
+        .collect();
 
     // Create PreEvent
     let pre_event = PreEventV3 {
@@ -582,7 +611,7 @@ pub fn hide_message(
         kind: HIDE_MESSAGE, // Kind 43
         tags: filtered_tags,
         content: "".to_string(),
-	};
+    };
     // Sign the event
     signer.sign_event(pre_event)
 }
@@ -638,13 +667,15 @@ pub fn mute_user(
     signer.sign_event(pre_event)
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{EventKind, TagV3, PublicKey, PrivateKey, Unixtime, Id, Error, PublicKeyHex, UncheckedUrl, Signer, KeySecurity};
-    use crate::KeySigner;
     use crate::test_serde;
+    use crate::types::{
+        Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
+        UncheckedUrl, Unixtime,
+    };
+    use crate::KeySigner;
     use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey};
     use sha2::{Digest, Sha256};
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -678,7 +709,8 @@ mod test {
             channel_description,
             channel_picture,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelCreation);
         assert_eq!(event.pubkey, signer.public_key());
@@ -739,7 +771,8 @@ mod test {
             channel_description,
             channel_picture,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelMetadata);
         assert_eq!(event.pubkey, signer.public_key());
@@ -791,13 +824,12 @@ mod test {
 
         // Test with only required arguments
         let event_minimal = set_channel_metadata(
-            &signer,
-            channel_id,
-            None, // name
+            &signer, channel_id, None, // name
             None, // description
             None, // picture
             None, // relay_url
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event_minimal.kind, EventKind::ChannelMetadata);
         assert_eq!(event_minimal.pubkey, signer.public_key());
@@ -821,7 +853,8 @@ mod test {
             None, // description
             channel_picture,
             None, // relay_url
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event_partial.kind, EventKind::ChannelMetadata);
         assert_eq!(event_partial.pubkey, signer.public_key());
@@ -866,7 +899,8 @@ mod test {
             reply_to_id,
             root_message_id,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelMessage);
         assert_eq!(event.pubkey, signer.public_key());
@@ -925,7 +959,8 @@ mod test {
             &message_id_to_hide,
             reason,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelHideMessage);
         assert_eq!(event.pubkey, signer.public_key());
@@ -973,7 +1008,9 @@ mod test {
                 assert!(pubkey.len() > 0);
                 assert_eq!(recommended_relay_url, Some(relay_url.clone()));
                 assert!(petname.is_none()); // Mute user tag should not have petname
-                if petname.is_none() { found_p_tag = false; }
+                if petname.is_none() {
+                    found_p_tag = false;
+                }
                 assert_eq!(petname.is_none(), !found_p_tag);
             } else if tag.tagname() == "r" {
                 let (url, _) = tag.parse_relay().unwrap();
@@ -1011,14 +1048,21 @@ mod test {
             channel_description,
             channel_picture,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_channel_creation(&event).unwrap();
 
         assert_eq!(parsed_event.channel_id, channel_id);
         assert_eq!(parsed_event.channel_name, Some(channel_name.to_string()));
-        assert_eq!(parsed_event.channel_description, Some(channel_description.to_string()));
-        assert_eq!(parsed_event.channel_picture, Some(channel_picture.unwrap().to_string()));
+        assert_eq!(
+            parsed_event.channel_description,
+            Some(channel_description.to_string())
+        );
+        assert_eq!(
+            parsed_event.channel_picture,
+            Some(channel_picture.unwrap().to_string())
+        );
         assert_eq!(parsed_event.relay_url, Some(&relay_url).cloned());
         assert_eq!(parsed_event.pubkey, signer.public_key());
     }
@@ -1031,15 +1075,14 @@ mod test {
         };
 
         let channel_id = "minimal-channel";
-        
+
         let event = create_channel(
-            &signer,
-            channel_id,
-            "", // Empty name
-            "", // Empty description
+            &signer, channel_id, "",   // Empty name
+            "",   // Empty description
             None, // No picture
             None, // No relay URL
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_channel_creation(&event).unwrap();
 
@@ -1071,7 +1114,8 @@ mod test {
             reply_to_id,
             root_message_id,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_channel_message(&event).unwrap();
 
@@ -1094,13 +1138,11 @@ mod test {
         let message = "Just a simple message";
 
         let event = create_channel_message(
-            &signer,
-            channel_id,
-            message,
-            None, // reply_to
+            &signer, channel_id, message, None, // reply_to
             None, // root_message
             None, // relay_url
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_channel_message(&event).unwrap();
 
@@ -1130,7 +1172,8 @@ mod test {
             &message_id_to_hide,
             reason,
             Some(&relay_url),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelHideMessage);
         assert_eq!(event.pubkey, signer.public_key());
@@ -1186,7 +1229,8 @@ mod test {
             &message_id_to_hide,
             reason,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_hide_message(&event).unwrap();
 
@@ -1213,7 +1257,8 @@ mod test {
             &message_id_to_hide,
             None, // reason
             None, // relay_url
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_hide_message(&event).unwrap();
 
@@ -1236,13 +1281,7 @@ mod test {
         let reason = Some("trolling");
         let relay_url = UncheckedUrl::from_str("wss://mute-relay.example.com");
 
-        let event = mute_user(
-            &signer,
-            channel_id,
-            &user_pubkey,
-            reason,
-            Some(&relay_url),
-        ).unwrap();
+        let event = mute_user(&signer, channel_id, &user_pubkey, reason, Some(&relay_url)).unwrap();
 
         assert_eq!(event.kind, EventKind::ChannelMuteUser);
         assert_eq!(event.pubkey, signer.public_key());
@@ -1297,7 +1336,8 @@ mod test {
             &user_pubkey,
             None, // reason
             None, // relay_url
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_mute_user(&event).unwrap();
 
@@ -1328,14 +1368,24 @@ mod test {
             channel_description,
             channel_picture,
             Some(&relay_url).cloned().as_ref(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_set_channel_metadata(&event).unwrap();
 
         assert_eq!(parsed_event.channel_id, channel_id);
-        assert_eq!(parsed_event.channel_name, channel_name.map(|s| s.to_string()));
-        assert_eq!(parsed_event.channel_description, channel_description.map(|s| s.to_string()));
-        assert_eq!(parsed_event.channel_picture, channel_picture.map(|s| s.to_string()));
+        assert_eq!(
+            parsed_event.channel_name,
+            channel_name.map(|s| s.to_string())
+        );
+        assert_eq!(
+            parsed_event.channel_description,
+            channel_description.map(|s| s.to_string())
+        );
+        assert_eq!(
+            parsed_event.channel_picture,
+            channel_picture.map(|s| s.to_string())
+        );
         assert_eq!(parsed_event.relay_url, Some(&relay_url).cloned());
         assert_eq!(parsed_event.pubkey, signer.public_key());
     }
@@ -1350,13 +1400,12 @@ mod test {
         let channel_id = "minimal-channel-id";
 
         let event = set_channel_metadata(
-            &signer,
-            channel_id,
-            None, // name
+            &signer, channel_id, None, // name
             None, // description
             None, // picture
             None, // relay_url
-        ).unwrap();
+        )
+        .unwrap();
 
         let parsed_event = parse_set_channel_metadata(&event).unwrap();
 
