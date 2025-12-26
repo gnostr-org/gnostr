@@ -195,8 +195,9 @@ impl NostrClient {
 
         let mut filter = Filter::new();
         filter.add_tag_value('d', channel_id.clone())
-              .add_event_kind(EventKind::ChannelMessage);
         filter.since = Some(Unixtime::now());
+
+        let subscription_id = SubscriptionId(format!("channel:{}", channel_id));
 
         let client_message = ClientMessage::Req(subscription_id, vec![filter.clone()]);
         let json = serde_json::to_string(&client_message).unwrap();
