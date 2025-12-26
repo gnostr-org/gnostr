@@ -102,12 +102,13 @@ impl Filter {
     }
 
     /// Add a Tag value to a filter
-    pub fn add_tag_value(&mut self, letter: char, value: String) {
+    pub fn add_tag_value(&mut self, letter: char, value: String) -> &mut Self {
         let _ = self
             .tags
             .entry(letter)
             .and_modify(|values| values.push(value.clone()))
             .or_insert(vec![value]);
+        self
     }
 
     /// Add a Tag value from a filter
