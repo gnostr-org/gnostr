@@ -55,6 +55,7 @@ pub struct App {
     pub messages: Arc<Mutex<Vec<msg::Msg>>>,
     pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
     pub msgs_scroll: usize,
+    pub rendered_line_offset: usize,
     pub topic: String,
 }
 
@@ -66,6 +67,7 @@ impl Default for App {
             messages: Default::default(),
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
+            rendered_line_offset: 0,
             topic: String::from("gnostr"),
         }
     }
@@ -129,25 +131,21 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 InputMode::Normal => match key.code {
                     KeyCode::Char('e') | KeyCode::Char('i') => {
                         app.input_mode = InputMode::Editing;
-                        app.msgs_scroll = usize::MAX;
+                        app.rendered_line_offset = 0; // Reset scroll when entering editing mode
                     }
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
                     KeyCode::Up => {
-                        let l = app.messages.lock().unwrap().len();
-                        app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
+                        app.rendered_line_offset = app.rendered_line_offset.saturating_add(1);
                     }
                     KeyCode::Down => {
-                        let l = app.messages.lock().unwrap().len();
-                        app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
+                        app.rendered_line_offset = app.rendered_line_offset.saturating_sub(1);
                     }
                     KeyCode::Esc => {
                         app.input.reset();
                     }
-                    _ => {
-                        app.msgs_scroll = usize::MAX;
-                    }
+                    _ => {} // No default scroll reset
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
@@ -160,6 +158,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         }
                         app.input.reset();
+                        app.rendered_line_offset = 0; // Reset scroll to bottom on new message
                     }
                     KeyCode::Esc => {
                         app.input_mode = InputMode::Normal;
@@ -174,7 +173,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 }
 
 //as popup widget is constructed in chat_details/mos.rs
-fn ui(f: &mut Frame, app: &App) {
+fn ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -194,14 +193,31 @@ fn ui(f: &mut Frame, app: &App) {
     f.render_widget(header, chunks[0]);
 
     // Messages Widget
-    let height = chunks[1].height; // Use height of the messages chunk
+    let height = chunks[1].height as usize; // Use height of the messages chunk
     let msgs = app.messages.lock().unwrap();
-    let messages: Vec<ListItem> = msgs[0..app.msgs_scroll.min(msgs.len())]
+    let all_rendered_lines: Vec<Line> = msgs
         .iter()
-        .rev()
-        .flat_map(|m| m.to_lines().into_iter().map(ListItem::new))
-        .take(height as usize)
+        .rev() // Display newest messages at the bottom
+        .flat_map(|m| m.to_lines())
         .collect();
+
+    let num_rendered_lines = all_rendered_lines.len();
+
+    // Adjust rendered_line_offset to stay within bounds
+    app.rendered_line_offset = app
+        .rendered_line_offset
+        .min(num_rendered_lines.saturating_sub(1));
+
+    let start_index = app.rendered_line_offset;
+    let end_index = (start_index + height).min(num_rendered_lines);
+
+    let messages: Vec<ListItem> = all_rendered_lines[start_index..end_index]
+        .iter()
+        .rev() // Reverse again to display in correct order (newest at bottom)
+        .cloned()
+        .map(ListItem::new)
+        .collect();
+
     let messages = List::new(messages)
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
