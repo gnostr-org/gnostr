@@ -274,7 +274,7 @@ pub async fn create_event(
     };
 
     let output_send_event = client.send_event(text_note_event.clone()).await?;
-    info!("Text note event sent successfully.");
+    info!("{:?}", output_send_event);
 
     let mut filter_one = crate::types::Filter::new();
     filter_one
@@ -555,7 +555,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
             //send git gnostr event
             let output = client.send_event(git_gnostr_event.clone()).await.expect("");
-            println!("Git gnostr event sent successfully.");
+            info!("{:?}", output);
             Ok(())
         }.await;
         if let Err(e) = result {
