@@ -516,50 +516,51 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     debug!("commit_id:\n{}", commit_id);
     let padded_commit_id = format!("{:0>64}", commit_id.clone());
     global_rt().spawn(async move {
-        //// commit based keys
-        //let keys = generate_nostr_keys_from_commit_hash(&commit_id)?;
-        //info!("keys.secret_key():\n{:?}", keys.secret_key());
-        //info!("keys.public_key():\n{}", keys.public_key());
+        let result: anyhow::Result<()> = async {
+            //parse keys from sha256 hash
+            let padded_private_key = PrivateKey::try_from_hex_string(&padded_commit_id).unwrap();
+            let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();
+            //create nostr client with commit based keys
+            //let client = Client::new(keys);
+            let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
+            let mut client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
 
-        //parse keys from sha256 hash
-        let padded_private_key = PrivateKey::try_from_hex_string(&padded_commit_id).unwrap();
-        let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();
-        //create nostr client with commit based keys
-        //let client = Client::new(keys);
-        let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-        let client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
+            for relay in BOOTSTRAP_RELAYS.iter().cloned() {
+                debug!("{}", relay);
+                client.connect_relay(UncheckedUrl(relay.to_string())).await?;
+            }
+        
 
-        for relay in BOOTSTRAP_RELAYS.iter().cloned() {
-            debug!("{}", relay);
-            client.connect_relay(UncheckedUrl(relay.to_string())).await?;
+            //build git gnostr event
+            let pre_event = PreEvent {
+                pubkey: padded_keys.public_key(),
+                created_at: Unixtime::now(),
+                kind: EventKind::TextNote,
+                tags: vec![],
+                content: serialized_commit.clone(),
+            };
+
+            let id = pre_event.hash().unwrap();
+            let sig = padded_keys.sign_id(id).unwrap();
+
+            let git_gnostr_event = Event {
+                id,
+                pubkey: pre_event.pubkey,
+                created_at: pre_event.created_at,
+                kind: pre_event.kind,
+                tags: pre_event.tags,
+                content: pre_event.content,
+                sig,
+            };
+
+            //send git gnostr event
+            let output = client.send_event(git_gnostr_event.clone()).await.expect("");
+            println!("Git gnostr event sent successfully.");
+            Ok(())
+        }.await;
+        if let Err(e) = result {
+            error!("Error in gnostr_legit_event spawned task: {:?}", e);
         }
-    
-
-        //build git gnostr event
-        let pre_event = PreEvent {
-            pubkey: padded_keys.public_key(),
-            created_at: Unixtime::now(),
-            kind: EventKind::TextNote,
-            tags: vec![],
-            content: serialized_commit.clone(),
-        };
-
-        let id = pre_event.hash().unwrap();
-        let sig = padded_keys.sign_id(id).unwrap();
-
-        let git_gnostr_event = Event {
-            id,
-            pubkey: pre_event.pubkey,
-            created_at: pre_event.created_at,
-            kind: pre_event.kind,
-            tags: pre_event.tags,
-            content: pre_event.content,
-            sig,
-        };
-
-        //send git gnostr event
-        let output = client.send_event(git_gnostr_event.clone()).await.expect("");
-        println!("Git gnostr event sent successfully.");
     });
 
     Ok(())
