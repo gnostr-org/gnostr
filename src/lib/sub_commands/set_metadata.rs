@@ -133,8 +133,11 @@ pub async fn set_metadata(
     //    &event.sig
     //);
     let event_id = client.send_event(event).await?;
-    print!("{{\"id\":\"{}\"}}", event_id.to_bech32()?);
-    print!("{{\"id\":\"{}\"}}", event_id);
+    if sub_command_args.hex {
+        print!("{{\"id\":\"{}\"}}", event_id);
+    } else {
+        print!("{{\"id\":\"{}\"}}", event_id.to_bech32()?);
+    }
 
     Ok(())
 }
