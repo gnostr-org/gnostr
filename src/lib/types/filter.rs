@@ -346,7 +346,7 @@ mod test {
             authors: vec![signer.public_key().into()],
             ..Default::default()
         };
-        filter.add_tag_value('e', Id::mock().as_hex_string());
+        let _ = filter.add_tag_value('e', Id::mock().as_hex_string());
         assert_eq!(filter.event_matches(&event), true);
 
         let filter = Filter {
