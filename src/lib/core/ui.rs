@@ -170,8 +170,6 @@ fn run_app<B: Backend>(
                         app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
                     }
                     KeyCode::Esc => {
-                        app.msgs_scroll = usize::MAX;
-                        app.msgs_scroll = usize::MAX;
                         app.input.reset();
                     }
                     _ => {
@@ -192,7 +190,6 @@ fn run_app<B: Backend>(
                     }
                     KeyCode::Esc => {
                         app.input_mode = InputMode::Normal;
-                        app.msgs_scroll = app.messages.lock().unwrap().len();
                     }
                     _ => {
                         app.input.handle_event(&Event::Key(key));

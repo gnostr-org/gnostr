@@ -143,8 +143,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
                     }
                     KeyCode::Esc => {
-                        app.msgs_scroll = usize::MAX;
-                        app.msgs_scroll = usize::MAX;
                         app.input.reset();
                     }
                     _ => {
@@ -165,7 +163,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                     KeyCode::Esc => {
                         app.input_mode = InputMode::Normal;
-                        app.msgs_scroll = app.messages.lock().unwrap().len();
                     }
                     _ => {
                         app.input.handle_event(&Event::Key(key));
