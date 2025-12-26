@@ -315,8 +315,8 @@ mod test {
         filter.del_tag_value('e', IdHex::mock().to_string());
         assert_eq!(filter.tags.get(&'e'), None);
 
-        filter.add_tag_value('t', "footstr".to_string());
-        filter.add_tag_value('t', "bitcoin".to_string());
+        let _ = filter.add_tag_value('t', "footstr".to_string());
+        let _ = filter.add_tag_value('t', "bitcoin".to_string());
         filter.del_tag_value('t', "bitcoin".to_string());
         assert!(filter.tags.get(&'t').is_some());
     }
