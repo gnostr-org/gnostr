@@ -226,9 +226,12 @@ impl NostrClient {
     pub async fn subscribe_to_marketplace(&self) {
         info!("Subscribing to marketplace events");
 
-        let mut filter = Filter::new();
-        filter.add_event_kind(EventKind::MarketplaceUi);
-        filter.since = Some(Unixtime::now());
+        let filter = {
+            let mut f = Filter::new();
+            f.add_event_kind(EventKind::MarketplaceUi);
+            f.since = Some(Unixtime::now());
+            f
+        };
 
         let subscription_id = SubscriptionId("marketplace".to_string());
 
