@@ -87,7 +87,8 @@ async fn test_ngit_send_command() -> Result<(), Box<dyn StdError>> {
 async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
     let git_repo = test_utils::cli_tester_create_proposals()?;
 
-    let mut p = test_utils::CliTester::new_from_dir(&git_repo.dir, vec!["--disable-cli_spinners", "list"]);
+    let mut p =
+        test_utils::CliTester::new_from_dir(&git_repo.dir, vec!["--disable-cli_spinners", "list"]);
 
     p.expect_end_eventually()?;
     Ok(())
@@ -97,7 +98,7 @@ async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
 #[serial]
 /*async */
 fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
-    let (_originating_repo, test_repo) = 
+    let (_originating_repo, test_repo) =
         test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
     let mut p = test_utils::CliTester::new_from_dir(
         &test_repo.dir,
@@ -120,7 +121,7 @@ fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
 #[serial]
 /*async */
 fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
-    let (_originating_repo, test_repo) = 
+    let (_originating_repo, test_repo) =
         test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout(
         )?;
     let mut p = test_utils::CliTester::new_from_dir(
@@ -145,7 +146,8 @@ fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
 async fn test_ngit_fetch_command() -> Result<(), Box<dyn StdError>> {
     let git_repo = test_utils::cli_tester_create_proposals()?;
 
-    let mut p = test_utils::CliTester::new_from_dir(&git_repo.dir, vec!["--disable-cli_spinners", "fetch"]);
+    let mut p =
+        test_utils::CliTester::new_from_dir(&git_repo.dir, vec!["--disable-cli_spinners", "fetch"]);
 
     p.expect_end_eventually()?;
     Ok(())
@@ -153,7 +155,8 @@ async fn test_ngit_fetch_command() -> Result<(), Box<dyn StdError>> {
 
 #[tokio::test]
 #[serial]
-async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<(), Box<dyn StdError>> {
+async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<(), Box<dyn StdError>>
+{
     let kinds_string = "1630,1632,1621,30618,1633,1631,1617,30617".to_string();
     let base_query_args = QuerySubCommand {
         authors: None,
@@ -171,8 +174,7 @@ async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<()
     for relay_url in BOOTSTRAP_RELAYS.iter() {
         println!(
             "\nTesting ngit query with kinds {} on relay: {}\n",
-            kinds_string,
-            relay_url
+            kinds_string, relay_url
         );
         let ngit_command = NgitCommands::Query(QuerySubCommand {
             relay: Some(relay_url.clone()),

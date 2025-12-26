@@ -139,8 +139,8 @@ impl NBReader {
 
             loop {
                 match reader.read(&mut byte) {
-                            Ok(0) => {
-                                tx.send(Ok(PipedChar::EOF)).ok();
+                    Ok(0) => {
+                        tx.send(Ok(PipedChar::EOF)).ok();
                         break;
                     }
                     Ok(_) => {
@@ -244,7 +244,10 @@ impl NBReader {
     /// assert_eq!("?", &until_end);
     /// ```
     ///
-    pub fn read_until(&mut self, needle: &ReadUntil) -> Result<(String, String), Box<dyn std::error::Error + Send>> {
+    pub fn read_until(
+        &mut self,
+        needle: &ReadUntil,
+    ) -> Result<(String, String), Box<dyn std::error::Error + Send>> {
         let start = time::Instant::now();
 
         loop {

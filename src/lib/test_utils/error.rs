@@ -20,14 +20,10 @@ pub enum Error {
     },
 
     #[error("Unmatched Error: Expected {} but got \"{}\"", .expected, .got)]
-    Unmatched {
-        expected: String,
-        got: String,
-    },
+    Unmatched { expected: String, got: String },
 
     #[error("The provided program name is empty.")]
     EmptyProgramName,
-
 
     #[error(transparent)]
     Io(#[from] std::io::Error),
