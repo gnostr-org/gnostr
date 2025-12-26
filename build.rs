@@ -1,16 +1,16 @@
+use sha2::{Digest, Sha256};
 use std::{
     env, fs, io,
     io::{Error, ErrorKind, Write},
     path::Path,
     process::Command,
 };
-use sha2::{Digest, Sha256};
-
-
 
 fn _sync_nip44_vectors() {
-    const NIP44_VECTORS_URL: &str = "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
-    const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
+    const NIP44_VECTORS_URL: &str =
+        "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
+    const NIP44_VECTORS_SHA256: &str =
+        "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
     let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join("src/lib/types/nip44/nip44.vectors.json");
 
@@ -47,7 +47,9 @@ fn _sync_nip44_vectors() {
                 if hex_hash == NIP44_VECTORS_SHA256 {
                     let mut file = fs::File::create(&dest_path).unwrap();
                     file.write_all(&content).unwrap();
-                    println!("cargo:warning=Successfully downloaded and verified nip44.vectors.json.");
+                    println!(
+                        "cargo:warning=Successfully downloaded and verified nip44.vectors.json."
+                    );
                 } else {
                     panic!(
                         "Downloaded nip44.vectors.json has incorrect hash. Expected {}, got {}",
@@ -62,7 +64,10 @@ fn _sync_nip44_vectors() {
                         e
                     );
                 } else {
-                    panic!("Failed to download nip44.vectors.json and no local copy available: {}", e);
+                    panic!(
+                        "Failed to download nip44.vectors.json and no local copy available: {}",
+                        e
+                    );
                 }
             }
         }
@@ -192,7 +197,9 @@ fn install_sccache() {
         if !install_command.is_empty() {
             install_windows_dependency("sccache", install_command);
         } else {
-            println!("cargo:warning=Neither scoop nor winget found. Please install sccache manually.");
+            println!(
+                "cargo:warning=Neither scoop nor winget found. Please install sccache manually."
+            );
         }
     }
 }
@@ -1017,8 +1024,9 @@ fn _git_commit(dir_path: &Path) -> Result<(), io::Error> {
 
         // The failure block must return the error value, which is Err(io::Error).
         // We create a new io::Error here to indicate the child process failed.
-        Err(Error::other(
-            format!("'git commit' failed with status: {}", output.status),
-        ))
+        Err(Error::other(format!(
+            "'git commit' failed with status: {}",
+            output.status
+        )))
     }
 }
