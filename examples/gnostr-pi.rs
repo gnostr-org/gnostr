@@ -24,16 +24,14 @@ fn main() {
     //
     //
     //
-    if (args.len() - 1) >= 1
-        && (&args[1] == "-h" || &args[1] == "--help") {
-            println!("{}", get_help_message());
-            process::exit(0);
-        }
-    if (args.len() - 1) >= 1
-        && (&args[1] == "-v" || &args[1] == "-V" || &args[1] == "--version") {
-            println!("{}", get_version_message());
-            process::exit(0);
-        }
+    if (args.len() - 1) >= 1 && (&args[1] == "-h" || &args[1] == "--help") {
+        println!("{}", get_help_message());
+        process::exit(0);
+    }
+    if (args.len() - 1) >= 1 && (&args[1] == "-v" || &args[1] == "-V" || &args[1] == "--version") {
+        println!("{}", get_version_message());
+        process::exit(0);
+    }
     if (args.len() - 1) == 1 {
         let depth = u64::from_str(&args[1]).unwrap() * 5 + 1;
         calculate_pi_digits_impl(depth);

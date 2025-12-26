@@ -2,9 +2,7 @@ use gnostr::utils::retry::GnostrRetry;
 
 fn my_sync_fn(_n: &str) -> Result<(), std::io::Error> {
     println!("my_sync_fn({})", _n);
-    Err(std::io::Error::other(
-        "generic error",
-    ))
+    Err(std::io::Error::other("generic error"))
 }
 
 fn main() {

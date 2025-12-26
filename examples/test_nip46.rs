@@ -1,10 +1,10 @@
 use base64::Engine;
 use gnostr::get_weeble;
-use gnostr::{Command, Probe};
 use gnostr::types::{
     ContentEncryptionAlgorithm, Event, EventKind, Filter, KeySigner, PreEvent, PrivateKey,
     PublicKey, RelayMessage, RelayUrl, Signer, SubscriptionId, Tag, Unixtime,
 };
+use gnostr::{Command, Probe};
 use serde::{Deserialize, Serialize};
 use std::env;
 
