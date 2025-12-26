@@ -1,32 +1,49 @@
-use std::process::Command;
 use anyhow::Result;
 use std::path::Path;
-
-
+use std::process::Command;
 
 fn main() -> Result<()> {
     let weeble_output = Command::new("gnostr-weeble").output()?.stdout;
     let weeble_cmd_output = String::from_utf8_lossy(&weeble_output).trim().to_string();
 
     let blockheight_output = Command::new("gnostr-blockheight").output()?.stdout;
-    let blockheight_cmd_output = String::from_utf8_lossy(&blockheight_output).trim().to_string();
+    let blockheight_cmd_output = String::from_utf8_lossy(&blockheight_output)
+        .trim()
+        .to_string();
 
     let wobble_output = Command::new("gnostr-wobble").output()?.stdout;
     let wobble_cmd_output = String::from_utf8_lossy(&wobble_output).trim().to_string();
 
-    let tag_name = run(std::env::args().skip(1).collect(), &weeble_cmd_output, &blockheight_cmd_output, &wobble_cmd_output, &std::env::current_dir()?)?;
+    let tag_name = run(
+        std::env::args().skip(1).collect(),
+        &weeble_cmd_output,
+        &blockheight_cmd_output,
+        &wobble_cmd_output,
+        &std::env::current_dir()?,
+    )?;
     print!("{}", tag_name);
     Ok(())
 }
 
-fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str, repo_path: &Path) -> Result<String> {
+fn run(
+    args: Vec<String>,
+    weeble: &str,
+    blockheight: &str,
+    wobble: &str,
+    repo_path: &Path,
+) -> Result<String> {
     let weeble = weeble.trim().to_string();
     let blockheight = blockheight.trim().to_string();
     let wobble = wobble.trim().to_string();
 
-    let mut tag_name = format!("v{}.{}.{}",
+    let mut tag_name = format!(
+        "v{}.{}.{}",
         if weeble.is_empty() { "0" } else { &weeble },
-        if blockheight.is_empty() { "0" } else { &blockheight },
+        if blockheight.is_empty() {
+            "0"
+        } else {
+            &blockheight
+        },
         if wobble.is_empty() { "0" } else { &wobble },
     );
 
@@ -34,10 +51,18 @@ fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str, repo_pa
         tag_name = format!("{}-{}", tag_name, args[0]);
     }
 
-    let output = Command::new("git").arg("tag").arg("-f").arg(&tag_name).current_dir(repo_path).output()?;
+    let output = Command::new("git")
+        .arg("tag")
+        .arg("-f")
+        .arg(&tag_name)
+        .current_dir(repo_path)
+        .output()?;
 
     if !output.status.success() {
-        eprintln!("Error creating branch: {}", String::from_utf8_lossy(&output.stderr));
+        eprintln!(
+            "Error creating branch: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         anyhow::bail!("Failed to create branch");
     }
     Ok(tag_name)
@@ -53,15 +78,53 @@ mod tests {
     fn setup_test_repo() -> tempfile::TempDir {
         let dir = tempdir().unwrap();
         let _repo_path = dir.path();
-        Command::new("git").arg("init").current_dir(_repo_path).output().unwrap();
-        Command::new("git").arg("config").arg("user.email").arg("test@example.com").current_dir(_repo_path).output().unwrap();
-        Command::new("git").arg("config").arg("user.name").arg("Test User").current_dir(_repo_path).output().unwrap();
+        Command::new("git")
+            .arg("init")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .arg("config")
+            .arg("user.email")
+            .arg("test@example.com")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .arg("config")
+            .arg("user.name")
+            .arg("Test User")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
         fs::write(_repo_path.join("file.txt"), "initial content").unwrap();
-        Command::new("git").arg("add").arg(".").current_dir(_repo_path).output().unwrap();
-        Command::new("git").arg("commit").arg("-m").arg("Initial commit").current_dir(_repo_path).output().unwrap();
+        Command::new("git")
+            .arg("add")
+            .arg(".")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .arg("commit")
+            .arg("-m")
+            .arg("Initial commit")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
         fs::write(_repo_path.join("file.txt"), "second content").unwrap();
-        Command::new("git").arg("add").arg(".").current_dir(_repo_path).output().unwrap();
-        Command::new("git").arg("commit").arg("-m").arg("Second commit").current_dir(_repo_path).output().unwrap();
+        Command::new("git")
+            .arg("add")
+            .arg(".")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .arg("commit")
+            .arg("-m")
+            .arg("Second commit")
+            .current_dir(_repo_path)
+            .output()
+            .unwrap();
         dir
     }
 
@@ -72,20 +135,41 @@ mod tests {
         std::env::set_current_dir(repo_path)?;
 
         let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
+        let blockheight = gnostr::blockheight::blockheight()
+            .unwrap_or(0.0)
+            .to_string();
         let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
-        let expected_tag_name = format!("v{}.{}.{}", weeble.clone(), blockheight.clone(), wobble.clone());
+        let expected_tag_name = format!(
+            "v{}.{}.{}",
+            weeble.clone(),
+            blockheight.clone(),
+            wobble.clone()
+        );
 
         let created_tag = run(vec![], &weeble, &blockheight, &wobble, repo_path)?;
 
-        let current_tag_output = Command::new("git").arg("describe").arg("--tags").current_dir(repo_path).output().unwrap().stdout;
-        let current_tag = String::from_utf8_lossy(&current_tag_output).trim().to_string();
+        let current_tag_output = Command::new("git")
+            .arg("describe")
+            .arg("--tags")
+            .current_dir(repo_path)
+            .output()
+            .unwrap()
+            .stdout;
+        let current_tag = String::from_utf8_lossy(&current_tag_output)
+            .trim()
+            .to_string();
 
         assert_eq!(current_tag, expected_tag_name);
         assert_eq!(created_tag, expected_tag_name);
 
         // Clean up the tag
-        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).current_dir(repo_path).output().unwrap();
+        Command::new("git")
+            .arg("tag")
+            .arg("-d")
+            .arg(&expected_tag_name)
+            .current_dir(repo_path)
+            .output()
+            .unwrap();
 
         Ok(())
     }
@@ -97,22 +181,43 @@ mod tests {
         std::env::set_current_dir(repo_path)?;
 
         let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = gnostr::blockheight::blockheight().unwrap_or(0.0).to_string();
+        let blockheight = gnostr::blockheight::blockheight()
+            .unwrap_or(0.0)
+            .to_string();
         let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
 
         let suffix = "test_suffix";
         let expected_tag_name = format!("v{}.{}.{}-{}", weeble, blockheight, wobble, suffix);
-        
-        let created_tag = run(vec![suffix.to_string()], &weeble, &blockheight, &wobble, repo_path)?;
+
+        let created_tag = run(
+            vec![suffix.to_string()],
+            &weeble,
+            &blockheight,
+            &wobble,
+            repo_path,
+        )?;
 
         // Verify the tag was created
-        let tag_list_output = Command::new("git").arg("tag").arg("-l").arg(&expected_tag_name).current_dir(repo_path).output().unwrap().stdout;
+        let tag_list_output = Command::new("git")
+            .arg("tag")
+            .arg("-l")
+            .arg(&expected_tag_name)
+            .current_dir(repo_path)
+            .output()
+            .unwrap()
+            .stdout;
         let tag_exists = String::from_utf8_lossy(&tag_list_output).trim().to_string();
         assert_eq!(tag_exists, expected_tag_name);
         assert_eq!(created_tag, expected_tag_name);
 
         // Clean up the tag
-        Command::new("git").arg("tag").arg("-d").arg(&expected_tag_name).current_dir(repo_path).output().unwrap();
+        Command::new("git")
+            .arg("tag")
+            .arg("-d")
+            .arg(&expected_tag_name)
+            .current_dir(repo_path)
+            .output()
+            .unwrap();
 
         Ok(())
     }
