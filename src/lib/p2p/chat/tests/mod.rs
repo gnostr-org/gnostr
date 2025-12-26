@@ -450,7 +450,7 @@ More details here."
         for tag in event.tags.iter() {
             if let Some(name) = tag.clone().0.get(0).map(|s| s.clone()) {
                 // Collect all values associated with a tag name
-                for value in tag.clone().to_vec().iter().skip(1) {
+                for value in tag.clone().0.iter().skip(1) {
                     found_tags
                         .entry(name.to_string())
                         .or_insert_with(Vec::new)
