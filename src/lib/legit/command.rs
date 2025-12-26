@@ -277,7 +277,7 @@ pub async fn create_event(
     info!("Text note event sent successfully.");
 
     let filter_one = crate::types::Filter::new()
-        .add_author(&pubkey_keys.public_key().into())
+        .add_author(&pubkey_keys.into())
         .kind(crate::types::EventKind::TextNote)
         .limit(10);
 
