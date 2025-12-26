@@ -209,7 +209,9 @@ impl EventHub {
 /// Start listening for websocket connections on `port`.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
-pub fn launch(port: u16) -> Result<(EventHub, std::thread::JoinHandle<()>, CancellationToken), Error> {
+pub fn launch(
+    port: u16,
+) -> Result<(EventHub, std::thread::JoinHandle<()>, CancellationToken), Error> {
     let address = format!("0.0.0.0:{}", port);
     let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
     let cancellation_token = CancellationToken::new();
@@ -345,17 +347,18 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    use tokio_tungstenite::MaybeTlsStream;
-    use tokio::net::TcpStream;
+
     use futures_util::StreamExt;
+    use tokio::net::TcpStream;
     use tokio::time::{timeout, Duration};
+    use tokio_tungstenite::MaybeTlsStream;
     use tokio_tungstenite::WebSocketStream;
 
     // Helper to find an available port and return a bound TcpListener
     async fn find_available_listener() -> tokio::net::TcpListener {
         for port in 8081..9000 {
-            if let Ok(listener) = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await {
+            if let Ok(listener) = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await
+            {
                 return listener;
             }
         }
@@ -393,11 +396,11 @@ mod tests {
         // Test Binary message
         let binary_msg = Message::Binary(vec![1, 2, 3]);
         let tungstenite_binary: tungstenite::Message = binary_msg.clone().into();
-        assert!(matches!(tungstenite_binary, tungstenite::Message::Binary(_)));
-        assert_eq!(
-            Message::try_from(tungstenite_binary).unwrap(),
-            binary_msg
-        );
+        assert!(matches!(
+            tungstenite_binary,
+            tungstenite::Message::Binary(_)
+        ));
+        assert_eq!(Message::try_from(tungstenite_binary).unwrap(), binary_msg);
 
         // Test unsupported message type
         let ping_msg = tungstenite::Message::Ping(vec![1].into());
@@ -409,7 +412,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
 
         // Give the server a moment to start
         tokio::time::sleep(Duration::from_secs(1)).await;
@@ -417,21 +422,30 @@ mod tests {
         let mut client_ws = connect_websocket_client(port).await;
 
         // Verify connection event
-        let (client_id, responder) = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Connect event in time") {
+        let (client_id, responder) = match timeout(Duration::from_secs(5), event_hub.poll_async())
+            .await
+            .expect("Server did not send Connect event in time")
+        {
             Event::Connect(id, resp) => (id, resp),
             other => panic!("Expected Connect event, got {:?}", other),
         };
 
         // Send a message from client to server
         let client_message = "Hello from client".to_string();
-        client_ws.send(tungstenite::Message::Text(client_message.clone().into())).await.unwrap();
+        client_ws
+            .send(tungstenite::Message::Text(client_message.clone().into()))
+            .await
+            .unwrap();
 
         // Verify message event on server side
-        let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Message event in time") {
+        let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async())
+            .await
+            .expect("Server did not send Message event in time")
+        {
             Event::Message(id, msg) => {
                 assert_eq!(id, client_id);
                 msg
-            },
+            }
             other => panic!("Expected Message event, got {:?}", other),
         };
 
@@ -439,7 +453,11 @@ mod tests {
         responder.send(received_message.clone());
 
         // Verify message received by client
-        let response = timeout(Duration::from_secs(5), client_ws.next()).await.expect("Client did not receive message in time").unwrap().unwrap();
+        let response = timeout(Duration::from_secs(5), client_ws.next())
+            .await
+            .expect("Client did not receive message in time")
+            .unwrap()
+            .unwrap();
         match response {
             tungstenite::Message::Text(text) => assert_eq!(text, client_message),
             other => panic!("Expected text message back, got {:?}", other),
@@ -448,7 +466,12 @@ mod tests {
         // Test Responder::close
         responder.close();
         // The client should receive a close frame and then the connection should be dropped
-        let client_close_frame = timeout(Duration::from_secs(5), client_ws.next()).await.expect("Client did not receive close frame in time").unwrap().unwrap().is_close();
+        let client_close_frame = timeout(Duration::from_secs(5), client_ws.next())
+            .await
+            .expect("Client did not receive close frame in time")
+            .unwrap()
+            .unwrap()
+            .is_close();
         assert!(client_close_frame);
 
         // Signal the server to shut down and wait for its thread to finish
@@ -464,7 +487,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client1 = connect_websocket_client(port).await;
@@ -488,7 +513,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client = connect_websocket_client(port).await;
@@ -507,7 +534,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client_ws = connect_websocket_client(port).await;
@@ -522,5 +551,3 @@ mod tests {
         server_handle.join().expect("Server thread panicked");
     }
 }
-
-
