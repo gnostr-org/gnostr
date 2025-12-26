@@ -40,7 +40,6 @@ pub struct DetailsComponent {
 type WrappedCommitMessage<'a> = (Vec<Cow<'a, str>>, Vec<Cow<'a, str>>);
 
 impl DetailsComponent {
-
     pub fn new(env: &Environment, focused: bool) -> Self {
         Self {
             repo: env.repo.clone(),
