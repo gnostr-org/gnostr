@@ -1,16 +1,17 @@
 use clap::{Parser, Subcommand};
 use gnostr::queue::InternalEvent;
-use gnostr::types::{
-    EventKind, KeySigner, NostrClient, PreEventV3, PrivateKey, Signer, UncheckedUrl, Unixtime, EventV3, PublicKey, Nip05, TagV3, ContentEncryptionAlgorithm, Id, Rumor
-};
-use gnostr::types::Signature;
-use std::str::FromStr;
-use gnostr::types::nip2::{self, Contact};
-use gnostr::types::nip9;
 use gnostr::types::nip18;
+use gnostr::types::nip2::{self, Contact};
 use gnostr::types::nip26;
 use gnostr::types::nip59;
+use gnostr::types::nip9;
+use gnostr::types::Signature;
+use gnostr::types::{
+    ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05, NostrClient, PreEventV3,
+    PrivateKey, PublicKey, Rumor, Signer, TagV3, UncheckedUrl, Unixtime,
+};
 use secp256k1::XOnlyPublicKey;
+use std::str::FromStr;
 use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
@@ -167,10 +168,9 @@ async fn main() -> anyhow::Result<()> {
     match args.command {
         SubCommand::Publish { content, subject } => {
             println!("Publishing: {}", content);
-            let signer =
-                KeySigner::from_private_key(PrivateKey::generate(), "", 1).unwrap();
+            let signer = KeySigner::from_private_key(PrivateKey::generate(), "", 1).unwrap();
             let pubkey = signer.public_key();
-            
+
             let mut tags = vec![];
             if let Some(s) = subject {
                 tags.push(TagV3(vec!["subject".to_string(), s]));
@@ -227,14 +227,10 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         SubCommand::SendDm { recipient, content } => {
-            let signer =
-                KeySigner::from_private_key(PrivateKey::generate(), "", 1).unwrap();
+            let signer = KeySigner::from_private_key(PrivateKey::generate(), "", 1).unwrap();
             let recipient_pk = PublicKey::try_from_hex_string(&recipient, true)?;
-            let encrypted_content = signer.encrypt(
-                &recipient_pk,
-                &content,
-                ContentEncryptionAlgorithm::Nip04,
-            )?;
+            let encrypted_content =
+                signer.encrypt(&recipient_pk, &content, ContentEncryptionAlgorithm::Nip04)?;
             let pubkey = signer.public_key();
             let preevent = PreEventV3 {
                 pubkey,
@@ -278,11 +274,16 @@ async fn main() -> anyhow::Result<()> {
             );
             client.send_event(event).await?;
         }
-        SubCommand::AddContact { private_key, pubkey, relay_url, petname } => {
+        SubCommand::AddContact {
+            private_key,
+            pubkey,
+            relay_url,
+            petname,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             let public_key = pk.public_key();
             let secret_key = pk.as_secret_key();
-            
+
             // TODO: Fetch current contact list
             let mut contacts: Vec<Contact> = vec![];
 
@@ -293,14 +294,14 @@ async fn main() -> anyhow::Result<()> {
                 petname,
             });
 
-            let event = nip2::set_contact_list(
-                contacts,
-                &public_key.as_xonly_public_key(),
-                &secret_key,
-            );
+            let event =
+                nip2::set_contact_list(contacts, &public_key.as_xonly_public_key(), &secret_key);
             client.send_event(event).await?;
         }
-        SubCommand::RemoveContact { private_key, pubkey } => {
+        SubCommand::RemoveContact {
+            private_key,
+            pubkey,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             let public_key = pk.public_key();
             let secret_key = pk.as_secret_key();
@@ -311,11 +312,8 @@ async fn main() -> anyhow::Result<()> {
             let remove_pk = XOnlyPublicKey::from_str(&pubkey)?;
             contacts.retain(|c| c.public_key != remove_pk);
 
-            let event = nip2::set_contact_list(
-                contacts,
-                &public_key.as_xonly_public_key(),
-                &secret_key,
-            );
+            let event =
+                nip2::set_contact_list(contacts, &public_key.as_xonly_public_key(), &secret_key);
             client.send_event(event).await?;
         }
         SubCommand::GetContacts { private_key } => {
@@ -325,7 +323,13 @@ async fn main() -> anyhow::Result<()> {
             println!("Getting contacts for {}", pubkey.as_hex_string());
             client.subscribe_to_contact_lists(pubkey).await;
         }
-        SubCommand::MarketProduct { private_key, name, description, price, currency } => {
+        SubCommand::MarketProduct {
+            private_key,
+            name,
+            description,
+            price,
+            currency,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
             let pubkey = signer.public_key();
@@ -335,7 +339,8 @@ async fn main() -> anyhow::Result<()> {
                 "description": description,
                 "price": price,
                 "currency": currency,
-            }).to_string();
+            })
+            .to_string();
 
             let preevent = PreEventV3 {
                 pubkey,
@@ -357,7 +362,11 @@ async fn main() -> anyhow::Result<()> {
             };
             client.send_event(event).await?;
         }
-        SubCommand::MarketStall { private_key, name, description } => {
+        SubCommand::MarketStall {
+            private_key,
+            name,
+            description,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
             let pubkey = signer.public_key();
@@ -365,7 +374,8 @@ async fn main() -> anyhow::Result<()> {
             let content = serde_json::json!({
                 "name": name,
                 "description": description,
-            }).to_string();
+            })
+            .to_string();
 
             let preevent = PreEventV3 {
                 pubkey,
@@ -390,7 +400,13 @@ async fn main() -> anyhow::Result<()> {
         SubCommand::MarketSubscribe => {
             client.subscribe_to_marketplace().await;
         }
-        SubCommand::Delegate { private_key, delegatee, event_kind, until, since } => {
+        SubCommand::Delegate {
+            private_key,
+            delegatee,
+            event_kind,
+            until,
+            since,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             let signer = KeySigner::from_private_key(pk.clone(), "", 1).unwrap();
             let public_key = signer.public_key();
@@ -442,21 +458,17 @@ async fn main() -> anyhow::Result<()> {
                 content,
             };
 
-            let seal_event = nip59::create_seal(
-                rumor,
-                &sender_private_key,
-                &recipient_pk,
-            )?;
+            let seal_event = nip59::create_seal(rumor, &sender_private_key, &recipient_pk)?;
 
-            let gift_wrap_event = nip59::create_gift_wrap(
-                seal_event,
-                &sender_private_key,
-                &recipient_pk,
-            )?;
+            let gift_wrap_event =
+                nip59::create_gift_wrap(seal_event, &sender_private_key, &recipient_pk)?;
 
             client.send_event(gift_wrap_event).await?;
         }
-        SubCommand::RepostTextNote { private_key, event_id } => {
+        SubCommand::RepostTextNote {
+            private_key,
+            event_id,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             // TODO: Fetch the event to be reposted. For now, create a dummy event.
             println!("Reposting text note {}", event_id);
@@ -469,10 +481,17 @@ async fn main() -> anyhow::Result<()> {
                 content: "".to_string(),
                 tags: vec![],
             };
-            let repost_event = nip18::create_repost_text_note(&dummy_event, &pk.public_key().as_xonly_public_key(), &pk.as_secret_key())?;
+            let repost_event = nip18::create_repost_text_note(
+                &dummy_event,
+                &pk.public_key().as_xonly_public_key(),
+                &pk.as_secret_key(),
+            )?;
             client.send_event(repost_event).await?;
         }
-        SubCommand::RepostGeneric { private_key, event_id } => {
+        SubCommand::RepostGeneric {
+            private_key,
+            event_id,
+        } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
             // TODO: Fetch the event to be reposted. For now, create a dummy event.
             println!("Reposting generic event {}", event_id);
@@ -485,7 +504,11 @@ async fn main() -> anyhow::Result<()> {
                 content: "".to_string(),
                 tags: vec![],
             };
-            let repost_event = nip18::create_generic_repost(&dummy_event, &pk.public_key().as_xonly_public_key(), &pk.as_secret_key())?;
+            let repost_event = nip18::create_generic_repost(
+                &dummy_event,
+                &pk.public_key().as_xonly_public_key(),
+                &pk.as_secret_key(),
+            )?;
             client.send_event(repost_event).await?;
         }
     }
@@ -508,7 +531,10 @@ async fn main() -> anyhow::Result<()> {
                             let pubkey = v.first().unwrap_or(&"");
                             let relay = v.get(1).unwrap_or(&"");
                             let petname = v.get(2).unwrap_or(&"");
-                            println!("  pubkey: {}, relay: {}, petname: {}", pubkey, relay, petname);
+                            println!(
+                                "  pubkey: {}, relay: {}, petname: {}",
+                                pubkey, relay, petname
+                            );
                         }
                     }
                 } else if event.kind == EventKind::GiftWrap {
@@ -521,12 +547,15 @@ async fn main() -> anyhow::Result<()> {
                         let rumor_json = signer.decrypt(&seal_event.pubkey, &seal_event.content)?;
                         let rumor: Rumor = serde_json::from_str(&rumor_json)?;
 
-                        println!("NIP-17 DM from {}: {}", seal_event.pubkey.as_hex_string(), rumor.content);
+                        println!(
+                            "NIP-17 DM from {}: {}",
+                            seal_event.pubkey.as_hex_string(),
+                            rumor.content
+                        );
                     }
                 } else if event.kind == EventKind::MarketplaceUi {
                     println!("Marketplace event: {:?}", event);
-                }
-                else {
+                } else {
                     println!("Received event: {:?}", event);
                 }
             }
