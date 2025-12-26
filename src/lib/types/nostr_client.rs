@@ -151,6 +151,8 @@ impl NostrClient {
               .add_event_kind(EventKind::GiftWrap);
         filter.since = Some(Unixtime::now());
 
+        let subscription_id = SubscriptionId(format!("dms:{}", public_key.as_hex_string()));
+
         let client_message = ClientMessage::Req(subscription_id, vec![filter.clone()]);
         let json = serde_json::to_string(&client_message).unwrap();
         let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
