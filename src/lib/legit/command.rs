@@ -551,11 +551,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
         //send git gnostr event
         let output = client.send_event(git_gnostr_event.clone()).await.expect("");
-
-        println!("Event ID: {}", output.id.as_hex_string());
-        println!("Event ID BECH32: {}", output.id.as_bech32_string());
-        println!("Sent to: {:?}", output.success);
-        println!("Not sent to: {:?}", output.failed);
+        println!("Git gnostr event sent successfully.");
     });
 
     Ok(())
