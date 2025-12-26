@@ -1,11 +1,11 @@
 use crate::blockheight;
 use crate::weeble;
 use crate::wobble;
-use std::io;
-use std::process::Command;
 use clap::{Parser, Subcommand, ValueEnum};
-use std::path::PathBuf;
 use std::fs;
+use std::io;
+use std::path::PathBuf;
+use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser, Debug)]
@@ -87,18 +87,14 @@ pub fn linux(command: Commands) {
                 eprintln!("'scrot' does not have a dedicated full screen command. Use 'scrot <filename>' or 'scrot -s' to select the whole screen.");
             }
         }
-        Commands::Area { tool, filename } => {
-            match tool {
-                Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-a"]),
-                Tool::Scrot => execute_and_handle_linux("scrot", &["-s", &filename]),
-            }
-        }
-        Commands::Window { tool, .. } => {
-             match tool {
-                Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-w"]),
-                Tool::Scrot => execute_and_handle_linux("scrot", &["-s"]),
-            }
-        }
+        Commands::Area { tool, filename } => match tool {
+            Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-a"]),
+            Tool::Scrot => execute_and_handle_linux("scrot", &["-s", &filename]),
+        },
+        Commands::Window { tool, .. } => match tool {
+            Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-w"]),
+            Tool::Scrot => execute_and_handle_linux("scrot", &["-s"]),
+        },
         Commands::Clipboard { .. } => {
             eprintln!("Clipboard capture is not implemented for Linux in this tool. You can pipe the output of scrot to xclip for example: `scrot -s -o /dev/stdout | xclip -selection clipboard -t image/png`");
         }
@@ -146,7 +142,6 @@ fn execute_and_handle_macos(program: &str, args: &[&str]) {
     }
 }
 
-
 pub fn take_screenshot(output_path: &str) -> io::Result<()> {
     if cfg!(target_os = "macos") {
         macos_simple(output_path)
@@ -192,13 +187,11 @@ pub fn execute_linux_command(program: &str, args: &[&str]) -> io::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(
-            format!(
-                "Command failed: {} {}",
-                program,
-                String::from_utf8_lossy(&output.stderr)
-            ),
-        ))
+        Err(io::Error::other(format!(
+            "Command failed: {} {}",
+            program,
+            String::from_utf8_lossy(&output.stderr)
+        )))
     }
 }
 
@@ -207,13 +200,11 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(
-            format!(
-                "Command failed: {} {}",
-                program,
-                String::from_utf8_lossy(&output.stderr)
-            ),
-        ))
+        Err(io::Error::other(format!(
+            "Command failed: {} {}",
+            program,
+            String::from_utf8_lossy(&output.stderr)
+        )))
     }
 }
 
@@ -299,12 +290,11 @@ mod tests {
     #[ignore]
     fn test_make_screenshot_cross_platform() {
         // This test now verifies that our new screenshot utility works correctly.
-        let screenshot_path =
-            make_screenshot_cross_platform("self_test").expect("Failed to capture screenshot during self-test");
+        let screenshot_path = make_screenshot_cross_platform("self_test")
+            .expect("Failed to capture screenshot during self-test");
 
         // --- Verify ---
-        let metadata =
-            fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
         assert!(metadata.is_file(), "Screenshot is not a file");
         assert!(metadata.len() > 0, "Screenshot file is empty");
 
