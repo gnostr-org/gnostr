@@ -125,8 +125,8 @@ pub struct DiffComponent {
 }
 
 impl DiffComponent {
-		/// new
-        pub fn new(env: &Environment, is_immutable: bool) -> Self {
+    /// new
+    pub fn new(env: &Environment, is_immutable: bool) -> Self {
         Self {
             focused: false,
             queue: env.queue.clone(),
@@ -146,15 +146,15 @@ impl DiffComponent {
             options: env.options.clone(),
         }
     }
-                fn can_scroll(&self) -> bool {
+    fn can_scroll(&self) -> bool {
         self.diff.as_ref().is_some_and(|diff| diff.lines > 1)
     }
-				/// current
-        pub fn current(&self) -> (String, bool) {
+    /// current
+    pub fn current(&self) -> (String, bool) {
         (self.current.path.clone(), self.current.is_stage)
     }
-		/// clear
-        pub fn clear(&mut self, pending: bool) {
+    /// clear
+    pub fn clear(&mut self, pending: bool) {
         self.current = Current::default();
         self.diff = None;
         self.longest_line = 0;
@@ -164,8 +164,8 @@ impl DiffComponent {
         self.selected_hunk = None;
         self.pending = pending;
     }
-		/// update
-        pub fn update(&mut self, path: String, is_stage: bool, diff: FileDiff) {
+    /// update
+    pub fn update(&mut self, path: String, is_stage: bool, diff: FileDiff) {
         self.pending = false;
 
         //hash
