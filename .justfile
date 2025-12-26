@@ -151,3 +151,9 @@ gh-act-run-all:
 gnostr-bot-matrix:
   @make gnostr-bot-matrix
 
+gnostr-bot-macos:
+  @make gnostr-bot-macos
+
+gnostr-bot-macos-intel:
+  @make gnostr-bot-macos-intel
+
