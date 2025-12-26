@@ -369,7 +369,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
     custom_tags.insert(
-        padded_keys.clone().public_key().to_string(),
+        padded_keys.clone().public_key().as_hex_string(),
         vec!["GNOSTR".to_string()],
     );
 
