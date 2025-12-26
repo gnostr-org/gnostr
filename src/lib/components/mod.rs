@@ -1,6 +1,4 @@
-#![warn(
-    missing_docs,
-)]
+#![warn(missing_docs)]
 
 mod changes;
 mod chat_details;
@@ -131,44 +129,44 @@ pub fn command_pump(out: &mut Vec<CommandInfo>, force_all: bool, components: &[&
 /// ScrollType
 #[derive(Copy, Clone)]
 pub enum ScrollType {
-	/// Up
+    /// Up
     Up,
-	/// Down
+    /// Down
     Down,
-	/// Home
+    /// Home
     Home,
-	/// End
+    /// End
     End,
-	/// PageUp
+    /// PageUp
     PageUp,
-	/// PageDown
+    /// PageDown
     PageDown,
 }
 
 /// HorizontalScrollType
 #[derive(Copy, Clone)]
 pub enum HorizontalScrollType {
-	/// Left
+    /// Left
     Left,
-	/// Right
+    /// Right
     Right,
 }
 
 /// Direction
 #[derive(Copy, Clone)]
 pub enum Direction {
-	/// Up
+    /// Up
     Up,
-	/// Down
+    /// Down
     Down,
 }
 
 /// CommandBlocking
 #[derive(PartialEq, Eq)]
 pub enum CommandBlocking {
-	/// Blocking
+    /// Blocking
     Blocking,
-	/// PassingOn
+    /// PassingOn
     PassingOn,
 }
 
@@ -183,31 +181,31 @@ pub fn visibility_blocking<T: Component>(comp: &T) -> CommandBlocking {
 
 /// DrawableComponent
 pub trait DrawableComponent {
-	/// draw
-        fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()>;
+    /// draw
+    fn draw(&self, f: &mut Frame, rect: Rect) -> Result<()>;
 }
 
 /// EventState
 #[derive(PartialEq, Eq)]
 pub enum EventState {
-	/// Consumed
+    /// Consumed
     Consumed,
-	/// notConsumed
+    /// notConsumed
     NotConsumed,
 }
 
 /// FuzzyFinderTarget
 #[derive(Copy, Clone, Debug)]
 pub enum FuzzyFinderTarget {
-	/// Branches
+    /// Branches
     Branches,
-	/// Files
+    /// Files
     Files,
     //Home,
 }
 
 impl EventState {
-	/// is_consumed
+    /// is_consumed
     pub fn is_consumed(&self) -> bool {
         *self == Self::Consumed
     }
@@ -225,31 +223,31 @@ impl From<bool> for EventState {
 
 /// base component trait
 pub trait Component {
-	/// command
-        fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking;
+    /// command
+    fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking;
 
-	/// event
-        fn event(&mut self, ev: &Event) -> Result<EventState>;
+    /// event
+    fn event(&mut self, ev: &Event) -> Result<EventState>;
 
-		/// focused
-        fn focused(&self) -> bool {
+    /// focused
+    fn focused(&self) -> bool {
         false
     }
     /// focus/unfocus this component depending on param
     fn focus(&mut self, _focus: bool) {}
-	/// is_visible
-        fn is_visible(&self) -> bool {
+    /// is_visible
+    fn is_visible(&self) -> bool {
         true
     }
-		/// hide
-        fn hide(&mut self) {}
-		/// show
-        fn show(&mut self) -> Result<()> {
+    /// hide
+    fn hide(&mut self) {}
+    /// show
+    fn show(&mut self) -> Result<()> {
         Ok(())
     }
 
-		/// toggle_visible
-        fn toggle_visible(&mut self) -> Result<()> {
+    /// toggle_visible
+    fn toggle_visible(&mut self) -> Result<()> {
         if self.is_visible() {
             self.hide();
             Ok(())
