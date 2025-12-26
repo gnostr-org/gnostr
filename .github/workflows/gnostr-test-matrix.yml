@@ -24,7 +24,6 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest] #[macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
-        rustup: [stable, nightly]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: true
@@ -107,7 +106,7 @@ jobs:
       ##  with:
       ##    path: |
       ##      ~/.rustup
-      ##    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+      ##    key: ${{ runner.os }}-rustup-${{ matrix.toolchain }}
 
       ##- name: Restore cargo
       ##  id: cache-cargo-restore
@@ -116,17 +115,17 @@ jobs:
       ##  with:
       ##    path: |
       ##      ~/.cargo
-      ##    key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+      ##    key: ${{ runner.os }}-cargo-${{ matrix.toolchain }}
 
       ##- name: Install Rust toolchain
       ##  uses: actions-rust-lang/setup-rust-toolchain@v1
       ##  with:
-      ##    toolchain: ${{ matrix.rustup }}
+      ##    toolchain: ${{ matrix.toolchain }}
       ##    # components: rustfmt, clippy
       ##    # targets: wasm32-unknown-unknown
 
       - run: |
-          rustup default ${{ matrix.rustup }}
+          rustup default ${{ matrix.toolchain }}
 
       #- name: Restore target
       #  if: ${{ !env.ACT }}
@@ -135,7 +134,7 @@ jobs:
       #  with:
       #    path: |
       #      target
-      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      #    key: ${{ runner.os }}-target-${{ matrix.toolchain }}
 
       - uses: actions/checkout@v4
         with:
@@ -152,7 +151,7 @@ jobs:
       #- name: coverage.sh
       #  shell: bash
       #  run: |
-      #    ./coverage.sh ${{ matrix.rustup }} || true
+      #    ./coverage.sh ${{ matrix.toolchain }} || true
 
       - name: make
         shell: bash
@@ -423,7 +422,7 @@ jobs:
       #  id: jobs
       #  if: ${{ !env.ACT }}
       #  with:
-      #    job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.rustup }})" # input job.<job-id>.name and matrix here.
+      #    job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.toolchain }})" # input job.<job-id>.name and matrix here.
       #    per_page: 50 # input matrix size here if it is larger than 30
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
@@ -439,7 +438,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Failed!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
@@ -474,7 +473,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Cancelled!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
@@ -509,7 +508,7 @@ jobs:
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
+            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Success!" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
