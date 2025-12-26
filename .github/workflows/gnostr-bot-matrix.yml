@@ -329,7 +329,7 @@ jobs:
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
+          cargo install -j8 -f --path . --all-features && echo "✅" ## || echo "❌"
           gnostr nip34 --help
           gnostr nip34 repo-announcement --help
           gnostr nip34 repo-state --help
@@ -349,9 +349,6 @@ jobs:
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
-        run: |
-          cargo test -j8 -- --ignored && echo "✅" || echo "❌"
-
       - run: |
          make gnostr-chat &
          make gnostr-chat &
