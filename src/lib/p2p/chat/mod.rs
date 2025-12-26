@@ -2,34 +2,30 @@ use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
 
-use crate::queue::InternalEvent;
 use self::msg::{Msg, MsgKind};
-use crate::types::{EventV3, Id, Signer, UncheckedUrl, Error};
+use crate::queue::InternalEvent;
 use crate::types::nip28::CREATE_CHANNEL_MESSAGE;
+use crate::types::{Error, EventV3, Id, Signer, UncheckedUrl};
 use gnostr_asyncgit::sync::RepoPath;
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 
-use std::{error::Error as StdError, time::Duration};
 use std::path::PathBuf;
+use std::{error::Error as StdError, time::Duration};
 //use async_std::path::PathBuf;
 
 use tokio::{io, io::AsyncBufReadExt};
-use tracing_subscriber::util::SubscriberInitExt;
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-
 
 pub mod msg;
 pub use msg::*;
 pub mod p2p;
 pub use p2p::evt_loop;
-pub mod ui;
 pub mod tests;
-
-
+pub mod ui;
 
 /// Simple CLI application to interact with nostr
 #[derive(Debug, Parser)]
@@ -99,21 +95,21 @@ pub struct ChatCli {
 pub struct ChatSubCommands {
     //#[command(subcommand)]
     //command: ChatCommands,
-// nsec or hex private key
+    // nsec or hex private key
     #[arg(short, long, global = true)]
     pub nsec: Option<String>,
-// password to decrypt nsec
+    // password to decrypt nsec
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     #[arg(long, global = true)]
     pub name: Option<String>,
-// chat topic
+    // chat topic
     #[arg(long, global = true)]
     pub topic: Option<String>,
-// chat hash
+    // chat hash
     #[arg(long, global = true)]
     pub hash: Option<String>,
-// disable spinner animations
+    // disable spinner animations
     #[arg(long, default_value_t = false)]
     pub disable_cli_spinners: bool,
     #[arg(long)]
@@ -202,7 +198,11 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         tokio::time::sleep(Duration::from_secs(3)).await;
 
         let msg = Msg::default().set_content(message, 0);
-        if input_tx.send(InternalEvent::ChatMessage(msg)).await.is_err() {
+        if input_tx
+            .send(InternalEvent::ChatMessage(msg))
+            .await
+            .is_err()
+        {
             eprintln!("Failed to send message to event loop.");
         } else {
             println!("Message sent. Waiting for propagation...");
@@ -216,13 +216,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     }
 
     tokio::task::spawn_blocking(move || {
-
         let search_path: PathBuf = match &args.gitdir {
-            Some(repo_path) => {
-                match repo_path {
-                    RepoPath::Path(p) => p.clone(), 
-                    _ => panic!("Unsupported RepoPath variant"), 
-                }
+            Some(repo_path) => match repo_path {
+                RepoPath::Path(p) => p.clone(),
+                _ => panic!("Unsupported RepoPath variant"),
             },
             // If no gitdir arg was provided, default to current directory "."
             None => PathBuf::from("."), //TODO $HOME/.gnostr
@@ -239,13 +236,13 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
         // TODO use padded_commit_id to generate nostr public_key
         // TODO use gnostr::types to create nip0 metadata for the specific padded_commit_id
-		// TODO metadata uses 
-		//
-		// p 
-		// -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4"
-		// b 
+        // TODO metadata uses
+        //
+        // p
+        // -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4"
+        // b
         // -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png"
-		//
+        //
         if args.nsec.is_none() {
             args.nsec = Some(padded_commit_id);
             tracing::info!("Using args.nsec  as default private key {:#?}.", args.nsec);
@@ -290,17 +287,22 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         global_rt().spawn(async move {
             tokio::time::sleep(Duration::from_millis(1000)).await;
             input_tx_clone
-                .send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Join)))
+                .send(InternalEvent::ChatMessage(
+                    Msg::default().set_kind(MsgKind::Join),
+                ))
                 .await
                 .unwrap();
         });
 
         app.run().map_err(|e| anyhow!(e.to_string()))?;
 
-        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
+        let _ = input_tx.send(InternalEvent::ChatMessage(
+            Msg::default().set_kind(MsgKind::Leave),
+        ));
         std::thread::sleep(Duration::from_millis(500));
         Ok(())
-    }).await?
+    })
+    .await?
 }
 
 pub async fn input_loop(

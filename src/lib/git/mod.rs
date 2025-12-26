@@ -646,7 +646,10 @@ impl RepoActions for Repo {
                 .context("cannot get starting commit from specified value")?
                 .id();
             revwalk.push(commit_oid)?;
-            Ok(revwalk.take(1).map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?)
+            Ok(revwalk
+                .take(1)
+                .map(|o| Ok(oid_to_sha1(&o?)))
+                .collect::<Result<Vec<Sha1Hash>>>()?)
         } else if revspec.mode().contains(git2::RevparseMode::RANGE) {
             let from_oid = revspec
                 .from()
@@ -661,7 +664,9 @@ impl RepoActions for Repo {
             revwalk.hide(from_oid)?;
 
             // Collect commits (already in reverse chronological order by default)
-            let commits: Vec<Sha1Hash> = revwalk.map(|o| Ok(oid_to_sha1(&o?))).collect::<Result<Vec<Sha1Hash>>>()?;
+            let commits: Vec<Sha1Hash> = revwalk
+                .map(|o| Ok(oid_to_sha1(&o?)))
+                .collect::<Result<Vec<Sha1Hash>>>()?;
             Ok(commits)
         } else {
             bail!("specified value not in a supported format")
@@ -831,9 +836,9 @@ fn extract_sig_from_patch_tags<'a>(
 #[cfg(test)]
 mod tests {
 
-    use std::fs;
     use super::*;
     use crate::test_utils::{generate_repo_ref_event, git::GitTestRepo};
+    use std::fs;
 
     mod git_config_item_local {
         use super::*;
@@ -1237,8 +1242,9 @@ libgit2 1.9.1
             let git_repo = Repo::from_path(&test_repo.dir)?;
             let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
-            let generated_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?;
-            
+            let generated_patch =
+                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?;
+
             let first_line_parent_oid = generated_patch
                 .lines()
                 .next()
@@ -1264,7 +1270,8 @@ libgit2 1.9.1
 
             assert_eq!(
                 generated_patch,
-                format!("\
+                format!(
+                    "\
 From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
 {from_line}
 {date_line}
@@ -1286,7 +1293,8 @@ index 0000000..a66525d
 --
 libgit2 1.9.1
 
-")
+"
+                )
             );
             Ok(())
         }
@@ -2202,7 +2210,7 @@ libgit2 1.9.1
                 test_repo.populate_with_test_branch()?;
 
                 let head_commit = git_repo.get_head_commit()?;
-                
+
                 // When on a branch ahead of main, HEAD~1 should return the parent of the current HEAD
                 let expected_commit = git_repo.get_commit_parent(&head_commit)?;
 
@@ -2242,10 +2250,7 @@ libgit2 1.9.1
                     .map(|o| Ok(oid_to_sha1(&o?)))
                     .collect::<Result<Vec<Sha1Hash>>>()?;
 
-                assert_eq!(
-                    actual_commits,
-                    expected_commits,
-                );
+                assert_eq!(actual_commits, expected_commits,);
                 Ok(())
             }
         }
@@ -2279,10 +2284,7 @@ libgit2 1.9.1
                     .map(|o| Ok(oid_to_sha1(&o?)))
                     .collect::<Result<Vec<Sha1Hash>>>()?;
 
-                assert_eq!(
-                    actual_commits,
-                    expected_commits,
-                );
+                assert_eq!(actual_commits, expected_commits,);
                 Ok(())
             }
         }
@@ -2302,7 +2304,9 @@ libgit2 1.9.1
                 let main_head_commit = git_repo.get_tip_of_branch("main")?;
 
                 assert_eq!(
-                    git_repo.parse_starting_commits(&format!("{main_head_commit}..{feature_head_commit}"))?,
+                    git_repo.parse_starting_commits(&format!(
+                        "{main_head_commit}..{feature_head_commit}"
+                    ))?,
                     vec![
                         feature_head_commit,
                         feature_parent1_commit,

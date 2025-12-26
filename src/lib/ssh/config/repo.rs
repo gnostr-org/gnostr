@@ -32,12 +32,7 @@ pub async fn load_repo_config(repo_path: &Path) -> anyhow::Result<RepoConfig> {
         Ok(toml::from_str(&text)?)
     } else {
         Ok(RepoConfig {
-            name: repo_path
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string(),
+            name: repo_path.file_name().unwrap().to_str().unwrap().to_string(),
             public: false,
             members: vec![],
             failed_push_message: None,
@@ -48,8 +43,10 @@ pub async fn load_repo_config(repo_path: &Path) -> anyhow::Result<RepoConfig> {
 }
 
 pub async fn load_repo_config_from_path(config_path: PathBuf) -> anyhow::Result<RepoConfig> {
-    let text = read_to_string(&config_path)
-        .context(format!("Couldn't read repo config from {}", config_path.display()))?;
+    let text = read_to_string(&config_path).context(format!(
+        "Couldn't read repo config from {}",
+        config_path.display()
+    ))?;
     Ok(toml::from_str(&text)?)
 }
 

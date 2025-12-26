@@ -32,7 +32,7 @@ pub struct ExternalChatPopup {
 }
 
 impl ExternalChatPopup {
-        pub fn new(env: &Environment) -> Self {
+    pub fn new(env: &Environment) -> Self {
         Self {
             visible: false,
             theme: env.theme.clone(),

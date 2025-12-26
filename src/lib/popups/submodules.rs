@@ -212,14 +212,14 @@ impl SubmodulesListPopup {
         }
     }
 
-        pub fn open(&mut self) -> Result<()> {
+    pub fn open(&mut self) -> Result<()> {
         self.show()?;
         self.update_submodules()?;
 
         Ok(())
     }
 
-        pub fn update_submodules(&mut self) -> Result<()> {
+    pub fn update_submodules(&mut self) -> Result<()> {
         if self.is_visible() {
             self.submodules = get_submodules(&self.repo.borrow())?;
 

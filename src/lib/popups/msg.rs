@@ -62,9 +62,9 @@ impl DrawableComponent for MsgPopup {
         let msg_lines: Vec<String> = wrapped_msg.lines().map(String::from).collect();
         let line_num = msg_lines.len();
 
-                    let height = POPUP_HEIGHT
-                        .saturating_sub(BORDER_WIDTH)
-                        .min(f.area().height.saturating_sub(BORDER_WIDTH));
+        let height = POPUP_HEIGHT
+            .saturating_sub(BORDER_WIDTH)
+            .min(f.area().height.saturating_sub(BORDER_WIDTH));
         let top = self.scroll.update_no_selection(line_num, height.into());
 
         let scrolled_lines = msg_lines
@@ -169,11 +169,9 @@ impl MsgPopup {
         self.show()
     }
 
-
     pub fn show_error(&mut self, msg: &str) -> Result<()> {
         self.set_new_msg(msg, strings::msg_title_error(&self.key_config))
     }
-
 
     pub fn show_info(&mut self, msg: &str) -> Result<()> {
         self.set_new_msg(msg, strings::msg_title_info(&self.key_config))

@@ -157,7 +157,7 @@ impl HelpPopup {
             key_config: env.key_config.clone(),
         }
     }
-        pub fn set_cmds(&mut self, cmds: Vec<CommandInfo>) {
+    pub fn set_cmds(&mut self, cmds: Vec<CommandInfo>) {
         self.cmds = cmds
             .into_iter()
             .filter(|e| !e.text.hide_help)

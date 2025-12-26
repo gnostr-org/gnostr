@@ -22,11 +22,11 @@ use crate::{
 /// InputType
 #[derive(PartialEq, Eq)]
 pub enum InputType {
-	/// Singleline
+    /// Singleline
     Singleline,
-	/// Multiline
+    /// Multiline
     Multiline,
-	/// Password
+    /// Password
     Password,
 }
 
@@ -57,8 +57,7 @@ pub struct TextInputComponent {
 }
 
 impl TextInputComponent {
-
-	/// new
+    /// new
     pub fn new(env: &Environment, title: &str, default_msg: &str, show_char_count: bool) -> Self {
         Self {
             msg: OnceCell::default(),
@@ -76,13 +75,13 @@ impl TextInputComponent {
         }
     }
 
-	/// with_input_type
+    /// with_input_type
     pub const fn with_input_type(mut self, input_type: InputType) -> Self {
         self.input_type = input_type;
         self
     }
 
-	/// set_input_type
+    /// set_input_type
     pub fn set_input_type(&mut self, input_type: InputType) {
         self.clear();
         self.input_type = input_type;
@@ -125,8 +124,7 @@ impl TextInputComponent {
         self.embed = true;
     }
 
-
-	/// enabled
+    /// enabled
     pub fn enabled(&mut self, enable: bool) {
         self.selected = Some(enable);
     }
@@ -182,8 +180,7 @@ impl TextInputComponent {
         self.title = t;
     }
 
-
-	/// set_default_msg
+    /// set_default_msg
     pub fn set_default_msg(&mut self, v: String) {
         self.default_msg = v;
         if self.is_visible() {
