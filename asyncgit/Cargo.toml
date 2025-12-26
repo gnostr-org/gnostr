@@ -20,7 +20,7 @@ name = "gnostr_asyncgit"
 path = "src/lib.rs"
 
 [features]
-default = ["trace-libgit"]
+default = ["trace-libgit", "openssl-sys"]
 trace-libgit = []
 vendor-openssl = ["openssl-sys"]
 
