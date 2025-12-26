@@ -226,7 +226,7 @@ impl NostrClient {
 
         let filter = {
             let mut f = Filter::new();
-            f.add_event_kind(EventKind::MarketplaceUi);
+            let _ = f.add_event_kind(EventKind::MarketplaceUi);
             f.since = Some(Unixtime::now());
             f
         };
