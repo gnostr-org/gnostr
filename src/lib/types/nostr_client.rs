@@ -130,9 +130,7 @@ impl NostrClient {
         } else {
             filter.add_event_kind(EventKind::TextNote);
         }
-        filter.since = Some(Unixtime::now());
-
-        let client_message = ClientMessage::Req(subscription_id, vec![filter]);
+        let client_message = ClientMessage::Req(subscription_id, vec![filter.clone()]);
         let json = serde_json::to_string(&client_message).unwrap();
         let websocket_message = tokio_tungstenite::tungstenite::Message::Text(json.into());
 
