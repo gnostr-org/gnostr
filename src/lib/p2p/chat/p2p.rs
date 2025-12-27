@@ -151,6 +151,8 @@ pub async fn evt_loop(
     recv: tokio::sync::mpsc::Sender<crate::queue::InternalEvent>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
+    let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
+
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
         .with_tcp(
@@ -281,13 +283,20 @@ pub async fn evt_loop(
                         "Got message: '{}' with id: {id} from peer: {peer_id}",
                         String::from_utf8_lossy(&message.data),
                     );
-                    match serde_json::from_slice::<crate::p2p::chat::msg::Msg>(&message.data) {
+                    match serde_json::from_slice::<Msg>(&message.data) {
                         Ok(msg) => {
-                            recv.send(crate::queue::InternalEvent::ChatMessage(msg)).await?;
+                            if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
+                                if let Some(reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
+                                }
+                            } else {
+                                // It's a single-part message, send directly
+                                recv.send(crate::queue::InternalEvent::ChatMessage(msg)).await?;
+                            }
                         },
                         Err(e) => {
-                            warn!("Error deserializing message: {e:?}");
-                            let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                            debug!("Error deserializing message: {e:?}");
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(MsgKind::System);
                             recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
                         }
                     }
