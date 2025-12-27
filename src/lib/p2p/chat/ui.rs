@@ -25,6 +25,7 @@ use std::{
     time::Duration,
 };
 use textwrap::{fill, Options};
+use uuid::Uuid;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
@@ -156,11 +157,20 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let input_text = app.input.value().to_owned();
-                            let wrapped_lines = fill(&input_text, 80); // Split into lines of 80 characters
+                            let wrapped_lines: Vec<String> = fill(&input_text, 80)
+                                .split('\n')
+                                .map(|s| s.to_string())
+                                .collect();
+                            let total_chunks = wrapped_lines.len();
+                            let message_id = Uuid::new_v4().to_string();
 
-                            for line in wrapped_lines.split('\n') {
+                            for (sequence_num, line) in wrapped_lines.into_iter().enumerate() {
                                 if !line.trim().is_empty() {
-                                    let m = msg::Msg::default().set_content(line.to_string(), 0);
+                                    let m = msg::Msg::default()
+                                        .set_content(line, 0)
+                                        .set_message_id(message_id.clone())
+                                        .set_sequence_num(sequence_num)
+                                        .set_total_chunks(total_chunks);
                                     app.add_message(m.clone());
                                     if let Some(ref mut hook) = app._on_input_enter {
                                         hook(m);
