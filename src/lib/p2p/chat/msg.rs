@@ -4,6 +4,7 @@ use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use textwrap::{Options, wrap}; // Add this line
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")
@@ -137,23 +138,27 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {
-                if m.from == *USER_NAME {
-                    Line::default().left_aligned().spans(vec![
-                        Span::styled(
-                            format!("{}{} ", &m.from, ">"),
-                            Style::default().fg(gen_color_by_hash(&m.from)),
-                        ),
-                        m.content[0].clone().into(),
-                    ])
+                let wrapped_content = wrap(&m.content[0], Options::new(80));
+                let mut spans = Vec::new();
+
+                let (prefix, indent) = if m.from == *USER_NAME {
+                    (format!("{}{} ", &m.from, ">"), " ".repeat(m.from.len() + 2))
                 } else {
-                    Line::default().left_aligned().spans(vec![
-                        Span::styled(
-                            format!(" {}{}", &m.from, "> "),
-                            Style::default().fg(gen_color_by_hash(&m.from)),
-                        ),
-                        m.content[0].clone().into(),
-                    ])
+                    (format!(" {}{}", &m.from, "> "), " ".repeat(m.from.len() + 3))
+                };
+                
+                spans.push(Span::styled(
+                    prefix,
+                    Style::default().fg(gen_color_by_hash(&m.from)),
+                ));
+                spans.push(wrapped_content[0].clone().into());
+
+                for i in 1..wrapped_content.len() {
+                    spans.push(Span::raw("\n"));
+                    spans.push(Span::raw(indent.clone()));
+                    spans.push(wrapped_content[i].clone().into());
                 }
+                Line::default().left_aligned().spans(spans)
             }
             Raw => m.content[0].clone().into(),
             Command => Line::default().spans(vec![
