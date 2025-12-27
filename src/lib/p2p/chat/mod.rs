@@ -260,10 +260,11 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         println!("Initializing network and discovering peers...");
         tokio::time::sleep(Duration::from_secs(3)).await;
 
-        let wrapped_lines: Vec<String> = fill(&message_input, 80)
-            .split('\n')
-            .map(|s| s.to_string())
-            .collect();
+        let mut wrapped_lines: Vec<String> = Vec::new();
+        for line in message_input.lines() {
+            wrapped_lines.extend(fill(line, 80).split('\n').map(|s| s.to_string()));
+        }
+
         let total_chunks = wrapped_lines.len();
         let message_id = Uuid::new_v4().to_string();
 
