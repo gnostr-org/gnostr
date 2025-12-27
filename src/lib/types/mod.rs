@@ -72,7 +72,7 @@ pub mod nip28;
 pub use nip28::*;
 
 /// metadata
-mod metadata;
+pub mod metadata;
 pub use metadata::Metadata;
 
 /// naddr
