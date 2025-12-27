@@ -239,7 +239,7 @@ fn ui(f: &mut Frame, app: &App) {
     };
 
     for (i, c) in input_str.chars().enumerate() {
-        if i == 79 { // 0-indexed, so 79 is the 80th character
+        if (i + 1) % 80 == 0 { // Highlight every 80th character
             spans.push(ratatui::text::Span::styled(
                 c.to_string(),
                 default_input_style.fg(Color::Red),
