@@ -1,9 +1,9 @@
+use crate::types::Event;
 use git2::Oid;
 use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use crate::types::Event;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")
