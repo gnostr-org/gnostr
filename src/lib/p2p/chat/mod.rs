@@ -112,15 +112,12 @@ pub struct ChatSubCommands {
     // disable spinner animations
     #[arg(long, default_value_t = false)]
     pub disable_cli_spinners: bool,
-    #[arg(long)]
+    #[arg(long, default_value_t = false)]
     pub info: bool,
     #[arg(long)]
     pub debug: bool,
     #[arg(long)]
     pub trace: bool,
-    /// Send a single message to a topic and exit
-    #[arg(long, global = true, requires = "topic")]
-    pub oneshot: Option<String>,
     /// workdir
     pub workdir: Option<String>,
     #[arg(
@@ -131,6 +128,9 @@ pub struct ChatSubCommands {
     )]
     /// gitdir
     pub gitdir: Option<RepoPath>,
+    /// Send a single message to a topic and exit
+    #[arg(long, global = true, requires = "topic")]
+    pub oneshot: Option<String>,
 }
 
 //async tasks
