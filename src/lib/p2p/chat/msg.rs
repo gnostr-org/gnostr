@@ -40,6 +40,9 @@ pub struct Msg {
     pub kind: MsgKind,
     pub commit_id: CommitId,
     pub nostr_event: Option<Event>,
+    pub message_id: Option<String>,    // New field
+    pub sequence_num: Option<usize>,   // New field
+    pub total_chunks: Option<usize>,   // New field
 }
 
 impl Default for Msg {
@@ -50,6 +53,9 @@ impl Default for Msg {
             kind: MsgKind::Chat,
             commit_id: CommitId::new(Oid::zero()),
             nostr_event: None,
+            message_id: None,
+            sequence_num: None,
+            total_chunks: None,
         }
     }
 }
@@ -76,6 +82,25 @@ impl Msg {
         self.nostr_event = Some(event);
         self
     }
+
+    // New setter for message_id
+    pub fn set_message_id(mut self, message_id: String) -> Self {
+        self.message_id = Some(message_id);
+        self
+    }
+
+    // New setter for sequence_num
+    pub fn set_sequence_num(mut self, sequence_num: usize) -> Self {
+        self.sequence_num = Some(sequence_num);
+        self
+    }
+
+    // New setter for total_chunks
+    pub fn set_total_chunks(mut self, total_chunks: usize) -> Self {
+        self.total_chunks = Some(total_chunks);
+        self
+    }
+
 
     pub fn wrap_text(self, _text: Msg, _max_width: usize) -> Self {
         //	for line in text.content.bytes() {

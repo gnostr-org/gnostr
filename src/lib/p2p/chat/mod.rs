@@ -15,6 +15,7 @@ use serde_json; // Explicitly added for clarity
 use std::path::PathBuf;
 use std::{error::Error as StdError, time::Duration};
 use textwrap::{fill, Options};
+use uuid::Uuid;
 use crate::types::metadata::{DEFAULT_AVATAR, DEFAULT_BANNER};
 //use async_std::path::PathBuf;
 
@@ -259,11 +260,21 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         println!("Initializing network and discovering peers...");
         tokio::time::sleep(Duration::from_secs(3)).await;
 
-        let wrapped_lines = fill(&message_input, 80); // Split into lines of 80 characters
+        let wrapped_lines: Vec<String> = fill(&message_input, 80)
+            .split('\n')
+            .map(|s| s.to_string())
+            .collect();
+        let total_chunks = wrapped_lines.len();
+        let message_id = Uuid::new_v4().to_string();
 
-        for line in wrapped_lines.split('\n') {
+        for (sequence_num, line) in wrapped_lines.into_iter().enumerate() {
             if !line.trim().is_empty() {
-                let msg = Msg::default().set_content(line.to_string(), 0);
+                let msg = Msg::default()
+                    .set_content(line, 0)
+                    .set_message_id(message_id.clone())
+                    .set_sequence_num(sequence_num)
+                    .set_total_chunks(total_chunks);
+
                 if input_tx
                     .send(InternalEvent::ChatMessage(msg))
                     .await
@@ -271,7 +282,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
                 {
                     eprintln!("Failed to send message to event loop.");
                 } else {
-                    println!("Message sent. Waiting for propagation...");
+                    println!("Message chunk {}/{} sent. Waiting for propagation...", sequence_num + 1, total_chunks);
                 }
             }
         }
