@@ -216,12 +216,18 @@ fn ui(f: &mut Frame, app: &App) {
     // Messages Widget
     let height = chunks[1].height; // Use height of the messages chunk
     let msgs = app.messages.lock().unwrap();
-    let messages: Vec<ListItem> = msgs[0..app.msgs_scroll.min(msgs.len())]
-        .iter()
-        .rev()
-        .map(|m| ListItem::new(Line::from(m)))
-        .take(height as usize)
-        .collect();
+    
+    let mut messages: Vec<ListItem> = Vec::new();
+    for msg in msgs.iter().rev() {
+        let line = Line::from(msg); // This applies textwrap and adds '\n'
+        for visual_line_str in line.to_string().split('\n') {
+            if !visual_line_str.is_empty() {
+                messages.push(ListItem::new(Line::raw(visual_line_str.to_string())));
+            }
+        }
+    }
+    messages.truncate(height as usize); // Take only the visible number of lines
+
     let messages = List::new(messages)
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
