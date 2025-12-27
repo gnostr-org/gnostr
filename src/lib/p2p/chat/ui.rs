@@ -24,6 +24,7 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
+use textwrap::{fill, Options};
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
@@ -154,11 +155,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
-                            let m =
-                                msg::Msg::default().set_content(app.input.value().to_owned(), 0);
-                            app.add_message(m.clone());
-                            if let Some(ref mut hook) = app._on_input_enter {
-                                hook(m);
+                            let input_text = app.input.value().to_owned();
+                            let wrapped_lines = fill(&input_text, 80); // Split into lines of 80 characters
+
+                            for line in wrapped_lines.split('\n') {
+                                if !line.trim().is_empty() {
+                                    let m = msg::Msg::default().set_content(line.to_string(), 0);
+                                    app.add_message(m.clone());
+                                    if let Some(ref mut hook) = app._on_input_enter {
+                                        hook(m);
+                                    }
+                                }
                             }
                         }
                         app.input.reset();
