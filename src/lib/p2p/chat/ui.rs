@@ -230,11 +230,32 @@ fn ui(f: &mut Frame, app: &App) {
     // Input Widget
     let width = chunks[2].width.max(3) - 3; // Use width of the input chunk
     let scroll = app.input.visual_scroll(width as usize);
-    let input = Paragraph::new(app.input.value())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Cyan),
-        })
+
+    let input_str = app.input.value();
+    let mut spans = Vec::new();
+    let default_input_style = match app.input_mode {
+        InputMode::Normal => Style::default(),
+        InputMode::Editing => Style::default().fg(Color::Cyan),
+    };
+
+    for (i, c) in input_str.chars().enumerate() {
+        if i == 79 { // 0-indexed, so 79 is the 80th character
+            spans.push(ratatui::text::Span::styled(
+                c.to_string(),
+                default_input_style.fg(Color::Red),
+            ));
+        } else {
+            spans.push(ratatui::text::Span::styled(
+                c.to_string(),
+                default_input_style,
+            ));
+        }
+    }
+
+    let input_line = Line::from(spans);
+
+    let input = Paragraph::new(input_line)
+        .style(default_input_style)
         .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title("Input"));
     f.render_widget(input, chunks[2]);
