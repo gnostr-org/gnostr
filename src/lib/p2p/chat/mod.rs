@@ -5,13 +5,16 @@ use git2::{ObjectType, Repository};
 use self::msg::{Msg, MsgKind};
 use crate::queue::InternalEvent;
 use crate::types::nip28::CREATE_CHANNEL_MESSAGE;
-use crate::types::{Error, EventV3, Id, Signer, UncheckedUrl};
+use crate::types::{Error, EventV3, Id, Metadata, Signer, UncheckedUrl};
+use gnostr_asyncgit::sync::commit::padded_commit_id;
 use gnostr_asyncgit::sync::RepoPath;
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
+use serde_json; // Explicitly added for clarity
 
 use std::path::PathBuf;
 use std::{error::Error as StdError, time::Duration};
+use crate::types::metadata::{DEFAULT_AVATAR, DEFAULT_BANNER};
 //use async_std::path::PathBuf;
 
 use tokio::{io, io::AsyncBufReadExt};
@@ -140,7 +143,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 }
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
-    let mut args = sub_command_args.clone();
+    let args = sub_command_args.clone();
 
     if let Some(hash) = args.hash.clone() {
         debug!("hash={}", hash);
@@ -178,17 +181,75 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
     let _ = subscriber.try_init();
 
+    // Determine the KeySigner to use
+    let nsec_hex = if let Some(nsec) = args.nsec.clone() {
+        nsec
+    } else if let Some(hash) = args.hash.clone() {
+        format!("{:0>64}", hash)
+    } else {
+        //args.nsec = padded_commit_id("0".to_string())
+
+        // Fallback to generate a new key if no nsec or hash is provided.
+        // For now, use a fixed dummy private key for simplicity in testing.
+        // TODO: Implement proper key generation.
+        "0000000000000000000000000000000000000000000000000000000000000001".to_string()
+    };
+    let private_key = crate::types::PrivateKey::try_from_hex_string(&nsec_hex).unwrap();
+    let keys = crate::types::KeySigner::from_private_key(private_key, "", 1).unwrap();
+    let public_key = keys.public_key();
+
+    // Initialize NostrClient and channels
+    let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let client = crate::types::nostr_client::NostrClient::new(peer_tx.clone());
+
+    // Send NIP-01 metadata event
+    let name = args
+        .name
+        .clone()
+        .unwrap_or_else(|| public_key.as_hex_string().chars().take(8).collect());
+    let metadata = {
+        let mut m = Metadata::default();
+        m.name = Some(name);
+        m.picture = Some(DEFAULT_AVATAR.to_string());
+        m.other.insert("banner".to_string(), serde_json::Value::String(DEFAULT_BANNER.to_string()));
+        m
+    };
+
+    let pre_event = crate::types::PreEvent {
+        pubkey: public_key,
+        created_at: crate::types::Unixtime::now(),
+        kind: crate::types::EventKind::Metadata,
+        tags: vec![],
+        content: serde_json::to_string(&metadata).unwrap(),
+    };
+
+    let id = pre_event.hash().unwrap();
+    let sig = keys.sign_id(id).unwrap();
+
+    let metadata_event = EventV3 {
+        id,
+        pubkey: pre_event.pubkey,
+        created_at: pre_event.created_at,
+        kind: pre_event.kind,
+        tags: pre_event.tags,
+        content: pre_event.content,
+        sig,
+    };
+
+    client.send_event(metadata_event).await?;
+    info!("NIP-01 metadata event sent successfully.");
+
+    // Define topic outside oneshot block
+    let topic = gossipsub::IdentTopic::new(
+        args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
+    );
+
     if let Some(message) = args.oneshot {
         info!("Oneshot mode: sending message '{}'", message);
 
-        let topic_str = args.topic.expect("--topic is required with --oneshot");
-        let topic = gossipsub::IdentTopic::new(topic_str);
-
-        let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-
         let _p2p_handle = tokio::spawn(async move {
-            if let Err(e) = evt_loop(input_rx, peer_tx, topic).await {
+            if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
                 eprintln!("p2p event loop error: {}", e);
             }
         });
@@ -231,22 +292,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let commit = obj.peel_to_commit()?;
         let commit_id = commit.id().to_string();
 
-        // Use the padded commit ID as the default private key if --nsec is not provided.
+        //
         let padded_commit_id = format!("{:0>64}", commit_id.clone());
-
-        // TODO use padded_commit_id to generate nostr public_key
-        // TODO use gnostr::types to create nip0 metadata for the specific padded_commit_id
-        // TODO metadata uses
-        //
-        // p
-        // -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4"
-        // b
-        // -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png"
-        //
-        if args.nsec.is_none() {
-            args.nsec = Some(padded_commit_id);
-            tracing::info!("Using args.nsec  as default private key {:#?}.", args.nsec);
-        }
 
         let mut app = ui::App {
             topic: args.topic.unwrap_or_else(|| commit_id.to_string()),
