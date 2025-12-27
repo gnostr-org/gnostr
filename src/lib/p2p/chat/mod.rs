@@ -292,8 +292,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let commit = obj.peel_to_commit()?;
         let commit_id = commit.id().to_string();
 
-        //
-        let padded_commit_id = format!("{:0>64}", commit_id.clone());
+        // TODO
+        let _padded_commit_id = format!("{:0>64}", commit_id.clone());
 
         let mut app = ui::App {
             topic: args.topic.unwrap_or_else(|| commit_id.to_string()),
