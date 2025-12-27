@@ -10,9 +10,100 @@ use std::time::Duration;
 use tokio::{io, select};
 use tracing::{debug, warn};
 
+use std::collections::HashMap;
+use parking_lot::Mutex;
+use std::sync::Arc;
+
 use ureq::Agent;
 
 use crate::p2p::kvs::{FileRequest, FileResponse};
+use crate::p2p::chat::msg::{Msg, MsgKind};
+
+// Struct to manage message reassembly
+pub struct MessageReassembler {
+    // message_id -> (total_chunks, received_chunks, chunks)
+    buffer: Mutex<HashMap<String, (usize, usize, Vec<Option<Msg>>)>>,
+}
+
+impl MessageReassembler {
+    pub fn new() -> Self {
+        MessageReassembler {
+            buffer: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// Adds a message chunk to the buffer and attempts reassembly.
+    /// Returns Some(complete_message) if reassembly is successful, None otherwise.
+    pub fn add_chunk_and_reassemble(&self, msg_chunk: Msg) -> Option<Msg> {
+        if msg_chunk.message_id.is_none() || msg_chunk.sequence_num.is_none() || msg_chunk.total_chunks.is_none() {
+            // Not a multi-part message, or missing sequencing info
+            return None;
+        }
+
+        let message_id = msg_chunk.message_id.clone().unwrap(); // Clone here
+        let sequence_num = msg_chunk.sequence_num.unwrap();
+        let total_chunks = msg_chunk.total_chunks.unwrap();
+
+        let mut buffer_guard = self.buffer.lock();
+
+        let (buffered_total_chunks, ref mut received_count, ref mut chunks) = buffer_guard
+            .entry(message_id.clone())
+            .or_insert_with(|| (total_chunks, 0, vec![None; total_chunks]));
+
+        // Ensure consistency if a message_id is reused with different total_chunks
+        // Or if an invalid chunk is received for an already existing message_id
+        if *buffered_total_chunks != total_chunks {
+            debug!("Inconsistent total_chunks for message_id {}. Expected {}, got {}", message_id, *buffered_total_chunks, total_chunks);
+            buffer_guard.remove(&message_id);
+            return None;
+        }
+
+        if sequence_num < total_chunks {
+            if chunks[sequence_num].is_none() {
+                chunks[sequence_num] = Some(msg_chunk.clone()); // Clone msg_chunk here
+                *received_count += 1;
+            } else {
+                debug!("Duplicate chunk received for message_id {} sequence {}", message_id, sequence_num);
+            }
+        } else {
+            debug!("Invalid sequence_num {} for message_id {} (total_chunks {})", sequence_num, message_id, total_chunks);
+            return None;
+        }
+
+        if *received_count == total_chunks {
+            // All chunks received, reassemble
+            let mut full_content = String::new();
+            let mut reassembled_msg = Msg::default();
+
+            for (i, chunk_option) in chunks.iter().enumerate() {
+                if let Some(chunk) = chunk_option {
+                    if i == 0 {
+                        // Use the first chunk's metadata for the reassembled message
+                        reassembled_msg.from = chunk.from.clone();
+                        reassembled_msg.kind = chunk.kind;
+                        reassembled_msg.commit_id = chunk.commit_id;
+                        reassembled_msg.nostr_event = chunk.nostr_event.clone();
+                        // Reset sequencing info as it's now a single complete message
+                        reassembled_msg.message_id = None;
+                        reassembled_msg.sequence_num = None;
+                        reassembled_msg.total_chunks = None;
+                    }
+                    full_content.push_str(&chunk.content[0]);
+                } else {
+                    // This should not happen if received_count == total_chunks
+                    debug!("Missing chunk for message_id {} at sequence {}", message_id, i);
+                    buffer_guard.remove(&message_id); // Clear incomplete message
+                    return None;
+                }
+            }
+            reassembled_msg.content = vec![full_content];
+            buffer_guard.remove(&message_id);
+            Some(reassembled_msg)
+        } else {
+            None
+        }
+    }
+}
 
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {
@@ -128,7 +219,7 @@ pub async fn evt_loop(
                 request_response::Config::default(),
             );
 
-            Ok(MyBehaviour {
+            Ok(crate::p2p::chat::p2p::MyBehaviour {
                 gossipsub,
                 mdns,
                 identify,
@@ -137,7 +228,7 @@ pub async fn evt_loop(
                 request_response,
             })
         })?
-        .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
+        .with_swarm_config(|c: libp2p::swarm::Config| c.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
 
     // subscribes to our topic
