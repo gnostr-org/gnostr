@@ -14,6 +14,7 @@ use serde_json; // Explicitly added for clarity
 
 use std::path::PathBuf;
 use std::{error::Error as StdError, time::Duration};
+use textwrap::{fill, Options};
 use crate::types::metadata::{DEFAULT_AVATAR, DEFAULT_BANNER};
 //use async_std::path::PathBuf;
 
@@ -245,8 +246,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
     );
 
-    if let Some(message) = args.oneshot {
-        info!("Oneshot mode: sending message '{}'", message);
+    if let Some(message_input) = args.oneshot {
+        info!("Oneshot mode: sending message '{}'", message_input);
 
         let _p2p_handle = tokio::spawn(async move {
             if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
@@ -258,17 +259,23 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         println!("Initializing network and discovering peers...");
         tokio::time::sleep(Duration::from_secs(3)).await;
 
-        let msg = Msg::default().set_content(message, 0);
-        if input_tx
-            .send(InternalEvent::ChatMessage(msg))
-            .await
-            .is_err()
-        {
-            eprintln!("Failed to send message to event loop.");
-        } else {
-            println!("Message sent. Waiting for propagation...");
-        }
+        let wrapped_lines = fill(&message_input, 80); // Split into lines of 80 characters
 
+        for line in wrapped_lines.split('\n') {
+            if !line.trim().is_empty() {
+                let msg = Msg::default().set_content(line.to_string(), 0);
+                if input_tx
+                    .send(InternalEvent::ChatMessage(msg))
+                    .await
+                    .is_err()
+                {
+                    eprintln!("Failed to send message to event loop.");
+                } else {
+                    println!("Message sent. Waiting for propagation...");
+                }
+            }
+        }
+        
         // Allow time for the message to propagate.
         tokio::time::sleep(Duration::from_secs(2)).await;
 
