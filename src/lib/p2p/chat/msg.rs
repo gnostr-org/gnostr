@@ -146,12 +146,12 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                         m.content[0].clone().into(),
                     ])
                 } else {
-                    Line::default().right_aligned().spans(vec![
-                        m.content[0].clone().into(),
+                    Line::default().left_aligned().spans(vec![
                         Span::styled(
-                            format!(" {}{}", "<", &m.from),
+                            format!(" {}{}", &m.from, "> "),
                             Style::default().fg(gen_color_by_hash(&m.from)),
                         ),
+                        m.content[0].clone().into(),
                     ])
                 }
             }
