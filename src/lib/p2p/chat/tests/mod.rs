@@ -7,10 +7,10 @@ mod tests {
     use std::borrow::Cow;
     use std::collections::HashSet;
 
+    use crate::types::{KeySecurity, PrivateKey, Signer};
     use serde_json::json;
     use std::collections::HashMap;
     use std::path::Path;
-    use crate::types::{PrivateKey, KeySecurity, Signer};
 
     use crate::legit::command::create_event;
     use crate::legit::command::create_event_with_custom_tags;
@@ -415,7 +415,8 @@ More details here."
         // Use a well-known private key for deterministic testing
         let sk_hex = "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Example private key
         let private_key = crate::types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
-        let keys = crate::types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
+        let keys =
+            crate::types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
         let pubkey = keys.public_key();
 
         let content = "Test event content";
@@ -477,7 +478,8 @@ More details here."
         // Test create_event without custom tags, using default values
         let sk_hex = "2a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Another example key
         let private_key = crate::types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
-        let keys = crate::types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
+        let keys =
+            crate::types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
         let pubkey = keys.public_key();
         let content = "Default event test";
         let custom_tags = HashMap::new(); // Empty tags
@@ -497,7 +499,7 @@ More details here."
         let keys = crate::types::key_signer::KeySigner::generate("", 1).unwrap();
         let pubkey = keys.public_key();
         let pre_event = crate::types::PreEvent {
-            pubkey: pubkey,
+            pubkey,
             created_at: crate::types::Unixtime::now(),
             kind: crate::types::EventKind::TextNote,
             tags: vec![],
