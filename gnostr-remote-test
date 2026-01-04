@@ -35,4 +35,6 @@ sleep 5
 gnostr --nsec $NSEC react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
 sleep 5
 gnostr --nsec $NSEC react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
+sleep 5
+gnostr --nsec $NSEC react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
 ## END:contents of $0"
