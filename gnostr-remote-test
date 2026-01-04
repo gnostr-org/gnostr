@@ -23,7 +23,7 @@ gnostr fetch-by-id --id $EVENT1_ID -r wss://relay.snort.social
 sleep 5
 
 export EVENT2=$(gnostr --nsec ${NSEC} -r wss://relay.snort.social custom-event -k 1 -c "#gnostr distributed/decentralized CI EVENT! REF:https://nostr.band/?q=$EVENT1_ID" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" -t "weeble|$(gnostr --weeble)" -t "blockheight|$(gnostr --blockheight)" -t "wobble|$(gnostr --wobble)")
-echo "Raw EVENT2: $EVENT2"
+echo; echo "Raw EVENT2: $EVENT2"
 RAW_BECH32_OUTPUT2=$(gnostr bech32-to-any $EVENT2)
 echo "Raw bech32-to-any output for EVENT2: $RAW_BECH32_OUTPUT2"
 export EVENT2_ID=$(echo "$RAW_BECH32_OUTPUT2" | jq -r '.note')
@@ -32,7 +32,7 @@ sleep 5
 gnostr --nsec $(gnostr privkey-to-bech32 $NSEC) -r wss://relay.snort.social react --event-id $EVENT1_ID --reaction "+"
 sleep 5
 sleep 5
-gnostr --nsec $NSEC -r wss://relay.damus.io react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
+gnostr --nsec $NSEC react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
 sleep 5
-gnostr --nsec $NSEC -r wss://relay.damus.io react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
+gnostr --nsec $NSEC react --event-id 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 --reaction "+"
 ## END:contents of $0"
