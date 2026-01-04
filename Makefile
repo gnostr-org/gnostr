@@ -60,6 +60,7 @@ cargo-build: 	## 	cargo build
 cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install -j $(NPROC) --path . $(FORCE)
+	@cargo install -j $(NPROC) --path ./relay $(FORCE)
 
 cargo-sort: 	cargo-sort
 	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
