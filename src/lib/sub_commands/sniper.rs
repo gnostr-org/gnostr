@@ -37,7 +37,14 @@ pub struct SniperArgs {
 }
 
 pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("relays.yaml").unwrap();
+    let relays_file_path = Path::new("relays.yaml");
+    if !relays_file_path.exists() {
+        let default_relays = "wss://relay.damus.io\nwss://relay.snort.social\nwss://nostr.wine\nwss://relay.nostr.band";
+        fs::write(relays_file_path, default_relays)?;
+        println!("Created default relays.yaml");
+    }
+
+    let relays = load_file(relays_file_path).unwrap();
     let client = reqwest::Client::new();
     let bodies = stream::iter(relays)
         .map(|url| {
