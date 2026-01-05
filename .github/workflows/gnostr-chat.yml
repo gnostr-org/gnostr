@@ -145,6 +145,15 @@ jobs:
           MESSAGE="Hello from github-ci-sender at $(date +%s)"
           gnostr chat --name sender --topic gnostr-test-topic --message "$MESSAGE"
 
+          ONESHOT_MESSAGE="Hello from github-ci-sender at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$ONESHOT_MESSAGE"
+          ONESHOT_MESSAGE="Hello from github-ci-sender at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$ONESHOT_MESSAGE"
+          ONESHOT_MESSAGE="Hello from github-ci-sender at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$ONESHOT_MESSAGE"
+          ONESHOT_MESSAGE="Hello from github-ci-sender at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$ONESHOT_MESSAGE"
+
           sleep 5 # Give message time to propagate
 
           echo "Checking listener output..."
