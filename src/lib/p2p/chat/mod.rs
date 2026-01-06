@@ -269,22 +269,21 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let message_id = Uuid::new_v4().to_string();
 
         for (sequence_num, line) in wrapped_lines.into_iter().enumerate() {
-            if !line.trim().is_empty() {
-                let msg = Msg::default()
-                    .set_content(line, 0)
-                    .set_message_id(message_id.clone())
-                    .set_sequence_num(sequence_num)
-                    .set_total_chunks(total_chunks);
+            // Send every chunk, even if it appears empty, as it counts towards total_chunks
+            let msg = Msg::default()
+                .set_content(line, 0)
+                .set_message_id(message_id.clone())
+                .set_sequence_num(sequence_num)
+                .set_total_chunks(total_chunks);
 
-                if input_tx
-                    .send(InternalEvent::ChatMessage(msg))
-                    .await
-                    .is_err()
-                {
-                    eprintln!("Failed to send message to event loop.");
-                } else {
-                    println!("Message chunk {}/{} sent. Waiting for propagation...", sequence_num + 1, total_chunks);
-                }
+            if input_tx
+                .send(InternalEvent::ChatMessage(msg))
+                .await
+                .is_err()
+            {
+                eprintln!("Failed to send message to event loop.");
+            } else {
+                println!("Message chunk {}/{} sent. Waiting for propagation...", sequence_num + 1, total_chunks);
             }
         }
         
