@@ -254,7 +254,16 @@ pub async fn evt_loop(
 
     debug!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
 
-    // Kick it off
+    // Helper function for text wrapping
+    fn apply_text_wrapping(msg: &mut Msg, terminal_width: usize) {
+        let should_wrap = msg.kind == MsgKind::Chat || (msg.kind == MsgKind::OneShot && msg.content[0].contains("--diff"));
+
+        if should_wrap && !msg.content.is_empty() {
+            let wrapped_content = textwrap::fill(&msg.content[0], Options::new(terminal_width));
+            msg.content = wrapped_content.lines().map(String::from).collect();
+        }
+    }
+
     // Kick it off
     loop {
         select! {
@@ -298,21 +307,16 @@ pub async fn evt_loop(
                     match serde_json::from_slice::<Msg>(&message.data) {
                         Ok(msg) => {
                             if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
-                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
-                                    if reassembled_msg.kind == MsgKind::OneShot && reassembled_msg.content[0].contains("--diff") {
-                                                                            let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
-                                                                            let wrapped_content = textwrap::fill(&reassembled_msg.content[0], Options::new(terminal_width));
-                                                                            reassembled_msg.content = wrapped_content.lines().map(String::from).collect();                                    }
-                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
-                                }
+                                                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                                                    let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                                                    apply_text_wrapping(&mut reassembled_msg, terminal_width);
+                                                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
+                                                                }
                             } else {
                                 // It's a single-part message, send directly
                                 let mut processed_msg = msg;
-                                if processed_msg.kind == MsgKind::OneShot && processed_msg.content[0].contains("--diff") {
-                                    let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
-                                    let wrapped_content = textwrap::fill(&processed_msg.content[0], Options::new(terminal_width));
-                                    processed_msg.content = wrapped_content.lines().map(String::from).collect();
-                                }
+                                let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                apply_text_wrapping(&mut processed_msg, terminal_width);
                                 recv.send(crate::queue::InternalEvent::ChatMessage(processed_msg)).await?;
                             }
                         },
