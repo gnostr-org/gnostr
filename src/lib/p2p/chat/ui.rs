@@ -246,7 +246,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
-                AppMode::SelectingDiff { ref mut diff_messages, ref mut selected_index, ref mut scroll_state } => {
+                AppMode::SelectingDiff { ref mut diff_messages, ref mut selected_index, scroll_state: _ } => {
                     match key.code {
                         KeyCode::Up => {
                             if *selected_index > 0 {
@@ -308,7 +308,6 @@ fn ui(f: &mut Frame, app: &App) {
     let mut messages: Vec<ListItem> = Vec::new();
 
     for msg in msgs.iter().rev() {
-        let options = Options::new(message_area_width as usize);
 
         match msg.kind {
             MsgKind::Chat => {
@@ -360,7 +359,7 @@ fn ui(f: &mut Frame, app: &App) {
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(messages, chunks[1]);
 
-    if let AppMode::SelectingDiff { diff_messages, selected_index, scroll_state } = &app.mode {
+    if let AppMode::SelectingDiff { diff_messages, selected_index, scroll_state: _ } = &app.mode {
         let popup_area = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -368,7 +367,7 @@ fn ui(f: &mut Frame, app: &App) {
                 Constraint::Percentage(60),
                 Constraint::Percentage(20),
             ])
-            .split(f.size())[1];
+            .split(f.area())[1];
 
         let popup_area = Layout::default()
             .direction(Direction::Horizontal)
@@ -411,9 +410,10 @@ fn ui(f: &mut Frame, app: &App) {
 
     let input_str = app.input.value();
     let mut spans = Vec::new();
-    let default_input_style = match app.input_mode {
-        InputMode::Normal => Style::default(),
-        InputMode::Editing => Style::default().fg(Color::Cyan),
+    let default_input_style = match app.mode {
+        AppMode::Normal => Style::default(),
+        AppMode::Editing => Style::default().fg(Color::Cyan),
+        AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), // Indicate non-editable
     };
 
     for (i, c) in input_str.chars().enumerate() {
@@ -438,11 +438,12 @@ fn ui(f: &mut Frame, app: &App) {
         .block(Block::default().borders(Borders::ALL).title("Input"));
     f.render_widget(input, chunks[2]);
 
-    match app.input_mode {
-        InputMode::Normal => {}
-        InputMode::Editing => f.set_cursor_position((
+    match app.mode {
+        AppMode::Normal => {}
+        AppMode::Editing => f.set_cursor_position((
             chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
             chunks[2].y + 1,
         )),
+        AppMode::SelectingDiff { .. } => {} // No cursor in this mode
     }
 }

@@ -11,7 +11,7 @@ pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
         .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string())
         .to_string()
 });
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub enum MsgKind {
     #[default]
     Chat,
@@ -35,7 +35,7 @@ pub enum MsgKind {
     OneShot,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Msg {
     pub from: String,
     pub content: Vec<String>,
