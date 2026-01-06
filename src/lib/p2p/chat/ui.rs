@@ -13,7 +13,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::Color,
     text::{Line, Span}, // Added Span here
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Clear, ListState},
     Frame, Terminal,
 };
 
@@ -40,11 +40,16 @@ impl Drop for TerminalCleanup {
     }
 }
 
-#[derive(Default)]
-pub enum InputMode {
+#[derive(Default, PartialEq, Eq)] // Add PartialEq, Eq for comparison
+pub enum AppMode {
     #[default]
     Normal,
     Editing,
+    SelectingDiff {
+        diff_messages: Vec<msg::Msg>, // Filtered list of diff messages
+        selected_index: usize,        // Index of the currently selected diff
+        scroll_state: usize,          // Scroll position for the diff list
+    },
 }
 
 /// App holds the state of the application
@@ -52,7 +57,7 @@ pub struct App {
     /// Current value of the input box
     pub input: Input,
     /// Current input mode
-    pub input_mode: InputMode,
+    pub mode: AppMode, // Renamed from input_mode to mode
     /// History of recorded messages
     pub messages: Arc<Mutex<Vec<msg::Msg>>>,
     pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
@@ -64,7 +69,7 @@ impl Default for App {
     fn default() -> Self {
         App {
             input: Input::default(),
-            input_mode: InputMode::default(),
+            mode: AppMode::default(), // Use new AppMode
             messages: Default::default(),
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
@@ -160,14 +165,30 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 return Ok(());
             }
 
-            match app.input_mode {
-                InputMode::Normal => match key.code {
+            match app.mode { // Changed from app.input_mode
+                AppMode::Normal => match key.code {
                     KeyCode::Char('e') | KeyCode::Char('i') => {
-                        app.input_mode = InputMode::Editing;
+                        app.mode = AppMode::Editing; // Changed from app.input_mode
                         app.msgs_scroll = usize::MAX;
                     }
                     KeyCode::Char('q') => {
                         return Ok(());
+                    }
+                    KeyCode::Char('\\') => { // New keybinding for selecting diffs
+                        let all_messages = app.messages.lock().unwrap();
+                        let diff_messages: Vec<msg::Msg> = all_messages
+                            .iter()
+                            .filter(|m| m.kind == MsgKind::GitDiff)
+                            .cloned() // Clone to move into the new state
+                            .collect();
+
+                        if !diff_messages.is_empty() {
+                            app.mode = AppMode::SelectingDiff {
+                                diff_messages,
+                                selected_index: 0,
+                                scroll_state: 0,
+                            };
+                        }
                     }
                     KeyCode::Up => {
                         let l = app.messages.lock().unwrap().len();
@@ -186,7 +207,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = usize::MAX;
                     }
                 },
-                InputMode::Editing => match key.code {
+                AppMode::Editing => match key.code { // Changed from InputMode::Editing
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let input_text = app.input.value().to_owned();
@@ -218,13 +239,42 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.reset();
                     }
                     KeyCode::Esc => {
-                        app.input_mode = InputMode::Normal;
+                        app.mode = AppMode::Normal; // Changed from app.input_mode
                         app.msgs_scroll = app.messages.lock().unwrap().len();
                     }
                     _ => {
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
+                AppMode::SelectingDiff { ref mut diff_messages, ref mut selected_index, ref mut scroll_state } => {
+                    match key.code {
+                        KeyCode::Up => {
+                            if *selected_index > 0 {
+                                *selected_index -= 1;
+                            }
+                        }
+                        KeyCode::Down => {
+                            if *selected_index < diff_messages.len() - 1 {
+                                *selected_index += 1;
+                            }
+                        }
+                        KeyCode::Enter => {
+                            // Display the selected diff
+                            let selected_diff = diff_messages[*selected_index].clone();
+                            // Clear existing messages and add the selected diff for display
+                            let mut all_messages = app.messages.lock().unwrap();
+                            all_messages.clear(); // Clear existing messages
+                            all_messages.push(selected_diff); // Add the selected diff
+                            app.msgs_scroll = usize::MAX; // Scroll to bottom
+
+                            app.mode = AppMode::Normal; // Exit selection mode
+                        }
+                        KeyCode::Esc => {
+                            app.mode = AppMode::Normal; // Exit selection mode
+                        }
+                        _ => {}
+                    }
+                }
             }
         }
     }
@@ -284,23 +334,17 @@ fn ui(f: &mut Frame, app: &App) {
                 messages.push(ListItem::new(Line::from(chat_spans)));
             },
             MsgKind::GitDiff => {
-                let line_content = &msg.content[0]; // Each msg.content[0] is a single line of diff
-
-                let style = if line_content.starts_with('+') {
-                    Style::default().fg(Color::Green)
-                } else if line_content.starts_with('-') {
-                    Style::default().fg(Color::Red)
-                } else if line_content.starts_with('@') || line_content.starts_with('\\') {
-                    Style::default().fg(Color::Cyan)
-                } else {
-                    Style::default().fg(Color::White)
-                };
-
-                let wrapped_lines = textwrap::wrap(line_content, options.clone());
-
-                // For each segment of the wrapped diff line, create a new ListItem
-                for wrapped_segment in wrapped_lines.into_iter() {
-                    messages.push(ListItem::new(Line::from(Span::styled(wrapped_segment.to_string(), style))));
+                for line_content in msg.content.iter() { // Iterate directly over pre-wrapped lines
+                    let style = if line_content.starts_with('+') {
+                        Style::default().fg(Color::Green)
+                    } else if line_content.starts_with('-') {
+                        Style::default().fg(Color::Red)
+                    } else if line_content.starts_with('@') || line_content.starts_with('\\') {
+                        Style::default().fg(Color::Cyan)
+                    } else {
+                        Style::default().fg(Color::White)
+                    };
+                    messages.push(ListItem::new(Line::from(Span::styled(line_content.clone(), style))));
                 }
             },
             _ => {
@@ -315,6 +359,51 @@ fn ui(f: &mut Frame, app: &App) {
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(messages, chunks[1]);
+
+    if let AppMode::SelectingDiff { diff_messages, selected_index, scroll_state } = &app.mode {
+        let popup_area = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(20),
+                Constraint::Percentage(60),
+                Constraint::Percentage(20),
+            ])
+            .split(f.size())[1];
+
+        let popup_area = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage(20),
+                Constraint::Percentage(60),
+                Constraint::Percentage(20),
+            ])
+            .split(popup_area)[1];
+
+        f.render_widget(Clear, popup_area); // Clear the area first
+
+        let items: Vec<ListItem> = diff_messages.iter().enumerate().map(|(i, msg)| {
+            let mut summary = String::new();
+            if let Some(first_line) = msg.content.first() {
+                // Take a snippet of the first line as a summary
+                summary = first_line.chars().take(popup_area.width as usize - 4).collect(); // -4 for borders
+            }
+            let content = if i == *selected_index {
+                format!("> {}", summary)
+            } else {
+                format!("  {}", summary)
+            };
+            ListItem::new(content).style(Style::default().fg(Color::Yellow))
+        }).collect();
+
+        let mut list_state = ListState::default();
+        list_state.select(Some(*selected_index));
+
+        let diff_list = List::new(items)
+            .block(Block::default().borders(Borders::ALL).title("Select Diff"))
+            .highlight_style(Style::default().fg(Color::Black).bg(Color::White));
+            
+        f.render_stateful_widget(diff_list, popup_area, &mut list_state);
+    }
 
     // Input Widget
     let width = chunks[2].width.max(3) - 3; // Use width of the input chunk
