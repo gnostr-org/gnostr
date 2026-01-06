@@ -152,7 +152,16 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {
-                Line::from(Span::raw(m.content[0].clone()))
+                let mut spans = Vec::new();
+                // Assuming `m.from` is the sender's name
+                if let Some(first_line) = m.content.first() {
+                    spans.push(Span::raw(format!("{}: {}", m.from, first_line)));
+                }
+
+                for line in m.content.iter().skip(1) {
+                    spans.push(Span::raw(line.clone()));
+                }
+                Line::from(spans)
             }
             Raw => m.content[0].clone().into(),
             Command => Line::default().spans(vec![
