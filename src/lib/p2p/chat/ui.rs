@@ -111,6 +111,19 @@ impl App {
     }
 }
 
+fn gen_color_by_hash(s: &str) -> Color {
+    static LIGHT_COLORS: [Color; 5] = [
+        Color::LightMagenta,
+        Color::LightGreen,
+        Color::LightYellow,
+        Color::LightBlue,
+        Color::LightCyan,
+        // Color::White,
+    ];
+    let h = s.bytes().fold(0, |acc, b| acc ^ b as usize);
+    LIGHT_COLORS[h % LIGHT_COLORS.len()]
+}
+
 fn process_and_add_diff_message(app: &mut App, input_text: String) {
     let diff_content = input_text.strip_prefix("--diff ").unwrap_or(&input_text);
     let message_id = Uuid::new_v4().to_string();
@@ -238,16 +251,85 @@ fn ui(f: &mut Frame, app: &App) {
     f.render_widget(header, chunks[0]);
 
     // Messages Widget
-    let height = chunks[1].height; // Use height of the messages chunk
+    let height = chunks[1].height; // Re-introduce height variable
+    let message_area_width = chunks[1].width;
     let msgs = app.messages.lock().unwrap();
     
     let mut messages: Vec<ListItem> = Vec::new();
+
     for msg in msgs.iter().rev() {
-        let line = Line::from(msg); // This applies textwrap and adds '\n'
-        for visual_line_str in line.to_string().split('\n') {
-            if !visual_line_str.is_empty() {
-                messages.push(ListItem::new(Line::raw(visual_line_str.to_string())));
+        let mut current_message_spans: Vec<ratatui::text::Span> = Vec::new();
+        let options = Options::new(message_area_width as usize);
+
+        match msg.kind {
+            MsgKind::Chat => {
+                let (prefix, indent) = if msg.from == *msg::USER_NAME {
+                    (format!("{}{} ", &msg.from, ">"), " ".repeat(msg.from.len() + 2))
+                } else {
+                    (format!(" {}{}", &msg.from, "> "), " ".repeat(msg.from.len() + 3))
+                };
+                let prefix_style = Style::default().fg(gen_color_by_hash(&msg.from));
+                current_message_spans.push(ratatui::text::Span::styled(prefix.clone(), prefix_style));
+
+                let content_width = message_area_width.saturating_sub(prefix.len() as u16);
+                let wrapped_content = textwrap::wrap(&msg.content[0], Options::new(content_width as usize));
+
+                for (idx, segment) in wrapped_content.into_iter().enumerate() {
+                    if idx > 0 {
+                        current_message_spans.push(ratatui::text::Span::raw("\n"));
+                        current_message_spans.push(ratatui::text::Span::raw(indent.clone()));
+                    }
+                    current_message_spans.push(ratatui::text::Span::raw(segment.to_string()));
+                }
+            },
+            MsgKind::GitDiff => {
+                let first_line_indent_char_len = if !msg.content.is_empty() {
+                    let first_line_char = msg.content[0].chars().next();
+                    if first_line_char == Some('+') || first_line_char == Some('-') || first_line_char == Some('@') || first_line_char == Some('\\') {
+                        1
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                };
+                let indent_str = " ".repeat(first_line_indent_char_len);
+
+                for (line_idx, line_content) in msg.content.iter().enumerate() {
+                    let style = if line_content.starts_with('+') {
+                        Style::default().fg(Color::Green)
+                    } else if line_content.starts_with('-') {
+                        Style::default().fg(Color::Red)
+                    } else if line_content.starts_with('@') || line_content.starts_with('\\') {
+                        Style::default().fg(Color::Cyan)
+                    } else {
+                        Style::default().fg(Color::White)
+                    };
+
+                    let wrapped_lines = textwrap::wrap(line_content, options.clone());
+
+                    for (segment_idx, wrapped_segment) in wrapped_lines.iter().enumerate() { // Iterate over reference
+                        if segment_idx > 0 { // This is a wrapped part of the same original line
+                            current_message_spans.push(ratatui::text::Span::raw("\n"));
+                            current_message_spans.push(ratatui::text::Span::raw(indent_str.clone()));
+                        }
+                        current_message_spans.push(ratatui::text::Span::styled(wrapped_segment.to_string(), style));
+                    }
+                    // Add a newline between distinct lines of the diff, unless it's the very last segment of the very last line
+                    if line_idx < msg.content.len() - 1 || (!wrapped_lines.is_empty() && wrapped_lines.last().unwrap().len() == message_area_width as usize) {
+                        current_message_spans.push(ratatui::text::Span::raw("\n"));
+                    }
+                }
+            },
+            _ => {
+                // For other MsgKind, directly convert to ListItem
+                messages.push(ListItem::new(ratatui::text::Text::from(Line::from(msg)))); // Fixed: Convert Line to Text
+                continue; // Continue to the next message
             }
+        }
+        
+        if !current_message_spans.is_empty() {
+            messages.push(ListItem::new(Line::from(current_message_spans)));
         }
     }
     messages.truncate(height as usize); // Take only the visible number of lines

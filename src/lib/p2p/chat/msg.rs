@@ -128,19 +128,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
         use ratatui::text::{Line, Span};
         use MsgKind::*;
 
-        fn gen_color_by_hash(s: &str) -> Color {
-            static LIGHT_COLORS: [Color; 5] = [
-                Color::LightMagenta,
-                Color::LightGreen,
-                Color::LightYellow,
-                Color::LightBlue,
-                Color::LightCyan,
-                // Color::White,
-            ];
-            let h = s.bytes().fold(0, |acc, b| acc ^ b as usize);
-            LIGHT_COLORS[h % LIGHT_COLORS.len()]
-        }
-
         match m.kind {
             //System
             System => Line::from(Span::styled(
@@ -164,34 +151,13 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {
-                let wrapped_content = wrap(&m.content[0], Options::new(80));
-                let mut spans = Vec::new();
-
-                let (prefix, indent) = if m.from == *USER_NAME {
-                    (format!("{}{} ", &m.from, ">"), " ".repeat(m.from.len() + 2))
-                } else {
-                    (format!(" {}{}", &m.from, "> "), " ".repeat(m.from.len() + 3))
-                };
-                
-                spans.push(Span::styled(
-                    prefix,
-                    Style::default().fg(gen_color_by_hash(&m.from)),
-                ));
-                spans.push(wrapped_content[0].clone().into());
-
-                for i in 1..wrapped_content.len() {
-                    spans.push(Span::raw("\n"));
-                    spans.push(Span::raw(indent.clone()));
-                    spans.push(wrapped_content[i].clone().into());
-                }
-                Line::default().left_aligned().spans(spans)
+                Line::from(Span::raw(m.content[0].clone()))
             }
             Raw => m.content[0].clone().into(),
             Command => Line::default().spans(vec![
                 Span::styled(
                     format!("Command: {}{} ", &m.from, ">"),
                     Style::default()
-                        .fg(gen_color_by_hash(&m.from))
                         .add_modifier(Modifier::ITALIC),
                 ),
                 m.content[0].clone().into(),
@@ -201,7 +167,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             //        Span::styled(
             //            format!("{}", m.content[0].clone()),
             //            Style::default()
-            //                .fg(gen_color_by_hash(&m.from))
             //                .add_modifier(Modifier::ITALIC),
             //        ),
             //        //m.content[1].clone().into(),
@@ -214,7 +179,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"commit\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -227,7 +191,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"tree\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -240,7 +203,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"Author\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -253,7 +215,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"parent\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -266,7 +227,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"msg\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -279,7 +239,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"name\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -292,7 +251,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"email\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -305,7 +263,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"time\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -318,7 +275,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"header\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -331,7 +287,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     Span::styled(
                         format!("{{\"body\": \"{}\"}}", m.content[0].clone()),
                         Style::default()
-                            .fg(gen_color_by_hash(&m.from))
                             .add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
@@ -350,44 +305,17 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             ]),
             GitDiff => {
                 let mut spans = Vec::new();
-                let options = Options::new(80); // Use a fixed width for wrapping
-
-                // Preserve prefix for coloring and indent subsequent lines
-                let (_prefix_len, indent_str) = if !m.content.is_empty() {
-                    let first_line = &m.content[0];
-                    let p_len = if first_line.starts_with('+') || first_line.starts_with('-') || first_line.starts_with('@') || first_line.starts_with('\\') {
-                        1 // For +, -, @, \
-                    } else {
-                        0
-                    };
-                    (p_len, " ".repeat(p_len))
-                } else {
-                    (0, String::new())
-                };
-
-
-                for (i, line) in m.content.iter().enumerate() {
+                for line in m.content.iter() {
                     let style = if line.starts_with('+') {
                         Style::default().fg(Color::Green)
                     } else if line.starts_with('-') {
                         Style::default().fg(Color::Red)
-                    } else if line.starts_with('@') || line.starts_with('\\') { // Diff header lines
+                    } else if line.starts_with('@') || line.starts_with('\\') {
                         Style::default().fg(Color::Cyan)
                     } else {
                         Style::default().fg(Color::White)
                     };
-
-                    let wrapped_lines = wrap(line, options.clone());
-
-                    for (j, wrapped_segment) in wrapped_lines.into_iter().enumerate() {
-                        if i > 0 || j > 0 { // Add newline for subsequent lines or wrapped segments
-                            spans.push(Span::raw("\n"));
-                            if j > 0 { // Indent only wrapped segments of the same logical diff line
-                                spans.push(Span::raw(indent_str.clone()));
-                            }
-                        }
-                        spans.push(Span::styled(wrapped_segment.to_string(), style));
-                    }
+                    spans.push(Span::styled(line.clone(), style));
                 }
                 Line::from(spans)
             }
