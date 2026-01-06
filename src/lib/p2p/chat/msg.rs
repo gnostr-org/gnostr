@@ -350,19 +350,44 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             ]),
             GitDiff => {
                 let mut spans = Vec::new();
-                for line in m.content.iter() {
+                let options = Options::new(80); // Use a fixed width for wrapping
+
+                // Preserve prefix for coloring and indent subsequent lines
+                let (_prefix_len, indent_str) = if !m.content.is_empty() {
+                    let first_line = &m.content[0];
+                    let p_len = if first_line.starts_with('+') || first_line.starts_with('-') || first_line.starts_with('@') || first_line.starts_with('\\') {
+                        1 // For +, -, @, \
+                    } else {
+                        0
+                    };
+                    (p_len, " ".repeat(p_len))
+                } else {
+                    (0, String::new())
+                };
+
+
+                for (i, line) in m.content.iter().enumerate() {
                     let style = if line.starts_with('+') {
                         Style::default().fg(Color::Green)
                     } else if line.starts_with('-') {
                         Style::default().fg(Color::Red)
+                    } else if line.starts_with('@') || line.starts_with('\\') { // Diff header lines
+                        Style::default().fg(Color::Cyan)
                     } else {
                         Style::default().fg(Color::White)
                     };
-                    spans.push(Span::styled(line.clone(), style));
-                    spans.push(Span::raw("\n"));
-                }
-                if !spans.is_empty() {
-                    spans.pop(); // Remove the last newline
+
+                    let wrapped_lines = wrap(line, options.clone());
+
+                    for (j, wrapped_segment) in wrapped_lines.into_iter().enumerate() {
+                        if i > 0 || j > 0 { // Add newline for subsequent lines or wrapped segments
+                            spans.push(Span::raw("\n"));
+                            if j > 0 { // Indent only wrapped segments of the same logical diff line
+                                spans.push(Span::raw(indent_str.clone()));
+                            }
+                        }
+                        spans.push(Span::styled(wrapped_segment.to_string(), style));
+                    }
                 }
                 Line::from(spans)
             }
