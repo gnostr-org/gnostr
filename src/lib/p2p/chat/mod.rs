@@ -260,9 +260,15 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         println!("Initializing network and discovering peers...");
         tokio::time::sleep(Duration::from_secs(3)).await;
 
+        // Detect if message_input is a git diff
+        let mut msg_kind = MsgKind::OneShot;
+        if message_input.contains("diff --git") || (message_input.contains("--- a/") && message_input.contains("+++ b/")) {
+            msg_kind = MsgKind::GitDiff;
+        }
+
         // Create a single Msg object with the entire message_input
         let msg = Msg::default()
-            .set_kind(MsgKind::OneShot)
+            .set_kind(msg_kind)
             .set_content(message_input.clone(), 0); // Use message_input directly
 
         if input_tx
