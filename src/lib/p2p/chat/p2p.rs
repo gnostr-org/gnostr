@@ -256,11 +256,55 @@ pub async fn evt_loop(
 
     // Helper function for text wrapping
     fn apply_text_wrapping(msg: &mut Msg, terminal_width: usize) {
-        let should_wrap = msg.kind == MsgKind::Chat || (msg.kind == MsgKind::OneShot && msg.content[0].contains("--diff"));
+        if msg.content.is_empty() {
+            return;
+        }
 
-        if should_wrap && !msg.content.is_empty() {
-            let wrapped_content = textwrap::fill(&msg.content[0], Options::new(terminal_width));
-            msg.content = wrapped_content.lines().map(String::from).collect();
+        match msg.kind {
+            MsgKind::Chat | MsgKind::OneShot => { // OneShot without --diff will be handled here
+                let wrapped_content = textwrap::fill(&msg.content[0], Options::new(terminal_width));
+                msg.content = wrapped_content.lines().map(String::from).collect();
+            }
+            MsgKind::GitDiff => {
+                let mut wrapped_lines = Vec::new();
+                for line in msg.content[0].lines() {
+                    let (prefix, content) = if line.starts_with('+') {
+                        ("+", &line[1..])
+                    } else if line.starts_with('-') {
+                        ("-", &line[1..])
+                    } else if line.starts_with(' ') { // context line
+                        (" ", &line[1..])
+                    } else if line.starts_with("diff --git") || line.starts_with("index") || line.starts_with("--- a/") || line.starts_with("+++ b/") {
+                        // Header lines, no wrapping for now, just add as is
+                        wrapped_lines.push(line.to_string());
+                        continue;
+                    } else if line.starts_with("@@") {
+                        ("@@", &line[2..]) // Handle @@ line
+                    }
+                    else {
+                        // No specific diff prefix, treat as regular content
+                        ("", line)
+                    };
+
+                    // Ensure the width calculation accounts for the prefix length
+                    let wrap_width = if terminal_width > prefix.len() {
+                        terminal_width - prefix.len()
+                    } else {
+                        terminal_width // Fallback if prefix is too long
+                    };
+
+                    let wrapped_segments = textwrap::fill(content, Options::new(wrap_width));
+                    for (i, segment) in wrapped_segments.lines().enumerate() {
+                        if i == 0 { // First segment gets the prefix
+                            wrapped_lines.push(format!("{}{}", prefix, segment));
+                        } else { // Subsequent segments are indented if prefix was not empty
+                            wrapped_lines.push(format!("{:indent$}{}", "", segment, indent = prefix.len()));
+                        }
+                    }
+                }
+                msg.content = wrapped_lines;
+            }
+            _ => { /* No wrapping for other message kinds */ }
         }
     }
 
