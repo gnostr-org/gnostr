@@ -32,6 +32,7 @@ pub enum MsgKind {
     GitCommitTime,
     NostrEvent,
     GitDiff,
+    OneShot,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -319,6 +320,10 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 }
                 Line::from(spans)
             }
+            OneShot => Line::from(Span::styled(
+                format!("[ONESHOT] {}: {}", m.from, m.content[0]),
+                Style::default().fg(Color::Rgb(255, 165, 0)), // Orange color for OneShot messages
+            )),
         }
     }
 }
@@ -407,6 +412,9 @@ impl Display for Msg {
             }
             MsgKind::GitDiff => {
                 write!(f, "[Git Diff]")
+            }
+            MsgKind::OneShot => {
+                write!(f, "[ONESHOT] {}: {}", self.from, self.content[0])
             }
         }
     }

@@ -271,6 +271,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         for (sequence_num, line) in wrapped_lines.into_iter().enumerate() {
             // Send every chunk, even if it appears empty, as it counts towards total_chunks
             let msg = Msg::default()
+                .set_kind(MsgKind::OneShot)
                 .set_content(line, 0)
                 .set_message_id(message_id.clone())
                 .set_sequence_num(sequence_num)
