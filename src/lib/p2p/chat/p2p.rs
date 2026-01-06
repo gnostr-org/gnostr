@@ -300,10 +300,9 @@ pub async fn evt_loop(
                             if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
                                 if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
                                     if reassembled_msg.kind == MsgKind::OneShot && reassembled_msg.content[0].contains("--diff") {
-                                        let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
-                                        let wrapped_content = textwrap::fill(&reassembled_msg.content[0], Options::new(terminal_width));
-                                        reassembled_msg.content[0] = wrapped_content;
-                                    }
+                                                                            let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                                                            let wrapped_content = textwrap::fill(&reassembled_msg.content[0], Options::new(terminal_width));
+                                                                            reassembled_msg.content = wrapped_content.lines().map(String::from).collect();                                    }
                                     recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
                                 }
                             } else {
@@ -312,7 +311,7 @@ pub async fn evt_loop(
                                 if processed_msg.kind == MsgKind::OneShot && processed_msg.content[0].contains("--diff") {
                                     let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
                                     let wrapped_content = textwrap::fill(&processed_msg.content[0], Options::new(terminal_width));
-                                    processed_msg.content[0] = wrapped_content;
+                                    processed_msg.content = wrapped_content.lines().map(String::from).collect();
                                 }
                                 recv.send(crate::queue::InternalEvent::ChatMessage(processed_msg)).await?;
                             }
