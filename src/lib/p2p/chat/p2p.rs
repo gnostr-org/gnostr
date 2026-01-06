@@ -296,12 +296,19 @@ pub async fn evt_loop(
                     match serde_json::from_slice::<Msg>(&message.data) {
                         Ok(msg) => {
                             if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
-                                if let Some(reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                    if reassembled_msg.kind == MsgKind::OneShot && reassembled_msg.content[0].contains("--diff") {
+                                        reassembled_msg.content[0] = format!("[DIFF FORMATTED] {}", reassembled_msg.content[0]);
+                                    }
                                     recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
                                 }
                             } else {
                                 // It's a single-part message, send directly
-                                recv.send(crate::queue::InternalEvent::ChatMessage(msg)).await?;
+                                let mut processed_msg = msg;
+                                if processed_msg.kind == MsgKind::OneShot && processed_msg.content[0].contains("--diff") {
+                                    processed_msg.content[0] = format!("[DIFF FORMATTED] {}", processed_msg.content[0]);
+                                }
+                                recv.send(crate::queue::InternalEvent::ChatMessage(processed_msg)).await?;
                             }
                         },
                         Err(e) => {
