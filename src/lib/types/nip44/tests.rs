@@ -380,8 +380,10 @@ fn test_invalid_decrypt() {
 }
 
 #[test]
-#[ignore]
+//#[ignore]
+#[cfg(feature = "expensive_tests")]
 fn bench_encryption_inner() {
+    println!("Starting bench_encryption_inner...");
     const SEC1HEX: &'static str =
         "dc4b57c5fe856584b01aab34dad7454b0f715bdfab091bf0dbbe12f65c778838";
     const SEC2HEX: &'static str =
@@ -395,38 +397,53 @@ fn bench_encryption_inner() {
 
     let (pub2, _) = sec2.x_only_public_key(&SECP256K1);
 
+    println!("Calculating shared conversation key...");
     let shared = get_conversation_key(sec1, pub2);
+    println!("Shared conversation key calculated.");
 
     // Bench a maximum length message
-    let message: Vec<u8> = std::iter::repeat(0).take(65536 - 128).collect();
-    let message = unsafe { String::from_utf8_unchecked(message) };
-    let start = std::time::Instant::now();
+    println!("Benchmarking with maximum length message ({} bytes)...", 65536 - 128);
+    let message_long: Vec<u8> = std::iter::repeat(0).take(65536 - 128).collect();
+    let message_long = unsafe { String::from_utf8_unchecked(message_long) };
+    let start_long = std::time::Instant::now();
     let rounds = 32768;
     for _ in 0..rounds {
         std::hint::black_box({
-            let encrypted = encrypt(&shared, &*message).unwrap();
+            let encryption_start = std::time::Instant::now();
+            let encrypted = encrypt(&shared, &*message_long).unwrap();
+            let encryption_elapsed = encryption_start.elapsed();
+            let decryption_start = std::time::Instant::now();
             let _decrypted = decrypt(&shared, &*encrypted).unwrap();
+            let decryption_elapsed = decryption_start.elapsed();
+            // println!("  Encryption: {:?}, Decryption: {:?}", encryption_elapsed, decryption_elapsed);
         });
     }
-    let elapsed = start.elapsed();
-    let total_nanos = elapsed.as_nanos();
-    let nanos_per_roundtrip = total_nanos / rounds as u128;
-    let nanosx10_per_roundtrip_per_char_long = 10 * nanos_per_roundtrip / message.len() as u128;
+    let elapsed_long = start_long.elapsed();
+    let total_nanos_long = elapsed_long.as_nanos();
+    let nanos_per_roundtrip_long = total_nanos_long / rounds as u128;
+    let nanosx10_per_roundtrip_per_char_long = 10 * nanos_per_roundtrip_long / message_long.len() as u128;
+    println!("Finished benchmarking long message.");
 
     // Bench a minimal length message
-    let message = "a";
-    let start = std::time::Instant::now();
-    let rounds = 32768;
+    println!("Benchmarking with minimal length message (1 byte)...");
+    let message_short = "a";
+    let start_short = std::time::Instant::now();
     for _ in 0..rounds {
         std::hint::black_box({
-            let encrypted = encrypt(&shared, &*message).unwrap();
+            let encryption_start = std::time::Instant::now();
+            let encrypted = encrypt(&shared, &*message_short).unwrap();
+            let encryption_elapsed = encryption_start.elapsed();
+            let decryption_start = std::time::Instant::now();
             let _decrypted = decrypt(&shared, &*encrypted).unwrap();
+            let decryption_elapsed = decryption_start.elapsed();
+            // println!("  Encryption: {:?}, Decryption: {:?}", encryption_elapsed, decryption_elapsed);
         });
     }
-    let elapsed = start.elapsed();
-    let total_nanos = elapsed.as_nanos();
-    let nanos_per_roundtrip = total_nanos / rounds as u128;
-    let nanosx10_per_roundtrip_per_char_short = 10 * nanos_per_roundtrip / message.len() as u128;
+    let elapsed_short = start_short.elapsed();
+    let total_nanos_short = elapsed_short.as_nanos();
+    let nanos_per_roundtrip_short = total_nanos_short / rounds as u128;
+    let nanosx10_per_roundtrip_per_char_short = 10 * nanos_per_roundtrip_short / message_short.len() as u128;
+    println!("Finished benchmarking short message.");
 
     // This is approximate math, assuming overhead is negligable on the long message, which
     // is approximately true.
@@ -434,10 +451,11 @@ fn bench_encryption_inner() {
     let overheadx10 = nanosx10_per_roundtrip_per_char_short - percharx10;
 
     println!(
-        "{}.{}ns plus {}.{}ns per character (encrypt and decrypt)",
+        "Summary: {}.{}ns plus {}.{}ns per character (encrypt and decrypt roundtrip)",
         overheadx10 / 10,
         overheadx10 % 10,
         percharx10 / 10,
         percharx10 % 10
     );
+    println!("bench_encryption_inner finished.");
 }
