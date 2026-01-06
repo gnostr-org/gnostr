@@ -31,6 +31,7 @@ pub enum MsgKind {
     GitCommitBody,
     GitCommitTime,
     NostrEvent,
+    GitDiff,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -347,6 +348,24 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 ),
                 m.content[0].clone().into(),
             ]),
+            GitDiff => {
+                let mut spans = Vec::new();
+                for line in m.content.iter() {
+                    let style = if line.starts_with('+') {
+                        Style::default().fg(Color::Green)
+                    } else if line.starts_with('-') {
+                        Style::default().fg(Color::Red)
+                    } else {
+                        Style::default().fg(Color::White)
+                    };
+                    spans.push(Span::styled(line.clone(), style));
+                    spans.push(Span::raw("\n"));
+                }
+                if !spans.is_empty() {
+                    spans.pop(); // Remove the last newline
+                }
+                Line::from(spans)
+            }
         }
     }
 }
@@ -432,6 +451,9 @@ impl Display for Msg {
             }
             MsgKind::NostrEvent => {
                 write!(f, "[Nostr Event] {}", self.content[0])
+            }
+            MsgKind::GitDiff => {
+                write!(f, "[Git Diff]")
             }
         }
     }
