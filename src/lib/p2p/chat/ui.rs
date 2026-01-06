@@ -29,7 +29,7 @@ use uuid::Uuid;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
-use crate::p2p::chat::msg;
+use crate::p2p::chat::msg::{self, MsgKind};
 
 struct TerminalCleanup;
 
@@ -111,6 +111,26 @@ impl App {
     }
 }
 
+fn process_and_add_diff_message(app: &mut App, input_text: String) {
+    let diff_content = input_text.strip_prefix("--diff ").unwrap_or(&input_text);
+    let message_id = Uuid::new_v4().to_string();
+    let lines: Vec<String> = diff_content.lines().map(|s| s.to_string()).collect();
+    let total_chunks = lines.len(); // Each line is a chunk for diffs
+
+    for (sequence_num, line) in lines.into_iter().enumerate() {
+        let m = msg::Msg::default()
+            .set_content(line, 0)
+            .set_kind(MsgKind::GitDiff)
+            .set_message_id(message_id.clone())
+            .set_sequence_num(sequence_num)
+            .set_total_chunks(total_chunks);
+        app.add_message(m.clone());
+        if let Some(ref mut hook) = app._on_input_enter {
+            hook(m);
+        }
+    }
+}
+
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     let tick_rate = Duration::from_millis(100);
     loop {
@@ -157,23 +177,27 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let input_text = app.input.value().to_owned();
-                            let wrapped_lines: Vec<String> = fill(&input_text, 80)
-                                .split('\n')
-                                .map(|s| s.to_string())
-                                .collect();
-                            let total_chunks = wrapped_lines.len();
-                            let message_id = Uuid::new_v4().to_string();
+                            if input_text.starts_with("--diff ") {
+                                process_and_add_diff_message(app, input_text);
+                            } else {
+                                let wrapped_lines: Vec<String> = fill(&input_text, 80)
+                                    .split('\n')
+                                    .map(|s| s.to_string())
+                                    .collect();
+                                let total_chunks = wrapped_lines.len();
+                                let message_id = Uuid::new_v4().to_string();
 
-                            for (sequence_num, line) in wrapped_lines.into_iter().enumerate() {
-                                if !line.trim().is_empty() {
-                                    let m = msg::Msg::default()
-                                        .set_content(line, 0)
-                                        .set_message_id(message_id.clone())
-                                        .set_sequence_num(sequence_num)
-                                        .set_total_chunks(total_chunks);
-                                    app.add_message(m.clone());
-                                    if let Some(ref mut hook) = app._on_input_enter {
-                                        hook(m);
+                                for (sequence_num, line) in wrapped_lines.into_iter().enumerate() {
+                                    if !line.trim().is_empty() {
+                                        let m = msg::Msg::default()
+                                            .set_content(line, 0)
+                                            .set_message_id(message_id.clone())
+                                            .set_sequence_num(sequence_num)
+                                            .set_total_chunks(total_chunks);
+                                        app.add_message(m.clone());
+                                        if let Some(ref mut hook) = app._on_input_enter {
+                                            hook(m);
+                                        }
                                     }
                                 }
                             }
