@@ -320,10 +320,19 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 }
                 Line::from(spans)
             }
-            OneShot => Line::from(Span::styled(
-                format!("[ONESHOT] {}: {}", m.from, m.content[0]),
-                Style::default().fg(Color::Rgb(255, 165, 0)), // Orange color for OneShot messages
-            )),
+            OneShot => {
+                let mut spans = Vec::new();
+                let orange_style = Style::default().fg(Color::Rgb(255, 165, 0));
+
+                if let Some(first_line) = m.content.first() {
+                    spans.push(Span::styled(format!("[ONESHOT] {}: {}", m.from, first_line), orange_style));
+                }
+
+                for line in m.content.iter().skip(1) {
+                    spans.push(Span::styled(line.clone(), orange_style));
+                }
+                Line::from(spans)
+            }
         }
     }
 }
