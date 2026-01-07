@@ -453,6 +453,9 @@ fn ui(f: &mut Frame, app: &App) {
 
         let items: Vec<ListItem> = messages.iter().map(|msg| {
             let mut lines: Vec<Line> = Vec::new();
+            let message_id_display = msg.message_id.as_deref().unwrap_or("N/A");
+            lines.push(Line::from(Span::styled(format!("ID: {}", message_id_display), Style::default().fg(Color::DarkGray))));
+
             match msg.kind {
                 MsgKind::GitDiff => {
                     for line_content in msg.content.iter() {
