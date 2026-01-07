@@ -18,6 +18,7 @@ use ratatui::{
 };
 
 use ratatui::style::Style;
+use ratatui::prelude::Stylize;
 use std::{
     error::Error,
     io,
