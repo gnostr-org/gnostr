@@ -45,10 +45,10 @@ pub enum AppMode {
     #[default]
     Normal,
     Editing,
-    SelectingDiff {
-        diff_messages: Vec<msg::Msg>, // Filtered list of diff messages
-        selected_index: usize,        // Index of the currently selected diff
-        scroll_state: usize,          // Scroll position for the diff list
+    SelectingMessage {
+        messages: Vec<msg::Msg>,      // Filtered list of messages to select from
+        selected_index: usize,        // Index of the currently selected message
+        scroll_state: ListState,      // Scroll state for the selectable list
     },
 }
 
@@ -69,7 +69,7 @@ impl Default for App {
     fn default() -> Self {
         App {
             input: Input::default(),
-            mode: AppMode::default(), // Use new AppMode
+            mode: AppMode::default(),
             messages: Default::default(),
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
@@ -175,21 +175,20 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         return Ok(());
                     }
                     KeyCode::Char('\\') => { // New keybinding for selecting diffs
-                        let all_messages = app.messages.lock().unwrap();
-                        let diff_messages: Vec<msg::Msg> = all_messages
-                            .iter()
-                            .filter(|m| m.kind == MsgKind::GitDiff)
-                            .cloned() // Clone to move into the new state
-                            .collect();
-
-                        if !diff_messages.is_empty() {
-                            app.mode = AppMode::SelectingDiff {
-                                diff_messages,
-                                selected_index: 0,
-                                scroll_state: 0,
-                            };
-                        }
-                    }
+                                                    let all_messages = app.messages.lock().unwrap();
+                                                    let selectable_messages: Vec<msg::Msg> = all_messages
+                                                        .iter()
+                                                        .filter(|m| m.kind == MsgKind::GitDiff || m.kind == MsgKind::OneShot)
+                                                        .cloned()
+                                                        .collect();
+                        
+                                                    if !selectable_messages.is_empty() {
+                                                        app.mode = AppMode::SelectingMessage {
+                                                            messages: selectable_messages,
+                                                            selected_index: 0,
+                                                            scroll_state: ListState::default(),
+                                                        };
+                                                    }                    }
                     KeyCode::Up => {
                         let l = app.messages.lock().unwrap().len();
                         app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
@@ -246,25 +245,27 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
-                AppMode::SelectingDiff { ref mut diff_messages, ref mut selected_index, scroll_state: _ } => {
+                AppMode::SelectingMessage { ref mut messages, ref mut selected_index, ref mut scroll_state } => {
                     match key.code {
                         KeyCode::Up => {
                             if *selected_index > 0 {
                                 *selected_index -= 1;
                             }
+                            scroll_state.select(Some(*selected_index));
                         }
                         KeyCode::Down => {
-                            if *selected_index < diff_messages.len() - 1 {
+                            if *selected_index < messages.len() - 1 {
                                 *selected_index += 1;
                             }
+                            scroll_state.select(Some(*selected_index));
                         }
                         KeyCode::Enter => {
-                            // Display the selected diff
-                            let selected_diff = diff_messages[*selected_index].clone();
-                            // Clear existing messages and add the selected diff for display
+                            // Display the selected message
+                            let selected_message = messages[*selected_index].clone();
+                            // Clear existing messages and add the selected message for display
                             let mut all_messages = app.messages.lock().unwrap();
                             all_messages.clear(); // Clear existing messages
-                            all_messages.push(selected_diff); // Add the selected diff
+                            all_messages.push(selected_message); // Add the selected message
                             app.msgs_scroll = usize::MAX; // Scroll to bottom
 
                             app.mode = AppMode::Normal; // Exit selection mode
@@ -359,7 +360,7 @@ fn ui(f: &mut Frame, app: &App) {
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(messages, chunks[1]);
 
-    if let AppMode::SelectingDiff { diff_messages, selected_index, scroll_state: _ } = &app.mode {
+    if let AppMode::SelectingMessage { messages, selected_index: _, scroll_state } = &app.mode {
         let popup_area = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -380,28 +381,47 @@ fn ui(f: &mut Frame, app: &App) {
 
         f.render_widget(Clear, popup_area); // Clear the area first
 
-        let items: Vec<ListItem> = diff_messages.iter().enumerate().map(|(i, msg)| {
-            let mut summary = String::new();
-            if let Some(first_line) = msg.content.first() {
-                // Take a snippet of the first line as a summary
-                summary = first_line.chars().take(popup_area.width as usize - 4).collect(); // -4 for borders
+        let items: Vec<ListItem> = messages.iter().map(|msg| {
+            let mut lines: Vec<Line> = Vec::new();
+            match msg.kind {
+                MsgKind::GitDiff => {
+                    for line_content in msg.content.iter() {
+                        let style = if line_content.starts_with('+') {
+                            Style::default().fg(Color::Green)
+                        } else if line_content.starts_with('-') {
+                            Style::default().fg(Color::Red)
+                        } else if line_content.starts_with('@') || line_content.starts_with('\\') {
+                            Style::default().fg(Color::Cyan)
+                        } else {
+                            Style::default().fg(Color::White)
+                        };
+                        lines.push(Line::from(Span::styled(line_content.clone(), style)));
+                    }
+                },
+                MsgKind::OneShot => {
+                    let orange_style = Style::default().fg(Color::Rgb(255, 165, 0));
+                    if let Some(first_line) = msg.content.first() {
+                        lines.push(Line::from(Span::styled(format!("[ONESHOT] {}: {}", msg.from, first_line), orange_style)));
+                    }
+                    for line_content in msg.content.iter().skip(1) {
+                        lines.push(Line::from(Span::styled(line_content.clone(), orange_style)));
+                    }
+                },
+                _ => {
+                    // Fallback for other message types, though only GitDiff and OneShot should be here
+                    if let Some(first_line) = msg.content.first() {
+                        lines.push(Line::from(Span::styled(first_line.clone(), Style::default().fg(Color::White))));
+                    }
+                }
             }
-            let content = if i == *selected_index {
-                format!("> {}", summary)
-            } else {
-                format!("  {}", summary)
-            };
-            ListItem::new(content).style(Style::default().fg(Color::Yellow))
+            ListItem::new(lines)
         }).collect();
 
-        let mut list_state = ListState::default();
-        list_state.select(Some(*selected_index));
-
         let diff_list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("Select Diff"))
+            .block(Block::default().borders(Borders::ALL).title("Select Message"))
             .highlight_style(Style::default().fg(Color::Black).bg(Color::White));
             
-        f.render_stateful_widget(diff_list, popup_area, &mut list_state);
+        f.render_stateful_widget(diff_list, popup_area, &mut scroll_state.clone());
     }
 
     // Input Widget
@@ -413,7 +433,7 @@ fn ui(f: &mut Frame, app: &App) {
     let default_input_style = match app.mode {
         AppMode::Normal => Style::default(),
         AppMode::Editing => Style::default().fg(Color::Cyan),
-        AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), // Indicate non-editable
+        AppMode::SelectingMessage { .. } => Style::default().fg(Color::DarkGray), // Indicate non-editable
     };
 
     for (i, c) in input_str.chars().enumerate() {
@@ -444,6 +464,6 @@ fn ui(f: &mut Frame, app: &App) {
             chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
             chunks[2].y + 1,
         )),
-        AppMode::SelectingDiff { .. } => {} // No cursor in this mode
+        AppMode::SelectingMessage { .. } => {} // No cursor in this mode
     }
 }
