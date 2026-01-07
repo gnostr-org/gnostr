@@ -64,6 +64,7 @@ pub struct App {
     pub msgs_scroll: usize,
     pub topic: String,
     pub selected_message_content_scroll: usize, // New field for scrolling within a selected message
+    pub show_side_panel: bool,
 }
 
 impl Default for App {
@@ -76,6 +77,7 @@ impl Default for App {
             msgs_scroll: usize::MAX,
             topic: String::from("gnostr"),
             selected_message_content_scroll: 0, // Initialize new field
+            show_side_panel: false,
         }
     }
 }
@@ -182,19 +184,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             return Ok(());
                         }
                         KeyCode::Char('\\') => {
-                            let selectable_messages: Vec<msg::Msg> = msgs
-                                .iter()
-                                .filter(|m| m.kind == MsgKind::GitDiff || m.kind == MsgKind::OneShot)
-                                .cloned()
-                                .collect();
-                            
-                            if !selectable_messages.is_empty() {
-                                app.mode = AppMode::SelectingMessage {
-                                    messages: selectable_messages,
-                                    selected_index: 0,
-                                    scroll_state: ListState::default(),
-                                };
-                            }
+                            // Toggle side panel
+                            app.show_side_panel = !app.show_side_panel;
                         }
                         KeyCode::Up => {
                             if is_single_scrollable_message {
@@ -309,6 +300,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 
 //as popup widget is constructed in chat_details/mos.rs
 fn ui(f: &mut Frame, app: &App) {
+    let main_layout_constraints = if app.show_side_panel {
+        vec![Constraint::Percentage(70), Constraint::Percentage(30)]
+    } else {
+        vec![Constraint::Percentage(100)]
+    };
+
+    let main_layout_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(main_layout_constraints)
+        .split(f.area());
+
+    let message_and_input_area = main_layout_chunks[0];
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -319,7 +323,7 @@ fn ui(f: &mut Frame, app: &App) {
             ]
             .as_ref(),
         )
-        .split(f.area());
+        .split(message_and_input_area);
 
     // Header Widget
     let header_text = vec![Line::from(app.topic.as_str())];
@@ -449,7 +453,7 @@ fn ui(f: &mut Frame, app: &App) {
             ])
             .split(popup_area)[1];
 
-        f.render_widget(Clear, popup_area); // Clear the area first
+        f.render_widget(Clear, f.area()); // Clear the area first
 
         let items: Vec<ListItem> = messages.iter().map(|msg| {
             let mut lines: Vec<Line> = Vec::new();
@@ -538,5 +542,15 @@ fn ui(f: &mut Frame, app: &App) {
             chunks[2].y + 1,
         )),
         AppMode::SelectingMessage { .. } => {} // No cursor in this mode
+    }
+
+    // Render side panel if active
+    if app.show_side_panel {
+        let side_panel_area = main_layout_chunks[1];
+        let side_panel = Block::default()
+            .borders(Borders::ALL)
+            .title("Side Panel")
+            .fg(Color::White);
+        f.render_widget(side_panel, side_panel_area);
     }
 }
