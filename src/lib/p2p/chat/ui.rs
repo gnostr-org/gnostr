@@ -190,14 +190,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         }
                         KeyCode::Up => {
                             if is_single_scrollable_message {
-                                app.selected_message_content_scroll = app.selected_message_content_scroll.saturating_sub(1);
-                            } else {
-                                let l = msgs.len();
-                                app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
-                            }
-                        }
-                        KeyCode::Down => {
-                            if is_single_scrollable_message {
                                 // Max scroll is determined by content length minus visible height
                                 // This requires the actual visible height which is only available in `ui` function.
                                 // For now, we'll use a rough estimate or handle overflow in `ui`.
@@ -209,6 +201,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             } else {
                                 let l = msgs.len();
                                 app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
+                            }
+                        }
+                        KeyCode::Down => {
+                            if is_single_scrollable_message {
+                                app.selected_message_content_scroll = app.selected_message_content_scroll.saturating_sub(1);
+                            } else {
+                                let l = msgs.len();
+                                app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
                             }
                         }
                         KeyCode::Esc => {
