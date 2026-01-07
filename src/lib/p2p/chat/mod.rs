@@ -335,9 +335,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             while let Some(event) = peer_rx.recv().await {
                 debug!("recv: {:?}", event);
                 if let InternalEvent::ChatMessage(m) = event {
+                    debug!("mod.rs: Adding chat message to TUI. Kind: {:?}, Message ID: {:?}", m.kind, m.message_id);
                     tui_msg_adder(m);
                 } else {
-                    debug!("Received non-chat message event: {:?}", event);
+                    debug!("mod.rs: Received non-chat message event: {:?}", event);
                 }
             }
         });
