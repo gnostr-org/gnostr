@@ -63,6 +63,7 @@ pub struct App {
     pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
     pub msgs_scroll: usize,
     pub topic: String,
+    pub selected_message_content_scroll: usize, // New field for scrolling within a selected message
 }
 
 impl Default for App {
@@ -74,6 +75,7 @@ impl Default for App {
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
             topic: String::from("gnostr"),
+            selected_message_content_scroll: 0, // Initialize new field
         }
     }
 }
@@ -166,46 +168,69 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             }
 
             match app.mode { // Changed from app.input_mode
-                AppMode::Normal => match key.code {
-                    KeyCode::Char('e') | KeyCode::Char('i') => {
-                        app.mode = AppMode::Editing; // Changed from app.input_mode
-                        app.msgs_scroll = usize::MAX;
+                AppMode::Normal => {
+                    let msgs = app.messages.lock().unwrap();
+                    let is_single_scrollable_message = msgs.len() == 1
+                        && (msgs[0].kind == MsgKind::GitDiff || msgs[0].kind == MsgKind::OneShot);
+
+                    match key.code {
+                        KeyCode::Char('e') | KeyCode::Char('i') => {
+                            app.mode = AppMode::Editing;
+                            app.msgs_scroll = usize::MAX;
+                        }
+                        KeyCode::Char('q') => {
+                            return Ok(());
+                        }
+                        KeyCode::Char('\\') => {
+                            let selectable_messages: Vec<msg::Msg> = msgs
+                                .iter()
+                                .filter(|m| m.kind == MsgKind::GitDiff || m.kind == MsgKind::OneShot)
+                                .cloned()
+                                .collect();
+                            
+                            if !selectable_messages.is_empty() {
+                                app.mode = AppMode::SelectingMessage {
+                                    messages: selectable_messages,
+                                    selected_index: 0,
+                                    scroll_state: ListState::default(),
+                                };
+                            }
+                        }
+                        KeyCode::Up => {
+                            if is_single_scrollable_message {
+                                app.selected_message_content_scroll = app.selected_message_content_scroll.saturating_sub(1);
+                            } else {
+                                let l = msgs.len();
+                                app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
+                            }
+                        }
+                        KeyCode::Down => {
+                            if is_single_scrollable_message {
+                                // Max scroll is determined by content length minus visible height
+                                // This requires the actual visible height which is only available in `ui` function.
+                                // For now, we'll use a rough estimate or handle overflow in `ui`.
+                                // A more robust solution would pass visible height to run_app or calculate here.
+                                let total_content_lines = msgs[0].content.len();
+                                let visible_height = terminal.size()?.height.saturating_sub(6) as usize; // Estimate: total height - header - input
+                                let max_scroll = total_content_lines.saturating_sub(visible_height).max(0);
+                                app.selected_message_content_scroll = (app.selected_message_content_scroll + 1).min(max_scroll);
+                            } else {
+                                let l = msgs.len();
+                                app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
+                            }
+                        }
+                        KeyCode::Esc => {
+                            app.msgs_scroll = usize::MAX;
+                            app.selected_message_content_scroll = 0; // Reset content scroll on Esc
+                            app.input.reset();
+                        }
+                        _ => {
+                            if !is_single_scrollable_message {
+                                app.msgs_scroll = usize::MAX;
+                            }
+                        }
                     }
-                    KeyCode::Char('q') => {
-                        return Ok(());
-                    }
-                    KeyCode::Char('\\') => { // New keybinding for selecting diffs
-                                                    let all_messages = app.messages.lock().unwrap();
-                                                    let selectable_messages: Vec<msg::Msg> = all_messages
-                                                        .iter()
-                                                        .filter(|m| m.kind == MsgKind::GitDiff || m.kind == MsgKind::OneShot)
-                                                        .cloned()
-                                                        .collect();
-                        
-                                                    if !selectable_messages.is_empty() {
-                                                        app.mode = AppMode::SelectingMessage {
-                                                            messages: selectable_messages,
-                                                            selected_index: 0,
-                                                            scroll_state: ListState::default(),
-                                                        };
-                                                    }                    }
-                    KeyCode::Up => {
-                        let l = app.messages.lock().unwrap().len();
-                        app.msgs_scroll = app.msgs_scroll.saturating_sub(1).min(l);
-                    }
-                    KeyCode::Down => {
-                        let l = app.messages.lock().unwrap().len();
-                        app.msgs_scroll = app.msgs_scroll.saturating_add(1).min(l);
-                    }
-                    KeyCode::Esc => {
-                        app.msgs_scroll = usize::MAX;
-                        app.msgs_scroll = usize::MAX;
-                        app.input.reset();
-                    }
-                    _ => {
-                        app.msgs_scroll = usize::MAX;
-                    }
-                },
+                }
                 AppMode::Editing => match key.code { // Changed from InputMode::Editing
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
@@ -267,6 +292,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             all_messages.clear(); // Clear existing messages
                             all_messages.push(selected_message); // Add the selected message
                             app.msgs_scroll = usize::MAX; // Scroll to bottom
+                            app.selected_message_content_scroll = 0; // Reset scroll for new message
 
                             app.mode = AppMode::Normal; // Exit selection mode
                         }
@@ -304,37 +330,22 @@ fn ui(f: &mut Frame, app: &App) {
     // Messages Widget
     let height = chunks[1].height; // Re-introduce height variable
     let message_area_width = chunks[1].width;
-    let msgs = app.messages.lock().unwrap();
-    
-    let mut messages: Vec<ListItem> = Vec::new();
+    let current_messages = app.messages.lock().unwrap();
+    let is_single_scrollable_message = current_messages.len() == 1
+        && (current_messages[0].kind == MsgKind::GitDiff || current_messages[0].kind == MsgKind::OneShot);
 
-    for msg in msgs.iter().rev() {
+    let messages_to_render: Vec<ListItem>;
+    let mut all_messages_list_items: Vec<ListItem> = Vec::new(); // Declare here
 
-        match msg.kind {
-            MsgKind::Chat => {
-                let mut chat_spans: Vec<ratatui::text::Span> = Vec::new();
-                let (prefix, indent) = if msg.from == *msg::USER_NAME {
-                    (format!("{}{} ", &msg.from, ">"), " ".repeat(msg.from.len() + 2))
-                } else {
-                    (format!(" {}{}", &msg.from, "> "), " ".repeat(msg.from.len() + 3))
-                };
-                let prefix_style = Style::default().fg(gen_color_by_hash(&msg.from));
-                chat_spans.push(ratatui::text::Span::styled(prefix.clone(), prefix_style));
-
-                let content_width = message_area_width.saturating_sub(prefix.len() as u16);
-                let wrapped_content = textwrap::wrap(&msg.content[0], Options::new(content_width as usize));
-
-                for (idx, segment) in wrapped_content.into_iter().enumerate() {
-                    if idx > 0 {
-                        chat_spans.push(ratatui::text::Span::raw("\n"));
-                        chat_spans.push(ratatui::text::Span::raw(indent.clone()));
-                    }
-                    chat_spans.push(ratatui::text::Span::raw(segment.to_string()));
-                }
-                messages.push(ListItem::new(Line::from(chat_spans)));
-            },
-            MsgKind::GitDiff => {
-                for line_content in msg.content.iter() { // Iterate directly over pre-wrapped lines
+    if is_single_scrollable_message {
+        let msg = &current_messages[0];
+        let start_index = app.selected_message_content_scroll;
+        let end_index = (start_index + height as usize).min(msg.content.len());
+        
+        let mut lines: Vec<Line> = Vec::new();
+        for line_content in msg.content.iter().skip(start_index).take(end_index - start_index) {
+            match msg.kind {
+                MsgKind::GitDiff => {
                     let style = if line_content.starts_with('+') {
                         Style::default().fg(Color::Green)
                     } else if line_content.starts_with('-') {
@@ -344,21 +355,80 @@ fn ui(f: &mut Frame, app: &App) {
                     } else {
                         Style::default().fg(Color::White)
                     };
-                    messages.push(ListItem::new(Line::from(Span::styled(line_content.clone(), style))));
-                }
-            },
-            _ => {
-                // For other MsgKind, directly convert to ListItem
-                messages.push(ListItem::new(ratatui::text::Text::from(Line::from(msg))));
+                    lines.push(Line::from(Span::styled(line_content.clone(), style)));
+                },
+                MsgKind::OneShot => {
+                    let orange_style = Style::default().fg(Color::Rgb(255, 165, 0));
+                    lines.push(Line::from(Span::styled(line_content.clone(), orange_style)));
+                },
+                _ => unreachable!(), // Should not happen given `is_single_scrollable_message` check
             }
         }
-    }
-    messages.truncate(height as usize); // Take only the visible number of lines
+        messages_to_render = vec![ListItem::new(lines)];
 
-    let messages = List::new(messages)
-        .direction(ratatui::widgets::ListDirection::BottomToTop)
-        .block(Block::default().borders(Borders::NONE));
-    f.render_widget(messages, chunks[1]);
+        let messages_list = List::new(messages_to_render)
+            .block(Block::default().borders(Borders::NONE));
+        f.render_widget(messages_list, chunks[1]);
+
+    } else {
+        // Populate all_messages_list_items only in this branch
+        for msg in current_messages.iter().rev() {
+            match msg.kind {
+                MsgKind::Chat => {
+                    let mut chat_spans: Vec<ratatui::text::Span> = Vec::new();
+                    let (prefix, indent) = if msg.from == *msg::USER_NAME {
+                        (format!("{}{} ", &msg.from, ">"), " ".repeat(msg.from.len() + 2))
+                    } else {
+                        (format!(" {}{}", &msg.from, "> "), " ".repeat(msg.from.len() + 3))
+                    };
+                    let prefix_style = Style::default().fg(gen_color_by_hash(&msg.from));
+                    chat_spans.push(ratatui::text::Span::styled(prefix.clone(), prefix_style));
+
+                    let content_width = message_area_width.saturating_sub(prefix.len() as u16);
+                    let wrapped_content = textwrap::wrap(&msg.content[0], Options::new(content_width as usize));
+
+                    for (idx, segment) in wrapped_content.into_iter().enumerate() {
+                        if idx > 0 {
+                            chat_spans.push(ratatui::text::Span::raw("\n"));
+                            chat_spans.push(ratatui::text::Span::raw(indent.clone()));
+                        }
+                        chat_spans.push(ratatui::text::Span::raw(segment.to_string()));
+                    }
+                    all_messages_list_items.push(ListItem::new(Line::from(chat_spans)));
+                },
+                MsgKind::GitDiff => {
+                    for line_content in msg.content.iter() {
+                        let style = if line_content.starts_with('+') {
+                            Style::default().fg(Color::Green)
+                        } else if line_content.starts_with('-') {
+                            Style::default().fg(Color::Red)
+                        } else if line_content.starts_with('@') || line_content.starts_with('\\') {
+                            Style::default().fg(Color::Cyan)
+                        } else {
+                            Style::default().fg(Color::White)
+                        };
+                        all_messages_list_items.push(ListItem::new(Line::from(Span::styled(line_content.clone(), style))));
+                    }
+                },
+                _ => {
+                    all_messages_list_items.push(ListItem::new(ratatui::text::Text::from(Line::from(msg))));
+                }
+            }
+        }
+        
+        let num_total_messages = all_messages_list_items.len();
+        let num_visible_messages = height as usize;
+
+        let start_index = app.msgs_scroll.min(num_total_messages.saturating_sub(num_visible_messages).max(0));
+        let end_index = (start_index + num_visible_messages).min(num_total_messages);
+        
+        let visible_messages: Vec<ListItem> = all_messages_list_items[start_index..end_index].to_vec();
+
+        let messages_list = List::new(visible_messages)
+            .direction(ratatui::widgets::ListDirection::BottomToTop)
+            .block(Block::default().borders(Borders::NONE));
+        f.render_widget(messages_list, chunks[1]);
+    }
 
     if let AppMode::SelectingMessage { messages, selected_index: _, scroll_state } = &app.mode {
         let popup_area = Layout::default()
