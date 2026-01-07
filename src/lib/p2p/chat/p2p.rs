@@ -94,8 +94,8 @@ impl MessageReassembler {
                         reassembled_msg.kind = chunk.kind;
                         reassembled_msg.commit_id = chunk.commit_id;
                         reassembled_msg.nostr_event = chunk.nostr_event.clone();
-                        // Reset sequencing info as it's now a single complete message
-                        reassembled_msg.message_id = None;
+                        // Retain message_id from the first chunk
+                        reassembled_msg.message_id = chunk.message_id.clone();
                         reassembled_msg.sequence_num = None;
                         reassembled_msg.total_chunks = None;
                     }
@@ -350,15 +350,21 @@ pub async fn evt_loop(
                     );
                     match serde_json::from_slice::<Msg>(&message.data) {
                         Ok(msg) => {
+                            debug!("evt_loop: Deserialized message. Kind: {:?}, Message ID: {:?}", msg.kind, msg.message_id);
                             if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
                                                                 if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
                                                                     let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                                                    debug!("evt_loop: Sending reassembled message to recv. Kind: {:?}, Message ID: {:?}", reassembled_msg.kind, reassembled_msg.message_id);
                                                                     apply_text_wrapping(&mut reassembled_msg, terminal_width);
                                                                     recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
-                                                                }
-                            } else {
+                                                                }                            } else {
                                 // It's a single-part message, send directly
                                 let mut processed_msg = msg;
+                                // If message_id is not set, use the gossipsub message_id
+                                if processed_msg.message_id.is_none() {
+                                    processed_msg.message_id = Some(id.to_string()); // Convert gossipsub::MessageId to String
+                                }
+                                debug!("evt_loop: Sending single-part message to recv. Kind: {:?}, Message ID: {:?}", processed_msg.kind, processed_msg.message_id);
                                 let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
                                 apply_text_wrapping(&mut processed_msg, terminal_width);
                                 recv.send(crate::queue::InternalEvent::ChatMessage(processed_msg)).await?;
