@@ -177,7 +177,7 @@ impl App {
             branches,
             commit_state,
             branch_state,
-            current_mode: NavigatorMode::Commits,
+            current_mode: NavigatorMode::Branches,
             repo,
         })
     }
