@@ -293,23 +293,23 @@ impl App {
         Ok(())
     }
 
-    /// Loads full commit details for the selected commit.
+    /// Loads git diff for the selected commit.
     fn load_full_commit(&mut self) -> Result<()> {
         if let Some(selected_index) = self.commit_state.selected() {
             if let Some(commit) = self.commits.get(selected_index) {
                 // Find the full commit object using the hash
                 let commit_oid = git2::Oid::from_str(&commit.full_hash)?;
                 if let Ok(git_commit) = self.repo.find_commit(commit_oid) {
-                    let mut commit_details = String::new();
+                    let mut diff_content = String::new();
 
                     // Add commit header
-                    commit_details.push_str(&format!("Commit: {}\n", git_commit.id()));
-                    commit_details.push_str(&format!(
+                    diff_content.push_str(&format!("Commit: {}\n", git_commit.id()));
+                    diff_content.push_str(&format!(
                         "Author: {} <{}>\n",
                         git_commit.author().name().unwrap_or("Unknown"),
                         git_commit.author().email().unwrap_or("unknown@example.com")
                     ));
-                    commit_details.push_str(&format!(
+                    diff_content.push_str(&format!(
                         "Date: {}\n",
                         chrono::DateTime::from_timestamp(git_commit.author().when().seconds(), 0)
                             .map(|dt| dt.naive_local())
@@ -317,49 +317,92 @@ impl App {
                             .format("%Y-%m-%d %H:%M:%S")
                     ));
 
-                    if git_commit.author() != git_commit.committer() {
-                        commit_details.push_str(&format!(
-                            "Committer: {} <{}>\n",
-                            git_commit.committer().name().unwrap_or("Unknown"),
-                            git_commit
-                                .committer()
-                                .email()
-                                .unwrap_or("unknown@example.com")
-                        ));
-                        commit_details.push_str(&format!(
-                            "Commit Date: {}\n",
-                            chrono::DateTime::from_timestamp(
-                                git_commit.committer().when().seconds(),
-                                0
-                            )
-                            .map(|dt| dt.naive_local())
-                            .unwrap_or_default()
-                            .format("%Y-%m-%d %H:%M:%S")
-                        ));
-                    }
-
-                    commit_details.push_str("\n");
-                    commit_details
+                    diff_content.push_str("\n");
+                    diff_content
                         .push_str(&format!("    {}\n\n", git_commit.summary().unwrap_or("")));
 
-                    // Add full commit message
-                    if let Some(message) = git_commit.message() {
-                        let lines: Vec<&str> = message.lines().collect();
-                        if lines.len() > 1 {
-                            for line in lines.iter().skip(1) {
-                                if !line.trim().is_empty() {
-                                    commit_details.push_str(&format!("    {}\n", line));
-                                }
-                            }
-                            commit_details.push_str("\n");
+                    // Get the diff against parent(s)
+                    let parent_count = git_commit.parent_count();
+
+                    if parent_count == 0 {
+                        // Initial commit - show all files
+                        diff_content.push_str("Initial commit - showing all files:\n\n");
+
+                        let tree = git_commit.tree()?;
+                        let diff = self.repo.diff_tree_to_tree(None, Some(&tree), None)?;
+                        self.format_diff(&diff, &mut diff_content)?;
+                    } else {
+                        // Show diff against first parent
+                        if let Ok(parent) = git_commit.parent(0) {
+                            let parent_tree = parent.tree()?;
+                            let current_tree = git_commit.tree()?;
+                            let diff = self.repo.diff_tree_to_tree(
+                                Some(&parent_tree),
+                                Some(&current_tree),
+                                None,
+                            )?;
+                            self.format_diff(&diff, &mut diff_content)?;
                         }
                     }
 
-                    self.full_commit_details = Some(commit_details);
+                    self.full_commit_details = Some(diff_content);
                     self.show_full_commit = true;
                 }
             }
         }
+        Ok(())
+    }
+
+    /// Formats a git diff object into a readable string.
+    fn format_diff(&self, diff: &git2::Diff, output: &mut String) -> Result<()> {
+        let mut patch = String::new();
+        diff.print(git2::DiffFormat::Patch, |delta, _hunk, line| {
+            let origin_char = line.origin();
+            let content_str = std::str::from_utf8(line.content()).unwrap_or("");
+
+            match origin_char {
+                '+' => {
+                    patch.push('+');
+                    patch.push_str(content_str);
+                }
+                '-' => {
+                    patch.push('-');
+                    patch.push_str(content_str);
+                }
+                ' ' => {
+                    patch.push(' ');
+                    patch.push_str(content_str);
+                }
+                'F' => {
+                    // File header
+                    if let Some(new_path) = delta.new_file().path() {
+                        if let Some(old_path) = delta.old_file().path() {
+                            patch.push_str(&format!(
+                                "diff --git a/{} b/{}\n",
+                                old_path.display(),
+                                new_path.display()
+                            ));
+                        }
+                    }
+                }
+                '>' => {
+                    // Add/delete/rename operations
+                    patch.push_str(content_str);
+                }
+                '<' => {
+                    // Add/delete/rename operations
+                    patch.push_str(content_str);
+                }
+                _ => {
+                    // Other line types including file headers
+                    patch.push(origin_char);
+                    patch.push_str(content_str);
+                }
+            }
+            true
+        })?;
+
+        output.push_str(&patch);
         Ok(())
     }
 
@@ -458,9 +501,9 @@ fn ui(f: &mut Frame, app: &mut App) {
 
             // --- Commit Details ---
             let title = if app.show_full_commit {
-                "Full Commit Details (Read-Only) - [Left] to return"
+                "Git Diff (Read-Only) - [Left] to return"
             } else {
-                "Commit Details (Read-Only) - [Right] for full commit"
+                "Commit Details (Read-Only) - [Right] for git diff"
             };
             let block = Block::default().title(title).borders(Borders::ALL);
             f.render_widget(block, chunks[1]);
@@ -633,7 +676,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             if app.show_full_commit {
                 "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Left] Summary"
             } else {
-                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Right] Full Commit"
+                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Right] Git Diff"
             }
         }
         NavigatorMode::Branches => {
