@@ -22,6 +22,7 @@ use ratatui::{
 #[derive(Debug, Clone)]
 struct Commit {
     hash: String,
+    full_hash: String,
     author: String,
     summary: String,
     committer_date: String,
@@ -53,6 +54,8 @@ struct App {
     branch_state: ListState,
     current_mode: NavigatorMode,
     repo: git2::Repository,
+    full_commit_details: Option<String>,
+    show_full_commit: bool,
 }
 
 impl App {
@@ -78,11 +81,13 @@ impl App {
                     .unwrap_or_default();
                 let committer_date = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                let hash = commit.id().to_string();
+                let full_hash = commit.id().to_string();
+                let hash = full_hash.chars().take(8).collect::<String>();
                 let summary = commit.summary().unwrap_or_default().to_string();
 
                 Commit {
-                    hash: hash.chars().take(8).collect(),
+                    hash,
+                    full_hash,
                     author: author.name().unwrap_or("Unknown").to_string(),
                     summary,
                     committer_date,
@@ -179,6 +184,8 @@ impl App {
             branch_state,
             current_mode: NavigatorMode::Branches,
             repo,
+            full_commit_details: None,
+            show_full_commit: false,
         })
     }
 
@@ -285,6 +292,81 @@ impl App {
         }
         Ok(())
     }
+
+    /// Loads full commit details for the selected commit.
+    fn load_full_commit(&mut self) -> Result<()> {
+        if let Some(selected_index) = self.commit_state.selected() {
+            if let Some(commit) = self.commits.get(selected_index) {
+                // Find the full commit object using the hash
+                let commit_oid = git2::Oid::from_str(&commit.full_hash)?;
+                if let Ok(git_commit) = self.repo.find_commit(commit_oid) {
+                    let mut commit_details = String::new();
+
+                    // Add commit header
+                    commit_details.push_str(&format!("Commit: {}\n", git_commit.id()));
+                    commit_details.push_str(&format!(
+                        "Author: {} <{}>\n",
+                        git_commit.author().name().unwrap_or("Unknown"),
+                        git_commit.author().email().unwrap_or("unknown@example.com")
+                    ));
+                    commit_details.push_str(&format!(
+                        "Date: {}\n",
+                        chrono::DateTime::from_timestamp(git_commit.author().when().seconds(), 0)
+                            .map(|dt| dt.naive_local())
+                            .unwrap_or_default()
+                            .format("%Y-%m-%d %H:%M:%S")
+                    ));
+
+                    if git_commit.author() != git_commit.committer() {
+                        commit_details.push_str(&format!(
+                            "Committer: {} <{}>\n",
+                            git_commit.committer().name().unwrap_or("Unknown"),
+                            git_commit
+                                .committer()
+                                .email()
+                                .unwrap_or("unknown@example.com")
+                        ));
+                        commit_details.push_str(&format!(
+                            "Commit Date: {}\n",
+                            chrono::DateTime::from_timestamp(
+                                git_commit.committer().when().seconds(),
+                                0
+                            )
+                            .map(|dt| dt.naive_local())
+                            .unwrap_or_default()
+                            .format("%Y-%m-%d %H:%M:%S")
+                        ));
+                    }
+
+                    commit_details.push_str("\n");
+                    commit_details
+                        .push_str(&format!("    {}\n\n", git_commit.summary().unwrap_or("")));
+
+                    // Add full commit message
+                    if let Some(message) = git_commit.message() {
+                        let lines: Vec<&str> = message.lines().collect();
+                        if lines.len() > 1 {
+                            for line in lines.iter().skip(1) {
+                                if !line.trim().is_empty() {
+                                    commit_details.push_str(&format!("    {}\n", line));
+                                }
+                            }
+                            commit_details.push_str("\n");
+                        }
+                    }
+
+                    self.full_commit_details = Some(commit_details);
+                    self.show_full_commit = true;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Toggles full commit view.
+    fn toggle_full_commit(&mut self) {
+        self.show_full_commit = !self.show_full_commit;
+    }
 }
 
 /// Runs the TUI application loop.
@@ -310,6 +392,18 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Enter | KeyCode::Char(' ') => {
                             if let Err(_e) = app.action() {
                                 // Could show error message in UI
+                            }
+                        }
+                        KeyCode::Right => {
+                            if app.current_mode == NavigatorMode::Commits {
+                                if let Err(_e) = app.load_full_commit() {
+                                    // Could show error message in UI
+                                }
+                            }
+                        }
+                        KeyCode::Left => {
+                            if app.current_mode == NavigatorMode::Commits && app.show_full_commit {
+                                app.toggle_full_commit();
                             }
                         }
                         _ => {}
@@ -363,47 +457,69 @@ fn ui(f: &mut Frame, app: &mut App) {
             f.render_stateful_widget(list, chunks[0], &mut app.commit_state);
 
             // --- Commit Details ---
-            let block = Block::default()
-                .title("Commit Details (Read-Only)")
-                .borders(Borders::ALL);
+            let title = if app.show_full_commit {
+                "Full Commit Details (Read-Only) - [Left] to return"
+            } else {
+                "Commit Details (Read-Only) - [Right] for full commit"
+            };
+            let block = Block::default().title(title).borders(Borders::ALL);
             f.render_widget(block, chunks[1]);
 
             if let Some(selected_index) = app.commit_state.selected() {
-                if let Some(commit) = app.commits.get(selected_index) {
-                    let details_chunks = Layout::default()
-                        .direction(Direction::Vertical)
-                        .margin(1)
-                        .constraints([
-                            Constraint::Length(1), // Hash
-                            Constraint::Length(1), // Author
-                            Constraint::Length(1), // Date
-                            Constraint::Min(0),    // Summary
-                        ])
-                        .split(chunks[1].inner(ratatui::layout::Margin {
+                if app.show_full_commit {
+                    // Show full commit details
+                    if let Some(ref full_details) = app.full_commit_details {
+                        let details_chunk = chunks[1].inner(ratatui::layout::Margin {
                             horizontal: 1,
                             vertical: 1,
-                        }));
+                        });
+                        f.render_widget(
+                            Paragraph::new(full_details.clone())
+                                .style(Style::default().fg(Color::White)),
+                            details_chunk,
+                        );
+                    }
+                } else {
+                    // Show summary details
+                    if let Some(commit) = app.commits.get(selected_index) {
+                        let details_chunks = Layout::default()
+                            .direction(Direction::Vertical)
+                            .margin(1)
+                            .constraints([
+                                Constraint::Length(1), // Hash
+                                Constraint::Length(1), // Author
+                                Constraint::Length(1), // Date
+                                Constraint::Min(0),    // Summary
+                            ])
+                            .split(chunks[1].inner(ratatui::layout::Margin {
+                                horizontal: 1,
+                                vertical: 1,
+                            }));
 
-                    f.render_widget(
-                        Paragraph::new(format!("Hash: {}", commit.hash.clone().bold()))
-                            .style(Style::default().fg(Color::Yellow)),
-                        details_chunks[0],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!("Author: {}", commit.author.clone().green().bold())),
-                        details_chunks[1],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!(
-                            "Date: {}",
-                            commit.committer_date.to_string().cyan()
-                        )),
-                        details_chunks[2],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!("Summary: \n{}", commit.summary)),
-                        details_chunks[3],
-                    );
+                        f.render_widget(
+                            Paragraph::new(format!("Hash: {}", commit.hash.clone().bold()))
+                                .style(Style::default().fg(Color::Yellow)),
+                            details_chunks[0],
+                        );
+                        f.render_widget(
+                            Paragraph::new(format!(
+                                "Author: {}",
+                                commit.author.clone().green().bold()
+                            )),
+                            details_chunks[1],
+                        );
+                        f.render_widget(
+                            Paragraph::new(format!(
+                                "Date: {}",
+                                commit.committer_date.to_string().cyan()
+                            )),
+                            details_chunks[2],
+                        );
+                        f.render_widget(
+                            Paragraph::new(format!("Summary: \n{}", commit.summary)),
+                            details_chunks[3],
+                        );
+                    }
                 }
             }
         }
@@ -514,7 +630,11 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     let help_text = match app.current_mode {
         NavigatorMode::Commits => {
-            "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous"
+            if app.show_full_commit {
+                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Left] Summary"
+            } else {
+                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Right] Full Commit"
+            }
         }
         NavigatorMode::Branches => {
             "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Enter/Space] Checkout"
