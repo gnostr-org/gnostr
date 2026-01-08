@@ -299,7 +299,7 @@ impl App {
     fn load_full_commit(&mut self) -> Result<()> {
         let mut diff_content = String::new();
 
-        if !self.selected_commits.is_empty() {
+        if !self.selected_commits.is_empty() || self.show_full_commit {
             let mut selected_indices: Vec<_> = self.selected_commits.iter().cloned().collect();
             selected_indices.sort();
 
@@ -569,27 +569,37 @@ impl App {
     }
 
     /// Toggles selection of the current commit (max 2 commits).
+    /// Automatically shows diff when exactly 2 commits are selected.
     fn toggle_commit_selection(&mut self) {
         if let Some(selected_index) = self.commit_state.selected() {
             if self.selected_commits.contains(&selected_index) {
                 self.selected_commits.remove(&selected_index);
             } else if self.selected_commits.len() < 2 {
                 self.selected_commits.insert(selected_index);
+
+                // Auto-show diff when exactly 2 commits are selected
+                if self.selected_commits.len() == 2 {
+                    let _ = self.load_full_commit();
+                }
             }
             // If we already have 2 selected and trying to add a third,
-            // replace the oldest selection
+            // replace the oldest selection and auto-show new diff
             else if self.selected_commits.len() >= 2 {
                 let mut indices: Vec<_> = self.selected_commits.iter().cloned().collect();
                 indices.sort();
                 self.selected_commits.remove(&indices[0]); // Remove oldest
                 self.selected_commits.insert(selected_index);
+
+                // Auto-show diff for new selection
+                let _ = self.load_full_commit();
             }
         }
     }
 
-    /// Clears all selected commits.
+    /// Clears all selected commits and exits full commit view.
     fn clear_selection(&mut self) {
         self.selected_commits.clear();
+        self.show_full_commit = false; // Exit diff view
     }
 
     /// Returns the number of selected commits.
@@ -899,15 +909,24 @@ fn ui(f: &mut Frame, app: &mut App) {
     let help_text = match app.current_mode {
         NavigatorMode::Commits => {
             let base_help = "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
-            let selection_help = if app.selected_count() > 0 { 
-                " | [c] Clear selection" 
-            } else { 
-                "" 
-            };
             
             if app.show_full_commit {
+                let selection_help = if app.selected_count() > 0 { 
+                    " | [c] Clear selection" 
+                } else { 
+                    "" 
+                };
                 format!("{} | [Left] Summary{}", base_help, selection_help)
             } else {
+                let selection_help = if app.selected_count() > 0 { 
+                    if app.selected_count() == 1 {
+                        " | [Space] Select 1 more for range"
+                    } else {
+                        " | [c] Clear range"
+                    }
+                } else { 
+                    "" 
+                };
                 format!("{} | [Space] Select | [Right] Git Diff{}", base_help, selection_help)
             }
         }
