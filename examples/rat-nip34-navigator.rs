@@ -74,6 +74,8 @@ struct App {
     repo: git2::Repository,
     selected_commits: HashSet<usize>,
     selected_nip34_events: HashSet<usize>,
+    full_commit_details: Option<String>,
+    show_full_commit: bool,
 }
 
 impl App {
