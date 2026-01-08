@@ -302,37 +302,97 @@ impl App {
                 if let Ok(git_commit) = self.repo.find_commit(commit_oid) {
                     let mut diff_content = String::new();
 
-                    // Add commit header
+                    // Add commit details header widget
+                    diff_content
+                        .push_str("╭─────────────────────────────────────────────────────────╮\n");
+                    diff_content
+                        .push_str("│                    Commit Details                    │\n");
+                    diff_content
+                        .push_str("╰─────────────────────────────────────────────────────────╯\n");
                     diff_content.push_str(&format!("Commit: {}\n", git_commit.id()));
                     diff_content.push_str(&format!(
                         "Author: {} <{}>\n",
                         git_commit.author().name().unwrap_or("Unknown"),
                         git_commit.author().email().unwrap_or("unknown@example.com")
                     ));
-                    diff_content.push_str(&format!(
-                        "Date: {}\n",
-                        chrono::DateTime::from_timestamp(git_commit.author().when().seconds(), 0)
+
+                    // Add committer if different from author
+                    if git_commit.author() != git_commit.committer() {
+                        diff_content.push_str(&format!(
+                            "Committer: {} <{}>\n",
+                            git_commit.committer().name().unwrap_or("Unknown"),
+                            git_commit
+                                .committer()
+                                .email()
+                                .unwrap_or("unknown@example.com")
+                        ));
+                        diff_content.push_str(&format!(
+                            "Commit Date: {}\n",
+                            chrono::DateTime::from_timestamp(
+                                git_commit.committer().when().seconds(),
+                                0
+                            )
                             .map(|dt| dt.naive_local())
                             .unwrap_or_default()
                             .format("%Y-%m-%d %H:%M:%S")
-                    ));
+                        ));
+                    } else {
+                        diff_content.push_str(&format!(
+                            "Date: {}\n",
+                            chrono::DateTime::from_timestamp(
+                                git_commit.author().when().seconds(),
+                                0
+                            )
+                            .map(|dt| dt.naive_local())
+                            .unwrap_or_default()
+                            .format("%Y-%m-%d %H:%M:%S")
+                        ));
+                    }
+
+                    diff_content.push_str("\n");
+                    diff_content.push_str("Message:\n");
+                    diff_content.push_str(&format!("    {}\n", git_commit.summary().unwrap_or("")));
+
+                    // Add full commit message body if it exists
+                    if let Some(message) = git_commit.message() {
+                        let lines: Vec<&str> = message.lines().collect();
+                        if lines.len() > 1 {
+                            for line in lines.iter().skip(1) {
+                                if !line.trim().is_empty() {
+                                    diff_content.push_str(&format!("    {}\n", line));
+                                }
+                            }
+                        }
+                    }
 
                     diff_content.push_str("\n");
                     diff_content
-                        .push_str(&format!("    {}\n\n", git_commit.summary().unwrap_or("")));
+                        .push_str("╭─────────────────────────────────────────────────────────╮\n");
+                    diff_content
+                        .push_str("│                      Git Diff                       │\n");
+                    diff_content.push_str(
+                        "╰─────────────────────────────────────────────────────────╯\n\n",
+                    );
 
                     // Get the diff against parent(s)
                     let parent_count = git_commit.parent_count();
 
                     if parent_count == 0 {
                         // Initial commit - show all files
-                        diff_content.push_str("Initial commit - showing all files:\n\n");
+                        diff_content.push_str("🌟 Initial Commit - All files:\n\n");
 
                         let tree = git_commit.tree()?;
                         let diff = self.repo.diff_tree_to_tree(None, Some(&tree), None)?;
                         self.format_diff(&diff, &mut diff_content)?;
                     } else {
                         // Show diff against first parent
+                        if parent_count > 1 {
+                            diff_content
+                                .push_str("🔀 Merge Commit - Diff against first parent:\n\n");
+                        } else {
+                            diff_content.push_str("📝 Changes - Diff against parent:\n\n");
+                        }
+
                         if let Ok(parent) = git_commit.parent(0) {
                             let parent_tree = parent.tree()?;
                             let current_tree = git_commit.tree()?;
