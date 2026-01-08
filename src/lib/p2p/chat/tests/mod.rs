@@ -1,27 +1,27 @@
 #[cfg(test)]
 mod tests {
 
+    use std::{
+        borrow::Cow,
+        collections::{HashMap, HashSet},
+        path::Path,
+    };
+
+    use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
+    use git2::{Commit, Signature, Time};
+    use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
+    use serde_json::json;
+
     use super::super::msg::USER_NAME;
     use super::super::*; // Import items from the parent module (chat)
-    use git2::{Commit, Signature, Time};
-    use std::borrow::Cow;
-    use std::collections::HashSet;
-
-    use crate::types::{KeySecurity, PrivateKey, Signer};
-    use serde_json::json;
-    use std::collections::HashMap;
-    use std::path::Path;
-
-    use crate::legit::command::create_event;
-    use crate::legit::command::create_event_with_custom_tags;
-    use crate::utils::{
-        byte_array_to_hex_string, generate_nostr_keys_from_commit_hash, parse_json,
-        split_json_string, split_value_by_newline, value_to_string,
+    use crate::{
+        legit::command::{create_event, create_event_with_custom_tags},
+        types::{KeySecurity, PrivateKey, Signer},
+        utils::{
+            byte_array_to_hex_string, generate_nostr_keys_from_commit_hash, parse_json,
+            split_json_string, split_value_by_newline, value_to_string,
+        },
     };
-    use chrono::{TimeZone, Utc}; // Import TimeZone and Utc for timestamp
-
-    use gnostr_asyncgit::sync::commit::deserialize_commit;
-    use gnostr_asyncgit::sync::commit::serialize_commit;
 
     // Helper function to create a dummy git repository for testing
     fn create_dummy_repo(path: &Path) -> Repository {
@@ -203,8 +203,8 @@ line3"
             format!("{}: hello", *USER_NAME)
         );
 
-        // To truly test right-aligned, we'd need to mock USER_NAME to be different from the sender.
-        // For now, we assume it's tested implicitly by the logic.
+        // To truly test right-aligned, we'd need to mock USER_NAME to be different from
+        // the sender. For now, we assume it's tested implicitly by the logic.
 
         // Test Join
         let msg_join = Msg::default().set_kind(MsgKind::Join);
@@ -247,8 +247,8 @@ line3"
             kind: MsgKind::GitCommitId,
             ..Msg::default()
         };
-        // The `gen_color_by_hash` will produce a color, but we focus on the string format.
-        // Format is `"{{"commit": "{}"}}"` + content[1]
+        // The `gen_color_by_hash` will produce a color, but we focus on the string
+        // format. Format is `"{{"commit": "{}"}}"` + content[1]
         assert_eq!(
             format!("{}", msg_commit_id),
             format!(
@@ -341,7 +341,8 @@ line3"
         // GitCommitTime
         let msg_commit_time = Msg {
             from: mock_sender.to_string(),
-            content: vec!["1678886400".to_string(), "some value".to_string()], // Example Unix timestamp
+            content: vec!["1678886400".to_string(), "some value".to_string()], /* Example Unix
+                                                                                * timestamp */
             kind: MsgKind::GitCommitTime,
             ..Msg::default()
         };
@@ -439,13 +440,14 @@ More details here."
         assert_eq!(event.pubkey, pubkey);
         assert_eq!(event.kind, crate::types::EventKind::TextNote); // Default kind used by EventBuilder::new
 
-        // Check tags. Note: EventBuilder might format tags differently or only take the first value.
-        // We expect tags to be present and have the correct names.
+        // Check tags. Note: EventBuilder might format tags differently or only take the
+        // first value. We expect tags to be present and have the correct names.
         // Let's check for the presence of tag names and their values.
-        // The `create_event_with_custom_tags` implementation uses `Tag::parse` and `Tag::custom`.
-        // `Tag::parse` expects a `&[&str]` where first element is tag name, second is value.
-        // `Tag::custom` is similar.
-        // The provided `custom_tags` HashMap has `Vec<String>` for values. The implementation pops the first value.
+        // The `create_event_with_custom_tags` implementation uses `Tag::parse` and
+        // `Tag::custom`. `Tag::parse` expects a `&[&str]` where first element
+        // is tag name, second is value. `Tag::custom` is similar.
+        // The provided `custom_tags` HashMap has `Vec<String>` for values. The
+        // implementation pops the first value.
 
         let mut found_tags = HashMap::new();
         for tag in event.tags.iter() {
@@ -460,8 +462,9 @@ More details here."
             }
         }
 
-        // Verify tags as per the implementation's handling of HashMap<String, Vec<String>>
-        // The current implementation `Tag::parse([&tag_name, &tag_values[0]]).unwrap()` suggests only the first value is used.
+        // Verify tags as per the implementation's handling of HashMap<String,
+        // Vec<String>> The current implementation `Tag::parse([&tag_name,
+        // &tag_values[0]]).unwrap()` suggests only the first value is used.
         assert_eq!(
             found_tags.get("tag1").map(|v| v[0].clone()),
             Some("value1".to_string())

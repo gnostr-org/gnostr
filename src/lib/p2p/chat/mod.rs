@@ -1,29 +1,29 @@
-use anyhow::{anyhow, Result};
+use std::{error::Error as StdError, path::PathBuf, time::Duration};
+
+use anyhow::{Result, anyhow};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
-
-use self::msg::{Msg, MsgKind};
-use crate::queue::InternalEvent;
-use crate::types::nip28::CREATE_CHANNEL_MESSAGE;
-use crate::types::{Error, EventV3, Id, Metadata, Signer, UncheckedUrl};
-use gnostr_asyncgit::sync::commit::padded_commit_id;
-use gnostr_asyncgit::sync::RepoPath;
+use gnostr_asyncgit::sync::{RepoPath, commit::padded_commit_id};
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use serde_json; // Explicitly added for clarity
-
-use std::path::PathBuf;
-use std::{error::Error as StdError, time::Duration};
-use textwrap::{fill, Options};
-use uuid::Uuid;
-use crate::types::metadata::{DEFAULT_AVATAR, DEFAULT_BANNER};
+use textwrap::{Options, fill};
 //use async_std::path::PathBuf;
-
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use uuid::Uuid;
+
+use self::msg::{Msg, MsgKind};
+use crate::{
+    queue::InternalEvent,
+    types::{
+        Error, EventV3, Id, Metadata, Signer, UncheckedUrl,
+        metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
+        nip28::CREATE_CHANNEL_MESSAGE,
+    },
+};
 
 pub mod msg;
 pub use msg::*;
@@ -214,7 +214,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let mut m = Metadata::default();
         m.name = Some(name);
         m.picture = Some(DEFAULT_AVATAR.to_string());
-        m.other.insert("banner".to_string(), serde_json::Value::String(DEFAULT_BANNER.to_string()));
+        m.other.insert(
+            "banner".to_string(),
+            serde_json::Value::String(DEFAULT_BANNER.to_string()),
+        );
         m
     };
 
@@ -262,7 +265,9 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
         // Detect if message_input is a git diff
         let mut msg_kind = MsgKind::OneShot;
-        if message_input.contains("diff --git") || (message_input.contains("--- a/") && message_input.contains("+++ b/")) {
+        if message_input.contains("diff --git")
+            || (message_input.contains("--- a/") && message_input.contains("+++ b/"))
+        {
             msg_kind = MsgKind::GitDiff;
         }
 
@@ -280,7 +285,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         } else {
             println!("Oneshot message sent. Waiting for propagation...");
         }
-        
+
         // Allow time for the message to propagate.
         tokio::time::sleep(Duration::from_secs(2)).await;
 

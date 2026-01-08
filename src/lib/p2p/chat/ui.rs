@@ -1,33 +1,33 @@
 //use crate::ui::solarized_dark;
 //use crate::ui::solarized_light;
 
-//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-//use ratatui::prelude::*;
-use ratatui::{
-    backend::{Backend, CrosstermBackend},
-    crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-        execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    },
-    layout::{Constraint, Direction, Layout},
-    style::Color,
-    text::{Line, Span}, // Added Span here
-    widgets::{Block, Borders, List, ListItem, Paragraph, Clear, ListState},
-    Frame, Terminal,
-};
-
-use ratatui::style::Style;
+//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour,
+// swarm::SwarmEvent, tcp, yamux}; use ratatui::prelude::*;
 use std::{
     error::Error,
     io,
     sync::{Arc, Mutex},
     time::Duration,
 };
-use textwrap::{fill, Options};
+
+use ratatui::style::Style;
+use ratatui::{
+    Frame,
+    Terminal,
+    backend::{Backend, CrosstermBackend},
+    crossterm::{
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+        execute,
+        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    },
+    layout::{Constraint, Direction, Layout},
+    style::Color,
+    text::{Line, Span}, // Added Span here
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
+};
+use textwrap::{Options, fill};
+use tui_input::{Input, backend::crossterm::EventHandler};
 use uuid::Uuid;
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
 
 use crate::p2p::chat::msg::{self, MsgKind};
 
@@ -165,7 +165,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 return Ok(());
             }
 
-            match app.mode { // Changed from app.input_mode
+            match app.mode {
+                // Changed from app.input_mode
                 AppMode::Normal => match key.code {
                     KeyCode::Char('e') | KeyCode::Char('i') => {
                         app.mode = AppMode::Editing; // Changed from app.input_mode
@@ -174,11 +175,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
-                    KeyCode::Char('\\') => { // New keybinding for selecting diffs
+                    KeyCode::Char('\\') => {
+                        // New keybinding for selecting diffs
                         let all_messages = app.messages.lock().unwrap();
                         let diff_messages: Vec<msg::Msg> = all_messages
                             .iter()
-                            .filter(|m| m.kind == MsgKind::GitDiff)
+                            .filter(|m| m.kind == MsgKind::GitDiff || m.kind == MsgKind::OneShot)
                             .cloned() // Clone to move into the new state
                             .collect();
 
@@ -207,7 +209,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.msgs_scroll = usize::MAX;
                     }
                 },
-                AppMode::Editing => match key.code { // Changed from InputMode::Editing
+                AppMode::Editing => match key.code {
+                    // Changed from InputMode::Editing
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
                             let input_text = app.input.value().to_owned();
@@ -246,7 +249,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         app.input.handle_event(&Event::Key(key));
                     }
                 },
-                AppMode::SelectingDiff { ref mut diff_messages, ref mut selected_index, scroll_state: _ } => {
+                AppMode::SelectingDiff {
+                    ref mut diff_messages,
+                    ref mut selected_index,
+                    scroll_state: _,
+                } => {
                     match key.code {
                         KeyCode::Up => {
                             if *selected_index > 0 {
@@ -304,24 +311,30 @@ fn ui(f: &mut Frame, app: &App) {
     let height = chunks[1].height; // Re-introduce height variable
     let message_area_width = chunks[1].width;
     let msgs = app.messages.lock().unwrap();
-    
+
     let mut messages: Vec<ListItem> = Vec::new();
 
     for msg in msgs.iter().rev() {
-
         match msg.kind {
             MsgKind::Chat => {
                 let mut chat_spans: Vec<ratatui::text::Span> = Vec::new();
                 let (prefix, indent) = if msg.from == *msg::USER_NAME {
-                    (format!("{}{} ", &msg.from, ">"), " ".repeat(msg.from.len() + 2))
+                    (
+                        format!("{}{} ", &msg.from, ">"),
+                        " ".repeat(msg.from.len() + 2),
+                    )
                 } else {
-                    (format!(" {}{}", &msg.from, "> "), " ".repeat(msg.from.len() + 3))
+                    (
+                        format!(" {}{}", &msg.from, "> "),
+                        " ".repeat(msg.from.len() + 3),
+                    )
                 };
                 let prefix_style = Style::default().fg(gen_color_by_hash(&msg.from));
                 chat_spans.push(ratatui::text::Span::styled(prefix.clone(), prefix_style));
 
                 let content_width = message_area_width.saturating_sub(prefix.len() as u16);
-                let wrapped_content = textwrap::wrap(&msg.content[0], Options::new(content_width as usize));
+                let wrapped_content =
+                    textwrap::wrap(&msg.content[0], Options::new(content_width as usize));
 
                 for (idx, segment) in wrapped_content.into_iter().enumerate() {
                     if idx > 0 {
@@ -331,9 +344,10 @@ fn ui(f: &mut Frame, app: &App) {
                     chat_spans.push(ratatui::text::Span::raw(segment.to_string()));
                 }
                 messages.push(ListItem::new(Line::from(chat_spans)));
-            },
+            }
             MsgKind::GitDiff => {
-                for line_content in msg.content.iter() { // Iterate directly over pre-wrapped lines
+                for line_content in msg.content.iter() {
+                    // Iterate directly over pre-wrapped lines
                     let style = if line_content.starts_with('+') {
                         Style::default().fg(Color::Green)
                     } else if line_content.starts_with('-') {
@@ -343,9 +357,12 @@ fn ui(f: &mut Frame, app: &App) {
                     } else {
                         Style::default().fg(Color::White)
                     };
-                    messages.push(ListItem::new(Line::from(Span::styled(line_content.clone(), style))));
+                    messages.push(ListItem::new(Line::from(Span::styled(
+                        line_content.clone(),
+                        style,
+                    ))));
                 }
-            },
+            }
             _ => {
                 // For other MsgKind, directly convert to ListItem
                 messages.push(ListItem::new(ratatui::text::Text::from(Line::from(msg))));
@@ -359,7 +376,12 @@ fn ui(f: &mut Frame, app: &App) {
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(messages, chunks[1]);
 
-    if let AppMode::SelectingDiff { diff_messages, selected_index, scroll_state: _ } = &app.mode {
+    if let AppMode::SelectingDiff {
+        diff_messages,
+        selected_index,
+        scroll_state: _,
+    } = &app.mode
+    {
         let popup_area = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -380,19 +402,26 @@ fn ui(f: &mut Frame, app: &App) {
 
         f.render_widget(Clear, popup_area); // Clear the area first
 
-        let items: Vec<ListItem> = diff_messages.iter().enumerate().map(|(i, msg)| {
-            let mut summary = String::new();
-            if let Some(first_line) = msg.content.first() {
-                // Take a snippet of the first line as a summary
-                summary = first_line.chars().take(popup_area.width as usize - 4).collect(); // -4 for borders
-            }
-            let content = if i == *selected_index {
-                format!("> {}", summary)
-            } else {
-                format!("  {}", summary)
-            };
-            ListItem::new(content).style(Style::default().fg(Color::Yellow))
-        }).collect();
+        let items: Vec<ListItem> = diff_messages
+            .iter()
+            .enumerate()
+            .map(|(i, msg)| {
+                let mut summary = String::new();
+                if let Some(first_line) = msg.content.first() {
+                    // Take a snippet of the first line as a summary
+                    summary = first_line
+                        .chars()
+                        .take(popup_area.width as usize - 4)
+                        .collect(); // -4 for borders
+                }
+                let content = if i == *selected_index {
+                    format!("> {}", summary)
+                } else {
+                    format!("  {}", summary)
+                };
+                ListItem::new(content).style(Style::default().fg(Color::Yellow))
+            })
+            .collect();
 
         let mut list_state = ListState::default();
         list_state.select(Some(*selected_index));
@@ -400,7 +429,7 @@ fn ui(f: &mut Frame, app: &App) {
         let diff_list = List::new(items)
             .block(Block::default().borders(Borders::ALL).title("Select Diff"))
             .highlight_style(Style::default().fg(Color::Black).bg(Color::White));
-            
+
         f.render_stateful_widget(diff_list, popup_area, &mut list_state);
     }
 
@@ -413,11 +442,12 @@ fn ui(f: &mut Frame, app: &App) {
     let default_input_style = match app.mode {
         AppMode::Normal => Style::default(),
         AppMode::Editing => Style::default().fg(Color::Cyan),
-        AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), // Indicate non-editable
+        AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), /* Indicate non-editable */
     };
 
     for (i, c) in input_str.chars().enumerate() {
-        if (i + 1) % 80 == 0 { // Highlight every 80th character
+        if (i + 1) % 80 == 0 {
+            // Highlight every 80th character
             spans.push(ratatui::text::Span::styled(
                 c.to_string(),
                 default_input_style.fg(Color::Red),

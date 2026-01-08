@@ -1,25 +1,23 @@
+use std::{collections::HashMap, error::Error, sync::Arc, time::Duration};
+
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub, identify, kad, mdns, noise, ping,
+    StreamProtocol, gossipsub, identify, kad, mdns, noise, ping,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, StreamProtocol,
+    tcp, yamux,
 };
-use std::error::Error;
-use std::time::Duration;
+use parking_lot::Mutex;
+use terminal_size::{Height, Width, terminal_size};
+use textwrap::{self, Options};
 use tokio::{io, select};
 use tracing::{debug, warn};
-
-use std::collections::HashMap;
-use parking_lot::Mutex;
-use std::sync::Arc;
-use terminal_size::{terminal_size, Height, Width};
-use textwrap::{self, Options};
-
 use ureq::Agent;
 
-use crate::p2p::kvs::{FileRequest, FileResponse};
-use crate::p2p::chat::msg::{Msg, MsgKind};
+use crate::p2p::{
+    chat::msg::{Msg, MsgKind},
+    kvs::{FileRequest, FileResponse},
+};
 
 // Struct to manage message reassembly
 pub struct MessageReassembler {
@@ -35,9 +33,13 @@ impl MessageReassembler {
     }
 
     /// Adds a message chunk to the buffer and attempts reassembly.
-    /// Returns Some(complete_message) if reassembly is successful, None otherwise.
+    /// Returns Some(complete_message) if reassembly is successful, None
+    /// otherwise.
     pub fn add_chunk_and_reassemble(&self, msg_chunk: Msg) -> Option<Msg> {
-        if msg_chunk.message_id.is_none() || msg_chunk.sequence_num.is_none() || msg_chunk.total_chunks.is_none() {
+        if msg_chunk.message_id.is_none()
+            || msg_chunk.sequence_num.is_none()
+            || msg_chunk.total_chunks.is_none()
+        {
             // Not a multi-part message, or missing sequencing info
             debug!("Received non-multi-part message or message with missing sequencing info.");
             return None;
@@ -47,22 +49,32 @@ impl MessageReassembler {
         let sequence_num = msg_chunk.sequence_num.unwrap();
         let total_chunks = msg_chunk.total_chunks.unwrap();
 
-        debug!("AddChunk: Received chunk for message_id: {}, sequence_num: {}/{}, content_len: {}",
-               message_id, sequence_num + 1, total_chunks, msg_chunk.content[0].len());
+        debug!(
+            "AddChunk: Received chunk for message_id: {}, sequence_num: {}/{}, content_len: {}",
+            message_id,
+            sequence_num + 1,
+            total_chunks,
+            msg_chunk.content[0].len()
+        );
 
         let mut buffer_guard = self.buffer.lock();
 
-        let (buffered_total_chunks, ref mut received_count, ref mut chunks) = buffer_guard
-            .entry(message_id.clone())
-            .or_insert_with(|| {
-                debug!("AddChunk: Initializing buffer for message_id: {} with total_chunks: {}", message_id, total_chunks);
+        let (buffered_total_chunks, ref mut received_count, ref mut chunks) =
+            buffer_guard.entry(message_id.clone()).or_insert_with(|| {
+                debug!(
+                    "AddChunk: Initializing buffer for message_id: {} with total_chunks: {}",
+                    message_id, total_chunks
+                );
                 (total_chunks, 0, vec![None; total_chunks])
             });
 
         // Ensure consistency if a message_id is reused with different total_chunks
         // Or if an invalid chunk is received for an already existing message_id
         if *buffered_total_chunks != total_chunks {
-            debug!("AddChunk: Inconsistent total_chunks for message_id {}. Expected {}, got {}", message_id, *buffered_total_chunks, total_chunks);
+            debug!(
+                "AddChunk: Inconsistent total_chunks for message_id {}. Expected {}, got {}",
+                message_id, *buffered_total_chunks, total_chunks
+            );
             buffer_guard.remove(&message_id);
             return None;
         }
@@ -71,17 +83,29 @@ impl MessageReassembler {
             if chunks[sequence_num].is_none() {
                 chunks[sequence_num] = Some(msg_chunk.clone()); // Clone msg_chunk here
                 *received_count += 1;
-                debug!("AddChunk: Chunk {} received for message_id: {}. Total received: {}/{}", sequence_num, message_id, *received_count, total_chunks);
+                debug!(
+                    "AddChunk: Chunk {} received for message_id: {}. Total received: {}/{}",
+                    sequence_num, message_id, *received_count, total_chunks
+                );
             } else {
-                debug!("AddChunk: Duplicate chunk received for message_id {} sequence {}", message_id, sequence_num);
+                debug!(
+                    "AddChunk: Duplicate chunk received for message_id {} sequence {}",
+                    message_id, sequence_num
+                );
             }
         } else {
-            debug!("AddChunk: Invalid sequence_num {} for message_id {} (total_chunks {})", sequence_num, message_id, total_chunks);
+            debug!(
+                "AddChunk: Invalid sequence_num {} for message_id {} (total_chunks {})",
+                sequence_num, message_id, total_chunks
+            );
             return None;
         }
 
         if *received_count == total_chunks {
-            debug!("AddChunk: All chunks received for message_id: {}. Attempting reassembly.", message_id);
+            debug!(
+                "AddChunk: All chunks received for message_id: {}. Attempting reassembly.",
+                message_id
+            );
             // All chunks received, reassemble
             let mut full_content = String::new();
             let mut reassembled_msg = Msg::default();
@@ -102,14 +126,20 @@ impl MessageReassembler {
                     full_content.push_str(&chunk.content[0]);
                 } else {
                     // This should not happen if received_count == total_chunks
-                    debug!("AddChunk: Critical error - Missing chunk for message_id {} at sequence {} during reassembly despite received_count matching total_chunks.", message_id, i);
+                    debug!(
+                        "AddChunk: Critical error - Missing chunk for message_id {} at sequence {} during reassembly despite received_count matching total_chunks.",
+                        message_id, i
+                    );
                     buffer_guard.remove(&message_id); // Clear incomplete message
                     return None;
                 }
             }
             reassembled_msg.content = vec![full_content];
             buffer_guard.remove(&message_id);
-            debug!("AddChunk: Successfully reassembled message for message_id: {}.", message_id);
+            debug!(
+                "AddChunk: Successfully reassembled message for message_id: {}.",
+                message_id
+            );
             Some(reassembled_msg)
         } else {
             None
@@ -148,8 +178,8 @@ pub async fn async_prompt(mempool_url: String) -> String {
 }
 
 ///// fetch_data_async
-//async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>, ureq::Error> {
-//    task::spawn_blocking(move || {
+//async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>,
+// ureq::Error> {    task::spawn_blocking(move || {
 //        let response = ureq::get(&url).call();
 //        response
 //    })
@@ -180,9 +210,7 @@ pub async fn evt_loop(
             // This is used to deduplicate messages.
             //
             let _message_id_fn = |message: &gossipsub::Message| {
-                use std::hash::DefaultHasher;
-                use std::hash::Hash;
-                use std::hash::Hasher;
+                use std::hash::{DefaultHasher, Hash, Hasher};
                 let mut s = DefaultHasher::new();
                 message.data.hash(&mut s);
                 gossipsub::MessageId::from(s.finish().to_string())
@@ -242,7 +270,9 @@ pub async fn evt_loop(
                 request_response,
             })
         })?
-        .with_swarm_config(|c: libp2p::swarm::Config| c.with_idle_connection_timeout(Duration::from_secs(60)))
+        .with_swarm_config(|c: libp2p::swarm::Config| {
+            c.with_idle_connection_timeout(Duration::from_secs(60))
+        })
         .build();
 
     // subscribes to our topic
@@ -261,7 +291,8 @@ pub async fn evt_loop(
         }
 
         match msg.kind {
-            MsgKind::Chat | MsgKind::OneShot => { // OneShot without --diff will be handled here
+            MsgKind::Chat | MsgKind::OneShot => {
+                // OneShot without --diff will be handled here
                 let wrapped_content = textwrap::fill(&msg.content[0], Options::new(terminal_width));
                 msg.content = wrapped_content.lines().map(String::from).collect();
             }
@@ -272,16 +303,20 @@ pub async fn evt_loop(
                         ("+", &line[1..])
                     } else if line.starts_with('-') {
                         ("-", &line[1..])
-                    } else if line.starts_with(' ') { // context line
+                    } else if line.starts_with(' ') {
+                        // context line
                         (" ", &line[1..])
-                    } else if line.starts_with("diff --git") || line.starts_with("index") || line.starts_with("--- a/") || line.starts_with("+++ b/") {
+                    } else if line.starts_with("diff --git")
+                        || line.starts_with("index")
+                        || line.starts_with("--- a/")
+                        || line.starts_with("+++ b/")
+                    {
                         // Header lines, no wrapping for now, just add as is
                         wrapped_lines.push(line.to_string());
                         continue;
                     } else if line.starts_with("@@") {
                         ("@@", &line[2..]) // Handle @@ line
-                    }
-                    else {
+                    } else {
                         // No specific diff prefix, treat as regular content
                         ("", line)
                     };
@@ -295,10 +330,17 @@ pub async fn evt_loop(
 
                     let wrapped_segments = textwrap::fill(content, Options::new(wrap_width));
                     for (i, segment) in wrapped_segments.lines().enumerate() {
-                        if i == 0 { // First segment gets the prefix
+                        if i == 0 {
+                            // First segment gets the prefix
                             wrapped_lines.push(format!("{}{}", prefix, segment));
-                        } else { // Subsequent segments are indented if prefix was not empty
-                            wrapped_lines.push(format!("{:indent$}{}", "", segment, indent = prefix.len()));
+                        } else {
+                            // Subsequent segments are indented if prefix was not empty
+                            wrapped_lines.push(format!(
+                                "{:indent$}{}",
+                                "",
+                                segment,
+                                indent = prefix.len()
+                            ));
                         }
                     }
                 }
