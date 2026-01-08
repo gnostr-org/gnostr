@@ -12,8 +12,8 @@ use crossterm::{
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
-    crossterm::style::Stylize,
     layout::{Constraint, Direction, Layout, Rect},
+    prelude::Stylize,
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
@@ -49,8 +49,9 @@ impl App {
                 let author = commit.author();
                 let time = commit.committer().when();
                 let date = time.seconds();
-                let datetime =
-                    chrono::NaiveDateTime::from_timestamp_opt(date, 0).unwrap_or_default();
+                let datetime = chrono::DateTime::from_timestamp(date, 0)
+                    .map(|dt| dt.naive_local())
+                    .unwrap_or_default();
                 let committer_date = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
 
                 let hash = commit.id().to_string();
@@ -137,7 +138,7 @@ fn run_app<B: ratatui::backend::Backend>(
 
 /// Draws the UI to the terminal frame.
 fn ui(f: &mut Frame, app: &mut App) {
-    let size = f.size();
+    let size = f.area();
 
     // Layout for commit list (left) and details (right)
     let chunks = Layout::default()
@@ -162,7 +163,11 @@ fn ui(f: &mut Frame, app: &mut App) {
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Green)),
         )
-        .highlight_style(Style::default().bg(Color::Blue).bold())
+        .highlight_style(
+            Style::default()
+                .bg(Color::Blue)
+                .add_modifier(ratatui::style::Modifier::BOLD),
+        )
         .highlight_symbol(">> ");
 
     f.render_stateful_widget(list, chunks[0], &mut app.state);
@@ -184,18 +189,18 @@ fn ui(f: &mut Frame, app: &mut App) {
                     Constraint::Length(1), // Date
                     Constraint::Min(0),    // Summary
                 ])
-                .split(chunks[1].inner(&ratatui::layout::Margin {
+                .split(chunks[1].inner(ratatui::layout::Margin {
                     horizontal: 1,
                     vertical: 1,
                 }));
 
             f.render_widget(
-                Paragraph::new(format!("Hash: {}", commit.hash.bold()))
+                Paragraph::new(format!("Hash: {}", commit.hash.clone().bold()))
                     .style(Style::default().fg(Color::Yellow)),
                 details_chunks[0],
             );
             f.render_widget(
-                Paragraph::new(format!("Author: {}", commit.author.green().bold())),
+                Paragraph::new(format!("Author: {}", commit.author.clone().green().bold())),
                 details_chunks[1],
             );
             f.render_widget(
