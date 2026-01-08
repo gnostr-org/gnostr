@@ -300,34 +300,97 @@ impl App {
         let mut diff_content = String::new();
 
         if !self.selected_commits.is_empty() {
-            // Multiple commits selected - show summary
-            diff_content.push_str("╭─────────────────────────────────────────────────────────╮\n");
-            diff_content.push_str(&format!(
-                "│              Selected {} Commit(s)                │\n",
-                self.selected_count()
-            ));
-            diff_content
-                .push_str("╰─────────────────────────────────────────────────────────╯\n\n");
-
             let mut selected_indices: Vec<_> = self.selected_commits.iter().cloned().collect();
             selected_indices.sort();
 
-            for (count, &index) in selected_indices.iter().enumerate() {
-                if let Some(commit) = self.commits.get(index) {
-                    diff_content.push_str(&format!(
-                        "{}. [{}] {} - {}\n",
-                        count + 1,
-                        commit.hash,
-                        commit.author,
-                        commit.summary
-                    ));
+            if self.selected_commits.len() == 2 {
+                // Show diff range between 2 commits
+                if let (Some(from_index), Some(to_index)) =
+                    (selected_indices.get(0), selected_indices.get(1))
+                {
+                    if let (Some(from_commit), Some(to_commit)) =
+                        (self.commits.get(*from_index), self.commits.get(*to_index))
+                    {
+                        diff_content.push_str(
+                            "╭─────────────────────────────────────────────────────────╮\n",
+                        );
+                        diff_content
+                            .push_str("│                   Diff Range                        │\n");
+                        diff_content.push_str(
+                            "╰─────────────────────────────────────────────────────────╯\n\n",
+                        );
+
+                        diff_content.push_str(&format!(
+                            "From: [{}] {} - {}\n",
+                            from_commit.hash, from_commit.author, from_commit.summary
+                        ));
+                        diff_content.push_str(&format!(
+                            "To:   [{}] {} - {}\n\n",
+                            to_commit.hash, to_commit.author, to_commit.summary
+                        ));
+
+                        diff_content.push_str(
+                            "╭─────────────────────────────────────────────────────────╮\n",
+                        );
+                        diff_content
+                            .push_str("│                      Git Diff                       │\n");
+                        diff_content.push_str(
+                            "╰─────────────────────────────────────────────────────────╯\n\n",
+                        );
+
+                        diff_content.push_str("📝 Changes between commits:\n\n");
+
+                        // Get diff between the two commits
+                        let from_oid = git2::Oid::from_str(&from_commit.full_hash)?;
+                        let to_oid = git2::Oid::from_str(&to_commit.full_hash)?;
+
+                        if let (Ok(from_commit_obj), Ok(to_commit_obj)) = (
+                            self.repo.find_commit(from_oid),
+                            self.repo.find_commit(to_oid),
+                        ) {
+                            let from_tree = from_commit_obj.tree()?;
+                            let to_tree = to_commit_obj.tree()?;
+                            let diff = self.repo.diff_tree_to_tree(
+                                Some(&from_tree),
+                                Some(&to_tree),
+                                None,
+                            )?;
+                            self.format_diff(&diff, &mut diff_content)?;
+                        }
+                    }
+                }
+            } else {
+                // Show selection summary (1 or 3+ commits selected)
+                diff_content
+                    .push_str("╭─────────────────────────────────────────────────────────╮\n");
+                diff_content.push_str(&format!(
+                    "│              Selected {} Commit(s)                │\n",
+                    self.selected_count()
+                ));
+                diff_content
+                    .push_str("╰─────────────────────────────────────────────────────────╯\n\n");
+
+                for (count, &index) in selected_indices.iter().enumerate() {
+                    if let Some(commit) = self.commits.get(index) {
+                        diff_content.push_str(&format!(
+                            "{}. [{}] {} - {}\n",
+                            count + 1,
+                            commit.hash,
+                            commit.author,
+                            commit.summary
+                        ));
+                    }
+                }
+
+                diff_content.push_str("\n");
+                if self.selected_commits.len() == 1 {
+                    diff_content.push_str("💡 Tip: Select another commit to view diff range\n");
+                } else {
+                    diff_content.push_str(
+                        "💡 Tip: Only 2 commits allowed for diff range. Press 'c' to clear.\n",
+                    );
                 }
             }
-
-            diff_content.push_str("\n");
-            diff_content.push_str(
-                "💡 Tip: Press 'c' to clear selection and view individual commit diffs\n",
-            );
         } else if let Some(selected_index) = self.commit_state.selected() {
             // No commits selected, load current focused commit
             if let Some(commit) = self.commits.get(selected_index) {
@@ -505,12 +568,20 @@ impl App {
         self.show_full_commit = !self.show_full_commit;
     }
 
-    /// Toggles selection of the current commit.
+    /// Toggles selection of the current commit (max 2 commits).
     fn toggle_commit_selection(&mut self) {
         if let Some(selected_index) = self.commit_state.selected() {
             if self.selected_commits.contains(&selected_index) {
                 self.selected_commits.remove(&selected_index);
-            } else {
+            } else if self.selected_commits.len() < 2 {
+                self.selected_commits.insert(selected_index);
+            }
+            // If we already have 2 selected and trying to add a third,
+            // replace the oldest selection
+            else if self.selected_commits.len() >= 2 {
+                let mut indices: Vec<_> = self.selected_commits.iter().cloned().collect();
+                indices.sort();
+                self.selected_commits.remove(&indices[0]); // Remove oldest
                 self.selected_commits.insert(selected_index);
             }
         }
