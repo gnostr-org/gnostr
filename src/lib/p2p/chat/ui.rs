@@ -271,9 +271,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             let selected_diff = diff_messages[*selected_index].clone();
                             // Clear existing messages and add the selected diff for display
                             let mut all_messages = app.messages.lock().unwrap();
-                            all_messages.clear(); // Clear existing messages
+                            let oneshot_messages: Vec<msg::Msg> = all_messages
+                                .iter()
+                                .filter(|m| m.kind == MsgKind::OneShot)
+                                .cloned()
+                                .collect();
+
+                            // TODO: remove duplicates by p2p message id
+                            // all_messages.clear(); // Clear existing messages
+                            all_messages.extend(oneshot_messages); // Add existing OneShot messages back
                             all_messages.push(selected_diff); // Add the selected diff
-                            app.msgs_scroll = usize::MAX; // Scroll to bottom
+                            // TODO: handle better
+                            // app.msgs_scroll = usize::MAX; // Scroll to bottom
 
                             app.mode = AppMode::Normal; // Exit selection mode
                         }
