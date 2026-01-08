@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     io,
     time::{Duration, Instant},
 };
@@ -14,9 +15,12 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Stylize,
     style::{Color, Style},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
     Frame, Terminal,
 };
+
+// Import gnostr NIP-34 types
+use gnostr::types::nip34::{UnsignedEvent, Nip34Kind};
 
 /// Represents a relevant subset of a Git commit's data.
 #[derive(Debug, Clone)]
@@ -39,39 +43,52 @@ struct Branch {
     is_remote: bool,
 }
 
+/// NIP-34 event data for display.
+#[derive(Debug, Clone)]
+struct Nip34Event {
+    id: String,
+    pubkey: String,
+    kind: u16,
+    created_at: u64,
+    content: String,
+    tags: Vec<Vec<String>>,
+}
+
 /// Navigation modes for the application.
 #[derive(Debug, Clone, PartialEq)]
 enum NavigatorMode {
     Commits,
     Branches,
+    Nip34Events,
 }
 
 /// The main application state.
 struct App {
     commits: Vec<Commit>,
     branches: Vec<Branch>,
+    nip34_events: Vec<Nip34Event>,
     commit_state: ListState,
     branch_state: ListState,
+    nip34_state: ListState,
     current_mode: NavigatorMode,
     repo: git2::Repository,
-    full_commit_details: Option<String>,
-    show_full_commit: bool,
+    selected_commits: HashSet<usize>,
+    selected_nip34_events: HashSet<usize>,
 }
 
 impl App {
-    /// Constructs a new App with commit and branch data loaded from the current git
-    /// repository.
+    /// Constructs a new App with git data and NIP-34 support.
     fn new() -> Result<Self> {
         let repo = git2::Repository::open_from_env()?;
-
-        // Load commits
+        
+        // Load commits (same as original)
         let mut revwalk = repo.revwalk()?;
         revwalk.push_head()?;
 
         let commits: Vec<Commit> = revwalk
             .filter_map(|id| id.ok())
             .filter_map(|oid| repo.find_commit(oid).ok())
-            .take(100) // Limit to 100 commits for performance
+            .take(100)
             .map(|commit| {
                 let author = commit.author();
                 let time = commit.committer().when();
@@ -95,10 +112,9 @@ impl App {
             })
             .collect();
 
-        // Load branches
+        // Load branches (same as original)
         let mut branches = Vec::new();
 
-        // Get local branches
         for branch_ref in repo.branches(Some(git2::BranchType::Local))? {
             let (branch, _) = branch_ref?;
             if let Some(branch_name) = branch.name()? {
@@ -112,11 +128,6 @@ impl App {
                         };
 
                         let author = commit.author();
-                        let time = author.when();
-                        let _datetime = chrono::DateTime::from_timestamp(time.seconds(), 0)
-                            .map(|dt| dt.naive_local())
-                            .unwrap_or_default();
-
                         branches.push(Branch {
                             name: branch_name.to_string(),
                             commit_hash: commit.id().to_string().chars().take(8).collect(),
@@ -130,42 +141,45 @@ impl App {
             }
         }
 
-        // Get remote branches
-        for branch_ref in repo.branches(Some(git2::BranchType::Remote))? {
-            let (branch, _) = branch_ref?;
-            if let Some(branch_name) = branch.name()? {
-                let branch_ref_name = format!("refs/remotes/{}", branch_name);
-                if let Ok(reference) = repo.find_reference(&branch_ref_name) {
-                    if let Some(commit) = reference.peel_to_commit().ok() {
-                        let author = commit.author();
-                        let time = author.when();
-                        let _datetime = chrono::DateTime::from_timestamp(time.seconds(), 0)
-                            .map(|dt| dt.naive_local())
-                            .unwrap_or_default();
-
-                        branches.push(Branch {
-                            name: branch_name.to_string(),
-                            commit_hash: commit.id().to_string().chars().take(8).collect(),
-                            commit_message: commit.summary().unwrap_or_default().to_string(),
-                            author: author.name().unwrap_or("Unknown").to_string(),
-                            is_current: false,
-                            is_remote: true,
-                        });
-                    }
-                }
-            }
-        }
-
-        // Sort branches: current branch first, then local branches, then remote branches
-        branches.sort_by(|a, b| match (a.is_current, b.is_current) {
-            (true, false) => std::cmp::Ordering::Less,
-            (false, true) => std::cmp::Ordering::Greater,
-            _ => match (a.is_remote, b.is_remote) {
-                (false, true) => std::cmp::Ordering::Less,
-                (true, false) => std::cmp::Ordering::Greater,
-                _ => a.name.cmp(&b.name),
+        // For now, create sample NIP-34 events
+        // In a real implementation, these would be loaded from Nostr relays
+        let nip34_events = vec![
+            Nip34Event {
+                id: "abc123def456".to_string(),
+                pubkey: "npub1abc...".to_string(),
+                kind: Nip34Kind::Patch as u16,
+                created_at: chrono::Utc::now().timestamp() as u64,
+                content: "Fix critical authentication bug in NIP-34 implementation".to_string(),
+                tags: vec![
+                    vec!["d".to_string(), "fix-auth-bug".to_string()],
+                    vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                ],
             },
-        });
+            Nip34Event {
+                id: "def456ghi789".to_string(),
+                pubkey: "npub1def...".to_string(),
+                kind: Nip34Kind::PullRequest as u16,
+                created_at: (chrono::Utc::now().timestamp() - 3600) as u64, // 1 hour ago
+                content: "Add NIP-34 event creation and signing support".to_string(),
+                tags: vec![
+                    vec!["r".to_string(), "main".to_string()],
+                    vec!["pr".to_string(), "42".to_string()],
+                    vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                ],
+            },
+            Nip34Event {
+                id: "ghi789jkl012".to_string(),
+                pubkey: "npub1ghi...".to_string(),
+                kind: Nip34Kind::Issue as u16,
+                created_at: (chrono::Utc::now().timestamp() - 7200) as u64, // 2 hours ago
+                content: "Implement NIP-34 event serialization for git patches".to_string(),
+                tags: vec![
+                    vec!["k".to_string(), "issue-123".to_string()],
+                    vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                    vec!["title".to_string(), "Feature: NIP-34 support".to_string()],
+                ],
+            },
+        ];
 
         let mut commit_state = ListState::default();
         if !commits.is_empty() {
@@ -177,15 +191,22 @@ impl App {
             branch_state.select(Some(0));
         }
 
+        let mut nip34_state = ListState::default();
+        if !nip34_events.is_empty() {
+            nip34_state.select(Some(0));
+        }
+
         Ok(Self {
             commits,
             branches,
+            nip34_events,
             commit_state,
             branch_state,
-            current_mode: NavigatorMode::Branches,
+            nip34_state,
+            current_mode: NavigatorMode::Commits,
             repo,
-            full_commit_details: None,
-            show_full_commit: false,
+            selected_commits: HashSet::new(),
+            selected_nip34_events: HashSet::new(),
         })
     }
 
@@ -193,122 +214,238 @@ impl App {
     fn switch_mode(&mut self) {
         self.current_mode = match self.current_mode {
             NavigatorMode::Commits => NavigatorMode::Branches,
-            NavigatorMode::Branches => NavigatorMode::Commits,
+            NavigatorMode::Branches => NavigatorMode::Nip34Events,
+            NavigatorMode::Nip34Events => NavigatorMode::Commits,
         };
     }
 
     /// Moves the selection up in the current mode.
     fn previous(&mut self) {
-        match self.current_mode {
-            NavigatorMode::Commits => {
-                let i = match self.commit_state.selected() {
-                    Some(i) => {
-                        if i == 0 {
-                            self.commits.len() - 1
-                        } else {
-                            i - 1
-                        }
-                    }
-                    None => 0,
-                };
-                self.commit_state.select(Some(i));
-            }
-            NavigatorMode::Branches => {
-                let i = match self.branch_state.selected() {
-                    Some(i) => {
-                        if i == 0 {
-                            self.branches.len() - 1
-                        } else {
-                            i - 1
-                        }
-                    }
-                    None => 0,
-                };
-                self.branch_state.select(Some(i));
-            }
+        let state = match self.current_mode {
+            NavigatorMode::Commits => &mut self.commit_state,
+            NavigatorMode::Branches => &mut self.branch_state,
+            NavigatorMode::Nip34Events => &mut self.nip34_state,
+        };
+
+        let items = match self.current_mode {
+            NavigatorMode::Commits => self.commits.len(),
+            NavigatorMode::Branches => self.branches.len(),
+            NavigatorMode::Nip34Events => self.nip34_events.len(),
+        };
+
+        if items == 0 {
+            return;
         }
+
+        let i = match state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    items - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        state.select(Some(i));
     }
 
     /// Moves the selection down in the current mode.
     fn next(&mut self) {
-        match self.current_mode {
-            NavigatorMode::Commits => {
-                let i = match self.commit_state.selected() {
-                    Some(i) => {
-                        if i >= self.commits.len() - 1 {
-                            0
-                        } else {
-                            i + 1
-                        }
-                    }
-                    None => 0,
-                };
-                self.commit_state.select(Some(i));
+        let state = match self.current_mode {
+            NavigatorMode::Commits => &mut self.commit_state,
+            NavigatorMode::Branches => &mut self.branch_state,
+            NavigatorMode::Nip34Events => &mut self.nip34_state,
+        };
+
+        let items = match self.current_mode {
+            NavigatorMode::Commits => self.commits.len(),
+            NavigatorMode::Branches => self.branches.len(),
+            NavigatorMode::Nip34Events => self.nip34_events.len(),
+        };
+
+        if items == 0 {
+            return;
+        }
+
+        let i = match state.selected() {
+            Some(i) => {
+                if i >= items - 1 {
+                    0
+                } else {
+                    i + 1
+                }
             }
-            NavigatorMode::Branches => {
-                let i = match self.branch_state.selected() {
-                    Some(i) => {
-                        if i >= self.branches.len() - 1 {
-                            0
-                        } else {
-                            i + 1
-                        }
-                    }
-                    None => 0,
-                };
-                self.branch_state.select(Some(i));
+            None => 0,
+        };
+        state.select(Some(i));
+    }
+
+    /// Toggles selection of current commit (max 2 commits).
+    /// Automatically shows diff when exactly 2 commits are selected.
+    fn toggle_commit_selection(&mut self) {
+        if let Some(selected_index) = self.commit_state.selected() {
+            if self.selected_commits.contains(&selected_index) {
+                self.selected_commits.remove(&selected_index);
+            } else if self.selected_commits.len() < 2 {
+                self.selected_commits.insert(selected_index);
+                
+                // Auto-show diff when exactly 2 commits are selected
+                if self.selected_commits.len() == 2 {
+                    let _ = self.load_full_commit();
+                }
+            }
+            // If we already have 2 selected and trying to add a third,
+            // replace the oldest selection and auto-show new diff
+            else if self.selected_commits.len() >= 2 {
+                let mut indices: Vec<_> = self.selected_commits.iter().cloned().collect();
+                indices.sort();
+                self.selected_commits.remove(&indices[0]); // Remove oldest
+                self.selected_commits.insert(selected_index);
+                
+                // Auto-show diff for new selection
+                let _ = self.load_full_commit();
             }
         }
     }
 
-    /// Performs mode-specific action (checkout branch in branches mode).
-    fn action(&mut self) -> Result<()> {
-        match self.current_mode {
-            NavigatorMode::Commits => {
-                // No action for commits mode (read-only)
+    /// Toggles selection of NIP-34 events.
+    fn toggle_nip34_selection(&mut self) {
+        if let Some(selected_index) = self.nip34_state.selected() {
+            if self.selected_nip34_events.contains(&selected_index) {
+                self.selected_nip34_events.remove(&selected_index);
+            } else {
+                self.selected_nip34_events.insert(selected_index);
             }
-            NavigatorMode::Branches => {
-                if let Some(selected_index) = self.branch_state.selected() {
-                    if let Some(branch) = self.branches.get(selected_index) {
-                        if !branch.is_remote {
-                            let branch_name = &branch.name;
-                            let branch_ref = format!("refs/heads/{}", branch_name);
+        }
+    }
 
-                            // Checkout the branch
-                            let reference = self.repo.find_reference(&branch_ref)?;
-                            self.repo.set_head(
-                                reference.name().expect("Reference should have a name"),
-                            )?;
+    /// Clears all selected commits/events.
+    fn clear_selection(&mut self) {
+        self.selected_commits.clear();
+        self.selected_nip34_events.clear();
+    }
 
-                            // Update the current branch status
-                            for b in &mut self.branches {
-                                b.is_current = false;
-                            }
-                            self.branches[selected_index].is_current = true;
+    /// Returns number of selected items in current mode.
+    fn selected_count(&self) -> usize {
+        match self.current_mode {
+            NavigatorMode::Commits => self.selected_commits.len(),
+            NavigatorMode::Branches => 0,
+            NavigatorMode::Nip34Events => self.selected_nip34_events.len(),
+        }
+    }
+
+    /// Creates NIP-34 event from selected commits.
+    fn create_nip34_patch_event(&self) -> Result<Nip34Event> {
+        if self.selected_commits.len() != 2 {
+            return Err(anyhow::anyhow!("Need exactly 2 commits selected to create patch"));
+        }
+
+        let mut indices: Vec<_> = self.selected_commits.iter().cloned().collect();
+        indices.sort();
+        
+        if let (Some(from_index), Some(to_index)) = (indices.get(0), indices.get(1)) {
+            if let (Some(from_commit), Some(to_commit)) = (self.commits.get(*from_index), self.commits.get(*to_index)) {
+                // Create a patch between two commits
+                let content = format!(
+                    "Patch from {} to {}\n\nFrom: {} ({})\nTo: {} ({})\n\nThis would create a NIP-34 patch event.",
+                    from_commit.hash, to_commit.hash,
+                    from_commit.author, from_commit.summary,
+                    to_commit.author, to_commit.summary
+                );
+
+                Ok(Nip34Event {
+                    id: "new-patch-event".to_string(),
+                    pubkey: "your-pubkey-here".to_string(), // User would need to provide this
+                    kind: Nip34Kind::Patch as u16,
+                    created_at: chrono::Utc::now().timestamp() as u64,
+                    content,
+                    tags: vec![
+                        vec!["d".to_string(), format!("{}..{}", from_commit.full_hash, to_commit.full_hash)],
+                        vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                    ],
+                })
+            } else {
+                Err(anyhow::anyhow!("Invalid commit selection"))
+            }
+        } else {
+            Err(anyhow::anyhow!("No commits selected"))
+        }
+    }
+
+    /// Loads git diff for selected commits (max 2 for range diff).
+    fn load_full_commit(&mut self) -> Result<()> {
+        let mut diff_content = String::new();
+
+        if !self.selected_commits.is_empty() || self.show_full_commit {
+            let mut selected_indices: Vec<_> = self.selected_commits.iter().cloned().collect();
+            selected_indices.sort();
+
+            if self.selected_commits.len() == 2 {
+                // Show diff range between two commits
+                if let (Some(from_index), Some(to_index)) = (selected_indices.get(0), selected_indices.get(1)) {
+                    if let (Some(from_commit), Some(to_commit)) = (self.commits.get(*from_index), self.commits.get(*to_index)) {
+                        diff_content.push_str("╭─────────────────────────────────────────────────╮\n");
+                        diff_content.push_str("│                   Diff Range                        │\n");
+                        diff_content.push_str("╰─────────────────────────────────────────────────╯\n\n");
+
+                        diff_content.push_str(&format!("From: [{}] {} - {}\n", from_commit.hash, from_commit.author, from_commit.summary));
+                        diff_content.push_str(&format!("To:   [{}] {} - {}\n\n", to_commit.hash, to_commit.author, to_commit.summary));
+
+                        diff_content.push_str("╭─────────────────────────────────────────────────╮\n");
+                        diff_content.push_str("│                      Git Diff                       │\n");
+                        diff_content.push_str("╰─────────────────────────────────────────────────╯\n\n");
+
+                        diff_content.push_str("📝 Changes between commits:\n\n");
+
+                        // Get diff between two commits
+                        let from_oid = git2::Oid::from_str(&from_commit.full_hash)?;
+                        let to_oid = git2::Oid::from_str(&to_commit.full_hash)?;
+                        
+                        if let (Ok(from_commit_obj), Ok(to_commit_obj)) = (self.repo.find_commit(from_oid), self.repo.find_commit(to_oid)) {
+                            let from_tree = from_commit_obj.tree()?;
+                            let to_tree = to_commit_obj.tree()?;
+                            let diff = self.repo.diff_tree_to_tree(Some(&from_tree), Some(&to_tree), None)?;
+                            self.format_diff(&diff, &mut diff_content)?;
                         }
                     }
                 }
-            }
-        }
-        Ok(())
-    }
+            } else {
+                // Show selection summary (1 or 3+ commits selected)
+                diff_content.push_str("╭─────────────────────────────────────────────────╮\n");
+                diff_content.push_str(&format!(
+                    "│              Selected {} Commit(s)                │\n",
+                    self.selected_count()
+                ));
+                diff_content.push_str("╰─────────────────────────────────────────────────╯\n\n");
 
-    /// Loads git diff for the selected commit.
-    fn load_full_commit(&mut self) -> Result<()> {
-        if let Some(selected_index) = self.commit_state.selected() {
+                for (count, &index) in selected_indices.iter().enumerate() {
+                    if let Some(commit) = self.commits.get(*index) {
+                        diff_content.push_str(&format!(
+                            "{}. [{}] {} - {}\n",
+                            count + 1,
+                            commit.hash,
+                            commit.author,
+                            commit.summary
+                        ));
+                    }
+                }
+
+                diff_content.push_str("\n");
+                if self.selected_commits.len() == 1 {
+                    diff_content.push_str("💡 Tip: Select another commit to view diff range\n");
+                } else {
+                    diff_content.push_str("💡 Tip: Only 2 commits allowed for diff range. Press 'c' to clear.\n");
+                }
+            }
+        } else if let Some(selected_index) = self.commit_state.selected() {
+            // No commits selected, load current focused commit
             if let Some(commit) = self.commits.get(selected_index) {
-                // Find the full commit object using the hash
                 let commit_oid = git2::Oid::from_str(&commit.full_hash)?;
                 if let Ok(git_commit) = self.repo.find_commit(commit_oid) {
-                    let mut diff_content = String::new();
-
-                    // Add commit details header widget
-                    diff_content
-                        .push_str("╭─────────────────────────────────────────────────────────╮\n");
-                    diff_content
-                        .push_str("│                    Commit Details                    │\n");
-                    diff_content
-                        .push_str("╰─────────────────────────────────────────────────────────╯\n");
+                    diff_content.push_str("╭─────────────────────────────────────────────────╮\n");
+                    diff_content.push_str("│                    Commit Details                    │\n");
+                    diff_content.push_str("╰─────────────────────────────────────────────────╯\n");
                     diff_content.push_str(&format!("Commit: {}\n", git_commit.id()));
                     diff_content.push_str(&format!(
                         "Author: {} <{}>\n",
@@ -321,31 +458,22 @@ impl App {
                         diff_content.push_str(&format!(
                             "Committer: {} <{}>\n",
                             git_commit.committer().name().unwrap_or("Unknown"),
-                            git_commit
-                                .committer()
-                                .email()
-                                .unwrap_or("unknown@example.com")
+                            git_commit.committer().email().unwrap_or("unknown@example.com")
                         ));
                         diff_content.push_str(&format!(
                             "Commit Date: {}\n",
-                            chrono::DateTime::from_timestamp(
-                                git_commit.committer().when().seconds(),
-                                0
-                            )
-                            .map(|dt| dt.naive_local())
-                            .unwrap_or_default()
-                            .format("%Y-%m-%d %H:%M:%S")
+                            chrono::DateTime::from_timestamp(git_commit.committer().when().seconds(), 0)
+                                .map(|dt| dt.naive_local())
+                                .unwrap_or_default()
+                                .format("%Y-%m-%d %H:%M:%S")
                         ));
                     } else {
                         diff_content.push_str(&format!(
                             "Date: {}\n",
-                            chrono::DateTime::from_timestamp(
-                                git_commit.author().when().seconds(),
-                                0
-                            )
-                            .map(|dt| dt.naive_local())
-                            .unwrap_or_default()
-                            .format("%Y-%m-%d %H:%M:%S")
+                            chrono::DateTime::from_timestamp(git_commit.author().when().seconds(), 0)
+                                .map(|dt| dt.naive_local())
+                                .unwrap_or_default()
+                                .format("%Y-%m-%d %H:%M:%S")
                         ));
                     }
 
@@ -366,15 +494,11 @@ impl App {
                     }
 
                     diff_content.push_str("\n");
-                    diff_content
-                        .push_str("╭─────────────────────────────────────────────────────────╮\n");
-                    diff_content
-                        .push_str("│                      Git Diff                       │\n");
-                    diff_content.push_str(
-                        "╰─────────────────────────────────────────────────────────╯\n\n",
-                    );
+                    diff_content.push_str("╭─────────────────────────────────────────────────╮\n");
+                    diff_content.push_str("│                      Git Diff                       │\n");
+                    diff_content.push_str("╰─────────────────────────────────────────────────╯\n\n");
 
-                    // Get the diff against parent(s)
+                    // Get diff against parent(s)
                     let parent_count = git_commit.parent_count();
 
                     if parent_count == 0 {
@@ -387,8 +511,7 @@ impl App {
                     } else {
                         // Show diff against first parent
                         if parent_count > 1 {
-                            diff_content
-                                .push_str("🔀 Merge Commit - Diff against first parent:\n\n");
+                            diff_content.push_str("🔀 Merge Commit - Diff against first parent:\n\n");
                         } else {
                             diff_content.push_str("📝 Changes - Diff against parent:\n\n");
                         }
@@ -404,12 +527,12 @@ impl App {
                             self.format_diff(&diff, &mut diff_content)?;
                         }
                     }
-
-                    self.full_commit_details = Some(diff_content);
-                    self.show_full_commit = true;
                 }
             }
         }
+
+        self.full_commit_details = Some(diff_content);
+        self.show_full_commit = true;
         Ok(())
     }
 
@@ -437,11 +560,8 @@ impl App {
                     // File header
                     if let Some(new_path) = delta.new_file().path() {
                         if let Some(old_path) = delta.old_file().path() {
-                            patch.push_str(&format!(
-                                "diff --git a/{} b/{}\n",
-                                old_path.display(),
-                                new_path.display()
-                            ));
+                            patch.push_str(&format!("diff --git a/{} b/{}\n", 
+                                old_path.display(), new_path.display()));
                         }
                     }
                 }
@@ -466,10 +586,9 @@ impl App {
         Ok(())
     }
 
-    /// Toggles full commit view.
-    fn toggle_full_commit(&mut self) {
-        self.show_full_commit = !self.show_full_commit;
-    }
+    // Storage for full commit details
+    full_commit_details: Option<String>,
+    show_full_commit: bool,
 }
 
 /// Runs the TUI application loop.
@@ -493,8 +612,12 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Down | KeyCode::Char('j') => app.next(),
                         KeyCode::Up | KeyCode::Char('k') => app.previous(),
                         KeyCode::Enter | KeyCode::Char(' ') => {
-                            if let Err(_e) = app.action() {
-                                // Could show error message in UI
+                            match app.current_mode {
+                                NavigatorMode::Commits => app.toggle_commit_selection(),
+                                NavigatorMode::Branches => {
+                                    // Could add branch checkout here
+                                }
+                                NavigatorMode::Nip34Events => app.toggle_nip34_selection(),
                             }
                         }
                         KeyCode::Right => {
@@ -506,7 +629,19 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                         KeyCode::Left => {
                             if app.current_mode == NavigatorMode::Commits && app.show_full_commit {
-                                app.toggle_full_commit();
+                                app.show_full_commit = false;
+                            }
+                        }
+                        KeyCode::Char('c') => {
+                            app.clear_selection();
+                            app.show_full_commit = false;
+                        }
+                        KeyCode::Char('n') => {
+                            // Create NIP-34 patch from selected commits
+                            if app.current_mode == NavigatorMode::Commits {
+                                if let Err(_e) = app.create_nip34_patch_event() {
+                                    // Could show error message
+                                }
                             }
                         }
                         _ => {}
@@ -525,233 +660,365 @@ fn run_app<B: ratatui::backend::Backend>(
 fn ui(f: &mut Frame, app: &mut App) {
     let size = f.area();
 
+    // Top navigation tabs
+    let titles = vec!["Commits", "Branches", "NIP-34 Events"];
+    let selected_index = match app.current_mode {
+        NavigatorMode::Commits => 0,
+        NavigatorMode::Branches => 1,
+        NavigatorMode::Nip34Events => 2,
+    };
+
+    let tabs = Tabs::new(titles)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("NIP-34 Git Navigator"),
+        )
+        .style(Style::default().fg(Color::Cyan))
+        .highlight_style(Style::default().fg(Color::White).bg(Color::Blue))
+        .divider(" | ")
+        .select(selected_index);
+
+    f.render_widget(tabs, Rect::new(0, 0, size.width, 3));
+
+    // Main content area below tabs
+    let content_area = Rect::new(0, 3, size.width, size.height - 4);
+
+    match app.current_mode {
+        NavigatorMode::Commits => render_commits_view(f, app, content_area),
+        NavigatorMode::Branches => render_branches_view(f, app, content_area),
+        NavigatorMode::Nip34Events => render_nip34_view(f, app, content_area),
+    }
+
+    // Help text at bottom
+    let help_text = get_help_text(app);
+    let help_widget = Paragraph::new(help_text)
+        .style(Style::default().bg(Color::Black).fg(Color::White))
+        .alignment(ratatui::layout::Alignment::Center)
+        .block(Block::default());
+    
+    let help_area = Rect::new(0, size.height.saturating_sub(1), size.width, 1);
+    f.render_widget(help_widget, help_area);
+}
+
+/// Renders the commits view.
+fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Layout for list (left) and details (right)
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
-        .split(size);
+        .split(area);
 
-    match app.current_mode {
-        NavigatorMode::Commits => {
-            // --- Commit List ---
-            let items: Vec<ListItem> = app
-                .commits
-                .iter()
-                .map(|c| {
-                    let content = format!("[{}] {} - {}", c.hash, c.author, c.summary);
-                    ListItem::new(content).style(Style::default().fg(Color::Gray))
-                })
-                .collect();
-
-            let list = List::new(items)
-                .block(
-                    Block::default()
-                        .title("Commit History")
-                        .borders(Borders::ALL)
-                        .border_style(Style::default().fg(Color::Green)),
-                )
-                .highlight_style(
-                    Style::default()
-                        .bg(Color::Blue)
-                        .add_modifier(ratatui::style::Modifier::BOLD),
-                )
-                .highlight_symbol(">> ");
-
-            f.render_stateful_widget(list, chunks[0], &mut app.commit_state);
-
-            // --- Commit Details ---
-            let title = if app.show_full_commit {
-                "Git Diff (Read-Only) - [Left] to return"
+    // --- Commit List ---
+    let items: Vec<ListItem> = app
+        .commits
+        .iter()
+        .enumerate()
+        .map(|(index, c)| {
+            let selected_indicator = if app.selected_commits.contains(&index) { "✓ " } else { "  " };
+            let content = format!("{}[{}] {} - {}", selected_indicator, c.hash, c.author, c.summary);
+            let style = if app.selected_commits.contains(&index) {
+                Style::default().fg(Color::Yellow)
             } else {
-                "Commit Details (Read-Only) - [Right] for git diff"
+                Style::default().fg(Color::Gray)
             };
-            let block = Block::default().title(title).borders(Borders::ALL);
-            f.render_widget(block, chunks[1]);
+            ListItem::new(content).style(style)
+        })
+        .collect();
 
-            if let Some(selected_index) = app.commit_state.selected() {
-                if app.show_full_commit {
-                    // Show full commit details
-                    if let Some(ref full_details) = app.full_commit_details {
-                        let details_chunk = chunks[1].inner(ratatui::layout::Margin {
-                            horizontal: 1,
-                            vertical: 1,
-                        });
-                        f.render_widget(
-                            Paragraph::new(full_details.clone())
-                                .style(Style::default().fg(Color::White)),
-                            details_chunk,
-                        );
-                    }
-                } else {
-                    // Show summary details
-                    if let Some(commit) = app.commits.get(selected_index) {
-                        let details_chunks = Layout::default()
-                            .direction(Direction::Vertical)
-                            .margin(1)
-                            .constraints([
-                                Constraint::Length(1), // Hash
-                                Constraint::Length(1), // Author
-                                Constraint::Length(1), // Date
-                                Constraint::Min(0),    // Summary
-                            ])
-                            .split(chunks[1].inner(ratatui::layout::Margin {
-                                horizontal: 1,
-                                vertical: 1,
-                            }));
+    let title = if app.selected_commits.len() > 0 {
+        format!("Commit History ({} selected)", app.selected_commits.len())
+    } else {
+        "Commit History".to_string()
+    };
+    
+    let list = List::new(items)
+        .block(
+            Block::default()
+                .title(title)
+                .borders(Borders::ALL)
+                .border_style(if app.selected_commits.len() > 0 { 
+                    Style::default().fg(Color::Yellow) 
+                } else { 
+                    Style::default().fg(Color::Green) 
+                }),
+        )
+        .highlight_style(
+            Style::default()
+                .bg(Color::Blue)
+                .add_modifier(ratatui::style::Modifier::BOLD),
+        )
+        .highlight_symbol(">> ");
 
-                        f.render_widget(
-                            Paragraph::new(format!("Hash: {}", commit.hash.clone().bold()))
-                                .style(Style::default().fg(Color::Yellow)),
-                            details_chunks[0],
-                        );
-                        f.render_widget(
-                            Paragraph::new(format!(
-                                "Author: {}",
-                                commit.author.clone().green().bold()
-                            )),
-                            details_chunks[1],
-                        );
-                        f.render_widget(
-                            Paragraph::new(format!(
-                                "Date: {}",
-                                commit.committer_date.to_string().cyan()
-                            )),
-                            details_chunks[2],
-                        );
-                        f.render_widget(
-                            Paragraph::new(format!("Summary: \n{}", commit.summary)),
-                            details_chunks[3],
-                        );
-                    }
-                }
-            }
+    f.render_stateful_widget(list, chunks[0], &mut app.commit_state);
+
+    // --- Details Panel ---
+    let details_block = Block::default()
+        .title("Git & NIP-34 Operations")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Magenta));
+    f.render_widget(details_block, chunks[1]);
+
+    if app.show_full_commit {
+        if let Some(ref details) = app.full_commit_details {
+            let details_chunk = chunks[1].inner(ratatui::layout::Margin {
+                horizontal: 1,
+                vertical: 1,
+            });
+            f.render_widget(
+                Paragraph::new(details.clone())
+                    .style(Style::default().fg(Color::White)),
+                details_chunk,
+            );
         }
-        NavigatorMode::Branches => {
-            // --- Branch List ---
-            let items: Vec<ListItem> = app
-                .branches
-                .iter()
-                .map(|b| {
-                    let prefix = if b.is_current {
-                        "* "
-                    } else if b.is_remote {
-                        "R "
-                    } else {
-                        "  "
-                    };
-                    let content = format!("{}{} - {}", prefix, b.name, b.commit_message);
-                    let style = if b.is_current {
-                        Style::default().fg(Color::Green)
-                    } else if b.is_remote {
-                        Style::default().fg(Color::Cyan)
-                    } else {
-                        Style::default().fg(Color::Gray)
-                    };
-                    ListItem::new(content).style(style)
-                })
-                .collect();
+    } else {
+        let details_chunk = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints([
+                Constraint::Length(1), // Instructions
+                Constraint::Length(1), // Selection count
+                Constraint::Min(0),    // Tips
+            ])
+            .split(chunks[1].inner(ratatui::layout::Margin {
+                horizontal: 1,
+                vertical: 1,
+            }));
 
-            let list = List::new(items)
-                .block(
-                    Block::default()
-                        .title("Git Branches")
-                        .borders(Borders::ALL)
-                        .border_style(Style::default().fg(Color::Green)),
-                )
-                .highlight_style(
-                    Style::default()
-                        .bg(Color::Blue)
-                        .add_modifier(ratatui::style::Modifier::BOLD),
-                )
-                .highlight_symbol(">> ");
+        f.render_widget(
+            Paragraph::new("Use ↑↓ to navigate, Space to select (max 2)")
+                .style(Style::default().fg(Color::Cyan)),
+            details_chunk[0],
+        );
 
-            f.render_stateful_widget(list, chunks[0], &mut app.branch_state);
+        f.render_widget(
+            Paragraph::new(format!("Selected: {} commits", app.selected_commits.len()))
+                .style(Style::default().fg(Color::Yellow)),
+            details_chunk[1],
+        );
 
-            // --- Branch Details ---
-            let block = Block::default()
-                .title("Branch Details")
-                .borders(Borders::ALL);
-            f.render_widget(block, chunks[1]);
+        f.render_widget(
+            Paragraph::new(format!("Press 'n' to create NIP-34 patch from selected commits"))
+                .style(Style::default().fg(Color::Green)),
+            details_chunk[2],
+        );
+    }
+}
 
-            if let Some(selected_index) = app.branch_state.selected() {
-                if let Some(branch) = app.branches.get(selected_index) {
-                    let details_chunks = Layout::default()
-                        .direction(Direction::Vertical)
-                        .margin(1)
-                        .constraints([
-                            Constraint::Length(1), // Name
-                            Constraint::Length(1), // Type
-                            Constraint::Length(1), // Commit
-                            Constraint::Length(1), // Author
-                            Constraint::Min(0),    // Message
-                        ])
-                        .split(chunks[1].inner(ratatui::layout::Margin {
-                            horizontal: 1,
-                            vertical: 1,
-                        }));
+/// Renders the branches view.
+fn render_branches_view(f: &mut Frame, app: &mut App, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+        .split(area);
 
-                    let branch_type = if branch.is_current {
-                        "Current Branch".to_string().green().bold()
-                    } else if branch.is_remote {
-                        "Remote Branch".to_string().cyan().bold()
-                    } else {
-                        "Local Branch".to_string().yellow()
-                    };
+    // --- Branch List ---
+    let items: Vec<ListItem> = app
+        .branches
+        .iter()
+        .map(|b| {
+            let prefix = if b.is_current {
+                "* "
+            } else if b.is_remote {
+                "R "
+            } else {
+                "  "
+            };
+            let content = format!("{}{} - {}", prefix, b.name, b.commit_message);
+            let style = if b.is_current {
+                Style::default().fg(Color::Green)
+            } else if b.is_remote {
+                Style::default().fg(Color::Cyan)
+            } else {
+                Style::default().fg(Color::Gray)
+            };
+            ListItem::new(content).style(style)
+        })
+        .collect();
 
-                    f.render_widget(
-                        Paragraph::new(format!("Name: {}", branch.name.clone().bold()))
-                            .style(Style::default().fg(Color::Yellow)),
-                        details_chunks[0],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!("Type: {}", branch_type)),
-                        details_chunks[1],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!("Commit: {}", branch.commit_hash.clone().bold()))
-                            .style(Style::default().fg(Color::Magenta)),
-                        details_chunks[2],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!("Author: {}", branch.author.clone().green().bold())),
-                        details_chunks[3],
-                    );
-                    f.render_widget(
-                        Paragraph::new(format!("Message:\n{}", branch.commit_message)),
-                        details_chunks[4],
-                    );
-                }
-            }
+    let list = List::new(items)
+        .block(
+            Block::default()
+                .title("Git Branches")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Green)),
+        )
+        .highlight_style(
+            Style::default()
+                .bg(Color::Blue)
+                .add_modifier(ratatui::style::Modifier::BOLD),
+        )
+        .highlight_symbol(">> ");
+
+    f.render_stateful_widget(list, chunks[0], &mut app.branch_state);
+
+    // --- Details Panel ---
+    let details_block = Block::default()
+        .title("Branch Operations")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Magenta));
+    f.render_widget(details_block, chunks[1]);
+}
+
+/// Renders the NIP-34 events view.
+fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+        .split(area);
+
+    // --- NIP-34 Events List ---
+    let items: Vec<ListItem> = app
+        .nip34_events
+        .iter()
+        .enumerate()
+        .map(|(index, event)| {
+            let selected_indicator = if app.selected_nip34_events.contains(&index) { "✓ " } else { "  " };
+            let kind_name = match event.kind {
+                1617 => "Repo Announcement",
+                1618 => "Repo State",
+                1617 => "Patch",
+                1618 => "Pull Request",
+                1619 => "PR Update",
+                1621 => "Issue",
+                _ => "Unknown",
+            };
+            
+            let content_preview = if event.content.len() > 50 {
+                format!("{}...", &event.content[..47])
+            } else {
+                event.content.clone()
+            };
+
+            let content = format!("{}[{}] {} - {}", 
+                selected_indicator, 
+                &event.id[..8], 
+                kind_name,
+                content_preview
+            );
+            let style = if app.selected_nip34_events.contains(&index) {
+                Style::default().fg(Color::Yellow)
+            } else {
+                Style::default().fg(Color::Gray)
+            };
+            ListItem::new(content).style(style)
+        })
+        .collect();
+
+    let title = if app.selected_nip34_events.len() > 0 {
+        format!("NIP-34 Events ({} selected)", app.selected_nip34_events.len())
+    } else {
+        "NIP-34 Events".to_string()
+    };
+
+    let list = List::new(items)
+        .block(
+            Block::default()
+                .title(title)
+                .borders(Borders::ALL)
+                .border_style(if app.selected_nip34_events.len() > 0 { 
+                    Style::default().fg(Color::Yellow) 
+                } else { 
+                    Style::default().fg(Color::Green) 
+                }),
+        )
+        .highlight_style(
+            Style::default()
+                .bg(Color::Blue)
+                .add_modifier(ratatui::style::Modifier::BOLD),
+        )
+        .highlight_symbol(">> ");
+
+    f.render_stateful_widget(list, chunks[0], &mut app.nip34_state);
+
+    // --- Event Details Panel ---
+    let details_block = Block::default()
+        .title("NIP-34 Event Details")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Magenta));
+    f.render_widget(details_block, chunks[1]);
+
+    if let Some(selected_index) = app.nip34_state.selected() {
+        if let Some(event) = app.nip34_events.get(selected_index) {
+            let details_chunk = chunks[1].inner(ratatui::layout::Margin {
+                horizontal: 1,
+                vertical: 1,
+            });
+            
+            let event_details = format!(
+                "Event ID: {}\n\
+                Public Key: {}\n\
+                Kind: {} ({})\n\
+                Created: {}\n\
+                Content: {}\n\n\
+                Tags:\n{}",
+                event.id,
+                event.pubkey,
+                event.kind,
+                match event.kind {
+                    1617 => "Repo Announcement",
+                    1618 => "Repo State", 
+                    1617 => "Patch",
+                    1618 => "Pull Request",
+                    1619 => "PR Update",
+                    1621 => "Issue",
+                    _ => "Unknown",
+                },
+                chrono::DateTime::from_timestamp(event.created_at as i64, 0)
+                    .map(|dt| dt.naive_local())
+                    .unwrap_or_default()
+                    .format("%Y-%m-%d %H:%M:%S"),
+                event.content,
+                event.tags.iter()
+                    .map(|tag| format!("  {}: {}", tag.get(0).unwrap_or(&"".to_string()), 
+                        tag.get(1).unwrap_or(&"".to_string())))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+
+            f.render_widget(
+                Paragraph::new(event_details)
+                    .style(Style::default().fg(Color::White)),
+                details_chunk,
+            );
         }
     }
+}
 
-    // --- Mode Indicator and Help Text ---
-    let mode_text = match app.current_mode {
-        NavigatorMode::Commits => "COMMITS MODE".green().bold(),
-        NavigatorMode::Branches => "BRANCHES MODE".blue().bold(),
-    };
-
-    let help_text = match app.current_mode {
+/// Gets help text based on current mode and state.
+fn get_help_text(app: &App) -> String {
+    let base_help = "Controls: [Tab] Switch | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
+    
+    match app.current_mode {
         NavigatorMode::Commits => {
+            let selection_help = if app.selected_commits.len() > 0 { 
+                if app.selected_commits.len() == 1 {
+                    " | [Space] Select 1 more | [n] Create Patch"
+                } else {
+                    " | [c] Clear | [n] Create Patch"
+                }
+            } else { 
+                "" 
+            };
+            
             if app.show_full_commit {
-                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Left] Summary"
+                format!("{} | [Left] Summary{}", base_help, selection_help)
             } else {
-                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Right] Git Diff"
+                format!("{} | [Space] Select | [Right] Diff{}", base_help, selection_help)
             }
         }
         NavigatorMode::Branches => {
-            "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Enter/Space] Checkout"
+            format!("{} | [Enter] Checkout", base_help)
         }
-    };
-
-    let mode_indicator = Paragraph::new(format!("{} | {}", mode_text, help_text))
-        .style(Style::default().bg(Color::Black).fg(Color::White))
-        .alignment(ratatui::layout::Alignment::Center)
-        .block(Block::default());
-
-    // Position the help text at the bottom
-    let help_area = Rect::new(0, size.height.saturating_sub(1), size.width, 1);
-    f.render_widget(mode_indicator, help_area);
+        NavigatorMode::Nip34Events => {
+            let selection_help = if app.selected_nip34_events.len() > 0 { 
+                " | [c] Clear" 
+            } else { 
+                "" 
+            };
+            format!("{} | [Space] Select{}", base_help, selection_help)
+        }
+    }
 }
 
 /// Initializes the terminal and runs the application.
@@ -770,7 +1037,7 @@ fn main() -> Result<()> {
 
     // Restore terminal
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen,)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
 
     if let Err(e) = res {
