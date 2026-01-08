@@ -403,19 +403,26 @@ fn ui(f: &mut Frame, app: &App) {
 
         f.render_widget(Clear, popup_area); // Clear the area first
 
-        let items: Vec<ListItem> = diff_messages.iter().enumerate().map(|(i, msg)| {
-            let mut summary = String::new();
-            if let Some(first_line) = msg.content.first() {
-                // Take a snippet of the first line as a summary
-                summary = first_line.chars().take(popup_area.width as usize - 4).collect(); // -4 for borders
-            }
-            let content = if i == *selected_index {
-                format!("> {}", summary)
-            } else {
-                format!("  {}", summary)
-            };
-            ListItem::new(content).style(Style::default().fg(Color::Yellow))
-        }).collect();
+        let items: Vec<ListItem> = diff_messages
+            .iter()
+            .enumerate()
+            .map(|(i, msg)| {
+                let mut summary = String::new();
+                if let Some(first_line) = msg.content.first() {
+                    // Take a snippet of the first line as a summary
+                    summary = first_line
+                        .chars()
+                        .take(popup_area.width as usize - 4)
+                        .collect(); // -4 for borders
+                }
+                let content = if i == *selected_index {
+                    format!("> {}", summary)
+                } else {
+                    format!("  {}", summary)
+                };
+                ListItem::new(content).style(Style::default().fg(Color::Yellow))
+            })
+            .collect();
 
         let mut list_state = ListState::default();
         list_state.select(Some(*selected_index));
