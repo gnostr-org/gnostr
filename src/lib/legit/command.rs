@@ -1,12 +1,15 @@
+use crate::types::nostr_client;
+use crate::types::{
+    Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
+    Unixtime,
+};
+use crate::utils::{parse_json, split_json_string};
 use anyhow::anyhow;
 use git2::{ObjectType, Repository, RepositoryState};
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use crate::types::{Event, PreEvent, EventKind, KeySigner, PrivateKey, PublicKey, Unixtime, Tag, UncheckedUrl, Signer};
-use crate::types::nostr_client;
-use once_cell::sync::OnceCell;
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
-use crate::utils::{parse_json, split_json_string};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_legit::gitminer::{self, Gitminer};
+use once_cell::sync::OnceCell;
 use serde_json;
 use serde_json::Value;
 use std::borrow::Cow;
@@ -190,13 +193,11 @@ pub async fn create_kind_event(
 }
 
 pub async fn create_event(
-
     keys: KeySigner,
 
     custom_tags: HashMap<String, Vec<String>>,
 
     content: &str,
-
 ) -> anyhow::Result<Event> {
     // Changed return type
 
@@ -212,14 +213,14 @@ pub async fn create_event(
 
     for relay in BOOTSTRAP_RELAYS.iter().cloned() {
         debug!("{}", relay);
-        client.connect_relay(UncheckedUrl(relay.to_string())).await?;
+        client
+            .connect_relay(UncheckedUrl(relay.to_string()))
+            .await?;
     }
 
     // Connect to the relays.
     // client.send_event - signed_event
-    client
-        .send_event(signed_event.clone())
-        .await?;
+    client.send_event(signed_event.clone()).await?;
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
@@ -227,7 +228,10 @@ pub async fn create_event(
 
     debug!("signed_event.content: {}", signed_event.content);
 
-    debug!("signed_event.pubkey: {}", signed_event.pubkey.as_hex_string());
+    debug!(
+        "signed_event.pubkey: {}",
+        signed_event.pubkey.as_hex_string()
+    );
 
     debug!("signed_event.kind: {:?}", signed_event.kind);
 
@@ -256,7 +260,7 @@ pub async fn create_event(
         pubkey: pubkey_keys,
         created_at: Unixtime::now(),
         kind: EventKind::TextNote,
-        tags: tags,
+        tags,
         content: format!("gnostr:legit {}", pubkey_keys.as_hex_string()).to_string(),
     };
 
@@ -292,10 +296,16 @@ pub async fn create_event(
 
     // another filter
 
-    let test_author_pubkey =
-        crate::types::PublicKey::try_from_bech32_string("npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet", true).unwrap();
+    let test_author_pubkey = crate::types::PublicKey::try_from_bech32_string(
+        "npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet",
+        true,
+    )
+    .unwrap();
 
-    info!("test_author_pubkey={}", test_author_pubkey.as_bech32_string());
+    info!(
+        "test_author_pubkey={}",
+        test_author_pubkey.as_bech32_string()
+    );
 
     let mut filter_test_author = crate::types::Filter::new();
     filter_test_author
@@ -322,8 +332,10 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 
 pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdError>> {
     // gnostr_legit_event
-    let empty_hash_private_key =
-        PrivateKey::try_from_hex_string("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
+    let empty_hash_private_key = PrivateKey::try_from_hex_string(
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    )
+    .unwrap();
     let empty_hash_keys = KeySigner::from_private_key(empty_hash_private_key, "", 1).unwrap();
 
     //create a HashMap of custom_tags
@@ -362,8 +374,9 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     //info!("keys.public_key():\n{}", keys.public_key());
 
     //parse keys from sha256 hash
-            let padded_private_key = PrivateKey::try_from_hex_string(&padded_commit_id).unwrap();
-            let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();    let serialized_commit_for_kind_event = serialized_commit.clone();
+    let padded_private_key = PrivateKey::try_from_hex_string(&padded_commit_id).unwrap();
+    let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();
+    let serialized_commit_for_kind_event = serialized_commit.clone();
 
     //create a HashMap of custom_tags
     //used to insert commit tags
@@ -410,7 +423,8 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
                 error!("Failed to create kind event: {:?}", e);
             }
             Ok(())
-        }.await;
+        }
+        .await;
         if let Err(e) = result {
             error!("Error in gnostr_legit_event spawned task: {:?}", e);
         }
@@ -527,9 +541,10 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
             for relay in BOOTSTRAP_RELAYS.iter().cloned() {
                 debug!("{}", relay);
-                client.connect_relay(UncheckedUrl(relay.to_string())).await?;
+                client
+                    .connect_relay(UncheckedUrl(relay.to_string()))
+                    .await?;
             }
-        
 
             //build git gnostr event
             let pre_event = PreEvent {
@@ -557,7 +572,8 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             let output = client.send_event(git_gnostr_event.clone()).await.expect("");
             info!("{:?}", output);
             Ok(())
-        }.await;
+        }
+        .await;
         if let Err(e) = result {
             error!("Error in gnostr_legit_event spawned task: {:?}", e);
         }

@@ -4,7 +4,7 @@ use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use textwrap::{Options, wrap}; // Add this line
+use textwrap::{wrap, Options}; // Add this line
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")
@@ -42,9 +42,9 @@ pub struct Msg {
     pub kind: MsgKind,
     pub commit_id: CommitId,
     pub nostr_event: Option<Event>,
-    pub message_id: Option<String>,    // New field
-    pub sequence_num: Option<usize>,   // New field
-    pub total_chunks: Option<usize>,   // New field
+    pub message_id: Option<String>,  // New field
+    pub sequence_num: Option<usize>, // New field
+    pub total_chunks: Option<usize>, // New field
 }
 
 impl Default for Msg {
@@ -102,7 +102,6 @@ impl Msg {
         self.total_chunks = Some(total_chunks);
         self
     }
-
 
     pub fn wrap_text(self, _text: Msg, _max_width: usize) -> Self {
         //	for line in text.content.bytes() {
@@ -167,8 +166,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             Command => Line::default().spans(vec![
                 Span::styled(
                     format!("Command: {}{} ", &m.from, ">"),
-                    Style::default()
-                        .add_modifier(Modifier::ITALIC),
+                    Style::default().add_modifier(Modifier::ITALIC),
                 ),
                 m.content[0].clone().into(),
             ]),
@@ -188,8 +186,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"commit\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -200,8 +197,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"tree\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -212,8 +208,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"Author\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -224,8 +219,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"parent\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -236,8 +230,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"msg\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -248,8 +241,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"name\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -260,8 +252,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"email\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -272,8 +263,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"time\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -284,8 +274,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"header\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -296,8 +285,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"body\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -334,7 +322,10 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 let orange_style = Style::default().fg(Color::Rgb(255, 165, 0));
 
                 if let Some(first_line) = m.content.first() {
-                    spans.push(Span::styled(format!("[ONESHOT] {}: {}", m.from, first_line), orange_style));
+                    spans.push(Span::styled(
+                        format!("[ONESHOT] {}: {}", m.from, first_line),
+                        orange_style,
+                    ));
                 }
 
                 for line in m.content.iter().skip(1) {
