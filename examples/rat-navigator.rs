@@ -56,6 +56,7 @@ struct App {
     repo: git2::Repository,
     full_commit_details: Option<String>,
     show_full_commit: bool,
+    selected_commits: std::collections::HashSet<usize>,
 }
 
 impl App {
@@ -186,6 +187,7 @@ impl App {
             repo,
             full_commit_details: None,
             show_full_commit: false,
+            selected_commits: std::collections::HashSet::new(),
         })
     }
 
@@ -293,14 +295,46 @@ impl App {
         Ok(())
     }
 
-    /// Loads git diff for the selected commit.
+    /// Loads git diff for selected commits.
     fn load_full_commit(&mut self) -> Result<()> {
-        if let Some(selected_index) = self.commit_state.selected() {
+        let mut diff_content = String::new();
+
+        if !self.selected_commits.is_empty() {
+            // Multiple commits selected - show summary
+            diff_content.push_str("╭─────────────────────────────────────────────────────────╮\n");
+            diff_content.push_str(&format!(
+                "│              Selected {} Commit(s)                │\n",
+                self.selected_count()
+            ));
+            diff_content
+                .push_str("╰─────────────────────────────────────────────────────────╯\n\n");
+
+            let mut selected_indices: Vec<_> = self.selected_commits.iter().cloned().collect();
+            selected_indices.sort();
+
+            for (count, &index) in selected_indices.iter().enumerate() {
+                if let Some(commit) = self.commits.get(index) {
+                    diff_content.push_str(&format!(
+                        "{}. [{}] {} - {}\n",
+                        count + 1,
+                        commit.hash,
+                        commit.author,
+                        commit.summary
+                    ));
+                }
+            }
+
+            diff_content.push_str("\n");
+            diff_content.push_str(
+                "💡 Tip: Press 'c' to clear selection and view individual commit diffs\n",
+            );
+        } else if let Some(selected_index) = self.commit_state.selected() {
+            // No commits selected, load current focused commit
             if let Some(commit) = self.commits.get(selected_index) {
                 // Find the full commit object using the hash
                 let commit_oid = git2::Oid::from_str(&commit.full_hash)?;
                 if let Ok(git_commit) = self.repo.find_commit(commit_oid) {
-                    let mut diff_content = String::new();
+                    // Reuse existing diff_content variable declared above
 
                     // Add commit details header widget
                     diff_content
@@ -470,6 +504,27 @@ impl App {
     fn toggle_full_commit(&mut self) {
         self.show_full_commit = !self.show_full_commit;
     }
+
+    /// Toggles selection of the current commit.
+    fn toggle_commit_selection(&mut self) {
+        if let Some(selected_index) = self.commit_state.selected() {
+            if self.selected_commits.contains(&selected_index) {
+                self.selected_commits.remove(&selected_index);
+            } else {
+                self.selected_commits.insert(selected_index);
+            }
+        }
+    }
+
+    /// Clears all selected commits.
+    fn clear_selection(&mut self) {
+        self.selected_commits.clear();
+    }
+
+    /// Returns the number of selected commits.
+    fn selected_count(&self) -> usize {
+        self.selected_commits.len()
+    }
 }
 
 /// Runs the TUI application loop.
@@ -492,9 +547,19 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Tab => app.switch_mode(),
                         KeyCode::Down | KeyCode::Char('j') => app.next(),
                         KeyCode::Up | KeyCode::Char('k') => app.previous(),
-                        KeyCode::Enter | KeyCode::Char(' ') => {
+                        KeyCode::Enter => {
                             if let Err(_e) = app.action() {
                                 // Could show error message in UI
+                            }
+                        }
+                        KeyCode::Char(' ') => {
+                            match app.current_mode {
+                                NavigatorMode::Commits => app.toggle_commit_selection(),
+                                NavigatorMode::Branches => {
+                                    if let Err(_e) = app.action() {
+                                        // Could show error message in UI
+                                    }
+                                }
                             }
                         }
                         KeyCode::Right => {
@@ -507,6 +572,11 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Left => {
                             if app.current_mode == NavigatorMode::Commits && app.show_full_commit {
                                 app.toggle_full_commit();
+                            }
+                        }
+                        KeyCode::Char('c') => {
+                            if app.current_mode == NavigatorMode::Commits {
+                                app.clear_selection();
                             }
                         }
                         _ => {}
@@ -537,18 +607,42 @@ fn ui(f: &mut Frame, app: &mut App) {
             let items: Vec<ListItem> = app
                 .commits
                 .iter()
-                .map(|c| {
-                    let content = format!("[{}] {} - {}", c.hash, c.author, c.summary);
-                    ListItem::new(content).style(Style::default().fg(Color::Gray))
+                .enumerate()
+                .map(|(index, c)| {
+                    let selected_indicator = if app.selected_commits.contains(&index) {
+                        "✓ "
+                    } else {
+                        "  "
+                    };
+                    let content = format!(
+                        "{}[{}] {} - {}",
+                        selected_indicator, c.hash, c.author, c.summary
+                    );
+                    let style = if app.selected_commits.contains(&index) {
+                        Style::default().fg(Color::Yellow)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+                    ListItem::new(content).style(style)
                 })
                 .collect();
+
+            let title = if app.selected_count() > 0 {
+                format!("Commit History ({} selected)", app.selected_count())
+            } else {
+                "Commit History".to_string()
+            };
 
             let list = List::new(items)
                 .block(
                     Block::default()
-                        .title("Commit History")
+                        .title(title)
                         .borders(Borders::ALL)
-                        .border_style(Style::default().fg(Color::Green)),
+                        .border_style(if app.selected_count() > 0 {
+                            Style::default().fg(Color::Yellow)
+                        } else {
+                            Style::default().fg(Color::Green)
+                        }),
                 )
                 .highlight_style(
                     Style::default()
@@ -733,14 +827,21 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     let help_text = match app.current_mode {
         NavigatorMode::Commits => {
+            let base_help = "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
+            let selection_help = if app.selected_count() > 0 { 
+                " | [c] Clear selection" 
+            } else { 
+                "" 
+            };
+            
             if app.show_full_commit {
-                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Left] Summary"
+                format!("{} | [Left] Summary{}", base_help, selection_help)
             } else {
-                "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Right] Git Diff"
+                format!("{} | [Space] Select | [Right] Git Diff{}", base_help, selection_help)
             }
         }
         NavigatorMode::Branches => {
-            "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Enter/Space] Checkout"
+            "Controls: [Tab] Switch Mode | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous | [Enter/Space] Checkout".to_string()
         }
     };
 
