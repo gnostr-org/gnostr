@@ -61,7 +61,7 @@ impl NIP32Event for Event {
         // First, process 'L' tags to build the namespace map
         for tag in &self.tags {
             if tag.0.len() == 2 && tag.0[0] == LABEL_NAMESPACE_TAG_NAME {
-                namespace_map.insert(tag.0[1].clone(), tag.0[1].clone()); // Mark is usually same as namespace for 'L' tags
+                let _ = namespace_map.insert(tag.0[1].clone(), tag.0[1].clone()); // Mark is usually same as namespace for 'L' tags
             }
         }
 
@@ -90,7 +90,7 @@ impl NIP32Event for Event {
         if let Some(m) = mark {
             tag_elements.push(m);
         }
-        self.tags.push(Tag(tag_elements));
+        self.tags.push(Tag::new(tag_elements.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice()));
     }
 
     fn add_label_namespace_tag(&mut self, namespace: String) {
@@ -102,7 +102,7 @@ impl NIP32Event for Event {
         if let Some(m) = mark {
             tag_elements.push(m);
         }
-        Tag(tag_elements)
+        Tag::new(tag_elements.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice())
     }
 
     fn create_label_namespace_tag(namespace: String) -> Tag {
@@ -236,6 +236,6 @@ mod tests {
         assert_eq!(event.extract_labels()[0].value, label_value);
         assert_eq!(event.extract_labels()[0].namespace, namespace);
         assert!(event.tags.iter().any(|tag| tag.0.len() == 2 && tag.0[0] == "e" && tag.0[1] == target_event_id.as_hex_string()));
-        assert!(event.tags.iter().any(|tag| tag.0.len() == 2 && tag.0[0] == LABEL_NAMESPACE_TAG_NAME && tag.0[1] == namespace.unwrap()));
+        assert!(event.tags.iter().any(|tag| tag.0.len() == 2 && tag.0[0] == LABEL_NAMESPACE_TAG_NAME && tag.0[1] == namespace.clone().unwrap()));
     }
 }
