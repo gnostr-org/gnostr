@@ -725,7 +725,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     let size = f.area();
 
     // Top navigation tabs
-    let titles = vec!["1:Commits", "2:Branches", "3:NIP-34 Events"];
+    let titles = vec!["Commits", "Branches", "NIP-34 Events"];
     let selected_index = match app.current_mode {
         NavigatorMode::Commits => 0,
         NavigatorMode::Branches => 1,
@@ -736,7 +736,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("NIP-34 Git Navigator"),
+                .title("NIP-34 Gnostr Navigator"),
         )
         .style(Style::default().fg(Color::Cyan))
         .highlight_style(Style::default().fg(Color::White).bg(Color::Blue))
@@ -825,7 +825,7 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
 
     // --- Details Panel ---
     let details_block = Block::default() 
-        .title("Git & NIP-34 Operations")
+        .title("Gnostr NIP-34 Operations")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Magenta));
     f.render_widget(details_block, chunks[1]);
