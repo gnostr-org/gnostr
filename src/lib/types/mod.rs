@@ -171,7 +171,10 @@ pub mod nip53;
 pub mod nip38;
 pub mod nip40;
 pub mod nip94;
+pub mod nip25;
 pub mod nip14;
+pub mod nip30;
+pub mod nip32;
 pub mod nostr_client; // Added
 pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
 pub use nostr_client::*; // Added
