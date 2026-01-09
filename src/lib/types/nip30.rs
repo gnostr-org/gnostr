@@ -76,7 +76,7 @@ mod tests {
         let shortcode = "wave".to_string();
         let image_url = "https://example.com/wave.png".to_string();
         let tag = Event::create_custom_emoji_tag(shortcode.clone(), image_url.clone());
-        assert_eq!(tag.0, vec![CUSTOM_EMOJI_TAG_NAME, shortcode, image_url]);
+        assert_eq!(tag.0, vec![CUSTOM_EMOJI_TAG_NAME.to_string(), shortcode.clone(), image_url.clone()]);
     }
 
     #[test]
