@@ -1,3 +1,6 @@
+mod p2p_chat_integration_tests;
+mod headless_test;
+
 #[cfg(test)]
 mod tests {
 

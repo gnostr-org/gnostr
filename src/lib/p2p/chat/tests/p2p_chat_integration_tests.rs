@@ -1,9 +1,9 @@
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::super::queue::InternalEvent;
-    use super::super::super::super::p2p::chat::msg::{Msg, MsgKind};
-    use super::super::super::super::p2p::chat::p2p::evt_loop;
+    use crate::queue::InternalEvent;
+    use crate::p2p::chat::msg::{Msg, MsgKind};
+    use crate::p2p::chat::p2p::evt_loop;
     use libp2p::gossipsub;
     use tokio::sync::mpsc;
     use std::time::Duration;
