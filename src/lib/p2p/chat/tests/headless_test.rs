@@ -16,7 +16,8 @@ mod tests {
         let build_output = Command::new("cargo")
             .arg("build")
             .output()
-            .await.expect("Failed to build gnostr project");
+            .await // Await the Future returned by output()
+            .expect("Failed to build gnostr project");
 
         assert!(build_output.status.success(), "Cargo build failed: {:?}", build_output);
 
@@ -63,7 +64,7 @@ mod tests {
                 // This means the process is still running after the timeout, which is the expected
                 // behavior for a truly "detached" background process.
                 println!("Headless chat process is still running after {:?} seconds (expected detached behavior).", timeout_duration);
-                child_process.kill().await.expect("Failed to kill detached headless chat process"); // Changed child.kill to child_process.kill
+                child_process.kill().await.expect("Failed to kill detached headless chat process"); // Await the Future returned by kill()
                 // TODO: Add more sophisticated checks here if needed, e.g., connecting to its P2P network
             }
         }
