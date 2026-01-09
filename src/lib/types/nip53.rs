@@ -12,7 +12,7 @@
 //! Data structures are defined using `serde` for serialization/deserialization.
 
 use serde::{Deserialize, Serialize};
-use crate::types::{Event, EventId, PublicKey, Tag, Unixtime}; // Re-using existing types
+use crate::types::{Event, Id, PublicKey, Tag, Unixtime}; // Re-using existing types
 
 /// NIP-53 Live Activity Kinds
 pub const LIVE_STREAMING_EVENT_KIND: u32 = 30311;
@@ -102,8 +102,8 @@ pub struct RoomPresenceEventContent {
 impl NIP53ParameterizedReplaceable for Event {
     fn d_tag(&self) -> Option<&str> {
         self.tags.iter().find_map(|tag| {
-            if tag.len() > 1 && tag[0] == "d" {
-                Some(tag[1].as_str())
+            if tag.0.len() > 1 && tag.0[0] == "d" {
+                Some(tag.0[1].as_str())
             } else {
                 None
             }
@@ -116,6 +116,6 @@ impl NIP53ParameterizedReplaceable for Event {
         // would be the event ID itself, or a hash of relevant content.
         // For parameterized replaceable events, a 'd' tag is REQUIRED.
         self.d_tag()
-            .map_or_else(|| self.id.to_string(), |d| d.to_string())
+            .map_or_else(|| self.id.as_hex_string(), |d| d.to_string())
     }
 }

@@ -1,12 +1,14 @@
 use anyhow::Result;
 use clap::{Parser /*, Subcommand*/};
-use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
+use gnostr::cli::{get_app_cache_path, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use gnostr_asyncgit::sync::RepoPath;
 use std::env;
-use tracing::{debug, trace};
+use tracing::debug;
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, EnvFilter, Registry};
+use tracing_subscriber::prelude::*; // Import SubscriberExt
 
 use serde::ser::StdError;
 
@@ -18,11 +20,9 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let args: GnostrCli = GnostrCli::parse();
 
     let app_cache = get_app_cache_path();
-    if args.logging {
-        let logging = setup_logging();
-        trace!("{:?}", logging);
-    };
-    let level = if args.debug {
+
+    // Setup tracing subscriber once and globally
+    let base_level = if args.debug {
         LevelFilter::DEBUG
     } else if args.trace {
         LevelFilter::TRACE
@@ -33,14 +33,20 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     } else {
         LevelFilter::OFF
     };
-    let env_args: Vec<String> = env::args().collect();
-    for arg in &env_args {
-        debug!("24:arg={:?}", arg);
+
+    let filter = EnvFilter::builder()
+        .with_default_directive(base_level.into())
+        .from_env() // This reads RUST_LOG and builds the filter
+        .expect("Failed to build EnvFilter from environment");
+
+    let subscriber = Registry::default()
+        .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
+        .with(filter);
+
+    if let Err(e) = subscriber.try_init() {
+        eprintln!("Failed to initialize tracing subscriber: {}", e);
     }
 
-    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    trace!("{:?}", app_cache);
 
     if args.gitdir.is_some() {
         // Assuming 'args' and 'gitdir' are correctly defined elsewhere

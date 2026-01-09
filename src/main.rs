@@ -475,7 +475,6 @@ async fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use clap::CommandFactory; // Required for `into_iter()`
 
     #[test]
     fn test_cli_parsing_default() {
@@ -487,7 +486,6 @@ mod tests {
         assert!(!cli.trace);
         assert!(!cli.info);
         assert!(!cli.warn);
-        assert!(!cli.logging);
         assert!(cli.command.is_none());
     }
 
