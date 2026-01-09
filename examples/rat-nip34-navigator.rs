@@ -222,6 +222,11 @@ impl App {
         };
     }
 
+    /// Sets the navigation mode.
+    fn set_mode(&mut self, mode: NavigatorMode) {
+        self.current_mode = mode;
+    }
+
     /// Moves the selection up in the current mode.
     fn previous(&mut self) {
         let state = match self.current_mode {
@@ -667,6 +672,9 @@ fn run_app<B: ratatui::backend::Backend>(
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                         KeyCode::Tab => app.switch_mode(),
+                        KeyCode::Char('1') => app.set_mode(NavigatorMode::Commits),
+                        KeyCode::Char('2') => app.set_mode(NavigatorMode::Branches),
+                        KeyCode::Char('3') => app.set_mode(NavigatorMode::Nip34Events),
                         KeyCode::Down | KeyCode::Char('j') => app.next(),
                         KeyCode::Up | KeyCode::Char('k') => app.previous(),
                         KeyCode::Enter | KeyCode::Char(' ') => match app.current_mode {
@@ -700,7 +708,7 @@ fn run_app<B: ratatui::backend::Backend>(
                                 }
                             }
                         }
-                        _ => {} 
+                        _ => {}
                     }
                 }
             }
@@ -717,7 +725,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     let size = f.area();
 
     // Top navigation tabs
-    let titles = vec!["Commits", "Branches", "NIP-34 Events"];
+    let titles = vec!["1:Commits", "2:Branches", "3:NIP-34 Events"];
     let selected_index = match app.current_mode {
         NavigatorMode::Commits => 0,
         NavigatorMode::Branches => 1,
@@ -1068,7 +1076,8 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
 
 /// Gets help text based on current mode and state.
 fn get_help_text(app: &App) -> String {
-    let base_help = "Controls: [Tab] Switch | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
+    let base_help =
+        "Controls: [1/2/3] Go to Tab | [Tab] Switch | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
     
     match app.current_mode {
         NavigatorMode::Commits => {
