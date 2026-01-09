@@ -207,8 +207,6 @@ nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 nostr-db = { version = "0.4.5", features = ["search"] }
 
 ## TODO remove and upgrade
-nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
-## TODO remove and upgrade
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 
 ## aligned with ./crawler
