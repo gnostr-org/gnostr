@@ -303,6 +303,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     // and exit immediately without starting the TUI.
     if sub_command_args.headless {
         info!("Headless mode enabled: running event loop in background.");
+        println!("Headless chat process started with PID: {}", std::process::id());
 
         // Spawn the event loop to run in the background.
         // This keeps the P2P network alive for the chat.
