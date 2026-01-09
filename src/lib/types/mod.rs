@@ -167,6 +167,7 @@ pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
 /// NIP-44 related types and functionalities for secure direct messages.
 pub mod nip44;
+pub mod nip53;
 pub mod nostr_client; // Added
 pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
 pub use nostr_client::*; // Added
