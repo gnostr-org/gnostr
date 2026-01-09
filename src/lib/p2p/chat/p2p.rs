@@ -5,7 +5,7 @@ use libp2p::{
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, StreamProtocol,
 };
-use std::error::Error;
+use anyhow::{anyhow, Result};
 use std::time::Duration;
 use tokio::{io, select};
 use tracing::{debug, warn};
@@ -190,7 +190,7 @@ pub async fn evt_loop(
     mut send: tokio::sync::mpsc::Receiver<crate::queue::InternalEvent>,
     recv: tokio::sync::mpsc::Sender<crate::queue::InternalEvent>,
     topic: gossipsub::IdentTopic,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
 
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
@@ -227,7 +227,7 @@ pub async fn evt_loop(
                 // content-address messages.
                 // No two messages of the same content will be propagated.
                 .build()
-                .map_err(|msg| io::Error::other(msg))?;
+                .map_err(|msg| anyhow!(msg))?;
             // Temporary hack because `build` does not return a proper `std::error::Error`.
 
             // build a gossipsub network behaviour
