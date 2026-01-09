@@ -89,7 +89,7 @@ pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
-pub use nostr_sdk_0_19_1::prelude::rand; //TODO remove next
+pub use nostr_sdk_0_32_0::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
 pub use tokio_tungstenite::connect_async;
 pub use tokio_tungstenite::tungstenite::Message;
