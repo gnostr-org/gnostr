@@ -1,7 +1,7 @@
 use clap::{Parser /*, Subcommand*/};
 use gnostr::blockhash;
 use gnostr::blockheight;
-use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
+use gnostr::cli::{get_app_cache_path, GnostrCli, GnostrCommands};
 use gnostr::sub_commands;
 use gnostr::weeble;
 use gnostr::wobble;
@@ -22,12 +22,8 @@ async fn main() -> anyhow::Result<()> {
     env::set_var("WOBBLE", "0");
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
-    let app_cache = get_app_cache_path();
-    //if gnostr_cli_args.logging {
-    //    let logging = setup_logging();
-    //    debug!("{:?}", logging);
-    //};
-    let level = if gnostr_cli_args.debug {
+    // Setup tracing subscriber once and globally
+    let base_level = if gnostr_cli_args.debug {
         LevelFilter::DEBUG
     } else if gnostr_cli_args.trace {
         LevelFilter::TRACE
@@ -39,28 +35,20 @@ async fn main() -> anyhow::Result<()> {
         LevelFilter::OFF
     };
 
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
-        .add_directive("hickory_proto=off".parse().unwrap())
-        .add_directive("hickory_proto::rr=off".parse().unwrap())
-        .add_directive("hickory_proto::rr::record_data=off".parse().unwrap())
-        .add_directive("libp2p_mdns=off".parse().unwrap())
-        //.add_directive("gnostr::p2p=off".parse().unwrap())
-        .add_directive("libp2p=off".parse().unwrap())
-        .add_directive("mio=off".parse().unwrap())
-        //.add_directive("gnostr::p2p::chat=off".parse().unwrap())
-        //.add_directive("gnostr::p2p::chat::p2p=off".parse().unwrap())
-        .add_directive("gnostr::message=off".parse().unwrap());
+    let filter = EnvFilter::builder()
+        .with_default_directive(base_level.into())
+        .from_env() // This reads RUST_LOG and builds the filter
+        .expect("Failed to build EnvFilter from environment");
 
-    if gnostr_cli_args.logging {
-        let logging = setup_logging();
-        debug!("{:?}", logging);
-    } else {
-        let subscriber = Registry::default()
-            .with(fmt::layer().with_writer(std::io::stdout))
-            .with(filter);
-        subscriber.init();
-    };
+    let subscriber = Registry::default()
+        .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
+        .with(filter);
+
+    if let Err(e) = subscriber.try_init() {
+        eprintln!("Failed to initialize tracing subscriber: {}", e);
+    }
+    
+    let app_cache = get_app_cache_path();
 
     let env_args: Vec<String> = env::args().collect();
     for arg in &env_args {
