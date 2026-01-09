@@ -7,7 +7,7 @@ use clap::{
 };
 // Corrected import path for ArgMatches
 use gnostr_asyncgit::sync::RepoPath;
-use simplelog::{Config, LevelFilter, WriteLogger};
+// Remove simplelog imports
 use std::{
     //env,
     fs::{self, File},
@@ -231,35 +231,24 @@ pub struct GnostrCli {
     pub screenshots: Option<u8>,
 
     /// Enable info logging
-    #[arg(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false")]
     pub info: bool,
 
     /// Enable debug logging
-    #[arg(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false")]
     pub debug: bool,
 
     /// Enable trace logging
-    #[arg(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false")]
     pub trace: bool,
 
     /// Enable warn logging
-    #[arg(long, default_value = "false", conflicts_with = "logging")]
+    #[arg(long, default_value = "false")]
     pub warn: bool,
 
     /// Generate bugreport
     #[arg(long, default_value = "false")]
     pub bugreport: bool,
-
-    /// Enable logging
-    #[arg(
-        long,
-        default_value = "false",
-        conflicts_with = "info",
-        conflicts_with = "debug",
-        conflicts_with = "trace",
-        conflicts_with = "warn"
-    )]
-    pub logging: bool,
 }
 
 impl Default for GnostrCli {
@@ -290,7 +279,6 @@ impl Default for GnostrCli {
             trace: false,
             warn: false,
             bugreport: false,
-            logging: false,
         }
     }
 }
@@ -366,18 +354,6 @@ pub enum GnostrCommands {
     Git(git::GitSubCommand),
     /// Nip34 sub commands
     Nip34(crate::sub_commands::nip34::Nip34Command),
-}
-
-/// setup_logging
-pub fn setup_logging() -> Result<()> {
-    let mut path = get_app_cache_path()?;
-    path.push("gnostr.log");
-
-    println!("Logging enabled. log written to: {path:?}");
-
-    WriteLogger::init(LevelFilter::Trace, Config::default(), File::create(path)?)?;
-
-    Ok(())
 }
 
 /// get_app_cache_path
