@@ -4503,7 +4503,6 @@ dependencies = [
  "shellwords",
  "signal-child",
  "simple_logger",
- "simplelog",
  "speedy",
  "ssh-key",
  "strip-ansi-escapes",
