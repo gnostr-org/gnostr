@@ -405,6 +405,25 @@ impl App {
         }
     }
 
+    /// Republishes the selected NIP-34 event.
+    fn republish_nip34_event(&mut self) -> Result<()> {
+        if let Some(selected_index) = self.nip34_state.selected() {
+            if let Some(event_to_republish) = self.nip34_events.get(selected_index).cloned() {
+                let unsigned_event = UnsignedEvent::new(
+                    &self.public_key,
+                    event_to_republish.kind,
+                    event_to_republish.tags,
+                    event_to_republish.content,
+                );
+                let new_event = unsigned_event
+                    .sign(&self.secret_key)
+                    .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+                self.nip34_events.push(new_event);
+            }
+        }
+        Ok(())
+    }
+
     /// Loads git diff for selected commits (max 2 for range diff).
     fn load_full_commit(&mut self) -> Result<()> {
         let mut diff_content = String::new();
@@ -704,6 +723,13 @@ fn run_app<B: ratatui::backend::Backend>(
                             // Create NIP-34 patch from selected commits
                             if app.current_mode == NavigatorMode::Commits {
                                 if let Err(_e) = app.create_nip34_patch_event() {
+                                    // Could show error message
+                                }
+                            }
+                        }
+                        KeyCode::Char('r') => {
+                            if app.current_mode == NavigatorMode::Nip34Events {
+                                if let Err(_e) = app.republish_nip34_event() {
                                     // Could show error message
                                 }
                             }
@@ -1101,12 +1127,12 @@ fn get_help_text(app: &App) -> String {
             format!("{} | [Enter] Checkout", base_help)
         }
         NavigatorMode::Nip34Events => {
-            let selection_help = if app.selected_nip34_events.len() > 0 { 
-                " | [c] Clear" 
-            } else { 
-                "" 
+            let selection_help = if app.selected_nip34_events.len() > 0 {
+                " | [c] Clear"
+            } else {
+                ""
             };
-            format!("{} | [Space] Select{}", base_help, selection_help)
+            format!("{} | [Space] Select{} | [r] Republish", base_help, selection_help)
         }
     }
 }
