@@ -190,6 +190,8 @@ dep-graph: 	### 	dep-graph
 
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j \$(NPROC) --bin gnostr
+	./target/debug/gnostr chat --topic gnostr --name "\$(shell gnostr --weeble)/\$(shell gnostr --blockheight)/\$(shell gnostr --wobble):\$(USER)" --headless
+	./target/debug/gnostr chat --topic gnostr --oneshot "testing-$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" -n "$(gnostr --hash "$(gnostr-weeble)")"
 	./target/debug/gnostr chat --topic gnostr --name "\$(shell gnostr --weeble)/\$(shell gnostr --blockheight)/\$(shell gnostr --wobble):\$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
