@@ -90,6 +90,9 @@ pub struct ChatCli {
         default_value = "false"
     )]
     pub trace: bool,
+    /// Run in headless mode (no TUI)
+    #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
+    pub headless: bool,
     #[arg(long = "cfg", default_value = "")]
     pub config: String,
 }
@@ -123,6 +126,9 @@ pub struct ChatSubCommands {
     pub debug: bool,
     #[arg(long)]
     pub trace: bool,
+    /// Run in headless mode (no TUI)
+    #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
+    pub headless: bool,
     /// workdir
     pub workdir: Option<String>,
     #[arg(
@@ -290,6 +296,25 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         tokio::time::sleep(Duration::from_secs(2)).await;
 
         println!("Oneshot operation complete.");
+        return Ok(());
+    }
+
+    // If headless mode is enabled and not in oneshot mode, run the event loop in the background
+    // and exit immediately without starting the TUI.
+    if sub_command_args.headless {
+        info!("Headless mode enabled: running event loop in background.");
+
+        // Spawn the event loop to run in the background.
+        // This keeps the P2P network alive for the chat.
+        tokio::spawn(async move {
+            if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
+                eprintln!("Headless p2p event loop error: {}", e);
+            }
+        });
+
+        // Sleep briefly to allow background task to start, then return.
+        // The tokio runtime will keep the spawned task alive.
+        tokio::time::sleep(Duration::from_millis(100)).await;
         return Ok(());
     }
 
