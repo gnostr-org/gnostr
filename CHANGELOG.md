@@ -1,4 +1,356 @@
 
+### Cargo.toml
+
+* add doc test deps (d9e7eff)
+
+
+
+### Features
+
+* Implement NIP-38 and finalize NIP-53 (000e835)
+
+* Implement NIP-94 File Metadata (0000c4f)
+
+* Implement NIP-14 Subject Tag (000f4eb)
+
+* Implement NIP-30 Custom Emoji (0004de0)
+
+* Implement NIP-30 Custom Emoji (000f8a6)
+
+* Implement NIP-32 Labeling (0006a15)
+
+* Implement NIP-36 Sensitive Content (000b8c3)
+
+* Implement NIP-13 Proof of Work (0000eb2)
+
+
+
+### examples/gnostr-xor.rs
+
+* remove (0b9e622)
+
+
+
+### src/lib/mod.rs
+
+* remove nostr_sdk_0_19_1 (adaafdd)
+
+
+
+### src/lib/sub_commands/xor.rs
+
+* initial impl (c458718)
+
+
+
+### Cargo.toml
+
+* add dev deps:nostr_0_34_1:nostr-sdk_0_34_0 (511f907)
+
+
+
+### Features
+
+* add --headless flag for detached chat (00016fd)
+
+* refine headless chat logging and process naming (000c709)
+
+* Implement NIP-53 events; refactor logging (000336e)
+
+
+
+### examples/rat-carousel-branches.rs
+
+* apply cargo fmt (2483092)
+
+
+
+### examples/rat-carousel.rs
+
+* apply cargo fmt (f54bcc5)
+
+
+
+### examples/rat-navigator.rs
+
+* NavigatorMode::Branches:default (7b9f318)
+
+* show_full_commit (79dd5bb)
+
+* header stubs (381d407)
+
+
+
+### examples/rat-nip34-navigator.rs
+
+* initial (23045a6)
+
+* intermediate (09d9c80)
+
+* intermediate (fa4055a)
+
+* initial impl (2650cfa)
+
+* NavigatorMode (136fa3d)
+
+* NavigatorMode:Gnostr (2153c78)
+
+* republish nip34 events (d9d6657)
+
+
+
+### make_just.sh
+
+* use gnostr --weeble/blockheight/wobble (9d23742)
+
+
+
+### src
+
+* apply cargo fmt:src/lib/p2p/chat/ui.rs:intermediate:Select Diff (ef68b76)
+
+
+
+### src/bin/gnostr-nip34.rs
+
+* initial impl (d08892e)
+
+
+
+### src/lib/p2p/chat/mod.rs
+
+* print process id (8c2ab3d)
+
+
+
+### src/lib/p2p/chat/tests/headless_test.rs
+
+* intermediate (1c09d60)
+
+* child_process.kill().await.expect (e252575)
+
+
+
+### src/lib/p2p/chat/ui.rs
+
+* apply cargo fmt (8e265f8)
+
+* Select popup working (4b25e9d)
+
+
+
+### Features
+
+* Add diff selection UI and keybindings (00006a4)
+
+
+
+### src/lib/p2p/chat/msg.rs
+
+* decentralized diff messaging (54878e9)
+
+
+
+### Bug Fixes
+
+* Make DEFAULT_AVATAR, DEFAULT_BANNER, and metadata module public (000c002)
+
+* prevent accidental use of backticks in commit messages (000ef93)
+
+* Ensure diff messages line-break correctly in TUI (0008fb6)
+
+* Implement dynamic line breaking for chat and diff messages (000a67e)
+
+* Render diff messages as separate list items with dynamic wrapping (000bb94)
+
+* Correctly display wrapped OneShot messages in ratatui (0007ee0)
+
+* Ensure --oneshot messages are wrapped correctly on the receiving end (00067ab)
+
+
+
+### CHANGELOG.md
+
+* update (9940ef6)
+
+
+
+### Features
+
+* Integrate Nostr event handling and refactor dependencies (0002068)
+
+* Add DEFAULT_AVATAR and DEFAULT_BANNER constants (92a4401)
+
+* Add --diff message formatting (000a205)
+
+* Add OneShot MsgKind and integrate into oneshot command (00058b6)
+
+* Implement peer logic for MsgKind::OneShot with --diff formatting (0001ed4)
+
+* Implement terminal width wrapping for --diff OneShot messages (000acb0)
+
+* Apply line breaking to all chat messages and update ratatui display (0003d3a)
+
+* Implement intelligent diff formatting with prefix preservation (000b293)
+
+
+
+### app/src/lib.rs
+
+* gnostr-app (dcbbe11)
+
+
+
+### src/lib/legit/command.rs
+
+* migrate to internal types:src/lib/types:intermediate (e6b92d2)
+
+* migrate to internal types:src/lib/types (1dcdd4e)
+
+* migrate to internal types:src/lib/types (4540605)
+
+* migrate to internal types:src/lib/types (624f835)
+
+* migrate to internal types:src/lib/types (4bb8e55)
+
+* migrate to internal types:src/lib/types (242c517)
+
+* migrate to internal types:src/lib/types (e40cf33)
+
+* migrate to internal types:src/lib/types (a8c717a)
+
+* migrate to internal types:src/lib/types (fc74e01)
+
+* migrate to internal types:src/lib/types (089f6fd)
+
+* migrate to internal types:src/lib/types (3cc65de)
+
+* migrate to internal types:src/lib/types (4147f07)
+
+* migrate to internal types:src/lib/types (8729162)
+
+* migrate to internal types:src/lib/types (86cc55e)
+
+* migrate to internal types:src/lib/types (4eec1e8)
+
+* migrate to internal types:src/lib/types (7fa23b2)
+
+* migrate to internal types:src/lib/types (202d8d7)
+
+* migrate to internal types:src/lib/types (31ec264)
+
+* migrate to internal types:src/lib/types (99f7270)
+
+* migrate to internal types:src/lib/types (b965e15)
+
+* migrate to internal types:src/lib/types (42e2309)
+
+* migrate to internal types:src/lib/types (77aac73)
+
+* migrate to internal types:src/lib/types (2c72f43)
+
+* migrate to internal types:src/lib/types (6951cf3)
+
+* migrate to internal types:src/lib/types (0f4c960)
+
+* migrate to internal types:src/lib/types (d156a89)
+
+* migrate to internal types:src/lib/types (bfa18fe)
+
+* migrate to internal types:src/lib/types (0f303b7)
+
+* migrate to internal types:src/lib/types (dedec38)
+
+* migrate to internal types:src/lib/types (060d727)
+
+* migrate to internal types:src/lib/types (47c8d20)
+
+* migrate to internal types:src/lib/types (c67d4cc)
+
+* migrate to internal types:src/lib/types (9601ea7)
+
+* migrate to internal types:src/lib/types (9f43e1b)
+
+* migrate to internal types:src/lib/types (ae333ac)
+
+* migrate to internal types:src/lib/types (da3126a)
+
+* migrate to internal types:src/lib/types (270e716)
+
+* migrate to internal types:src/lib/types (b14fba7)
+
+* migrate to internal types:src/lib/types (a83ce5d)
+
+* migrate to internal types:src/lib/types (ef7f831)
+
+* migrate to internal types:src/lib/types (8189e2e)
+
+* migrate to internal types:src/lib/types (f9a3e82)
+
+* migrate to internal types:src/lib/types (58eecc9)
+
+* migrate to internal types:src/lib/types (3ef6c1c)
+
+* migrate to internal types:src/lib/types (f247820)
+
+* info output (00080bf)
+
+* info output (000acb0)
+
+* info output (00092b5)
+
+
+
+### src/lib/p2p/chat
+
+* message chunking:intermediate (2b5e638)
+
+* message chunking:intermediate (cd1ea15)
+
+
+
+### src/lib/p2p/chat/mod.rs
+
+* message chunking (d9492ff)
+
+
+
+### src/lib/p2p/chat/msg.rs
+
+* NostrEvent (d734234)
+
+* left align all texts (2e42c97)
+
+* line break:intermediate (d7eb95d)
+
+* message chunk ordering:intermediate (6848377)
+
+
+
+### src/lib/p2p/chat/p2p.rs
+
+* message chunk ordering:intermediate (730f896)
+
+* message chunking:intermediate (62b3aa1)
+
+* message chunking:intermediate (def3aa6)
+
+
+
+### src/lib/p2p/chat/ui.rs
+
+* highlight-80th (de032df)
+
+* highlight-every-80th (3237046)
+
+
+
+### src/lib/p2p/mod.rs
+
+* use src/lib/types (d943617)
+
+
+
 ### src/lib/test_utils/mod.rs
 
 * use winapi:windows_process_killer (551114d)
