@@ -1,6 +1,7 @@
 //! NIP-34 implementation for creating git-related events.
 
 use crate::{blockhash, blockheight, weeble, wobble};
+use anyhow::anyhow;
 use secp256k1::{Message, SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -114,7 +115,7 @@ impl UnsignedEvent {
 
 /// NIP-34 event kinds.
 #[allow(missing_docs)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Nip34Kind {
     RepoAnnouncement = 30617,
     RepoState = 30618,
@@ -127,6 +128,27 @@ pub enum Nip34Kind {
     StatusClosed = 1632,
     StatusDraft = 1633,
     UserGraspList = 10317,
+}
+
+impl TryFrom<u16> for Nip34Kind {
+    type Error = anyhow::Error;
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value {
+            30617 => Ok(Nip34Kind::RepoAnnouncement),
+            30618 => Ok(Nip34Kind::RepoState),
+            1617 => Ok(Nip34Kind::Patch),
+            1618 => Ok(Nip34Kind::PullRequest),
+            1619 => Ok(Nip34Kind::PullRequestUpdate),
+            1621 => Ok(Nip34Kind::Issue),
+            1630 => Ok(Nip34Kind::StatusOpen),
+            1631 => Ok(Nip34Kind::StatusApplied),
+            1632 => Ok(Nip34Kind::StatusClosed),
+            1633 => Ok(Nip34Kind::StatusDraft),
+            10317 => Ok(Nip34Kind::UserGraspList),
+            _ => Err(anyhow::anyhow!("Invalid NIP-34 kind: {}", value)),
+        }
+    }
 }
 
 #[cfg(test)]
