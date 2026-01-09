@@ -135,7 +135,7 @@ mod tests {
     async fn test_perform_xor_longer_key() -> Result<()> {
         let input = "abc"; // 0x61 0x62 0x63
         let key = "f0f1f2"; // 0xf0 0xf1 0xf2
-        let expected = "313331"; // 0x61^0xf0 = 0x31, 0x62^0xf1 = 0x33, 0x63^0xf2 = 0x31
+        let expected = "919391"; // Corrected value
 
         let input_bytes = input.as_bytes();
         let key_bytes = hex::decode(key)?;
