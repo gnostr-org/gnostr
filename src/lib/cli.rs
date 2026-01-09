@@ -354,6 +354,8 @@ pub enum GnostrCommands {
     Git(git::GitSubCommand),
     /// Nip34 sub commands
     Nip34(crate::sub_commands::nip34::Nip34Command),
+    /// XOR utility subcommand
+    Xor(crate::sub_commands::xor::XorArgs),
 }
 
 /// get_app_cache_path

@@ -38,3 +38,4 @@ pub mod sniper;
 pub mod tui;
 pub mod user_status;
 pub mod vanity;
+pub mod xor;
