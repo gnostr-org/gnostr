@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1897.931618.723504"
+version = "1897.931636.697526"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
