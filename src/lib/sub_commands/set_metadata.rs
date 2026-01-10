@@ -69,11 +69,11 @@ pub async fn set_metadata(
 
     // Picture URL
     if let Some(picture_url) = &sub_command_args.picture {
-        metadata.picture = Some(UncheckedUrl::from_str(picture_url));
+        metadata.picture = Some(UncheckedUrl::from_str(picture_url).to_string());
     };
     // Banner URL
     if let Some(banner_url) = &sub_command_args.banner {
-        metadata.other.insert("banner".to_string(), Value::String(banner_url.to_string()));
+        metadata.other.insert("banner".to_string(), Value::String(banner_url.clone()));
     };
 
     // NIP-05 identifier
@@ -84,12 +84,12 @@ pub async fn set_metadata(
 
     // LUD-06 string
     if let Some(lud06) = &sub_command_args.lud06 {
-        metadata.other.insert("lud06".to_string(), Value::String(lud06.to_string()));
+        metadata.other.insert("lud06".to_string(), Value::String(lud06.clone()));
     }
 
     // LUD-16 string
     if let Some(lud16) = &sub_command_args.lud16 {
-        metadata.other.insert("lud16".to_string(), Value::String(lud16.to_string()));
+        metadata.other.insert("lud16".to_string(), Value::String(lud16.clone()));
     }
 
     // Set custom fields
