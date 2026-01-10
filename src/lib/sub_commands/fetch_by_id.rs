@@ -1,5 +1,5 @@
 use crate::get_weeble;
-use crate::types::{Filter, IdHex, RelayMessage, SubscriptionId};
+use crate::types::{Filter, Id, IdHex, RelayMessage, SubscriptionId};
 use crate::{Command, Probe};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
@@ -16,7 +16,16 @@ pub struct FetchByIdSubCommand {
 
 pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn std::error::Error>> {
     let id: IdHex = match args.id.clone() {
-        Some(id_val) => IdHex::try_from_str(&id_val)?,
+        Some(id_val) => {
+            if id_val.starts_with("note1") {
+                // bech32
+                let id = Id::try_from_bech32_string(&id_val)?;
+                id.into()
+            } else {
+                // hex
+                IdHex::try_from_str(&id_val)?
+            }
+        }
         None => "fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c"
             .to_string()
             .into(),
@@ -39,6 +48,7 @@ pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn s
     filter.add_id(&id);
 
     let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
+
     to_probe
         .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
         .await?;
