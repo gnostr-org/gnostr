@@ -1,29 +1,29 @@
-/// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
-//use crate::ui::event::Event;
-//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-use ratatui::{
-    backend::{Backend, CrosstermBackend},
-    crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-        execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    },
-    layout::{Constraint, Direction, Layout},
-    style::Color,
-    text::Line,
-    widgets::{Block, Borders, List, ListItem, Paragraph},
-    Frame, Terminal,
-};
-
-use ratatui::style::Style;
 use std::{
     error::Error,
     io,
     sync::{Arc, Mutex},
     time::Duration,
 };
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
+
+use ratatui::style::Style;
+/// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
+//use crate::ui::event::Event;
+//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp,
+// yamux};
+use ratatui::{
+    Frame, Terminal,
+    backend::{Backend, CrosstermBackend},
+    crossterm::{
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+        execute,
+        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    },
+    layout::{Constraint, Direction, Layout},
+    style::Color,
+    text::Line,
+    widgets::{Block, Borders, List, ListItem, Paragraph},
+};
+use tui_input::{Input, backend::crossterm::EventHandler};
 
 use crate::p2p::chat::msg;
 
@@ -229,7 +229,8 @@ fn ui(f: &mut Frame, app: &App) {
             {}
 
         InputMode::Editing => {
-            // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
+            // Make the cursor visible and ask tui-rs to put it at the specified coordinates
+            // after rendering
             f.set_cursor_position((
                 // Put cursor past the end of the input text
                 chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,

@@ -1,10 +1,12 @@
 use std::str::FromStr;
 
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Keys, PublicKey};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{Client, Keys, PublicKey},
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct MutePublickeySubCommand {
@@ -33,7 +35,10 @@ pub async fn mute_publickey(
     let pubkey_to_mute = PublicKey::try_from_hex_string(&sub_command_args.public_key, true)?;
 
     let event_id = client
-        .mute_channel_user(pubkey_to_mute, sub_command_args.reason.clone().unwrap_or_default())
+        .mute_channel_user(
+            pubkey_to_mute,
+            sub_command_args.reason.clone().unwrap_or_default(),
+        )
         .await?;
 
     println!("Public key {} muted in event {}", pubkey_to_mute, event_id);

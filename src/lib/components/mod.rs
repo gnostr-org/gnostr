@@ -24,10 +24,10 @@ pub use cred::CredComponent;
 use crossterm::event::Event;
 pub use diff::DiffComponent;
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     text::{Span, Text},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 pub use revision_files::RevisionFilesComponent;
 pub use syntax_text::SyntaxTextComponent;

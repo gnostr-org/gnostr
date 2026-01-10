@@ -1,25 +1,29 @@
+use std::fmt;
+
+use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
+use secp256k1::{SECP256K1, XOnlyPublicKey};
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, Visitor},
+    ser::Serializer,
+};
+#[cfg(feature = "speedy")]
+use speedy::{Context, Readable, Reader, Writable, Writer};
+
 use super::{Error, PrivateKey, Signature};
 #[cfg(test)]
 use crate::test_serde;
-use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
 
-use secp256k1::XOnlyPublicKey;
-use secp256k1::SECP256K1;
-use serde::de::{Deserializer, Visitor};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "speedy")]
-use speedy::{Context, Readable, Reader, Writable, Writer};
-use std::fmt;
-
-/// This is a public key, which identifies an actor (usually a person) and is shared.
+/// This is a public key, which identifies an actor (usually a person) and is
+/// shared.
 #[derive(AsMut, AsRef, Copy, Clone, Debug, Deref, Eq, From, Into, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey([u8; 32]);
 
 impl PublicKey {
     /// Render into a hexadecimal string
     ///
-    /// Consider converting `.into()` a `PublicKeyHex` which is a wrapped type rather than a naked `String`
+    /// Consider converting `.into()` a `PublicKeyHex` which is a wrapped type
+    /// rather than a naked `String`
     pub fn as_hex_string(&self) -> String {
         hex::encode(self.0)
     }
@@ -98,7 +102,7 @@ impl PublicKey {
 
     /// Verify a signed message
     pub fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), Error> {
-        use secp256k1::hashes::{sha256, Hash};
+        use secp256k1::hashes::{Hash, sha256};
         let pk = XOnlyPublicKey::from_slice(self.0.as_slice())?;
         let hash = sha256::Hash::hash(message).to_byte_array();
         let message = secp256k1::Message::from_digest(hash);
@@ -120,8 +124,6 @@ impl PublicKey {
         .unwrap()
     }
 }
-
-
 
 impl fmt::Display for PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -203,9 +205,11 @@ impl<C: Context> Writable<C> for PublicKey {
     }
 }
 
-/// This is a public key, which identifies an actor (usually a person) and is shared, as a hex string
+/// This is a public key, which identifies an actor (usually a person) and is
+/// shared, as a hex string
 ///
-/// You can convert from a `PublicKey` into this with `From`/`Into`.  You can convert this back to a `PublicKey` with `TryFrom`/`TryInto`.
+/// You can convert from a `PublicKey` into this with `From`/`Into`.  You can
+/// convert this back to a `PublicKey` with `TryFrom`/`TryInto`.
 #[derive(
     AsMut,
     AsRef,

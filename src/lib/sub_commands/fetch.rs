@@ -6,7 +6,7 @@ use nostr_0_34_1::nips::nip01::Coordinate;
 
 use crate::{
     //cli::Cli,
-    client::{fetching_with_report, Client, Connect},
+    client::{Client, Connect, fetching_with_report},
     git::{Repo, RepoActions},
     repo_ref::get_repo_coordinates,
 };

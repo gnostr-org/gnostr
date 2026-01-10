@@ -1,15 +1,15 @@
 use anyhow::Result;
 use crossterm::event::Event;
-use gnostr_asyncgit::sync::{self, get_config_string, CommitId, RepoPathRef};
-use ratatui::{layout::Rect, Frame};
+use gnostr_asyncgit::sync::{self, CommitId, RepoPathRef, get_config_string};
+use ratatui::{Frame, layout::Rect};
 
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, InputType, TextInputComponent,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, InputType,
+        TextInputComponent, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     queue::{InternalEvent, NeedsUpdate, Queue},
     strings, try_or_popup,
 };
@@ -149,9 +149,9 @@ impl TagCommitPopup {
             .unwrap_or_default();
 
         anyhow::ensure!(
-			!gpgsign,
-			"config tag.gpgsign=true detected.\ngpg signing not supported.\ndeactivate in your repo/gitconfig to be able to tag without signing."
-		);
+            !gpgsign,
+            "config tag.gpgsign=true detected.\ngpg signing not supported.\ndeactivate in your repo/gitconfig to be able to tag without signing."
+        );
 
         let (tag_name, tag_annotation) = self.tag_info();
 

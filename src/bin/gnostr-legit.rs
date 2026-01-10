@@ -1,3 +1,11 @@
+use std::{
+    convert::TryInto,
+    env,
+    io::{self},
+    process::Command,
+    thread,
+};
+
 /// #![allow(unused)]
 /// #![allow(dead_code)]
 ///
@@ -6,11 +14,6 @@
 use clap::Parser;
 use gnostr::legit::command;
 use gnostr_legit::gitminer;
-use std::convert::TryInto;
-use std::env;
-use std::io::{self};
-use std::process::Command;
-use std::thread;
 use time::OffsetDateTime;
 
 #[derive(Parser, Debug)]

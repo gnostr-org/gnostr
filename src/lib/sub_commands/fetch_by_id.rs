@@ -1,8 +1,10 @@
-use crate::get_weeble;
-use crate::types::{Filter, Id, IdHex, RelayMessage, SubscriptionId};
-use crate::{Command, Probe};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
+
+use crate::{
+    Command, Probe, get_weeble,
+    types::{Filter, Id, IdHex, RelayMessage, SubscriptionId},
+};
 
 #[derive(clap::Args, Debug, Clone)]
 pub struct FetchByIdSubCommand {

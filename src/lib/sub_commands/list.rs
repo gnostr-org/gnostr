@@ -1,25 +1,21 @@
 use std::{io::Write, ops::Add};
 
-use crate::{
-    client::{
-        get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache, Client,
-    },
-    git_events::{
-        get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
-    },
-};
-use anyhow::{bail, Context, Result};
-use nostr_sdk_0_34_0::Kind;
+use anyhow::{Context, Result, bail};
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
-    client::{fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect},
-    git::{str_to_sha1, Repo, RepoActions},
+    client::{
+        Client, Connect, fetching_with_report, get_all_proposal_patch_events_from_cache,
+        get_events_from_cache, get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
+    },
+    git::{Repo, RepoActions, str_to_sha1},
     git_events::{
         commit_msg_from_patch_oneliner, event_is_revision_root, event_to_cover_letter,
-        patch_supports_commit_ids,
+        get_commit_id_from_patch, get_most_recent_patch_with_ancestors, patch_supports_commit_ids,
+        status_kinds, tag_value,
     },
     repo_ref::get_repo_coordinates,
+    types::EventKind,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -52,9 +48,11 @@ pub async fn launch() -> Result<()> {
     let statuses: Vec<nostr_0_34_1::Event> = {
         let mut statuses = get_events_from_cache(
             git_repo_path,
-            vec![nostr_0_34_1::Filter::default()
-                .kinds(status_kinds().clone())
-                .events(proposals_and_revisions.iter().map(nostr_0_34_1::Event::id))],
+            vec![
+                nostr_0_34_1::Filter::default()
+                    .kinds(status_kinds().clone())
+                    .events(proposals_and_revisions.iter().map(nostr_0_34_1::Event::id)),
+            ],
         )
         .await?;
         statuses.sort_by_key(|e| e.created_at);
@@ -87,29 +85,29 @@ pub async fn launch() -> Result<()> {
         {
             e.kind()
         } else {
-            Kind::GitStatusOpen
+            EventKind::GitStatusOpen
         };
-        if status.eq(&Kind::GitStatusOpen) {
+        if status.eq(&EventKind::GitStatusOpen) {
             open_proposals.push(proposal);
-        } else if status.eq(&Kind::GitStatusClosed) {
+        } else if status.eq(&EventKind::GitStatusClosed) {
             closed_proposals.push(proposal);
-        } else if status.eq(&Kind::GitStatusDraft) {
+        } else if status.eq(&EventKind::GitStatusDraft) {
             draft_proposals.push(proposal);
-        } else if status.eq(&Kind::GitStatusApplied) {
+        } else if status.eq(&EventKind::GitStatusApplied) {
             applied_proposals.push(proposal);
         }
     }
 
-    let mut selected_status = Kind::GitStatusOpen;
+    let mut selected_status = EventKind::GitStatusOpen;
 
     loop {
-        let proposals_for_status = if selected_status == Kind::GitStatusOpen {
+        let proposals_for_status = if selected_status == EventKind::GitStatusOpen {
             &open_proposals
-        } else if selected_status == Kind::GitStatusDraft {
+        } else if selected_status == EventKind::GitStatusDraft {
             &draft_proposals
-        } else if selected_status == Kind::GitStatusClosed {
+        } else if selected_status == EventKind::GitStatusClosed {
             &closed_proposals
-        } else if selected_status == Kind::GitStatusApplied {
+        } else if selected_status == EventKind::GitStatusApplied {
             &applied_proposals
         } else {
             &open_proposals
@@ -117,15 +115,15 @@ pub async fn launch() -> Result<()> {
 
         let prompt = if proposals.len().eq(&open_proposals.len()) {
             "all proposals"
-        } else if selected_status == Kind::GitStatusOpen {
+        } else if selected_status == EventKind::GitStatusOpen {
             if open_proposals.is_empty() {
                 "proposals menu"
             } else {
                 "open proposals"
             }
-        } else if selected_status == Kind::GitStatusDraft {
+        } else if selected_status == EventKind::GitStatusDraft {
             "draft proposals"
-        } else if selected_status == Kind::GitStatusClosed {
+        } else if selected_status == EventKind::GitStatusClosed {
             "closed proposals"
         } else {
             "applied proposals"
@@ -144,16 +142,16 @@ pub async fn launch() -> Result<()> {
             })
             .collect();
 
-        if !selected_status.eq(&Kind::GitStatusOpen) && open_proposals.len().gt(&0) {
+        if !selected_status.eq(&EventKind::GitStatusOpen) && open_proposals.len().gt(&0) {
             choices.push(format!("({}) Open proposals...", open_proposals.len()));
         }
-        if !selected_status.eq(&Kind::GitStatusDraft) && draft_proposals.len().gt(&0) {
+        if !selected_status.eq(&EventKind::GitStatusDraft) && draft_proposals.len().gt(&0) {
             choices.push(format!("({}) Draft proposals...", draft_proposals.len()));
         }
-        if !selected_status.eq(&Kind::GitStatusClosed) && closed_proposals.len().gt(&0) {
+        if !selected_status.eq(&EventKind::GitStatusClosed) && closed_proposals.len().gt(&0) {
             choices.push(format!("({}) Closed proposals...", closed_proposals.len()));
         }
-        if !selected_status.eq(&Kind::GitStatusApplied) && applied_proposals.len().gt(&0) {
+        if !selected_status.eq(&EventKind::GitStatusApplied) && applied_proposals.len().gt(&0) {
             choices.push(format!(
                 "({}) Applied proposals...",
                 applied_proposals.len()
@@ -168,13 +166,13 @@ pub async fn launch() -> Result<()> {
 
         if (selected_index + 1).gt(&proposals_for_status.len()) {
             if choices[selected_index].contains("Open") {
-                selected_status = Kind::GitStatusOpen;
+                selected_status = EventKind::GitStatusOpen;
             } else if choices[selected_index].contains("Draft") {
-                selected_status = Kind::GitStatusDraft;
+                selected_status = EventKind::GitStatusDraft;
             } else if choices[selected_index].contains("Closed") {
-                selected_status = Kind::GitStatusClosed;
+                selected_status = EventKind::GitStatusClosed;
             } else if choices[selected_index].contains("Applied") {
-                selected_status = Kind::GitStatusApplied;
+                selected_status = EventKind::GitStatusApplied;
             }
             continue;
         }
@@ -435,11 +433,11 @@ pub async fn launch() -> Result<()> {
                         )
                         .context("cannot apply patch chain")?;
                     println!(
-						"checked out proposal branch and applied {} appendments ({} ahead {} behind '{main_branch_name}')",
-						&index,
-						local_ahead_of_main.len().add(&index),
-						local_beind_main.len(),
-					);
+                        "checked out proposal branch and applied {} appendments ({} ahead {} behind '{main_branch_name}')",
+                        &index,
+                        local_ahead_of_main.len().add(&index),
+                        local_beind_main.len(),
+                    );
                     Ok(())
                 }
                 1 => launch_git_am_with_patches(most_recent_proposal_patch_chain),
@@ -460,12 +458,12 @@ pub async fn launch() -> Result<()> {
                 .eq(&local_branch_tip.to_string())
         }) {
             println!(
-				"updated proposal available ({} ahead {} behind '{main_branch_name}'). existing version is {} ahead {} behind '{main_branch_name}'",
-				most_recent_proposal_patch_chain.len(),
-				proposal_behind_main.len(),
-				local_ahead_of_main.len(),
-				local_beind_main.len(),
-			);
+                "updated proposal available ({} ahead {} behind '{main_branch_name}'). existing version is {} ahead {} behind '{main_branch_name}'",
+                most_recent_proposal_patch_chain.len(),
+                proposal_behind_main.len(),
+                local_ahead_of_main.len(),
+                local_beind_main.len(),
+            );
             return match Interactor::default().choice(
                 PromptChoiceParms::default()
                     .with_default(0)
@@ -492,22 +490,22 @@ pub async fn launch() -> Result<()> {
                         )
                         .context("cannot apply patch chain")?;
                     println!(
-						"checked out new version of proposal ({} ahead {} behind '{main_branch_name}'), replacing old version ({} ahead {} behind '{main_branch_name}')",
-						chain_length,
-						proposal_behind_main.len(),
-						local_ahead_of_main.len(),
-						local_beind_main.len(),
-					);
+                        "checked out new version of proposal ({} ahead {} behind '{main_branch_name}'), replacing old version ({} ahead {} behind '{main_branch_name}')",
+                        chain_length,
+                        proposal_behind_main.len(),
+                        local_ahead_of_main.len(),
+                        local_beind_main.len(),
+                    );
                     Ok(())
                 }
                 1 => {
                     check_clean(&git_repo)?;
                     git_repo.checkout(&cover_letter.get_branch_name()?)?;
                     println!(
-						"checked out old proposal in existing branch ({} ahead {} behind '{main_branch_name}')",
-						local_ahead_of_main.len(),
-						local_beind_main.len(),
-					);
+                        "checked out old proposal in existing branch ({} ahead {} behind '{main_branch_name}')",
+                        local_ahead_of_main.len(),
+                        local_beind_main.len(),
+                    );
                     Ok(())
                 }
                 2 => launch_git_am_with_patches(most_recent_proposal_patch_chain),
@@ -526,11 +524,11 @@ pub async fn launch() -> Result<()> {
                 .context("cannot get commits ahead behind for propsal_top and local_branch_tip")?;
 
             println!(
-				"local proposal branch exists with {} unpublished commits on top of the most up-to-date version of the proposal ({} ahead {} behind '{main_branch_name}')",
-				local_ahead_of_proposal.len(),
-				local_ahead_of_main.len(),
-				proposal_behind_main.len(),
-			);
+                "local proposal branch exists with {} unpublished commits on top of the most up-to-date version of the proposal ({} ahead {} behind '{main_branch_name}')",
+                local_ahead_of_proposal.len(),
+                local_ahead_of_main.len(),
+                proposal_behind_main.len(),
+            );
             return match Interactor::default().choice(
                 PromptChoiceParms::default()
                     .with_default(0)
@@ -545,11 +543,11 @@ pub async fn launch() -> Result<()> {
                 0 => {
                     git_repo.checkout(&cover_letter.get_branch_name()?)?;
                     println!(
-						"checked out proposal branch with {} unpublished commits ({} ahead {} behind '{main_branch_name}')",
-						local_ahead_of_proposal.len(),
-						local_ahead_of_main.len(),
-						proposal_behind_main.len(),
-					);
+                        "checked out proposal branch with {} unpublished commits ({} ahead {} behind '{main_branch_name}')",
+                        local_ahead_of_proposal.len(),
+                        local_ahead_of_main.len(),
+                        proposal_behind_main.len(),
+                    );
                     Ok(())
                 }
                 1 => continue,
@@ -567,30 +565,30 @@ pub async fn launch() -> Result<()> {
         // them)
         if git_repo.does_commit_exist(&proposal_tip.to_string())? {
             println!(
-				"you have previously applied the latest version of the proposal ({} ahead {} behind '{main_branch_name}') but your local proposal branch has amended or rebased it ({} ahead {} behind '{main_branch_name}')",
-				most_recent_proposal_patch_chain.len(),
-				proposal_behind_main.len(),
-				local_ahead_of_main.len(),
-				local_beind_main.len(),
-			);
+                "you have previously applied the latest version of the proposal ({} ahead {} behind '{main_branch_name}') but your local proposal branch has amended or rebased it ({} ahead {} behind '{main_branch_name}')",
+                most_recent_proposal_patch_chain.len(),
+                proposal_behind_main.len(),
+                local_ahead_of_main.len(),
+                local_beind_main.len(),
+            );
         }
         // user probably has a unpublished amended or rebase version
         // of an older proposal version
         else {
             println!(
-				"your local proposal branch ({} ahead {} behind '{main_branch_name}') has conflicting changes with the latest published proposal ({} ahead {} behind '{main_branch_name}')",
-				local_ahead_of_main.len(),
-				local_beind_main.len(),
-				most_recent_proposal_patch_chain.len(),
-				proposal_behind_main.len(),
-			);
+                "your local proposal branch ({} ahead {} behind '{main_branch_name}') has conflicting changes with the latest published proposal ({} ahead {} behind '{main_branch_name}')",
+                local_ahead_of_main.len(),
+                local_beind_main.len(),
+                most_recent_proposal_patch_chain.len(),
+                proposal_behind_main.len(),
+            );
 
             println!(
-				"its likely that you have rebased / amended an old proposal version because git has no record of the latest proposal commit."
-			);
+                "its likely that you have rebased / amended an old proposal version because git has no record of the latest proposal commit."
+            );
             println!(
-				"it is possible that you have been working off the latest version and git has delete this commit as part of a clean up"
-			);
+                "it is possible that you have been working off the latest version and git has delete this commit as part of a clean up"
+            );
         }
         println!("to view the latest proposal but retain your changes:");
         println!("  1) create a new branch off the tip commit of this one to store your changes");
@@ -613,10 +611,10 @@ pub async fn launch() -> Result<()> {
                 check_clean(&git_repo)?;
                 git_repo.checkout(&cover_letter.get_branch_name()?)?;
                 println!(
-					"checked out old proposal in existing branch ({} ahead {} behind '{main_branch_name}')",
-					local_ahead_of_main.len(),
-					local_beind_main.len(),
-				);
+                    "checked out old proposal in existing branch ({} ahead {} behind '{main_branch_name}')",
+                    local_ahead_of_main.len(),
+                    local_beind_main.len(),
+                );
                 Ok(())
             }
             1 => {
@@ -635,12 +633,12 @@ pub async fn launch() -> Result<()> {
 
                 git_repo.checkout(&cover_letter.get_branch_name()?)?;
                 println!(
-					"checked out latest version of proposal ({} ahead {} behind '{main_branch_name}'), replacing unpublished version ({} ahead {} behind '{main_branch_name}')",
-					chain_length,
-					proposal_behind_main.len(),
-					local_ahead_of_main.len(),
-					local_beind_main.len(),
-				);
+                    "checked out latest version of proposal ({} ahead {} behind '{main_branch_name}'), replacing unpublished version ({} ahead {} behind '{main_branch_name}')",
+                    chain_length,
+                    proposal_behind_main.len(),
+                    local_ahead_of_main.len(),
+                    local_beind_main.len(),
+                );
                 Ok(())
             }
             2 => launch_git_am_with_patches(most_recent_proposal_patch_chain),
@@ -722,8 +720,8 @@ fn save_patches_to_dir(mut patches: Vec<nostr_0_34_1::Event>, git_repo: &Repo) -
 fn check_clean(git_repo: &Repo) -> Result<()> {
     if git_repo.has_outstanding_changes()? {
         bail!(
-			"cannot pull proposal branch when repository is not clean. discard or stash (un)staged changes and try again."
-		);
+            "cannot pull proposal branch when repository is not clean. discard or stash (un)staged changes and try again."
+        );
     }
     Ok(())
 }

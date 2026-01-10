@@ -1,10 +1,12 @@
 //! `xor` subcommand
 //!
-//! This subcommand provides a basic XOR operation for input data using a given key.
+//! This subcommand provides a basic XOR operation for input data using a given
+//! key.
+
+use std::io::{self, Read};
 
 use anyhow::Result;
 use clap::Args;
-use std::io::{self, Read};
 
 /// `xor` subcommand arguments.
 #[derive(Args, Debug, Clone)]
@@ -16,8 +18,9 @@ pub struct XorArgs {
     #[arg(long, short = 's', alias = "privkey")]
     pub sec: Option<String>,
 
-    /// Read the input for XOR from stdin (default behavior if no key is provided via --sec).
-    /// If --sec is also provided, stdin will be XORed with the provided key.
+    /// Read the input for XOR from stdin (default behavior if no key is
+    /// provided via --sec). If --sec is also provided, stdin will be XORed
+    /// with the provided key.
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub stdin: bool,
 }
@@ -38,7 +41,8 @@ pub async fn xor_command(args: &XorArgs) -> Result<()> {
         return Ok(());
     };
 
-    // Decode key from hex (assuming key is always hex for simplicity as per DEFAULT_SEC in example)
+    // Decode key from hex (assuming key is always hex for simplicity as per
+    // DEFAULT_SEC in example)
     let key_bytes = hex::decode(&key_hex)?;
 
     // 2. Get the input data
@@ -61,8 +65,9 @@ pub async fn xor_command(args: &XorArgs) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::io::Cursor;
+
+    use super::*;
 
     // Helper to simulate stdin
     fn simulate_stdin(input: &str) -> Cursor<Vec<u8>> {
@@ -76,11 +81,12 @@ mod tests {
             stdin: true,
         };
         let input = "hello";
-        
+
         let mut stdin_mock = simulate_stdin(input);
         let original_stdin = io::stdin(); // Save original stdin
-        // Replace stdin with mock (this part is tricky, may need to use external crate like `mock_stdin`)
-        // For actual tests, this would ideally involve mocking std::io::stdin directly or passing a Read trait.
+        // Replace stdin with mock (this part is tricky, may need to use external crate
+        // like `mock_stdin`) For actual tests, this would ideally involve
+        // mocking std::io::stdin directly or passing a Read trait.
         // For simplicity in this test, we'll manually xor and compare.
 
         // Manually calculate expected output
@@ -94,10 +100,11 @@ mod tests {
         let expected_output = hex::encode(&expected_xored_bytes);
 
         // This test would need to capture stdout to verify the output.
-        // For now, we'll just check if it runs without error and produces the expected output manually.
-        // In a real test, `assert_stdout_eq` from `assert_cmd` could be used.
-        // For this context, assuming `xor_command` prints to stdout.
-        
+        // For now, we'll just check if it runs without error and produces the expected
+        // output manually. In a real test, `assert_stdout_eq` from `assert_cmd`
+        // could be used. For this context, assuming `xor_command` prints to
+        // stdout.
+
         // As we cannot easily mock global stdin/stdout without external crates,
         // let's create a simpler unit test for the xor logic itself.
         let result_bytes = perform_xor(input_bytes, &key_bytes)?;
@@ -121,7 +128,7 @@ mod tests {
     #[tokio::test]
     async fn test_perform_xor_basic() -> Result<()> {
         let input = "abc"; // 0x61 0x62 0x63
-        let key = "ff";    // 0xff
+        let key = "ff"; // 0xff
         let expected = "9e9d9c"; // 0x61^0xff = 0x9e, 0x62^0xff = 0x9d, 0x63^0xff = 0x9c
 
         let input_bytes = input.as_bytes();

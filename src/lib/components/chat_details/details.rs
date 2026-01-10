@@ -2,30 +2,30 @@ use std::{borrow::Cow, cell::Cell};
 
 use anyhow::Result;
 use crossterm::event::Event;
-use gnostr_asyncgit::sync::{self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag};
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Modifier, Style},
-    text::{Line, Span, Text},
-    Frame,
+use gnostr_asyncgit::sync::{
+    self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag, commit_files::OldNew,
 };
-use sync::CommitTags;
-
-use gnostr_asyncgit::sync::commit_files::OldNew;
 use log::debug;
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::{Error, SQLiteDatabase};
+use ratatui::{
+    Frame,
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Modifier, Style},
+    text::{Line, Span, Text},
+};
+use sync::CommitTags;
 
 use super::style::Detail;
 use crate::{
     app::Environment,
     components::{
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
         chat_details::style::style_detail,
         dialog_paragraph,
         utils::{scroll_vertical::VerticalScroll, time_to_string},
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     strings::{self, order},
     ui::style::SharedTheme,
 };
@@ -151,7 +151,8 @@ impl DetailsComponent {
                 //adhere to git log formatting
 
                 //EXAMPLE
-                //commit 77aa531796ba0de324f928abd05c1f5314df9f74 (HEAD -> WEEBLE/BLOCKHEIGHT/WOBBLE/PARENT/CHILD-additonal_string)
+                //commit 77aa531796ba0de324f928abd05c1f5314df9f74 (HEAD ->
+                // WEEBLE/BLOCKHEIGHT/WOBBLE/PARENT/CHILD-additonal_string)
                 //
                 //Author: randymcmillan <randymcmillan@protonmail.com>
                 //Date:   Sun Apr 20 21:37:43 2025 -0400
@@ -159,7 +160,6 @@ impl DetailsComponent {
                 //    src/lib/components/topiclist.rs:commit keys
                 //
                 //    apply cargo fmt
-                //
                 Line::from(vec![
                     Span::styled(
                         Cow::from(strings::commit::details_sha().to_string()),
@@ -220,8 +220,8 @@ impl DetailsComponent {
             //    res.push(Line::from(
             //        itertools::Itertools::intersperse(
             //            self.tags.iter().map(|tag| {
-            //                Span::styled(Cow::from(&tag.name), self.theme.text(true, false))
-            //            }),
+            //                Span::styled(Cow::from(&tag.name), self.theme.text(true,
+            // false))            }),
             //            Span::styled(Cow::from(","), self.theme.text(true, false)),
             //        )
             //        .collect::<Vec<Span>>(),
@@ -402,8 +402,10 @@ impl CompareDetailsComponent {
     pub async fn create_directory_if_not_exists() -> Result<(), Box<dyn std::error::Error>> {
         //use async_std::fs;
         //use async_std::fs::File;
-        use async_std::io::ErrorKind;
-        use async_std::path::{Path, PathBuf};
+        use async_std::{
+            io::ErrorKind,
+            path::{Path, PathBuf},
+        };
         let base_path = async_std::path::Path::new(".git");
         let filename = async_std::path::Path::new("nostr-cache.sqlite");
         let full_path: PathBuf = base_path.join(filename);

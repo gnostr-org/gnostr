@@ -1,6 +1,7 @@
 // Copyright 2015-2020 nostr-proto Developers
 // Licensed under the MIT license <LICENSE-MIT or http://opensource.org/licenses/MIT>
-// This file may not be copied, modified, or distributed except according to those terms.
+// This file may not be copied, modified, or distributed except according to
+// those terms.
 
 //! This crate provides types for nostr protocol handling.
 
@@ -112,7 +113,7 @@ pub mod nip9;
 pub use nip05::Nip05;
 
 mod nostr_url;
-pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};
+pub use nostr_url::{NostrBech32, NostrUrl, find_nostr_bech32_pos, find_nostr_url_pos};
 
 mod pay_request_data;
 pub use pay_request_data::PayRequestData;
@@ -165,26 +166,26 @@ pub use unixtime::Unixtime;
 mod url;
 pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
-/// NIP-44 related types and functionalities for secure direct messages.
-pub mod nip44;
-pub mod nip53;
-pub mod nip38;
-pub mod nip40;
-pub mod nip94;
-pub mod nip25;
 pub mod nip14;
+pub mod nip25;
 pub mod nip30;
 pub mod nip32;
 pub mod nip36;
+pub mod nip38;
+pub mod nip40;
+/// NIP-44 related types and functionalities for secure direct messages.
+pub mod nip44;
+pub mod nip53;
+pub mod nip94;
 pub mod nostr_client; // Added
-pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
+pub use nip44::{Error as Nip44Error, decrypt, encrypt, get_conversation_key};
 pub use nostr_client::*; // Added
 pub mod nip19;
 pub use nip19::*;
 pub mod keys;
 pub use keys::Keys;
 pub mod client;
-pub use client::{Client, Options, FilterOptions};
+pub use client::{Client, FilterOptions, Options};
 pub mod image_dimensions;
 pub use image_dimensions::ImageDimensions;
 

@@ -1,49 +1,47 @@
 /// ## Screenshot Testing
 ///
-/// The screenshot tests are designed to capture the state of the TUI at a specific
-/// moment. They are particularly useful for debugging and verifying the UI.
+/// The screenshot tests are designed to capture the state of the TUI at a
+/// specific moment. They are particularly useful for debugging and verifying
+/// the UI.
 ///
 /// To add a new screenshot test, follow this pattern:
 ///
-/// 1.  **Spawn the application in a separate process.** This is necessary to
-///     prevent the TUI from blocking the test runner.
-/// 2.  **Wait for the TUI to initialize.** A simple `thread::sleep` is
-///     sufficient for this purpose.
-/// 3.  **Call the `make_screenshot` utility.** This will capture the screen and
-///     save it to the `test_screenshots` directory.
-/// 4.  **Terminate the process.** This is important to prevent the TUI from
-///     running indefinitely.
-/// 5.  **Assert that the screenshot was created.** This verifies that the
-///     test ran successfully.
+/// 1. **Spawn the application in a separate process.** This is necessary to
+///    prevent the TUI from blocking the test runner.
+/// 2. **Wait for the TUI to initialize.** A simple `thread::sleep` is
+///    sufficient for this purpose.
+/// 3. **Call the `make_screenshot` utility.** This will capture the screen and
+///    save it to the `test_screenshots` directory.
+/// 4. **Terminate the process.** This is important to prevent the TUI from
+///    running indefinitely.
+/// 5. **Assert that the screenshot was created.** This verifies that the test
+///    ran successfully.
 ///
 /// For an example, see `test_run_gnostr_and_capture_screenshot`.
 #[cfg(test)]
 mod tests {
-    use anyhow::Result;
-    use assert_cmd::assert::OutputAssertExt;
-    use assert_cmd::cargo::cargo_bin;
-    use predicates::prelude::PredicateBooleanExt;
-    use predicates::str;
-    use std::error::Error;
-    use std::fs::{self, File};
-    use std::io::Write;
-    use std::path::{Path, PathBuf};
-    use std::process::Command;
+    use std::{
+        error::Error,
+        fs::{self, File},
+        io::Write,
+        path::{Path, PathBuf},
+        process::Command,
+        thread,
+        time::Duration,
+    };
 
-    use crate::cli::get_app_cache_path;
-    use crate::core::ui::TerminalCleanup;
-    use crate::utils::screenshot;
+    use anyhow::Result;
+    use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin};
+    //integrate use asyncgit repo actions
+    //integrate use asyncgit repo actions
+    //integrate use asyncgit repo actions
+    use git2::{Repository, Signature};
+    use predicates::{prelude::PredicateBooleanExt, str};
     use serial_test::serial;
     use signal_child::Signalable;
-    use std::thread;
-    use std::time::Duration;
-
-    //integrate use asyncgit repo actions
-    //integrate use asyncgit repo actions
-    //integrate use asyncgit repo actions
-
-    use git2::{Repository, Signature};
     use tempfile::TempDir;
+
+    use crate::{cli::get_app_cache_path, core::ui::TerminalCleanup, utils::screenshot};
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
@@ -202,10 +200,11 @@ mod tests {
         // Test valid: No logging flags
         let mut cmd_no_logging = Command::new(cargo_bin("gnostr"));
         cmd_no_logging.arg("--hash").arg("test");
-        cmd_no_logging.assert()
+        cmd_no_logging
+            .assert()
             .success()
-            // Ensure stderr does NOT contain specific log level indicators or the file logging message.
-            // It might contain other debug output like "40:arg=..."
+            // Ensure stderr does NOT contain specific log level indicators or the file logging
+            // message. It might contain other debug output like "40:arg=..."
             .stderr(str::contains("level=").not())
             .stderr(str::contains("Logging enabled.").not());
 
@@ -341,11 +340,13 @@ mod tests {
 
         //let mut cmd = Command::new(cargo_bin("gnostr"));
         ////setup process to capture the ratatui screen
-        //cmd.arg("tui"); // TUI is the default if no other subcommand is given, but we explicitly call it here
+        //cmd.arg("tui"); // TUI is the default if no other subcommand is given, but we
+        // explicitly call it here
 
         //cmd.assert()
         //    .code(0) // Expect a successful exit from the TUI
-        //    .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path.clone())));
+        //    .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable
+        // is set to: {}", repo_path.clone())));
 
         //// Unset the environment variable to avoid affecting other tests
         //env::remove_var("GNOSTR_GITDIR");
@@ -373,9 +374,9 @@ mod tests {
         //let screenshot_path = screenshot_path_result.unwrap();
         //
         //// Verify the screenshot file was created
-        //let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
-        //assert!(metadata.is_file(), "Screenshot is not a file");
-        //assert!(metadata.len() > 0, "Screenshot file is empty");
+        //let metadata = fs::metadata(&screenshot_path).expect("Failed to get
+        // screenshot metadata"); assert!(metadata.is_file(), "Screenshot is not
+        // a file"); assert!(metadata.len() > 0, "Screenshot file is empty");
 
         let _cleanup_guard = TerminalCleanup;
         Ok(())
@@ -402,15 +403,16 @@ mod tests {
         //let screenshot_path_result = screenshot::make_screenshot("gnostr_chat_run");
 
         //// Terminate the child process gracefully
-        //child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to gnostr chat process");
-        //child.wait().expect("Failed to wait for gnostr chat process");
+        //child.signal(signal_child::signal::SIGINT).expect("Failed to send SIGINT to
+        // gnostr chat process"); child.wait().expect("Failed to wait for gnostr
+        // chat process");
 
         //// Assert that the screenshot was created
         //assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
         //let screenshot_path = screenshot_path_result.unwrap();
-        //let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
-        //assert!(metadata.is_file(), "Screenshot is not a file");
-        //assert!(metadata.len() > 0, "Screenshot file is empty");
+        //let metadata = fs::metadata(&screenshot_path).expect("Failed to get
+        // screenshot metadata"); assert!(metadata.is_file(), "Screenshot is not
+        // a file"); assert!(metadata.len() > 0, "Screenshot file is empty");
 
         let _cleanup_guard = TerminalCleanup;
         Ok(())

@@ -1,6 +1,10 @@
-use crate::types::versioned::event3::{EventV3, PreEventV3, RumorV3, UnsignedEventV3};
-use crate::types::versioned::zap_data::ZapDataV2;
-use crate::types::Id;
+use crate::types::{
+    Id,
+    versioned::{
+        event3::{EventV3, PreEventV3, RumorV3, UnsignedEventV3},
+        zap_data::ZapDataV2,
+    },
+};
 
 /// The main event type
 pub type Event = EventV3;

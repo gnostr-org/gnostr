@@ -336,8 +336,9 @@ pub fn joe_signature() -> Signature<'static> {
 #[cfg(test)]
 mod tests {
 
-    use super::*;
     use std::fs;
+
+    use super::*;
 
     #[test]
     fn methods_do_not_throw() -> Result<()> {
@@ -449,8 +450,9 @@ mod tests {
         repo.checkout("feature")?;
         assert_eq!(repo.get_checked_out_branch_name()?, "feature");
 
-        // Test detached HEAD (more complex to set up, might skip for now or add a specific helper)
-        // For now, assume it always returns a branch name as per current usage.
+        // Test detached HEAD (more complex to set up, might skip for now or add a
+        // specific helper) For now, assume it always returns a branch name as
+        // per current usage.
 
         Ok(())
     }
@@ -469,10 +471,12 @@ mod tests {
         // Test non-existent branch
         let result = repo.get_tip_of_local_branch("non-existent-branch");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("cannot find branch non-existent-branch"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("cannot find branch non-existent-branch")
+        );
 
         Ok(())
     }

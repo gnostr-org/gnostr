@@ -5,8 +5,9 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/14.md
 
-use crate::types::{Event, Tag};
 use anyhow::Result;
+
+use crate::types::{Event, Tag};
 
 /// The name of the subject tag.
 pub const SUBJECT_TAG_NAME: &str = "subject";
@@ -38,7 +39,8 @@ impl NIP14Event for Event {
 
     fn add_subject_tag(&mut self, subject: String) {
         // Remove existing subject tags to ensure only one is present
-        self.tags.retain(|tag| tag.0.get(0) != Some(&SUBJECT_TAG_NAME.to_string()));
+        self.tags
+            .retain(|tag| tag.0.get(0) != Some(&SUBJECT_TAG_NAME.to_string()));
         self.tags.push(Self::create_subject_tag(subject));
     }
 
@@ -75,7 +77,10 @@ mod tests {
             sig: Signature::zeroes(),
         };
 
-        assert_eq!(event.subject().map(|s| s.to_string()), Some(subject_str.to_string()));
+        assert_eq!(
+            event.subject().map(|s| s.to_string()),
+            Some(subject_str.to_string())
+        );
     }
 
     #[test]
@@ -112,14 +117,34 @@ mod tests {
 
         // Add a new subject tag
         event.add_subject_tag(new_subject.to_string());
-        assert_eq!(event.subject().map(|s| s.to_string()), Some(new_subject.to_string()));
+        assert_eq!(
+            event.subject().map(|s| s.to_string()),
+            Some(new_subject.to_string())
+        );
         // Ensure only one subject tag exists
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&SUBJECT_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&SUBJECT_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
 
         // Add another subject tag, it should replace the existing one
         let even_newer_subject = "Final topic of conversation";
         event.add_subject_tag(even_newer_subject.to_string());
-        assert_eq!(event.subject().map(|s| s.to_string()), Some(even_newer_subject.to_string()));
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&SUBJECT_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event.subject().map(|s| s.to_string()),
+            Some(even_newer_subject.to_string())
+        );
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&SUBJECT_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
     }
 }

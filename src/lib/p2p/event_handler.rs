@@ -1,6 +1,7 @@
-use super::behaviour::BehaviourEvent;
 use libp2p::{gossipsub, kad, mdns, swarm::SwarmEvent};
 use tracing::{debug, info, trace, warn};
+
+use super::behaviour::BehaviourEvent;
 
 pub async fn handle_swarm_event(
     swarm: &mut libp2p::Swarm<super::behaviour::Behaviour>,

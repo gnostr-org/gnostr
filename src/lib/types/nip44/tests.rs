@@ -1,8 +1,9 @@
 #![allow(clippy::all)]
 #[rustfmt::skip]
 use crate::*;
-use super::{calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key, Error};
-use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
+use secp256k1::{SECP256K1, SecretKey, XOnlyPublicKey};
+
+use super::{Error, calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key};
 
 // We use the test vectors from Paul Miller's javascript so we don't accidently
 // mistype anything
@@ -402,8 +403,8 @@ fn bench_encryption_inner() {
     let nanos_per_roundtrip = total_nanos / rounds as u128;
     let nanosx10_per_roundtrip_per_char_short = 10 * nanos_per_roundtrip / message.len() as u128;
 
-    // This is approximate math, assuming overhead is negligable on the long message, which
-    // is approximately true.
+    // This is approximate math, assuming overhead is negligable on the long
+    // message, which is approximately true.
     let percharx10 = nanosx10_per_roundtrip_per_char_long;
     let overheadx10 = nanosx10_per_roundtrip_per_char_short - percharx10;
 

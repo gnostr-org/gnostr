@@ -1,20 +1,21 @@
 //! An easy-to-use WebSocket server.
 //!
 //! To start a WebSocket listener, simply call [`launch()`], and use the
-//! returned [`EventHub`] to react to client messages, connections, and disconnections.
+//! returned [`EventHub`] to react to client messages, connections, and
+//! disconnections.
 //!
 //! # Example
 //!
 //! A WebSocket echo server:
 //!
 //! ```no_run
-//! use gnostr::ws::{Event, Responder};
 //! use std::collections::HashMap;
+//!
+//! use gnostr::ws::{Event, Responder};
 //!
 //! fn main() {
 //!     // listen for WebSockets on port 8080:
-//!     let event_hub = gnostr::ws::launch(8080)
-//!         .expect("failed to listen on port 8080");
+//!     let event_hub = gnostr::ws::launch(8080).expect("failed to listen on port 8080");
 //!     // map between client ids and the client's `Responder`:
 //!     let mut clients: HashMap<u64, Responder> = HashMap::new();
 //!
@@ -24,26 +25,31 @@
 //!                 println!("A client connected with id #{}", client_id);
 //!                 // add their Responder to our `clients` map:
 //!                 clients.insert(client_id, responder);
-//!             },
+//!             }
 //!             Event::Disconnect(client_id) => {
 //!                 println!("Client #{} disconnected.", client_id);
 //!                 // remove the disconnected client from the clients map:
 //!                 clients.remove(&client_id);
-//!             },
+//!             }
 //!             Event::Message(client_id, message) => {
-//!                 println!("Received a message from client #{}: {:?}", client_id, message);
+//!                 println!(
+//!                     "Received a message from client #{}: {:?}",
+//!                     client_id, message
+//!                 );
 //!                 // retrieve this client's `Responder`:
 //!                 let responder = clients.get(&client_id).unwrap();
 //!                 // echo the message back:
 //!                 responder.send(message);
-//!             },
+//!             }
 //!         }
 //!     }
 //! }
 //! ```
 use futures_util::{SinkExt, StreamExt};
-use tokio::net::{TcpListener, TcpStream};
-use tokio::runtime::Runtime;
+use tokio::{
+    net::{TcpListener, TcpStream},
+    runtime::Runtime,
+};
 use tokio_tungstenite::{accept_async, tungstenite};
 pub use tokio_util::sync::CancellationToken;
 use tracing::warn;
@@ -133,7 +139,8 @@ impl Responder {
 }
 
 /// An incoming event from a client.
-/// This can be an incoming message, a new client connection, or a disconnection.
+/// This can be an incoming message, a new client connection, or a
+/// disconnection.
 #[derive(Debug)]
 pub enum Event {
     /// A new client has connected.
@@ -173,10 +180,13 @@ impl EventHub {
         Self { rx }
     }
 
-    /// Clears the event queue and returns all the events that were in the queue.
+    /// Clears the event queue and returns all the events that were in the
+    /// queue.
     pub fn drain(&self) -> Vec<Event> {
         if self.rx.is_disconnected() && self.rx.is_empty() {
-            panic!("EventHub channel disconnected. Panicking because Websocket listener thread was killed.");
+            panic!(
+                "EventHub channel disconnected. Panicking because Websocket listener thread was killed."
+            );
         }
 
         self.rx.drain().collect()
@@ -218,19 +228,22 @@ pub fn launch(
     launch_from_listener(listener, cancellation_token)
 }
 
-/// Start listening for websocket connections with the specified [`TcpListener`](std::net::TcpListener).
-/// The listener must be bound (by calling [`bind`](std::net::TcpListener::bind)) before being passed to
+/// Start listening for websocket connections with the specified
+/// [`TcpListener`](std::net::TcpListener). The listener must be bound (by
+/// calling [`bind`](std::net::TcpListener::bind)) before being passed to
 /// `launch_from_listener`.
 ///
 /// ```no_run
 /// use std::net::TcpListener;
+///
 /// use gnostr::ws::CancellationToken;
 ///
-///     // Example of using a pre-bound listener instead of providing a port.
-///     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
-///     let cancellation_token = CancellationToken::new();
-///     let event_hub = gnostr::ws::launch_from_listener(listener, cancellation_token).expect("failed to listen on port 8080");
-///     // ...
+/// // Example of using a pre-bound listener instead of providing a port.
+/// let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
+/// let cancellation_token = CancellationToken::new();
+/// let event_hub = gnostr::ws::launch_from_listener(listener, cancellation_token)
+///     .expect("failed to listen on port 8080");
+/// // ...
 /// ```
 pub fn launch_from_listener(
     listener: std::net::TcpListener,
@@ -317,7 +330,8 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
     };
 
     let event_tx2 = event_tx.clone();
-    //future that forwards messages received from the websocket to the event channel
+    //future that forwards messages received from the websocket to the event
+    // channel
     let events = async move {
         while let Some(message) = incoming.next().await {
             if let Ok(tungstenite_msg) = message {
@@ -336,7 +350,8 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
         Result::<(), ()>::Err(())
     };
 
-    // use try_join so that when `events` returns Err (the websocket closes), responder_events will be stopped too
+    // use try_join so that when `events` returns Err (the websocket closes),
+    // responder_events will be stopped too
     let _ = futures_util::try_join!(responder_events, events);
 
     event_tx
@@ -346,13 +361,14 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use futures_util::StreamExt;
-    use tokio::net::TcpStream;
-    use tokio::time::{timeout, Duration};
-    use tokio_tungstenite::MaybeTlsStream;
-    use tokio_tungstenite::WebSocketStream;
+    use tokio::{
+        net::TcpStream,
+        time::{Duration, timeout},
+    };
+    use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+
+    use super::*;
 
     // Helper to find an available port and return a bound TcpListener
     async fn find_available_listener() -> tokio::net::TcpListener {
@@ -465,7 +481,8 @@ mod tests {
 
         // Test Responder::close
         responder.close();
-        // The client should receive a close frame and then the connection should be dropped
+        // The client should receive a close frame and then the connection should be
+        // dropped
         let client_close_frame = timeout(Duration::from_secs(5), client_ws.next())
             .await
             .expect("Client did not receive close frame in time")

@@ -1,8 +1,9 @@
-use std::env;
-use std::fs;
-use std::io::Result;
-use std::path::{Path, PathBuf};
-use std::process::{exit, Command};
+use std::{
+    env, fs,
+    io::Result,
+    path::{Path, PathBuf},
+    process::{Command, exit},
+};
 
 fn main() {
     let email = env::args()
@@ -200,18 +201,20 @@ fn set_directory_permissions(path: &Path) -> Result<()> {
 
     #[cfg(target_os = "windows")]
     {
-        // On Windows, there's no direct equivalent to chmod for directories to make them owner-only
-        // using just standard library `Permissions`.
-        // The `SetFileAttributes` function (which `set_permissions` uses) primarily sets
-        // flags like `FILE_ATTRIBUTE_READONLY`.
+        // On Windows, there's no direct equivalent to chmod for directories to make
+        // them owner-only using just standard library `Permissions`.
+        // The `SetFileAttributes` function (which `set_permissions` uses) primarily
+        // sets flags like `FILE_ATTRIBUTE_READONLY`.
         // For true granular control (like owner-only), you need to work with ACLs.
-        // For SSH, the critical part is that the user account running SSH *can* access these files,
-        // and that other users *cannot*. Relying on default Windows permissions where only the
-        // current user has full control is often sufficient for ~/.ssh.
-        // If a stricter ACL is needed, a crate like `windows-permissions` or direct WinAPI calls
-        // would be necessary. For this script, we'll ensure it's not world-writable via the
-        // `set_readonly(true)` if it's a file, but for directories, `create_dir_all` often
-        // inherits sensible permissions. We'll simply ensure it's not marked as readonly.
+        // For SSH, the critical part is that the user account running SSH *can* access
+        // these files, and that other users *cannot*. Relying on default
+        // Windows permissions where only the current user has full control is
+        // often sufficient for ~/.ssh. If a stricter ACL is needed, a crate
+        // like `windows-permissions` or direct WinAPI calls would be necessary.
+        // For this script, we'll ensure it's not world-writable via the
+        // `set_readonly(true)` if it's a file, but for directories, `create_dir_all`
+        // often inherits sensible permissions. We'll simply ensure it's not
+        // marked as readonly.
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_readonly(false); // Ensure it's not read-only
         fs::set_permissions(path, perms)?;
@@ -220,7 +223,8 @@ fn set_directory_permissions(path: &Path) -> Result<()> {
     }
 }
 
-// Function to set permissions for private files (like private keys, authorized_keys)
+// Function to set permissions for private files (like private keys,
+// authorized_keys)
 fn set_file_permissions(path: &Path) -> Result<()> {
     #[cfg(target_os = "macos")]
     {
@@ -242,17 +246,20 @@ fn set_file_permissions(path: &Path) -> Result<()> {
     {
         // On Windows, setting a file to "600" (owner read/write only) means ensuring
         // it's not set as FILE_ATTRIBUTE_READONLY and that its ACL only grants
-        // the current user full control. `set_readonly(true)` makes it *more* restricted.
-        // For private keys, we want to ensure only the owner can read/write.
-        // The `std::fs::set_permissions` function on Windows corresponds to `SetFileAttributes`.
-        // Setting `set_readonly(true)` is the closest standard library equivalent to restrict
-        // writes, but true owner-only access usually involves ACL manipulation.
-        // SSH on Windows generally expects the private key file to *not* be accessible
+        // the current user full control. `set_readonly(true)` makes it *more*
+        // restricted. For private keys, we want to ensure only the owner can
+        // read/write. The `std::fs::set_permissions` function on Windows
+        // corresponds to `SetFileAttributes`. Setting `set_readonly(true)` is
+        // the closest standard library equivalent to restrict writes, but true
+        // owner-only access usually involves ACL manipulation. SSH on Windows
+        // generally expects the private key file to *not* be accessible
         // by other users. The default file creation permissions often achieve this.
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_readonly(true); // Attempt to make it read-only for all, closest to 600
         fs::set_permissions(path, perms)?;
-        println!("  (Windows: Set file to read-only attribute. For stronger security, consider manual ACL review.)");
+        println!(
+            "  (Windows: Set file to read-only attribute. For stronger security, consider manual ACL review.)"
+        );
         Ok(())
     }
 }
@@ -284,7 +291,9 @@ fn set_public_key_permissions(path: &Path) -> Result<()> {
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_readonly(false); // Ensure it's not read-only
         fs::set_permissions(path, perms)?;
-        println!("  (Windows: Ensured public key is not read-only. Default ACLs usually allow broader read access.)");
+        println!(
+            "  (Windows: Ensured public key is not read-only. Default ACLs usually allow broader read access.)"
+        );
         Ok(())
     }
 }

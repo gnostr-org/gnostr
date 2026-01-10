@@ -1,7 +1,8 @@
-use libp2p::identity;
 use std::error::Error;
+
+use libp2p::identity;
 use tracing::{debug, trace};
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 pub const GNOSTR_SHA256: [u8; 32] = [
     0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,

@@ -1,11 +1,12 @@
-use crate::types::Error;
-use crate::types::{
-    DelegationConditions, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
-};
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use crate::types::{
+    DelegationConditions, Error, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
+};
 
 /// A tag on an Event
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -512,8 +513,6 @@ impl TagV3 {
         Ok((protocol, id))
     }
 }
-
-
 
 impl fmt::Display for TagV3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

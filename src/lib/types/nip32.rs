@@ -1,14 +1,15 @@
 //! NIP-32: Labeling
 //!
-//! This NIP defines a system for labeling Nostr events using two new indexable tags:
-//! `L` for label namespaces and `l` for labels. It also defines a new event kind (1985)
-//! for attaching these labels to existing events.
+//! This NIP defines a system for labeling Nostr events using two new indexable
+//! tags: `L` for label namespaces and `l` for labels. It also defines a new
+//! event kind (1985) for attaching these labels to existing events.
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/32.md
 
-use crate::types::{Event, Id, PublicKey, Tag, Unixtime, EventKind, PreEvent, Signature};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
+
+use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-32 Label Event Kind
 pub const LABEL_EVENT_KIND: u32 = 1985;
@@ -31,7 +32,8 @@ pub trait NIP32Event {
     fn extract_labels(&self) -> Vec<Label>;
 
     /// Adds an "l" tag (label value) to the event.
-    /// Optionally includes a "mark" if the label is associated with a namespace.
+    /// Optionally includes a "mark" if the label is associated with a
+    /// namespace.
     fn add_label_tag(&mut self, label_value: String, mark: Option<String>);
 
     /// Adds an "L" tag (label namespace) to the event.
@@ -56,7 +58,8 @@ pub trait NIP32Event {
 impl NIP32Event for Event {
     fn extract_labels(&self) -> Vec<Label> {
         let mut labels = Vec::new();
-        let mut namespace_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        let mut namespace_map: std::collections::HashMap<String, String> =
+            std::collections::HashMap::new();
 
         // First, process 'L' tags to build the namespace map
         for tag in &self.tags {
@@ -70,7 +73,7 @@ impl NIP32Event for Event {
             if tag.0.len() >= 2 && tag.0[0] == LABEL_TAG_NAME {
                 let label_value = tag.0[1].clone();
                 let mark = tag.0.get(2).map(|s| s.clone());
-                
+
                 let namespace = if let Some(m) = mark {
                     // If a mark is present, check if it corresponds to a namespace
                     namespace_map.get(&m).map(|s| s.clone())
@@ -78,8 +81,11 @@ impl NIP32Event for Event {
                     // If no mark, NIP-32 implies "ugc" if omitted.
                     Some("ugc".to_string()) // TODO: NIP-32 says "ugc" is implied if omitted, check for existing "L" tag
                 };
-                
-                labels.push(Label { value: label_value, namespace });
+
+                labels.push(Label {
+                    value: label_value,
+                    namespace,
+                });
             }
         }
         labels
@@ -90,11 +96,18 @@ impl NIP32Event for Event {
         if let Some(m) = mark {
             tag_elements.push(m);
         }
-        self.tags.push(Tag::new(tag_elements.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice()));
+        self.tags.push(Tag::new(
+            tag_elements
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
+                .as_slice(),
+        ));
     }
 
     fn add_label_namespace_tag(&mut self, namespace: String) {
-        self.tags.push(Tag::new(&[LABEL_NAMESPACE_TAG_NAME, &namespace]));
+        self.tags
+            .push(Tag::new(&[LABEL_NAMESPACE_TAG_NAME, &namespace]));
     }
 
     fn create_label_tag(label_value: String, mark: Option<String>) -> Tag {
@@ -102,7 +115,13 @@ impl NIP32Event for Event {
         if let Some(m) = mark {
             tag_elements.push(m);
         }
-        Tag::new(tag_elements.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice())
+        Tag::new(
+            tag_elements
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
+                .as_slice(),
+        )
     }
 
     fn create_label_namespace_tag(namespace: String) -> Tag {
@@ -118,7 +137,7 @@ impl NIP32Event for Event {
     ) -> Result<Event> {
         let mut tags: Vec<Tag> = vec![
             Tag::new(&["e", &target_event_id.as_hex_string()]), // Target the event ID
-            Self::create_label_tag(label_value, namespace.clone().or(Some("ugc".to_string()))), // Default mark to "ugc"
+            Self::create_label_tag(label_value, namespace.clone().or(Some("ugc".to_string()))), /* Default mark to "ugc" */
         ];
         if let Some(ns) = namespace {
             tags.push(Self::create_label_namespace_tag(ns));
@@ -172,8 +191,14 @@ mod tests {
     fn test_extract_labels() {
         let mut tags = Vec::new();
         tags.push(Event::create_label_namespace_tag("ISO-3166-2".to_string()));
-        tags.push(Event::create_label_tag("IT-MI".to_string(), Some("ISO-3166-2".to_string())));
-        tags.push(Event::create_label_tag("bug".to_string(), Some("ugc".to_string())));
+        tags.push(Event::create_label_tag(
+            "IT-MI".to_string(),
+            Some("ISO-3166-2".to_string()),
+        ));
+        tags.push(Event::create_label_tag(
+            "bug".to_string(),
+            Some("ugc".to_string()),
+        ));
         tags.push(Tag::new(&["e", &Id::mock().as_hex_string()])); // Non-label tag
 
         let event = Event {
@@ -188,8 +213,14 @@ mod tests {
 
         let labels = event.extract_labels();
         assert_eq!(labels.len(), 2);
-        assert!(labels.contains(&Label { value: "IT-MI".to_string(), namespace: Some("ISO-3166-2".to_string()) }));
-        assert!(labels.contains(&Label { value: "bug".to_string(), namespace: Some("ugc".to_string()) }));
+        assert!(labels.contains(&Label {
+            value: "IT-MI".to_string(),
+            namespace: Some("ISO-3166-2".to_string())
+        }));
+        assert!(labels.contains(&Label {
+            value: "bug".to_string(),
+            namespace: Some("ugc".to_string())
+        }));
     }
 
     #[test]
@@ -211,7 +242,10 @@ mod tests {
         let labels = event.extract_labels();
         assert_eq!(labels.len(), 1);
         // NIP-32 implies "ugc" mark if omitted in the 'l' tag.
-        assert!(labels.contains(&Label { value: "feature".to_string(), namespace: Some("ugc".to_string()) }));
+        assert!(labels.contains(&Label {
+            value: "feature".to_string(),
+            namespace: Some("ugc".to_string())
+        }));
     }
 
     #[test]
@@ -228,14 +262,19 @@ mod tests {
             namespace.clone(),
             target_event_id,
             content_description.clone(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::Label);
         assert_eq!(event.content, content_description.unwrap());
         assert_eq!(event.extract_labels().len(), 1);
         assert_eq!(event.extract_labels()[0].value, label_value);
         assert_eq!(event.extract_labels()[0].namespace, namespace);
-        assert!(event.tags.iter().any(|tag| tag.0.len() == 2 && tag.0[0] == "e" && tag.0[1] == target_event_id.as_hex_string()));
-        assert!(event.tags.iter().any(|tag| tag.0.len() == 2 && tag.0[0] == LABEL_NAMESPACE_TAG_NAME && tag.0[1] == namespace.clone().unwrap()));
+        assert!(event.tags.iter().any(|tag| tag.0.len() == 2
+            && tag.0[0] == "e"
+            && tag.0[1] == target_event_id.as_hex_string()));
+        assert!(event.tags.iter().any(|tag| tag.0.len() == 2
+            && tag.0[0] == LABEL_NAMESPACE_TAG_NAME
+            && tag.0[1] == namespace.clone().unwrap()));
     }
 }

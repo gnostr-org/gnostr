@@ -1,20 +1,16 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::cli::LegitCommands;
-use crate::sub_commands::fetch;
-use crate::sub_commands::init;
-use crate::sub_commands::list;
-use crate::sub_commands::login;
-use crate::sub_commands::pull;
-use crate::sub_commands::push;
-use crate::sub_commands::send;
+use ::time::OffsetDateTime;
 use clap::Args;
 use gnostr_legit::gitminer;
 use nostr_sdk_0_34_0::prelude::*;
 use serde::ser::StdError;
 
-use crate::legit::command;
-use ::time::OffsetDateTime;
+use crate::{
+    cli::LegitCommands,
+    legit::command,
+    sub_commands::{fetch, init, list, login, pull, push, send},
+};
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]

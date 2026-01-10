@@ -1,11 +1,15 @@
-//! Unblocking reader which supports waiting for strings/regexes and EOF to be present
+//! Unblocking reader which supports waiting for strings/regexes and EOF to be
+//! present
+
+use std::{
+    fmt,
+    io::{self, BufReader, prelude::*},
+    result,
+    sync::mpsc::{Receiver, channel},
+    thread, time,
+};
 
 pub use regex::Regex;
-use std::io::prelude::*;
-use std::io::{self, BufReader};
-use std::sync::mpsc::{channel, Receiver};
-use std::{fmt, time};
-use std::{result, thread};
 
 #[derive(Debug)]
 enum PipeError {
@@ -52,7 +56,8 @@ impl fmt::Display for ReadUntil {
 ///
 /// # Arguments:
 ///
-/// - buffer: the currently read buffer from a process which will still grow in the future
+/// - buffer: the currently read buffer from a process which will still grow in
+///   the future
 /// - eof: if the process already sent an EOF or a HUP
 ///
 /// # Return
@@ -100,9 +105,11 @@ pub fn find(needle: &ReadUntil, buffer: &str, eof: bool) -> Option<(usize, usize
 /// Options for NBReader
 ///
 /// - timeout:
-///  + `None`: read_until is blocking forever. This is probably not what you want
+///  + `None`: read_until is blocking forever. This is probably not what you
+///    want
 ///  + `Some(millis)`: after millis milliseconds a timeout error is raised
-/// - strip_ansi_escape_codes: Whether to filter out escape codes, such as colors.
+/// - strip_ansi_escape_codes: Whether to filter out escape codes, such as
+///   colors.
 #[derive(Default)]
 pub struct Options {
     pub timeout_ms: Option<u64>,
@@ -111,9 +118,9 @@ pub struct Options {
 
 /// Non blocking reader
 ///
-/// Typically you'd need that to check for output of a process without blocking your thread.
-/// Internally a thread is spawned and the output is read ahead so when
-/// calling `read_line` or `read_until` it reads from an internal buffer
+/// Typically you'd need that to check for output of a process without blocking
+/// your thread. Internally a thread is spawned and the output is read ahead so
+/// when calling `read_line` or `read_until` it reads from an internal buffer
 pub struct NBReader {
     reader: Receiver<result::Result<PipedChar, PipeError>>,
     buffer: String,
@@ -175,7 +182,8 @@ impl NBReader {
         }
     }
 
-    /// reads all available chars from the read channel and stores them in self.buffer
+    /// reads all available chars from the read channel and stores them in
+    /// self.buffer
     fn read_into_buffer(&mut self) -> Result<(), Box<dyn std::error::Error + Send>> {
         if self.eof {
             return Ok(());
@@ -201,18 +209,20 @@ impl NBReader {
     /// 1. yet unread string until and without needle
     /// 2. matched needle
     ///
-    /// This methods loops (while reading from the Cursor) until the needle is found.
+    /// This methods loops (while reading from the Cursor) until the needle is
+    /// found.
     ///
     /// There are different modes:
     ///
-    /// - `ReadUntil::String` searches for string (use '\n'.to_string() to search for newline).
-    ///   Returns not yet read data in first String, and needle in second String
-    /// - `ReadUntil::Regex` searches for regex
-    ///   Returns not yet read data in first String and matched regex in second String
-    /// - `ReadUntil::NBytes` reads maximum n bytes
-    ///   Returns n bytes in second String, first String is left empty
-    /// - `ReadUntil::EOF` reads until end of file is reached
-    ///   Returns all bytes in second String, first is left empty
+    /// - `ReadUntil::String` searches for string (use '\n'.to_string() to
+    ///   search for newline). Returns not yet read data in first String, and
+    ///   needle in second String
+    /// - `ReadUntil::Regex` searches for regex Returns not yet read data in
+    ///   first String and matched regex in second String
+    /// - `ReadUntil::NBytes` reads maximum n bytes Returns n bytes in second
+    ///   String, first String is left empty
+    /// - `ReadUntil::EOF` reads until end of file is reached Returns all bytes
+    ///   in second String, first is left empty
     ///
     /// Note that when used with a tty the lines end with \r\n
     ///
@@ -223,10 +233,13 @@ impl NBReader {
     /// ```
     /// # use std::io::Cursor;
     /// //use super::*;
-    /// use gnostr::test_utils::reader::{NBReader, Options, ReadUntil, Regex};    ///
+    /// use gnostr::test_utils::reader::{NBReader, Options, ReadUntil, Regex};
+    /// ///
     /// // instead of a Cursor you would put your process output or file here
-    /// let f = Cursor::new("Hello, miss!\n\
-    ///                         What do you mean: 'miss'?");
+    /// let f = Cursor::new(
+    ///     "Hello, miss!\n\
+    ///                         What do you mean: 'miss'?",
+    /// );
     /// let mut e = NBReader::new(f, Options::default());
     ///
     /// let (first_line, _) = e.read_until(&ReadUntil::String('\n'.to_string())).unwrap();
@@ -243,7 +256,6 @@ impl NBReader {
     /// let (_, until_end) = e.read_until(&ReadUntil::EOF).unwrap();
     /// assert_eq!("?", &until_end);
     /// ```
-    ///
     pub fn read_until(
         &mut self,
         needle: &ReadUntil,

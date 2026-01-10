@@ -4,29 +4,26 @@ use std::{
     path::{Path, PathBuf},
     rc::Rc,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use gnostr_asyncgit::{
-    sync::{
-        self,
-        utils::{repo_work_dir, undo_last_commit},
-        RepoPath, RepoPathRef,
-    },
     AsyncGitNotification, PushType,
+    sync::{
+        self, RepoPath, RepoPathRef,
+        utils::{repo_work_dir, undo_last_commit},
+    },
 };
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Tabs},
-    Frame,
 };
 use unicode_width::UnicodeWidthStr;
 
@@ -34,10 +31,10 @@ use crate::{
     accessors,
     cmdbar::CommandBar,
     components::{
-        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
+        CommandInfo, Component, DrawableComponent, FuzzyFinderTarget, command_pump, event_pump,
     },
     input::{Input, InputEvent, InputState},
-    keys::{key_match, KeyConfig, SharedKeyConfig},
+    keys::{KeyConfig, SharedKeyConfig, key_match},
     options::{Options, SharedOptions},
     popup_stack::PopupStack,
     popups::{
@@ -55,6 +52,8 @@ use crate::{
     tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
     try_or_popup,
     ui::style::{SharedTheme, Theme},
+    weeble::weeble_sync,
+    wobble::wobble_sync,
 };
 
 #[derive(Clone)]
@@ -634,7 +633,6 @@ impl App {
     fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {
         match tab {
             //AppTabs::Chat => self.set_tab(0)?,
-            //
             AppTabs::Chat => self.set_tab(0)?,
             AppTabs::Status => self.set_tab(1)?,
             AppTabs::Log => self.set_tab(2)?,
@@ -688,8 +686,6 @@ impl App {
                 self.blame_file_popup.open(params)?;
             }
             //
-            //
-            //
             StackablePopupOpen::DisplayChat(param) => {
                 self.display_chat_popup.open(param)?;
             }
@@ -700,24 +696,17 @@ impl App {
             //    self.inspect_commit_popup.open(param)?;
             //}
             //
-            //
             StackablePopupOpen::FileRevlog(param) => {
                 self.file_revlog_popup.open(param)?;
             }
-            //
-            //
             //
             StackablePopupOpen::FileTree(param) => {
                 self.revision_files_popup.open(param)?;
             }
             //
-            //
-            //
             StackablePopupOpen::InspectChat(param) => {
                 self.inspect_chat_popup.open(param)?;
             }
-            //
-            //
             //
             StackablePopupOpen::InspectCommit(param) => {
                 self.inspect_commit_popup.open(param)?;

@@ -1,6 +1,6 @@
+use std::{fs, path::Path};
+
 use crate::utils::screenshot::take_screenshot;
-use std::fs;
-use std::path::Path;
 
 #[test]
 fn test_capture_fullscreen() {

@@ -67,8 +67,7 @@ pub fn identify_ahead_behind(
 mod tests {
 
     use super::*;
-    use crate::git::oid_to_sha1;
-    use crate::test_utils::git::GitTestRepo;
+    use crate::{git::oid_to_sha1, test_utils::git::GitTestRepo};
 
     #[test]
     fn when_from_branch_doesnt_exist_return_error() -> Result<()> {

@@ -1,11 +1,13 @@
 //! NIP-34 implementation for creating git-related events.
 
-use crate::{blockhash, blockheight, weeble, wobble};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use anyhow::anyhow;
 use secp256k1::{Message, SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::{blockhash, blockheight, weeble, wobble};
 
 /// A signed Nostr event.
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -153,9 +155,10 @@ impl TryFrom<u16> for Nip34Kind {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rand::rngs::OsRng;
-    use secp256k1::{schnorr, Secp256k1};
+    use secp256k1::{Secp256k1, schnorr};
+
+    use super::*;
 
     fn test_event_creation(kind: Nip34Kind, mut tags: Vec<Vec<String>>, content: String) {
         let secp = Secp256k1::new();

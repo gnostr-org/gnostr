@@ -1,13 +1,13 @@
-#[cfg(test)]
-use crate::test_serde;
-
-use super::Error;
-use super::{EventKind, Id, PublicKey, UncheckedUrl};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-/// An 'nevent': event id along with some relays in which that event may be found.
+use super::{Error, EventKind, Id, PublicKey, UncheckedUrl};
+#[cfg(test)]
+use crate::test_serde;
+
+/// An 'nevent': event id along with some relays in which that event may be
+/// found.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct NEvent {

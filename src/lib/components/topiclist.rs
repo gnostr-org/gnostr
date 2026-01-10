@@ -1,22 +1,21 @@
 #![allow(missing_docs)]
+use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, env, rc::Rc, time::Instant};
+
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
-    self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+    self, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags, checkout_commit,
 };
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
-use std::env;
-use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
+use tui_input::{Input, backend::crossterm::EventHandler};
 
 #[derive(Default)]
 pub enum InputMode {
@@ -25,17 +24,18 @@ pub enum InputMode {
     Editing,
 }
 
-use super::utils::logitems::{ItemBatch, LogEntry};
-use super::CommandText;
-use crate::p2p::chat::msg::Msg;
-use crate::utils::truncate_chars;
+use super::{
+    CommandText,
+    utils::logitems::{ItemBatch, LogEntry},
+};
 use crate::{
     app::Environment,
     components::{
-        utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, ScrollType,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
+        utils::string_width_align,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
+    p2p::chat::msg::Msg,
     queue::{InternalEvent, Queue},
     strings::{self, symbol},
     try_or_popup,
@@ -43,6 +43,7 @@ use crate::{
         calc_scroll_top,
         style::{SharedTheme, Theme},
     },
+    utils::truncate_chars,
 };
 
 const ELEMENTS_PER_LINE: usize = 9;
@@ -301,8 +302,8 @@ impl TopicList {
             Ok(())
         } else {
             anyhow::bail!(
-				"Could not select commit. It might not be loaded yet or it might be on a different branch."
-			);
+                "Could not select commit. It might not be loaded yet or it might be on a different branch."
+            );
         }
     }
 
@@ -469,7 +470,8 @@ impl TopicList {
         selected: bool,
         tags: Option<String>,
         local_branches: Option<String>,
-        remote_branches: Option<String>, //detect branch names with pr/WEEBLE/BLOCKHEIGHT/WOBBLE nip34 etc
+        remote_branches: Option<String>, /* detect branch names with
+                                          * pr/WEEBLE/BLOCKHEIGHT/WOBBLE nip34 etc */
         theme: &Theme,
         width: usize, //width
         _now: DateTime<Local>,
@@ -1110,7 +1112,7 @@ impl DrawableComponent for TopicList {
         //format nip34 info
         f.render_widget(
             Paragraph::new(self.get_detail_text(
-                /*10_usize * */ topic_height_in_lines,
+                /* 10_usize * */ topic_height_in_lines,
                 (current_size.0 - 6) as usize,
             ))
             .block(

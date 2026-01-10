@@ -12,6 +12,7 @@
 //! Data structures are defined using `serde` for serialization/deserialization.
 
 use serde::{Deserialize, Serialize};
+
 use crate::types::{Event, Id, PublicKey, Tag, Unixtime}; // Re-using existing types
 
 /// NIP-53 Live Activity Kinds
@@ -20,8 +21,9 @@ pub const MEETING_SPACE_EVENT_KIND: u32 = 30312;
 pub const MEETING_ROOM_EVENT_KIND: u32 = 30313;
 pub const ROOM_PRESENCE_KIND: u32 = 10312;
 
-/// Common fields for parameterized replaceable NIP-53 events (kinds 30311, 30312, 30313)
-/// These events typically include a 'd' tag for a unique identifier.
+/// Common fields for parameterized replaceable NIP-53 events (kinds 30311,
+/// 30312, 30313) These events typically include a 'd' tag for a unique
+/// identifier.
 pub trait NIP53ParameterizedReplaceable {
     fn d_tag(&self) -> Option<&str>;
     fn identifier(&self) -> String; // A unique identifier derived from event content/tags
@@ -82,7 +84,8 @@ pub struct MeetingRoomEventContent {
     /// End time of the meeting.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub end_time: Option<Unixtime>,
-    /// The current status of the meeting room ("scheduled", "in-progress", "ended", etc.)
+    /// The current status of the meeting room ("scheduled", "in-progress",
+    /// "ended", etc.)
     pub status: String, // TODO: Use an enum for status
 }
 

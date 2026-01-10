@@ -1,19 +1,23 @@
-use crate::remote::message_stream::{MessageStream, TransitionToRead};
-use crate::remote::messages;
-use crate::remote::messages::*;
-use crate::remote::options::*;
-use anyhow::*;
 //https://crates.io/crates/bincode/1.3.1
 //bincode
 use core::result::Result::Ok;
-use log::{debug, error, info, trace};
 use std::{
     fs::File,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     process::{Child, Command, Stdio},
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::mpsc::{Receiver, Sender, channel},
     thread,
+};
+
+use anyhow::*;
+use log::{debug, error, info, trace};
+
+use crate::remote::{
+    message_stream::{MessageStream, TransitionToRead},
+    messages,
+    messages::*,
+    options::*,
 };
 
 type IoOut = Receiver<Vec<u8>>;
@@ -29,8 +33,8 @@ struct Context {
 }
 
 impl Context {
-    /// Handles incoming messages and sends back reply (if needed) if returns false it means we
-    /// should exit the update
+    /// Handles incoming messages and sends back reply (if needed) if returns
+    /// false it means we should exit the update
     pub fn handle_incoming_msg<S: Write + Read>(
         &mut self,
         msg_stream: &mut MessageStream,
@@ -123,29 +127,32 @@ impl Context {
         Ok(true)
     }
 
-    /// Pipe streams are blocking, we need separate threads to monitor them without blocking the primary thread.
+    /// Pipe streams are blocking, we need separate threads to monitor them
+    /// without blocking the primary thread.
     fn child_stream_to_vec<R>(mut stream: R, out: Sender<Vec<u8>>)
     where
         R: Read + Send + 'static,
     {
         thread::Builder::new()
             .name("child_stream_to_vec".into())
-            .spawn(move || loop {
-                let mut buf = [0u8; 2];
-                match stream.read(&mut buf) {
-                    Err(err) => {
-                        error!("{}] Error reading from stream: {}", line!(), err);
-                        break;
-                    }
-                    Ok(got) => {
-                        if got == 0 {
+            .spawn(move || {
+                loop {
+                    let mut buf = [0u8; 2];
+                    match stream.read(&mut buf) {
+                        Err(err) => {
+                            error!("{}] Error reading from stream: {}", line!(), err);
                             break;
                         }
+                        Ok(got) => {
+                            if got == 0 {
+                                break;
+                            }
 
-                        let mut vec = Vec::with_capacity(got);
-                        vec.extend_from_slice(&buf[..got]);
-                        // TODO: Fix this
-                        let _ = out.send(vec);
+                            let mut vec = Vec::with_capacity(got);
+                            vec.extend_from_slice(&buf[..got]);
+                            // TODO: Fix this
+                            let _ = out.send(vec);
+                        }
                     }
                 }
             })
@@ -154,8 +161,7 @@ impl Context {
 
     #[cfg(unix)]
     fn set_executable_permissions(path: &str) {
-        use std::fs;
-        use std::os::unix::fs::PermissionsExt; // Import the Unix-specific extension trait
+        use std::{fs, os::unix::fs::PermissionsExt}; // Import the Unix-specific extension trait
 
         debug!("Setting Unix-like permissions for '{}'", path);
         if let Err(e) = fs::set_permissions(path, fs::Permissions::from_mode(0o700)) {
@@ -169,9 +175,10 @@ impl Context {
             "Skipping explicit permission setting on Windows for '{}'.",
             path
         );
-        // On Windows, you typically rely on the file extension (.exe) for executability
-        // and that the user running it has default "Execute" ACL permissions.
-        // If you need fine-grained ACL control, you'd need external crates or FFI to Windows API.
+        // On Windows, you typically rely on the file extension (.exe) for
+        // executability and that the user running it has default
+        // "Execute" ACL permissions. If you need fine-grained ACL
+        // control, you'd need external crates or FFI to Windows API.
     }
 
     fn start_executable(&mut self, f: &messages::LaunchExecutableRequest) {

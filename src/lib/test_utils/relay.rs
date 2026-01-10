@@ -1,11 +1,9 @@
-use std::collections::HashMap;
-use std::thread::JoinHandle;
+use std::{collections::HashMap, thread::JoinHandle};
 
-use crate::ws::CancellationToken;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use nostr_0_34_1::{ClientMessage, JsonUtil, RelayMessage};
 
-use crate::test_utils::CliTester;
+use crate::{test_utils::CliTester, ws::CancellationToken};
 
 type ListenerEventFunc<'a> = &'a dyn Fn(&mut Relay, u64, nostr_0_34_1::Event) -> Result<()>;
 pub type ListenerReqFunc<'a> = &'a dyn Fn(

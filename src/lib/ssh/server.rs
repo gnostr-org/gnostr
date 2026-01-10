@@ -1,18 +1,15 @@
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
-use russh::server::{Msg, Session};
-use russh::*;
-use russh_keys::*;
-use tokio::io::AsyncWriteExt;
-use tokio::process::ChildStdin;
-
 use log::error;
-use tokio::sync::Mutex;
+use russh::{
+    server::{Msg, Session},
+    *,
+};
+use russh_keys::*;
+use tokio::{io::AsyncWriteExt, process::ChildStdin, sync::Mutex};
 
-use crate::ssh::config::server::ServerUser;
-use crate::ssh::state::State;
+use crate::ssh::{config::server::ServerUser, state::State};
 
 mod keys;
 use self::keys::server_keys;

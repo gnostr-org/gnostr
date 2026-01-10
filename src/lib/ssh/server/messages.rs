@@ -1,9 +1,8 @@
 use colored::{ColoredString, Colorize};
-use russh::{server::Handle, ChannelId, CryptoVec};
-
-use crate::ssh::utils::CustomContext;
+use russh::{ChannelId, CryptoVec, server::Handle};
 
 use super::commands::Knob;
+use crate::ssh::utils::CustomContext;
 
 async fn send_message(
     handle: Handle,

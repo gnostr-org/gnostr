@@ -1,9 +1,15 @@
-use crate::utils::create_client;
-use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Filter, Id, Keys, PublicKey, Tag, Unixtime, IdHex, PublicKeyHex};
 use std::{str::FromStr, time::Duration};
+
+use anyhow::{Error as AnyhowError, Result};
+use clap::Args;
 use tracing::debug;
+
+use crate::{
+    types::{
+        Client, Event, EventKind, Filter, Id, IdHex, Keys, PublicKey, PublicKeyHex, Tag, Unixtime,
+    },
+    utils::create_client,
+};
 
 #[derive(Args, Debug)]
 pub struct ListEventsSubCommand {
@@ -67,13 +73,19 @@ pub async fn list_events(
 
     // Handle author public keys
     if let Some(authors_str) = &sub_command_args.authors {
-        let authors: Result<Vec<PublicKeyHex>, _> = authors_str.iter().map(|author| PublicKeyHex::try_from_str(author)).collect();
+        let authors: Result<Vec<PublicKeyHex>, _> = authors_str
+            .iter()
+            .map(|author| PublicKeyHex::try_from_str(author))
+            .collect();
         filter.authors = authors?;
     }
 
     // Handle kind numbers
     if let Some(kinds_u64) = &sub_command_args.kinds {
-        filter.kinds = kinds_u64.iter().map(|k| EventKind::from(*k as u32)).collect();
+        filter.kinds = kinds_u64
+            .iter()
+            .map(|k| EventKind::from(*k as u32))
+            .collect();
     }
 
     // Handle e-tags

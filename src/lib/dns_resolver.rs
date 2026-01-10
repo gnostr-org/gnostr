@@ -1,11 +1,16 @@
-use crate::global_rt::global_rt;
-use std::net::{IpAddr, SocketAddr};
-use trust_dns_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
-use trust_dns_resolver::proto::rr::{RData, RecordType};
-use trust_dns_resolver::TokioAsyncResolver;
+use std::{
+    net::{IpAddr, SocketAddr},
+    process::Command,
+    str,
+};
 
-use std::process::Command;
-use std::str;
+use trust_dns_resolver::{
+    TokioAsyncResolver,
+    config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts},
+    proto::rr::{RData, RecordType},
+};
+
+use crate::global_rt::global_rt;
 
 pub fn dns_resolver_sys() -> Result<String, Box<dyn std::error::Error>> {
     // Specify the dig command and its arguments
@@ -47,8 +52,9 @@ pub fn dns_resolver() -> Result<Vec<IpAddr>, Box<dyn std::error::Error>> {
         let resolver = TokioAsyncResolver::tokio(config, ResolverOpts::default());
 
         // --- 2. Perform the DNS Lookup for TXT records of o-o.myaddr.l.google.com ---
-        // This is based on your initial request to mimic 'dig TXT +short o-o.myaddr.l.google.com'
-        //println!("Looking up TXT records for o-o.myaddr.l.google.com @8.8.8.8...");
+        // This is based on your initial request to mimic 'dig TXT +short
+        // o-o.myaddr.l.google.com' println!("Looking up TXT records for
+        // o-o.myaddr.l.google.com @8.8.8.8...");
         let txt_response = resolver
             .lookup("o-o.myaddr.l.google.com.", RecordType::TXT)
             .await?;
@@ -86,8 +92,9 @@ pub fn dns_resolver() -> Result<Vec<IpAddr>, Box<dyn std::error::Error>> {
             for _address in &addresses {
                 //println!("114:\n\n{}\n\n", address);
                 // Note: Asserting specific IPs for www.example.com is brittle
-                // as they can change. The previous example's assertion was incorrect.
-                // You should typically just print and verify manually.
+                // as they can change. The previous example's assertion was
+                // incorrect. You should typically just print
+                // and verify manually.
             }
         }
 

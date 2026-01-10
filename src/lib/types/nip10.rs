@@ -1,8 +1,9 @@
 // NIP-10: Text Notes and Threads
 // https://github.com/nostr-protocol/nips/blob/master/10.md
 
-use crate::types::event::{Event, EventId, UnsignedEvent};
 use secp256k1::{SecretKey, XOnlyPublicKey};
+
+use crate::types::event::{Event, EventId, UnsignedEvent};
 
 /// Create a reply to an event.
 pub fn create_reply(

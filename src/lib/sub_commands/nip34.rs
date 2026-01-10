@@ -1,13 +1,15 @@
 use std::borrow::Cow;
 
+use anyhow::{Error as AnyhowError, Result};
 use clap::{Args, Subcommand};
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{
-    Client, Event, EventKind, Id, Keys, TagV3 as Tag, PrivateKey, PreEventV3, Unixtime, KeySigner,
-    Signer,
-};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PrivateKey, Signer,
+        TagV3 as Tag, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct Nip34Command {
@@ -239,7 +241,7 @@ async fn repo_announcement(
         tags,
         content: "".to_string(),
     };
-    
+
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
 
@@ -278,7 +280,7 @@ async fn repo_state(
         tags,
         content: "".to_string(),
     };
-    
+
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
 
@@ -314,7 +316,7 @@ async fn patch(
         tags,
         content: args.content.clone(),
     };
-    
+
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
 
@@ -354,7 +356,7 @@ async fn pull_request(
 
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
-    
+
     let event_id = client.send_event(event).await?;
     println!("{}", event_id.as_bech32_string());
 

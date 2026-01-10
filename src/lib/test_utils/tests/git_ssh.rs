@@ -1,12 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use crate::utils::find_available_port;
+    use std::{env, fs::File, io::Write, net::TcpListener, process::Command};
+
     use serial_test::serial;
-    use std::env;
-    use std::fs::File;
-    use std::io::Write;
-    use std::net::TcpListener;
-    use std::process::Command;
+
+    use crate::utils::find_available_port;
 
     const SERVER_TOML_TEMPLATE: &str = r#"
 name = "gnostr.org"

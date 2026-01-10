@@ -1,13 +1,18 @@
-use super::Error;
-use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
-use serde::de::{Deserializer, Visitor};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "speedy")]
-use speedy::{Readable, Writable};
 use std::fmt;
 
-/// An event identifier, constructed as a SHA256 hash of the event fields according to NIP-01
+use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, Visitor},
+    ser::Serializer,
+};
+#[cfg(feature = "speedy")]
+use speedy::{Readable, Writable};
+
+use super::Error;
+
+/// An event identifier, constructed as a SHA256 hash of the event fields
+/// according to NIP-01
 #[derive(
     AsMut, AsRef, Clone, Copy, Debug, Deref, Eq, From, Hash, Into, Ord, PartialEq, PartialOrd,
 )]
@@ -18,7 +23,8 @@ pub struct Id(pub [u8; 32]);
 impl Id {
     /// Render into a hexadecimal string
     ///
-    /// Consider converting `.into()` an `IdHex` which is a wrapped type rather than a naked `String`
+    /// Consider converting `.into()` an `IdHex` which is a wrapped type rather
+    /// than a naked `String`
     pub fn as_hex_string(&self) -> String {
         hex::encode(self.0)
     }
@@ -120,9 +126,11 @@ impl Visitor<'_> for IdVisitor {
     }
 }
 
-/// An event identifier, constructed as a SHA256 hash of the event fields according to NIP-01, as a hex string
+/// An event identifier, constructed as a SHA256 hash of the event fields
+/// according to NIP-01, as a hex string
 ///
-/// You can convert from an `Id` into this with `From`/`Into`.  You can convert this back to an `Id` with `TryFrom`/`TryInto`.
+/// You can convert from an `Id` into this with `From`/`Into`.  You can convert
+/// this back to an `Id` with `TryFrom`/`TryInto`.
 #[derive(
     AsMut,
     AsRef,

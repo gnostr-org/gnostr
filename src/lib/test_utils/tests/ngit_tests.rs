@@ -1,10 +1,16 @@
-use crate::cli::NgitCommands;
-use crate::sub_commands::ngit::{ngit, NgitSubCommand};
-use crate::sub_commands::query::QuerySubCommand;
-use crate::test_utils;
+use std::error::Error as StdError;
+
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use serial_test::serial;
-use std::error::Error as StdError;
+
+use crate::{
+    cli::NgitCommands,
+    sub_commands::{
+        ngit::{NgitSubCommand, ngit},
+        query::QuerySubCommand,
+    },
+    test_utils,
+};
 
 // Helper function to create a dummy NgitSubCommand
 fn create_dummy_ngit_subcommand(command: NgitCommands) -> NgitSubCommand {
@@ -96,7 +102,7 @@ async fn test_ngit_list_command() -> Result<(), Box<dyn StdError>> {
 
 //#[tokio::test]
 #[serial]
-/*async */
+/* async */
 fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
     let (_originating_repo, test_repo) =
         test_utils::create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
@@ -119,7 +125,7 @@ fn test_ngit_pull_command() -> Result<(), Box<dyn StdError>> {
 
 //#[tokio::test]
 #[serial]
-/*async */
+/* async */
 fn test_ngit_push_command() -> Result<(), Box<dyn StdError>> {
     let (_originating_repo, test_repo) =
         test_utils::create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout(

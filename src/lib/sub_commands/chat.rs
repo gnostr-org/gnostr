@@ -3,15 +3,14 @@
 
 //use crate::sub_commands::chat::Utc;
 
-use crate::types::PrivateKey;
+//migrate carefully
+use anyhow::Result;
+use tracing::Level;
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::ChatSubCommands;
-//migrate carefully
-use anyhow::Result;
-
-use tracing::Level;
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+use crate::types::PrivateKey;
 
 /// chat
 ///
@@ -38,7 +37,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
         // If --name is provided, use it.
         Some(name)
     } else if let Some(nsec_hex) = sub_command_args.nsec.clone() {
-        // If --name is not provided, but --nsec is, try to derive the public key fingerprint.
+        // If --name is not provided, but --nsec is, try to derive the public key
+        // fingerprint.
         match PrivateKey::try_from_hex_string(&nsec_hex) {
             Ok(private_key) => {
                 let public_key = private_key.public_key();
@@ -47,7 +47,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
             Err(e) => {
                 // Log a warning if nsec is provided but invalid, but don't crash.
                 // The USER env var won't be set from nsec in this case.
-                tracing::warn!("Could not derive public key from --nsec due to error: {}. USER env var will not be set from nsec.", e);
+                tracing::warn!(
+                    "Could not derive public key from --nsec due to error: {}. USER env var will not be set from nsec.",
+                    e
+                );
                 None
             }
         }
@@ -56,10 +59,12 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
         None
     };
 
-    // Only set the USER environment variable if a username was successfully determined.
+    // Only set the USER environment variable if a username was successfully
+    // determined.
     if let Some(user_name) = username_to_set {
         if !user_name.is_empty() {
-            // Ensure we don't set it to an empty string if derivation resulted in one (though unlikely with hex)
+            // Ensure we don't set it to an empty string if derivation resulted in one
+            // (though unlikely with hex)
             use std::env;
             env::set_var("USER", &user_name);
             tracing::debug!("USER environment variable set to: {}", user_name);

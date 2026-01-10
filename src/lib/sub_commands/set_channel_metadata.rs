@@ -1,10 +1,13 @@
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{
-    Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner, Signer,
-};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, Metadata, PreEventV3, Signer, Tag,
+        UncheckedUrl, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct SetChannelMetadataSubCommand {
@@ -55,9 +58,7 @@ pub async fn set_channel_metadata(
         metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
-    let relay_url: Option<String> = sub_command_args
-        .recommended_relay
-        .clone();
+    let relay_url: Option<String> = sub_command_args.recommended_relay.clone();
 
     let pre_event = PreEventV3 {
         pubkey: keys.public_key(),
@@ -70,7 +71,7 @@ pub async fn set_channel_metadata(
         ])],
         content: serde_json::to_string(&metadata)?,
     };
-    
+
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
 

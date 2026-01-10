@@ -22,11 +22,11 @@ mod config_test;
 #[path = "./state_test.rs"]
 mod state_test;
 
+use std::{path::PathBuf, sync::Arc};
+
 use anyhow::anyhow;
 use log::info;
 use state::State;
-use std::path::PathBuf;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub async fn start() -> anyhow::Result<()> {

@@ -1,9 +1,9 @@
-use nostr_sdk_0_34_0::prelude::*;
 use std::{rc::Rc, slice::Iter};
 
 use chrono::{DateTime, Duration, Local, Utc};
 use gnostr_asyncgit::sync::{CommitId, CommitInfo};
 use indexmap::IndexSet;
+use nostr_sdk_0_34_0::prelude::*;
 
 #[cfg(feature = "ghemoji")]
 use super::emoji::emojifi_string;
@@ -193,11 +193,11 @@ mod tests {
     fn test_emojifi_string_conversion_cases() {
         assert_eq!(&test_conversion("It's :hammer: time!"), "It's 🔨 time!");
         assert_eq!(
-			&test_conversion(
-				":red_circle::orange_circle::yellow_circle::green_circle::large_blue_circle::purple_circle:"
-			),
-			"🔴🟠🟡🟢🔵🟣"
-		);
+            &test_conversion(
+                ":red_circle::orange_circle::yellow_circle::green_circle::large_blue_circle::purple_circle:"
+            ),
+            "🔴🟠🟡🟢🔵🟣"
+        );
         assert_eq!(
             &test_conversion("It's raining :cat:s and :dog:s"),
             "It's raining 🐱s and 🐶s"

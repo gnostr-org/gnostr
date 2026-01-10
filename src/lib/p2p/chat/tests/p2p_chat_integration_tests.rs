@@ -1,12 +1,17 @@
-
 #[cfg(test)]
 mod tests {
-    use crate::queue::InternalEvent;
-    use crate::p2p::chat::msg::{Msg, MsgKind};
-    use crate::p2p::chat::p2p::evt_loop;
+    use std::time::Duration;
+
     use libp2p::gossipsub;
     use tokio::sync::mpsc;
-    use std::time::Duration;
+
+    use crate::{
+        p2p::chat::{
+            msg::{Msg, MsgKind},
+            p2p::evt_loop,
+        },
+        queue::InternalEvent,
+    };
 
     #[tokio::test]
     async fn test_p2p_connectivity_two_nodes() {
@@ -34,10 +39,14 @@ mod tests {
         .set_content(msg1_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx1.send(InternalEvent::ChatMessage(msg1)).await.unwrap();
+        send_tx1
+            .send(InternalEvent::ChatMessage(msg1))
+            .await
+            .unwrap();
 
         // Receive the message on peer 2's side
-        let received_event = tokio::time::timeout(Duration::from_secs(5), recv_rx2.recv()).await
+        let received_event = tokio::time::timeout(Duration::from_secs(5), recv_rx2.recv())
+            .await
             .expect("Timeout waiting for message on peer 2")
             .expect("Channel closed on peer 2");
 
@@ -58,10 +67,14 @@ mod tests {
         .set_content(msg2_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx2.send(InternalEvent::ChatMessage(msg2)).await.unwrap();
+        send_tx2
+            .send(InternalEvent::ChatMessage(msg2))
+            .await
+            .unwrap();
 
         // Receive the message on peer 1's side
-        let received_event_2 = tokio::time::timeout(Duration::from_secs(5), recv_rx1.recv()).await
+        let received_event_2 = tokio::time::timeout(Duration::from_secs(5), recv_rx1.recv())
+            .await
             .expect("Timeout waiting for message on peer 1")
             .expect("Channel closed on peer 1");
 
@@ -70,7 +83,10 @@ mod tests {
             assert_eq!(received_msg_2.content[0], msg2_content);
             assert_eq!(received_msg_2.kind, MsgKind::Chat);
         } else {
-            panic!("Received wrong event type on peer 1: {:?}", received_event_2);
+            panic!(
+                "Received wrong event type on peer 1: {:?}",
+                received_event_2
+            );
         }
     }
 
@@ -103,10 +119,14 @@ mod tests {
         .set_content(msg1_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx1.send(InternalEvent::ChatMessage(msg1)).await.unwrap();
+        send_tx1
+            .send(InternalEvent::ChatMessage(msg1))
+            .await
+            .unwrap();
 
         // Peer 2 should receive the message
-        let received_event_2 = tokio::time::timeout(Duration::from_secs(5), recv_rx2.recv()).await
+        let received_event_2 = tokio::time::timeout(Duration::from_secs(5), recv_rx2.recv())
+            .await
             .expect("Timeout waiting for message on peer 2")
             .expect("Channel closed on peer 2");
 
@@ -114,11 +134,15 @@ mod tests {
             assert_eq!(received_msg.from, "peer1");
             assert_eq!(received_msg.content[0], msg1_content);
         } else {
-            panic!("Received wrong event type on peer 2: {:?}", received_event_2);
+            panic!(
+                "Received wrong event type on peer 2: {:?}",
+                received_event_2
+            );
         }
 
         // Peer 3 should also receive the message
-        let received_event_3 = tokio::time::timeout(Duration::from_secs(5), recv_rx3.recv()).await
+        let received_event_3 = tokio::time::timeout(Duration::from_secs(5), recv_rx3.recv())
+            .await
             .expect("Timeout waiting for message on peer 3")
             .expect("Channel closed on peer 3");
 
@@ -126,7 +150,10 @@ mod tests {
             assert_eq!(received_msg.from, "peer1");
             assert_eq!(received_msg.content[0], msg1_content);
         } else {
-            panic!("Received wrong event type on peer 3: {:?}", received_event_3);
+            panic!(
+                "Received wrong event type on peer 3: {:?}",
+                received_event_3
+            );
         }
     }
 }

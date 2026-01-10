@@ -1,10 +1,10 @@
-use crate::ws::{launch_from_listener, Error, Event, Message, Responder};
-use futures_util::SinkExt;
-use futures_util::StreamExt;
 use std::time::Duration;
-use tokio::net::TcpStream;
-use tokio::time::timeout;
-use tokio_tungstenite::{tungstenite, MaybeTlsStream, WebSocketStream};
+
+use futures_util::{SinkExt, StreamExt};
+use tokio::{net::TcpStream, time::timeout};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite};
+
+use crate::ws::{Error, Event, Message, Responder, launch_from_listener};
 
 // Helper to find an available port and return a bound TcpListener
 #[allow(unused)]
@@ -117,7 +117,8 @@ async fn test_find_available_listener_and_connect_websocket_client() {
 
     // Test Responder::close
     responder.close();
-    // The client should receive a close frame and then the connection should be dropped
+    // The client should receive a close frame and then the connection should be
+    // dropped
     let client_close_frame = client_ws.next().await.unwrap().unwrap().is_close();
     assert!(client_close_frame);
 
@@ -201,12 +202,17 @@ async fn test_websocket_connection_and_message_echo() {
         .expect("Server did not send Connect event in time")
     {
         Event::Connect(id, resp) => {
-            println!("Received expected Connect event. Got a tuple containing client_id (u64): {} and a Responder.", id);
+            println!(
+                "Received expected Connect event. Got a tuple containing client_id (u64): {} and a Responder.",
+                id
+            );
             (id, resp)
         }
         other => {
             println!("Received unexpected event: {:?}", other);
-            panic!("Expected a Connect event to get the (u64, Responder) tuple, but got a different event.");
+            panic!(
+                "Expected a Connect event to get the (u64, Responder) tuple, but got a different event."
+            );
         }
     };
 }

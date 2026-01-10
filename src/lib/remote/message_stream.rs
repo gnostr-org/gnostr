@@ -1,14 +1,19 @@
-use super::messages::Messages;
-use anyhow::*;
 use core::result::Result::Ok;
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::Hasher,
+    io::{Read, Write},
+};
+
+use anyhow::*;
 use log::trace;
 use serde::ser::Serialize;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::Hasher;
-use std::io::{Read, Write};
+
+use super::messages::Messages;
 
 /// These are all the states that is needed to write to the output
-/// This supports writing it non-blocking fashion and can pickup where it left of.
+/// This supports writing it non-blocking fashion and can pickup where it left
+/// of.
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum State {
     ReadHeader,
@@ -63,8 +68,8 @@ impl MessageStream {
         }
     }
 
-    /// Update the state machine. Will return a Some(Message) when a read request has finished.
-    /// For writes no state will be given back
+    /// Update the state machine. Will return a Some(Message) when a read
+    /// request has finished. For writes no state will be given back
     pub fn update<S: Write + Read>(&mut self, stream: &mut S) -> Result<Option<Messages>> {
         match self.state {
             State::WriteHeader => {
@@ -122,7 +127,8 @@ impl MessageStream {
         }
     }
 
-    /// Begins writing message to the stream, returns false if it can't, true if finished
+    /// Begins writing message to the stream, returns false if it can't, true if
+    /// finished
     pub fn begin_write_message<T: Serialize, S: Write + Read>(
         &mut self,
         stream: &mut S,
@@ -162,7 +168,8 @@ impl MessageStream {
             self.data.len()
         );
 
-        // Do a update directly here to reduce latency as short messages will likely finish directly
+        // Do a update directly here to reduce latency as short messages will likely
+        // finish directly
         self.update(stream)?;
 
         // check if we have finished already
@@ -201,7 +208,8 @@ impl MessageStream {
         }
     }
 
-    /// Write header to the stream and return the total amount of data that has been written
+    /// Write header to the stream and return the total amount of data that has
+    /// been written
     fn write_header<S: Write + Read>(&mut self, stream: &mut S) -> Result<usize> {
         self.header_offset += Self::write(stream, &self.header[self.header_offset..])?;
         trace!(
@@ -225,12 +233,14 @@ impl MessageStream {
         Ok(self.header_offset)
     }
 
-    /// Write data to the stream and return the total amount of data that has been written
+    /// Write data to the stream and return the total amount of data that has
+    /// been written
     fn write_data<S: Write + Read>(&mut self, stream: &mut S) -> Result<usize> {
         self.data_offset += Self::write(stream, &self.data[self.data_offset..])?;
         trace!("write_data total bytes {} written", self.data_offset);
 
-        // When we have finished writing all data we switch over to look for incoming messages
+        // When we have finished writing all data we switch over to look for incoming
+        // messages
         if self.data_offset == self.data.len() {
             self.header_offset = 0;
 

@@ -12,35 +12,39 @@ pub mod opt;
 pub mod swarm_builder;
 pub mod utils;
 
-use crate::blockhash::blockhash_async;
-use crate::blockheight::blockheight_async;
-use crate::p2p::chat::msg::{Msg, MsgKind};
-use crate::p2p::chat::ChatSubCommands;
-use crate::types::Event;
-use chrono::{Local, Timelike};
-use futures::stream::StreamExt;
-use libp2p::{
-    gossipsub, identify, identity,
-    kad::{
-        self,
-        store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
-    },
-    mdns, noise, ping, rendezvous,
-    swarm::SwarmEvent,
-    tcp, yamux, PeerId,
-};
-use serde_json;
 use std::{
     env,
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
     thread,
 };
-use tokio::time::Duration;
-use tokio::{io, select};
+
+use chrono::{Local, Timelike};
+use futures::stream::StreamExt;
+use libp2p::{
+    PeerId, gossipsub, identify, identity,
+    kad::{
+        self, Config as KadConfig,
+        store::{MemoryStore, MemoryStoreConfig},
+    },
+    mdns, noise, ping, rendezvous,
+    swarm::SwarmEvent,
+    tcp, yamux,
+};
+use serde_json;
+use tokio::{io, select, time::Duration};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
+
+use crate::{
+    blockhash::blockhash_async,
+    blockheight::blockheight_async,
+    p2p::chat::{
+        ChatSubCommands,
+        msg::{Msg, MsgKind},
+    },
+    types::Event,
+};
 
 //const TOPIC: &str = "gnostr";
 

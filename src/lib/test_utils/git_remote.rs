@@ -1,10 +1,11 @@
 use std::{collections::HashSet, env::current_dir};
 
-use super::{git::GitTestRepo, *};
 use anyhow::{Context, Result};
 use futures::join;
 use nostr_0_34_1::nips::nip01::Coordinate;
-use nostr_sdk_0_34_0::{secp256k1::rand, Kind, ToBech32};
+use nostr_sdk_0_34_0::{Kind, ToBech32, secp256k1::rand};
+
+use super::{git::GitTestRepo, *};
 
 pub static NOSTR_REMOTE_NAME: &str = "nostr";
 pub static STATE_KIND: nostr_0_34_1::Kind = Kind::Custom(30618);
@@ -105,7 +106,8 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
         true,
     )?;
 
-    // Push all branches from git_repo to source_git_repo to ensure full history is present
+    // Push all branches from git_repo to source_git_repo to ensure full history is
+    // present
     {
         let mut remote = source_git_repo
             .git_repo
@@ -122,11 +124,9 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
     let events = vec![
         generate_test_key_1_metadata_event("fred"),
         generate_test_key_1_relay_list_event(),
-        generate_repo_ref_event_with_git_server(vec![source_git_repo
-            .dir
-            .to_str()
-            .unwrap()
-            .to_string()]),
+        generate_repo_ref_event_with_git_server(vec![
+            source_git_repo.dir.to_str().unwrap().to_string(),
+        ]),
     ];
     // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
     let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -189,8 +189,8 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
     Ok((state_event.clone(), source_git_repo))
 }
 
-pub async fn prep_source_repo_and_events_including_proposals(
-) -> Result<(Vec<nostr_0_34_1::Event>, GitTestRepo)> {
+pub async fn prep_source_repo_and_events_including_proposals()
+-> Result<(Vec<nostr_0_34_1::Event>, GitTestRepo)> {
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 

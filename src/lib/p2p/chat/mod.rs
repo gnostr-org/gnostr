@@ -1,30 +1,30 @@
-use anyhow::{anyhow, Result};
+use std::{error::Error as StdError, path::PathBuf, time::Duration};
+
+use anyhow::{Result, anyhow};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
-
-use self::msg::{Msg, MsgKind};
-use crate::queue::InternalEvent;
-use crate::types::nip28::CREATE_CHANNEL_MESSAGE;
-use crate::types::{Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl};
-use gnostr_asyncgit::sync::commit::padded_commit_id;
-use gnostr_asyncgit::sync::RepoPath;
+use gnostr_asyncgit::sync::{RepoPath, commit::padded_commit_id};
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
-use serde_json; // Explicitly added for clarity
-
-use crate::types::metadata::{DEFAULT_AVATAR, DEFAULT_BANNER};
-use std::path::PathBuf;
-use std::{error::Error as StdError, time::Duration};
 use proctitle::set_title;
-use textwrap::{fill, Options};
-use uuid::Uuid;
+use serde_json; // Explicitly added for clarity
+use textwrap::{Options, fill};
 //use async_std::path::PathBuf;
-
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use uuid::Uuid;
+
+use self::msg::{Msg, MsgKind};
+use crate::{
+    queue::InternalEvent,
+    types::{
+        Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
+        metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
+        nip28::CREATE_CHANNEL_MESSAGE,
+    },
+};
 
 pub mod msg;
 pub use msg::*;
@@ -158,10 +158,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         debug!("hash={}", hash);
     };
 
-        if let Some(name) = args.name.clone() {
-            use std::env;
-            env::set_var("USER", &name);
-        };
+    if let Some(name) = args.name.clone() {
+        use std::env;
+        env::set_var("USER", &name);
+    };
     // Determine the KeySigner to use
     let nsec_hex = if let Some(nsec) = args.nsec.clone() {
         nsec
@@ -209,7 +209,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     };
 
     tracing::info!("\n{:?}\n", &sub_command_args);
-    println!("pre_event={:?}", Into::<crate::types::PublicKeyHex>::into(pre_event.pubkey));
+    println!(
+        "pre_event={:?}",
+        Into::<crate::types::PublicKeyHex>::into(pre_event.pubkey)
+    );
 
     let id = pre_event.hash().unwrap();
     let sig = keys.sign_id(id).unwrap();
@@ -232,8 +235,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
     );
 
-        if let Some(message_input) = args.oneshot {
-            if !args.headless {
+    if let Some(message_input) = args.oneshot {
+        if !args.headless {
             tracing::info!("Oneshot mode: sending message '{}'", message_input);
 
             let _p2p_handle = tokio::spawn(async move {
@@ -272,12 +275,11 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             // Allow time for the message to propagate.
             tokio::time::sleep(Duration::from_secs(2)).await;
             tracing::info!("Oneshot operation complete.");
-
-            } else {
-                println!("headless conflicts with oneshot!");
-            }
-            return Ok(());
+        } else {
+            println!("headless conflicts with oneshot!");
         }
+        return Ok(());
+    }
 
     // If headless mode is enabled and not in oneshot mode,
     // run the event loop in the background

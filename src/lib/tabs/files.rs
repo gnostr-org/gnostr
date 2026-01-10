@@ -6,8 +6,8 @@ use gnostr_asyncgit::sync::{self, RepoPathRef};
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, RevisionFilesComponent,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
+        RevisionFilesComponent, visibility_blocking,
     },
     sub_commands::tui::AsyncNotification,
 };

@@ -1,7 +1,9 @@
 use clap::Parser;
 use futures::future::{FutureExt, TryFutureExt};
-use gnostr::p2p::lookup::{LookupClient, LookupError};
-use gnostr::p2p::network_config::Network;
+use gnostr::p2p::{
+    lookup::{LookupClient, LookupError},
+    network_config::Network,
+};
 use libp2p::{Multiaddr, PeerId};
 
 #[derive(Debug, Parser)]

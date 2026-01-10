@@ -1,10 +1,13 @@
+use std::error::Error;
+
 use git2::Repository;
 use libp2p::{gossipsub, kad};
-use std::error::Error;
 use tracing::debug;
 
-use super::behaviour::Behaviour;
-use super::git_integration::{get_commit_diff_as_bytes, get_commit_id_of_tag};
+use super::{
+    behaviour::Behaviour,
+    git_integration::{get_commit_diff_as_bytes, get_commit_id_of_tag},
+};
 use crate::p2p::args::Args;
 
 pub async fn run_git_publisher(

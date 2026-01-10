@@ -1,12 +1,14 @@
-use super::Error;
-#[cfg(test)]
-use crate::test_serde;
-use crate::types::{PublicKey, UncheckedUrl};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-/// A person's profile on nostr which consists of the data needed in order to follow someone.
+use super::Error;
+#[cfg(test)]
+use crate::test_serde;
+use crate::types::{PublicKey, UncheckedUrl};
+
+/// A person's profile on nostr which consists of the data needed in order to
+/// follow someone.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct Profile {
@@ -41,8 +43,8 @@ impl Profile {
 
     /// Import from a bech32 encoded string ("nprofile")
     ///
-    /// If verify is true, will verify that it works as a secp256k1::XOnlyPublicKey. This
-    /// has a performance cost.
+    /// If verify is true, will verify that it works as a
+    /// secp256k1::XOnlyPublicKey. This has a performance cost.
     pub fn try_from_bech32_string(s: &str, verify: bool) -> Result<Profile, Error> {
         let data = bech32::decode(s)?;
         if data.0 != *super::HRP_NPROFILE {

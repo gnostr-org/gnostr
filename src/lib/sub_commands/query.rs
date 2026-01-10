@@ -47,8 +47,8 @@ pub struct QuerySubCommand {
     /// Maximum number of events to return.
     #[arg(long, default_value = "1")]
     pub limit: Option<i32>,
-    /// Generic filters in the format '#<tag> <value>'. Expects two space-separated values.
-    /// Example: --generic "#t" "general,nostr"
+    /// Generic filters in the format '#<tag> <value>'. Expects two
+    /// space-separated values. Example: --generic "#t" "general,nostr"
     #[arg(num_args = 2, value_delimiter = ' ', long)]
     pub generic: Option<Vec<String>>,
     /// Filter by hashtags (comma-separated).
@@ -63,8 +63,8 @@ pub struct QuerySubCommand {
     /// Filter by event kinds (comma-separated integers).
     #[arg(long)]
     pub kinds: Option<String>,
-    /// Search for text within event content. Can take multiple values, but only the first is used.
-    /// Example: --search "keyword1,keyword2"
+    /// Search for text within event content. Can take multiple values, but only
+    /// the first is used. Example: --search "keyword1,keyword2"
     #[arg(num_args = 1.., long)]
     pub search: Option<Vec<String>>,
     /// Specify a relay URL to connect to.
@@ -222,10 +222,11 @@ fn build_filter_map(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use clap::{Parser, Subcommand};
     use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
     use serde_json::json;
+
+    use super::*;
 
     #[derive(Parser)]
     #[command(name = "gnostr", about = "A test CLI for gnostr")]
@@ -411,7 +412,8 @@ mod tests {
         let args = create_query_subcommand(&["--kinds", "1,2,1"]);
         let (filt, _) = build_filter_map(&args)?;
 
-        // The current implementation allows duplicates, which is acceptable for a filter list.
+        // The current implementation allows duplicates, which is acceptable for a
+        // filter list.
         assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2, 1]));
         Ok(())
     }

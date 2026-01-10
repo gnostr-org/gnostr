@@ -1,10 +1,10 @@
+use std::{ops::DerefMut, sync::mpsc::Sender};
+
 use super::{
     ContentEncryptionAlgorithm, DelegationConditions, EncryptedPrivateKey, Error, Event, EventV1,
     EventV2, Id, KeySecurity, KeySigner, Metadata, PreEvent, PrivateKey, PublicKey, Rumor, RumorV1,
     RumorV2, Signature, Signer,
 };
-use std::ops::DerefMut;
-use std::sync::mpsc::Sender;
 
 /// All states that your identity can be in
 #[derive(Debug, Default)]
@@ -23,7 +23,8 @@ pub enum Identity {
 // No one besides the Identity has the internal Signer, so we can safely Send
 unsafe impl Send for Identity {}
 
-// Nobody can write while someone else is reading with just a non-mutable &reference
+// Nobody can write while someone else is reading with just a non-mutable
+// &reference
 unsafe impl Sync for Identity {}
 
 impl Identity {
@@ -175,8 +176,8 @@ impl Identity {
 
     /// Export the private key in hex.
     ///
-    /// This returns a boolean indicating if the key security was downgraded. If it was,
-    /// the caller should save the new self.encrypted_private_key()
+    /// This returns a boolean indicating if the key security was downgraded. If
+    /// it was, the caller should save the new self.encrypted_private_key()
     ///
     /// We need the password and log_n parameters to possibly rebuild
     /// the EncryptedPrivateKey when downgrading key security
@@ -194,8 +195,8 @@ impl Identity {
 
     /// Export the private key in bech32.
     ///
-    /// This returns a boolean indicating if the key security was downgraded. If it was,
-    /// the caller should save the new self.encrypted_private_key()
+    /// This returns a boolean indicating if the key security was downgraded. If
+    /// it was, the caller should save the new self.encrypted_private_key()
     ///
     /// We need the password and log_n parameters to possibly rebuild
     /// the EncryptedPrivateKey when downgrading key security
@@ -244,7 +245,8 @@ impl Identity {
         }
     }
 
-    /// Create a ZapRequest event These events are not published to nostr, they are sent to a lnurl.
+    /// Create a ZapRequest event These events are not published to nostr, they
+    /// are sent to a lnurl.
     pub fn create_zap_request_event(
         &self,
         recipient_pubkey: PublicKey,

@@ -1,7 +1,7 @@
 use core::str;
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result /*, Error*/};
+use anyhow::{Context, Result /* , Error */, anyhow};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
@@ -22,9 +22,9 @@ use repo_ref::RepoRef;
 use crate::{
     git::Repo,
     utils::{
-        fetch_or_list_error_is_not_authentication_failure, get_open_proposals,
+        Direction, fetch_or_list_error_is_not_authentication_failure, get_open_proposals,
         get_read_protocols_to_try, get_short_git_server_name, join_with_and,
-        set_protocol_preference, Direction,
+        set_protocol_preference,
     },
 };
 
@@ -278,21 +278,22 @@ mod tests {
 
     mod without_state_announcement {
 
-        use futures_util::join;
-        use gnostr::test_utils::generate_repo_ref_event_with_git_server;
-        use gnostr::test_utils::generate_test_key_1_metadata_event;
-        use gnostr::test_utils::generate_test_key_1_relay_list_event;
-        use gnostr::test_utils::git_remote::cli_tester_after_fetch;
-        use gnostr::test_utils::git_remote::prep_git_repo;
-        use gnostr::test_utils::relay::Relay;
-        use serial_test::serial;
         use std::collections::HashSet;
+
+        use futures_util::join;
+        use gnostr::test_utils::{
+            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+            generate_test_key_1_relay_list_event,
+            git_remote::{cli_tester_after_fetch, prep_git_repo},
+            relay::Relay,
+        };
+        use serial_test::serial;
 
         #[tokio::test]
         #[serial]
         #[ignore]
-        async fn lists_head_and_2_branches_and_commit_ids_from_git_server(
-        ) -> Result<(), anyhow::Error> {
+        async fn lists_head_and_2_branches_and_commit_ids_from_git_server()
+        -> Result<(), anyhow::Error> {
             let mut source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
             std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
@@ -308,11 +309,9 @@ mod tests {
             let events = vec![
                 generate_test_key_1_metadata_event("fred"),
                 generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![source_git_repo
-                    .dir
-                    .to_str()
-                    .unwrap()
-                    .to_string()]),
+                generate_repo_ref_event_with_git_server(vec![
+                    source_git_repo.dir.to_str().unwrap().to_string(),
+                ]),
             ];
             // fallback (51,52) user write (53, 55) repo (55, 56) blaster
             // (57)
@@ -385,11 +384,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                     state_event,
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56)
@@ -475,11 +472,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                     state_event,
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56)
@@ -551,19 +546,23 @@ mod tests {
         //    #[tokio::test]
         //    #[serial]
         //    #[cfg(feature = "expensive_tests")]
-        //    async fn open_proposal_listed_in_prs_namespace() ->  Result<(), anyhow::Error> {
-        //        let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
-        //        let source_path = source_git_repo.dir.to_str().unwrap().to_string();
+        //    async fn open_proposal_listed_in_prs_namespace() ->  Result<(),
+        // anyhow::Error> {        let (state_event, source_git_repo) =
+        // generate_repo_with_state_event().await?;        let
+        // source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
-        //        let main_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
-        //        let example_commit_id = source_git_repo.get_tip_of_local_branch("example-branch")?;
+        //        let main_commit_id =
+        // source_git_repo.get_tip_of_local_branch("main")?;        let
+        // example_commit_id =
+        // source_git_repo.get_tip_of_local_branch("example-branch")?;
 
         //        let git_repo = prep_git_repo()?;
 
         //        let events = vec![
         //            generate_test_key_1_metadata_event("fred"),
         //            generate_test_key_1_relay_list_event(),
-        //            generate_repo_ref_event_with_git_server(vec![source_git_repo
+        //
+        // generate_repo_ref_event_with_git_server(vec![source_git_repo
         //                .dir
         //                .to_str()
         //                .unwrap()
@@ -583,14 +582,15 @@ mod tests {
         //        r51.events = events.clone();
         //        r55.events = events;
 
-        //        let cli_tester_handle = std::thread::spawn(move || ->  Result<(), anyhow::Error> {
-        //            cli_tester_create_proposals()?;
+        //        let cli_tester_handle = std::thread::spawn(move || ->
+        // Result<(), anyhow::Error> {
+        // cli_tester_create_proposals()?;
 
         //            let mut p = cli_tester_after_fetch(&git_repo)?;
         //            p.send_line("list")?;
         //            p.expect(
-        //                format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
-        //            )?;
+        //                format!("fetching {} ref list over filesystem...\r\n",
+        // source_path).as_str(),            )?;
         //            p.expect("list: connecting...\r\n\r\r\r")?;
         //            // println!("{}",
         //            // p.expect_eventually("\r\n\r\n")?);
@@ -614,7 +614,8 @@ mod tests {
 
         //        let res = cli_tester_handle.join().unwrap()?;
 
-        //        let proposal_creation_repo = cli_tester_create_proposal_branches_ready_to_send()?;
+        //        let proposal_creation_repo =
+        // cli_tester_create_proposal_branches_ready_to_send()?;
 
         //        let mut pr_refs = vec![];
         //        for name in [
@@ -625,8 +626,8 @@ mod tests {
         //            pr_refs.push(format!(
         //                "{} refs/heads/{}",
         //                proposal_creation_repo.get_tip_of_local_branch(name)?,
-        //                get_proposal_branch_name_from_events(&r55.events, name)?,
-        //            ));
+        //                get_proposal_branch_name_from_events(&r55.events,
+        // name)?,            ));
         //        }
 
         //        assert_eq!(
@@ -637,8 +638,8 @@ mod tests {
         //                vec![
         //                    "@refs/heads/main HEAD".to_string(),
         //                    format!("{} refs/heads/main", main_commit_id),
-        //                    format!("{} refs/heads/example-branch", example_commit_id),
-        //                ],
+        //                    format!("{} refs/heads/example-branch",
+        // example_commit_id),                ],
         //                pr_refs,
         //            ]
         //            .concat()

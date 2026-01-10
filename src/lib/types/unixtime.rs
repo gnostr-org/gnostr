@@ -1,9 +1,12 @@
+use std::{
+    ops::{Add, Sub},
+    time::Duration,
+};
+
 use derive_more::{AsMut, AsRef, Deref, Display, From, Into};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::ops::{Add, Sub};
-use std::time::Duration;
 
 /// An integer count of the number of seconds from 1st January 1970.
 /// This does not count any of the leap seconds that have occurred, it

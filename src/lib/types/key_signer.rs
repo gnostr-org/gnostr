@@ -1,8 +1,9 @@
+use std::fmt;
+
 use super::{
     ContentEncryptionAlgorithm, EncryptedPrivateKey, Error, Id, KeySecurity, PrivateKey, PublicKey,
     Signature, Signer,
 };
-use std::fmt;
 
 /// Signer with a local private key (and public key)
 pub struct KeySigner {
@@ -50,7 +51,8 @@ impl KeySigner {
         })
     }
 
-    /// Create a Signer from an `EncryptedPrivateKey` and a password to unlock it
+    /// Create a Signer from an `EncryptedPrivateKey` and a password to unlock
+    /// it
     pub fn from_encrypted_private_key(epk: EncryptedPrivateKey, pass: &str) -> Result<Self, Error> {
         let priv_key = epk.decrypt(pass)?;
         let pub_key = priv_key.public_key();

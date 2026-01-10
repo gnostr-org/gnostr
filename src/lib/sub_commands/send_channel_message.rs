@@ -1,7 +1,13 @@
-use crate::utils::{create_client, parse_private_key};
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner, Signer};
+
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, Signer, Tag, UncheckedUrl,
+        Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct SendChannelMessageSubCommand {
@@ -31,7 +37,7 @@ pub async fn send_channel_message(
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
     let channel_id = Id::try_from_hex_string(&sub_command_args.channel_id)?;
-    
+
     let tags = vec![Tag::new(&[
         "e",
         &channel_id.as_hex_string(),

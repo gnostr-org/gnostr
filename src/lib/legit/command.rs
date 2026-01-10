@@ -1,28 +1,30 @@
-use crate::types::nostr_client;
-use crate::types::{
-    Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
-    Unixtime,
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    error::Error as StdError,
+    io,
+    io::Write,
+    process::Command,
+    time::{Duration, SystemTime},
 };
-use crate::utils::{parse_json, split_json_string};
+
 use anyhow::anyhow;
 use git2::{ObjectType, Repository, RepositoryState};
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_legit::gitminer::{self, Gitminer};
 use once_cell::sync::OnceCell;
-use serde_json;
-use serde_json::Value;
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::io::Write;
-use std::process::Command;
-use std::{
-    error::Error as StdError,
-    io,
-    time::{Duration, SystemTime},
-};
+use serde_json::{self, Value};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
+
+use crate::{
+    types::{
+        Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
+        Unixtime, nostr_client,
+    },
+    utils::{parse_json, split_json_string},
+};
 
 pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let _start = SystemTime::now();
@@ -103,7 +105,8 @@ pub async fn create_event_with_custom_tags(
     for (tag_name, tag_values) in custom_tags {
         info!("tag_name={:?}", tag_name);
         info!("tag_values={:?}", tag_values);
-        // Use the first value for now, similar to how nostr_sdk's Tag::parse might behave in this context
+        // Use the first value for now, similar to how nostr_sdk's Tag::parse might
+        // behave in this context
         if let Some(value) = tag_values.get(0) {
             tags.push(Tag::new(&[&tag_name, value]));
         }

@@ -1,8 +1,10 @@
-use crate::types::error::Error;
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use crate::types::error::Error;
 
 /// A string that is supposed to represent a URL but which might be invalid
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Serialize, Ord)]

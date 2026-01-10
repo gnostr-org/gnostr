@@ -1,12 +1,15 @@
-use crate::types::Error;
-use crate::types::{
-    DelegationConditions, EventKind, Id, PublicKeyHex, SignatureHex, UncheckedUrl, Unixtime,
+use std::fmt;
+
+use serde::{
+    de::{Deserialize, Deserializer, SeqAccess, Visitor},
+    ser::{Serialize, SerializeSeq, Serializer},
 };
-use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
-use serde::ser::{Serialize, SerializeSeq, Serializer};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use crate::types::{
+    DelegationConditions, Error, EventKind, Id, PublicKeyHex, SignatureHex, UncheckedUrl, Unixtime,
+};
 
 /// A tag on an Event
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -59,8 +62,8 @@ pub enum TagV2 {
     } = 2,
 
     /// This is a reference to an event, where the first string is the event Id.
-    /// The second string is defined in NIP-01 as an optional URL, but subsequent
-    /// 'e' NIPs define more data and interpretations.
+    /// The second string is defined in NIP-01 as an optional URL, but
+    /// subsequent 'e' NIPs define more data and interpretations.
     Event {
         /// The Id of some other event that this event refers to
         id: Id,
@@ -84,9 +87,10 @@ pub enum TagV2 {
         trailing: Vec<String>,
     } = 4,
 
-    /// 'p' This is a reference to a user by public key, where the first string is
-    /// the PublicKey. The second string is defined in NIP-01 as an optional URL,
-    /// but subsqeuent NIPs define more data and interpretations.
+    /// 'p' This is a reference to a user by public key, where the first string
+    /// is the PublicKey. The second string is defined in NIP-01 as an
+    /// optional URL, but subsqeuent NIPs define more data and
+    /// interpretations.
     Pubkey {
         /// The public key of the identity that this event refers to
         pubkey: PublicKeyHex,
@@ -140,7 +144,8 @@ pub enum TagV2 {
         trailing: Vec<String>,
     } = 9,
 
-    /// A subject. The first string is the subject. Should only be in TextNote events.
+    /// A subject. The first string is the subject. Should only be in TextNote
+    /// events.
     Subject {
         /// The subject
         subject: String,
@@ -151,7 +156,8 @@ pub enum TagV2 {
 
     /// A nonce tag for Proof of Work
     Nonce {
-        /// A random number that makes the event hash meet the proof of work required
+        /// A random number that makes the event hash meet the proof of work
+        /// required
         nonce: String,
 
         /// The target number of bits for the proof of work
@@ -161,8 +167,9 @@ pub enum TagV2 {
         trailing: Vec<String>,
     } = 11,
 
-    /// There is no known nostr tag like this. This was a mistake, but we can't remove it
-    /// or deserialization of data serialized with this in mind will break.
+    /// There is no known nostr tag like this. This was a mistake, but we can't
+    /// remove it or deserialization of data serialized with this in mind
+    /// will break.
     Parameter {
         /// Parameter
         param: String,
@@ -194,7 +201,8 @@ pub enum TagV2 {
 
     /// Direct parent of an event, 'E' tag
     /// This is from <https://github.com/nostr-protocol/nips/pull/830> which may not happen
-    /// We should not create these, but we can support them if we encounter them.
+    /// We should not create these, but we can support them if we encounter
+    /// them.
     EventParent {
         /// The id of some other event that is the direct parent to this event
         id: Id,
@@ -825,7 +833,7 @@ impl<'de> Visitor<'de> for TagVisitor {
                     return Ok(TagV2::Other {
                         tag: tagname.to_string(),
                         data: parts,
-                    })
+                    });
                 }
             };
             let kind: EventKind = From::from(kindnum);
@@ -904,7 +912,7 @@ impl<'de> Visitor<'de> for TagVisitor {
                         return Ok(TagV2::Other {
                             tag: tagname.to_string(),
                             data,
-                        })
+                        });
                     }
                     Some(s) => data.push(s),
                 }

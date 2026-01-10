@@ -1,37 +1,36 @@
 use std::{
-    fs::{read_to_string, File},
+    fs::{File, read_to_string},
     io::{Read, Write},
     path::PathBuf,
     str::FromStr,
 };
 
-use anyhow::{bail, Ok, Result};
+use anyhow::{Ok, Result, bail};
 use crossterm::event::Event;
 use easy_cast::Cast;
 use gnostr_asyncgit::{
-    cached,
+    StatusItem, StatusItemType, cached,
     sync::{
-        self, commit::commit_message_prettify, get_config_string, CommitId, HookResult,
-        PrepareCommitMsgSource, RepoPathRef, RepoState,
+        self, CommitId, HookResult, PrepareCommitMsgSource, RepoPathRef, RepoState,
+        commit::commit_message_prettify, get_config_string,
     },
-    StatusItem, StatusItemType,
 };
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     widgets::Paragraph,
-    Frame,
 };
 
 use super::ExternalEditorPopup;
-use crate::popups::ExternalChatPopup;
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, TextInputComponent,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, TextInputComponent,
+        visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     options::SharedOptions,
+    popups::ExternalChatPopup,
     queue::{InternalEvent, NeedsUpdate, Queue},
     strings, try_or_popup,
     ui::style::SharedTheme,

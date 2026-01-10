@@ -1,8 +1,8 @@
 use std::{
     rc::Rc,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
     time::Duration,
 };
@@ -11,30 +11,30 @@ use anyhow::Result;
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    asyncjob::AsyncSingleJob,
-    sync::{
-        self, filter_commit_by_search, CommitId, LogFilterSearch, LogFilterSearchOptions,
-        RepoPathRef,
-    },
     AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification, AsyncLog, AsyncTags,
     CommitFilesParams, FetchStatus, ProgressPercent,
+    asyncjob::AsyncSingleJob,
+    sync::{
+        self, CommitId, LogFilterSearch, LogFilterSearchOptions, RepoPathRef,
+        filter_commit_by_search,
+    },
 };
 use indexmap::IndexSet;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::Span,
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 use sync::CommitTags;
 
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, CommitDetailsComponent, CommitList,
-        Component, DrawableComponent, EventState,
+        CommandBlocking, CommandInfo, CommitDetailsComponent, CommitList, Component,
+        DrawableComponent, EventState, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     popups::{FileTreeOpen, InspectCommitOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order},

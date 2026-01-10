@@ -1,18 +1,13 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::cli::NgitCommands;
-use crate::sub_commands::fetch;
-use crate::sub_commands::init;
-use crate::sub_commands::list;
-use crate::sub_commands::login;
-use crate::sub_commands::pull;
-use crate::sub_commands::push;
-use crate::sub_commands::query;
-use crate::sub_commands::send;
 use clap::Args;
-use nostr_sdk_0_34_0::prelude::*;
-
 use serde::ser::StdError;
+
+use crate::{
+    cli::NgitCommands,
+    sub_commands::{fetch, init, list, login, pull, push, query, send},
+    types::{Event, EventKind, Keys, Tag},
+};
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
