@@ -58,18 +58,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
-
-      - name: Run sccache-cache only on non-release runs
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        uses: mozilla-actions/sccache-action@v0.0.9
-
-      - name: Set Rust caching env vars only on non-release runs
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
@@ -87,7 +77,7 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          dist ${{ (!github.event.pull_request && format('host --allow-dirty --steps=create --tag={0}', github.ref_name)) || 'plan --allow-dirty' }} --output-format=json > plan-dist-manifest.json
+          dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --output-format=json > plan-dist-manifest.json
           echo "dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -128,6 +118,7 @@ jobs:
           git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
@@ -136,17 +127,6 @@ jobs:
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           fi
-
-      - name: Run sccache-cache
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        uses: mozilla-actions/sccache-action@v0.0.9
-
-      - name: Set Rust caching env vars
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
@@ -159,31 +139,9 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
-      - name: Install required cross-compilers (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
-      - name: Debug: Check installed aarch64 linkers (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found in PATH"
-          which aarch64-elf-gcc || echo "aarch64-elf-gcc not found in PATH"
-          ls -l /usr/bin/*aarch64* || echo "No aarch64 binaries in /usr/bin"
-      - name: Create symlink for aarch64-elf-gcc (Linux)
-        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo ln -s $(which aarch64-linux-gnu-gcc) /usr/local/bin/aarch64-elf-gcc || true
-          echo "/usr/local/bin" >> $GITHUB_PATH
-      - name: Install required cross-compilers (macOS)
-        if: runner.os == 'macOS'
-        run: brew install aarch64-elf-binutils aarch64-elf-gcc
-      - name: Configure aarch64-unknown-linux-gnu linker
-        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
-        run: |
-          mkdir -p .cargo
-          echo '[target.aarch64-unknown-linux-gnu]' > .cargo/config.toml
-          echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
       - name: Build artifacts
         run: |
+          # Actually do builds and make zips and whatnot
           dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "dist ran successfully"
       - id: cargo-dist
@@ -219,6 +177,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install cached dist
         uses: actions/download-artifact@v4
@@ -233,20 +192,10 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
-
-      - name: Run sccache-cache
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        uses: mozilla-actions/sccache-action@v0.0.9
-
-      - name: Set Rust caching env vars
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
       - id: cargo-dist
         shell: bash
         run: |
-          dist build --allow-dirty ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
+          dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
           echo "dist ran successfully"
 
           # Parse out what we just built and upload it to scratch storage
@@ -268,8 +217,8 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-22.04"
@@ -278,16 +227,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
-      - name: Run sccache-cache
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        uses: mozilla-actions/sccache-action@v0.0.9
-
-      - name: Set Rust caching env vars
-        #if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
       - name: Install cached dist
         uses: actions/download-artifact@v4
         with:
@@ -304,7 +245,7 @@ jobs:
       - id: host
         shell: bash
         run: |
-          dist host --allow-dirty ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
+          dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
           echo "artifacts uploaded and released successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -351,7 +292,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: "gnostr-org/homebrew-gnostr-org"
+          persist-credentials: true
+          repository: "gnostr-org/homebrew-gnostr"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
       - name: Fetch homebrew formulae
@@ -397,4 +339,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
