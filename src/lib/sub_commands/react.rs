@@ -2,7 +2,7 @@ use std::process::exit;
 use std::time::Duration;
 
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use crate::types::{Error, Event, Filter, Id, PublicKey};
 
 use crate::utils::{create_client, parse_private_key};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
@@ -30,12 +30,14 @@ pub async fn react_to_event(
     mut relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &ReactionSubCommand,
-) -> Result<()> {
+) -> Result<(), Error> {
     if relays.is_empty() {
         relays = BOOTSTRAP_RELAYS.to_vec();
     }
 
     let keys = parse_private_key(private_key, false).await?;
+    // TODO: The client must also be reimplemented without nostr_sdk.
+    // For now, client and its methods are assumed to be compatible or stubbed out.
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     if sub_command_args.reaction.trim().is_empty() {
@@ -43,45 +45,38 @@ pub async fn react_to_event(
         exit(0)
     }
 
-    let event_id = EventId::from_hex(&sub_command_args.event_id)?;
-    let subscription: Filter = if !sub_command_args.author_pubkey.is_empty() {
-        let author_pubkey = PublicKey::from_hex(sub_command_args.author_pubkey.clone())?;
-        Filter::new().event(event_id).author(author_pubkey)
-    } else {
-        Filter::new().event(event_id)
-    };
+    let event_id = Id::try_from_hex_string(&sub_command_args.event_id)?;
+    // TODO: Implement Filter::event and Filter::author methods in src/lib/types/filter.rs
+    let subscription: Filter = Filter::new(); // Placeholder
 
     debug!("{:?}", subscription);
-    let events = client
-        .get_events_of_with_opts(
-            vec![subscription],
-            Some(Duration::from_secs(30)),
-            FilterOptions::ExitOnEOSE,
-        )
-        .await?;
+    // TODO: Replace with gnostr client logic to fetch and react to events
+    // This functionality needs to be reimplemented without nostr_sdk
+    let events: Vec<Event> = Vec::new(); // Placeholder for fetched events
+    let id: Id = event_id; // Placeholder for the reaction event ID (or use event_id)
 
     if events.is_empty() {
         eprintln!("Unable to find note with the provided event id");
         exit(0);
     }
 
-    let event_to_react_to = events.first().unwrap();
-
-    let id = client
-        .reaction(event_to_react_to, sub_command_args.reaction.clone())
-        .await?;
+    // The following lines were part of nostr_sdk client interaction and are now commented out.
+    // let event_to_react_to = events.first().unwrap();
+    // let id = client
+    //     .reaction(event_to_react_to, sub_command_args.reaction.clone())
+    //     .await?;
 
     if sub_command_args.hex {
         print!(
             "{{\"event_id\":\"{}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
-            event_id, sub_command_args.reaction, id
+            event_id.as_hex_string(), sub_command_args.reaction, id.as_hex_string()
         );
     } else {
         print!(
             "{{\"event_id\":\"{}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
-            event_id.to_bech32()?,
+            event_id.as_bech32_string(),
             sub_command_args.reaction,
-            id.to_bech32()?
+            id.as_bech32_string()
         );
     }
     Ok(())

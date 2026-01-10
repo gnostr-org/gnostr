@@ -2,7 +2,8 @@ use crate::utils::{create_client, parse_private_key};
 use clap::Args;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, Keys, PrivateKey, PublicKey, Id, Filter};
 
 #[derive(Args, Debug)]
 pub struct BroadcastEventsSubCommand {
@@ -15,12 +16,12 @@ pub async fn broadcast_events(
     nsec: Option<String>,
     mut relays: Vec<String>,
     sub_command_args: &BroadcastEventsSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         relays = BOOTSTRAP_RELAYS.clone()
     }
 
-    let keys: Keys = if nsec.is_none() {
+    let keys = if nsec.is_none() {
         parse_private_key(None, false).await?
     } else {
         parse_private_key(nsec, false).await?

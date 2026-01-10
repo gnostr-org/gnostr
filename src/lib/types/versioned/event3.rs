@@ -147,6 +147,20 @@ impl RumorV3 {
 }
 
 impl EventV3 {
+    /// Create a dummy event for testing or placeholder purposes.
+    #[allow(dead_code)]
+    pub fn new_dummy() -> Self {
+        Self {
+            id: Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000000").unwrap(),
+            pubkey: PublicKey::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000000", false).unwrap(), // pubkey of all zeroes
+            created_at: Unixtime(0),
+            kind: EventKind::TextNote,
+            sig: Signature::zeroes(),
+            content: "Dummy event content".to_string(),
+            tags: Vec::new(),
+        }
+    }
+
     /// Check the validity of an event. This is useful if you deserialize an event
     /// from the network. If you create an event using new() it should already be
     /// trustworthy.
@@ -163,7 +177,6 @@ impl EventV3 {
 
         // Verify the signature
         self.pubkey.verify(serialized.as_bytes(), &self.sig)?;
-
         // Also verify the ID is the SHA256
         // (the above verify function also does it internally,
         //  so there is room for improvement here)
