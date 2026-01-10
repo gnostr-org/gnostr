@@ -222,7 +222,7 @@ impl Filter {
 
 
 impl fmt::Display for Filter {
-    fn fmt(&self, f: &mut fmt::Formatter<_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parts = Vec::new();
         if !self.ids.is_empty() { parts.push(format!("ids: {:?}", self.ids)); }
         if !self.authors.is_empty() { parts.push(format!("authors: {:?}", self.authors)); }

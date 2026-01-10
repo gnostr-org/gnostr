@@ -52,7 +52,7 @@ pub async fn set_channel_metadata(
     }
 
     if let Some(picture) = sub_command_args.picture.clone() {
-        metadata.picture = Some(UncheckedUrl::from_str(&picture).into_string());
+        metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
     let relay_url = sub_command_args
