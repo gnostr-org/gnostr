@@ -219,6 +219,20 @@ impl Filter {
     }
 }
 
+impl fmt::Display for Filter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut parts = Vec::new();
+        if !self.ids.is_empty() { parts.push(format!("ids: {:?}", self.ids)); }
+        if !self.authors.is_empty() { parts.push(format!("authors: {:?}", self.authors)); }
+        if !self.kinds.is_empty() { parts.push(format!("kinds: {:?}", self.kinds)); }
+        if !self.tags.is_empty() { parts.push(format!("tags: {:?}", self.tags)); }
+        if let Some(since) = self.since { parts.push(format!("since: {}", since)); }
+        if let Some(until) = self.until { parts.push(format!("until: {}", until)); }
+        if let Some(limit) = self.limit { parts.push(format!("limit: {}", limit)); }
+        write!(f, "Filter {{ {} }}", parts.join(", "))
+    }
+}
+
 fn serialize_tags<S>(tags: &BTreeMap<char, Vec<String>>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,

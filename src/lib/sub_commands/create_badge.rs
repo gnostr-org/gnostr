@@ -1,5 +1,6 @@
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey, Tag, PrivateKey, UncheckedUrl, ImageDimensions, Unixtime};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -39,7 +40,7 @@ pub async fn create_badge(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &CreateBadgeSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -64,7 +65,7 @@ pub async fn create_badge(
             _ => None,
         };
 
-        let url = UncheckedUrl::from(thumb_url);
+        let url = UncheckedUrl::from_string(thumb_url);
 
         if let Some((width, height)) = thumb_size {
             vec![(url, Some(ImageDimensions { width, height }))]
@@ -76,23 +77,50 @@ pub async fn create_badge(
     };
 
     let image_url: Option<UncheckedUrl> =
-        sub_command_args.image_url.clone().map(UncheckedUrl::from);
+        sub_command_args.image_url.clone().map(UncheckedUrl::from_string);
 
-    let event = EventBuilder::define_badge(
-        sub_command_args.id.clone(),
-        sub_command_args.name.clone(),
-        sub_command_args.description.clone(),
-        image_url,
-        image_size,
-        thumbnails,
-    )
-    .to_pow_event(&keys, difficulty_target)?;
+    // TODO: Implement EventBuilder::define_badge without nostr_sdk
+    // For now, create a dummy event and manually add tags for badge definition.
+    let mut event = Event::new_dummy();
+    event.kind = EventKind::BadgeDefinition;
+    event.created_at = Unixtime::now(); // Use current time
+    event.pubkey = keys.public_key(); // Set the author
+    event.content = sub_command_args.description.clone().unwrap_or_default();
+
+    // Add 'd' tag for unique identifier
+    event.tags.push(Tag::new_identifier(sub_command_args.id.clone()));
+
+    // Add 'name' tag
+    if let Some(name) = sub_command_args.name.clone() {
+        event.tags.push(Tag::new_name(name));
+    }
+
+    // Add 'image' tag
+    if let Some(url) = image_url {
+        if let Some(dims) = image_size {
+            event.tags.push(Tag::new_image(url, Some(dims.width), Some(dims.height)));
+        } else {
+            event.tags.push(Tag::new_image(url, None, None));
+        }
+    }
+
+    // Add 'thumb' tags
+    for (thumb_url, thumb_dims) in thumbnails {
+        if let Some(dims) = thumb_dims {
+            event.tags.push(Tag::new_thumb(thumb_url, Some(dims.width), Some(dims.height)));
+        } else {
+            event.tags.push(Tag::new_thumb(thumb_url, None, None));
+        }
+    }
+
+    // TODO: Sign the event with the keys (this would replace to_pow_event)
+    // For now, the dummy event has a dummy signature.
 
     // Publish event
     let event_id = client.send_event(event).await?;
     println!("Published badge definition with id:");
-    println!("Hex: {}", event_id.to_hex());
-    println!("Bech32: {}", event_id.to_bech32()?);
+    println!("Hex: {}", event_id.as_hex_string());
+    println!("Bech32: {}", event_id.as_bech32_string());
 
     Ok(())
 }

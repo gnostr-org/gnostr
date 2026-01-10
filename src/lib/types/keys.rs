@@ -9,6 +9,12 @@ pub struct Keys {
     public_key: PublicKey,
 }
 
+impl fmt::Display for Keys {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Keys {{ public_key: {} }}", self.public_key.as_hex_string())
+    }
+}
+
 impl Keys {
     pub fn generate() -> Self {
         let private_key = PrivateKey::generate();
