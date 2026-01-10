@@ -1,10 +1,11 @@
-use sha2::{Digest, Sha256};
 use std::{
     env, fs, io,
     io::{Error, ErrorKind, Write},
     path::Path,
     process::Command,
 };
+
+use sha2::{Digest, Sha256};
 
 fn _sync_nip44_vectors() {
     const NIP44_VECTORS_URL: &str =
@@ -120,7 +121,9 @@ fn install_sccache() {
         } else if command_exists("dnf") {
             "dnf"
         } else {
-            println!("cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually.");
+            println!(
+                "cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually."
+            );
             return;
         };
 
@@ -180,7 +183,9 @@ fn install_sccache() {
                 }
             }
         } else {
-            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
             panic!("Homebrew not found.");
         }
     } else if target_os == "windows" {
@@ -303,7 +308,9 @@ fn install_xcb_deps() {
                 ],
             )
         } else {
-            println!("cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually.");
+            println!(
+                "cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually."
+            );
             return;
         };
 
@@ -358,7 +365,9 @@ fn install_xcb_deps() {
                 }
             }
         } else {
-            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
             panic!("Failed to install required macOS dependencies.");
         }
     } else if target_os == "windows" {
