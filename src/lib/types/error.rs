@@ -238,5 +238,5 @@ pub enum Error {
 
     /// Boxed standard error
     #[error(transparent)]
-    Custom(#[from] Box<dyn std::error::Error>),
+    Custom(#[from] Box<dyn std::error::Error + Send + Sync + 'static>),
 }
