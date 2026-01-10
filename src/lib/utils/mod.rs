@@ -74,11 +74,11 @@ pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) ->
     let keys = match private_key {
         Some(pk) => {
             if pk.starts_with("nsec") {
-                let pk_obj = crate::types::PrivateKey::try_from_bech32_string(pk)?;
+                let pk_obj = crate::types::PrivateKey::try_from_bech32_string(&pk)?;
                 crate::types::Keys::new(pk_obj)
             } else {
                 // We assume it's a hex formatted private key
-                let pk_obj = crate::types::PrivateKey::try_from_hex_string(pk)?;
+                let pk_obj = crate::types::PrivateKey::try_from_hex_string(&pk)?;
                 crate::types::Keys::new(pk_obj)
             }
         }
@@ -122,7 +122,7 @@ pub async fn parse_key_or_id_to_hex_string(
     let hex_key_or_id = if input.starts_with("npub") {
         crate::types::PublicKey::try_from_bech32_string(&input, true)?.as_hex_string()
     } else if input.starts_with("nsec") {
-        crate::types::PrivateKey::try_from_bech32_string(input)?.as_hex_string()
+        crate::types::PrivateKey::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("note") {
         crate::types::Id::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("nprofile") {
