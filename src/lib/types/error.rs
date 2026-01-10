@@ -235,4 +235,8 @@ pub enum Error {
     /// Invalid NIP-19 prefix
     #[error("Invalid NIP-19 prefix")]
     InvalidNip19Prefix,
+
+    /// Boxed standard error
+    #[error(transparent)]
+    Custom(#[from] Box<dyn std::error::Error>),
 }
