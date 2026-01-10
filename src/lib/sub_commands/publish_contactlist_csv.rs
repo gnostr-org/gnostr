@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Keys, PreEventV3, PublicKey, Tag, Unixtime, UncheckedUrl, KeySigner};
+use crate::types::{Client, Event, EventKind, Keys, PreEventV3, PublicKey, Tag, Unixtime, UncheckedUrl, KeySigner, Signer};
 use serde::Deserialize;
 
 use crate::utils::{create_client, parse_private_key};

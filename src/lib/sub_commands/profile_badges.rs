@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Filter, Id, Keys, PreEventV3, Unixtime, KeySigner, Tag};
+use crate::types::{Client, Event, EventKind, Filter, Id, Keys, PreEventV3, Unixtime, KeySigner, Tag, Signer};
 
 use crate::utils::{create_client, parse_private_key};
 

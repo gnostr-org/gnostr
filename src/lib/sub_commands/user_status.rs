@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, PreEventV3, PublicKey, Tag, Unixtime, KeySigner};
+use crate::types::{Client, Event, EventKind, Id, Keys, PreEventV3, PublicKey, Tag, Unixtime, KeySigner, Signer};
 
 
 use crate::utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key};
