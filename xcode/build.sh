@@ -23,6 +23,7 @@ xcodebuild -project "$PROJECT" \
            -destination "platform=macOS,name=My Mac" \
            SUPPORTS_MACCATALYST=YES \
            SUPPORTS_IOS_DESIGNED_FOR_MAC=YES \
+           -allowProvisioningUpdates \
            clean build
 
 # 2. Bundle Verification
