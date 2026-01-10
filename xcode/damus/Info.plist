@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>app.vinux.nostr</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nostr</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>bitcoinbeach</string>
+		<string>breez</string>
+		<string>muun</string>
+		<string>zeusln</string>
+		<string>zebedee</string>
+		<string>lightning</string>
+		<string>squarecash</string>
+		<string>phoenix</string>
+		<string>lnlink</string>
+		<string>strike</string>
+		<string>bluewallet</string>
+		<string>walletofsatoshi</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+</dict>
+</plist>
