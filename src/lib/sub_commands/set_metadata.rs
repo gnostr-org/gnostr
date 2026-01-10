@@ -1,6 +1,9 @@
 use clap::Args;
-use nostr_sdk_0_32_0::nips::nip05;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{
+    Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner,
+};
+use serde_json::Value;
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -43,7 +46,7 @@ pub async fn set_metadata(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &SetMetadataSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -55,88 +58,76 @@ pub async fn set_metadata(
 
     // Name
     if let Some(name) = &sub_command_args.name {
-        metadata = metadata.name(name);
+        metadata.name = Some(name.clone());
     }
 
     // About
     if let Some(about) = &sub_command_args.about {
-        metadata = metadata.about(about);
+        metadata.about = Some(about.clone());
     }
 
     // Picture URL
     if let Some(picture_url) = &sub_command_args.picture {
-        let url = Url::parse(picture_url)?;
-        metadata = metadata.picture(url);
+        metadata.picture = Some(UncheckedUrl::from_str(picture_url));
     };
     // Banner URL
     if let Some(banner_url) = &sub_command_args.banner {
-        let url = Url::parse(banner_url)?;
-        metadata = metadata.banner(url);
+        metadata.banner = Some(UncheckedUrl::from_str(banner_url));
     };
 
     // NIP-05 identifier
     if let Some(nip05_identifier) = &sub_command_args.nip05 {
-        // Check if the nip05 is valid
-        nip05::verify(&keys.public_key(), nip05_identifier.as_str(), None).await?;
-        metadata = metadata.nip05(nip05_identifier);
+        // TODO: Implement nip05::verify without nostr_sdk
+        metadata.nip05 = Some(nip05_identifier.clone());
     }
 
     // LUD-06 string
     if let Some(lud06) = &sub_command_args.lud06 {
-        metadata = metadata.lud06(lud06);
+        metadata.lud06 = Some(lud06.clone());
     }
 
     // LUD-16 string
     if let Some(lud16) = &sub_command_args.lud16 {
-        metadata = metadata.lud16(lud16);
+        metadata.lud16 = Some(lud16.clone());
     }
 
     // Set custom fields
     for ef in sub_command_args.extra_field.iter() {
         let sef: Vec<&str> = ef.split(':').collect();
         if sef.len() == 2 {
-            metadata = metadata.custom_field(sef[0], sef[1])
+            metadata.custom.insert(sef[0].to_string(), Value::String(sef[1].to_string()));
         }
     }
 
+    let mut tags: Vec<Tag> = Vec::new();
     // External identity tags (NIP-39)
-    let mut identity_tags: Vec<Tag> = Vec::new();
     for identity in &sub_command_args.identities {
         let parts: Vec<&str> = identity.split(':').collect();
         if parts.len() == 3 {
             let platform_identity = format!("{}:{}", parts[0], parts[1]);
             let proof = parts[2].to_string();
-            let tag = Tag::custom(TagKind::Custom("i".into()), [platform_identity, proof]);
-            identity_tags.push(tag);
+            tags.push(Tag::new(&["i", &platform_identity, &proof]));
         } else {
             eprintln!("Invalid identity format: {}", identity);
         }
     }
 
-    let event = EventBuilder::metadata(&metadata)
-        .add_tags(identity_tags)
-        .to_pow_event(&keys, difficulty_target)
-        .unwrap();
-    //let mut tag_counter = 0;
-    //for tag in &event.tags.clone() {
-    //    //println!("tag {:?}\n{:?}", tag, &event.tags[tag_counter]);
-    //    tag_counter += 1;
-    //}
-    //println!(
-    //    "{} {} {} {} {:?} {} {}",
-    //    &event.id,
-    //    &event.pubkey,
-    //    &event.created_at,
-    //    &event.kind,
-    //    &event.tags,
-    //    &event.content,
-    //    &event.sig
-    //);
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::Metadata,
+        tags,
+        content: serde_json::to_string(&metadata)?,
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
+    
     let event_id = client.send_event(event).await?;
     if sub_command_args.hex {
-        print!("{{\"id\":\"{}\"}}", event_id);
+        print!("{{\"id\":\"{}\"}}", event_id.as_hex_string());
     } else {
-        print!("{{\"id\":\"{}\"}}", event_id.to_bech32()?);
+        print!("{{\"id\":\"{}\"}}", event_id.as_bech32_string());
     }
 
     Ok(())

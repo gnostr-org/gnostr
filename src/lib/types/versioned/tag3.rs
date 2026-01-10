@@ -5,6 +5,7 @@ use crate::types::{
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
+use std::fmt;
 
 /// A tag on an Event
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -515,6 +516,12 @@ impl TagV3 {
 impl fmt::Display for TagV3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}]", self.0.join(", "))
+    }
+}
+
+impl fmt::Display for TagV3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[({})]", self.0.join(", "))
     }
 }
 

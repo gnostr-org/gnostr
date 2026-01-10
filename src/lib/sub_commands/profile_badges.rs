@@ -2,7 +2,8 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, EventKind, Filter, Id, Keys, PreEventV3, Unixtime, KeySigner, Tag};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -21,50 +22,64 @@ pub async fn set_profile_badges(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &ProfileBadgesSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
 
     let keys = parse_private_key(private_key, false).await?;
-    let client: Client = create_client(&keys, relays, difficulty_target).await?;
+    let client = create_client(&keys, relays, difficulty_target).await?;
 
-    let badge_definition_event_ids: Vec<EventId> = sub_command_args
+    let badge_definition_event_ids: Vec<Id> = sub_command_args
         .badge_id
         .iter()
-        .map(|badge_id| EventId::from_str(badge_id).unwrap())
+        .map(|badge_id| Id::try_from_hex_string(badge_id).unwrap())
         .collect();
-    let badge_definition_filter = Filter::new()
-        .ids(badge_definition_event_ids)
-        .kind(Kind::BadgeDefinition);
-    let badge_defintion_events = client
+    let mut badge_definition_filter = Filter::new();
+    badge_definition_filter.ids = badge_definition_event_ids.into_iter().map(|id| id.into()).collect();
+    badge_definition_filter.kinds = vec![EventKind::BadgeDefinition];
+    
+    let badge_definition_events = client
         .get_events_of(vec![badge_definition_filter], Some(Duration::from_secs(10)))
-        .await
-        .unwrap();
+        .await?;
 
-    let award_event_ids: Vec<EventId> = sub_command_args
+    let award_event_ids: Vec<Id> = sub_command_args
         .award_id
         .iter()
-        .map(|award_event_id| EventId::from_str(award_event_id).unwrap())
+        .map(|award_event_id| Id::try_from_hex_string(award_event_id).unwrap())
         .collect();
-    let badge_award_filter = Filter::new().ids(award_event_ids).kind(Kind::BadgeAward);
+    let mut badge_award_filter = Filter::new();
+    badge_award_filter.ids = award_event_ids.into_iter().map(|id| id.into()).collect();
+    badge_award_filter.kinds = vec![EventKind::BadgeAward];
+
     let badge_award_events = client
         .get_events_of(vec![badge_award_filter], Some(Duration::from_secs(10)))
-        .await
-        .unwrap();
+        .await?;
 
-    let event = EventBuilder::profile_badges(
-        badge_defintion_events,
-        badge_award_events,
-        &keys.public_key(),
-    )?
-    .to_pow_event(&keys, difficulty_target)?;
+    let mut tags = Vec::new();
+    for event in badge_definition_events {
+        tags.push(Tag::new(&["a", &format!("{}:{}", u32::from(event.kind), event.pubkey.as_hex_string())]));
+    }
+    for event in badge_award_events {
+        tags.push(Tag::new(&["e", &event.id.as_hex_string()]));
+    }
+
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::ProfileBadges,
+        tags,
+        content: "".to_string(),
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     // Publish event
     let event_id = client.send_event(event).await?;
     println!("Published profile badges event with id:");
-    println!("Hex: {}", event_id.to_hex());
-    println!("Bech32: {}", event_id.to_bech32()?);
+    println!("Hex: {}", event_id.as_hex_string());
+    println!("Bech32: {}", event_id.as_bech32_string());
 
     Ok(())
 }

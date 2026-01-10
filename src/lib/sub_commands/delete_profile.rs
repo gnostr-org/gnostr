@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey, Tag, PreEventV3, Unixtime, KeySigner};
+use serde_json::Value;
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -29,7 +31,7 @@ pub async fn delete(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &DeleteProfileSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -45,50 +47,59 @@ pub async fn delete(
         println!("checking author events...");
 
         // Convert kind number to Kind struct
-        let kinds: Vec<Kind> = sub_command_args
+        let kinds: Vec<EventKind> = sub_command_args
             .kinds
             .clone()
             .unwrap_or_default()
             .into_iter()
-            .map(|x| x as u16)
-            .map(Kind::from)
+            .map(|x| EventKind::from(x as u32))
             .collect();
 
+        let mut filter = Filter::new();
+        filter.authors = authors.iter().map(|p| (*p).into()).collect();
+        filter.kinds = kinds;
+
         let events: Vec<Event> = client
-            .get_events_of(vec![Filter::new().authors(authors).kinds(kinds)], timeout)
+            .get_events_of(vec![filter], timeout)
             .await?;
 
-        let event_ids: Vec<EventIdOrCoordinate> = events
+        let event_tags: Vec<Tag> = events
             .iter()
-            .map(|event| EventIdOrCoordinate::from(event.id))
-            .collect::<Vec<EventIdOrCoordinate>>();
+            .map(|event| Tag::new(&["e", &event.id.as_hex_string()]))
+            .collect();
 
         println!("Retrieved events to delete: {}", events.len());
 
-        let delete_event: Event = EventBuilder::delete_with_reason(
-            event_ids,
-            sub_command_args.reason.clone().unwrap_or_default(),
-        )
-        .to_pow_event(&keys, difficulty_target)
-        .unwrap();
+        let pre_event = PreEventV3 {
+            pubkey: keys.public_key(),
+            created_at: Unixtime::now(),
+            kind: EventKind::EventDeletion,
+            tags: event_tags,
+            content: sub_command_args.reason.clone().unwrap_or_default(),
+        };
+
+        let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+        let delete_event = signer.sign_event(pre_event)?;
 
         let event_id = client.send_event(delete_event).await?;
 
         if !sub_command_args.hex {
-            println!("All event deleted in event {}", event_id.to_bech32()?);
+            println!("All event deleted in event {}", event_id.as_bech32_string());
         } else {
-            println!("All event deleted in event {}", event_id.to_hex());
+            println!("All event deleted in event {}", event_id.as_hex_string());
         }
     } else {
         // Not a perfect delete but multiple clients trigger off of this metadata
-        let metadata = Metadata::default()
-            .name("Deleted")
-            .display_name("Deleted")
-            .about("Deleted")
-            .custom_field("deleted", Value::Bool(true));
+        let mut metadata = Metadata::default();
+        metadata.name = Some("Deleted".to_string());
+        metadata.display_name = Some("Deleted".to_string());
+        metadata.about = Some("Deleted".to_string());
+        let mut custom_fields = std::collections::BTreeMap::new();
+        custom_fields.insert("deleted".to_string(), Value::Bool(true));
+        metadata.custom = custom_fields;
 
         let event_id = client.set_metadata(&metadata).await?;
-        println!("Metadata updated ({})", event_id.to_bech32()?);
+        println!("Metadata updated ({})", event_id.as_bech32_string());
     }
     Ok(())
 }

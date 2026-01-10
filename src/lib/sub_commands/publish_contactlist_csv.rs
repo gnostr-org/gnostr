@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, EventKind, Keys, PreEventV3, PublicKey, Tag, Unixtime, UncheckedUrl, KeySigner};
 use serde::Deserialize;
 
 use crate::utils::{create_client, parse_private_key};
@@ -33,7 +34,7 @@ pub async fn publish_contact_list_from_csv_file(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &PublishContactListCsvSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -42,22 +43,32 @@ pub async fn publish_contact_list_from_csv_file(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let mut rdr = csv::Reader::from_path(&sub_command_args.filepath)?;
-    let mut contacts: Vec<Contact> = vec![];
+    let mut tags: Vec<Tag> = vec![];
     for result in rdr.deserialize() {
-        let tag: ContactListTag = result?;
-        let relay_url = match tag.relay {
-            Some(relay) => Some(UncheckedUrl::from_str(&relay)?),
-            None => None,
-        };
-        let clt = Contact {
-            public_key: PublicKey::from_str(&tag.pubkey)?,
-            relay_url,
-            alias: tag.petname,
-        };
-        contacts.push(clt);
+        let tag_data: ContactListTag = result?;
+        let pubkey = PublicKey::try_from_hex_string(&tag_data.pubkey, true)?;
+        let mut tag_vec = vec!["p".to_string(), pubkey.as_hex_string()];
+        if let Some(relay) = tag_data.relay {
+            tag_vec.push(relay);
+        }
+        if let Some(petname) = tag_data.petname {
+            tag_vec.push(petname);
+        }
+        tags.push(Tag::from_strings(tag_vec));
     }
 
-    client.set_contact_list(contacts).await?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::ContactList,
+        tags,
+        content: "".to_string(),
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
+
+    client.send_event(event).await?;
     println!("Contact list imported!");
     Ok(())
 }

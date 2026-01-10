@@ -2,6 +2,7 @@
 // TODO: Implement actual Keys functionality
 
 use crate::types::{Error, PrivateKey, PublicKey};
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Keys {

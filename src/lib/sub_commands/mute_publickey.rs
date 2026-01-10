@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Keys, PublicKey};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -20,7 +21,7 @@ pub async fn mute_publickey(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &MutePublickeySubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -29,10 +30,10 @@ pub async fn mute_publickey(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     // Set up pubkey to mute
-    let pubkey_to_mute = key::PublicKey::from_str(sub_command_args.public_key.as_str())?;
+    let pubkey_to_mute = PublicKey::try_from_hex_string(&sub_command_args.public_key, true)?;
 
     let event_id = client
-        .mute_channel_user(pubkey_to_mute, sub_command_args.reason.clone())
+        .mute_channel_user(pubkey_to_mute, sub_command_args.reason.clone().unwrap_or_default())
         .await?;
 
     println!("Public key {} muted in event {}", pubkey_to_mute, event_id);

@@ -1,7 +1,10 @@
 use std::borrow::Cow;
 
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{
+    Client, Event, EventKind, Id, Keys, TagV3 as Tag, PrivateKey, PreEventV3, Unixtime, KeySigner,
+};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -145,7 +148,7 @@ pub async fn create_custom_event(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &CustomEventCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -154,7 +157,7 @@ pub async fn create_custom_event(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     // Parse kind input
-    let kind = Kind::Custom(sub_command_args.kind);
+    let kind = EventKind::from(sub_command_args.kind as u32);
 
     // Set content
     let content = sub_command_args
@@ -165,25 +168,30 @@ pub async fn create_custom_event(
     // Set up tags
     let mut tags: Vec<Tag> = vec![];
 
-    for tag in sub_command_args.tags.clone().iter() {
-        let parts: Vec<String> = tag.split('|').map(String::from).collect();
-        let tag_kind = parts.first().unwrap().clone();
-        tags.push(Tag::custom(
-            TagKind::Custom(Cow::from(tag_kind)),
-            parts[1..].to_vec(),
-        ));
+    for tag_str in sub_command_args.tags.clone().iter() {
+        let parts: Vec<String> = tag_str.split('|').map(String::from).collect();
+        tags.push(Tag::from_strings(parts));
     }
 
-    // Initialize event builder
-    let event = EventBuilder::new(kind, content, tags).to_pow_event(&keys, difficulty_target)?;
+    // TODO: Implement Proof of Work (difficulty_target)
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind,
+        tags,
+        content,
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     // Publish event
     let event_id = client.send_event(event).await?;
 
     if !sub_command_args.hex {
-        println!("{}", event_id.to_bech32()?);
+        println!("{}", event_id.as_bech32_string());
     } else {
-        println!("{}", event_id.to_hex());
+        println!("{}", event_id.as_hex_string());
     }
 
     Ok(())

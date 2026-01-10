@@ -1,5 +1,6 @@
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Id, Keys};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -21,7 +22,7 @@ pub async fn hide_public_channel_message(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &HidePublicChannelMessageSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -30,10 +31,10 @@ pub async fn hide_public_channel_message(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     // Set up eventId
-    let event_id_to_hide = EventId::from_hex(sub_command_args.event_id.clone())?;
+    let event_id_to_hide = Id::try_from_hex_string(&sub_command_args.event_id)?;
 
     client
-        .hide_channel_msg(event_id_to_hide, sub_command_args.reason.clone())
+        .hide_channel_msg(event_id_to_hide, sub_command_args.reason.clone().unwrap_or_default())
         .await?;
     println!("Channel message with id {event_id_to_hide} successfully hidden");
 

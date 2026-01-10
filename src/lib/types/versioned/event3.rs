@@ -4,6 +4,7 @@ use crate::types::{
     MilliSatoshi, NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3,
     Unixtime, ZapData,
 };
+use std::fmt;
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;

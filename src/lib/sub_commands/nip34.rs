@@ -1,7 +1,10 @@
 use std::borrow::Cow;
 
 use clap::{Args, Subcommand};
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{
+    Client, Event, EventKind, Id, Keys, TagV3 as Tag, PrivateKey, PreEventV3, Unixtime, KeySigner,
+};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -176,7 +179,7 @@ pub async fn launch(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &Nip34Command,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     match &sub_command_args.command {
         Nip34SubCommand::RepoAnnouncement(args) => {
             repo_announcement(private_key, relays, difficulty_target, args).await?;
@@ -205,7 +208,7 @@ async fn repo_announcement(
     relays: Vec<String>,
     difficulty_target: u8,
     args: &RepoAnnouncementCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -214,44 +217,33 @@ async fn repo_announcement(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let mut tags = vec![
-        Tag::custom(TagKind::Custom(Cow::from("d")), vec![args.name.clone()]),
-        Tag::custom(TagKind::Custom(Cow::from("name")), vec![args.name.clone()]),
-        Tag::custom(
-            TagKind::Custom(Cow::from("description")),
-            vec![args.description.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("web")),
-            vec![args.web_url.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("clone")),
-            vec![args.clone_url.clone()],
-        ),
-        Tag::custom(TagKind::Custom(Cow::from("relays")), args.relays.clone()),
-        Tag::custom(
-            TagKind::Custom(Cow::from("r")),
-            vec![args.root_commit.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("maintainers")),
-            args.maintainers.clone(),
-        ),
+        Tag::new(&["d", &args.name]),
+        Tag::new(&["name", &args.name]),
+        Tag::new(&["description", &args.description]),
+        Tag::new(&["web", &args.web_url]),
+        Tag::new(&["clone", &args.clone_url]),
+        Tag::new(&["relays", &args.relays.join(" ")]),
+        Tag::new(&["r", &args.root_commit]),
+        Tag::new(&["maintainers", &args.maintainers.join(" ")]),
     ];
 
     for hashtag in &args.hashtags {
-        tags.push(Tag::custom(
-            TagKind::Custom(Cow::from("t")),
-            vec![hashtag.clone()],
-        ));
+        tags.push(Tag::new(&["t", hashtag]));
     }
 
-    let event =
-        EventBuilder::new(Kind::Custom(30617), "", tags).to_pow_event(&keys, difficulty_target)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::from(30617),
+        tags,
+        content: "".to_string(),
+    };
+    
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     let event_id = client.send_event(event).await?;
-
-    println!("{}", event_id.to_bech32()?);
+    println!("{}", event_id.as_bech32_string());
 
     Ok(())
 }
@@ -261,7 +253,7 @@ async fn repo_state(
     relays: Vec<String>,
     difficulty_target: u8,
     args: &RepoStateCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -269,27 +261,28 @@ async fn repo_state(
     let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
-    let mut tags = vec![Tag::custom(
-        TagKind::Custom(Cow::from("d")),
-        vec![args.identifier.clone()],
-    )];
+    let mut tags = vec![Tag::new(&["d", &args.identifier])];
 
     for r in &args.refs {
         let parts: Vec<&str> = r.split('|').collect();
         if parts.len() == 2 {
-            tags.push(Tag::custom(
-                TagKind::Custom(Cow::from(parts[0])),
-                vec![parts[1].to_string()],
-            ));
+            tags.push(Tag::new(&[parts[0], parts[1]]));
         }
     }
 
-    let event =
-        EventBuilder::new(Kind::Custom(30618), "", tags).to_pow_event(&keys, difficulty_target)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::from(30618),
+        tags,
+        content: "".to_string(),
+    };
+    
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     let event_id = client.send_event(event).await?;
-
-    println!("{}", event_id.to_bech32()?);
+    println!("{}", event_id.as_bech32_string());
 
     Ok(())
 }
@@ -299,7 +292,7 @@ async fn patch(
     relays: Vec<String>,
     difficulty_target: u8,
     args: &PatchCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -308,23 +301,24 @@ async fn patch(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let tags = vec![
-        Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
-        Tag::custom(
-            TagKind::Custom(Cow::from("commit")),
-            vec![args.commit.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("parent-commit")),
-            vec![args.parent_commit.clone()],
-        ),
+        Tag::new(&["a", &args.repo]),
+        Tag::new(&["commit", &args.commit]),
+        Tag::new(&["parent-commit", &args.parent_commit]),
     ];
 
-    let event = EventBuilder::new(Kind::Custom(1617), args.content.clone(), tags)
-        .to_pow_event(&keys, difficulty_target)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::from(1617),
+        tags,
+        content: args.content.clone(),
+    };
+    
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     let event_id = client.send_event(event).await?;
-
-    println!("{}", event_id.to_bech32()?);
+    println!("{}", event_id.as_bech32_string());
 
     Ok(())
 }
@@ -334,7 +328,7 @@ async fn pull_request(
     relays: Vec<String>,
     difficulty_target: u8,
     args: &PullRequestCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -343,27 +337,25 @@ async fn pull_request(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let tags = vec![
-        Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
-        Tag::custom(
-            TagKind::Custom(Cow::from("subject")),
-            vec![args.subject.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("branch-name")),
-            vec![args.branch_name.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(Cow::from("merge-base")),
-            vec![args.merge_base.clone()],
-        ),
+        Tag::new(&["a", &args.repo]),
+        Tag::new(&["subject", &args.subject]),
+        Tag::new(&["branch-name", &args.branch_name]),
+        Tag::new(&["merge-base", &args.merge_base]),
     ];
 
-    let event =
-        EventBuilder::new(Kind::Custom(1618), "", tags).to_pow_event(&keys, difficulty_target)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::from(1618),
+        tags,
+        content: "".to_string(),
+    };
 
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
+    
     let event_id = client.send_event(event).await?;
-
-    println!("{}", event_id.to_bech32()?);
+    println!("{}", event_id.as_bech32_string());
 
     Ok(())
 }
@@ -373,7 +365,7 @@ async fn issue(
     relays: Vec<String>,
     difficulty_target: u8,
     args: &IssueCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -382,19 +374,23 @@ async fn issue(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     let tags = vec![
-        Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
-        Tag::custom(
-            TagKind::Custom(Cow::from("subject")),
-            vec![args.subject.clone()],
-        ),
+        Tag::new(&["a", &args.repo]),
+        Tag::new(&["subject", &args.subject]),
     ];
 
-    let event = EventBuilder::new(Kind::Custom(1621), args.content.clone(), tags)
-        .to_pow_event(&keys, difficulty_target)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::from(1621),
+        tags,
+        content: args.content.clone(),
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     let event_id = client.send_event(event).await?;
-
-    println!("{}", event_id.to_bech32()?);
+    println!("{}", event_id.as_bech32_string());
 
     Ok(())
 }
@@ -404,7 +400,7 @@ async fn status(
     relays: Vec<String>,
     difficulty_target: u8,
     args: &StatusCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -414,56 +410,49 @@ async fn status(
 
     let (kind, tags) = match &args.command {
         StatusSubCommand::Open(args) => (
-            Kind::Custom(1630),
+            EventKind::from(1630),
             vec![
-                Tag::custom(
-                    TagKind::Custom(Cow::from("e")),
-                    vec![args.event_id.clone(), "root".to_string()],
-                ),
-                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
+                Tag::new(&["e", &args.event_id, "root"]),
+                Tag::new(&["a", &args.repo]),
             ],
         ),
         StatusSubCommand::Applied(args) => (
-            Kind::Custom(1631),
+            EventKind::from(1631),
             vec![
-                Tag::custom(
-                    TagKind::Custom(Cow::from("e")),
-                    vec![args.event_id.clone(), "root".to_string()],
-                ),
-                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
-                Tag::custom(
-                    TagKind::Custom(Cow::from("applied-as-commits")),
-                    args.applied_as_commits.clone(),
-                ),
+                Tag::new(&["e", &args.event_id, "root"]),
+                Tag::new(&["a", &args.repo]),
+                Tag::new(&["applied-as-commits", &args.applied_as_commits.join(",")]),
             ],
         ),
         StatusSubCommand::Closed(args) => (
-            Kind::Custom(1632),
+            EventKind::from(1632),
             vec![
-                Tag::custom(
-                    TagKind::Custom(Cow::from("e")),
-                    vec![args.event_id.clone(), "root".to_string()],
-                ),
-                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
+                Tag::new(&["e", &args.event_id, "root"]),
+                Tag::new(&["a", &args.repo]),
             ],
         ),
         StatusSubCommand::Draft(args) => (
-            Kind::Custom(1633),
+            EventKind::from(1633),
             vec![
-                Tag::custom(
-                    TagKind::Custom(Cow::from("e")),
-                    vec![args.event_id.clone(), "root".to_string()],
-                ),
-                Tag::custom(TagKind::Custom(Cow::from("a")), vec![args.repo.clone()]),
+                Tag::new(&["e", &args.event_id, "root"]),
+                Tag::new(&["a", &args.repo]),
             ],
         ),
     };
 
-    let event = EventBuilder::new(kind, "", tags).to_pow_event(&keys, difficulty_target)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind,
+        tags,
+        content: "".to_string(),
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
 
     let event_id = client.send_event(event).await?;
-
-    println!("{}", event_id.to_bech32()?);
+    println!("{}", event_id.as_bech32_string());
 
     Ok(())
 }
