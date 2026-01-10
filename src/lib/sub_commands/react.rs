@@ -38,7 +38,7 @@ pub async fn react_to_event(
     let keys = parse_private_key(private_key, false).await?;
     // TODO: The client must also be reimplemented without nostr_sdk.
     // For now, client and its methods are assumed to be compatible or stubbed out.
-    let client = create_client(&keys, relays, difficulty_target).await?;
+    let _client = create_client(&keys, relays, difficulty_target).await?;
 
     if sub_command_args.reaction.trim().is_empty() {
         eprintln!("Reaction does not contain any content");
