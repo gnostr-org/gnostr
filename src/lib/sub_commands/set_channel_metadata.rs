@@ -66,7 +66,7 @@ pub async fn set_channel_metadata(
         tags: vec![Tag::new(&[
             "e",
             &channel_id.as_hex_string(),
-            relay_url.map_or("", |url| url.0.as_str()),
+            relay_url.as_ref().map_or("", |s| s.as_str()),
         ])],
         content: serde_json::to_string(&metadata)?,
     };
