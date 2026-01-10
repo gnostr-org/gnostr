@@ -11,7 +11,7 @@ pub struct FetchByIdSubCommand {
     pub id: Option<String>,
     /// Relay URL to connect to
     #[arg(short, long)]
-    pub relay_url: Option<String>,
+    pub relay: Option<String>,
 }
 
 pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn std::error::Error>> {
@@ -30,7 +30,7 @@ pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn s
             .to_string()
             .into(),
     };
-    let relay_url = match args.relay_url.clone() {
+    let relay_url = match args.relay.clone() {
         Some(u) => u,
         None => BOOTSTRAP_RELAYS[0].to_string(),
     };
