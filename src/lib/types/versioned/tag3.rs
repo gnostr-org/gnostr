@@ -324,12 +324,12 @@ impl TagV3 {
         Ok((relay, marker))
     }
 
-    /// Create a "d" tag
+    /// Create a new 'd' identifier tag
     pub fn new_identifier(identifier: String) -> TagV3 {
         TagV3(vec!["d".to_string(), identifier])
     }
 
-    /// Parse a "d" tag
+    /// Parse a 'd' tag
     pub fn parse_identifier(&self) -> Result<String, Error> {
         if self.0.len() < 2 {
             return Err(Error::TagMismatch);
@@ -340,7 +340,36 @@ impl TagV3 {
         Ok(self.0[1].to_string())
     }
 
-    /// Create a "subject" tag
+    /// Create a new 'name' tag
+    pub fn new_name(name: String) -> TagV3 {
+        TagV3(vec!["name".to_string(), name])
+    }
+
+    /// Create a new 'image' tag
+    pub fn new_image(url: UncheckedUrl, width: Option<u64>, height: Option<u64>) -> TagV3 {
+        let mut v = vec!["image".to_owned(), url.0];
+        if let Some(w) = width {
+            v.push(format!("{}", w));
+        }
+        if let Some(h) = height {
+            v.push(format!("{}", h));
+        }
+        TagV3(v)
+    }
+
+    /// Create a new 'thumb' tag
+    pub fn new_thumb(url: UncheckedUrl, width: Option<u64>, height: Option<u64>) -> TagV3 {
+        let mut v = vec!["thumb".to_owned(), url.0];
+        if let Some(w) = width {
+            v.push(format!("{}", w));
+        }
+        if let Some(h) = height {
+            v.push(format!("{}", h));
+        }
+        TagV3(v)
+    }
+
+    /// Create a new 'subject' tag
     pub fn new_subject(subject: String) -> TagV3 {
         TagV3(vec!["subject".to_string(), subject])
     }
@@ -464,6 +493,11 @@ impl TagV3 {
         TagV3(vec!["proxy".to_owned(), protocol, id])
     }
 
+    /// Create a generic tag with a name and value
+    pub fn new_tag(tagname: &str, value: &str) -> TagV3 {
+        TagV3(vec![tagname.to_owned(), value.to_owned()])
+    }
+
     /// parse proxy tag
     pub fn parse_proxy(&self) -> Result<(String, String), Error> {
         if self.0.len() < 3 {
@@ -475,6 +509,12 @@ impl TagV3 {
         let protocol = self.0[1].to_owned();
         let id = self.0[2].to_owned();
         Ok((protocol, id))
+    }
+}
+
+impl fmt::Display for TagV3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}]", self.0.join(", "))
     }
 }
 

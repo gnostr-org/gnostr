@@ -146,6 +146,20 @@ impl RumorV3 {
     }
 }
 
+impl fmt::Display for EventV3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Event {{ id: {}, pubkey: {}, kind: {}, created_at: {}, content: {}... }}",
+            self.id.as_hex_string(),
+            self.pubkey.as_hex_string(),
+            u32::from(self.kind),
+            self.created_at.0,
+            &self.content[..self.content.len().min(50)] // Truncate content for display
+        )
+    }
+}
+
 impl EventV3 {
     /// Create a dummy event for testing or placeholder purposes.
     #[allow(dead_code)]
@@ -159,6 +173,23 @@ impl EventV3 {
             content: "Dummy event content".to_string(),
             tags: Vec::new(),
         }
+    }
+
+    /// Sign a `PreEventV3` with the provided `PrivateKey` and return an `EventV3`.
+    pub fn sign_with_private_key(preevent: PreEventV3, private_key: &PrivateKey) -> Result<Self, Error> {
+        let id = preevent.hash()?;
+        let signer = KeySigner::from_private_key(private_key.clone(), "", 1)?;
+        let sig = signer.sign_id(id)?;
+
+        Ok(EventV3 {
+            id,
+            pubkey: preevent.pubkey,
+            created_at: preevent.created_at,
+            kind: preevent.kind,
+            tags: preevent.tags,
+            content: preevent.content,
+            sig,
+        })
     }
 
     /// Check the validity of an event. This is useful if you deserialize an event

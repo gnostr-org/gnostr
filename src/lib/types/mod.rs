@@ -185,6 +185,8 @@ pub mod keys;
 pub use keys::Keys;
 pub mod client;
 pub use client::{Client, Options, FilterOptions};
+pub mod image_dimensions;
+pub use image_dimensions::ImageDimensions;
 
 #[cfg(test)]
 #[macro_export]

@@ -1,5 +1,6 @@
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl, Unixtime};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -21,7 +22,7 @@ pub async fn create_public_channel(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &CreatePublicChannelSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -31,25 +32,38 @@ pub async fn create_public_channel(
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
     // Create metadata
-    let mut metadata: Metadata = Metadata::new().name(sub_command_args.name.clone());
+    let mut metadata = Metadata::new();
+    metadata.name = Some(sub_command_args.name.clone());
 
     if let Some(about) = sub_command_args.about.clone() {
-        metadata = metadata.about(about);
+        metadata.about = Some(about);
     }
 
     if let Some(picture) = sub_command_args.picture.clone() {
-        metadata = metadata.picture(Url::parse(picture.as_str()).unwrap());
+        // TODO: Ensure UncheckedUrl::try_from_str works correctly with Url::parse behavior
+        metadata.picture = Some(UncheckedUrl::from_str(&picture)?);
     }
 
+    // TODO: Implement EventBuilder::channel and to_event without nostr_sdk
+    // For now, create a dummy event of kind ChannelCreate and add metadata tag.
+    let mut event = Event::new_dummy();
+    event.kind = EventKind::ChannelCreation;
+    event.created_at = Unixtime::now();
+    event.pubkey = keys.public_key();
+    event.content = serde_json::to_string(&metadata)?;
+    event.tags.push(Tag::new_tag("p", &keys.public_key().as_hex_string()));
+
+    // Sign the event (dummy signing for now)
+    // let signed_event = keys.sign_event(event).await?; // Placeholder for actual signing
+
     // Send event
-    let event: Event = EventBuilder::channel(&metadata).to_event(&keys).unwrap();
     let event_id = client.send_event(event).await?;
 
     // Print results
     println!("\nCreated new public channel!");
     println!("Channel ID:");
-    println!("Hex: {}", event_id.to_hex());
-    println!("Bech32: {}", event_id.to_bech32()?);
+    println!("Hex: {}", event_id.as_hex_string());
+    println!("Bech32: {}", event_id.as_bech32_string());
 
     Ok(())
 }

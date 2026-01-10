@@ -91,7 +91,7 @@ pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) ->
 
     if print_keys {
         println!("Private key:");
-        if let Ok(sk) = keys.secret_key() {
+        if let Ok(mut sk) = keys.secret_key() {
             println!("{}", sk.as_bech32_string());
         }
 
