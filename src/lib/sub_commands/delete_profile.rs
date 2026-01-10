@@ -92,7 +92,7 @@ pub async fn delete(
         // Not a perfect delete but multiple clients trigger off of this metadata
         let mut metadata = Metadata::default();
         metadata.name = Some("Deleted".to_string());
-        let mut other = std::collections::BTreeMap::new();
+        let mut other = serde_json::Map::new();
         other.insert("display_name".to_string(), Value::String("Deleted".to_string()));
         other.insert("about".to_string(), Value::String("Deleted".to_string()));
         other.insert("deleted".to_string(), Value::Bool(true));
