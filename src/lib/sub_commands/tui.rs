@@ -28,7 +28,6 @@ use gnostr_asyncgit::{
     AsyncGitNotification,
     sync::{RepoPath, utils::repo_work_dir},
 };
-use nostr_sdk_0_37_0::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::{self, scope_time};
@@ -43,6 +42,7 @@ use crate::{
     input::{Input, InputEvent, InputState},
     keys::KeyConfig,
     spinner::Spinner,
+    types::Keys,
     ui::style::Theme,
     watcher::RepoWatcher,
     weeble, wobble,
