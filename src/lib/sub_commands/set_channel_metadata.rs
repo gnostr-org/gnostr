@@ -55,10 +55,9 @@ pub async fn set_channel_metadata(
         metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
-    let relay_url = sub_command_args
+    let relay_url: Option<String> = sub_command_args
         .recommended_relay
-        .clone()
-        .map(|relay_string| UncheckedUrl::from_str(&relay_string));
+        .clone();
 
     let pre_event = PreEventV3 {
         pubkey: keys.public_key(),
@@ -67,7 +66,7 @@ pub async fn set_channel_metadata(
         tags: vec![Tag::new(&[
             "e",
             &channel_id.as_hex_string(),
-            relay_url.map_or("".to_string(), |url| url.as_str().to_string()),
+            relay_url.map_or("", |url| url.0.as_str()),
         ])],
         content: serde_json::to_string(&metadata)?,
     };
