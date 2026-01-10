@@ -3,7 +3,7 @@ use std::path::Path;
 use anyhow::{Context, Result, bail};
 use console::Style;
 
-use crate::types::{NEvent, ToBech32, Tag, Id};
+use crate::types::{Id, NEvent, Tag, ToBech32};
 use crate::{
     //cli::Cli,
     cli_interactor::{
@@ -81,7 +81,7 @@ pub async fn launch(
         }
     }
 
-    let mut commits: Vec<Sha1Hash> = {
+    let mut commits: Vec<String> = {
         if args.since_or_range.is_empty() {
             let branch_name = git_repo.get_checked_out_branch_name()?;
             let proposed_commits = if branch_name.eq(main_branch_name) {
@@ -276,7 +276,7 @@ pub async fn launch(
     Ok(())
 }
 
-fn choose_commits(git_repo: &Repo, proposed_commits: Vec<Sha1Hash>) -> Result<Vec<Sha1Hash>> {
+fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<String>> {
     let mut proposed_commits = if proposed_commits.len().gt(&10) {
         vec![]
     } else {
@@ -341,7 +341,7 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<Sha1Hash>) -> Result<Ve
     Ok(selected_commits)
 }
 
-fn summarise_commit_for_selection(git_repo: &Repo, commit: &Sha1Hash) -> Result<String> {
+fn summarise_commit_for_selection(git_repo: &Repo, commit: &String) -> Result<String> {
     let references = git_repo.get_refs(commit)?;
     let dim = Style::new().color256(247);
     let prefix = format!("({})", git_repo.get_commit_author(commit)?[0],);
