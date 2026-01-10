@@ -1,7 +1,4 @@
-use std::io;
-use std::process::Command;
-use std::thread;
-use std::time::Duration;
+use std::{io, process::Command, thread, time::Duration};
 
 fn main() {
     // --- Path setup ---

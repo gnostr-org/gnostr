@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
 
-    use crate::utils::retry::GnostrRetry;
+    use std::{fs, sync::Arc};
+
     use actix_test::start;
     use anyhow::Result;
     use futures_util::{SinkExt, StreamExt};
@@ -9,12 +10,11 @@ mod tests {
     use gnostr_relay::App as GnostrRelayApp;
     use nostr_0_34_1::{EventBuilder, Keys, Kind, Tag};
     use serde_json::json;
-    use std::fs;
-    use std::sync::Arc;
     use tempfile::NamedTempFile;
     use tokio::sync::Mutex as TokioMutex;
-    use tokio_tungstenite::connect_async;
-    use tokio_tungstenite::tungstenite::Message;
+    use tokio_tungstenite::{connect_async, tungstenite::Message};
+
+    use crate::utils::retry::GnostrRetry;
 
     fn create_test_app_instance(_test_name: &str) -> Result<(GnostrRelayApp, String)> {
         // Create a temporary config file

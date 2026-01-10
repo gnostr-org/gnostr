@@ -1,6 +1,8 @@
-use super::{Id, NAddr, PublicKey, RelayUrl};
-use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
+
+use serde::{Deserialize, Serialize};
+
+use super::{Id, NAddr, PublicKey, RelayUrl};
 
 /// A reference to another event, either by `Id` (often coming from an 'e' tag),
 /// or by `NAddr` (often coming from an 'a' tag).

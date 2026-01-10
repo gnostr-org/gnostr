@@ -6,8 +6,9 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/40.md
 
-use crate::types::{Event, Tag, Unixtime};
 use anyhow::Result;
+
+use crate::types::{Event, Tag, Unixtime};
 
 /// The name of the expiration tag.
 pub const EXPIRATION_TAG_NAME: &str = "expiration";
@@ -39,7 +40,8 @@ impl NIP40Event for Event {
 
     fn add_expiration_tag(&mut self, expiry_time: Unixtime) {
         // Remove existing expiration tags to ensure only one is present
-        self.tags.retain(|tag| tag.0.get(0) != Some(&EXPIRATION_TAG_NAME.to_string()));
+        self.tags
+            .retain(|tag| tag.0.get(0) != Some(&EXPIRATION_TAG_NAME.to_string()));
         self.tags.push(Self::create_expiration_tag(expiry_time));
     }
 
@@ -130,12 +132,26 @@ mod tests {
         event.add_expiration_tag(new_expiry);
         assert_eq!(event.expiration_time(), Some(new_expiry));
         // Ensure only one expiration tag exists
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&EXPIRATION_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&EXPIRATION_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
 
         // Add another expiration tag, it should replace the existing one
         let even_newer_expiry = Unixtime::from(1800000000);
         event.add_expiration_tag(even_newer_expiry);
         assert_eq!(event.expiration_time(), Some(even_newer_expiry));
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&EXPIRATION_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&EXPIRATION_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
     }
 }

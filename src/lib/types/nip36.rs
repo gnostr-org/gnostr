@@ -1,20 +1,23 @@
 //! NIP-36: Sensitive Content
 //!
-//! This NIP introduces a `content-warning` tag to indicate that an event's content
-//! should be hidden by clients until the reader explicitly approves its display.
+//! This NIP introduces a `content-warning` tag to indicate that an event's
+//! content should be hidden by clients until the reader explicitly approves its
+//! display.
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/36.md
 
-use crate::types::{Event, Tag};
 use anyhow::Result;
+
+use crate::types::{Event, Tag};
 
 /// The name of the content-warning tag.
 pub const CONTENT_WARNING_TAG_NAME: &str = "content-warning";
 
 /// Helper trait for NIP-36 content warning tags on Event types.
 pub trait NIP36Event {
-    /// Extracts the optional reason for the content warning from the event's tags.
-    /// Returns `None` if the "content-warning" tag is not found or has no reason.
+    /// Extracts the optional reason for the content warning from the event's
+    /// tags. Returns `None` if the "content-warning" tag is not found or
+    /// has no reason.
     fn content_warning_reason(&self) -> Option<&str>;
 
     /// Adds a "content-warning" tag to the event with an optional reason.
@@ -38,7 +41,8 @@ impl NIP36Event for Event {
 
     fn add_content_warning_tag(&mut self, reason: Option<String>) {
         // Remove existing content-warning tags to ensure only one is present
-        self.tags.retain(|tag| tag.0.get(0) != Some(&CONTENT_WARNING_TAG_NAME.to_string()));
+        self.tags
+            .retain(|tag| tag.0.get(0) != Some(&CONTENT_WARNING_TAG_NAME.to_string()));
         self.tags.push(Self::create_content_warning_tag(reason));
     }
 
@@ -47,7 +51,13 @@ impl NIP36Event for Event {
         if let Some(r) = reason {
             tag_elements.push(r);
         }
-        Tag::new(tag_elements.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice())
+        Tag::new(
+            tag_elements
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
+                .as_slice(),
+        )
     }
 }
 
@@ -59,7 +69,9 @@ mod tests {
     // Helper to create a dummy event for testing
     fn create_dummy_event_with_warning(reason: Option<&str>) -> Event {
         let mut tags = Vec::new();
-        tags.push(Event::create_content_warning_tag(reason.map(|s| s.to_string())));
+        tags.push(Event::create_content_warning_tag(
+            reason.map(|s| s.to_string()),
+        ));
 
         Event {
             id: Id::mock(),
@@ -133,11 +145,25 @@ mod tests {
         event.add_content_warning_tag(Some(reason2.to_string()));
         assert_eq!(event.content_warning_reason(), Some(reason2));
         // Ensure only one content-warning tag exists
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&CONTENT_WARNING_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&CONTENT_WARNING_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
 
         // Add a content-warning tag without a reason
         event.add_content_warning_tag(None);
         assert_eq!(event.content_warning_reason(), None);
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&CONTENT_WARNING_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&CONTENT_WARNING_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
     }
 }

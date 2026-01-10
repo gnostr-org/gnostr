@@ -1,19 +1,17 @@
-use clap::{Parser /*, Subcommand*/};
-use gnostr::blockhash;
-use gnostr::blockheight;
-use gnostr::cli::{get_app_cache_path, GnostrCli, GnostrCommands};
-use gnostr::sub_commands;
-use gnostr::weeble;
-use gnostr::wobble;
+use std::env;
+
+use anyhow::anyhow;
+use clap::{Parser /* , Subcommand */};
+use gnostr::{
+    blockhash, blockheight,
+    cli::{GnostrCli, GnostrCommands, get_app_cache_path},
+    sub_commands, weeble, wobble,
+};
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
-use std::env;
-use tracing::{debug, /*info, */ trace};
+use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-use anyhow::anyhow; // Import the anyhow macro
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt}; // Import the anyhow macro
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -47,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
     if let Err(e) = subscriber.try_init() {
         eprintln!("Failed to initialize tracing subscriber: {}", e);
     }
-    
+
     let app_cache = get_app_cache_path();
 
     let env_args: Vec<String> = env::args().collect();
@@ -93,11 +91,12 @@ async fn main() -> anyhow::Result<()> {
     }
 
     //let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    //tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    //tracing::subscriber::set_global_default(subscriber).expect("setting default
+    // subscriber failed");
     trace!("{:?}", app_cache);
 
-    // These if statements don't return anything, which is fine as long as the match statement returns Result.
-    // if gnostr_cli_args.workdir.is_some() {};
+    // These if statements don't return anything, which is fine as long as the match
+    // statement returns Result. if gnostr_cli_args.workdir.is_some() {};
     // if gnostr_cli_args.directory.is_some() {};
     if gnostr_cli_args.hash.is_some() {
         //not none
@@ -108,7 +107,7 @@ async fn main() -> anyhow::Result<()> {
             //Usage: gnostr --hash <string>
             //Usage: gnostr --debug --hash <string>
             if env_args.len() >= 3 && env_args.len() <= 4
-            /*--debug, --trace, --info, etc...*/
+            /* --debug, --trace, --info, etc... */
             {
                 print!("{:x}", result);
                 std::process::exit(0); // Exits the program, so no need to return Ok(())

@@ -1,5 +1,4 @@
-pub use clap::value_parser;
-pub use clap::Parser;
+pub use clap::{Parser, value_parser};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Opt {
@@ -8,7 +7,8 @@ pub struct Opt {
     /// Supported levels: error, warn, info, debug, trace
     pub log_level: String,
     #[arg(short, long)]
-    /// Run as remote runner (default). This is the machine where the executable(s) will be run.
+    /// Run as remote runner (default). This is the machine where the
+    /// executable(s) will be run.
     #[arg(long, default_value_t = false, value_parser = value_parser!(bool))]
     pub remote_runner: bool,
     #[arg(short, long, default_value_t = 8888)]

@@ -1,22 +1,27 @@
-use std::ffi::OsStr;
-use std::path::Component;
-use std::str::from_utf8;
-use std::{path::PathBuf, process::Stdio};
+use std::{
+    ffi::OsStr,
+    path::{Component, PathBuf},
+    process::Stdio,
+    str::from_utf8,
+};
 
 use anyhow::Context;
 use clean_path::Clean;
 use log::info;
-use russh::{server::Handle, ChannelId, CryptoVec};
+use russh::{ChannelId, CryptoVec, server::Handle};
 use shellwords::split;
 use tokio::{io::AsyncReadExt, process::Command};
 
-use crate::ssh::config::repo::{load_repo_config, new_repo_config};
-use crate::ssh::config::server::load_server_config;
-use crate::ssh::git::Repo;
-use crate::ssh::utils::CustomContext;
-use crate::ssh::vars::*;
-
 use super::Handler;
+use crate::ssh::{
+    config::{
+        repo::{load_repo_config, new_repo_config},
+        server::load_server_config,
+    },
+    git::Repo,
+    utils::CustomContext,
+    vars::*,
+};
 
 #[derive(Clone)]
 pub struct Knob {
@@ -82,7 +87,8 @@ impl Handler {
             return Ok(());
         }
 
-        // Handle non-existent repos, including creating a new one on push for some users.
+        // Handle non-existent repos, including creating a new one on push for some
+        // users.
         let mut new_repo = false;
         if !repo_path.exists() {
             if command == GIT_PUSH_COMMAND && (can_create_repos || is_admin) {

@@ -52,7 +52,6 @@ impl TryFrom<u32> for RelayUsage {
 }
 
 /// The ways that a user uses a Relay
-///
 // See also https://github.com/mikedilger/gossip/blob/master/gossip-lib/src/storage/types/relay3.rs
 // See also https://github.com/nostr-protocol/nips/issues/1282 for possible future entries
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash)]

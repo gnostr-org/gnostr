@@ -1,6 +1,8 @@
-use super::Error;
-use super::{EncryptedPrivateKey, Id, NAddr, NEvent, Profile, PublicKey, RelayUrl, UncheckedUrl};
 use lazy_static::lazy_static;
+
+use super::{
+    EncryptedPrivateKey, Error, Id, NAddr, NEvent, Profile, PublicKey, RelayUrl, UncheckedUrl,
+};
 
 /// A bech32 sequence representing a nostr object (or set of objects)
 // note, internally we store them as the object the sequence represents
@@ -12,7 +14,8 @@ pub enum NostrBech32 {
     NEvent(NEvent),
     /// note - a NostrBech32 representing an event
     Id(Id),
-    /// nprofile - a NostrBech32 representing a public key and a set of relay URLs
+    /// nprofile - a NostrBech32 representing a public key and a set of relay
+    /// URLs
     Profile(Profile),
     /// npub - a NostrBech32 representing a public key
     Pubkey(PublicKey),
@@ -72,8 +75,8 @@ impl NostrBech32 {
         NostrBech32::CryptSec(epk)
     }
 
-    /// Try to convert a string into a NostrBech32. Must not have leading or trailing
-    /// junk for this to work.
+    /// Try to convert a string into a NostrBech32. Must not have leading or
+    /// trailing junk for this to work.
     pub fn try_from_string(s: &str) -> Option<NostrBech32> {
         if s.get(..6) == Some("naddr1") {
             if let Ok(na) = NAddr::try_from_bech32_string(s) {
@@ -130,7 +133,8 @@ impl NostrBech32 {
         bech32::encode::<bech32::Bech32>(*super::HRP_NRELAY, &tlv).unwrap()
     }
 
-    // Because nrelay uses TLV, we can't just use UncheckedUrl::try_from_bech32_string
+    // Because nrelay uses TLV, we can't just use
+    // UncheckedUrl::try_from_bech32_string
     fn nrelay_try_from_bech32_string(s: &str) -> Result<UncheckedUrl, Error> {
         let data = bech32::decode(s)?;
         if data.0 != *super::HRP_NRELAY {
@@ -191,8 +195,8 @@ impl NostrUrl {
         NostrUrl(bech32)
     }
 
-    /// Try to convert a string into a NostrUrl. Must not have leading or trailing
-    /// junk for this to work.
+    /// Try to convert a string into a NostrUrl. Must not have leading or
+    /// trailing junk for this to work.
     pub fn try_from_string(s: &str) -> Option<NostrUrl> {
         if s.get(..6) != Some("nostr:") {
             return None;
@@ -216,8 +220,8 @@ impl NostrUrl {
         output
     }
 
-    /// This converts all recognized bech32 sequences into proper nostr URLs by adding
-    /// the "nostr:" prefix where missing.
+    /// This converts all recognized bech32 sequences into proper nostr URLs by
+    /// adding the "nostr:" prefix where missing.
     pub fn urlize(s: &str) -> String {
         let mut output: String = String::with_capacity(s.len());
         let mut cursor = 0;

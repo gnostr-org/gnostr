@@ -1,9 +1,8 @@
+use std::{fs::File, io::Write, path::Path};
+
 use git2::{Oid, Repository, Signature};
 use gnostr_legit::gitminer::{Gitminer, Options};
 use serial_test::serial;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 use tempfile::TempDir;
 use time::OffsetDateTime;
 

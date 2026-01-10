@@ -1,6 +1,6 @@
+use std::{path::Path, process::Command};
+
 use anyhow::Result;
-use std::path::Path;
-use std::process::Command;
 
 fn main() -> Result<()> {
     let weeble_output = Command::new("gnostr-weeble").output()?.stdout;
@@ -69,9 +69,11 @@ fn run(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
+
     use tempfile::tempdir;
+
+    use super::*;
 
     // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {

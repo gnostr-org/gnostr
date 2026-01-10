@@ -1,20 +1,19 @@
-use crate::p2p::network_config::Network;
 use ansi_term::Style;
 use futures::stream::StreamExt;
-use libp2p::core::ConnectedPoint;
-use libp2p::identify;
-use libp2p::identity::Keypair;
-use libp2p::kad::ProgressStep;
-use libp2p::kad::{store::MemoryStore, GetClosestPeersOk, QueryResult};
-use libp2p::ping;
-use libp2p::relay;
-use libp2p::swarm::SwarmEvent;
 use libp2p::{
-    noise, swarm::NetworkBehaviour, tcp, yamux, Multiaddr, PeerId, StreamProtocol, Swarm,
-    SwarmBuilder,
+    Multiaddr, PeerId, StreamProtocol, Swarm, SwarmBuilder,
+    core::ConnectedPoint,
+    identify,
+    identity::Keypair,
+    kad::{GetClosestPeersOk, ProgressStep, QueryResult, store::MemoryStore},
+    noise, ping, relay,
+    swarm::{NetworkBehaviour, SwarmEvent},
+    tcp, yamux,
 };
 use log::debug;
 use thiserror::Error;
+
+use crate::p2p::network_config::Network;
 
 fn print_key(k: &str, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     writeln!(f, "{}:", Style::new().bold().paint(k))

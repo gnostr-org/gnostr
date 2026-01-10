@@ -6,11 +6,11 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/38.md
 
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
-use crate::types::{Event, Id, PublicKey, Tag, Unixtime, PreEvent}; // Re-using existing types
-use crate::types::event_kind::EventKind;
-use crate::types::signature::Signature;
-use anyhow::{anyhow, Result};
+
+use crate::types::{Event, Id, PreEvent, PublicKey, Tag, Unixtime}; // Re-using existing types
+use crate::types::{event_kind::EventKind, signature::Signature};
 
 /// NIP-38 User Status Event Kind (Parameterized Replaceable Event)
 pub const USER_STATUS_KIND: u32 = 30315;
@@ -98,10 +98,8 @@ impl NIP38Event for Event {
         // Other optional tags like r, p, e, a can be added here
     ) -> Result<Event> {
         let content = UserStatusContent { message }.message; // Content is just the message string
-        
-        let mut tags: Vec<Tag> = vec![
-            Tag::new(&["d", &status_type.to_string()])
-        ];
+
+        let mut tags: Vec<Tag> = vec![Tag::new(&["d", &status_type.to_string()])];
 
         if let Some(exp) = expiration {
             tags.push(Tag::new(&["expiration", &exp.to_string()]));
@@ -111,7 +109,7 @@ impl NIP38Event for Event {
             pubkey: public_key,
             created_at: Unixtime::now(),
             kind: EventKind::Replaceable(USER_STATUS_KIND),
-            tags: tags.clone(), // Clone tags for PreEvent
+            tags: tags.clone(),       // Clone tags for PreEvent
             content: content.clone(), // Clone content for PreEvent
         };
 

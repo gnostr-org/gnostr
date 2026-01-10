@@ -1,10 +1,13 @@
-use super::super::{Error, PublicKey};
-use super::PrivateKey;
-use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit, block_padding::Pkcs7};
 use base64::Engine;
 use rand_core::{OsRng, RngCore};
 use sha2::{Digest, Sha256};
 use zeroize::Zeroize;
+
+use super::{
+    super::{Error, PublicKey},
+    PrivateKey,
+};
 
 /// Content Encryption Algorithm
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -12,10 +15,12 @@ pub enum ContentEncryptionAlgorithm {
     /// NIP-04 (insecure)
     Nip04,
 
-    /// NIP-44 unpadded (produced by Amethyst for a few months around Aug-Oct 2023
+    /// NIP-44 unpadded (produced by Amethyst for a few months around Aug-Oct
+    /// 2023
     Nip44v1Unpadded,
 
-    /// NIP-44 padded (possibly never in use, or a few tests were produced by Gossip around Aug-Oct 2023)
+    /// NIP-44 padded (possibly never in use, or a few tests were produced by
+    /// Gossip around Aug-Oct 2023)
     Nip44v1Padded,
 
     /// NIP-44 v2 (latest, not yet audited)
@@ -88,7 +93,8 @@ impl PrivateKey {
             }
             match bytes[0] {
                 1 => ContentEncryptionAlgorithm::Nip44v1Unpadded,
-                // Note: Nip44v1Padded cannot be detected, and there may be no events out there using it.
+                // Note: Nip44v1Padded cannot be detected, and there may be no events out there
+                // using it.
                 2 => ContentEncryptionAlgorithm::Nip44v2,
                 _ => return Err(crate::types::nip44::Error::UnknownVersion.into()),
             }
@@ -126,7 +132,8 @@ impl PrivateKey {
         shared_key
     }
 
-    /// Generate a shared secret with someone elses public key (NIP-44 method, version 1)
+    /// Generate a shared secret with someone elses public key (NIP-44 method,
+    /// version 1)
     fn shared_secret_nip44_v1(&self, other: &PublicKey) -> [u8; 32] {
         // Build the whole PublicKey from the XOnlyPublicKey
         let pubkey = secp256k1::PublicKey::from_x_only_public_key(
@@ -151,7 +158,8 @@ impl PrivateKey {
         super::super::nip44::get_conversation_key(self.0, other.as_xonly_public_key())
     }
 
-    /// Encrypt content via a shared secret according to NIP-04. Returns (IV, Ciphertext) pair.
+    /// Encrypt content via a shared secret according to NIP-04. Returns (IV,
+    /// Ciphertext) pair.
     fn nip04_encrypt(&self, other: &PublicKey, plaintext: &[u8]) -> Result<String, Error> {
         let mut shared_secret = self.shared_secret_nip04(other);
         let iv = {
@@ -227,7 +235,8 @@ impl PrivateKey {
         if pad {
             let end_plaintext = 4 + plaintext.len();
 
-            // forced padding, up to a minimum of 32 bytes total so far (4 used for the u32 length)
+            // forced padding, up to a minimum of 32 bytes total so far (4 used for the u32
+            // length)
             let forced_padding = 32_usize.saturating_sub(end_plaintext);
             let end_forced_padding = end_plaintext + forced_padding;
 

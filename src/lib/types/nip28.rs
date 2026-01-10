@@ -3,41 +3,45 @@
 // NIP-28: Public Chat Channels
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
-use crate::types::event_kind::{EventKind, EventKindOrRange};
-use crate::types::versioned::event3::EventV3;
-use crate::types::versioned::event3::PreEventV3;
+use std::{collections::HashSet, str::FromStr};
+
+use secp256k1::{SecretKey, XOnlyPublicKey};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value, json};
+
 use crate::types::{
     Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
     Signer, TagV3, UncheckedUrl, Unixtime,
+    event_kind::{EventKind, EventKindOrRange},
+    versioned::event3::{EventV3, PreEventV3},
 };
-use secp256k1::{SecretKey, XOnlyPublicKey};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
-use std::collections::HashSet;
-use std::str::FromStr;
 
 /// Event Kind 40: Create channel
-/// Used to create a public chat channel, including initial metadata like name, description, and picture.
+/// Used to create a public chat channel, including initial metadata like name,
+/// description, and picture.
 pub const CREATE_CHANNEL: EventKind = EventKind::ChannelCreation;
 
 /// Event Kind 41: Set channel metadata
-/// Used to update a channel's public metadata. Clients should treat these like replaceable events,
-/// only storing the most recent one, and ignore updates from pubkeys other than the channel creator.
+/// Used to update a channel's public metadata. Clients should treat these like
+/// replaceable events, only storing the most recent one, and ignore updates
+/// from pubkeys other than the channel creator.
 pub const SET_CHANNEL_METADATA: EventKind = EventKind::ChannelMetadata;
 
 /// Event Kind 42: Create channel message
-/// Used to send text messages within a channel. It supports NIP-10 tags for relay recommendations
-/// and to indicate if a message is a reply or a root message within a thread.
+/// Used to send text messages within a channel. It supports NIP-10 tags for
+/// relay recommendations and to indicate if a message is a reply or a root
+/// message within a thread.
 pub const CREATE_CHANNEL_MESSAGE: EventKind = EventKind::ChannelMessage;
 
 /// Event Kind 43: Hide message
-/// Allows a user to hide a specific message within a channel. Clients can optionally hide messages
-/// for other users based on multiple hide events.
+/// Allows a user to hide a specific message within a channel. Clients can
+/// optionally hide messages for other users based on multiple hide events.
 pub const HIDE_MESSAGE: EventKind = EventKind::ChannelHideMessage;
 
 /// Event Kind 44: Mute user
-/// Allows a user to mute another user, hiding their messages within the channel. Similar to hiding messages,
-/// clients can extend this moderation to multiple users.
+/// Allows a user to mute another user, hiding their messages within the
+/// channel. Similar to hiding messages, clients can extend this moderation to
+/// multiple users.
 pub const MUTE_USER: EventKind = EventKind::ChannelMuteUser;
 
 /// Represents a parsed Kind 40 event for creating a public channel.
@@ -80,12 +84,15 @@ pub struct ChannelMetadataEvent {
 /// * `signer`: The signer that will be used to sign the event.
 /// * `channel_id`: The unique identifier for the channel (required, 'd' tag).
 /// * `channel_name`: The name of the channel (optional, 'name' tag).
-/// * `channel_description`: The description of the channel (optional, 'description' tag).
+/// * `channel_description`: The description of the channel (optional,
+///   'description' tag).
 /// * `channel_picture`: URL to the channel's picture (optional, 'picture' tag).
-/// * `relay_url`: A recommended relay URL for the channel (optional, 'relay' tag).
+/// * `relay_url`: A recommended relay URL for the channel (optional, 'relay'
+///   tag).
 ///
 /// # Returns
-/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on
+/// failure.
 pub fn create_channel(
     signer: &dyn Signer,
     channel_id: &str,
@@ -118,7 +125,8 @@ pub fn create_channel(
 
     // 'relay' tag - optional
     if let Some(relay) = relay_url {
-        // NIP-28 doesn't explicitly define a marker for channel creation relay, so use None.
+        // NIP-28 doesn't explicitly define a marker for channel creation relay, so use
+        // None.
         tags.push(TagV3::new_relay(relay.clone(), None));
     }
 
@@ -135,13 +143,15 @@ pub fn create_channel(
     signer.sign_event(pre_event)
 }
 
-/// Parses a generic `EventV3` into a `ChannelCreationEvent` if it matches Kind 40 and has valid tags.
+/// Parses a generic `EventV3` into a `ChannelCreationEvent` if it matches Kind
+/// 40 and has valid tags.
 ///
 /// # Arguments
 /// * `event`: The `EventV3` to parse.
 ///
 /// # Returns
-/// A `Result` containing the `ChannelCreationEvent` on success, or an `Error` if parsing fails or the event is not a valid Kind 40 event.
+/// A `Result` containing the `ChannelCreationEvent` on success, or an `Error`
+/// if parsing fails or the event is not a valid Kind 40 event.
 pub fn parse_channel_creation(event: &EventV3) -> Result<ChannelCreationEvent, Error> {
     if event.kind != CREATE_CHANNEL {
         return Err(Error::WrongEventKind);
@@ -189,7 +199,8 @@ pub struct ChannelMessageEvent {
     pub channel_id: String,
     /// The content of the message.
     pub message: String,
-    /// The ID of the message this message is replying to ('e' tag with 'reply' marker).
+    /// The ID of the message this message is replying to ('e' tag with 'reply'
+    /// marker).
     pub reply_to: Option<Id>,
     /// The ID of the root message in a thread ('e' tag with 'root' marker).
     pub root_message: Option<Id>,
@@ -199,13 +210,15 @@ pub struct ChannelMessageEvent {
     pub relay_url: Option<UncheckedUrl>,
 }
 
-/// Parses a generic `EventV3` into a `ChannelMessageEvent` if it matches Kind 42 and has valid tags.
+/// Parses a generic `EventV3` into a `ChannelMessageEvent` if it matches Kind
+/// 42 and has valid tags.
 ///
 /// # Arguments
 /// * `event`: The `EventV3` to parse.
 ///
 /// # Returns
-/// A `Result` containing the `ChannelMessageEvent` on success, or an `Error` if parsing fails or the event is not a valid Kind 42 event.
+/// A `Result` containing the `ChannelMessageEvent` on success, or an `Error` if
+/// parsing fails or the event is not a valid Kind 42 event.
 pub fn parse_channel_message(event: &EventV3) -> Result<ChannelMessageEvent, Error> {
     if event.kind != CREATE_CHANNEL_MESSAGE {
         return Err(Error::WrongEventKind);
@@ -229,7 +242,8 @@ pub fn parse_channel_message(event: &EventV3) -> Result<ChannelMessageEvent, Err
                 relay_url = recommended_relay_url; // Store relay if present
             }
         } else if let Ok((url, _)) = tag.parse_relay() {
-            // If no explicit relay tag was found on reply/root, check for a standalone 'r' tag.
+            // If no explicit relay tag was found on reply/root, check for a standalone 'r'
+            // tag.
             if relay_url.is_none() {
                 relay_url = Some(url);
             }
@@ -266,13 +280,15 @@ pub struct HideMessageEvent {
     pub pubkey: PublicKey,
 }
 
-/// Parses a generic `EventV3` into a `HideMessageEvent` if it matches Kind 43 and has valid tags.
+/// Parses a generic `EventV3` into a `HideMessageEvent` if it matches Kind 43
+/// and has valid tags.
 ///
 /// # Arguments
 /// * `event`: The `EventV3` to parse.
 ///
 /// # Returns
-/// A `Result` containing the `HideMessageEvent` on success, or an `Error` if parsing fails or the event is not a valid Kind 43 event.
+/// A `Result` containing the `HideMessageEvent` on success, or an `Error` if
+/// parsing fails or the event is not a valid Kind 43 event.
 pub fn parse_hide_message(event: &EventV3) -> Result<HideMessageEvent, Error> {
     if event.kind != HIDE_MESSAGE {
         return Err(Error::WrongEventKind);
@@ -334,13 +350,15 @@ pub struct MuteUserEvent {
     pub pubkey: PublicKey,
 }
 
-/// Parses a generic `EventV3` into a `MuteUserEvent` if it matches Kind 44 and has valid tags.
+/// Parses a generic `EventV3` into a `MuteUserEvent` if it matches Kind 44 and
+/// has valid tags.
 ///
 /// # Arguments
 /// * `event`: The `EventV3` to parse.
 ///
 /// # Returns
-/// A `Result` containing the `MuteUserEvent` on success, or an `Error` if parsing fails or the event is not a valid Kind 44 event.
+/// A `Result` containing the `MuteUserEvent` on success, or an `Error` if
+/// parsing fails or the event is not a valid Kind 44 event.
 pub fn parse_mute_user(event: &EventV3) -> Result<MuteUserEvent, Error> {
     if event.kind != MUTE_USER {
         return Err(Error::WrongEventKind);
@@ -391,12 +409,16 @@ pub fn parse_mute_user(event: &EventV3) -> Result<MuteUserEvent, Error> {
 /// * `signer`: The signer that will be used to sign the event.
 /// * `channel_id`: The unique identifier for the channel (required, 'd' tag).
 /// * `channel_name`: The new name of the channel (optional, 'name' tag).
-/// * `channel_description`: The new description of the channel (optional, 'description' tag).
-/// * `channel_picture`: New URL to the channel's picture (optional, 'picture' tag).
-/// * `relay_url`: A recommended relay URL for the channel (optional, 'relay' tag).
+/// * `channel_description`: The new description of the channel (optional,
+///   'description' tag).
+/// * `channel_picture`: New URL to the channel's picture (optional, 'picture'
+///   tag).
+/// * `relay_url`: A recommended relay URL for the channel (optional, 'relay'
+///   tag).
 ///
 /// # Returns
-/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on
+/// failure.
 pub fn set_channel_metadata(
     signer: &dyn Signer,
     channel_id: &str,
@@ -449,13 +471,15 @@ pub fn set_channel_metadata(
     signer.sign_event(pre_event)
 }
 
-/// Parses a generic `EventV3` into a `ChannelMetadataEvent` if it matches Kind 41 and has valid tags.
+/// Parses a generic `EventV3` into a `ChannelMetadataEvent` if it matches Kind
+/// 41 and has valid tags.
 ///
 /// # Arguments
 /// * `event`: The `EventV3` to parse.
 ///
 /// # Returns
-/// A `Result` containing the `ChannelMetadataEvent` on success, or an `Error` if parsing fails or the event is not a valid Kind 41 event.
+/// A `Result` containing the `ChannelMetadataEvent` on success, or an `Error`
+/// if parsing fails or the event is not a valid Kind 41 event.
 pub fn parse_set_channel_metadata(event: &EventV3) -> Result<ChannelMetadataEvent, Error> {
     if event.kind != SET_CHANNEL_METADATA {
         return Err(Error::WrongEventKind);
@@ -502,12 +526,15 @@ pub fn parse_set_channel_metadata(event: &EventV3) -> Result<ChannelMetadataEven
 /// * `signer`: The signer that will be used to sign the event.
 /// * `channel_id`: The unique identifier for the channel (required, 'd' tag).
 /// * `message`: The content of the message.
-/// * `reply_to_id`: The ID of the message this message is replying to (optional, 'e' tag with 'reply' marker).
-/// * `root_message_id`: The ID of the root message in a thread (optional, 'e' tag with 'root' marker).
+/// * `reply_to_id`: The ID of the message this message is replying to
+///   (optional, 'e' tag with 'reply' marker).
+/// * `root_message_id`: The ID of the root message in a thread (optional, 'e'
+///   tag with 'root' marker).
 /// * `relay_url`: A recommended relay URL for context (optional, 'relay' tag).
 ///
 /// # Returns
-/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on
+/// failure.
 pub fn create_channel_message(
     signer: &dyn Signer,
     channel_id: &str,
@@ -566,7 +593,8 @@ pub fn create_channel_message(
 /// * `relay_url`: A recommended relay URL for context (optional, 'relay' tag).
 ///
 /// # Returns
-/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on
+/// failure.
 pub fn hide_message(
     signer: &dyn Signer,
     channel_id: &str,
@@ -626,7 +654,8 @@ pub fn hide_message(
 /// * `relay_url`: A recommended relay URL for context (optional, 'relay' tag).
 ///
 /// # Returns
-/// A `Result` containing the signed `EventV3` on success, or an `Error` on failure.
+/// A `Result` containing the signed `EventV3` on success, or an `Error` on
+/// failure.
 pub fn mute_user(
     signer: &dyn Signer,
     channel_id: &str,
@@ -669,16 +698,19 @@ pub fn mute_user(
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::test_serde;
-    use crate::types::{
-        Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
-        UncheckedUrl, Unixtime,
-    };
-    use crate::KeySigner;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey};
     use sha2::{Digest, Sha256};
-    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use super::*;
+    use crate::{
+        KeySigner, test_serde,
+        types::{
+            Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
+            UncheckedUrl, Unixtime,
+        },
+    };
 
     #[test]
     fn test_nip28_event_kinds() {

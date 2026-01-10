@@ -1,9 +1,9 @@
 use std::{collections::HashSet, path::Path, str::FromStr, time::Duration};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use nostr_0_34_1::{
-    nips::{nip05, nip46::NostrConnectURI},
     PublicKey,
+    nips::{nip05, nip46::NostrConnectURI},
 };
 use nostr_sdk_0_34_0::{
     Alphabet, FromBech32, JsonUtil, Keys, Kind, NostrSigner, SingleLetterTag, Timestamp, ToBech32,
@@ -19,7 +19,7 @@ use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptPasswordParms,
     },
-    client::{fetch_public_key, get_event_from_global_cache, Connect},
+    client::{Connect, fetch_public_key, get_event_from_global_cache},
     git::{Repo, RepoActions},
 };
 
@@ -122,8 +122,8 @@ fn print_logged_in_as(user_ref: &UserRef, offline_mode: bool) -> Result<()> {
         println!("cannot extract account name from account metadata...");
     } else if !offline_mode && user_ref.relays.created_at.eq(&Timestamp::from(0)) {
         println!(
-			"cannot find your relay list. consider using another nostr client to create one to enhance your nostr experience."
-		);
+            "cannot find your relay list. consider using another nostr client to create one to enhance your nostr experience."
+        );
     }
     println!("logged in as {}", user_ref.metadata.name);
     Ok(())
@@ -163,8 +163,8 @@ async fn get_signer_without_prompts(
             Ok(signer)
         } else {
             bail!(
-				"bunker-app-key parameter must be provided alongside bunker-uri. if unknown, login interactively."
-			)
+                "bunker-app-key parameter must be provided alongside bunker-uri. if unknown, login interactively."
+            )
         }
     } else if !save_local {
         get_signer_with_git_config_nsec_or_bunker_without_prompts(git_repo).await

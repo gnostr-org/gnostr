@@ -1,12 +1,18 @@
 #![cfg(target_os = "windows")]
 
 // Import necessary items from the winapi crate
-use winapi::shared::minwindef::{DWORD, FALSE};
-use winapi::shared::ntdef::NULL;
-use winapi::um::errhandlingapi::GetLastError;
-use winapi::um::handleapi::CloseHandle;
-use winapi::um::processthreadsapi::{OpenProcess, TerminateProcess};
-use winapi::um::winnt::{HANDLE, PROCESS_TERMINATE};
+use winapi::{
+    shared::{
+        minwindef::{DWORD, FALSE},
+        ntdef::NULL,
+    },
+    um::{
+        errhandlingapi::GetLastError,
+        handleapi::CloseHandle,
+        processthreadsapi::{OpenProcess, TerminateProcess},
+        winnt::{HANDLE, PROCESS_TERMINATE},
+    },
+};
 
 // The function is public so it can be called from the main function.
 pub fn kill_process_by_pid(process_id: DWORD) -> Result<(), String> {

@@ -1,19 +1,17 @@
 /// ## Subcommand Screenshot Testing
 ///
-/// This test suite is designed to capture the `--help` output of each subcommand
-/// to ensure that the CLI help messages are consistent and correct.
+/// This test suite is designed to capture the `--help` output of each
+/// subcommand to ensure that the CLI help messages are consistent and correct.
 ///
 /// To add a new screenshot test, simply add a new call to the `screenshot_test`
 /// macro with the subcommand name.
-///
 #[cfg(test)]
 mod tests {
+    use std::{error::Error, fs, process::Command};
+
+    use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin};
+
     use crate::utils::screenshot;
-    use assert_cmd::assert::OutputAssertExt;
-    use assert_cmd::cargo::cargo_bin;
-    use std::error::Error;
-    use std::fs;
-    use std::process::Command;
 
     macro_rules! screenshot_test {
         ($name:ident, $subcommand:expr) => {

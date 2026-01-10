@@ -1,13 +1,13 @@
-use std::process::exit;
-use std::time::Duration;
+use std::{process::exit, time::Duration};
 
 use clap::Args;
-use crate::types::{Error, Event, Filter, Id, PublicKey};
-
-use crate::utils::{create_client, parse_private_key};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-
 use tracing::debug;
+
+use crate::{
+    types::{Error, Event, Filter, Id, PublicKey},
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct ReactionSubCommand {
@@ -17,7 +17,8 @@ pub struct ReactionSubCommand {
     /// Author pubkey of the event you are reacting to. Must be hex format.
     #[arg(short, long, default_value = "")]
     author_pubkey: String,
-    /// Reaction content. Set to '+' for like or '-' for dislike. Single emojis are also often used for reactions, such as in Damus Web.
+    /// Reaction content. Set to '+' for like or '-' for dislike. Single emojis
+    /// are also often used for reactions, such as in Damus Web.
     #[arg(short, long)]
     reaction: String,
     // Print keys as hex
@@ -46,7 +47,8 @@ pub async fn react_to_event(
     }
 
     let event_id = Id::try_from_hex_string(&sub_command_args.event_id)?;
-    // TODO: Implement Filter::event and Filter::author methods in src/lib/types/filter.rs
+    // TODO: Implement Filter::event and Filter::author methods in
+    // src/lib/types/filter.rs
     let subscription: Filter = Filter::new(); // Placeholder
 
     debug!("{:?}", subscription);
@@ -60,8 +62,8 @@ pub async fn react_to_event(
         exit(0);
     }
 
-    // The following lines were part of nostr_sdk client interaction and are now commented out.
-    // let event_to_react_to = events.first().unwrap();
+    // The following lines were part of nostr_sdk client interaction and are now
+    // commented out. let event_to_react_to = events.first().unwrap();
     // let id = client
     //     .reaction(event_to_react_to, sub_command_args.reaction.clone())
     //     .await?;
@@ -69,7 +71,9 @@ pub async fn react_to_event(
     if sub_command_args.hex {
         print!(
             "{{\"event_id\":\"{}\"}}{{\"reaction\":\"{}\"}}{{\"id\":\"{}\"}}",
-            event_id.as_hex_string(), sub_command_args.reaction, id.as_hex_string()
+            event_id.as_hex_string(),
+            sub_command_args.reaction,
+            id.as_hex_string()
         );
     } else {
         print!(

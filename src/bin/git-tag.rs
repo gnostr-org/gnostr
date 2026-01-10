@@ -1,5 +1,6 @@
-use anyhow::Result;
 use std::process::Command;
+
+use anyhow::Result;
 
 fn main() -> Result<()> {
     let weeble_output = Command::new("gnostr-weeble").output()?.stdout;
@@ -60,10 +61,12 @@ fn run(args: Vec<String>, weeble: &str, blockheight: &str, wobble: &str) -> Resu
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serial_test::serial;
     use std::fs;
+
+    use serial_test::serial;
     use tempfile::tempdir;
+
+    use super::*;
 
     // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {

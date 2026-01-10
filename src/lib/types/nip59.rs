@@ -1,9 +1,12 @@
 // NIP-59: Gift Wrap
 // https://github.com/nostr-protocol/nips/blob/master/59.md
 
-use crate::types::event::{Event, Rumor, UnsignedEvent};
-use crate::types::{ContentEncryptionAlgorithm, PrivateKey, PublicKey, Signer};
 use secp256k1::{SecretKey, XOnlyPublicKey};
+
+use crate::types::{
+    ContentEncryptionAlgorithm, PrivateKey, PublicKey, Signer,
+    event::{Event, Rumor, UnsignedEvent},
+};
 
 /// Create a Seal event (kind 13) which wraps a Rumor
 pub fn create_seal(

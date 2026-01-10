@@ -7,28 +7,26 @@ use compare_details::CompareDetailsComponent;
 use crossterm::event::Event;
 use details::DetailsComponent;
 use gnostr_asyncgit::{
-    sync::{commit_files::OldNew, CommitTags},
     AsyncCommitFiles, CommitFilesParams,
+    sync::{CommitTags, commit_files::OldNew},
 };
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
     Frame,
+    layout::{Constraint, Direction, Layout, Rect},
 };
 
 use super::{
-    command_pump, event_pump, CommandBlocking, CommandInfo, Component, DrawableComponent,
-    EventState, StatusTreeComponent,
+    CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, StatusTreeComponent,
+    command_pump, event_pump,
 };
 use crate::{
     accessors,
     app::Environment,
-    keys::{key_match, SharedKeyConfig},
+    components::{Text, dialog_paragraph},
+    keys::{SharedKeyConfig, key_match},
     strings,
     ui::style::SharedTheme,
 };
-
-use crate::components::dialog_paragraph;
-use crate::components::Text;
 
 /// CommitDetailsComponent
 pub struct CommitDetailsComponent {
@@ -171,7 +169,7 @@ impl DrawableComponent for CommitDetailsComponent {
             } else if details_focused {
                 //topiclist or revlog split
                 (80, 10, 10) //commit Info and Message visible
-                             //filetree obfuscated
+            //filetree obfuscated
             } else {
                 //topiclist or revlog toggle split
                 //Info AND

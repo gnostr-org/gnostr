@@ -1,9 +1,12 @@
 // NIP-18: Reposts
 // https://github.com/nostr-protocol/nips/blob/master/18.md
 
-use crate::types::event::{Event, EventId, UnsignedEvent};
-use crate::types::{PublicKey, RelayUrl, Tag};
 use secp256k1::{SecretKey, XOnlyPublicKey};
+
+use crate::types::{
+    PublicKey, RelayUrl, Tag,
+    event::{Event, EventId, UnsignedEvent},
+};
 
 /// Create a kind 6 repost event for a text note (kind 1).
 pub fn create_repost_text_note(

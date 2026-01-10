@@ -1,13 +1,15 @@
 use std::borrow::Cow;
 
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{
-    Client, Event, EventKind, Id, Keys, TagV3 as Tag, PrivateKey, PreEventV3, Unixtime, KeySigner,
-    Signer
-};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PrivateKey, Signer,
+        TagV3 as Tag, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct CustomEventCommand {
@@ -20,14 +22,19 @@ pub struct CustomEventCommand {
     ///
     /// NIP-10: Threaded Notes (Reply)
     ///
-    ///    Reply to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
+    ///    Reply to an event with ID
+    /// 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
     ///
-    /// > gnostr custom-event -k 1 -c "This is a reply." -r wss://relay.example.com -t "in_reply_to|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    /// > gnostr custom-event -k 1 -c "This is a reply." -r
+    /// > wss://relay.example.com -t
+    /// > "in_reply_to|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
     ///
     ///
     /// NIP-25: Reactions
     ///
-    ///    React to an event with ID 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' with a 👍 emoji
+    ///    React to an event with ID
+    /// 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789' with
+    /// a 👍 emoji
     ///
     /// > gnostr custom-event -k 7 -r wss://relay.example.example.com -t "reference|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" -t "+"
     ///
@@ -57,8 +64,9 @@ pub struct CustomEventCommand {
     ///
     /// -- Send a zap request for 1000 sats to a recipient
     ///
-    /// > gnostr custom-event -k 9735 -c '{"amount": 1000, "bolt11": "lnbc100..."}' -r wss://relay.example.com -t "p|recipient_pubkey..." -t "amount|1000"
-    ///
+    /// > gnostr custom-event -k 9735 -c '{"amount": 1000, "bolt11":
+    /// > "lnbc100..."}' -r wss://relay.example.com -t "p|recipient_pubkey..."
+    /// > -t "amount|1000"
     #[arg(short, long)]
     kind: u16,
 
@@ -72,7 +80,8 @@ pub struct CustomEventCommand {
     /// Example of a custom tag format (e.g., for NIP-12):
     /// "d|my-custom-tag-name"
     ///
-    /// Example of an 'a' tag (e.g., for NIP-33 Parameterized Replaceable Events):
+    /// Example of an 'a' tag (e.g., for NIP-33 Parameterized Replaceable
+    /// Events):
     /// "a|30001:b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a:bookmark|wss://nostr.oxtr.dev"
     ///
     /// The format is generally `TAG_KIND|TAG_VALUE1|TAG_VALUE2|...`
@@ -87,13 +96,20 @@ pub struct CustomEventCommand {
     ///
     /// -- Announce the current state of branches and tags for a repository.
     ///
-    /// > gnostr custom-event -k 30618 --tags "d|my-awesome-repo" --tags "refs/heads/main|ref: refs/heads/main" --tags "refs/tags/v1.0.0|ref: refs/tags/v1.0.0" --tags "HEAD|ref: refs/heads/main"
+    /// > gnostr custom-event -k 30618 --tags "d|my-awesome-repo" --tags
+    /// > "refs/heads/main|ref: refs/heads/main" --tags "refs/tags/v1.0.0|ref:
+    /// > refs/tags/v1.0.0" --tags "HEAD|ref: refs/heads/main"
     ///
     /// - NIP-34: Patch Announcement (Kind 1617)
     ///
     /// -- Announce a patch for a repository.
     ///
-    /// > gnostr custom-event -k 1617 --content "--- a/src/main.rs\n+++ b/src/main.rs\n@@ -1 +1 @@\n-let x = 5;\n+let x = 10;" --tags "a|30617:my-awesome-repo" --tags "r|wss://relay.example.com" --tags "p|recipient_pubkey..." --tags "t|root" --tags "commit|deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" --tags "parent-commit|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    /// > gnostr custom-event -k 1617 --content "--- a/src/main.rs\n+++
+    /// > b/src/main.rs\n@@ -1 +1 @@\n-let x = 5;\n+let x = 10;" --tags
+    /// > "a|30617:my-awesome-repo" --tags "r|wss://relay.example.com" --tags
+    /// > "p|recipient_pubkey..." --tags "t|root" --tags
+    /// > "commit|deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    /// > --tags "parent-commit|abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
     ///
     /// - NIP-34: Pull Request Announcement (Kind 1618)
     ///
@@ -111,29 +127,40 @@ pub struct CustomEventCommand {
     ///
     /// -- Announce an issue.
     ///
-    /// > gnostr custom-event -k 1621 --content "The login button is not working on the staging environment. It returns a 500 error." --tags "a|30617:my-awesome-repo" --tags "p|recipient_pubkey..." --tags "subject|Login button returns 500 error" --tags "t|bug" --tags "t|staging"
+    /// > gnostr custom-event -k 1621 --content "The login button is not working
+    /// > on the staging environment. It returns a 500 error." --tags
+    /// > "a|30617:my-awesome-repo" --tags "p|recipient_pubkey..." --tags
+    /// > "subject|Login button returns 500 error" --tags "t|bug" --tags
+    /// > "t|staging"
     ///
     /// - NIP-34: Status Events (Kinds 1630-1633)
     ///
     /// -- Update the status of another event (e.g., a patch, PR, or issue).
     ///
     /// Kind 1630 (Open):
-    /// > gnostr custom-event -k 1630 --tags "e|issue_event_id|root" --tags "a|30617:my-awesome-repo"
+    /// > gnostr custom-event -k 1630 --tags "e|issue_event_id|root" --tags
+    /// > "a|30617:my-awesome-repo"
     ///
     /// Kind 1631 (Applied/Merged/Resolved):
-    /// > gnostr custom-event -k 1631 --tags "e|patch_event_id|root" --tags "a|30617:my-awesome-repo" --tags "applied-as-commits|commit1_hash,commit2_hash" --tags "r|wss://relay.example.com"
+    /// > gnostr custom-event -k 1631 --tags "e|patch_event_id|root" --tags
+    /// > "a|30617:my-awesome-repo" --tags
+    /// > "applied-as-commits|commit1_hash,commit2_hash" --tags
+    /// > "r|wss://relay.example.com"
     ///
     /// Kind 1632 (Closed):
-    /// > gnostr custom-event -k 1632 --tags "e|pr_event_id|root" --tags "a|30617:my-awesome-repo"
+    /// > gnostr custom-event -k 1632 --tags "e|pr_event_id|root" --tags
+    /// > "a|30617:my-awesome-repo"
     ///
     /// Kind 1633 (Draft):
-    /// > gnostr custom-event -k 1633 --tags "e|patch_event_id|root" --tags "a|30617:my-awesome-repo"
+    /// > gnostr custom-event -k 1633 --tags "e|patch_event_id|root" --tags
+    /// > "a|30617:my-awesome-repo"
     ///
     /// - NIP-34: User Grasp List (Kind 10317)
     ///
     /// -- List preferred "grasp servers" for NIP-34 activities.
     ///
-    /// > gnostr custom-event -k 10317 --tags "g|wss://grasp.example.com" --tags "g|wss://another-grasp.example.com"
+    /// > gnostr custom-event -k 10317 --tags "g|wss://grasp.example.com" --tags
+    /// > "g|wss://another-grasp.example.com"
     ///
     /// Nostr Event Kind (NIP-01, NIP-10, NIP-25, etc.). See https://github.com/nostr-protocol/nips for a full list.
     #[arg(short, long, action = clap::ArgAction::Append)]

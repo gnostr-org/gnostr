@@ -1,13 +1,14 @@
-use std::ops::Add;
-use std::str::FromStr;
-use std::time::Duration;
+use std::{ops::Add, str::FromStr, time::Duration};
 
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, PreEventV3, PublicKey, Tag, Unixtime, KeySigner, Signer};
 
-
-use crate::utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime,
+    },
+    utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct UserStatusSubCommand {
@@ -93,9 +94,15 @@ pub async fn set_user_status(
 
     let event_id = client.send_event(event).await?;
     if !sub_command_args.hex {
-        println!("Published user status with id: {}", event_id.as_bech32_string());
+        println!(
+            "Published user status with id: {}",
+            event_id.as_bech32_string()
+        );
     } else {
-        println!("Published user status with id: {}", event_id.as_hex_string());
+        println!(
+            "Published user status with id: {}",
+            event_id.as_hex_string()
+        );
     }
 
     Ok(())

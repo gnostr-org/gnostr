@@ -1,11 +1,15 @@
-use crate::utils::{create_client, parse_private_key};
+use std::{ops::Add, str::FromStr, time::Duration};
+
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, PublicKey, Tag, PreEventV3, Unixtime, KeySigner, Signer};
-use std::ops::Add;
-use std::str::FromStr;
-use std::time::Duration;
 use tracing::trace;
+
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct NoteSubCommand {
@@ -82,7 +86,7 @@ pub async fn broadcast_textnote(
     if sub_command_args.verbose {
         println!("{}", sub_command_args.content.clone());
     }
-    
+
     let pre_event = PreEventV3 {
         pubkey: keys.public_key(),
         created_at: Unixtime::now(),
@@ -96,7 +100,7 @@ pub async fn broadcast_textnote(
 
     // Publish event
     let event_id = client.send_event(event).await?;
-    
+
     if sub_command_args.hex {
         print!("{{\"id\":\"{}\"}}", event_id.as_hex_string());
     } else {

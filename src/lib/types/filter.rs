@@ -1,11 +1,14 @@
-use super::{Event, EventKind, IdHex, PublicKeyHex, Tag, Unixtime};
-use serde::de::{Deserializer, MapAccess, Visitor};
-use serde::ser::{SerializeMap, Serializer};
-use serde::{Deserialize, Serialize};
+use std::{collections::BTreeMap, fmt};
+
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, MapAccess, Visitor},
+    ser::{SerializeMap, Serializer},
+};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::collections::BTreeMap;
-use std::fmt;
+
+use super::{Event, EventKind, IdHex, PublicKeyHex, Tag, Unixtime};
 
 /// Filter which specify what events a client is looking for
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -206,10 +209,12 @@ impl Filter {
         );
 
         Filter {
-            ids: vec![IdHex::try_from_str(
-                "3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084",
-            )
-            .unwrap()],
+            ids: vec![
+                IdHex::try_from_str(
+                    "3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084",
+                )
+                .unwrap(),
+            ],
             authors: vec![],
             kinds: vec![EventKind::TextNote, EventKind::Metadata],
             tags: map,
@@ -219,18 +224,30 @@ impl Filter {
     }
 }
 
-
-
 impl fmt::Display for Filter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parts = Vec::new();
-        if !self.ids.is_empty() { parts.push(format!("ids: {:?}", self.ids)); }
-        if !self.authors.is_empty() { parts.push(format!("authors: {:?}", self.authors)); }
-        if !self.kinds.is_empty() { parts.push(format!("kinds: {:?}", self.kinds)); }
-        if !self.tags.is_empty() { parts.push(format!("tags: {:?}", self.tags)); }
-        if let Some(since) = self.since { parts.push(format!("since: {}", since)); }
-        if let Some(until) = self.until { parts.push(format!("until: {}", until)); }
-        if let Some(limit) = self.limit { parts.push(format!("limit: {}", limit)); }
+        if !self.ids.is_empty() {
+            parts.push(format!("ids: {:?}", self.ids));
+        }
+        if !self.authors.is_empty() {
+            parts.push(format!("authors: {:?}", self.authors));
+        }
+        if !self.kinds.is_empty() {
+            parts.push(format!("kinds: {:?}", self.kinds));
+        }
+        if !self.tags.is_empty() {
+            parts.push(format!("tags: {:?}", self.tags));
+        }
+        if let Some(since) = self.since {
+            parts.push(format!("since: {}", since));
+        }
+        if let Some(until) = self.until {
+            parts.push(format!("until: {}", until));
+        }
+        if let Some(limit) = self.limit {
+            parts.push(format!("limit: {}", limit));
+        }
         write!(f, "Filter {{ {} }}", parts.join(", "))
     }
 }
@@ -339,8 +356,10 @@ mod test {
 
     #[test]
     fn test_event_matches() {
-        use crate::types::{PrivateKey, UncheckedUrl};
-        use crate::{Id, KeySigner, PreEvent, Signer, Tag};
+        use crate::{
+            Id, KeySigner, PreEvent, Signer, Tag,
+            types::{PrivateKey, UncheckedUrl},
+        };
 
         let signer = {
             let privkey = PrivateKey::mock();

@@ -1,8 +1,10 @@
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Id, Keys};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{Client, Id, Keys},
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct HidePublicChannelMessageSubCommand {
@@ -34,7 +36,10 @@ pub async fn hide_public_channel_message(
     let event_id_to_hide = Id::try_from_hex_string(&sub_command_args.event_id)?;
 
     client
-        .hide_channel_msg(event_id_to_hide, sub_command_args.reason.clone().unwrap_or_default())
+        .hide_channel_msg(
+            event_id_to_hide,
+            sub_command_args.reason.clone().unwrap_or_default(),
+        )
         .await?;
     println!("Channel message with id {event_id_to_hide} successfully hidden");
 

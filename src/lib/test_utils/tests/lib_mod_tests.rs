@@ -1,13 +1,14 @@
 #[cfg(test)]
 mod tests {
-    use crate::{
-        get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
-        get_relays_offline, get_relays_online, get_relays_paid, get_relays_public, get_weeble_sync,
-        get_wobble_sync, Config,
-    };
+    use std::sync::Once;
 
     use serial_test::serial;
-    use std::sync::Once;
+
+    use crate::{
+        Config, get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
+        get_relays_offline, get_relays_online, get_relays_paid, get_relays_public, get_weeble_sync,
+        get_wobble_sync,
+    };
 
     static INIT: Once = Once::new();
 
@@ -88,7 +89,8 @@ mod tests {
         setup();
         let result = get_weeble_sync();
         assert!(result.is_ok());
-        // We can't assert the exact value, but we can check if it's a valid float string
+        // We can't assert the exact value, but we can check if it's a valid float
+        // string
         let value = result.unwrap();
         assert!(!value.is_empty());
         assert!(value.parse::<f64>().is_ok());

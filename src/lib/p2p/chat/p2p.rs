@@ -1,25 +1,24 @@
+use std::{collections::HashMap, sync::Arc, time::Duration};
+
+use anyhow::{Result, anyhow};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub, identify, kad, mdns, noise, ping,
+    StreamProtocol, gossipsub, identify, kad, mdns, noise, ping,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, StreamProtocol,
+    tcp, yamux,
 };
-use anyhow::{anyhow, Result};
-use std::time::Duration;
+use parking_lot::Mutex;
+use terminal_size::{Height, Width, terminal_size};
+use textwrap::{self, Options};
 use tokio::{io, select};
 use tracing::{debug, warn};
-
-use parking_lot::Mutex;
-use std::collections::HashMap;
-use std::sync::Arc;
-use terminal_size::{terminal_size, Height, Width};
-use textwrap::{self, Options};
-
 use ureq::Agent;
 
-use crate::p2p::chat::msg::{Msg, MsgKind};
-use crate::p2p::kvs::{FileRequest, FileResponse};
+use crate::p2p::{
+    chat::msg::{Msg, MsgKind},
+    kvs::{FileRequest, FileResponse},
+};
 
 // Struct to manage message reassembly
 pub struct MessageReassembler {
@@ -35,7 +34,8 @@ impl MessageReassembler {
     }
 
     /// Adds a message chunk to the buffer and attempts reassembly.
-    /// Returns Some(complete_message) if reassembly is successful, None otherwise.
+    /// Returns Some(complete_message) if reassembly is successful, None
+    /// otherwise.
     pub fn add_chunk_and_reassemble(&self, msg_chunk: Msg) -> Option<Msg> {
         if msg_chunk.message_id.is_none()
             || msg_chunk.sequence_num.is_none()
@@ -127,7 +127,10 @@ impl MessageReassembler {
                     full_content.push_str(&chunk.content[0]);
                 } else {
                     // This should not happen if received_count == total_chunks
-                    debug!("AddChunk: Critical error - Missing chunk for message_id {} at sequence {} during reassembly despite received_count matching total_chunks.", message_id, i);
+                    debug!(
+                        "AddChunk: Critical error - Missing chunk for message_id {} at sequence {} during reassembly despite received_count matching total_chunks.",
+                        message_id, i
+                    );
                     buffer_guard.remove(&message_id); // Clear incomplete message
                     return None;
                 }
@@ -176,8 +179,8 @@ pub async fn async_prompt(mempool_url: String) -> String {
 }
 
 ///// fetch_data_async
-//async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>, ureq::Error> {
-//    task::spawn_blocking(move || {
+//async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>,
+// ureq::Error> {    task::spawn_blocking(move || {
 //        let response = ureq::get(&url).call();
 //        response
 //    })
@@ -208,9 +211,7 @@ pub async fn evt_loop(
             // This is used to deduplicate messages.
             //
             let _message_id_fn = |message: &gossipsub::Message| {
-                use std::hash::DefaultHasher;
-                use std::hash::Hash;
-                use std::hash::Hasher;
+                use std::hash::{DefaultHasher, Hash, Hasher};
                 let mut s = DefaultHasher::new();
                 message.data.hash(&mut s);
                 gossipsub::MessageId::from(s.finish().to_string())

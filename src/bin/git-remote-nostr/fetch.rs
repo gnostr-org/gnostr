@@ -5,26 +5,25 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
 use gnostr::{
     git::{
+        Repo, RepoActions,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
         utils::check_ssh_keys,
-        Repo, RepoActions,
     },
     git_events::tag_value,
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr_0_34_1::nips::nip19;
-use nostr_0_34_1::ToBech32;
+use nostr_0_34_1::{ToBech32, nips::nip19};
 
 use crate::utils::{
-    count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
+    Direction, count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
     find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch, get_open_proposals,
-    get_read_protocols_to_try, join_with_and, set_protocol_preference, Direction,
+    get_read_protocols_to_try, join_with_and, set_protocol_preference,
 };
 
 pub async fn run_fetch(
@@ -627,11 +626,9 @@ mod tests {
             let events = vec![
                 generate_test_key_1_metadata_event("fred"),
                 generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![source_git_repo
-                    .dir
-                    .to_str()
-                    .unwrap()
-                    .to_string()]),
+                generate_repo_ref_event_with_git_server(vec![
+                    source_git_repo.dir.to_str().unwrap().to_string(),
+                ]),
             ];
             // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (

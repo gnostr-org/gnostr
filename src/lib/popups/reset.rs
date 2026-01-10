@@ -5,18 +5,18 @@ use gnostr_asyncgit::{
     sync::{CommitId, RepoPath, ResetType},
 };
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
-    Frame,
 };
 
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     queue::Queue,
     strings, try_or_popup,
     ui::{self, style::SharedTheme},

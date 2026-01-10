@@ -1,22 +1,25 @@
 //! NIP-13: Proof of Work
 //! https://github.com/nostr-protocol/nips/blob/master/13.md
 
-use crate::types::event::{Event, UnsignedEvent};
-use crate::types::{Id, PublicKey, Tag, Unixtime, Signature};
 use anyhow::Result;
 use secp256k1::{SecretKey, XOnlyPublicKey};
+
+use crate::types::{
+    Id, PublicKey, Signature, Tag, Unixtime,
+    event::{Event, UnsignedEvent},
+};
 
 /// The name of the nonce tag.
 pub const NONCE_TAG_NAME: &str = "nonce";
 
 /// Helper trait for NIP-13 proof of work tags on Event types.
 pub trait NIP13Event {
-    /// Extracts the nonce value and target difficulty from the event's "nonce" tag.
-    /// Returns `None` if the "nonce" tag is not found or is malformed.
+    /// Extracts the nonce value and target difficulty from the event's "nonce"
+    /// tag. Returns `None` if the "nonce" tag is not found or is malformed.
     fn nonce_data(&self) -> Option<(u64, u8)>;
 
-    /// Adds a "nonce" tag to the event with the given nonce value and target difficulty.
-    /// If a "nonce" tag already exists, it will be replaced.
+    /// Adds a "nonce" tag to the event with the given nonce value and target
+    /// difficulty. If a "nonce" tag already exists, it will be replaced.
     fn add_nonce_tag(&mut self, nonce_value: u64, target_difficulty: u8);
 
     /// Creates a "nonce" tag with the given nonce value and target difficulty.
@@ -27,7 +30,9 @@ impl NIP13Event for Event {
     fn nonce_data(&self) -> Option<(u64, u8)> {
         self.tags.iter().find_map(|tag| {
             if tag.0.len() == 3 && tag.0[0] == NONCE_TAG_NAME {
-                if let (Ok(nonce), Ok(difficulty)) = (tag.0[1].parse::<u64>(), tag.0[2].parse::<u8>()) {
+                if let (Ok(nonce), Ok(difficulty)) =
+                    (tag.0[1].parse::<u64>(), tag.0[2].parse::<u8>())
+                {
                     Some((nonce, difficulty))
                 } else {
                     None
@@ -40,12 +45,18 @@ impl NIP13Event for Event {
 
     fn add_nonce_tag(&mut self, nonce_value: u64, target_difficulty: u8) {
         // Remove existing nonce tags to ensure only one is present
-        self.tags.retain(|tag| tag.0.get(0) != Some(&NONCE_TAG_NAME.to_string()));
-        self.tags.push(Self::create_nonce_tag(nonce_value, target_difficulty));
+        self.tags
+            .retain(|tag| tag.0.get(0) != Some(&NONCE_TAG_NAME.to_string()));
+        self.tags
+            .push(Self::create_nonce_tag(nonce_value, target_difficulty));
     }
 
     fn create_nonce_tag(nonce_value: u64, target_difficulty: u8) -> Tag {
-        Tag::new(&[NONCE_TAG_NAME, &nonce_value.to_string(), &target_difficulty.to_string()])
+        Tag::new(&[
+            NONCE_TAG_NAME,
+            &nonce_value.to_string(),
+            &target_difficulty.to_string(),
+        ])
     }
 }
 
@@ -62,7 +73,7 @@ pub fn generate_pow_event(
         // Remove any existing nonce tag before adding a new one for current iteration
         tags.retain(|tag| tag.0.get(0) != Some(&NONCE_TAG_NAME.to_string()));
         tags.push(Event::create_nonce_tag(nonce, difficulty));
-        
+
         let unsigned_event = UnsignedEvent::new(
             public_key,
             1,
@@ -102,7 +113,14 @@ mod tests {
         let nonce_val = 12345;
         let difficulty_val = 20;
         let tag = Event::create_nonce_tag(nonce_val, difficulty_val);
-        assert_eq!(tag.0, vec![NONCE_TAG_NAME.to_string(), nonce_val.to_string(), difficulty_val.to_string()]);
+        assert_eq!(
+            tag.0,
+            vec![
+                NONCE_TAG_NAME.to_string(),
+                nonce_val.to_string(),
+                difficulty_val.to_string()
+            ]
+        );
     }
 
     #[test]
@@ -145,7 +163,7 @@ mod tests {
             pubkey: PublicKey::mock(),
             created_at: Unixtime::now(),
             kind: EventKind::TextNote,
-            tags: vec![Tag::new(&[NONCE_TAG_NAME, "123", "not_a_difficulty"])], // Malformed difficulty
+            tags: vec![Tag::new(&[NONCE_TAG_NAME, "123", "not_a_difficulty"])], /* Malformed difficulty */
             content: "Normal content.".to_string(),
             sig: Signature::zeroes(),
         };
@@ -186,13 +204,27 @@ mod tests {
         event.add_nonce_tag(nonce2, difficulty2);
         assert_eq!(event.nonce_data(), Some((nonce2, difficulty2)));
         // Ensure only one nonce tag exists
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&NONCE_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&NONCE_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
 
         // Add another nonce tag, it should replace the existing one
         let nonce3 = 3;
         let difficulty3 = 15;
         event.add_nonce_tag(nonce3, difficulty3);
         assert_eq!(event.nonce_data(), Some((nonce3, difficulty3)));
-        assert_eq!(event.tags.iter().filter(|t| t.0.get(0) == Some(&NONCE_TAG_NAME.to_string())).count(), 1);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|t| t.0.get(0) == Some(&NONCE_TAG_NAME.to_string()))
+                .count(),
+            1
+        );
     }
 }

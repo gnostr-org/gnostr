@@ -2,20 +2,20 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use crossterm::event::Event;
-use gnostr_asyncgit::sync::{self, commit_files::OldNew, CommitDetails, CommitId, RepoPathRef};
+use gnostr_asyncgit::sync::{self, CommitDetails, CommitId, RepoPathRef, commit_files::OldNew};
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span, Text},
-    Frame,
 };
 
 use crate::{
     app::Environment,
     components::{
-        commit_details::style::{style_detail, Detail},
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
+        commit_details::style::{Detail, style_detail},
         dialog_paragraph,
         utils::time_to_string,
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
     },
     strings::{self},
     ui::style::SharedTheme,

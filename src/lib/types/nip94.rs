@@ -5,9 +5,10 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/94.md
 
-use serde::{Deserialize, Serialize};
-use crate::types::{Event, Id, PublicKey, Tag, Unixtime, EventKind, PreEvent, Signature};
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
+
+use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-94 File Metadata Event Kind (Regular Event)
 pub const FILE_METADATA_KIND: u32 = 1063;
@@ -202,13 +203,21 @@ mod tests {
             size,
             dim.map(|s| s.to_string()),
             blur.map(|s| s.to_string()),
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     #[test]
     fn test_file_url() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", None, None, None, None, "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            None,
+            None,
+            None,
+            None,
+            "A file",
         );
         assert_eq!(event.file_url(), Some("http://example.com/file.jpg"));
     }
@@ -216,7 +225,14 @@ mod tests {
     #[test]
     fn test_mime_type() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", None, None, None, None, "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            None,
+            None,
+            None,
+            None,
+            "A file",
         );
         assert_eq!(event.mime_type(), Some("image/jpeg"));
     }
@@ -224,7 +240,14 @@ mod tests {
     #[test]
     fn test_sha256_hash() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", None, None, None, None, "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            None,
+            None,
+            None,
+            None,
+            "A file",
         );
         assert_eq!(event.sha256_hash(), Some("hash_x"));
     }
@@ -232,7 +255,14 @@ mod tests {
     #[test]
     fn test_original_sha256_hash() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", Some("hash_ox"), None, None, None, "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            Some("hash_ox"),
+            None,
+            None,
+            None,
+            "A file",
         );
         assert_eq!(event.original_sha256_hash(), Some("hash_ox"));
     }
@@ -240,7 +270,14 @@ mod tests {
     #[test]
     fn test_file_size() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", None, Some(1024), None, None, "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            None,
+            Some(1024),
+            None,
+            None,
+            "A file",
         );
         assert_eq!(event.file_size(), Some(1024));
     }
@@ -248,7 +285,14 @@ mod tests {
     #[test]
     fn test_dimensions() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", None, None, Some("1920x1080"), None, "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            None,
+            None,
+            Some("1920x1080"),
+            None,
+            "A file",
         );
         assert_eq!(event.dimensions(), Some("1920x1080"));
     }
@@ -256,7 +300,14 @@ mod tests {
     #[test]
     fn test_blurhash() {
         let event = create_dummy_event(
-            "http://example.com/file.jpg", "image/jpeg", "hash_x", None, None, None, Some("LGE.g9of~qof_3jYRPofM_jsfjeY"), "A file",
+            "http://example.com/file.jpg",
+            "image/jpeg",
+            "hash_x",
+            None,
+            None,
+            None,
+            Some("LGE.g9of~qof_3jYRPofM_jsfjeY"),
+            "A file",
         );
         assert_eq!(event.blurhash(), Some("LGE.g9of~qof_3jYRPofM_jsfjeY"));
     }
@@ -273,7 +324,8 @@ mod tests {
             Some(2048),
             Some("800x600".to_string()),
             Some("blurhash_string".to_string()),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::FileMetadata);
         assert_eq!(event.content, "My cool image");

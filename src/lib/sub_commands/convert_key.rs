@@ -1,14 +1,19 @@
-use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
-use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
 use std::str::FromStr;
+
+use clap::Args;
+
+use crate::{
+    types::{Id, PublicKey},
+    utils::{Prefix, parse_key_or_id_to_hex_string},
+};
 
 #[derive(Args, Debug)]
 pub struct ConvertKeySubCommand {
     /// Pubkey in bech32 or hex format
     #[arg(short, long)]
     key: String,
-    /// Bech32 prefix. Only used if you're converting from hex to bech32 encoded keys.
+    /// Bech32 prefix. Only used if you're converting from hex to bech32 encoded
+    /// keys.
     #[arg(short, long)]
     prefix: Option<Prefix>,
     /// Set to true if you're converting from bech32 to hex
@@ -28,9 +33,15 @@ pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> Result<()> 
             .as_ref()
             .expect("Prefix parameter is missing")
         {
-            Prefix::Npub => PublicKey::from_str(sub_command_args.key.as_str())?.to_bech32()?,
-            Prefix::Nsec => SecretKey::from_str(sub_command_args.key.as_str())?.to_bech32()?,
-            Prefix::Note => EventId::from_str(sub_command_args.key.as_str())?.to_bech32()?,
+            Prefix::Npub => PublicKey::try_from_hex_string(sub_command_args.key.as_str(), true)?
+                .as_bech32_string(),
+            Prefix::Nsec => {
+                crate::types::PrivateKey::try_from_hex_string(sub_command_args.key.as_str())?
+                    .as_bech32_string()
+            }
+            Prefix::Note => {
+                Id::try_from_hex_string(sub_command_args.key.as_str())?.as_bech32_string()
+            }
         };
         print!("{encoded_key}");
     }

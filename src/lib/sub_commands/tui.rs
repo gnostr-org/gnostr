@@ -5,48 +5,48 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::if_not_else)]
-use crate::blockheight;
-use crate::weeble;
-use crate::wobble;
-use std::env;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
+use std::{
+    cell::RefCell,
+    env,
+    io::{self, Stdout},
+    panic, process,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::{Duration, Instant},
 };
 
-use crate::app::App;
-use crate::app::QuitState;
-use crate::core::GnostrSubCommands;
-use crate::input::{Input, InputEvent, InputState};
-use crate::keys::KeyConfig;
-use crate::spinner::Spinner;
-use crate::ui::style::Theme;
-use crate::watcher::RepoWatcher;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use backtrace::Backtrace;
-use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
+use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
 use crossterm::{
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use gnostr_asyncgit::{
-    sync::{utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
+    sync::{RepoPath, utils::repo_work_dir},
 };
 use nostr_sdk_0_37_0::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
-use scopetime;
-use scopetime::scope_time;
+use scopetime::{self, scope_time};
 use serde::ser::StdError;
-use std::{
-    cell::RefCell,
-    io::{self, Stdout},
-    panic, process,
-    time::{Duration, Instant},
+use tracing::{Level, debug};
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+
+use crate::{
+    app::{App, QuitState},
+    blockheight,
+    core::GnostrSubCommands,
+    input::{Input, InputEvent, InputState},
+    keys::KeyConfig,
+    spinner::Spinner,
+    ui::style::Theme,
+    watcher::RepoWatcher,
+    weeble, wobble,
 };
-use tracing::{debug, Level};
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 //use crate::{app::App, cli::process_cmdline};
 pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
@@ -219,10 +219,10 @@ pub fn set_panic_handlers() -> Result<()> {
         let backtrace = Backtrace::new();
         shutdown_terminal();
         log_eprintln!(
-			"\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
-			e,
-			backtrace
-		);
+            "\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
+            e,
+            backtrace
+        );
     }));
 
     // global threadpool
@@ -269,16 +269,19 @@ pub async fn tui(
     //debug!("240:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
 
     //TODO gnostr --gitdir
-    //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
+    //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git
+    // init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
     if !valid_path(&gitdir) {
         debug!("243:invalid path\nplease run gitui inside of a non-bare git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
             debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap());
-            //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
+            //let repo_path: RepoPath =
+            // RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().
+            // to_string()));
             let repo_path: RepoPath = RepoPath::from(
                 env::var("GNOSTR_GITDIR")
-                    .unwrap_or(env::var("HOME").unwrap().clone() /*TODO*/)
+                    .unwrap_or(env::var("HOME").unwrap().clone() /* TODO */)
                     .as_ref(),
             );
 
@@ -406,8 +409,8 @@ pub async fn tui(
     Ok(())
 }
 
-//pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
-//    let _ = crate::tui::tui().await;
+//pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn
+// StdError>> {    let _ = crate::tui::tui().await;
 //    Ok(())
 //}
 

@@ -1,15 +1,13 @@
-use gnostr::blockheight::blockheight_sync;
-use gnostr::weeble::weeble_sync;
-use gnostr::wobble::wobble_sync;
+use std::{
+    collections::HashMap,
+    env, fs, io,
+    path::{Path, PathBuf},
+    process::{Command, exit},
+};
+
+use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::env;
-use std::fs;
-use std::io;
-
-use std::path::{Path, PathBuf};
-use std::process::{exit, Command};
 
 // --- Structs for TOML configuration ---
 #[derive(Serialize, Deserialize, Debug)]
@@ -272,9 +270,9 @@ fn main() -> io::Result<()> {
                     }
                     Err(e) => {
                         eprintln!(
-                        "Error: Could not execute ssh-add. Is it installed and in your PATH? {}",
-                        e
-                    );
+                            "Error: Could not execute ssh-add. Is it installed and in your PATH? {}",
+                            e
+                        );
                         exit(1);
                     }
                 }

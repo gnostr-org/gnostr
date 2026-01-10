@@ -1,17 +1,16 @@
+use std::str::FromStr;
+
 use clap::{Parser, Subcommand};
-use gnostr::queue::InternalEvent;
-use gnostr::types::nip18;
-use gnostr::types::nip2::{self, Contact};
-use gnostr::types::nip26;
-use gnostr::types::nip59;
-use gnostr::types::nip9;
-use gnostr::types::Signature;
-use gnostr::types::{
-    ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05, NostrClient, PreEventV3,
-    PrivateKey, PublicKey, Rumor, Signer, TagV3, UncheckedUrl, Unixtime,
+use gnostr::{
+    queue::InternalEvent,
+    types::{
+        ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05, NostrClient,
+        PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime,
+        nip2::{self, Contact},
+        nip9, nip18, nip26, nip59,
+    },
 };
 use secp256k1::XOnlyPublicKey;
-use std::str::FromStr;
 use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
@@ -380,7 +379,8 @@ async fn main() -> anyhow::Result<()> {
             let preevent = PreEventV3 {
                 pubkey,
                 created_at: Unixtime::now(),
-                kind: EventKind::MarketplaceUi, // This should be a stall kind, but MarketplaceUi is the only one available
+                kind: EventKind::MarketplaceUi, /* This should be a stall kind, but MarketplaceUi
+                                                 * is the only one available */
                 tags: vec![],
                 content,
             };
@@ -427,7 +427,8 @@ async fn main() -> anyhow::Result<()> {
             let preevent = PreEventV3 {
                 pubkey: public_key,
                 created_at: Unixtime::now(),
-                kind: EventKind::TextNote, // NIP-26 is a tag, not a kind. Using TextNote as placeholder.
+                kind: EventKind::TextNote, /* NIP-26 is a tag, not a kind. Using TextNote as
+                                            * placeholder. */
                 tags: vec![TagV3(tag.split(' ').map(|s| s.to_string()).collect())],
                 content: "Delegation proof".to_string(),
             };
@@ -453,7 +454,9 @@ async fn main() -> anyhow::Result<()> {
                 id: Id::default(), // This will be replaced by the create_seal function
                 pubkey: sender_private_key.public_key(),
                 created_at: Unixtime::now(),
-                kind: EventKind::TextNote, // NIP-17 says Kind 14 for chat messages, but NIP-59 wraps generic rumors. Use TextNote for the inner rumor.
+                kind: EventKind::TextNote, /* NIP-17 says Kind 14 for chat messages, but NIP-59
+                                            * wraps generic rumors. Use TextNote for the inner
+                                            * rumor. */
                 tags: vec![],
                 content,
             };

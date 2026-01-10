@@ -8,16 +8,15 @@ use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use gnostr::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
-    Frame,
-    Terminal,
 };
 use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
@@ -72,7 +71,7 @@ impl App {
     /// Constructs a new App with git data and NIP-34 support.
     fn new() -> Result<Self> {
         let repo = git2::Repository::open_from_env()?;
-        
+
         // Load commits (same as original)
         let mut revwalk = repo.revwalk()?;
         revwalk.push_head()?;
@@ -163,10 +162,7 @@ impl App {
                 vec![
                     vec!["k".to_string(), "issue-123".to_string()],
                     vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
-                    vec![
-                        "title".to_string(),
-                        "Feature: NIP-34 support".to_string(),
-                    ],
+                    vec!["title".to_string(), "Feature: NIP-34 support".to_string()],
                 ],
             ),
         ];
@@ -469,14 +465,17 @@ impl App {
                         let from_oid = git2::Oid::from_str(&from_commit.full_hash)?;
                         let to_oid = git2::Oid::from_str(&to_commit.full_hash)?;
 
-                        if let (Ok(from_commit_obj), Ok(to_commit_obj)) =
-                            (self.repo.find_commit(from_oid), self.repo.find_commit(to_oid))
-                        {
+                        if let (Ok(from_commit_obj), Ok(to_commit_obj)) = (
+                            self.repo.find_commit(from_oid),
+                            self.repo.find_commit(to_oid),
+                        ) {
                             let from_tree = from_commit_obj.tree()?;
                             let to_tree = to_commit_obj.tree()?;
-                            let diff =
-                                self.repo
-                                    .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), None)?;
+                            let diff = self.repo.diff_tree_to_tree(
+                                Some(&from_tree),
+                                Some(&to_tree),
+                                None,
+                            )?;
                             self.format_diff(&diff, &mut diff_content)?;
                         }
                     }
@@ -506,8 +505,9 @@ impl App {
                 if self.selected_commits.len() == 1 {
                     diff_content.push_str("💡 Tip: Select another commit to view diff range\n");
                 } else {
-                    diff_content
-                        .push_str("💡 Tip: Only 2 commits allowed for diff range. Press 'c' to clear.\n");
+                    diff_content.push_str(
+                        "💡 Tip: Only 2 commits allowed for diff range. Press 'c' to clear.\n",
+                    );
                 }
             }
         } else if let Some(selected_index) = self.commit_state.selected() {
@@ -523,10 +523,7 @@ impl App {
                     diff_content.push_str(&format!(
                         "Author: {} <{}>\n",
                         git_commit.author().name().unwrap_or("Unknown"),
-                        git_commit
-                            .author() 
-                            .email()
-                            .unwrap_or("unknown@example.com")
+                        git_commit.author().email().unwrap_or("unknown@example.com")
                     ));
 
                     // Add committer if different from author
@@ -552,10 +549,13 @@ impl App {
                     } else {
                         diff_content.push_str(&format!(
                             "Date: {}\n",
-                            chrono::DateTime::from_timestamp(git_commit.author().when().seconds(), 0)
-                                .map(|dt| dt.naive_local())
-                                .unwrap_or_default()
-                                .format("%Y-%m-%d %H:%M:%S")
+                            chrono::DateTime::from_timestamp(
+                                git_commit.author().when().seconds(),
+                                0
+                            )
+                            .map(|dt| dt.naive_local())
+                            .unwrap_or_default()
+                            .format("%Y-%m-%d %H:%M:%S")
                         ));
                     }
 
@@ -577,8 +577,10 @@ impl App {
 
                     diff_content.push_str("\n");
                     diff_content.push_str("╭─────────────────────────────────────────────────╮\n");
-                    diff_content.push_str("│                      Git Diff                       │\n");
-                    diff_content.push_str("╰─────────────────────────────────────────────────╯\n\n");
+                    diff_content
+                        .push_str("│                      Git Diff                       │\n");
+                    diff_content
+                        .push_str("╰─────────────────────────────────────────────────╯\n\n");
 
                     // Get diff against parent(s)
                     let parent_count = git_commit.parent_count();
@@ -786,7 +788,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         .style(Style::default().bg(Color::Black).fg(Color::White))
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
-    
+
     let help_area = Rect::new(0, size.height.saturating_sub(1), size.width, 1);
     f.render_widget(help_widget, help_area);
 }
@@ -828,16 +830,16 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
     } else {
         "Commit History".to_string()
     };
-    
+
     let list = List::new(items)
         .block(
             Block::default()
                 .title(title)
                 .borders(Borders::ALL)
-                .border_style(if app.selected_commits.len() > 0 { 
-                    Style::default().fg(Color::Yellow) 
-                } else { 
-                    Style::default().fg(Color::Green) 
+                .border_style(if app.selected_commits.len() > 0 {
+                    Style::default().fg(Color::Yellow)
+                } else {
+                    Style::default().fg(Color::Green)
                 }),
         )
         .highlight_style(
@@ -850,7 +852,7 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_stateful_widget(list, chunks[0], &mut app.commit_state);
 
     // --- Details Panel ---
-    let details_block = Block::default() 
+    let details_block = Block::default()
         .title("Gnostr NIP-34 Operations")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Magenta));
@@ -863,8 +865,7 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
                 vertical: 1,
             });
             f.render_widget(
-                Paragraph::new(details.clone())
-                    .style(Style::default().fg(Color::White)),
+                Paragraph::new(details.clone()).style(Style::default().fg(Color::White)),
                 details_chunk,
             );
         }
@@ -889,11 +890,8 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
         );
 
         f.render_widget(
-            Paragraph::new(format!(
-                "Selected: {} commits",
-                app.selected_commits.len()
-            ))
-            .style(Style::default().fg(Color::Yellow)),
+            Paragraph::new(format!("Selected: {} commits", app.selected_commits.len()))
+                .style(Style::default().fg(Color::Yellow)),
             details_chunk[1],
         );
 
@@ -989,8 +987,11 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
             };
 
             let content_preview = if event.content.len() > 50 {
-                format!("{}\
-...", &event.content[..47])
+                format!(
+                    "{}\
+...",
+                    &event.content[..47]
+                )
             } else {
                 event.content.clone()
             };
@@ -1053,7 +1054,7 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
                 horizontal: 1,
                 vertical: 1,
             });
-            
+
             let event_details = format!(
                 "Event ID: {}\n\\
                 Public Key: {}\n\\
@@ -1084,8 +1085,8 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
                     .tags
                     .iter()
                     .map(|tag| format!(
-                        "  {}: {}\n", 
-                        tag.get(0).unwrap_or(&"".to_string()), 
+                        "  {}: {}\n",
+                        tag.get(0).unwrap_or(&"".to_string()),
                         tag.get(1).unwrap_or(&"".to_string())
                     ))
                     .collect::<Vec<_>>()
@@ -1102,21 +1103,20 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
 
 /// Gets help text based on current mode and state.
 fn get_help_text(app: &App) -> String {
-    let base_help =
-        "Controls: [1/2/3] Go to Tab | [Tab] Switch | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
-    
+    let base_help = "Controls: [1/2/3] Go to Tab | [Tab] Switch | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
+
     match app.current_mode {
         NavigatorMode::Commits => {
-            let selection_help = if app.selected_commits.len() > 0 { 
+            let selection_help = if app.selected_commits.len() > 0 {
                 if app.selected_commits.len() == 2 {
                     " | [c] Clear | [n] Create Patch"
                 } else {
                     " | [Space] Select another | [c] Clear"
                 }
-            } else { 
-                " | [Space] Select" 
+            } else {
+                " | [Space] Select"
             };
-            
+
             if app.show_full_commit {
                 format!("{} | [Left] Summary{}", base_help, selection_help)
             } else {
@@ -1132,7 +1132,10 @@ fn get_help_text(app: &App) -> String {
             } else {
                 ""
             };
-            format!("{} | [Space] Select{} | [r] Republish", base_help, selection_help)
+            format!(
+                "{} | [Space] Select{} | [r] Republish",
+                base_help, selection_help
+            )
         }
     }
 }
@@ -1162,4 +1165,3 @@ fn main() -> Result<()> {
 
     Ok(())
 }
-

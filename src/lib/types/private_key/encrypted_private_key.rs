@@ -1,10 +1,10 @@
-use super::super::Error;
-use super::{KeySecurity, PrivateKey};
-use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
+use std::ops::Deref;
+
+use aes::cipher::{BlockDecryptMut, KeyIvInit, block_padding::Pkcs7};
 use base64::Engine;
 use chacha20poly1305::{
-    aead::{Aead, AeadCore, KeyInit, Payload},
     XChaCha20Poly1305,
+    aead::{Aead, AeadCore, KeyInit, Payload},
 };
 use derive_more::Display;
 use hmac::Hmac;
@@ -14,15 +14,17 @@ use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::ops::Deref;
 use unicode_normalization::UnicodeNormalization;
 use zeroize::Zeroize;
+
+use super::{super::Error, KeySecurity, PrivateKey};
 
 // This allows us to detect bad decryptions with wrong passwords.
 const V1_CHECK_VALUE: [u8; 11] = [15, 91, 241, 148, 90, 143, 101, 12, 172, 255, 103];
 const V1_HMAC_ROUNDS: u32 = 100_000;
 
-/// This is an encrypted private key (the string inside is the bech32 ncryptsec string)
+/// This is an encrypted private key (the string inside is the bech32 ncryptsec
+/// string)
 #[derive(Clone, Debug, Display, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct EncryptedPrivateKey(pub String);
@@ -36,7 +38,8 @@ impl Deref for EncryptedPrivateKey {
 }
 
 impl EncryptedPrivateKey {
-    /// Create from a bech32 string (this just type wraps as the internal stringly already is one)
+    /// Create from a bech32 string (this just type wraps as the internal
+    /// stringly already is one)
     pub fn from_bech32_string(s: String) -> EncryptedPrivateKey {
         EncryptedPrivateKey(s)
     }
@@ -63,24 +66,24 @@ impl EncryptedPrivateKey {
     ///    compose = iv + ciphertext
     ///    encode = base64
     /// Version 0:
-    ///    PBKDF = pbkdf2-hmac-sha256 ( salt = concat(0x1, 15 random bytes), rounds = 100000 )
-    ///    inside = concat(private_key, 15 specified bytes, key_security_byte)
-    ///    encrypt = AES-256-CBC with random IV
+    ///    PBKDF = pbkdf2-hmac-sha256 ( salt = concat(0x1, 15 random bytes),
+    /// rounds = 100000 )    inside = concat(private_key, 15 specified
+    /// bytes, key_security_byte)    encrypt = AES-256-CBC with random IV
     ///    compose = salt + iv + ciphertext
     ///    encode = base64
     /// Version 1:
-    ///    PBKDF = pbkdf2-hmac-sha256 ( salt = concat(0x1, 15 random bytes), rounds = 100000 )
-    ///    inside = concat(private_key, 15 specified bytes, key_security_byte)
-    ///    encrypt = AES-256-CBC with random IV
+    ///    PBKDF = pbkdf2-hmac-sha256 ( salt = concat(0x1, 15 random bytes),
+    /// rounds = 100000 )    inside = concat(private_key, 15 specified
+    /// bytes, key_security_byte)    encrypt = AES-256-CBC with random IV
     ///    compose = salt + iv + ciphertext
     ///    encode = bech32('ncryptsec')
     /// Version 2:
-    ///    PBKDF = scrypt ( salt = 16 random bytes, log_n = user choice, r = 8, p = 1)
-    ///    inside = private_key
+    ///    PBKDF = scrypt ( salt = 16 random bytes, log_n = user choice, r = 8,
+    /// p = 1)    inside = private_key
     ///    associated_data = key_security_byte
     ///    encrypt = XChaCha20-Poly1305
-    ///    compose = concat (0x2, log_n, salt, nonce, associated_data, ciphertext)
-    ///    encode = bech32('ncryptsec')
+    ///    compose = concat (0x2, log_n, salt, nonce, associated_data,
+    /// ciphertext)    encode = bech32('ncryptsec')
     pub fn version(&self) -> Result<i8, Error> {
         if self.0.starts_with("ncryptsec1") {
             let data = bech32::decode(&self.0)?;
@@ -103,8 +106,8 @@ impl PrivateKey {
     /// Export in a (non-portable) encrypted form. This does not downgrade
     /// the security of the key, but you are responsible to keep it encrypted.
     /// You should not attempt to decrypt it, only use `import_encrypted()` on
-    /// it, or something similar in another library/client which also respects key
-    /// security.
+    /// it, or something similar in another library/client which also respects
+    /// key security.
     ///
     /// This currently exports into EncryptedPrivateKey version 2.
     ///
@@ -139,7 +142,8 @@ impl PrivateKey {
                 XChaCha20Poly1305::new((&symmetric_key).into())
             };
 
-            // The inner secret. We don't have to drop this because we are encrypting-in-place
+            // The inner secret. We don't have to drop this because we are
+            // encrypting-in-place
             let mut inner_secret: Vec<u8> = self.0.secret_bytes().to_vec();
 
             let payload = Payload {
@@ -165,7 +169,7 @@ impl PrivateKey {
         concatenation.extend(nonce); // 24 bytes of nonce
         concatenation.extend(associated_data); // 1 byte of key security
         concatenation.extend(ciphertext); // 48 bytes of ciphertext expected
-                                          // Total length is 91 = 1 + 1 + 16 + 24 + 1 + 48
+        // Total length is 91 = 1 + 1 + 16 + 24 + 1 + 48
 
         // bech32 encode
         Ok(EncryptedPrivateKey(bech32::encode::<bech32::Bech32>(
@@ -174,12 +178,14 @@ impl PrivateKey {
         )?))
     }
 
-    /// Import an encrypted private key which was exported with `export_encrypted()`.
+    /// Import an encrypted private key which was exported with
+    /// `export_encrypted()`.
     ///
     /// We recommend you zeroize() the password you pass in after you are
     /// done with it.
     ///
-    /// This is backwards-compatible with keys that were exported with older code.
+    /// This is backwards-compatible with keys that were exported with older
+    /// code.
     pub fn import_encrypted(
         encrypted: &EncryptedPrivateKey,
         password: &str,
@@ -288,7 +294,8 @@ impl PrivateKey {
             .decrypt_padded_vec_mut::<Pkcs7>(ciphertext)?; // 44 bytes
         if plaintext.len() != 44 {
             return Err(Error::InvalidEncryptedPrivateKey);
-            //return Err(Error::AssertionFailed("Import encrypted plaintext len != 44".to_owned()));
+            //return Err(Error::AssertionFailed("Import encrypted plaintext len
+            // != 44".to_owned()));
         }
 
         // Verify the check value
@@ -460,35 +467,38 @@ mod test {
 /*
  * version -1 (if 64 bytes, base64 encoded)
  *
- *    symmetric_aes_key = pbkdf2_hmac_sha256(password,  salt="nostr", rounds=4096)
- *    pre_encoded_encrypted_private_key = AES-256-CBC(IV=random, key=symmetric_aes_key, data=private_key)
- *    encrypted_private_key = base64(concat(IV, pre_encoded_encrypted_private_key))
+ *    symmetric_aes_key = pbkdf2_hmac_sha256(password,  salt="nostr",
+ * rounds=4096)    pre_encoded_encrypted_private_key = AES-256-CBC(IV=random,
+ * key=symmetric_aes_key, data=private_key)    encrypted_private_key =
+ * base64(concat(IV, pre_encoded_encrypted_private_key))
  *
  * version 0 (80 bytes, base64 encoded, same as v1 internally)
  *
- *    symmetric_aes_key = pbkdf2_hmac_sha256(password,  salt=concat(0x1, 15 random bytes), rounds=100000)
- *    key_security_byte = 0x0 if weak, 0x1 if medium
- *    inner_concatenation = concat(
+ *    symmetric_aes_key = pbkdf2_hmac_sha256(password,  salt=concat(0x1, 15
+ * random bytes), rounds=100000)    key_security_byte = 0x0 if weak, 0x1 if
+ * medium    inner_concatenation = concat(
  *        private_key,                                         // 32 bytes
  *        [15, 91, 241, 148, 90, 143, 101, 12, 172, 255, 103], // 11 bytes
  *        key_security_byte                                    //  1 byte
  *    )
- *    pre_encoded_encrypted_private_key = AES-256-CBC(IV=random, key=symmetric_aes_key, data=private_key)
- *    outer_concatenation = concat(IV, pre_encoded_encrypted_private_key)
- *    encrypted_private_key = base64(outer_concatenation)
+ *    pre_encoded_encrypted_private_key = AES-256-CBC(IV=random,
+ * key=symmetric_aes_key, data=private_key)    outer_concatenation =
+ * concat(IV, pre_encoded_encrypted_private_key)    encrypted_private_key =
+ * base64(outer_concatenation)
  *
  * version 1
  *
  *    salt = concat(byte(0x1), 15 random bytes)
- *    symmetric_aes_key = pbkdf2_hmac_sha256(password, salt=salt, rounds=100,000)
- *    key_security_byte = 0x0 if weak, 0x1 if medium
+ *    symmetric_aes_key = pbkdf2_hmac_sha256(password, salt=salt,
+ * rounds=100,000)    key_security_byte = 0x0 if weak, 0x1 if medium
  *    inner_concatenation = concat(
  *        private_key,                                          // 32 bytes
  *        [15, 91, 241, 148, 90, 143, 101, 12, 172, 255, 103],  // 11 bytes
  *        key_security_byte                                     //  1 byte
  *    )
- *    pre_encoded_encrypted_private_key = AES-256-CBC(IV=random, key=symmetric_aes_key, data=private_key)
- *    outer_concatenation = concat(salt, IV, pre_encoded_encrypted_private_key)
+ *    pre_encoded_encrypted_private_key = AES-256-CBC(IV=random,
+ * key=symmetric_aes_key, data=private_key)    outer_concatenation =
+ * concat(salt, IV, pre_encoded_encrypted_private_key)
  *    encrypted_private_key = bech32('ncryptsec', outer_concatenation)
  *
  * version 2 (scrypt, xchacha20-poly1305)
@@ -503,6 +513,7 @@ mod test {
  *        associated_data=key_security_byte
  *    )
  *    version = byte(0x3)
- *    outer_concatenation = concat(version, log2(rounds) as one byte, salt, nonce, pre_encoded_encrypted_private_key)
- *    encrypted_private_key = bech32('ncryptsec', outer_concatenation)
+ *    outer_concatenation = concat(version, log2(rounds) as one byte, salt,
+ * nonce, pre_encoded_encrypted_private_key)    encrypted_private_key =
+ * bech32('ncryptsec', outer_concatenation)
  */

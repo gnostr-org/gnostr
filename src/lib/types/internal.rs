@@ -1,11 +1,10 @@
 #![allow(clippy::print_with_newline)]
-use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
-use crate::blockheight::blockheight_sync;
-use crate::weeble::weeble_sync;
 use base64::Engine;
 use http::Uri;
-use tokio_tungstenite::tungstenite;
-use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{tungstenite, tungstenite::Message};
+
+use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
+use crate::{blockheight::blockheight_sync, weeble::weeble_sync};
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(

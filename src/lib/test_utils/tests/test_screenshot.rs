@@ -1,9 +1,12 @@
-use std::borrow::Cow;
-use std::fs;
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
-use std::thread;
-use std::time::Duration;
+use std::{
+    borrow::Cow,
+    fs,
+    path::PathBuf,
+    process::{Command, Stdio},
+    thread,
+    time::Duration,
+};
+
 use tmux_interface::{CapturePane, KillSession, NewSession, SendKeys, Tmux};
 
 fn is_tmux_installed() -> bool {

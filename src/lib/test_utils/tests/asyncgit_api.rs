@@ -1,13 +1,16 @@
+use std::{
+    fs::{self, File},
+    io::Write,
+    path::Path,
+};
+
 use git2::{Repository, Signature};
-use gnostr_asyncgit::sync::status::{get_status, StatusItemType, StatusType};
 use gnostr_asyncgit::sync::{
-    self, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
-    stage_add_file, RepoPath,
+    self, RepoPath, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
+    stage_add_file,
+    status::{StatusItemType, StatusType, get_status},
 };
 use serial_test::serial;
-use std::fs::{self, File};
-use std::io::Write;
-use std::path::Path;
 use tempfile::TempDir;
 
 // Helper function to set up a temporary git repository for testing.
@@ -112,14 +115,14 @@ fn test_complex_git_workflow() {
     //// 5. Verify the stash and that the working directory is clean
     //let stashes = get_stashes(&repo_path).unwrap();
     //assert_eq!(stashes.len(), 1);
-    //let stash_commit_details = get_commit_details(&repo_path, stashes[0]).unwrap();
-    //assert_eq!(
+    //let stash_commit_details = get_commit_details(&repo_path,
+    // stashes[0]).unwrap(); assert_eq!(
     //    stash_commit_details.message.unwrap().subject,
     //    "On feature-branch: test stash"
     //);
 
-    //let status_after_stash = get_status(&repo_path, StatusType::Both, None).unwrap();
-    //assert!(status_after_stash.is_empty());
+    //let status_after_stash = get_status(&repo_path, StatusType::Both,
+    // None).unwrap(); assert!(status_after_stash.is_empty());
 
     // 6. Check out the main branch again
     checkout_branch(&repo_path, "main", true).unwrap();

@@ -1,6 +1,7 @@
 // Copyright 2015-2020 nostr-proto Developers
 // Licensed under the MIT license <LICENSE-MIT or http://opensource.org/licenses/MIT>
-// This file may not be copied, modified, or distributed except according to those terms.
+// This file may not be copied, modified, or distributed except according to
+// those terms.
 
 //! NIP-19 bech32-encoded entities
 
@@ -10,7 +11,7 @@ use std::str::FromStr;
 
 use bech32::{self, Bech32, Bech32m, Hrp};
 
-use crate::types::{Error, Id, EventKind, PublicKey, RelayUrl};
+use crate::types::{Error, EventKind, Id, PublicKey, RelayUrl};
 
 /// Different NIP-19 bech32 encoded entity types
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,10 +80,14 @@ impl Nip19 {
         match hrp.as_str() {
             "npub" => Ok(Nip19::PublicKey(PublicKey::from_bytes(&data, true)?)),
             "nsec" => {
-                if data.len() != 32 { return Err(Error::InvalidPrivateKey); }
+                if data.len() != 32 {
+                    return Err(Error::InvalidPrivateKey);
+                }
                 Ok(Nip19::PrivateKey(hex::encode(data)))
-            },
-            "note" => Ok(Nip19::EventId(Id::try_from_bytes(&data).map_err(|_| Error::InvalidId)?)),
+            }
+            "note" => Ok(Nip19::EventId(
+                Id::try_from_bytes(&data).map_err(|_| Error::InvalidId)?,
+            )),
             "nprofile" => {
                 let mut public_key = None;
                 let mut relays = Vec::new();
@@ -97,7 +102,9 @@ impl Nip19 {
 
                     match t {
                         TLV_TYPE_SPECIAL => public_key = Some(PublicKey::from_bytes(v, true)?),
-                        TLV_TYPE_RELAY => relays.push(RelayUrl::try_from_str(&String::from_utf8(v.to_vec())?)?),
+                        TLV_TYPE_RELAY => {
+                            relays.push(RelayUrl::try_from_str(&String::from_utf8(v.to_vec())?)?)
+                        }
                         _ => {} // Ignore unknown TLV types
                     }
                 }
@@ -119,8 +126,12 @@ impl Nip19 {
                     cursor += l;
 
                     match t {
-                        TLV_TYPE_SPECIAL => event_id = Some(Id::try_from_bytes(v).map_err(|_| Error::InvalidId)?),
-                        TLV_TYPE_RELAY => relays.push(RelayUrl::try_from_str(&String::from_utf8(v.to_vec())?)?),
+                        TLV_TYPE_SPECIAL => {
+                            event_id = Some(Id::try_from_bytes(v).map_err(|_| Error::InvalidId)?)
+                        }
+                        TLV_TYPE_RELAY => {
+                            relays.push(RelayUrl::try_from_str(&String::from_utf8(v.to_vec())?)?)
+                        }
                         TLV_TYPE_AUTHOR => author = Some(PublicKey::from_bytes(v, true)?),
                         TLV_TYPE_KIND => {
                             if v.len() == 4 {
@@ -156,7 +167,9 @@ impl Nip19 {
 
                     match t {
                         TLV_TYPE_SPECIAL => identifier = Some(String::from_utf8(v.to_vec())?),
-                        TLV_TYPE_RELAY => relays.push(RelayUrl::try_from_str(&String::from_utf8(v.to_vec())?)?),
+                        TLV_TYPE_RELAY => {
+                            relays.push(RelayUrl::try_from_str(&String::from_utf8(v.to_vec())?)?)
+                        }
                         TLV_TYPE_AUTHOR => public_key = Some(PublicKey::from_bytes(v, true)?),
                         TLV_TYPE_KIND => {
                             if v.len() == 4 {
@@ -178,7 +191,9 @@ impl Nip19 {
                     relays,
                 }))
             }
-            "nrelay" => Ok(Nip19::Relay(RelayUrl::try_from_str(&String::from_utf8(data)?)?)),
+            "nrelay" => Ok(Nip19::Relay(RelayUrl::try_from_str(&String::from_utf8(
+                data,
+            )?)?)),
             _ => Err(Error::InvalidNip19Prefix),
         }
     }
@@ -186,12 +201,16 @@ impl Nip19 {
     /// Encode a NIP-19 entity into a bech32 string
     pub fn encode(&self) -> Result<String, Error> {
         match self {
-            Nip19::PublicKey(pk) => bech32::encode::<Bech32>(Hrp::parse("npub")?, pk.as_bytes()).map_err(|e| e.into()),
+            Nip19::PublicKey(pk) => {
+                bech32::encode::<Bech32>(Hrp::parse("npub")?, pk.as_bytes()).map_err(|e| e.into())
+            }
             Nip19::PrivateKey(sk_hex) => {
                 let sk_bytes = hex::decode(sk_hex)?;
                 bech32::encode::<Bech32>(Hrp::parse("nsec")?, &sk_bytes).map_err(|e| e.into())
-            },
-            Nip19::EventId(id) => bech32::encode::<Bech32>(Hrp::parse("note")?, id.0.as_slice()).map_err(|e| e.into()),
+            }
+            Nip19::EventId(id) => {
+                bech32::encode::<Bech32>(Hrp::parse("note")?, id.0.as_slice()).map_err(|e| e.into())
+            }
             Nip19::Profile(profile) => {
                 let mut data = Vec::new();
                 // Special: Public Key
@@ -261,9 +280,9 @@ impl Nip19 {
                 bech32::encode::<Bech32>(Hrp::parse("naddr")?, &data).map_err(|e| e.into())
             }
             Nip19::Relay(relay_url) => {
-                bech32::encode::<Bech32>(Hrp::parse("nrelay")?, relay_url.as_str().as_bytes()).map_err(|e| e.into())
+                bech32::encode::<Bech32>(Hrp::parse("nrelay")?, relay_url.as_str().as_bytes())
+                    .map_err(|e| e.into())
             }
         }
     }
 }
-

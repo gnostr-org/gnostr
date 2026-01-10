@@ -1,11 +1,16 @@
 use std::time::Duration;
 
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey, Tag, PreEventV3, Unixtime, KeySigner, Signer};
 use serde_json::Value;
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Filter, Id, KeySigner, Keys, Metadata, PreEventV3, PublicKey,
+        Signer, Tag, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct DeleteProfileSubCommand {
@@ -59,9 +64,7 @@ pub async fn delete(
         filter.authors = authors.iter().map(|p| (*p).into()).collect();
         filter.kinds = kinds;
 
-        let events: Vec<Event> = client
-            .get_events_of(vec![filter], timeout)
-            .await?;
+        let events: Vec<Event> = client.get_events_of(vec![filter], timeout).await?;
 
         let event_tags: Vec<Tag> = events
             .iter()
@@ -93,7 +96,10 @@ pub async fn delete(
         let mut metadata = Metadata::default();
         metadata.name = Some("Deleted".to_string());
         let mut other = serde_json::Map::new();
-        other.insert("display_name".to_string(), Value::String("Deleted".to_string()));
+        other.insert(
+            "display_name".to_string(),
+            Value::String("Deleted".to_string()),
+        );
         other.insert("about".to_string(), Value::String("Deleted".to_string()));
         other.insert("deleted".to_string(), Value::Bool(true));
         metadata.other = other;

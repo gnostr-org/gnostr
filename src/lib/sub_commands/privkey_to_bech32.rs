@@ -1,11 +1,13 @@
-use crate::types::PrivateKey;
 use anyhow::Result;
 use clap::Parser;
 use zeroize::Zeroize;
 
+use crate::types::PrivateKey;
+
 #[derive(Parser, Debug, Clone)]
 pub struct PrivkeyToBech32SubCommand {
-    /// Private key in hex format. If not provided, it will be prompted securely.
+    /// Private key in hex format. If not provided, it will be prompted
+    /// securely.
     #[arg(value_name = "PRIVATE_KEY_HEX", required = false)]
     pub privkey_hex: Option<String>,
 }

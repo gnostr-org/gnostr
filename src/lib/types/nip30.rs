@@ -1,13 +1,15 @@
 //! NIP-30: Custom Emoji
 //!
-//! This NIP defines how to include custom emojis in Nostr events using a special "emoji" tag.
-//! These emojis can be used in various event kinds like kind 0, 1, 7, and 30315.
+//! This NIP defines how to include custom emojis in Nostr events using a
+//! special "emoji" tag. These emojis can be used in various event kinds like
+//! kind 0, 1, 7, and 30315.
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/30.md
 
-use crate::types::{Event, Tag};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
+
+use crate::types::{Event, Tag};
 
 /// The name of the custom emoji tag.
 pub const CUSTOM_EMOJI_TAG_NAME: &str = "emoji";
@@ -22,7 +24,8 @@ pub struct Emoji {
 /// Helper trait for NIP-30 custom emoji tags on Event types.
 pub trait NIP30Event {
     /// Extracts all custom emojis defined in "emoji" tags from the event.
-    /// Returns a vector of `Emoji` structs. Invalid or malformed tags are ignored.
+    /// Returns a vector of `Emoji` structs. Invalid or malformed tags are
+    /// ignored.
     fn extract_custom_emojis(&self) -> Vec<Emoji>;
 
     /// Creates an "emoji" tag with the given shortcode and image URL.
@@ -57,7 +60,10 @@ mod tests {
     fn create_dummy_event_with_emojis(emojis: Vec<Emoji>) -> Event {
         let mut tags = Vec::new();
         for emoji in emojis {
-            tags.push(Event::create_custom_emoji_tag(emoji.shortcode, emoji.image_url));
+            tags.push(Event::create_custom_emoji_tag(
+                emoji.shortcode,
+                emoji.image_url,
+            ));
         }
 
         Event {
@@ -76,7 +82,14 @@ mod tests {
         let shortcode = "wave".to_string();
         let image_url = "https://example.com/wave.png".to_string();
         let tag = Event::create_custom_emoji_tag(shortcode.clone(), image_url.clone());
-        assert_eq!(tag.0, vec![CUSTOM_EMOJI_TAG_NAME.to_string(), shortcode.clone(), image_url.clone()]);
+        assert_eq!(
+            tag.0,
+            vec![
+                CUSTOM_EMOJI_TAG_NAME.to_string(),
+                shortcode.clone(),
+                image_url.clone()
+            ]
+        );
     }
 
     #[test]
@@ -118,7 +131,10 @@ mod tests {
             shortcode: "wave".to_string(),
             image_url: "https://example.com/wave.png".to_string(),
         };
-        let mut tags = vec![Event::create_custom_emoji_tag(emoji1.shortcode.clone(), emoji1.image_url.clone())];
+        let mut tags = vec![Event::create_custom_emoji_tag(
+            emoji1.shortcode.clone(),
+            emoji1.image_url.clone(),
+        )];
         // Malformed tag (missing image_url)
         tags.push(Tag::new(&[CUSTOM_EMOJI_TAG_NAME, "malformed"]));
         // Malformed tag (wrong name)

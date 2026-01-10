@@ -1,11 +1,13 @@
-use super::Error;
-use super::{EventKind, PublicKey, Signature, Unixtime};
-use serde::de::Error as DeError;
-use serde::de::{Deserialize, Deserializer, Visitor};
-use serde::ser::{Serialize, Serializer};
+use std::fmt;
+
+use serde::{
+    de::{Deserialize, Deserializer, Error as DeError, Visitor},
+    ser::{Serialize, Serializer},
+};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use super::{Error, EventKind, PublicKey, Signature, Unixtime};
 
 /// Delegation information for an Event
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -38,7 +40,8 @@ pub struct DelegationConditions {
 }
 
 impl DelegationConditions {
-    /// Return in conmpiled string form. If full form is stored, it is returned, otherwise it is compiled from parts.
+    /// Return in conmpiled string form. If full form is stored, it is returned,
+    /// otherwise it is compiled from parts.
     pub fn as_string(&self) -> String {
         match &self.full_string {
             Some(fs) => fs.clone(),
@@ -158,9 +161,7 @@ impl Visitor<'_> for DelegationConditionsVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
-    use crate::types::PrivateKey;
-    use crate::{KeySigner, Signer, Tag};
+    use crate::{KeySigner, Signer, Tag, test_serde, types::PrivateKey};
 
     test_serde! {DelegationConditions, test_delegation_conditions_serde}
 
@@ -224,7 +225,8 @@ mod test {
 
     #[test]
     fn test_delegation_tag_parse_and_verify_alt_order() {
-        // Clauses in the condition string are not in the canonical order, but this should not matter
+        // Clauses in the condition string are not in the canonical order, but this
+        // should not matter
         let tag_str = "[\"delegation\",\"05bc52a6117c57f99b73f5315f3105b21cecdcd2c6825dee8d508bd7d972ad6a\",\"kind=1&created_at<1686078180&created_at>1680807780\",\"1016d2f4284cdb4e6dc6eaa4e61dff87b9f4138786154d070d36e9434f817bd623abed2133bb62b9dcfb2fbf54b42e16bcd44cfc23907f8eb5b45c011caaa47c\"]";
         let dt = serde_json::from_str::<Tag>(tag_str).unwrap();
         if let Ok((pubkey, conditions, sig)) = dt.parse_delegation() {

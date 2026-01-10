@@ -1,12 +1,14 @@
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{
-    Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner,
-    Signer,
-};
 use serde_json::Value;
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Id, KeySigner, Keys, Metadata, PreEventV3, Signer, Tag,
+        UncheckedUrl, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct SetMetadataSubCommand {
@@ -73,7 +75,9 @@ pub async fn set_metadata(
     };
     // Banner URL
     if let Some(banner_url) = &sub_command_args.banner {
-        metadata.other.insert("banner".to_string(), Value::String(banner_url.clone()));
+        metadata
+            .other
+            .insert("banner".to_string(), Value::String(banner_url.clone()));
     };
 
     // NIP-05 identifier
@@ -84,19 +88,25 @@ pub async fn set_metadata(
 
     // LUD-06 string
     if let Some(lud06) = &sub_command_args.lud06 {
-        metadata.other.insert("lud06".to_string(), Value::String(lud06.clone()));
+        metadata
+            .other
+            .insert("lud06".to_string(), Value::String(lud06.clone()));
     }
 
     // LUD-16 string
     if let Some(lud16) = &sub_command_args.lud16 {
-        metadata.other.insert("lud16".to_string(), Value::String(lud16.clone()));
+        metadata
+            .other
+            .insert("lud16".to_string(), Value::String(lud16.clone()));
     }
 
     // Set custom fields
     for ef in sub_command_args.extra_field.iter() {
         let sef: Vec<&str> = ef.split(':').collect();
         if sef.len() == 2 {
-            metadata.other.insert(sef[0].to_string(), Value::String(sef[1].to_string()));
+            metadata
+                .other
+                .insert(sef[0].to_string(), Value::String(sef[1].to_string()));
         }
     }
 
@@ -123,7 +133,7 @@ pub async fn set_metadata(
 
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
-    
+
     let event_id = client.send_event(event).await?;
     if sub_command_args.hex {
         print!("{{\"id\":\"{}\"}}", event_id.as_hex_string());

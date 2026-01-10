@@ -1,8 +1,9 @@
 // NIP-03: OpenTimestamps Attestations for Events
 // https://github.com/nostr-protocol/nips/blob/master/03.md
 
-use crate::types::event::{Event, EventId, UnsignedEvent};
 use secp256k1::{SecretKey, XOnlyPublicKey};
+
+use crate::types::event::{Event, EventId, UnsignedEvent};
 
 /// Create an OpenTimestamps attestation event for another event.
 ///

@@ -3,20 +3,21 @@ use std::error::Error;
 
 use clap::Parser;
 use futures::stream::StreamExt;
-use libp2p::{gossipsub::IdentTopic, identity, kad, Multiaddr, PeerId};
+use gnostr::p2p::{
+    args::Args,
+    command_handler::handle_input_line,
+    event_handler::handle_swarm_event,
+    git_publisher::run_git_publisher,
+    network_config::IPFS_BOOTNODES,
+    swarm_builder,
+    utils::{generate_ed25519, init_subscriber},
+};
+use libp2p::{Multiaddr, PeerId, gossipsub::IdentTopic, identity, kad};
 use tokio::{
     io::{self, AsyncBufReadExt},
     select,
 };
 use tracing::{debug, info, warn};
-
-use gnostr::p2p::args::Args;
-use gnostr::p2p::command_handler::handle_input_line;
-use gnostr::p2p::event_handler::handle_swarm_event;
-use gnostr::p2p::git_publisher::run_git_publisher;
-use gnostr::p2p::network_config::IPFS_BOOTNODES;
-use gnostr::p2p::swarm_builder;
-use gnostr::p2p::utils::{generate_ed25519, init_subscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

@@ -2,15 +2,16 @@
 ///
 /// This test suite is designed to capture the TUI of multiple `gnostr chat`
 /// instances to ensure that the CLI TUI messages are consistent and correct.
-///
 #[cfg(test)]
 mod tests {
-    use crate::test_utils::git::GitTestRepo;
-    use crate::test_utils::CliTester;
-    use crate::utils::screenshot::make_screenshot;
+    use std::{thread, time::Duration};
+
     use serial_test::serial;
-    use std::thread;
-    use std::time::Duration;
+
+    use crate::{
+        test_utils::{CliTester, git::GitTestRepo},
+        utils::screenshot::make_screenshot,
+    };
 
     #[test]
     #[ignore]
@@ -42,8 +43,8 @@ mod tests {
 
         make_screenshot("chat_simulation_after_user2_replies")?;
 
-        // The CliTester's Drop implementation will automatically kill the child processes
-        // and restore the terminal.
+        // The CliTester's Drop implementation will automatically kill the child
+        // processes and restore the terminal.
 
         Ok(())
     }

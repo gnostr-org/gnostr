@@ -1,33 +1,32 @@
 //use crate::ui::solarized_dark;
 //use crate::ui::solarized_light;
 
-//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-//use ratatui::prelude::*;
-use ratatui::{
-    backend::{Backend, CrosstermBackend},
-    crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-        execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    },
-    layout::{Constraint, Direction, Layout},
-    style::Color,
-    text::{Line, Span}, // Added Span here
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
-    Frame,
-    Terminal,
-};
-
-use ratatui::style::Style;
+//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour,
+// swarm::SwarmEvent, tcp, yamux}; use ratatui::prelude::*;
 use std::{
     error::Error,
     io,
     sync::{Arc, Mutex},
     time::Duration,
 };
-use textwrap::{fill, Options};
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
+
+use ratatui::style::Style;
+use ratatui::{
+    Frame,
+    Terminal,
+    backend::{Backend, CrosstermBackend},
+    crossterm::{
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+        execute,
+        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    },
+    layout::{Constraint, Direction, Layout},
+    style::Color,
+    text::{Line, Span}, // Added Span here
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
+};
+use textwrap::{Options, fill};
+use tui_input::{Input, backend::crossterm::EventHandler};
 use uuid::Uuid;
 
 use crate::p2p::chat::msg::{self, MsgKind};
@@ -281,8 +280,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             // all_messages.clear(); // Clear existing messages
                             all_messages.extend(oneshot_messages); // Add existing OneShot messages back
                             all_messages.push(selected_diff); // Add the selected diff
-                                                              // TODO: handle better
-                                                              // app.msgs_scroll = usize::MAX; // Scroll to bottom
+                            // TODO: handle better
+                            // app.msgs_scroll = usize::MAX; // Scroll to bottom
 
                             app.mode = AppMode::Normal; // Exit selection mode
                         }
@@ -452,7 +451,7 @@ fn ui(f: &mut Frame, app: &App) {
     let default_input_style = match app.mode {
         AppMode::Normal => Style::default(),
         AppMode::Editing => Style::default().fg(Color::Cyan),
-        AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), // Indicate non-editable
+        AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), /* Indicate non-editable */
     };
 
     for (i, c) in input_str.chars().enumerate() {

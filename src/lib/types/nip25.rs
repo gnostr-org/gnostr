@@ -5,13 +5,15 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/25.md
 
-use serde::{Deserialize, Serialize};
-use crate::types::{Event, Id, PublicKey, Tag, Unixtime, EventKind, PreEvent, Signature};
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
+
+use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-25 Reaction Event Kind
 pub const REACTION_KIND: u32 = 7;
-/// NIP-25 External Content Reaction Event Kind (optional, will focus on Kind 7 first)
+/// NIP-25 External Content Reaction Event Kind (optional, will focus on Kind 7
+/// first)
 pub const EXTERNAL_CONTENT_REACTION_KIND: u32 = 17;
 
 /// Represents the content of a NIP-25 Reaction Event.
@@ -23,14 +25,18 @@ pub struct ReactionContent {
 
 /// Helper trait for NIP-25 reaction events.
 pub trait NIP25Event {
-    /// Extracts the ID of the event this reaction is responding to (from 'e' tag).
+    /// Extracts the ID of the event this reaction is responding to (from 'e'
+    /// tag).
     fn reacted_event_id(&self) -> Option<Id>;
 
-    /// Extracts the PublicKey of the author of the event this reaction is responding to (from 'p' tag).
+    /// Extracts the PublicKey of the author of the event this reaction is
+    /// responding to (from 'p' tag).
     fn reacted_pubkey(&self) -> Option<PublicKey>;
 
-    /// Extracts the original event coordinates from 'a' tag (for addressable events).
-    // fn reacted_addressable_event_coords(&self) -> Option<Coordinate>; // Maybe later if Coordinate is available
+    /// Extracts the original event coordinates from 'a' tag (for addressable
+    /// events).
+    // fn reacted_addressable_event_coords(&self) -> Option<Coordinate>; // Maybe later if
+    // Coordinate is available
 
     /// Creates a NIP-25 Reaction event (Kind 7).
     fn new_reaction_event(
@@ -68,10 +74,11 @@ impl NIP25Event for Event {
         reacted_pubkey: Option<PublicKey>,
         reaction_content: String,
     ) -> Result<Event> {
-        let content = ReactionContent { reaction: reaction_content.clone() }.reaction;
-        let mut tags: Vec<Tag> = vec![
-            Tag::new(&["e", &reacted_event_id.as_hex_string()]),
-        ];
+        let content = ReactionContent {
+            reaction: reaction_content.clone(),
+        }
+        .reaction;
+        let mut tags: Vec<Tag> = vec![Tag::new(&["e", &reacted_event_id.as_hex_string()])];
 
         if let Some(pk) = reacted_pubkey {
             tags.push(Tag::new(&["p", &pk.as_hex_string()]));
@@ -121,7 +128,8 @@ mod tests {
             reacted_event_id,
             reacted_pubkey,
             reaction_content.clone(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event.kind, EventKind::Reaction);
         assert_eq!(event.content, reaction_content);
@@ -135,7 +143,8 @@ mod tests {
             reacted_event_id,
             None, // No reacted pubkey
             custom_reaction.clone(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(event_emoji.kind, EventKind::Reaction);
         assert_eq!(event_emoji.content, custom_reaction);

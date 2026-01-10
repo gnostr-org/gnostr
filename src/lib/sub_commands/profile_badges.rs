@@ -1,11 +1,14 @@
-use std::str::FromStr;
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Filter, Id, Keys, PreEventV3, Unixtime, KeySigner, Tag, Signer};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Filter, Id, KeySigner, Keys, PreEventV3, Signer, Tag, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct ProfileBadgesSubCommand {
@@ -36,9 +39,12 @@ pub async fn set_profile_badges(
         .map(|badge_id| Id::try_from_hex_string(badge_id).unwrap())
         .collect();
     let mut badge_definition_filter = Filter::new();
-    badge_definition_filter.ids = badge_definition_event_ids.into_iter().map(|id| id.into()).collect();
+    badge_definition_filter.ids = badge_definition_event_ids
+        .into_iter()
+        .map(|id| id.into())
+        .collect();
     badge_definition_filter.kinds = vec![EventKind::BadgeDefinition];
-    
+
     let badge_definition_events = client
         .get_events_of(vec![badge_definition_filter], Some(Duration::from_secs(10)))
         .await?;
@@ -58,7 +64,10 @@ pub async fn set_profile_badges(
 
     let mut tags = Vec::new();
     for event in badge_definition_events {
-        tags.push(Tag::new(&["a", &format!("{}:{}", u32::from(event.kind), event.pubkey.as_hex_string())]));
+        tags.push(Tag::new(&[
+            "a",
+            &format!("{}:{}", u32::from(event.kind), event.pubkey.as_hex_string()),
+        ]));
     }
     for event in badge_award_events {
         tags.push(Tag::new(&["e", &event.id.as_hex_string()]));

@@ -1,24 +1,23 @@
-use libp2p::{
-    gossipsub, identify, identity,
-    kad::{
-        self,
-        store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
-    },
-    mdns, noise, ping, rendezvous,
-    swarm::Swarm,
-    tcp, yamux, PeerId,
-};
 use std::{
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
     time::Duration,
 };
+
+use libp2p::{
+    PeerId, gossipsub, identify, identity,
+    kad::{
+        self, Config as KadConfig,
+        store::{MemoryStore, MemoryStoreConfig},
+    },
+    mdns, noise, ping, rendezvous,
+    swarm::Swarm,
+    tcp, yamux,
+};
 use tokio::io;
 use tracing::info;
 
-use crate::p2p::behaviour::Behaviour;
-use crate::p2p::network_config::IPFS_PROTO_NAME;
+use crate::p2p::{behaviour::Behaviour, network_config::IPFS_PROTO_NAME};
 
 pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
     let peer_id = PeerId::from(keypair.public());

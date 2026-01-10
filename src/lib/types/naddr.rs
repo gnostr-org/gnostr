@@ -1,18 +1,21 @@
-#[cfg(test)]
-use crate::test_serde;
+use std::hash::{Hash, Hasher};
 
-use super::Error;
-use crate::types::{EventKind, PublicKey, UncheckedUrl};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::hash::{Hash, Hasher};
 
-/// An 'naddr': data to address a possibly parameterized replaceable event (d-tag, kind, author, and relays)
+use super::Error;
+#[cfg(test)]
+use crate::test_serde;
+use crate::types::{EventKind, PublicKey, UncheckedUrl};
+
+/// An 'naddr': data to address a possibly parameterized replaceable event
+/// (d-tag, kind, author, and relays)
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct NAddr {
-    /// the 'd' tag of the Event, or an empty string if the kind is not parameterized
+    /// the 'd' tag of the Event, or an empty string if the kind is not
+    /// parameterized
     pub d: String,
 
     /// Some of the relays where this could be found

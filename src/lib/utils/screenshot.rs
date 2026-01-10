@@ -1,12 +1,13 @@
-use crate::blockheight;
-use crate::weeble;
-use crate::wobble;
+use std::{
+    fs, io,
+    path::PathBuf,
+    process::Command,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 use clap::{Parser, Subcommand, ValueEnum};
-use std::fs;
-use std::io;
-use std::path::PathBuf;
-use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::{blockheight, weeble, wobble};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -84,7 +85,9 @@ pub fn linux(command: Commands) {
             if tool == Tool::Gnome {
                 execute_and_handle_linux("gnome-screenshot", &[]);
             } else {
-                eprintln!("'scrot' does not have a dedicated full screen command. Use 'scrot <filename>' or 'scrot -s' to select the whole screen.");
+                eprintln!(
+                    "'scrot' does not have a dedicated full screen command. Use 'scrot <filename>' or 'scrot -s' to select the whole screen."
+                );
             }
         }
         Commands::Area { tool, filename } => match tool {
@@ -96,7 +99,9 @@ pub fn linux(command: Commands) {
             Tool::Scrot => execute_and_handle_linux("scrot", &["-s"]),
         },
         Commands::Clipboard { .. } => {
-            eprintln!("Clipboard capture is not implemented for Linux in this tool. You can pipe the output of scrot to xclip for example: `scrot -s -o /dev/stdout | xclip -selection clipboard -t image/png`");
+            eprintln!(
+                "Clipboard capture is not implemented for Linux in this tool. You can pipe the output of scrot to xclip for example: `scrot -s -o /dev/stdout | xclip -selection clipboard -t image/png`"
+            );
         }
     }
 }
@@ -211,9 +216,9 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 /// # Captures a screenshot for debugging purposes during a test.
 ///
 /// This function is designed to be called from other tests to capture the UI
-/// state at a specific moment. The screenshot is saved in the `test_screenshots`
-/// directory with a filename that includes the provided context along with
-/// a timestamp.
+/// state at a specific moment. The screenshot is saved in the
+/// `test_screenshots` directory with a filename that includes the provided
+/// context along with a timestamp.
 ///
 /// ## Platform
 ///
@@ -233,8 +238,9 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 /// ## Example
 ///
 /// ```
-/// use assert_cmd::cargo::cargo_bin;
 /// use std::process::Command;
+///
+/// use assert_cmd::cargo::cargo_bin;
 /// fn my_tui_test() -> Result<(), Box<dyn std::error::Error>> {
 ///     let mut cmd = Command::new(cargo_bin("gnostr"));
 ///     cmd.arg("tui");
@@ -252,7 +258,10 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 ///     child.kill().expect("Failed to kill gnostr process");
 ///
 ///     // Assert that the screenshot was created
-///     assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+///     assert!(
+///         screenshot_path_result.is_ok(),
+///         "Failed to capture screenshot."
+///     );
 ///
 ///     Ok(())
 /// }
@@ -305,9 +314,9 @@ mod tests {
 /// # Captures a screenshot for debugging purposes during a test.
 ///
 /// This function is designed to be called from other tests to capture the UI
-/// state at a specific moment. The screenshot is saved in the `test_screenshots`
-/// directory with a filename that includes the provided context along with
-/// a timestamp.
+/// state at a specific moment. The screenshot is saved in the
+/// `test_screenshots` directory with a filename that includes the provided
+/// context along with a timestamp.
 ///
 /// ## Error Handling
 ///

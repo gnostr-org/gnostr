@@ -1,11 +1,14 @@
-use crate::types::{PublicKeyHex, UncheckedUrl};
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::collections::HashMap;
 
-/// The content of a webserver's /.well-known/nostr.json file used in NIP-05 and NIP-35
-/// This allows lookup and verification of a nostr user via a `user@domain` style identifier.
+use crate::types::{PublicKeyHex, UncheckedUrl};
+
+/// The content of a webserver's /.well-known/nostr.json file used in NIP-05 and
+/// NIP-35 This allows lookup and verification of a nostr user via a
+/// `user@domain` style identifier.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct Nip05V1 {

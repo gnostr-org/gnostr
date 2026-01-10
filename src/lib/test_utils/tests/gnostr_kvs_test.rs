@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use crate::p2p::generate_close_peer_id;
-    use crate::p2p::network_config::Network;
-    use crate::p2p::utils::generate_ed25519;
+    use std::str::FromStr;
+
     use libp2p::{Multiaddr, PeerId};
     use serial_test::serial;
-    use std::str::FromStr;
+
+    use crate::p2p::{generate_close_peer_id, network_config::Network, utils::generate_ed25519};
 
     #[test]
     #[serial]

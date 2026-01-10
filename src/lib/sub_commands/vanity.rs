@@ -1,5 +1,6 @@
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+
+use crate::types::Keys;
 
 #[derive(Args, Debug)]
 pub struct VanitySubCommand {
@@ -22,10 +23,10 @@ pub async fn vanity(sub_command_args: &VanitySubCommand) -> Result<()> {
     if sub_command_args.hex {
         println!("Public key (hex): {}", keys.public_key());
     } else {
-        println!("Public key: {}", keys.public_key().to_bech32()?);
+        println!("Public key: {}", keys.public_key().as_bech32_string());
     }
 
-    println!("Private key: {}", keys.secret_key()?.to_bech32()?);
+    println!("Private key: {}", keys.secret_key()?.as_bech32_string());
 
     Ok(())
 }

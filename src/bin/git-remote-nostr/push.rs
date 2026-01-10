@@ -6,15 +6,15 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
-use client::{get_events_from_cache, get_state_from_cache, send_events, sign_event, STATE_KIND};
+use client::{STATE_KIND, get_events_from_cache, get_state_from_cache, send_events, sign_event};
 use console::Term;
-use git::{sha1_to_oid, RepoActions};
-use git2::{Oid, Repository};
+use git::{RepoActions, sha1_to_oid};
 use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
+use git2::{Oid, Repository};
 use gnostr::{
     client::{self, get_event_from_cache_by_id},
     git::{
@@ -27,8 +27,8 @@ use gnostr::{
     repo_ref, repo_state,
 };
 use nostr_0_34_1::{
-    hashes::sha1::Hash as Sha1Hash, nips::nip10::Marker, Event, EventBuilder, EventId, Kind,
-    PublicKey, Tag,
+    Event, EventBuilder, EventId, Kind, PublicKey, Tag, hashes::sha1::Hash as Sha1Hash,
+    nips::nip10::Marker,
 };
 use nostr_signer_0_34_0::NostrSigner;
 use repo_ref::RepoRef;
@@ -39,10 +39,10 @@ use crate::{
     git::Repo,
     list::list_from_remotes,
     utils::{
-        count_lines_per_msg_vec, find_proposal_and_patches_by_branch_name, get_all_proposals,
-        get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,
-        join_with_and, push_error_is_not_authentication_failure, read_line,
-        set_protocol_preference, Direction,
+        Direction, count_lines_per_msg_vec, find_proposal_and_patches_by_branch_name,
+        get_all_proposals, get_remote_name_by_url, get_short_git_server_name,
+        get_write_protocols_to_try, join_with_and, push_error_is_not_authentication_failure,
+        read_line, set_protocol_preference,
     },
 };
 
@@ -269,8 +269,8 @@ pub async fn run_push(
                     }
                 } else {
                     println!(
-						"error {to} permission denied. you are not the proposal author or a repo maintainer"
-					);
+                        "error {to} permission denied. you are not the proposal author or a repo maintainer"
+                    );
                     rejected_proposal_refspecs.push(refspec.clone());
                 }
             } else {
@@ -545,9 +545,9 @@ fn report_on_transfer_progress(
     };
 
     Some(format!(
-		"push: Writing objects: {percentage}% ({current}/{total}) {size:.2} {unit}  | {speed:.2} MiB/s{}",
-		if current == total { ", done." } else { "" },
-	))
+        "push: Writing objects: {percentage}% ({current}/{total}) {size:.2} {unit}  | {speed:.2} MiB/s{}",
+        if current == total { ", done." } else { "" },
+    ))
 }
 
 struct PushReporter<'a> {
@@ -901,9 +901,11 @@ async fn get_merged_status_events(
                         // lookup parent id
                         let commit_events = get_events_from_cache(
                             git_repo.get_path()?,
-                            vec![nostr_0_34_1::Filter::default()
-                                .kind(nostr_0_34_1::Kind::GitPatch)
-                                .reference(parent.id().to_string())],
+                            vec![
+                                nostr_0_34_1::Filter::default()
+                                    .kind(nostr_0_34_1::Kind::GitPatch)
+                                    .reference(parent.id().to_string()),
+                            ],
                         )
                         .await?;
                         if let Some(commit_event) = commit_events.iter().find(|e| {
@@ -1265,11 +1267,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1346,11 +1346,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1438,11 +1436,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1495,8 +1491,8 @@ mod tests {
             #[serial]
             #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event(
-            ) -> Result<(), E> {
+            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event()
+            -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
@@ -1511,11 +1507,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1602,11 +1596,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                     state_event.clone(),
                 ];
 
@@ -1724,11 +1716,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1763,10 +1753,12 @@ mod tests {
                         relay::shutdown_relay(8000 + p)?;
                     }
 
-                    assert!(source_git_repo
-                        .git_repo
-                        .find_reference("refs/heads/vnext")
-                        .is_err());
+                    assert!(
+                        source_git_repo
+                            .git_repo
+                            .find_reference("refs/heads/vnext")
+                            .is_err()
+                    );
                     Ok(())
                 });
                 // launch relays
@@ -1806,11 +1798,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1844,10 +1834,12 @@ mod tests {
                     for p in [51, 52, 53, 55, 56, 57] {
                         relay::shutdown_relay(8000 + p)?;
                     }
-                    assert!(git_repo
-                        .git_repo
-                        .find_reference("refs/remotes/nostr/vnext")
-                        .is_err());
+                    assert!(
+                        git_repo
+                            .git_repo
+                            .find_reference("refs/remotes/nostr/vnext")
+                            .is_err()
+                    );
                     Ok(())
                 });
                 // launch relays
@@ -1887,11 +1879,9 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![source_git_repo
-                        .dir
-                        .to_str()
-                        .unwrap()
-                        .to_string()]),
+                    generate_repo_ref_event_with_git_server(vec![
+                        source_git_repo.dir.to_str().unwrap().to_string(),
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1947,11 +1937,9 @@ mod tests {
                     let events = vec![
                         generate_test_key_1_metadata_event("fred"),
                         generate_test_key_1_relay_list_event(),
-                        generate_repo_ref_event_with_git_server(vec![source_git_repo
-                            .dir
-                            .to_str()
-                            .unwrap()
-                            .to_string()]),
+                        generate_repo_ref_event_with_git_server(vec![
+                            source_git_repo.dir.to_str().unwrap().to_string(),
+                        ]),
                         state_event.clone(),
                     ];
 
@@ -2039,11 +2027,9 @@ mod tests {
                         let events = vec![
                             generate_test_key_1_metadata_event("fred"),
                             generate_test_key_1_relay_list_event(),
-                            generate_repo_ref_event_with_git_server(vec![source_git_repo
-                                .dir
-                                .to_str()
-                                .unwrap()
-                                .to_string()]),
+                            generate_repo_ref_event_with_git_server(vec![
+                                source_git_repo.dir.to_str().unwrap().to_string(),
+                            ]),
                             state_event.clone(),
                         ];
 

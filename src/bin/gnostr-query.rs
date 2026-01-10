@@ -1,6 +1,5 @@
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr_query::cli::cli;
-use gnostr_query::ConfigBuilder;
+use gnostr_query::{ConfigBuilder, cli::cli};
 use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
@@ -37,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(limit) = matches.get_one::<i32>("limit") {
         debug!("Applying limit filter: {}", limit);
         // ["EOSE","gnostr-query"] counts as a message!      + 1
-        filt.insert("limit".to_string(), json!(limit.clone() /*+ 1*/));
+        filt.insert("limit".to_string(), json!(limit.clone() /* + 1 */));
         limit_check = *limit;
     }
 

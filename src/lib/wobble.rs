@@ -1,14 +1,13 @@
-use crate::blockheight::{blockheight_async, blockheight_sync};
+use std::{env, time::SystemTime};
+
 use log::debug;
-use std::env;
-use std::time::SystemTime;
+
+use crate::blockheight::{blockheight_async, blockheight_sync};
 /// pub fn wobble() -> Result<f64, ascii::AsciiChar>
-///
 pub fn wobble() -> Result<f64, ascii::AsciiChar> {
     wobble_sync()
 }
 /// pub fn wobble_sync() -> Result<f64, ascii::AsciiChar>
-///
 pub fn wobble_sync() -> Result<f64, ascii::AsciiChar> {
     // wobble = utc_secs % blockheight
     let since_the_epoch = SystemTime::now()
@@ -25,7 +24,6 @@ pub fn wobble_sync() -> Result<f64, ascii::AsciiChar> {
     Ok(wobble.floor())
 }
 /// pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar>
-///
 pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar> {
     // wobble = utc_secs % blockheight
     let since_the_epoch = SystemTime::now()
@@ -43,7 +41,6 @@ pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar> {
     Ok(wobble.floor())
 }
 /// pub async fn wobble_async() -> Result<f64, ascii::AsciiChar>
-///
 pub async fn wobble_async() -> Result<f64, ascii::AsciiChar> {
     // wobble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
@@ -60,7 +57,6 @@ pub async fn wobble_async() -> Result<f64, ascii::AsciiChar> {
     Ok(wobble.floor())
 }
 /// pub fn wobble_millis_async() -> Result<f64, ascii::AsciiChar>
-///
 pub async fn wobble_millis_async() -> Result<f64, ascii::AsciiChar> {
     // wobble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()

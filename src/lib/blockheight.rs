@@ -1,5 +1,6 @@
-use crate::utils::{ureq_async, ureq_sync};
 use std::env;
+
+use crate::utils::{ureq_async, ureq_sync};
 
 pub fn check_curl() {
 

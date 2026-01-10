@@ -1,8 +1,13 @@
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey, Tag, PrivateKey, UncheckedUrl, ImageDimensions, Unixtime};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventKind, Filter, Id, ImageDimensions, Keys, Metadata, PrivateKey,
+        PublicKey, Tag, UncheckedUrl, Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct CreateBadgeSubCommand {
@@ -76,8 +81,10 @@ pub async fn create_badge(
         Vec::new()
     };
 
-    let image_url: Option<UncheckedUrl> =
-        sub_command_args.image_url.clone().map(UncheckedUrl::from_string);
+    let image_url: Option<UncheckedUrl> = sub_command_args
+        .image_url
+        .clone()
+        .map(UncheckedUrl::from_string);
 
     // TODO: Implement EventBuilder::define_badge without nostr_sdk
     // For now, create a dummy event and manually add tags for badge definition.
@@ -88,7 +95,9 @@ pub async fn create_badge(
     event.content = sub_command_args.description.clone().unwrap_or_default();
 
     // Add 'd' tag for unique identifier
-    event.tags.push(Tag::new_identifier(sub_command_args.id.clone()));
+    event
+        .tags
+        .push(Tag::new_identifier(sub_command_args.id.clone()));
 
     // Add 'name' tag
     if let Some(name) = sub_command_args.name.clone() {
@@ -98,7 +107,9 @@ pub async fn create_badge(
     // Add 'image' tag
     if let Some(url) = image_url {
         if let Some(dims) = image_size {
-            event.tags.push(Tag::new_image(url, Some(dims.width), Some(dims.height)));
+            event
+                .tags
+                .push(Tag::new_image(url, Some(dims.width), Some(dims.height)));
         } else {
             event.tags.push(Tag::new_image(url, None, None));
         }
@@ -107,7 +118,11 @@ pub async fn create_badge(
     // Add 'thumb' tags
     for (thumb_url, thumb_dims) in thumbnails {
         if let Some(dims) = thumb_dims {
-            event.tags.push(Tag::new_thumb(thumb_url, Some(dims.width), Some(dims.height)));
+            event.tags.push(Tag::new_thumb(
+                thumb_url,
+                Some(dims.width),
+                Some(dims.height),
+            ));
         } else {
             event.tags.push(Tag::new_thumb(thumb_url, None, None));
         }

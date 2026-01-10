@@ -1,17 +1,18 @@
-// Dummy Client and Options structs for now, to replace nostr_sdk::Client and Options
-// TODO: Implement actual Client and Options functionality
+// Dummy Client and Options structs for now, to replace nostr_sdk::Client and
+// Options TODO: Implement actual Client and Options functionality
 
-use std::time::Duration;
-use crate::types::{Keys, RelayUrl, Event, Filter, Error, Id, Metadata, Tag, PublicKey};
-use std::fmt;
+use std::{fmt, time::Duration};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+use crate::types::{Error, Event, Filter, Id, Keys, Metadata, PublicKey, RelayUrl, Tag};
+
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum FilterOptions {
     ExitOnEOSE,
     // Add other options as needed
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(missing_copy_implementations)]
 pub struct Options {
     send_timeout: Option<Duration>,
     wait_for_send: bool,
@@ -48,10 +49,8 @@ impl Options {
 pub struct Client {
     keys: Keys,
     relays: Vec<RelayUrl>,
-    options: Options,
+    _options: Options,
 }
-
-
 
 impl fmt::Display for Client {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -65,19 +64,19 @@ impl fmt::Display for Client {
 }
 
 impl Client {
-    pub fn with_opts(keys: &Keys, options: Options) -> Self {
+    pub fn with_opts(keys: &Keys, _options: Options) -> Self {
         Self {
             keys: keys.clone(),
             relays: Vec::new(),
-            options,
+            _options,
         }
     }
 
-    pub fn new(keys: &Keys, options: Options) -> Self {
+    pub fn new(keys: &Keys, _options: Options) -> Self {
         Self {
             keys: keys.clone(),
             relays: Vec::new(),
-            options,
+            _options,
         }
     }
 
@@ -107,47 +106,69 @@ impl Client {
     pub async fn reaction(&self, _event: &Event, _reaction: String) -> Result<Id, Error> {
         // Dummy implementation
         println!("Reacting to event...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000000")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        )?)
     }
 
     // Dummy method for client.send_event
     pub async fn send_event(&self, _event: Event) -> Result<Id, Error> {
         println!("Dummy: Sending event...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000001")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000001",
+        )?)
     }
 
     // Dummy method for client.delete_event
     pub async fn delete_event(&self, _event_id: Id) -> Result<Id, Error> {
         println!("Dummy: Deleting event...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000002")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000002",
+        )?)
     }
 
     // Dummy method for client.set_metadata
     pub async fn set_metadata(&self, _metadata: &Metadata) -> Result<Id, Error> {
         println!("Dummy: Setting metadata...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000003")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000003",
+        )?)
     }
 
     // Dummy method for client.hide_channel_msg
     pub async fn hide_channel_msg(&self, _channel_id: Id, _reason: String) -> Result<Id, Error> {
         println!("Dummy: Hiding channel message...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000004")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000004",
+        )?)
     }
 
     // Dummy method for client.mute_channel_user
-    pub async fn mute_channel_user(&self, _pubkey_to_mute: PublicKey, _reason: String) -> Result<Id, Error> {
+    pub async fn mute_channel_user(
+        &self,
+        _pubkey_to_mute: PublicKey,
+        _reason: String,
+    ) -> Result<Id, Error> {
         println!("Dummy: Muting channel user...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000005")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000005",
+        )?)
     }
 
     // Dummy method for client.publish_text_note
     pub async fn publish_text_note(&self, _content: String, _tags: Vec<Tag>) -> Result<Id, Error> {
         println!("Dummy: Publishing text note...");
-        Ok(Id::try_from_hex_string("0000000000000000000000000000000000000000000000000000000000000006")?)
+        Ok(Id::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000006",
+        )?)
     }
 
     // Dummy method for client.get_events_of (simplified version)
-    pub async fn get_events_of(&self, _filters: Vec<Filter>, _timeout: Option<Duration>) -> Result<Vec<Event>, Error> {
+    pub async fn get_events_of(
+        &self,
+        _filters: Vec<Filter>,
+        _timeout: Option<Duration>,
+    ) -> Result<Vec<Event>, Error> {
         println!("Dummy: Getting events (simplified)...");
         Ok(Vec::new())
     }

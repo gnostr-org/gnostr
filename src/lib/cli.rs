@@ -1,12 +1,5 @@
 #![warn(missing_docs)]
 
-use anyhow::{anyhow, Result};
-use clap::{
-    /*crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
-    Subcommand,
-};
-// Corrected import path for ArgMatches
-use gnostr_asyncgit::sync::RepoPath;
 // Remove simplelog imports
 use std::{
     //env,
@@ -14,45 +7,29 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::{Result, anyhow};
+use clap::{
+    /* crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
+    Subcommand,
+};
+// Corrected import path for ArgMatches
+use gnostr_asyncgit::sync::RepoPath;
+
 // Import individual sub_commands modules directly
 use crate::sub_commands::award_badge;
-use crate::sub_commands::bech32_to_any;
-use crate::sub_commands::broadcast_events;
-use crate::sub_commands::convert_key;
-use crate::sub_commands::create_badge;
-use crate::sub_commands::create_public_channel;
-use crate::sub_commands::custom_event;
-use crate::sub_commands::delete_event;
-use crate::sub_commands::delete_profile;
-use crate::sub_commands::fetch;
-use crate::sub_commands::fetch_by_id;
-use crate::sub_commands::generate_keypair;
-use crate::sub_commands::hide_public_channel_message;
-use crate::sub_commands::init;
-use crate::sub_commands::legit;
-use crate::sub_commands::list_events;
-use crate::sub_commands::login;
-use crate::sub_commands::mute_publickey;
-use crate::sub_commands::ngit;
-use crate::sub_commands::note;
-use crate::sub_commands::privkey_to_bech32;
-use crate::sub_commands::profile_badges;
-use crate::sub_commands::publish_contactlist_csv;
-use crate::sub_commands::push;
-use crate::sub_commands::react;
-use crate::sub_commands::send;
-use crate::sub_commands::send_channel_message;
-use crate::sub_commands::set_channel_metadata;
-use crate::sub_commands::set_metadata;
-use crate::sub_commands::user_status;
-use crate::sub_commands::vanity;
-// Import the new relay subcommand module
-use crate::sub_commands::relay;
-// Import the new QuerySubCommand struct
-use crate::sub_commands::query::QuerySubCommand;
 // Import the sniper subcommand module
 use crate::sub_commands::git;
-use crate::sub_commands::sniper;
+// Import the new QuerySubCommand struct
+use crate::sub_commands::query::QuerySubCommand;
+// Import the new relay subcommand module
+use crate::sub_commands::relay;
+use crate::sub_commands::{
+    bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
+    custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
+    hide_public_channel_message, init, legit, list_events, login, mute_publickey, ngit, note,
+    privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, send,
+    send_channel_message, set_channel_metadata, set_metadata, sniper, user_status, vanity,
+};
 
 /// CliArgs
 #[derive(Parser, Debug)]
@@ -226,7 +203,8 @@ pub struct GnostrCli {
     #[arg(short, long, action = clap::ArgAction::Append, default_value_t = 0)]
     pub difficulty_target: u8,
 
-    /// Take screenshots at a given interval in seconds. The interval defaults to 1 second.
+    /// Take screenshots at a given interval in seconds. The interval defaults
+    /// to 1 second.
     #[arg(long, value_name = "INTERVAL_SECONDS", num_args = 0..=1, default_missing_value = "1")]
     pub screenshots: Option<u8>,
 

@@ -1,8 +1,10 @@
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl, Unixtime};
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{Client, Event, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl, Unixtime},
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct CreatePublicChannelSubCommand {
@@ -40,7 +42,8 @@ pub async fn create_public_channel(
     }
 
     if let Some(picture) = sub_command_args.picture.clone() {
-        // TODO: Ensure UncheckedUrl::try_from_str works correctly with Url::parse behavior
+        // TODO: Ensure UncheckedUrl::try_from_str works correctly with Url::parse
+        // behavior
         metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
@@ -51,10 +54,13 @@ pub async fn create_public_channel(
     event.created_at = Unixtime::now();
     event.pubkey = keys.public_key();
     event.content = serde_json::to_string(&metadata)?;
-    event.tags.push(Tag::new_tag("p", &keys.public_key().as_hex_string()));
+    event
+        .tags
+        .push(Tag::new_tag("p", &keys.public_key().as_hex_string()));
 
     // Sign the event (dummy signing for now)
-    // let signed_event = keys.sign_event(event).await?; // Placeholder for actual signing
+    // let signed_event = keys.sign_event(event).await?; // Placeholder for actual
+    // signing
 
     // Send event
     let event_id = client.send_event(event).await?;

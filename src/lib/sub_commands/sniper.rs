@@ -1,12 +1,13 @@
-use clap::Parser;
-use futures::{stream, StreamExt};
-use reqwest::header::ACCEPT;
-use serde::{Deserialize, Serialize};
-use std::fs::{self, File};
 use std::{
+    fs::{self, File},
     io::{self, BufRead, BufReader, Write},
     path::Path,
 };
+
+use clap::Parser;
+use futures::{StreamExt, stream};
+use reqwest::header::ACCEPT;
+use serde::{Deserialize, Serialize};
 use tracing::{debug, error};
 
 const CONCURRENT_REQUESTS: usize = 16;
@@ -53,7 +54,8 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
 
                 let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
 
-                //shitlist - This filtering logic should ideally be configurable or more robust.
+                //shitlist - This filtering logic should ideally be configurable or more
+                // robust.
                 if !url.contains("monad.jb55.com")
                     && !url.contains("onlynotes")
                     && !url.contains("archives")

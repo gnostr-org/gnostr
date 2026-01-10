@@ -1,10 +1,12 @@
-use crate::types::Event;
+use std::fmt::Display;
+
 use git2::Oid;
 use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
-use textwrap::{wrap, Options}; // Add this line
+use textwrap::{Options, wrap};
+
+use crate::types::Event; // Add this line
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")
@@ -124,9 +126,11 @@ impl Msg {
 
 impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
     fn from(m: &'a Msg) -> Self {
-        use ratatui::style::{Color, Modifier, Style};
-        use ratatui::text::{Line, Span};
         use MsgKind::*;
+        use ratatui::{
+            style::{Color, Modifier, Style},
+            text::{Line, Span},
+        };
 
         match m.kind {
             //System

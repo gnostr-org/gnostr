@@ -1,26 +1,27 @@
 mod details;
 mod style;
+use anyhow::Result;
+use details::DetailsComponent;
+use gnostr_asyncgit::{
+    AsyncCommitFiles, CommitFilesParams,
+    sync::{CommitTags, commit_files::OldNew},
+};
+use nostr_sdk_0_34_0::prelude::*;
+use ratatui::{
+    Frame,
+    layout::{Constraint, Direction, Layout, Rect},
+};
+
 use self::details::CompareDetailsComponent;
 use super::{
-    command_pump, event_pump, CommandBlocking, CommandInfo, Component, DrawableComponent,
-    EventState, StatusTreeComponent,
+    CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, StatusTreeComponent,
+    command_pump, event_pump,
 };
 use crate::{
     accessors,
     app::Environment,
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     strings,
-};
-use anyhow::Result;
-use details::DetailsComponent;
-use gnostr_asyncgit::{
-    sync::{commit_files::OldNew, CommitTags},
-    AsyncCommitFiles, CommitFilesParams,
-};
-use nostr_sdk_0_34_0::prelude::*;
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    Frame,
 };
 
 /// ChatDetailsComponent
@@ -176,7 +177,7 @@ impl DrawableComponent for ChatDetailsComponent {
                 //1%
                 //
                 (1, 80, 20, 1) //commit Info and Message visible
-                               //filetree obfuscated
+            //filetree obfuscated
             } else {
                 //topiclist split
                 (1, 20, 80, 1)

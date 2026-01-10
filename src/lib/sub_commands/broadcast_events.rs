@@ -1,9 +1,12 @@
-use crate::utils::{create_client, parse_private_key};
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
-use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, Keys, PrivateKey, PublicKey, Id, Filter};
+
+use crate::{
+    types::{Client, Event, Filter, Id, Keys, PrivateKey, PublicKey},
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct BroadcastEventsSubCommand {

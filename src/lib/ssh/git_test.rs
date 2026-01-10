@@ -1,11 +1,15 @@
 #[cfg(test)]
 mod tests {
-    use crate::git::Repo;
+    use std::{
+        fs::{self, File},
+        io::Write,
+    };
+
     use anyhow::Context;
     use git2::{self, RepositoryInitOptions};
-    use std::fs::{self, File};
-    use std::io::Write;
     use tempfile::tempdir;
+
+    use crate::git::Repo;
 
     #[tokio::test]
     #[ignore]

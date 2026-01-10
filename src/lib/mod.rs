@@ -1,7 +1,6 @@
 #![allow(unused_imports)]
 #![deny(non_ascii_idents)]
 //! gnostr: a git+nostr workflow utility and library
-//!
 
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
 pub mod app;
@@ -81,31 +80,28 @@ pub mod verify_keypair;
 pub mod watcher;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
+//avoid?//upgrade?
+//pub use lightning;
+use anyhow::{Result, anyhow};
 pub use base64::Engine;
 pub use colorful::{Color, Colorful};
-pub use futures_util::stream::FusedStream;
-pub use futures_util::{SinkExt, StreamExt};
+use directories::ProjectDirs;
+pub use futures_util::{SinkExt, StreamExt, stream::FusedStream};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 pub use nostr_sdk_0_32_0::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
-pub use tokio_tungstenite::connect_async;
-pub use tokio_tungstenite::tungstenite::Message;
-pub use tokio_tungstenite::WebSocketStream;
+pub use tokio_tungstenite::{WebSocketStream, connect_async, tungstenite::Message};
+//use tokio_tungstenite::WebSocketStream;
+pub use types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
 pub use types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
-//use tokio_tungstenite::WebSocketStream;
-pub use types::nip44;
 pub use zeroize::Zeroize;
-//avoid?//upgrade?
-//pub use lightning;
-use anyhow::{anyhow, Result};
-use directories::ProjectDirs;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
 pub const GNOSTR_SHA256: [u8; 32] = [
@@ -238,8 +234,9 @@ pub struct Config {
     /// pub query: String
     pub query: String,
 }
-use sha256::digest;
 use std::process;
+
+use sha256::digest;
 // impl Config {
 impl Config {
     /// pub fn build(args: &\[String\]) -> Result\<Config, &'static str\>
@@ -310,17 +307,11 @@ use crate::types::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;
-pub use weeble::weeble;
-pub use weeble::weeble_async;
-pub use weeble::weeble_millis_async;
-pub use weeble::weeble_sync;
+pub use weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
 pub mod wobble;
-pub use wobble::wobble;
-pub use wobble::wobble_async;
-pub use wobble::wobble_millis_async;
-pub use wobble::wobble_sync;
+pub use wobble::{wobble, wobble_async, wobble_millis_async, wobble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
 pub mod blockhash;
@@ -328,8 +319,7 @@ pub use blockhash::blockhash;
 
 /// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
 pub mod blockheight;
-pub use blockheight::blockheight;
-pub use blockheight::blockheight_async;
+pub use blockheight::{blockheight, blockheight_async};
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
@@ -716,13 +706,15 @@ pub async fn req(
                 if sub == our_sub_id {
                     if why == Some(Why::AuthRequired) {
                         if authenticated.is_none() {
-                            eprintln!("Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)");
+                            eprintln!(
+                                "Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)"
+                            );
                             to_probe.send(Command::Exit).await?;
                             break;
                         }
 
-                        // We have already authenticated. We will resubmit once we get the
-                        // OK message.
+                        // We have already authenticated. We will resubmit once
+                        // we get the OK message.
                     } else {
                         to_probe.send(Command::Exit).await?;
                         break;

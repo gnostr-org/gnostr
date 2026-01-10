@@ -1,20 +1,16 @@
-use clap::{Parser, Subcommand};
-
-use crate::blockheight;
-use crate::weeble;
-use crate::wobble;
+use std::{io, path::Path, process::Command};
 
 use anyhow::Result;
+use clap::{Parser, Subcommand};
 use crossterm::{
     event::DisableMouseCapture,
     execute,
-    terminal::{disable_raw_mode, LeaveAlternateScreen},
+    terminal::{LeaveAlternateScreen, disable_raw_mode},
 };
 use env_logger::Env;
-use std::io;
-use std::path::Path;
-use std::process::Command;
 use which::which;
+
+use crate::{blockheight, weeble, wobble};
 
 struct TerminalCleanup;
 
@@ -77,11 +73,13 @@ enum GitCommands {
 enum TagCommands {
     /// Creates a git tag with an optional suffix.
     Create { suffix: Option<String> },
-    /// Displays git tag version with an optional suffix, but does not create the tag.
+    /// Displays git tag version with an optional suffix, but does not create
+    /// the tag.
     Version { suffix: Option<String> },
     /// Creates a git PR tag with an optional suffix.
     Pr { suffix: Option<String> },
-    /// Displays git PR tag version with an optional suffix, but does not create the tag.
+    /// Displays git PR tag version with an optional suffix, but does not create
+    /// the tag.
     PrVersion { suffix: Option<String> },
 }
 
@@ -448,11 +446,11 @@ welcome_message = "welcome to gnostr.org!"
 #[cfg(test)]
 mod tests {
 
-    use super::*;
-
     use std::fs;
 
     use tempfile::tempdir;
+
+    use super::*;
 
     // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {

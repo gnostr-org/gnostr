@@ -1,24 +1,23 @@
-use anyhow::{anyhow, Result};
-use futures_util::{
-    stream::{SplitSink, SplitStream},
-    SinkExt, StreamExt,
-};
-use tokio::net::TcpStream;
-use tokio_tungstenite::connect_async;
-use tokio_tungstenite::{tungstenite, MaybeTlsStream, WebSocketStream};
+use std::sync::{Arc, Mutex};
 
-use crate::queue::{InternalEvent, Queue};
-use crate::types::versioned::client_message3::ClientMessageV3;
-use crate::types::versioned::event3::EventV3;
+use anyhow::{Result, anyhow};
+use futures_util::{
+    SinkExt, StreamExt,
+    stream::{SplitSink, SplitStream},
+};
+use rand::Rng;
+use tokio::{net::TcpStream, sync::mpsc};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite};
+use tracing::{debug, info, warn};
+
 use crate::types::{
     ClientMessage, EventKind, Filter, PublicKey, RelayMessage, SubscriptionId, UncheckedUrl,
     Unixtime,
 }; // Added PublicKey
-use rand::Rng;
-use tokio::sync::mpsc;
-use tracing::{debug, info, warn};
-
-use std::sync::{Arc, Mutex};
+use crate::{
+    queue::{InternalEvent, Queue},
+    types::versioned::{client_message3::ClientMessageV3, event3::EventV3},
+};
 
 type WsSink =
     SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;
@@ -105,7 +104,8 @@ impl NostrClient {
             }
         }
 
-        // Put the sinks back into the Mutex, preserving their state (e.g., if one failed it's still here)
+        // Put the sinks back into the Mutex, preserving their state (e.g., if one
+        // failed it's still here)
         {
             let mut sinks_guard = self.relay_sinks.lock().unwrap();
             sinks_guard.extend(sinks_to_send.drain(..));

@@ -1,14 +1,15 @@
-#[cfg(test)]
-use crate::test_serde;
-use serde::de::Error as DeError;
-use serde::de::{Deserializer, Visitor};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
+use std::{convert::From, fmt};
+
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, Error as DeError, Visitor},
+    ser::Serializer,
+};
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
-use std::convert::From;
 
-use std::fmt;
+#[cfg(test)]
+use crate::test_serde;
 
 macro_rules! define_event_kinds {
     ($($comment:expr, $name:ident = $value:expr),*) => {

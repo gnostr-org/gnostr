@@ -1,8 +1,9 @@
 // NIP-02: Contact List and Petnames
 // https://github.com/nostr-protocol/nips/blob/master/02.md
 
-use crate::types::event::{Event, UnsignedEvent};
 use secp256k1::XOnlyPublicKey;
+
+use crate::types::event::{Event, UnsignedEvent};
 
 /// A contact
 #[derive(Debug, Clone)]

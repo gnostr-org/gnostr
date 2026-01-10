@@ -1,6 +1,6 @@
-use clap::Parser;
 use std::path::PathBuf;
 
+use clap::Parser;
 use libp2p::Multiaddr;
 #[derive(Parser, Debug)]
 #[command(name = "libp2p file sharing example")]
