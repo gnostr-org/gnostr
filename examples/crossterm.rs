@@ -4,15 +4,14 @@
 
 use std::{io::stdout, time::Duration};
 
-use futures::{future::FutureExt, select, StreamExt};
-use futures_timer::Delay;
-
 use crossterm::{
     cursor::position,
     event::{DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+use futures::{StreamExt, future::FutureExt, select};
+use futures_timer::Delay;
 
 const HELP: &str = r#"EventStream based on futures_util::Stream with tokio
  - Keyboard, mouse and terminal resize events enabled

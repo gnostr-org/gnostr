@@ -39,15 +39,16 @@ fn main() {
     println!("\n--- Another Project Example (different qualifier) ---");
     // Example for a project without an organization (e.g., an open-source tool)
     // You might use just the application name as the qualifier and organization
-    //if let Some(proj_dirs) = ProjectDirs::from(None, "MyOpenSourceTool", "MyOpenSourceTool") {
-    //    //println!("Application Name: {}", proj_dirs.application_name());
-    //    if let Some(config_dir) = proj_dirs.config_dir().to_str() {
-    //        println!("Config Dir: {}", config_dir);
-    //    }
+    //if let Some(proj_dirs) = ProjectDirs::from(None, "MyOpenSourceTool",
+    // "MyOpenSourceTool") {    //println!("Application Name: {}",
+    // proj_dirs.application_name());    if let Some(config_dir) =
+    // proj_dirs.config_dir().to_str() {        println!("Config Dir: {}",
+    // config_dir);    }
     //    if let Some(data_dir) = proj_dirs.data_dir().to_str() {
     //        println!("Data Dir: {}", data_dir);
     //    }
     //} else {
-    //    println!("Could not determine project directories for open source tool.");
+    //    println!("Could not determine project directories for open source
+    // tool.");
     //}
 }

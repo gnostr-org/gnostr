@@ -1,6 +1,6 @@
+use std::{env, io::Read, process};
+
 use gnostr::hash;
-use std::io::Read;
-use std::{env, process};
 fn main() {
     let args: Vec<String> = env::args().collect();
 

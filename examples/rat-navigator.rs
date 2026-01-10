@@ -7,15 +7,15 @@ use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Stylize,
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
-    Frame, Terminal,
 };
 
 /// Represents a relevant subset of a Git commit's data.
@@ -59,8 +59,8 @@ struct App {
 }
 
 impl App {
-    /// Constructs a new App with commit and branch data loaded from the current git
-    /// repository.
+    /// Constructs a new App with commit and branch data loaded from the current
+    /// git repository.
     fn new() -> Result<Self> {
         let repo = git2::Repository::open_from_env()?;
 
@@ -156,7 +156,8 @@ impl App {
             }
         }
 
-        // Sort branches: current branch first, then local branches, then remote branches
+        // Sort branches: current branch first, then local branches, then remote
+        // branches
         branches.sort_by(|a, b| match (a.is_current, b.is_current) {
             (true, false) => std::cmp::Ordering::Less,
             (false, true) => std::cmp::Ordering::Greater,

@@ -1,16 +1,16 @@
-use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
-use log::debug;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::env;
-use std::fs;
-use std::io;
 #[cfg(not(windows))]
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt; // Required for chmod (Unix-specific)
+use std::{
+    collections::HashMap,
+    env, fs, io,
+    path::{Path, PathBuf},
+    process::{Command, exit},
+};
 
-use std::path::{Path, PathBuf};
-use std::process::{exit, Command};
+use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
+use log::debug;
+use serde::{Deserialize, Serialize};
 
 // --- Structs for TOML configuration ---
 #[derive(Serialize, Deserialize, Debug)]
@@ -284,9 +284,9 @@ fn main() -> io::Result<()> {
                     }
                     Err(e) => {
                         eprintln!(
-                        "Error: Could not execute ssh-add. Is it installed and in your PATH? {}",
-                        e
-                    );
+                            "Error: Could not execute ssh-add. Is it installed and in your PATH? {}",
+                            e
+                        );
                         exit(1);
                     }
                 }

@@ -1,6 +1,7 @@
-use std::io::{self, BufRead};
-
-use std::fs::File;
+use std::{
+    fs::File,
+    io::{self, BufRead},
+};
 
 fn main() -> io::Result<()> {
     let file_path = "./relays.yaml"; // Replace with the actual path to your file
