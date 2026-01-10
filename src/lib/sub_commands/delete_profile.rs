@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey, Tag, PreEventV3, Unixtime, KeySigner};
+use crate::types::{Client, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey, Tag, PreEventV3, Unixtime, KeySigner, Signer};
 use serde_json::Value;
 
 use crate::utils::{create_client, parse_private_key};
@@ -92,11 +92,11 @@ pub async fn delete(
         // Not a perfect delete but multiple clients trigger off of this metadata
         let mut metadata = Metadata::default();
         metadata.name = Some("Deleted".to_string());
-        metadata.display_name = Some("Deleted".to_string());
-        metadata.about = Some("Deleted".to_string());
-        let mut custom_fields = std::collections::BTreeMap::new();
-        custom_fields.insert("deleted".to_string(), Value::Bool(true));
-        metadata.custom = custom_fields;
+        let mut other = std::collections::BTreeMap::new();
+        other.insert("display_name".to_string(), Value::String("Deleted".to_string()));
+        other.insert("about".to_string(), Value::String("Deleted".to_string()));
+        other.insert("deleted".to_string(), Value::Bool(true));
+        metadata.other = other;
 
         let event_id = client.set_metadata(&metadata).await?;
         println!("Metadata updated ({})", event_id.as_bech32_string());

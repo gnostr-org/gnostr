@@ -1,7 +1,7 @@
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
 use crate::types::{
-    Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner,
+    Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner, Signer,
 };
 
 use crate::utils::{create_client, parse_private_key};

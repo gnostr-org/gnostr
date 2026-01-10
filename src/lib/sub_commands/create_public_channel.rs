@@ -41,7 +41,7 @@ pub async fn create_public_channel(
 
     if let Some(picture) = sub_command_args.picture.clone() {
         // TODO: Ensure UncheckedUrl::try_from_str works correctly with Url::parse behavior
-        metadata.picture = Some(UncheckedUrl::from_str(&picture)?);
+        metadata.picture = Some(UncheckedUrl::from_str(&picture));
     }
 
     // TODO: Implement EventBuilder::channel and to_event without nostr_sdk

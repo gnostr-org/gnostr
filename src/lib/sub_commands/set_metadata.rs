@@ -2,6 +2,7 @@ use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
 use crate::types::{
     Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner,
+    Signer,
 };
 use serde_json::Value;
 
@@ -72,7 +73,7 @@ pub async fn set_metadata(
     };
     // Banner URL
     if let Some(banner_url) = &sub_command_args.banner {
-        metadata.banner = Some(UncheckedUrl::from_str(banner_url));
+        metadata.other.insert("banner".to_string(), Value::String(banner_url.to_string()));
     };
 
     // NIP-05 identifier
@@ -83,19 +84,19 @@ pub async fn set_metadata(
 
     // LUD-06 string
     if let Some(lud06) = &sub_command_args.lud06 {
-        metadata.lud06 = Some(lud06.clone());
+        metadata.other.insert("lud06".to_string(), Value::String(lud06.to_string()));
     }
 
     // LUD-16 string
     if let Some(lud16) = &sub_command_args.lud16 {
-        metadata.lud16 = Some(lud16.clone());
+        metadata.other.insert("lud16".to_string(), Value::String(lud16.to_string()));
     }
 
     // Set custom fields
     for ef in sub_command_args.extra_field.iter() {
         let sef: Vec<&str> = ef.split(':').collect();
         if sef.len() == 2 {
-            metadata.custom.insert(sef[0].to_string(), Value::String(sef[1].to_string()));
+            metadata.other.insert(sef[0].to_string(), Value::String(sef[1].to_string()));
         }
     }
 

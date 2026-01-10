@@ -1,7 +1,7 @@
 use crate::utils::{create_client, parse_private_key};
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, PublicKey, Tag, PreEventV3, Unixtime, KeySigner};
+use crate::types::{Client, Event, EventKind, Id, Keys, PublicKey, Tag, PreEventV3, Unixtime, KeySigner, Signer};
 use std::ops::Add;
 use std::str::FromStr;
 use std::time::Duration;

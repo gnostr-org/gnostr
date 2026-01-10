@@ -1,7 +1,7 @@
 use crate::utils::{create_client, parse_private_key};
 use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
-use crate::types::{Client, Event, EventKind, Id, Keys, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner};
+use crate::types::{Client, Event, EventKind, Id, Keys, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner, Signer};
 
 #[derive(Args, Debug)]
 pub struct SendChannelMessageSubCommand {
