@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use nostr_0_34_1::{FromBech32, PublicKey, ToBech32, nips::nip01::Coordinate};
-use nostr_sdk_0_34_0::Kind;
 
+use crate::types::{EventKind, NAddr, PublicKey};
 use crate::{
     //cli::Cli,
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
@@ -349,13 +348,13 @@ pub async fn launch(
 
     git_repo.save_git_config_item(
         "nostr.repo",
-        &Coordinate {
-            kind: Kind::GitRepoAnnouncement,
-            public_key: user_ref.public_key,
-            identifier: identifier.clone(),
+        &NAddr {
+            kind: EventKind::GitRepoAnnouncement,
+            author: user_ref.public_key,
+            d: identifier.clone(),
             relays: vec![],
         }
-        .to_bech32()?,
+        .as_bech32_string(),
         false,
     )?;
 
