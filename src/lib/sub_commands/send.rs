@@ -2,12 +2,8 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use console::Style;
-use nostr_0_34_1::{
-    ToBech32,
-    nips::{nip10::Marker, nip19::Nip19Event},
-};
-use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
+use crate::types::{NEvent, ToBech32, Tag, Id};
 use crate::{
     //cli::Cli,
     cli_interactor::{
