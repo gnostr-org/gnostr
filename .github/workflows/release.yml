@@ -168,6 +168,11 @@ jobs:
           which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found in PATH"
           which aarch64-elf-gcc || echo "aarch64-elf-gcc not found in PATH"
           ls -l /usr/bin/*aarch64* || echo "No aarch64 binaries in /usr/bin"
+      - name: Create symlink for aarch64-elf-gcc (Linux)
+        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo ln -s $(which aarch64-linux-gnu-gcc) /usr/local/bin/aarch64-elf-gcc || true
+          echo "/usr/local/bin" >> $GITHUB_PATH
       - name: Install required cross-compilers (macOS)
         if: runner.os == 'macOS'
         run: brew install aarch64-elf-binutils aarch64-elf-gcc
