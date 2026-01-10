@@ -3,13 +3,13 @@
 use ::time::OffsetDateTime;
 use clap::Args;
 use gnostr_legit::gitminer;
-use nostr_sdk_0_34_0::prelude::*;
 use serde::ser::StdError;
 
 use crate::{
     cli::LegitCommands,
     legit::command,
     sub_commands::{fetch, init, list, login, pull, push, send},
+    types::{Event, EventKind, Keys, Tag},
 };
 
 #[derive(Args, Debug)]
