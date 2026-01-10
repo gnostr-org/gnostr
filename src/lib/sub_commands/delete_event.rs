@@ -1,5 +1,6 @@
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Id, Keys};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -18,7 +19,7 @@ pub async fn delete(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &DeleteEventSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -26,13 +27,13 @@ pub async fn delete(
     let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays, difficulty_target).await?;
 
-    let event_id_to_delete = EventId::from_hex(sub_command_args.event_id.clone())?;
+    let event_id_to_delete = Id::try_from_hex_string(&sub_command_args.event_id)?;
 
     let event_id = client.delete_event(event_id_to_delete).await?;
     if !sub_command_args.hex {
-        println!("Deleted event with id: {}", event_id.to_bech32()?);
+        println!("Deleted event with id: {}", event_id.as_bech32_string());
     } else {
-        println!("Deleted event with id: {}", event_id.to_hex());
+        println!("Deleted event with id: {}", event_id.as_hex_string());
     }
     Ok(())
 }

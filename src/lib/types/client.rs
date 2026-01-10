@@ -3,6 +3,7 @@
 
 use std::time::Duration;
 use crate::types::{Keys, RelayUrl, Event, Filter, Error, Id, Metadata, Tag, PublicKey};
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterOptions {
@@ -52,6 +53,17 @@ pub struct Client {
 
 impl fmt::Display for Client {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Client {{ pubkey: {}, relays: {} }}",
+            self.keys.public_key().as_hex_string(),
+            self.relays.len()
+        )
+    }
+}
+
+impl fmt::Display for Client {
+    fn fmt(&self, f: &mut fmt::Formatter<_>) -> fmt::Result {
         write!(
             f,
             "Client {{ pubkey: {}, relays: {} }}",

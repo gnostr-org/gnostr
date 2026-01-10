@@ -1,5 +1,8 @@
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{
+    Client, Event, EventKind, Id, Keys, Metadata, PreEventV3, Tag, Unixtime, UncheckedUrl, KeySigner,
+};
 
 use crate::utils::{create_client, parse_private_key};
 
@@ -26,7 +29,7 @@ pub async fn set_channel_metadata(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &SetChannelMetadataSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -35,30 +38,43 @@ pub async fn set_channel_metadata(
     let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
-    let channel_id: EventId = EventId::from_hex(sub_command_args.channel_id.clone())?;
+    let channel_id: Id = Id::try_from_hex_string(&sub_command_args.channel_id)?;
 
     // Build metadata
-    let mut metadata: Metadata = Metadata::new();
+    let mut metadata = Metadata::new();
 
     if let Some(name) = sub_command_args.name.clone() {
-        metadata = metadata.name(name);
+        metadata.name = Some(name);
     }
 
     if let Some(about) = sub_command_args.about.clone() {
-        metadata = metadata.about(about);
+        metadata.about = Some(about);
     }
 
     if let Some(picture) = sub_command_args.picture.clone() {
-        metadata = metadata.picture(Url::parse(picture.as_str()).unwrap());
+        metadata.picture = Some(UncheckedUrl::from_str(&picture));
     }
 
     let relay_url = sub_command_args
         .recommended_relay
         .clone()
-        .map(|relay_string| Url::parse(relay_string.as_str()).unwrap());
+        .map(|relay_string| UncheckedUrl::from_str(&relay_string));
 
-    // Build and send event
-    let event = EventBuilder::channel_metadata(channel_id, relay_url, &metadata).to_event(&keys)?;
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::ChannelMetadata,
+        tags: vec![Tag::new(&[
+            "e",
+            &channel_id.as_hex_string(),
+            relay_url.map_or("", |url| url.as_str()),
+        ])],
+        content: serde_json::to_string(&metadata)?,
+    };
+    
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    let event = signer.sign_event(pre_event)?;
+
     let event_id = client.send_event(event.clone()).await?;
 
     // Print results
@@ -67,8 +83,8 @@ pub async fn set_channel_metadata(
         sub_command_args.channel_id.as_str()
     );
     println!("\nEvent ID:");
-    println!("Hex: {}", event_id.to_hex());
-    println!("Bech32: {}", event_id.to_bech32()?);
+    println!("Hex: {}", event_id.as_hex_string());
+    println!("Bech32: {}", event_id.as_bech32_string());
 
     Ok(())
 }

@@ -1,6 +1,7 @@
 use crate::utils::create_client;
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
+use anyhow::{Result, Error as AnyhowError};
+use crate::types::{Client, Event, EventKind, Filter, Id, Keys, PublicKey, Tag, Unixtime, IdHex, PublicKeyHex};
 use std::{str::FromStr, time::Duration};
 use tracing::debug;
 
@@ -49,99 +50,57 @@ pub struct ListEventsSubCommand {
 pub async fn list_events(
     relays: Vec<String>,
     sub_command_args: &ListEventsSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
 
-    let client = create_client(&Keys::generate(), relays, 0).await?;
+    let keys = Keys::generate();
+    let client = create_client(&keys, relays, 0).await?;
     let mut filter = Filter::new();
 
     // Handle event ids
-    if sub_command_args.ids.is_some() {
-        let ids: Vec<EventId> = sub_command_args
-            .ids
-            .clone()
-            .unwrap_or_default()
-            .iter()
-            .map(|id| EventId::from_str(id).unwrap())
-            .collect();
-        filter = filter.ids(ids);
+    if let Some(ids_str) = &sub_command_args.ids {
+        let ids: Result<Vec<IdHex>, _> = ids_str.iter().map(|id| IdHex::try_from_str(id)).collect();
+        filter.ids = ids?;
     }
 
     // Handle author public keys
-    if sub_command_args.authors.is_some() {
-        let authors: Vec<PublicKey> = sub_command_args
-            .authors
-            .clone()
-            .unwrap_or_default()
-            .iter()
-            .map(|author_pubkey| PublicKey::from_str(author_pubkey).unwrap())
-            .collect();
-        filter = filter.authors(authors);
+    if let Some(authors_str) = &sub_command_args.authors {
+        let authors: Result<Vec<PublicKeyHex>, _> = authors_str.iter().map(|author| PublicKeyHex::try_from_str(author)).collect();
+        filter.authors = authors?;
     }
 
     // Handle kind numbers
-    if sub_command_args.kinds.is_some() {
-        // Convert kind number to Kind struct
-        let kinds: Vec<Kind> = sub_command_args
-            .kinds
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|x| x as u16)
-            .map(Kind::from)
-            .collect();
-        filter = filter.kinds(kinds);
+    if let Some(kinds_u64) = &sub_command_args.kinds {
+        filter.kinds = kinds_u64.iter().map(|k| EventKind::from(*k as u32)).collect();
     }
 
     // Handle e-tags
-    if sub_command_args.etag.is_some() {
-        // Convert event id string to EventId struct
-        let events: Vec<EventId> = sub_command_args
-            .etag
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|e| {
-                if e.starts_with("note1") {
-                    EventId::from_bech32(e.as_str()).expect("Invalid event id")
-                } else {
-                    EventId::from_str(e.as_str()).expect("Invalid event id")
-                }
-            })
-            .collect();
-        filter = filter.events(events);
+    if let Some(etags) = &sub_command_args.etag {
+        filter.add_tag_value('e', etags.join(","));
     }
 
     // Handle p-tags
-    if sub_command_args.ptag.is_some() {
-        // Convert pubkey strings to XOnlyPublicKey struct
-        let pubkeys: Vec<PublicKey> = sub_command_args
-            .ptag
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|p| PublicKey::from_str(p.as_str()).expect("Invalid public key"))
-            .collect();
-        filter = filter.pubkeys(pubkeys);
+    if let Some(ptags) = &sub_command_args.ptag {
+        filter.add_tag_value('p', ptags.join(","));
     }
 
     // Handle d-tags
-    if sub_command_args.dtag.is_some() {
-        filter = filter.identifiers(sub_command_args.dtag.clone().unwrap_or_default());
+    if let Some(dtags) = &sub_command_args.dtag {
+        filter.add_tag_value('d', dtags.join(","));
     }
 
-    if sub_command_args.since.is_some() {
-        filter = filter.since(sub_command_args.since.map(Timestamp::from).unwrap())
+    if let Some(since) = sub_command_args.since {
+        filter.since = Some(Unixtime(since as i64));
     }
 
-    if sub_command_args.until.is_some() {
-        filter = filter.until(sub_command_args.until.map(Timestamp::from).unwrap())
+    if let Some(until) = sub_command_args.until {
+        filter.until = Some(Unixtime(until as i64));
     }
 
-    if sub_command_args.limit.is_some() {
-        filter = filter.limit(sub_command_args.limit.unwrap())
+    if let Some(limit) = sub_command_args.limit {
+        filter.limit = Some(limit);
     }
 
     let timeout = sub_command_args.timeout.map(Duration::from_secs);
