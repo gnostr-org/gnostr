@@ -49,5 +49,5 @@ jobs:
         # Navigate to xcode directory and run the build
         # The -allowProvisioningUpdates is crucial for CI environments
         pushd xcode
-        xcodebuild clean build analyze -scheme "$actual_scheme" -"$filetype_parameter" "$file_to_build" -allowProvisioningUpdates | xcpretty && exit ${PIPESTATUS[0]}
+        xcodebuild clean build analyze -scheme "$actual_scheme" -"$filetype_parameter" "$file_to_build" -allowProvisioningUpdates
         popd
