@@ -13,10 +13,10 @@ pub struct GenerateKeypairSubCommand {
 pub async fn get_new_keypair(sub_command_args: &GenerateKeypairSubCommand) -> anyhow::Result<()> {
     let keys = Keys::generate();
     if !sub_command_args.print_hex {
-        print!(
-            "{{\"private_key\":\"{}\"}}",
-            keys.secret_key()?.as_bech32_string()
-        );
+        print!("{{\"private_key\":\"{}\"}}", {
+            let mut key = keys.secret_key()?;
+            key.as_bech32_string()
+        });
         print!(
             "{{\"public_key\":\"{}\"}}",
             keys.public_key().as_bech32_string()
