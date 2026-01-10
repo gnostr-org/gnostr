@@ -1,4 +1,4 @@
-use crate::types::{NostrBech32, PrivateKey};
+use crate::types::{NEvent, NostrBech32, PrivateKey};
 use anyhow::Result;
 use clap::Parser;
 use nostr_0_34_1::bech32;
@@ -9,14 +9,27 @@ pub struct Bech32ToAnySubCommand {
     /// Bech32 string to convert
     #[arg(value_name = "BECH32_STRING")]
     pub bech32_string: String,
-    #[arg(long, value_name = "BECH32_RAW")]
+    #[arg(long, value_name = "BECH32_RAW", group = "output_format")]
     pub raw: bool,
-    #[arg(long, value_name = "BECH32_JSON")]
+    #[arg(long, value_name = "BECH32_JSON", group = "output_format")]
     pub json: bool,
+    /// Only output the event ID (hex string) if the input is a nevent
+    #[arg(long, group = "output_format")]
+    pub event_id: bool,
 }
 
 pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
     let bech32 = sub_command_args.bech32_string.trim();
+
+    if sub_command_args.event_id {
+        if let Ok(nevent) = crate::types::NEvent::try_from_bech32_string(bech32) {
+            println!("{}", nevent.id.as_hex_string());
+            return Ok(());
+        } else {
+            eprintln!("Error: --event-id can only be used with a valid nevent string.");
+            return Err(anyhow::anyhow!("Invalid nevent string for --event-id"));
+        }
+    }
 
     let output_value: Value;
     let mut raw_output_string: Option<String> = None;
