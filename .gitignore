@@ -12,7 +12,7 @@ tmpgit-**
 
 build_rs_cov.profraw
 
-vendor/
+!vendor/
 test_screenshots/**/*.png
 legit/src/empty/
 src/empty
