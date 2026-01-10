@@ -4,6 +4,7 @@ use clap::Args;
 use anyhow::{Result, Error as AnyhowError};
 use crate::types::{
     Client, Event, EventKind, Id, Keys, TagV3 as Tag, PrivateKey, PreEventV3, Unixtime, KeySigner,
+    Signer
 };
 
 use crate::utils::{create_client, parse_private_key};
