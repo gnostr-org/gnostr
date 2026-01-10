@@ -159,8 +159,17 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
-      - name: Install required cross-compilers
+      - name: Install required cross-compilers (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Install required cross-compilers (macOS)
+        if: runner.os == 'macOS'
+        run: brew install aarch64-elf-binutils aarch64-elf-gcc
+      - name: Configure aarch64-unknown-linux-gnu linker
+        run: |
+          mkdir -p .cargo
+          echo '[target.aarch64-unknown-linux-gnu]' >> .cargo/config.toml
+          echo 'linker = "aarch64-elf-gcc"' >> .cargo/config.toml
       - name: Build artifacts
         run: |
           dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
