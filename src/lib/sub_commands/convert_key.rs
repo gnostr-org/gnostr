@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::Result;
 use clap::Args;
 
 use crate::{
@@ -21,7 +22,7 @@ pub struct ConvertKeySubCommand {
     to_hex: bool,
 }
 
-pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> Result<()> {
+pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> anyhow::Result<()> {
     if sub_command_args.to_hex {
         // Input is bech32 encoded so we find the hex value
         let hex_key_or_id = parse_key_or_id_to_hex_string(sub_command_args.key.clone()).await?;

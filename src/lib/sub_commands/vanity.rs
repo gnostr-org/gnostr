@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Args;
 
 use crate::types::Keys;
