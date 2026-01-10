@@ -60,6 +60,10 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Install sccache
+        run: |
+          cargo install sccache --version 0.4.0 --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
@@ -120,6 +124,10 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Install sccache
+        run: |
+          cargo install sccache --version 0.4.0 --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
         run: |
@@ -171,14 +179,15 @@ jobs:
       - plan
       - build-local-artifacts
     runs-on: "ubuntu-22.04"
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Install sccache
+        run: |
+          cargo install sccache --version 0.4.0 --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install cached dist
         uses: actions/download-artifact@v4
         with:
@@ -229,6 +238,10 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Install sccache
+        run: |
+          cargo install sccache --version 0.4.0 --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install cached dist
         uses: actions/download-artifact@v4
         with:
