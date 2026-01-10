@@ -31,6 +31,16 @@ impl Id {
             .map_err(|_| Error::WrongLengthHexString)?))
     }
 
+    /// Create from a byte slice.
+    pub fn try_from_bytes(v: &[u8]) -> Result<Id, Error> {
+        if v.len() != 32 {
+            return Err(Error::InvalidId);
+        }
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(v);
+        Ok(Id(bytes))
+    }
+
     /// Export as a bech32 encoded string ("note")
     pub fn as_bech32_string(&self) -> String {
         bech32::encode::<bech32::Bech32>(*super::HRP_NOTE, &self.0).unwrap()
