@@ -21,14 +21,24 @@ NSEC=${1:-$HASH}
 RELAY=${1:-"wss://nos.lol"}
 export EVENT1=$($gnostr --nsec $NSEC -r $RELAY custom-event -k 30617 -c "" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" -t "weeble|$($gnostr --weeble)" -t "blockheight|$($gnostr --blockheight)" -t "wobble|$($gnostr --wobble)")
 EVENT1_ID=$($gnostr bech32-to-any $EVENT1 --raw)
+
 echo $EVENT1_ID;
-$gnostr fetch-by-id -i $EVENT1_ID --relay $RELAY && sleep 2;
+$gnostr fetch-by-id -i $EVENT1_ID --relay $RELAY
+
+echo;
+
+sleep 2;
 #exit
 export EVENT2=$($gnostr --nsec $NSEC -r $RELAY custom-event -k 1 -c "#gnostr distributed/decentralized CI EVENT! REF:https://nostr.band/?q=$EVENT1_ID" -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" -t "web|git.gnostr.org" -t "clone|git.gnostr.org" -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" -t "maintainers|gnostr <admin@gnostr.org>" -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" -t "weeble|$($gnostr --weeble)" -t "blockheight|$($gnostr --blockheight)" -t "wobble|$($gnostr --wobble)")
 export EVENT2_ID=$($gnostr bech32-to-any $EVENT2 --raw)
-$gnostr fetch-by-id -i $EVENT2_ID -r $RELAY && sleep 2;
-$gnostr --nsec $($gnostr privkey-to-bech32 $NSEC) -r $RELAY react -e $EVENT1_ID --reaction $EVENT1_ID;
-$gnostr --nsec $($gnostr privkey-to-bech32 $NSEC) -r $RELAY react -e $EVENT2_ID --reaction $EVENT2_ID;
+$gnostr fetch-by-id -i $EVENT2_ID -r $RELAY
+
+echo;
+
+sleep 2;
+
+$gnostr --nsec $($gnostr privkey-to-bech32 $NSEC) -r $RELAY react -e $EVENT1_ID --reaction $EVENT2_ID;
+$gnostr --nsec $($gnostr privkey-to-bech32 $NSEC) -r $RELAY react -e $EVENT2_ID --reaction $EVENT1_ID;
 ##gnostr --nsec $($gnostr --privkey-to-bech32 $($gnostr --hash "")) -r $RELAY react -e $EVENT1_ID -r $EVENT2_ID
 ## a known event 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 to test
 $gnostr --nsec $NSEC -r $RELAY react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r $EVENT1_ID;
