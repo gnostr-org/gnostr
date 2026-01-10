@@ -1,5 +1,6 @@
 //! Demonstrates how to block read characters or a full line.
-//! Just note that crossterm is not required to do this and can be done with `io::stdin()`.
+//! Just note that crossterm is not required to do this and can be done with
+//! `io::stdin()`.
 //!
 //! cargo run --example event-read-char-line
 

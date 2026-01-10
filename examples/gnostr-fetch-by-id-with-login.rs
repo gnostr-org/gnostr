@@ -1,6 +1,9 @@
-use gnostr::types::{Filter, IdHex, RelayMessage};
-use gnostr::{Command, Probe};
 use std::env;
+
+use gnostr::{
+    Command, Probe,
+    types::{Filter, IdHex, RelayMessage},
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

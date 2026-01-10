@@ -1,14 +1,11 @@
-use crossterm::event::Event;
-use crossterm::event::KeyCode;
-use crossterm::event::KeyEvent;
-
-use crossterm::event::KeyModifiers;
-use tui_input::backend::crossterm::EventHandler;
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 //use tui_input::*;
 
 // Removed `use ratatui::prelude::*;` as it's not used in this standalone example
 use tui_input::Input;
-// Removed `use tui_input::backend::crossterm::EventHandler;` as it's implicit for `handle_event`
+use tui_input::backend::crossterm::EventHandler;
+// Removed `use tui_input::backend::crossterm::EventHandler;` as it's implicit
+// for `handle_event`
 
 fn main() {
     // Scenario 1: Create an Input instance with an initial string value
@@ -19,10 +16,11 @@ fn main() {
     // Cursor position is now obtained with `cursor_pos()`
     println!("Cursor position: {}", input_field.cursor());
 
-    // IMPORTANT: The `Input` struct manages its cursor position internally based on events.
-    // There is no direct `set_cursor_position` method to arbitrarily move it.
-    // When you simulate typing via `handle_event`, the cursor will move automatically.
-    // For TUI rendering, you use `input_field.cursor_pos()` to tell Ratatui where to draw the *terminal* cursor.
+    // IMPORTANT: The `Input` struct manages its cursor position internally based on
+    // events. There is no direct `set_cursor_position` method to arbitrarily
+    // move it. When you simulate typing via `handle_event`, the cursor will
+    // move automatically. For TUI rendering, you use `input_field.cursor_pos()`
+    // to tell Ratatui where to draw the *terminal* cursor.
 
     // Scenario 2: Simulate typing into the input field
     // (This demonstrates how input is typically handled in a TUI event loop)

@@ -1,10 +1,10 @@
+use std::{io, io::Write};
+
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use sha2::{Digest, Sha256};
-use std::io;
-use std::io::Write;
 
 fn main() -> std::io::Result<()> {
     enable_raw_mode()?;

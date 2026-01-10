@@ -1,10 +1,10 @@
-use std::str::FromStr;
-use std::{env, process};
+use std::{env, process, str::FromStr};
 
 use num_bigint::BigInt;
 
 // Helper function to get the help message string.
-// This function returns a String, making it testable without relying on stdout capture.
+// This function returns a String, making it testable without relying on stdout
+// capture.
 fn get_help_message() -> String {
     "gnostr_pi <depth> <offset>\nNote:<depth> is NOT the returned number of digits!\nUsage:\nENTROPY=$(gnostr-pi 100 0); gnostr-sha256 $ENTROPY\n806b4aba301c1702df94bdb398f579da7b8419455274cb2235d45cc244de749f".to_string()
 }

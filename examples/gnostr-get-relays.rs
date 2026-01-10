@@ -1,9 +1,9 @@
 use std::env;
 
 use futures::executor::block_on;
-use gnostr::watch_list::{parse_json, parse_urls, stripped_urls};
 use gnostr::{
     get_relays_by_nip, get_stripped_urls, get_watch_list, get_watch_list_json, print_watch_list,
+    watch_list::{parse_json, parse_urls, stripped_urls},
 };
 pub fn handle_command() -> Result<bool, Box<dyn std::error::Error>> {
     let mut args = env::args().peekable();

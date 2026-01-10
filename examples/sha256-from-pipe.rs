@@ -1,5 +1,6 @@
-use sha2::{Digest, Sha256};
 use std::io::{self, Read};
+
+use sha2::{Digest, Sha256};
 
 fn main() -> io::Result<()> {
     let mut input = String::new();
