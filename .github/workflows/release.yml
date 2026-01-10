@@ -162,6 +162,12 @@ jobs:
       - name: Install required cross-compilers (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Debug: Check installed aarch64 linkers (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found in PATH"
+          which aarch64-elf-gcc || echo "aarch64-elf-gcc not found in PATH"
+          ls -l /usr/bin/*aarch64* || echo "No aarch64 binaries in /usr/bin"
       - name: Install required cross-compilers (macOS)
         if: runner.os == 'macOS'
         run: brew install aarch64-elf-binutils aarch64-elf-gcc
