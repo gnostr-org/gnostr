@@ -14,5 +14,40 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Run Xcode build script
-      run: bash xcode/build.sh
+    - name: Get default scheme
+      run: |
+        # Change to xcode directory to run xcodebuild -list
+        pushd xcode
+        scheme_list=$(xcodebuild -list -json | tr -d "\n")
+        popd
+        # Store the default scheme in a file at the root of the workspace
+        echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]" > "${{ github.workspace }}/default_scheme.txt"
+        echo "Using default scheme: $(cat "${{ github.workspace }}/default_scheme.txt")"
+
+    - name: Build and analyze
+      env:
+        # Set a default scheme name, which can be overridden
+        SCHEME_NAME: default
+      run: |
+        actual_scheme="$SCHEME_NAME"
+        if [ "$actual_scheme" = "default" ]; then
+          actual_scheme=$(cat "${{ github.workspace }}/default_scheme.txt")
+        fi
+
+        # Determine if it's a workspace or project
+        if [ -n "$(ls -A xcode | grep -i \\.xcworkspace\$)" ]; then
+          filetype_parameter="workspace"
+          file_to_build="$(ls -A xcode | grep -i \\.xcworkspace\$)"
+        else
+          filetype_parameter="project"
+          file_to_build="$(ls -A xcode | grep -i \\.xcodeproj\$)"
+        fi
+        
+        # Trim whitespace from file_to_build
+        file_to_build=$(echo "$file_to_build" | awk '{$1=$1;print}')
+
+        # Navigate to xcode directory and run the build
+        # The -allowProvisioningUpdates is crucial for CI environments
+        pushd xcode
+        xcodebuild clean build analyze -scheme "$actual_scheme" -"$filetype_parameter" "$file_to_build" -allowProvisioningUpdates | xcpretty && exit ${PIPESTATUS[0]}
+        popd
