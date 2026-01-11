@@ -206,6 +206,16 @@ pub async fn launch(
     // oldest first
     commits.reverse();
 
+    // Convert local Tags to nostr_0_34_1::Tags for the function call
+    let nostr_mention_tags: Vec<nostr_0_34_1::Tag> = mention_tags
+        .iter()
+        .map(|local_tag| {
+            // Convert Vec<String> back to nostr_0_34_1::Tag
+            let fields = local_tag.as_slice();
+            nostr_0_34_1::Tag::try_from(fields).map_err(|e| anyhow!("Failed to convert tag: {}", e))
+        })
+        .collect::<Result<_>>()?;
+
     let events = generate_cover_letter_and_patch_events(
         cover_letter_title_description.clone(),
         &git_repo,
@@ -420,6 +430,20 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     }
 
     Ok((root_proposal_id, mention_tags))
+}
+
+/// Convert nostr_0_34_1::Tag to local Tag type
+fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {
+    use crate::types::Tag;
+
+    // Convert nostr_0_34_1::Tag to Vec<String>
+    let tag_vec: Vec<String> = nostr_tag
+        .as_slice()
+        .iter()
+        .map(|field| field.to_string())
+        .collect();
+
+    Ok(Tag::from_strings(tag_vec))
 }
 
 // TODO

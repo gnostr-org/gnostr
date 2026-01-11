@@ -51,7 +51,7 @@ impl EventBuilder {
 
         // Sign the event
         let signer = KeySigner::from_private_key(keys.clone(), "", 1)?;
-        signer.sign_event(preevent)
+        Ok(signer.sign_event(preevent)?)
     }
 
     /// Build and sign the event without proof of work
@@ -138,11 +138,11 @@ impl EventBuilder {
     }
 
     /// Create a channel creation event (NIP-28)
-    pub fn channel(metadata: &Metadata) -> Self {
+    pub fn channel(metadata: &Metadata, pubkey: &PublicKey) -> Self {
         let mut tags = Vec::new();
 
         // Add author pubkey tag
-        tags.push(Tag::new_pubkey(metadata.pubkey, None, None));
+        tags.push(Tag::new_pubkey(*pubkey, None, None));
 
         Self {
             kind: EventKind::ChannelCreation,
