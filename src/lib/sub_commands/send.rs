@@ -83,7 +83,7 @@ pub async fn launch(
         }
     }
 
-    let mut commits: Vec<String> = {
+    let mut commits: Vec<Sha1Hash> = {
         if args.since_or_range.is_empty() {
             let branch_name = git_repo.get_checked_out_branch_name()?;
             let proposed_commits = if branch_name.eq(main_branch_name) {
@@ -110,16 +110,16 @@ pub async fn launch(
     let dim = Style::new().color256(247);
 
     for commit in &commits {
-        let commit_hash = Sha1Hash::from_hex(commit)?;
+        let commit_hash = *commit;
         println!(
             "{} {}",
-            dim.apply_to(commit.chars().take(7).collect::<String>()),
+            dim.apply_to(commit_hash.to_string().chars().take(7).collect::<String>()),
             git_repo.get_commit_message_summary(&commit_hash)?
         );
     }
 
     let (first_commit_ahead, behind) =
-        git_repo.get_commits_ahead_behind(&main_tip, commits.last().context("no commits")?)?;
+        git_repo.get_commits_ahead_behind(&main_tip, *commits.last().context("no commits")?)?;
 
     // check proposal ahead of origin/main
     if first_commit_ahead.len().gt(&1) && !Interactor::default().confirm(
@@ -293,7 +293,7 @@ pub async fn launch(
     Ok(())
 }
 
-fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<String>> {
+fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<Sha1Hash>> {
     use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
     let mut proposed_commits = if proposed_commits.len().gt(&10) {
@@ -304,9 +304,12 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
 
     let tip_of_head = git_repo.get_tip_of_branch(&git_repo.get_checked_out_branch_name()?)?;
     let tip_of_head_str = tip_of_head.to_string();
-    let most_recent_commit = proposed_commits.first().unwrap_or(&tip_of_head_str);
+    let most_recent_commit = proposed_commits
+        .first()
+        .cloned()
+        .unwrap_or_else(|| Sha1Hash::from_hex(&tip_of_head_str).unwrap());
 
-    let mut last_15_commits = vec![most_recent_commit.clone()];
+    let mut last_15_commits = vec![most_recent_commit.to_string()];
 
     while last_15_commits.len().lt(&15) {
         let last_commit = last_15_commits.last().unwrap();
@@ -335,11 +338,14 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
                 .with_defaults(
                     last_15_commits
                         .iter()
-                        .map(|h| proposed_commits.iter().any(|c| c.eq(h)))
+                        .map(|h| proposed_commits.iter().any(|c| c.to_string().eq(h)))
                         .collect(),
                 ),
         )?;
-        proposed_commits = selected.iter().map(|i| last_15_commits[*i]).collect();
+        proposed_commits = selected
+            .iter()
+            .map(|i| Sha1Hash::from_hex(&last_15_commits[*i]).unwrap())
+            .collect();
 
         if printed_error_line {
             term.clear_last_lines(1)?;
@@ -358,7 +364,10 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
             }
         }
 
-        break proposed_commits;
+        break proposed_commits
+            .into_iter()
+            .map(|s| Sha1Hash::from_hex(&s).map_err(|e| anyhow!("Failed to parse hex: {}", e)))
+            .collect::<Result<Vec<Sha1Hash>>>()?;
     };
     Ok(selected_commits)
 }

@@ -43,7 +43,7 @@ pub async fn launch() -> Result<()> {
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {
-            PublicKey::parse(npub)
+            nostr_sdk_0_34_0::prelude::PublicKey::parse(npub).ok()
         } else {
             None
         };

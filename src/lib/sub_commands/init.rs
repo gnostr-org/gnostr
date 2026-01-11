@@ -383,18 +383,15 @@ pub async fn launch(
         }
         Err(_) => true,
     } {
-        // Convert nostr SDK PublicKeys to local PublicKeys for save_repo_config_to_yaml
-        let local_maintainers: Result<Vec<crate::types::PublicKey>> = maintainers
+        let maintainers_for_yaml: Result<Vec<nostr_0_34_1::PublicKey>> = maintainers
             .iter()
-            .map(|npk| {
-                crate::types::PublicKey::from_bytes(&npk.to_bytes(), false)
-                    .map_err(anyhow::Error::from)
-            })
-            .collect();
+            .map(|npk| nostr_0_34_1::PublicKey::from_slice(&npk.to_bytes()))
+            .collect::<Result<Vec<_>>>()
+            .map_err(|e| anyhow::anyhow!("Failed to convert to nostr PublicKey: {}", e));
         save_repo_config_to_yaml(
             &git_repo,
             identifier.clone(),
-            local_maintainers?,
+            maintainers_for_yaml?,
             relays.clone(),
         )?;
         println!(
