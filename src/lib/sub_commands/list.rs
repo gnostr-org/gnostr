@@ -83,7 +83,14 @@ pub async fn launch() -> Result<()> {
             .collect::<Vec<&nostr_0_34_1::Event>>()
             .first()
         {
-            e.kind()
+            // Convert nostr_0_34_1::Kind to EventKind
+            match e.kind() {
+                nostr_0_34_1::Kind::GitStatusOpen => EventKind::GitStatusOpen,
+                nostr_0_34_1::Kind::GitStatusClosed => EventKind::GitStatusClosed,
+                nostr_0_34_1::Kind::GitStatusDraft => EventKind::GitStatusDraft,
+                nostr_0_34_1::Kind::GitStatusApplied => EventKind::GitStatusApplied,
+                _ => EventKind::GitStatusOpen,
+            }
         } else {
             EventKind::GitStatusOpen
         };
