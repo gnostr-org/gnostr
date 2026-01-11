@@ -1,8 +1,9 @@
 use std::path::Path;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use console::Style;
 use nostr_0_34_1::nips::nip10::Marker;
+use nostr_sdk_0_34_0::{ToBech32, hashes::sha1::Hash as Sha1Hash};
 
 use crate::types::{Id, NEvent, Tag};
 use crate::{
@@ -96,6 +97,9 @@ pub async fn launch(
             git_repo
                 .parse_starting_commits(&args.since_or_range)
                 .context("cannot parse specified starting commit or range")?
+                .into_iter()
+                .map(|hash| hash.to_string())
+                .collect::<Vec<String>>()
         }
     };
 
@@ -103,13 +107,14 @@ pub async fn launch(
         bail!("no commits selected");
     }
     println!("creating proposal from {} commits:", commits.len());
-
     let dim = Style::new().color256(247);
+
     for commit in &commits {
+        let commit_hash = Sha1Hash::from_hex(commit)?;
         println!(
             "{} {}",
-            dim.apply_to(commit.to_string().chars().take(7).collect::<String>()),
-            git_repo.get_commit_message_summary(commit)?
+            dim.apply_to(commit.chars().take(7).collect::<String>()),
+            git_repo.get_commit_message_summary(&commit_hash)?
         );
     }
 
@@ -128,7 +133,7 @@ pub async fn launch(
     }
 
     // check if a selected commit is already in origin
-    if commits.iter().any(|c| c.eq(&main_tip)) {
+    if commits.iter().any(|c: &String| c.eq(&main_tip)) {
         if !Interactor::default().confirm(
             PromptConfirmParms::default()
                 .with_prompt(
@@ -211,7 +216,7 @@ pub async fn launch(
         .iter()
         .map(|local_tag| {
             // Convert Vec<String> back to nostr_0_34_1::Tag
-            let fields = local_tag.as_slice();
+            let fields = local_tag.0.as_slice();
             nostr_0_34_1::Tag::try_from(fields).map_err(|e| anyhow!("Failed to convert tag: {}", e))
         })
         .collect::<Result<_>>()?;
@@ -223,7 +228,7 @@ pub async fn launch(
         &signer,
         &repo_ref,
         &root_proposal_id,
-        &mention_tags,
+        &nostr_mention_tags,
     )
     .await?;
 
@@ -263,9 +268,9 @@ pub async fn launch(
         if let Some(event) = events.first() {
             // TODO: Replace with NEvent implementation
             let event_bech32 = if let Some(_relay) = repo_ref.relays.first() {
-                event.id.as_bech32_string()
+                event.id().to_bech32()?
             } else {
-                event.id.as_bech32_string()
+                event.id().to_bech32()?
             };
             println!(
                 "{}",
@@ -289,6 +294,8 @@ pub async fn launch(
 }
 
 fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<String>> {
+    use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
+
     let mut proposed_commits = if proposed_commits.len().gt(&10) {
         vec![]
     } else {
@@ -296,13 +303,16 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
     };
 
     let tip_of_head = git_repo.get_tip_of_branch(&git_repo.get_checked_out_branch_name()?)?;
-    let most_recent_commit = proposed_commits.first().unwrap_or(&tip_of_head);
+    let tip_of_head_str = tip_of_head.to_string();
+    let most_recent_commit = proposed_commits.first().unwrap_or(&tip_of_head_str);
 
-    let mut last_15_commits = vec![*most_recent_commit];
+    let mut last_15_commits = vec![most_recent_commit.clone()];
 
     while last_15_commits.len().lt(&15) {
-        if let Ok(parent_commit) = git_repo.get_commit_parent(last_15_commits.last().unwrap()) {
-            last_15_commits.push(parent_commit);
+        let last_commit = last_15_commits.last().unwrap();
+        let hash = Sha1Hash::from_hex(last_commit)?;
+        if let Ok(parent_commit) = git_repo.get_commit_parent(&hash) {
+            last_15_commits.push(parent_commit.to_string());
         } else {
             break;
         }
@@ -354,9 +364,12 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
 }
 
 fn summarise_commit_for_selection(git_repo: &Repo, commit: &String) -> Result<String> {
-    let references = git_repo.get_refs(commit)?;
+    use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
+
+    let commit_hash = Sha1Hash::from_hex(commit)?;
+    let references = git_repo.get_refs(&commit_hash)?;
     let dim = Style::new().color256(247);
-    let prefix = format!("({})", git_repo.get_commit_author(commit)?[0],);
+    let prefix = format!("({})", git_repo.get_commit_author(&commit_hash)?[0],);
     let references_string = if references.is_empty() {
         String::new()
     } else {
@@ -373,7 +386,7 @@ fn summarise_commit_for_selection(git_repo: &Repo, commit: &String) -> Result<St
     Ok(format!(
         "{} {}{} {}",
         dim.apply_to(prefix),
-        git_repo.get_commit_message_summary(commit)?,
+        git_repo.get_commit_message_summary(&commit_hash)?,
         Style::new().magenta().apply_to(references_string),
         dim.apply_to(commit.to_string().chars().take(7).collect::<String>(),),
     ))
@@ -387,12 +400,19 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
         // TODO: Implement proper tag parsing without nostr_sdk
         match event_tag_from_nip19_or_hex(first, "in-reply-to", Marker::Root, true, false) {
             Ok(tag) => {
-                let event_id = tag.parse_event().map(|(id, _, _)| id).unwrap_or_else(|_| {
+                let event_id = if let nostr_0_34_1::TagKind::Event { event_id, .. } = tag.kind() {
+                    Id::try_from_hex_string(&event_id.to_hex()).unwrap_or_else(|_| {
+                        Id::try_from_hex_string(
+                            "0000000000000000000000000000000000000000000000000000000000000000",
+                        )
+                        .unwrap()
+                    })
+                } else {
                     Id::try_from_hex_string(
                         "0000000000000000000000000000000000000000000000000000000000000000",
                     )
                     .unwrap()
-                });
+                };
                 // TODO: Fix get_events_from_cache call to use local Filter
                 // let events = get_events_from_cache(
                 //     git_repo_path,
@@ -420,12 +440,11 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     let mut mention_tags = vec![];
     for (i, reply_to) in in_reply_to.iter().enumerate() {
         if i.ne(&0) || root_proposal_id.is_none() {
-            mention_tags.push(
+            let nostr_tag =
                 event_tag_from_nip19_or_hex(reply_to, "in-reply-to", Marker::Mention, true, false)
                     .context(format!(
                         "{reply_to} in 'in-reply-to' not a valid nostr reference"
-                    ))?,
-            );
+                    ))?;
 
             // Convert nostr_0_34_1::Tag to our local Tag type
             let local_tag = convert_nostr_tag_to_local(&nostr_tag)?;
@@ -442,7 +461,7 @@ fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {
 
     // Convert nostr_0_34_1::Tag to Vec<String>
     let tag_vec: Vec<String> = nostr_tag
-        .as_slice()
+        .to_vec()
         .iter()
         .map(|field| field.to_string())
         .collect();
