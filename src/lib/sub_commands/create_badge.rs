@@ -3,8 +3,8 @@ use clap::Args;
 
 use crate::{
     types::{
-        Client, Event, EventKind, Filter, Id, ImageDimensions, Keys, Metadata, PrivateKey,
-        PublicKey, Tag, UncheckedUrl, Unixtime,
+        Client, Event, EventBuilder, EventKind, Filter, Id, ImageDimensions, Keys, Metadata,
+        PrivateKey, PublicKey, Tag, UncheckedUrl, Unixtime,
     },
     utils::{create_client, parse_private_key},
 };
@@ -86,25 +86,15 @@ pub async fn create_badge(
         .clone()
         .map(UncheckedUrl::from_string);
 
-    // TODO: Implement EventBuilder::define_badge without nostr_sdk
-    // For now, create a dummy event and manually add tags for badge definition.
-    let mut event = Event::new_dummy();
-    event.kind = EventKind::BadgeDefinition;
-    event.created_at = Unixtime::now(); // Use current time
-    event.pubkey = keys.public_key(); // Set the author
-    event.content = sub_command_args.description.clone().unwrap_or_default();
-
-    // Add 'd' tag for unique identifier
-    event
-        .tags
-        .push(Tag::new_identifier(sub_command_args.id.clone()));
-
-    // Add 'name' tag
-    if let Some(name) = sub_command_args.name.clone() {
-        event.tags.push(Tag::new_name(name));
-    }
-
-    // Add 'image' tag
+    let event_builder = EventBuilder::define_badge(
+        sub_command_args.id.clone(),
+        sub_command_args.name.clone(),
+        sub_command_args.description.clone(),
+        image_url,
+        image_size,
+        thumbnails,
+    );
+    let event = event_builder.to_pow_event(&keys, difficulty_target)?; // Add 'image' tag
     if let Some(url) = image_url {
         if let Some(dims) = image_size {
             event
