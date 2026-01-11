@@ -5,9 +5,6 @@
 
 //! This crate provides types for nostr protocol handling.
 
-// Re-export bitcoin_hashes for use throughout the codebase
-pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
-
 #![allow(missing_docs)]
 #![deny(
     missing_debug_implementations,
@@ -191,6 +188,8 @@ pub use keys::Keys;
 pub mod client;
 pub use client::{Client, FilterOptions, Options};
 pub mod image_dimensions;
+// Re-export bitcoin_hashes for use throughout the codebase
+pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
 pub use image_dimensions::ImageDimensions;
 
 #[cfg(test)]
