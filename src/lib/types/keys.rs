@@ -52,12 +52,12 @@ impl Keys {
         use crate::types::PrivateKey;
 
         // Try to parse as private key first (nsec)
-        if let Ok(private_key) = PrivateKey::try_from_bech32_string(&s, false) {
+        if let Ok(private_key) = PrivateKey::try_from_bech32_string(&s) {
             return Some(Self::new(private_key));
         }
 
         // Try as hex private key
-        if let Ok(private_key) = PrivateKey::try_from_hex_string(&s, false) {
+        if let Ok(private_key) = PrivateKey::try_from_hex_string(&s) {
             return Some(Self::new(private_key));
         }
 
