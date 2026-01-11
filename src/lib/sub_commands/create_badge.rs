@@ -90,12 +90,12 @@ pub async fn create_badge(
         sub_command_args.id.clone(),
         sub_command_args.name.clone(),
         sub_command_args.description.clone(),
-        image_url,
+        image_url.clone(),
         image_size,
-        thumbnails,
+        thumbnails.clone(),
     );
     let private_key = keys.secret_key()?;
-    let event = event_builder.to_pow_event(&private_key, difficulty_target)?; // Add 'image' tag
+    let mut event = event_builder.to_pow_event(&private_key, difficulty_target)?; // Add 'image' tag
     if let Some(url) = image_url {
         if let Some(dims) = image_size {
             event
