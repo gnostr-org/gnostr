@@ -209,7 +209,7 @@ pub async fn launch(
         let mut maintainers_string = if !args.other_maintainers.is_empty() {
             [args.other_maintainers.clone()].concat().join(" ")
         } else if repo_ref.is_none() && repo_config_result.is_err() {
-            signer.public_key().await?.to_bech32()?
+            signer.public_key().await?.as_bech32_string()
         } else {
             let maintainers = if let Ok(config) = &repo_config_result {
                 config.maintainers.clone()
