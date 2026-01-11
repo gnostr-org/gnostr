@@ -11,7 +11,6 @@ use gnostr_asyncgit::{
     hash,
     sync::{self, RepoPathRef, diff::DiffLinePosition},
 };
-use nostr_sdk_0_37_0::prelude::*;
 use ratatui::{
     Frame,
     layout::Rect,
@@ -34,8 +33,9 @@ use crate::{
     string_utils::{tabs_to_spaces, trim_offset},
     strings,
     try_or_popup,
-    ui::style::SharedTheme,
+    types::Keys,
     //utils::parse_private_key,
+    ui::style::SharedTheme,
 };
 
 #[derive(Default)]
