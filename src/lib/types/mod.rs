@@ -43,6 +43,7 @@ mod error;
 pub use error::Error;
 
 mod event;
+mod event_builder;
 pub use event::{Event, PreEvent, Rumor, ZapData};
 
 /// event_kind
@@ -204,6 +205,8 @@ macro_rules! test_serde {
         }
     };
 }
+
+mod event_builder;
 
 // mod types;
 
