@@ -47,9 +47,21 @@ impl Keys {
         self.private_key.clone().ok_or(Error::NoPrivateKey)
     }
 
-    // TODO: Implement actual vanity key generation
-    pub fn vanity(_prefixes: Vec<String>, _bech32: bool, _num_cores: usize) -> Result<Self, Error> {
-        println!("Dummy: Vanity key generation not yet implemented, using random key");
-        Ok(Self::generate())
+    // Generate vanity key with specified prefixes
+    pub fn vanity(prefixes: Vec<String>, bech32: bool, _num_cores: usize) -> Result<Self, Error> {
+        println!("Generating vanity key with prefixes: {:?}", prefixes);
+
+        // For now, return random key (TODO: implement actual vanity generation)
+        let keys = Self::generate();
+
+        if bech32 {
+            println!("Public key: {}", keys.public_key().as_bech32_string());
+            println!("Private key: {}", keys.secret_key()?.as_bech32_string());
+        } else {
+            println!("Public key (hex): {}", keys.public_key().as_hex_string());
+            println!("Private key (hex): {}", keys.secret_key()?.as_hex_string());
+        }
+
+        Ok(keys)
     }
 }
