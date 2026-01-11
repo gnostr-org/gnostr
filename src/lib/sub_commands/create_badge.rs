@@ -94,7 +94,8 @@ pub async fn create_badge(
         image_size,
         thumbnails,
     );
-    let event = event_builder.to_pow_event(&keys, difficulty_target)?; // Add 'image' tag
+    let private_key = keys.secret_key()?;
+    let event = event_builder.to_pow_event(&private_key, difficulty_target)?; // Add 'image' tag
     if let Some(url) = image_url {
         if let Some(dims) = image_size {
             event
