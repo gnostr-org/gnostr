@@ -206,8 +206,6 @@ macro_rules! test_serde {
     };
 }
 
-mod event_builder;
-
 // mod types;
 
 pub mod versioned;
