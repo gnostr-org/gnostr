@@ -1,11 +1,13 @@
 use std::path::Path;
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, bail};
 use console::Style;
-use nostr_0_34_1::nips::nip10::Marker;
-use nostr_sdk_0_34_0::{ToBech32, hashes::sha1::Hash as Sha1Hash};
+use nostr_0_34_1::{
+    ToBech32,
+    nips::{nip10::Marker, nip19::Nip19Event},
+};
+use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
-use crate::types::{Id, NEvent, Tag};
 use crate::{
     //cli::Cli,
     cli_interactor::{
@@ -97,9 +99,6 @@ pub async fn launch(
             git_repo
                 .parse_starting_commits(&args.since_or_range)
                 .context("cannot parse specified starting commit or range")?
-                .into_iter()
-                .map(|hash| hash.to_string())
-                .collect::<Vec<String>>()
         }
     };
 
@@ -107,19 +106,18 @@ pub async fn launch(
         bail!("no commits selected");
     }
     println!("creating proposal from {} commits:", commits.len());
-    let dim = Style::new().color256(247);
 
+    let dim = Style::new().color256(247);
     for commit in &commits {
-        let commit_hash = *commit;
         println!(
             "{} {}",
-            dim.apply_to(commit_hash.to_string().chars().take(7).collect::<String>()),
-            git_repo.get_commit_message_summary(&commit_hash)?
+            dim.apply_to(commit.to_string().chars().take(7).collect::<String>()),
+            git_repo.get_commit_message_summary(commit)?
         );
     }
 
     let (first_commit_ahead, behind) =
-        git_repo.get_commits_ahead_behind(&main_tip, *commits.last().context("no commits")?)?;
+        git_repo.get_commits_ahead_behind(&main_tip, commits.last().context("no commits")?)?;
 
     // check proposal ahead of origin/main
     if first_commit_ahead.len().gt(&1) && !Interactor::default().confirm(
@@ -133,7 +131,7 @@ pub async fn launch(
     }
 
     // check if a selected commit is already in origin
-    if commits.iter().any(|c: &String| c.eq(&main_tip)) {
+    if commits.iter().any(|c| c.eq(&main_tip)) {
         if !Interactor::default().confirm(
             PromptConfirmParms::default()
                 .with_prompt(
@@ -211,16 +209,6 @@ pub async fn launch(
     // oldest first
     commits.reverse();
 
-    // Convert local Tags to nostr_0_34_1::Tags for the function call
-    let nostr_mention_tags: Vec<nostr_0_34_1::Tag> = mention_tags
-        .iter()
-        .map(|local_tag| {
-            // Convert Vec<String> back to nostr_0_34_1::Tag
-            let fields = local_tag.0.as_slice();
-            nostr_0_34_1::Tag::try_from(fields).map_err(|e| anyhow!("Failed to convert tag: {}", e))
-        })
-        .collect::<Result<_>>()?;
-
     let events = generate_cover_letter_and_patch_events(
         cover_letter_title_description.clone(),
         &git_repo,
@@ -228,7 +216,7 @@ pub async fn launch(
         &signer,
         &repo_ref,
         &root_proposal_id,
-        &nostr_mention_tags,
+        &mention_tags,
     )
     .await?;
 
@@ -266,9 +254,8 @@ pub async fn launch(
 
     if root_proposal_id.is_none() {
         if let Some(event) = events.first() {
-            // TODO: Replace with NEvent implementation
-            let event_bech32 = if let Some(_relay) = repo_ref.relays.first() {
-                event.id().to_bech32()?
+            let event_bech32 = if let Some(relay) = repo_ref.relays.first() {
+                Nip19Event::new(event.id(), vec![relay]).to_bech32()?
             } else {
                 event.id().to_bech32()?
             };
@@ -293,9 +280,7 @@ pub async fn launch(
     Ok(())
 }
 
-fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<Sha1Hash>> {
-    use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
-
+fn choose_commits(git_repo: &Repo, proposed_commits: Vec<Sha1Hash>) -> Result<Vec<Sha1Hash>> {
     let mut proposed_commits = if proposed_commits.len().gt(&10) {
         vec![]
     } else {
@@ -303,19 +288,13 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
     };
 
     let tip_of_head = git_repo.get_tip_of_branch(&git_repo.get_checked_out_branch_name()?)?;
-    let tip_of_head_str = tip_of_head.to_string();
-    let most_recent_commit = proposed_commits
-        .first()
-        .cloned()
-        .unwrap_or_else(|| Sha1Hash::from_hex(&tip_of_head_str).unwrap());
+    let most_recent_commit = proposed_commits.first().unwrap_or(&tip_of_head);
 
-    let mut last_15_commits = vec![most_recent_commit.to_string()];
+    let mut last_15_commits = vec![*most_recent_commit];
 
     while last_15_commits.len().lt(&15) {
-        let last_commit = last_15_commits.last().unwrap();
-        let hash = Sha1Hash::from_hex(last_commit)?;
-        if let Ok(parent_commit) = git_repo.get_commit_parent(&hash) {
-            last_15_commits.push(parent_commit.to_string());
+        if let Ok(parent_commit) = git_repo.get_commit_parent(last_15_commits.last().unwrap()) {
+            last_15_commits.push(parent_commit);
         } else {
             break;
         }
@@ -338,14 +317,11 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
                 .with_defaults(
                     last_15_commits
                         .iter()
-                        .map(|h| proposed_commits.iter().any(|c| c.to_string().eq(h)))
+                        .map(|h| proposed_commits.iter().any(|c| c.eq(h)))
                         .collect(),
                 ),
         )?;
-        proposed_commits = selected
-            .iter()
-            .map(|i| Sha1Hash::from_hex(&last_15_commits[*i]).unwrap())
-            .collect();
+        proposed_commits = selected.iter().map(|i| last_15_commits[*i]).collect();
 
         if printed_error_line {
             term.clear_last_lines(1)?;
@@ -364,21 +340,15 @@ fn choose_commits(git_repo: &Repo, proposed_commits: Vec<String>) -> Result<Vec<
             }
         }
 
-        break proposed_commits
-            .into_iter()
-            .map(|s| Sha1Hash::from_hex(&s).map_err(|e| anyhow!("Failed to parse hex: {}", e)))
-            .collect::<Result<Vec<Sha1Hash>>>()?;
+        break proposed_commits;
     };
     Ok(selected_commits)
 }
 
-fn summarise_commit_for_selection(git_repo: &Repo, commit: &String) -> Result<String> {
-    use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
-
-    let commit_hash = Sha1Hash::from_hex(commit)?;
-    let references = git_repo.get_refs(&commit_hash)?;
+fn summarise_commit_for_selection(git_repo: &Repo, commit: &Sha1Hash) -> Result<String> {
+    let references = git_repo.get_refs(commit)?;
     let dim = Style::new().color256(247);
-    let prefix = format!("({})", git_repo.get_commit_author(&commit_hash)?[0],);
+    let prefix = format!("({})", git_repo.get_commit_author(commit)?[0],);
     let references_string = if references.is_empty() {
         String::new()
     } else {
@@ -395,7 +365,7 @@ fn summarise_commit_for_selection(git_repo: &Repo, commit: &String) -> Result<St
     Ok(format!(
         "{} {}{} {}",
         dim.apply_to(prefix),
-        git_repo.get_commit_message_summary(&commit_hash)?,
+        git_repo.get_commit_message_summary(commit)?,
         Style::new().magenta().apply_to(references_string),
         dim.apply_to(commit.to_string().chars().take(7).collect::<String>(),),
     ))
@@ -404,43 +374,34 @@ fn summarise_commit_for_selection(git_repo: &Repo, commit: &String) -> Result<St
 async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     git_repo_path: &Path,
     in_reply_to: &[String],
-) -> Result<(Option<String>, Vec<Tag>)> {
+) -> Result<(Option<String>, Vec<nostr_0_34_1::Tag>)> {
     let root_proposal_id = if let Some(first) = in_reply_to.first() {
-        // TODO: Implement proper tag parsing without nostr_sdk
-        match event_tag_from_nip19_or_hex(first, "in-reply-to", Marker::Root, true, false) {
-            Ok(tag) => {
-                let event_id = if let nostr_0_34_1::TagKind::Event { event_id, .. } = tag.kind() {
-                    Id::try_from_hex_string(&event_id.to_hex()).unwrap_or_else(|_| {
-                        Id::try_from_hex_string(
-                            "0000000000000000000000000000000000000000000000000000000000000000",
-                        )
-                        .unwrap()
-                    })
+        match event_tag_from_nip19_or_hex(first, "in-reply-to", Marker::Root, true, false)?
+            .as_standardized()
+        {
+            Some(nostr_sdk_0_34_0::TagStandard::Event {
+                event_id,
+                relay_url: _,
+                marker: _,
+                public_key: _,
+            }) => {
+                let events = get_events_from_cache(
+                    git_repo_path,
+                    vec![nostr_0_34_1::Filter::new().id(*event_id)],
+                )
+                .await?;
+
+                if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {
+                    if event_is_patch_set_root(first) {
+                        Some(event_id.to_string())
+                    } else {
+                        None
+                    }
                 } else {
-                    Id::try_from_hex_string(
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                    )
-                    .unwrap()
-                };
-                // TODO: Fix get_events_from_cache call to use local Filter
-                // let events = get_events_from_cache(
-                //     git_repo_path,
-                //     vec![Filter::new().id(event_id)],
-                // )
-                // .await?;
-                //
-                // if let Some(first) = events.iter().find(|e| e.id.eq(&event_id)) {
-                //     if event_is_patch_set_root(first) {
-                //         Some(event_id.to_string())
-                //     } else {
-                //         None
-                //     }
-                // } else {
-                //     None
-                // }
-                Some(event_id.to_string())
+                    None
+                }
             }
-            Err(_) => None,
+            _ => None,
         }
     } else {
         return Ok((None, vec![]));
@@ -449,33 +410,16 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     let mut mention_tags = vec![];
     for (i, reply_to) in in_reply_to.iter().enumerate() {
         if i.ne(&0) || root_proposal_id.is_none() {
-            let nostr_tag =
+            mention_tags.push(
                 event_tag_from_nip19_or_hex(reply_to, "in-reply-to", Marker::Mention, true, false)
                     .context(format!(
                         "{reply_to} in 'in-reply-to' not a valid nostr reference"
-                    ))?;
-
-            // Convert nostr_0_34_1::Tag to our local Tag type
-            let local_tag = convert_nostr_tag_to_local(&nostr_tag)?;
-            mention_tags.push(local_tag);
+                    ))?,
+            );
         }
     }
 
     Ok((root_proposal_id, mention_tags))
-}
-
-/// Convert nostr_0_34_1::Tag to local Tag type
-fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {
-    use crate::types::Tag;
-
-    // Convert nostr_0_34_1::Tag to Vec<String>
-    let tag_vec: Vec<String> = nostr_tag
-        .to_vec()
-        .iter()
-        .map(|field| field.to_string())
-        .collect();
-
-    Ok(Tag::from_strings(tag_vec))
 }
 
 // TODO
