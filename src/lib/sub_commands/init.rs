@@ -369,6 +369,11 @@ pub async fn launch(
         }
         Err(_) => true,
     } {
+        // Convert nostr SDK PublicKeys to local PublicKeys for save_repo_config_to_yaml
+        let local_maintainers: Result<Vec<crate::types::PublicKey>> = maintainers
+            .iter()
+            .map(|npk| crate::types::PublicKey::from_bytes(npk.as_bytes(), false))
+            .collect();
         save_repo_config_to_yaml(
             &git_repo,
             identifier.clone(),
