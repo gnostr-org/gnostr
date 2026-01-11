@@ -383,15 +383,14 @@ pub async fn launch(
         }
         Err(_) => true,
     } {
-        let maintainers_for_yaml: Result<Vec<nostr_0_34_1::PublicKey>> = maintainers
+        let maintainers_for_yaml: Vec<nostr_0_34_1::PublicKey> = maintainers
             .iter()
-            .map(|npk| nostr_0_34_1::PublicKey::from_slice(&npk.to_bytes()))
-            .collect::<Result<Vec<_>>>()
-            .map_err(|e| anyhow::anyhow!("Failed to convert to nostr PublicKey: {}", e));
+            .filter_map(|npk| nostr_0_34_1::PublicKey::from_slice(&npk.to_bytes()).ok())
+            .collect();
         save_repo_config_to_yaml(
             &git_repo,
             identifier.clone(),
-            maintainers_for_yaml?,
+            maintainers_for_yaml,
             relays.clone(),
         )?;
         println!(
