@@ -47,6 +47,23 @@ impl Keys {
         self.private_key.clone().ok_or(Error::NoPrivateKey)
     }
 
+    /// Parse from nsec or bech32 string (for compatibility with nostr_sdk)
+    pub fn parse(s: String) -> Option<Self> {
+        use crate::types::PrivateKey;
+
+        // Try to parse as private key first (nsec)
+        if let Ok(private_key) = PrivateKey::try_from_bech32_string(&s, false) {
+            return Some(Self::new(private_key));
+        }
+
+        // Try as hex private key
+        if let Ok(private_key) = PrivateKey::try_from_hex_string(&s, false) {
+            return Some(Self::new(private_key));
+        }
+
+        None
+    }
+
     // Generate vanity key with specified prefixes
     pub fn vanity(prefixes: Vec<String>, bech32: bool, _num_cores: usize) -> Result<Self, Error> {
         println!("Generating vanity key with prefixes: {:?}", prefixes);
