@@ -50,8 +50,9 @@ pub async fn create_public_channel(
         metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
-    let event_builder = EventBuilder::channel(&metadata);
-    let event = event_builder.to_event(&keys)?;
+    let private_key = keys.secret_key()?;
+    let event_builder = EventBuilder::channel(&metadata, &private_key.public_key());
+    let event = event_builder.to_event(&private_key)?;
     let event_id = client.send_event(event).await?;
 
     // Print results
