@@ -426,6 +426,10 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
                         "{reply_to} in 'in-reply-to' not a valid nostr reference"
                     ))?,
             );
+
+            // Convert nostr_0_34_1::Tag to our local Tag type
+            let local_tag = convert_nostr_tag_to_local(&nostr_tag)?;
+            mention_tags.push(local_tag);
         }
     }
 
