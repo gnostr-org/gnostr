@@ -1,4 +1,5 @@
 use anyhow::{Context, Result, bail};
+use nostr_sdk_0_34_0::PublicKey;
 
 use crate::{
     client::{
@@ -11,7 +12,6 @@ use crate::{
         is_event_proposal_root_for_branch, tag_value,
     },
     repo_ref::get_repo_coordinates,
-    types::PublicKey,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -43,7 +43,7 @@ pub async fn launch() -> Result<()> {
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {
-            nostr_sdk_0_34_0::prelude::PublicKey::parse(npub).ok()
+            PublicKey::parse(npub).ok()
         } else {
             None
         };

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use nostr_sdk_0_34_0::{PublicKey as NostrPublicKey, ToBech32};
+use nostr_0_34_1::{FromBech32, PublicKey, ToBech32, nips::nip01::Coordinate};
+use nostr_sdk_0_34_0::Kind;
 
-use crate::types::{EventKind, NAddr, PublicKey};
 use crate::{
     //cli::Cli,
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
@@ -226,10 +226,13 @@ pub async fn launch(
                 vec![signer.public_key().await?.to_bech32()?]
             };
             // add current user if not present
-            if maintainers
-                .iter()
-                .any(|m| user_ref.public_key.to_bech32().unwrap().eq(m))
-            {
+            if maintainers.iter().any(|m| {
+                if let Ok(m_pubkey) = PublicKey::from_bech32(m) {
+                    user_ref.public_key.eq(&m_pubkey)
+                } else {
+                    false
+                }
+            }) {
                 maintainers.join(" ")
             } else {
                 [maintainers, vec![signer.public_key().await?.to_bech32()?]]
@@ -246,9 +249,9 @@ pub async fn launch(
                         .with_default(maintainers_string),
                 )?;
             }
-            let mut maintainers: Vec<NostrPublicKey> = vec![];
+            let mut maintainers: Vec<PublicKey> = vec![];
             for m in maintainers_string.split(' ') {
-                if let Ok(m_pubkey) = NostrPublicKey::parse(m) {
+                if let Ok(m_pubkey) = PublicKey::from_bech32(m) {
                     maintainers.push(m_pubkey);
                 } else {
                     println!("not a valid set of npubs seperated by a space");
@@ -260,14 +263,7 @@ pub async fn launch(
             if !maintainers.iter().any(|m| user_ref.public_key.eq(m)) {
                 maintainers.push(signer.public_key().await?);
             }
-            // Convert nostr SDK PublicKeys to local PublicKeys for the outer scope
-            break maintainers
-                .into_iter()
-                .map(|npk| {
-                    PublicKey::from_bytes(&npk.to_bytes(), false)
-                        .map_err(|e| anyhow::anyhow!("{}", e))
-                })
-                .collect::<Result<Vec<PublicKey>>>()?;
+            break maintainers;
         }
     };
 
@@ -333,13 +329,7 @@ pub async fn launch(
         git_server,
         web,
         relays: relays.clone(),
-        maintainers: maintainers
-            .iter()
-            .map(|local_pk| {
-                NostrPublicKey::from_slice(&local_pk.as_bytes())
-                    .map_err(|e| anyhow::anyhow!("Failed to convert local PublicKey: {}", e))
-            })
-            .collect::<Result<Vec<NostrPublicKey>>>()?,
+        maintainers: maintainers.clone(),
         events: HashMap::new(),
     };
     let repo_event = repo_ref.to_event(&signer).await?;
@@ -359,13 +349,13 @@ pub async fn launch(
 
     git_repo.save_git_config_item(
         "nostr.repo",
-        &NAddr {
-            kind: EventKind::GitRepoAnnouncement,
-            author: crate::types::PublicKey::from_bytes(&user_ref.public_key.to_bytes(), false)?,
-            d: identifier.clone(),
+        &Coordinate {
+            kind: Kind::GitRepoAnnouncement,
+            public_key: user_ref.public_key,
+            identifier: identifier.clone(),
             relays: vec![],
         }
-        .as_bech32_string(),
+        .to_bech32()?,
         false,
     )?;
 
@@ -375,22 +365,15 @@ pub async fn launch(
             !<std::option::Option<std::string::String> as Clone>::clone(&config.identifier)
                 .unwrap_or_default()
                 .eq(&identifier)
-                || !extract_pks(config.maintainers.clone())?
-                    .iter()
-                    .zip(maintainers.iter())
-                    .all(|(a, b)| a.to_string().eq(&b.to_string()))
+                || !extract_pks(config.maintainers.clone())?.eq(&maintainers)
                 || !config.relays.eq(&relays)
         }
         Err(_) => true,
     } {
-        let maintainers_for_yaml: Vec<nostr_0_34_1::PublicKey> = maintainers
-            .iter()
-            .filter_map(|npk| nostr_0_34_1::PublicKey::from_slice(&npk.to_bytes()).ok())
-            .collect();
         save_repo_config_to_yaml(
             &git_repo,
             identifier.clone(),
-            maintainers_for_yaml,
+            maintainers.clone(),
             relays.clone(),
         )?;
         println!(

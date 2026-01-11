@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, bail};
+use nostr_sdk_0_34_0::PublicKey;
 
 use crate::{
     client::{Client, send_events},
     git_events::{is_event_proposal_root_for_branch, tag_value},
-    types::PublicKey,
 };
 use crate::{
     //cli::Cli,
@@ -69,7 +69,7 @@ pub async fn launch(
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {
-            nostr_sdk_0_34_0::prelude::PublicKey::parse(npub).ok()
+            PublicKey::parse(npub).ok()
         } else {
             None
         };

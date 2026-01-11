@@ -1,6 +1,7 @@
 use std::{io::Write, ops::Add};
 
 use anyhow::{Context, Result, bail};
+use nostr_sdk_0_34_0::Kind;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
@@ -15,7 +16,6 @@ use crate::{
         status_kinds, tag_value,
     },
     repo_ref::get_repo_coordinates,
-    types::EventKind,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -83,38 +83,31 @@ pub async fn launch() -> Result<()> {
             .collect::<Vec<&nostr_0_34_1::Event>>()
             .first()
         {
-            // Convert nostr_0_34_1::Kind to EventKind
-            match e.kind() {
-                nostr_0_34_1::Kind::GitStatusOpen => EventKind::GitStatusOpen,
-                nostr_0_34_1::Kind::GitStatusClosed => EventKind::GitStatusClosed,
-                nostr_0_34_1::Kind::GitStatusDraft => EventKind::GitStatusDraft,
-                nostr_0_34_1::Kind::GitStatusApplied => EventKind::GitStatusApplied,
-                _ => EventKind::GitStatusOpen,
-            }
+            e.kind()
         } else {
-            EventKind::GitStatusOpen
+            Kind::GitStatusOpen
         };
-        if status.eq(&EventKind::GitStatusOpen) {
+        if status.eq(&Kind::GitStatusOpen) {
             open_proposals.push(proposal);
-        } else if status.eq(&EventKind::GitStatusClosed) {
+        } else if status.eq(&Kind::GitStatusClosed) {
             closed_proposals.push(proposal);
-        } else if status.eq(&EventKind::GitStatusDraft) {
+        } else if status.eq(&Kind::GitStatusDraft) {
             draft_proposals.push(proposal);
-        } else if status.eq(&EventKind::GitStatusApplied) {
+        } else if status.eq(&Kind::GitStatusApplied) {
             applied_proposals.push(proposal);
         }
     }
 
-    let mut selected_status = EventKind::GitStatusOpen;
+    let mut selected_status = Kind::GitStatusOpen;
 
     loop {
-        let proposals_for_status = if selected_status == EventKind::GitStatusOpen {
+        let proposals_for_status = if selected_status == Kind::GitStatusOpen {
             &open_proposals
-        } else if selected_status == EventKind::GitStatusDraft {
+        } else if selected_status == Kind::GitStatusDraft {
             &draft_proposals
-        } else if selected_status == EventKind::GitStatusClosed {
+        } else if selected_status == Kind::GitStatusClosed {
             &closed_proposals
-        } else if selected_status == EventKind::GitStatusApplied {
+        } else if selected_status == Kind::GitStatusApplied {
             &applied_proposals
         } else {
             &open_proposals
@@ -122,15 +115,15 @@ pub async fn launch() -> Result<()> {
 
         let prompt = if proposals.len().eq(&open_proposals.len()) {
             "all proposals"
-        } else if selected_status == EventKind::GitStatusOpen {
+        } else if selected_status == Kind::GitStatusOpen {
             if open_proposals.is_empty() {
                 "proposals menu"
             } else {
                 "open proposals"
             }
-        } else if selected_status == EventKind::GitStatusDraft {
+        } else if selected_status == Kind::GitStatusDraft {
             "draft proposals"
-        } else if selected_status == EventKind::GitStatusClosed {
+        } else if selected_status == Kind::GitStatusClosed {
             "closed proposals"
         } else {
             "applied proposals"
@@ -149,16 +142,16 @@ pub async fn launch() -> Result<()> {
             })
             .collect();
 
-        if !selected_status.eq(&EventKind::GitStatusOpen) && open_proposals.len().gt(&0) {
+        if !selected_status.eq(&Kind::GitStatusOpen) && open_proposals.len().gt(&0) {
             choices.push(format!("({}) Open proposals...", open_proposals.len()));
         }
-        if !selected_status.eq(&EventKind::GitStatusDraft) && draft_proposals.len().gt(&0) {
+        if !selected_status.eq(&Kind::GitStatusDraft) && draft_proposals.len().gt(&0) {
             choices.push(format!("({}) Draft proposals...", draft_proposals.len()));
         }
-        if !selected_status.eq(&EventKind::GitStatusClosed) && closed_proposals.len().gt(&0) {
+        if !selected_status.eq(&Kind::GitStatusClosed) && closed_proposals.len().gt(&0) {
             choices.push(format!("({}) Closed proposals...", closed_proposals.len()));
         }
-        if !selected_status.eq(&EventKind::GitStatusApplied) && applied_proposals.len().gt(&0) {
+        if !selected_status.eq(&Kind::GitStatusApplied) && applied_proposals.len().gt(&0) {
             choices.push(format!(
                 "({}) Applied proposals...",
                 applied_proposals.len()
@@ -173,13 +166,13 @@ pub async fn launch() -> Result<()> {
 
         if (selected_index + 1).gt(&proposals_for_status.len()) {
             if choices[selected_index].contains("Open") {
-                selected_status = EventKind::GitStatusOpen;
+                selected_status = Kind::GitStatusOpen;
             } else if choices[selected_index].contains("Draft") {
-                selected_status = EventKind::GitStatusDraft;
+                selected_status = Kind::GitStatusDraft;
             } else if choices[selected_index].contains("Closed") {
-                selected_status = EventKind::GitStatusClosed;
+                selected_status = Kind::GitStatusClosed;
             } else if choices[selected_index].contains("Applied") {
-                selected_status = EventKind::GitStatusApplied;
+                selected_status = Kind::GitStatusApplied;
             }
             continue;
         }
