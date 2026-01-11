@@ -296,12 +296,9 @@ pub fn generate_nostr_keys_from_commit_hash(
     commit_id: &str,
 ) -> Result<crate::types::Keys, AnyhowError> {
     let padded_commit_id = format!("{:0>64}", commit_id);
-    let mut key_bytes = padded_commit_id;
-    let hash_bytes = commit_id.as_bytes();
-
     // Use the padded commit ID to create a private key
     let private_key = crate::types::PrivateKey::try_from_hex_string(&padded_commit_id);
-    let keys = crate::types::Keys::new(private_key);
+    let keys = crate::types::Keys::new(private_key?);
     Ok(keys)
 }
 
