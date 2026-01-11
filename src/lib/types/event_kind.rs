@@ -132,6 +132,8 @@ define_event_kinds!(
     Patches = 1617,
     "Issue (NIP-34)",
     GitIssue = 1621,
+    "Git Repository Announcement (NIP-34)",
+    GitRepoAnnouncement = 30617,
     "Replies (NIP-34)",
     GitReply = 1622,
     "Status Open  (NIP-34)",
