@@ -100,6 +100,19 @@ impl PublicKey {
         self.0.as_slice().to_vec()
     }
 
+    /// Parse from bech32 or hex string (for compatibility with nostr_sdk)
+    pub fn parse(s: String) -> Option<Self> {
+        // Try bech32 first
+        if let Ok(pk) = Self::try_from_bech32_string(&s, false) {
+            return Some(pk);
+        }
+        // Try hex
+        if let Ok(pk) = Self::try_from_hex_string(&s, false) {
+            return Some(pk);
+        }
+        None
+    }
+
     /// Verify a signed message
     pub fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), Error> {
         use secp256k1::hashes::{Hash, sha256};
