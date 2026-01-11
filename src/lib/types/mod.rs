@@ -208,6 +208,7 @@ macro_rules! test_serde {
 // mod types;
 
 pub mod versioned;
+pub use event_builder::EventBuilder;
 pub use versioned::{
     ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
     MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,

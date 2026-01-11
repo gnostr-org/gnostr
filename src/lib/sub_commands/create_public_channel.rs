@@ -2,7 +2,10 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
 use crate::{
-    types::{Client, Event, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl, Unixtime},
+    types::{
+        Client, Event, EventBuilder, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl,
+        Unixtime,
+    },
     utils::{create_client, parse_private_key},
 };
 
@@ -47,22 +50,8 @@ pub async fn create_public_channel(
         metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
-    // TODO: Implement EventBuilder::channel and to_event without nostr_sdk
-    // For now, create a dummy event of kind ChannelCreate and add metadata tag.
-    let mut event = Event::new_dummy();
-    event.kind = EventKind::ChannelCreation;
-    event.created_at = Unixtime::now();
-    event.pubkey = keys.public_key();
-    event.content = serde_json::to_string(&metadata)?;
-    event
-        .tags
-        .push(Tag::new_tag("p", &keys.public_key().as_hex_string()));
-
-    // Sign the event (dummy signing for now)
-    // let signed_event = keys.sign_event(event).await?; // Placeholder for actual
-    // signing
-
-    // Send event
+    let event_builder = EventBuilder::channel(&metadata);
+    let event = event_builder.to_event(&keys)?;
     let event_id = client.send_event(event).await?;
 
     // Print results

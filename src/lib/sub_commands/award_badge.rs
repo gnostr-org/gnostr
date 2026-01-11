@@ -5,8 +5,8 @@ use clap::Args;
 
 use crate::{
     types::{
-        Client, Event, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19, Options,
-        PrivateKey, PublicKey, Tag,
+        Client, Event, EventBuilder, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19,
+        Options, PrivateKey, PublicKey, Tag,
     },
     utils::{create_client, parse_private_key},
 };
@@ -105,13 +105,11 @@ pub async fn award_badge(
 
     // Publish event
     // TODO: Replace with actual client.send_event implementation
-    let event_id_published = Id::try_from_hex_string(
-        "1111111111111111111111111111111111111111111111111111111111111111",
-    )?;
+    let event_id = client.send_event(event).await?;
 
     println!("Published badge award event with id:");
-    println!("Hex: {}", event_id_published.as_hex_string());
-    println!("Bech32: {}", event_id_published.as_bech32_string());
+    println!("Hex: {}", event_id.as_hex_string());
+    println!("Bech32: {}", event_id.as_bech32_string());
 
     Ok(())
 }
