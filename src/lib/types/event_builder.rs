@@ -3,12 +3,13 @@
 
 use anyhow::Result;
 
-use crate::types::{
+use super::{
     Event, EventKind, Id, ImageDimensions, KeySigner, Metadata, PreEvent, PrivateKey, PublicKey,
     Signer, Tag, UncheckedUrl, Unixtime,
 };
 
 /// Builder for creating Nostr events
+#[derive(Debug)]
 pub struct EventBuilder {
     kind: EventKind,
     content: String,
