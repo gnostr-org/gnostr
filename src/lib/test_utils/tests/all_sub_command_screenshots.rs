@@ -159,7 +159,8 @@ mod tests {
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_tui_run_screenshot, "tui", true);
     // screenshot_test!(test_ngit_run_screenshot, "ngit", true);
-    // // screenshot_test!(test_init_run_screenshot, "init", true);
+    //     #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_init_run_screenshot, "init", true);
     // // screenshot_test!(test_push_run_screenshot, "push", true);
     // // screenshot_test!(test_send_run_screenshot, "send", true);
     // // screenshot_test!(test_list_run_screenshot, "list", true);
