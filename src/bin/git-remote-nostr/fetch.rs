@@ -5,25 +5,25 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
 use gnostr::{
     git::{
-        Repo, RepoActions,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
         utils::check_ssh_keys,
+        Repo, RepoActions,
     },
     git_events::tag_value,
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr_0_34_1::{ToBech32, nips::nip19};
+use nostr_0_34_1::{nips::nip19, ToBech32};
 
 use crate::utils::{
-    Direction, count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
+    count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
     find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch, get_open_proposals,
-    get_read_protocols_to_try, join_with_and, set_protocol_preference,
+    get_read_protocols_to_try, join_with_and, set_protocol_preference, Direction,
 };
 
 pub async fn run_fetch(
@@ -609,7 +609,7 @@ mod tests {
 
         use anyhow::Context;
         use gnostr::test_utils::{
-            E, FEATURE_BRANCH_NAME_1, cli_tester_create_proposal_branches_ready_to_send,
+            cli_tester_create_proposal_branches_ready_to_send,
             generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
             generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
             git::GitTestRepo,
@@ -619,7 +619,8 @@ mod tests {
                 generate_repo_with_state_event, prep_git_repo, prep_git_repo_minus_1_commit,
                 prep_source_repo_and_events_including_proposals,
             },
-            relay::{Relay, shutdown_relay},
+            relay::{shutdown_relay, Relay},
+            E, FEATURE_BRANCH_NAME_1,
         };
         use nostr_0_34_1::Event;
         use serial_test::serial;
@@ -645,9 +646,11 @@ mod tests {
             let events = vec![
                 generate_test_key_1_metadata_event("fred"),
                 generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![
-                    source_git_repo.dir.to_str().unwrap().to_string(),
-                ]),
+                generate_repo_ref_event_with_git_server(vec![source_git_repo
+                    .dir
+                    .to_str()
+                    .unwrap()
+                    .to_string()]),
             ];
             // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -698,7 +701,7 @@ mod tests {
 
             use anyhow::Context;
             use gnostr::test_utils::{
-                E, FEATURE_BRANCH_NAME_1, cli_tester_create_proposal_branches_ready_to_send,
+                cli_tester_create_proposal_branches_ready_to_send,
                 generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
                 generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
                 git_remote::{
@@ -707,7 +710,8 @@ mod tests {
                     generate_repo_with_state_event, prep_git_repo, prep_git_repo_minus_1_commit,
                     prep_source_repo_and_events_including_proposals,
                 },
-                relay::{Relay, shutdown_relay},
+                relay::{shutdown_relay, Relay},
+                E, FEATURE_BRANCH_NAME_1,
             };
             use nostr_0_34_1::Event;
             use serial_test::serial;

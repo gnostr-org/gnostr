@@ -6,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use git2::Repository;
 use gnostr::{
     client::{
@@ -14,8 +14,8 @@ use gnostr::{
         get_proposals_and_revisions_from_cache,
     },
     git::{
-        Repo, RepoActions,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
+        Repo, RepoActions,
     },
     git_events::{
         event_is_revision_root, get_most_recent_patch_with_ancestors,
@@ -110,11 +110,9 @@ pub async fn get_open_proposals(
     let statuses: Vec<nostr_0_34_1::Event> = {
         let mut statuses = get_events_from_cache(
             git_repo_path,
-            vec![
-                nostr_0_34_1::Filter::default()
-                    .kinds(status_kinds().clone())
-                    .events(proposals.iter().map(nostr_0_34_1::Event::id)),
-            ],
+            vec![nostr_0_34_1::Filter::default()
+                .kinds(status_kinds().clone())
+                .events(proposals.iter().map(nostr_0_34_1::Event::id))],
         )
         .await?;
         statuses.sort_by_key(|e| e.created_at);

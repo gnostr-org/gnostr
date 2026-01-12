@@ -6,15 +6,15 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use auth_git2::GitAuthenticator;
-use client::{STATE_KIND, get_events_from_cache, get_state_from_cache, send_events, sign_event};
+use client::{get_events_from_cache, get_state_from_cache, send_events, sign_event, STATE_KIND};
 use console::Term;
-use git::{RepoActions, sha1_to_oid};
+use git::{sha1_to_oid, RepoActions};
+use git2::{Oid, Repository};
 use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
-use git2::{Oid, Repository};
 use gnostr::{
     client::{self, get_event_from_cache_by_id},
     git::{
@@ -27,8 +27,8 @@ use gnostr::{
     repo_ref, repo_state,
 };
 use nostr_0_34_1::{
-    Event, EventBuilder, EventId, Kind, PublicKey, Tag, hashes::sha1::Hash as Sha1Hash,
-    nips::nip10::Marker,
+    hashes::sha1::Hash as Sha1Hash, nips::nip10::Marker, Event, EventBuilder, EventId, Kind,
+    PublicKey, Tag,
 };
 use nostr_signer_0_34_0::NostrSigner;
 use repo_ref::RepoRef;
@@ -39,10 +39,10 @@ use crate::{
     git::Repo,
     list::list_from_remotes,
     utils::{
-        Direction, count_lines_per_msg_vec, find_proposal_and_patches_by_branch_name,
-        get_all_proposals, get_remote_name_by_url, get_short_git_server_name,
-        get_write_protocols_to_try, join_with_and, push_error_is_not_authentication_failure,
-        read_line, set_protocol_preference,
+        count_lines_per_msg_vec, find_proposal_and_patches_by_branch_name, get_all_proposals,
+        get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,
+        join_with_and, push_error_is_not_authentication_failure, read_line,
+        set_protocol_preference, Direction,
     },
 };
 
@@ -901,11 +901,9 @@ async fn get_merged_status_events(
                         // lookup parent id
                         let commit_events = get_events_from_cache(
                             git_repo.get_path()?,
-                            vec![
-                                nostr_0_34_1::Filter::default()
-                                    .kind(nostr_0_34_1::Kind::GitPatch)
-                                    .reference(parent.id().to_string()),
-                            ],
+                            vec![nostr_0_34_1::Filter::default()
+                                .kind(nostr_0_34_1::Kind::GitPatch)
+                                .reference(parent.id().to_string())],
                         )
                         .await?;
                         if let Some(commit_event) = commit_events.iter().find(|e| {
@@ -1241,18 +1239,18 @@ mod tests {
 
         use git2::Oid;
         use gnostr::test_utils::{
-            CliTester, E, FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
-            generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-            get_proposal_branch_name_from_events,
+            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
             git::GitTestRepo,
             git_remote::{
-                STATE_KIND, cli_expect_nostr_fetch, cli_tester_after_fetch,
+                cli_expect_nostr_fetch, cli_tester_after_fetch,
                 cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
                 clone_git_repo_with_nostr_url, generate_repo_with_state_event,
                 get_nostr_remote_url, prep_git_repo,
-                prep_source_repo_and_events_including_proposals,
+                prep_source_repo_and_events_including_proposals, STATE_KIND,
             },
-            relay::{Relay, shutdown_relay},
+            relay::{shutdown_relay, Relay},
+            CliTester, E, FEATURE_BRANCH_NAME_1,
         };
         use serial_test::serial;
         use tokio::join;
@@ -1269,7 +1267,7 @@ mod tests {
             use std::collections::HashSet;
 
             use gnostr::test_utils::{
-                E, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
                 generate_test_key_1_relay_list_event,
                 git::GitTestRepo,
                 git_remote::{
@@ -1277,7 +1275,8 @@ mod tests {
                     cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
                     generate_repo_with_state_event, prep_git_repo,
                 },
-                relay::{Relay, shutdown_relay},
+                relay::{shutdown_relay, Relay},
+                E,
             };
             use nostr_0_34_1::Event;
             use serial_test::serial;
@@ -1302,9 +1301,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1381,9 +1382,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1471,9 +1474,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1526,8 +1531,8 @@ mod tests {
             #[serial]
             #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event()
-            -> Result<(), E> {
+            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event(
+            ) -> Result<(), E> {
                 let mut git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
@@ -1542,9 +1547,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1631,9 +1638,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                     state_event.clone(),
                 ];
 
@@ -1736,7 +1745,7 @@ mod tests {
             use std::collections::HashSet;
 
             use gnostr::test_utils::{
-                E, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
                 generate_test_key_1_relay_list_event,
                 git::GitTestRepo,
                 git_remote::{
@@ -1744,7 +1753,8 @@ mod tests {
                     cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
                     generate_repo_with_state_event, prep_git_repo,
                 },
-                relay::{Relay, shutdown_relay},
+                relay::{shutdown_relay, Relay},
+                E,
             };
             use nostr_0_34_1::Event;
             use serial_test::serial;
@@ -1767,9 +1777,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1804,12 +1816,10 @@ mod tests {
                         relay::shutdown_relay(8000 + p)?;
                     }
 
-                    assert!(
-                        source_git_repo
-                            .git_repo
-                            .find_reference("refs/heads/vnext")
-                            .is_err()
-                    );
+                    assert!(source_git_repo
+                        .git_repo
+                        .find_reference("refs/heads/vnext")
+                        .is_err());
                     Ok(())
                 });
                 // launch relays
@@ -1849,9 +1859,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1885,12 +1897,10 @@ mod tests {
                     for p in [51, 52, 53, 55, 56, 57] {
                         relay::shutdown_relay(8000 + p)?;
                     }
-                    assert!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")
-                            .is_err()
-                    );
+                    assert!(git_repo
+                        .git_repo
+                        .find_reference("refs/remotes/nostr/vnext")
+                        .is_err());
                     Ok(())
                 });
                 // launch relays
@@ -1930,9 +1940,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1978,18 +1990,19 @@ mod tests {
 
                 use git2::Oid;
                 use gnostr::test_utils::{
-                    CliTester, E, FEATURE_BRANCH_NAME_1, generate_repo_ref_event,
-                    generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-                    generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+                    generate_repo_ref_event, generate_repo_ref_event_with_git_server,
+                    generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                    get_proposal_branch_name_from_events,
                     git::GitTestRepo,
                     git_remote::{
-                        STATE_KIND, cli_expect_nostr_fetch, cli_tester_after_fetch,
+                        cli_expect_nostr_fetch, cli_tester_after_fetch,
                         cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
                         clone_git_repo_with_nostr_url, generate_repo_with_state_event,
                         get_nostr_remote_url, prep_git_repo,
-                        prep_source_repo_and_events_including_proposals,
+                        prep_source_repo_and_events_including_proposals, STATE_KIND,
                     },
-                    relay::{Relay, shutdown_relay},
+                    relay::{shutdown_relay, Relay},
+                    CliTester, E, FEATURE_BRANCH_NAME_1,
                 };
                 use nostr_0_34_1::{Event, Kind};
                 use serial_test::serial;
@@ -2008,9 +2021,11 @@ mod tests {
                     let events = vec![
                         generate_test_key_1_metadata_event("fred"),
                         generate_test_key_1_relay_list_event(),
-                        generate_repo_ref_event_with_git_server(vec![
-                            source_git_repo.dir.to_str().unwrap().to_string(),
-                        ]),
+                        generate_repo_ref_event_with_git_server(vec![source_git_repo
+                            .dir
+                            .to_str()
+                            .unwrap()
+                            .to_string()]),
                         state_event.clone(),
                     ];
 
@@ -2079,13 +2094,14 @@ mod tests {
                     use std::collections::HashSet;
 
                     use gnostr::test_utils::{
-                        E, generate_repo_ref_event, generate_repo_ref_event_with_git_server,
+                        generate_repo_ref_event, generate_repo_ref_event_with_git_server,
                         generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
                         git::GitTestRepo,
                         git_remote::{
                             cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
                         },
-                        relay::{Relay, shutdown_relay},
+                        relay::{shutdown_relay, Relay},
+                        E,
                     };
                     use nostr_0_34_1::Event;
                     use serial_test::serial;
@@ -2112,9 +2128,11 @@ mod tests {
                         let events = vec![
                             generate_test_key_1_metadata_event("fred"),
                             generate_test_key_1_relay_list_event(),
-                            generate_repo_ref_event_with_git_server(vec![
-                                source_git_repo.dir.to_str().unwrap().to_string(),
-                            ]),
+                            generate_repo_ref_event_with_git_server(vec![source_git_repo
+                                .dir
+                                .to_str()
+                                .unwrap()
+                                .to_string()]),
                             state_event.clone(),
                         ];
 
