@@ -67,10 +67,11 @@ fn test_gitminer_new_ok() {
     let miner_result = Gitminer::new(opts);
     assert!(miner_result.is_ok());
     let _miner = miner_result.unwrap();
+    println!("{:?}", _miner);
 
     // `author` field is private, so we can't assert it directly.
     // We can assert the public `relays` field.
-    //assert_eq!(_miner.repo, "wss://relay.example.com");
+    //assert_eq!(_miner.repo, "wss://127.0.0.1:8080");
     //assert_eq!(_miner.repo, "wss://relay.example.com");
 }
 
