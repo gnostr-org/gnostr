@@ -111,9 +111,8 @@ mod tests {
         };
     }
 
-    // Test cases - currently commented out as they are more complex to run in
-    // CI Uncomment and use the _screenshot_test! macro when ready
-
+    // Test cases
+    //TODO cargo fmt ignore these
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
     #[cfg(feature = "expensive_tests")]
@@ -124,48 +123,62 @@ mod tests {
         "broadcast-events",
         false
     );
-    // "broadcast-events", false); screenshot_test!
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
-    // false); screenshot_test!(test_create_public_channel_run_screenshot,
-    // "create-public-channel", false); screenshot_test!
-    // (test_delete_event_run_screenshot, "delete-event",
-    // false); screenshot_test!(test_delete_profile_run_screenshot,
-    // "delete-profile", false); screenshot_test!(test_fetch_run_screenshot,
-    // "fetch", true); screenshot_test!
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_delete_event_run_screenshot, "delete-event", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_delete_profile_run_screenshot, "delete-profile", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_fetch_run_screenshot, "fetch", true);
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_git_run_screenshot, "git", true);
-    // screenshot_test!(test_hide_public_channel_message_run_screenshot,
-    // "hide-public-channel-message", false); screenshot_test!
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message", false);
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_login_run_screenshot, "login", true);
-    // screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey",
-    // false); screenshot_test!(test_note_run_screenshot, "note", false);
-    // screenshot_test!(test_profile_badges_run_screenshot, "profile-badges",
-    // false); screenshot_test!(test_publish_contactlist_csv_run_screenshot,
-    // "publish-contactlist-csv", false); screenshot_test!
-    // (test_query_run_screenshot, "query", false); screenshot_test!
-    // (test_react_run_screenshot, "react", false); screenshot_test!
-    // (test_relay_run_screenshot, "relay", true); screenshot_test!
-    // false); screenshot_test!(test_set_channel_metadata_run_screenshot,
-    // "set-channel-metadata", false); screenshot_test!
-    // (test_sniper_run_screenshot, "sniper", true);
-    // screenshot_test!(test_user_status_run_screenshot, "user-status", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_note_run_screenshot, "note", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_profile_badges_run_screenshot, "profile-badges", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_query_run_screenshot, "query", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_react_run_screenshot, "react", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_relay_run_screenshot, "relay", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_sniper_run_screenshot, "sniper", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_user_status_run_screenshot, "user-status", false);
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_vanity_run_screenshot, "vanity", true);
-    // screenshot_test!(test_privkey_to_bech32_run_screenshot,
-    // "privkey-to-bech32", false); screenshot_test!
-    // (test_chat_run_screenshot, "chat", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_privkey_to_bech32_run_screenshot, "privkey-to-bech32", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_chat_run_screenshot, "chat", true);
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_tui_run_screenshot, "tui", true);
-    // screenshot_test!(test_ngit_run_screenshot, "ngit", true);
-    //     #[cfg(feature = "expensive_tests")]
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_ngit_run_screenshot, "ngit", true);
+    #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_init_run_screenshot, "init", true);
-    //     #[cfg(feature = "expensive_tests")]
+    #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_push_run_screenshot, "push", true);
-    // // screenshot_test!(test_send_run_screenshot, "send", true);
-    // // screenshot_test!(test_list_run_screenshot, "list", true);
-    // // screenshot_test!(test_pull_run_screenshot, "pull", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_send_run_screenshot, "send", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_list_run_screenshot, "list", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_pull_run_screenshot, "pull", true);
 }
 
 #[ctor::dtor]
