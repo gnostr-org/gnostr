@@ -1,12 +1,11 @@
 use std::{
-    collections::HashMap,
-    io::{self, BufRead, BufReader, Write},
+    collections::{BTreeMap, HashMap},
+    io::{self, BufRead, BufReader},
     process,
 };
 
 use gnostr::types::{
-    Client, Event, EventKind, Filter, Id, Keys, Options, PrivateKey, PublicKey, RelayUrl, Tag,
-    Unixtime,
+    Client, Event, EventKind, Filter, Id, Keys, Options, PublicKey, RelayUrl, Tag, Unixtime,
 };
 
 fn main() -> io::Result<()> {
@@ -30,9 +29,9 @@ fn main() -> io::Result<()> {
     let client = Client::new(&keys, options);
 
     while reader.read_line(&mut line)? > 0 {
-        let line = line.trim();
+        let trimmed_line = line.trim();
 
-        match line {
+        match trimmed_line {
             "capabilities" => {
                 handle_capabilities();
             }
@@ -54,7 +53,7 @@ fn main() -> io::Result<()> {
                 handle_fetch(&cmd[6..], remote_name, url, &client)?;
             }
             _ => {
-                eprintln!("Unknown command: {}", line);
+                eprintln!("Unknown command: {}", trimmed_line);
             }
         }
 
@@ -71,7 +70,7 @@ fn handle_capabilities() {
     println!();
 }
 
-fn handle_list(remote_name: &str, url: &str, client: &Client) -> io::Result<()> {
+fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Result<()> {
     // Parse gnostr URL and list available refs
     if let Ok(repo_info) = parse_gnostr_url(url) {
         eprintln!("Listing refs for repository: {}", url);
@@ -119,7 +118,7 @@ fn handle_option(option: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn handle_push(push_spec: &str, remote_name: &str, url: &str, client: &Client) -> io::Result<()> {
+fn handle_push(push_spec: &str, _remote_name: &str, url: &str, client: &Client) -> io::Result<()> {
     // Parse push specification and create nostr events
     let parts: Vec<&str> = push_spec.split_whitespace().collect();
     if parts.len() >= 3 {
@@ -154,7 +153,12 @@ fn handle_push(push_spec: &str, remote_name: &str, url: &str, client: &Client) -
     Ok(())
 }
 
-fn handle_fetch(fetch_spec: &str, remote_name: &str, url: &str, client: &Client) -> io::Result<()> {
+fn handle_fetch(
+    fetch_spec: &str,
+    _remote_name: &str,
+    url: &str,
+    client: &Client,
+) -> io::Result<()> {
     // Parse fetch specification and retrieve from nostr
     eprintln!("Fetching from gnostr remote: {}", url);
 
