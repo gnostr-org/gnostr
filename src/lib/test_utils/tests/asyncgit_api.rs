@@ -6,9 +6,10 @@ use std::{
 
 use git2::{Repository, Signature};
 use gnostr_asyncgit::sync::{
-    self, RepoPath, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
+    self, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
     stage_add_file,
-    status::{StatusItemType, StatusType, get_status},
+    status::{get_status, StatusItemType, StatusType},
+    RepoPath,
 };
 use serial_test::serial;
 use tempfile::TempDir;

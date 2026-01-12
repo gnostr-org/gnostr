@@ -1,6 +1,6 @@
 use std::{collections::HashMap, thread::JoinHandle};
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use nostr_0_34_1::{ClientMessage, JsonUtil, RelayMessage};
 
 use crate::{test_utils::CliTester, ws::CancellationToken};
