@@ -11,19 +11,19 @@ use ratatui::style::Style;
 //use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp,
 // yamux};
 use ratatui::{
-    Frame, Terminal,
     backend::{Backend, CrosstermBackend},
     crossterm::{
         event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
-        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
     layout::{Constraint, Direction, Layout},
     style::Color,
     text::Line,
     widgets::{Block, Borders, List, ListItem, Paragraph},
+    Frame, Terminal,
 };
-use tui_input::{Input, backend::crossterm::EventHandler};
+use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::p2p::chat::msg;
 
