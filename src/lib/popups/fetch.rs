@@ -1,25 +1,25 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    AsyncFetchJob, AsyncGitNotification, ProgressPercent,
     asyncjob::AsyncSingleJob,
     sync::{
+        cred::{extract_username_password, need_username_password, BasicAuthCredential},
         RepoPathRef,
-        cred::{BasicAuthCredential, extract_username_password, need_username_password},
     },
+    AsyncFetchJob, AsyncGitNotification, ProgressPercent,
 };
 use ratatui::{
-    Frame,
     layout::Rect,
     text::Span,
     widgets::{Block, BorderType, Borders, Clear, Gauge},
+    Frame,
 };
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, CredComponent, DrawableComponent, EventState,
-        visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, CredComponent,
+        DrawableComponent, EventState,
     },
     keys::SharedKeyConfig,
     queue::{InternalEvent, NeedsUpdate, Queue},
