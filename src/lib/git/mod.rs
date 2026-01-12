@@ -3,10 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use git2::{DiffOptions, Oid, Revwalk};
 pub use identify_ahead_behind::identify_ahead_behind;
-use nostr_sdk_0_34_0::hashes::{Hash, sha1::Hash as Sha1Hash};
+use nostr_sdk_0_34_0::hashes::{sha1::Hash as Sha1Hash, Hash};
 
 use crate::git_events::{get_commit_id_from_patch, tag_value};
 pub mod identify_ahead_behind;
@@ -1145,8 +1145,8 @@ mod tests {
         }
 
         #[test]
-        fn correctly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_false()
-        -> Result<()> {
+        fn correctly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_false(
+        ) -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -1156,8 +1156,8 @@ mod tests {
         }
 
         #[test]
-        fn incorrectly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_error()
-        -> Result<()> {
+        fn incorrectly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_error(
+        ) -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -1730,8 +1730,8 @@ libgit2 1.9.1
             use crate::test_utils::git::joe_signature;
 
             #[tokio::test]
-            async fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature()
-            -> Result<()> {
+            async fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature(
+            ) -> Result<()> {
                 let mut source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
@@ -1844,8 +1844,8 @@ libgit2 1.9.1
 
         static BRANCH_NAME: &str = "add-example-feature";
         // returns original_repo, cover_letter_event, patch_events
-        async fn generate_test_repo_and_events()
-        -> Result<(GitTestRepo, nostr_0_34_1::Event, Vec<nostr_0_34_1::Event>)> {
+        async fn generate_test_repo_and_events(
+        ) -> Result<(GitTestRepo, nostr_0_34_1::Event, Vec<nostr_0_34_1::Event>)> {
             let mut original_repo = GitTestRepo::default();
             let oid3 = original_repo.populate_with_test_branch()?;
             let oid2 = original_repo.git_repo.find_commit(oid3)?.parent_id(0)?;
@@ -1882,11 +1882,9 @@ libgit2 1.9.1
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
-                    assert!(
-                        git_repo
-                            .get_local_branch_names()?
-                            .contains(&BRANCH_NAME.to_string())
-                    );
+                    assert!(git_repo
+                        .get_local_branch_names()?
+                        .contains(&BRANCH_NAME.to_string()));
                     Ok(())
                 }
 
@@ -1973,11 +1971,9 @@ libgit2 1.9.1
                     test_repo.stage_and_commit("add m3.md")?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
-                    assert!(
-                        git_repo
-                            .get_local_branch_names()?
-                            .contains(&BRANCH_NAME.to_string())
-                    );
+                    assert!(git_repo
+                        .get_local_branch_names()?
+                        .contains(&BRANCH_NAME.to_string()));
                     Ok(())
                 }
 
