@@ -22,6 +22,19 @@ pub struct Bech32ToAnySubCommand {
 pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
     let bech32 = sub_command_args.bech32_string.trim();
 
+    // Extract bech32 part from nostr URLs if present
+    let bech32 = if bech32.starts_with("nostr://") {
+        // Extract the bech32 part after "nostr://" and before any "/"
+        let after_prefix = &bech32[8..]; // Remove "nostr://"
+        if let Some(slash_pos) = after_prefix.find('/') {
+            &after_prefix[..slash_pos]
+        } else {
+            after_prefix
+        }
+    } else {
+        bech32
+    };
+
     if sub_command_args.event_id {
         if let Ok(nevent) = crate::types::NEvent::try_from_bech32_string(bech32) {
             println!("{}", nevent.id.as_hex_string());
@@ -56,7 +69,8 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
                 })
             }
             NostrBech32::Id(id) => {
-                let (hrp, _) = bech32::decode(bech32).unwrap();
+                let (hrp, _) = bech32::decode(bech32)
+                    .map_err(|e| anyhow::anyhow!("Invalid bech32 encoding: {}", e))?;
                 let mut map = serde_json::Map::new();
                 map.insert(hrp.to_string(), Value::String(id.as_hex_string()));
                 raw_output_string = Some(id.as_hex_string());
@@ -70,7 +84,8 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
                 })
             }
             NostrBech32::Pubkey(pubkey) => {
-                let (hrp, _) = bech32::decode(bech32).unwrap();
+                let (hrp, _) = bech32::decode(bech32)
+                    .map_err(|e| anyhow::anyhow!("Invalid bech32 encoding: {}", e))?;
                 let mut map = serde_json::Map::new();
                 map.insert(hrp.to_string(), Value::String(pubkey.as_hex_string()));
                 raw_output_string = Some(pubkey.as_hex_string());
@@ -82,13 +97,15 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
             }
         };
     } else if let Ok(mut key) = PrivateKey::try_from_bech32_string(bech32) {
-        let (hrp, _) = bech32::decode(bech32).unwrap();
+        let (hrp, _) = bech32::decode(bech32)
+            .map_err(|e| anyhow::anyhow!("Invalid bech32 encoding: {}", e))?;
         let mut map = serde_json::Map::new();
         map.insert(hrp.to_string(), Value::String(key.as_hex_string()));
         raw_output_string = Some(key.as_hex_string());
         output_value = Value::Object(map);
     } else {
-        let (hrp, data) = bech32::decode(bech32).unwrap();
+        let (hrp, data) = bech32::decode(bech32)
+            .map_err(|e| anyhow::anyhow!("Invalid bech32 encoding: {}", e))?;
         output_value = json!({
             "hrp": hrp.to_string(),
             "data": String::from_utf8_lossy(&data),
