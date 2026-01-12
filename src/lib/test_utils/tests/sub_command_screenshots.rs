@@ -8,8 +8,7 @@
 #[cfg(test)]
 mod tests {
     //TODO use anyhow::Error;
-    use std::error::Error;
-    use std::{fs, io::Write, path::Path, process::Command};
+    use std::{error::Error, fs, io::Write, path::Path, process::Command};
 
     use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin};
     use git2::{Repository, Signature};
