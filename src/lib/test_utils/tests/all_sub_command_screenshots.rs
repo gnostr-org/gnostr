@@ -133,7 +133,8 @@ mod tests {
     // false); screenshot_test!(test_delete_profile_run_screenshot,
     // "delete-profile", false); screenshot_test!(test_fetch_run_screenshot,
     // "fetch", true); screenshot_test!
-    // (test_git_run_screenshot, "git", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_git_run_screenshot, "git", true);
     // screenshot_test!(test_hide_public_channel_message_run_screenshot,
     // "hide-public-channel-message", false); screenshot_test!
     #[cfg(feature = "expensive_tests")]
