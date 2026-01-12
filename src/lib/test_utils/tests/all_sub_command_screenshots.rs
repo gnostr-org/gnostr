@@ -118,7 +118,12 @@ mod tests {
     screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any", false);
-    // false); screenshot_test!(test_broadcast_events_run_screenshot,
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(
+        test_broadcast_events_run_screenshot,
+        "broadcast-events",
+        false
+    );
     // "broadcast-events", false); screenshot_test!
     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
