@@ -364,7 +364,7 @@ mod tests {
     use futures_util::StreamExt;
     use tokio::{
         net::TcpStream,
-        time::{Duration, timeout},
+        time::{timeout, Duration},
     };
     use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 

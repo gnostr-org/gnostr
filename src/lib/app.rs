@@ -4,26 +4,27 @@ use std::{
     path::{Path, PathBuf},
     rc::Rc,
     sync::{
-        Arc,
         atomic::{AtomicBool, Ordering},
+        Arc,
     },
 };
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use gnostr_asyncgit::{
-    AsyncGitNotification, PushType,
     sync::{
-        self, RepoPath, RepoPathRef,
+        self,
         utils::{repo_work_dir, undo_last_commit},
+        RepoPath, RepoPathRef,
     },
+    AsyncGitNotification, PushType,
 };
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Tabs},
+    Frame,
 };
 use unicode_width::UnicodeWidthStr;
 
@@ -31,10 +32,10 @@ use crate::{
     accessors,
     cmdbar::CommandBar,
     components::{
-        CommandInfo, Component, DrawableComponent, FuzzyFinderTarget, command_pump, event_pump,
+        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
     },
     input::{Input, InputEvent, InputState},
-    keys::{KeyConfig, SharedKeyConfig, key_match},
+    keys::{key_match, KeyConfig, SharedKeyConfig},
     options::{Options, SharedOptions},
     popup_stack::PopupStack,
     popups::{

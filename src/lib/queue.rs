@@ -2,8 +2,8 @@ use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
 
 use bitflags::bitflags;
 use gnostr_asyncgit::{
+    sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
-    sync::{CommitId, LogFilterSearchOptions, diff::DiffLinePosition},
 };
 
 use crate::{
@@ -13,7 +13,7 @@ use crate::{
         InspectCommitOpen,
     },
     tabs::StashingOptions,
-    types::{Id, UncheckedUrl, versioned::event3::EventV3},
+    types::{versioned::event3::EventV3, Id, UncheckedUrl},
 };
 
 bitflags! {

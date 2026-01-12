@@ -5,9 +5,9 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use console::Style;
-use nostr_0_34_1::{FromBech32, PublicKey, Tag, TagStandard, ToBech32, nips::nip01::Coordinate};
+use nostr_0_34_1::{nips::nip01::Coordinate, FromBech32, PublicKey, Tag, TagStandard, ToBech32};
 use nostr_sdk_0_34_0::{Kind, NostrSigner, Timestamp};
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ use serde::{Deserialize, Serialize};
 use crate::client::Client;
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
-    client::{Connect, get_event_from_global_cache, get_events_from_cache, sign_event},
-    git::{Repo, RepoActions, nostr_url::NostrUrlDecoded},
+    client::{get_event_from_global_cache, get_events_from_cache, sign_event, Connect},
+    git::{nostr_url::NostrUrlDecoded, Repo, RepoActions},
 };
 
 #[derive(Default)]
@@ -611,24 +611,20 @@ mod tests {
 
             #[tokio::test]
             async fn identifier() {
-                assert!(
-                    create()
-                        .await
-                        .tags
-                        .iter()
-                        .any(|t| t.as_vec()[0].eq("d") && t.as_vec()[1].eq("123412341"))
-                )
+                assert!(create()
+                    .await
+                    .tags
+                    .iter()
+                    .any(|t| t.as_vec()[0].eq("d") && t.as_vec()[1].eq("123412341")))
             }
 
             #[tokio::test]
             async fn name() {
-                assert!(
-                    create()
-                        .await
-                        .tags
-                        .iter()
-                        .any(|t| t.as_vec()[0].eq("name") && t.as_vec()[1].eq("test name"))
-                )
+                assert!(create()
+                    .await
+                    .tags
+                    .iter()
+                    .any(|t| t.as_vec()[0].eq("name") && t.as_vec()[1].eq("test name")))
             }
 
             #[tokio::test]

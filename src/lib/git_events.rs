@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use nostr_0_34_1::nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19};
 use nostr_sdk_0_34_0::{
-    Event, EventBuilder, EventId, FromBech32, Kind, PublicKey, Tag, TagKind, TagStandard,
-    UncheckedUrl, hashes::sha1::Hash as Sha1Hash,
+    hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId, FromBech32, Kind, PublicKey, Tag,
+    TagKind, TagStandard, UncheckedUrl,
 };
 use nostr_signer_0_34_0::NostrSigner;
 
@@ -220,11 +220,9 @@ pub async fn generate_patch_event(
                     // matches
                     Tag::custom(
                         TagKind::Custom(std::borrow::Cow::Borrowed("commit-pgp-sig")),
-                        vec![
-                            git_repo
-                                .extract_commit_pgp_signature(commit)
-                                .unwrap_or_default(),
-                        ],
+                        vec![git_repo
+                            .extract_commit_pgp_signature(commit)
+                            .unwrap_or_default()],
                     ),
                     // removing description tag will not cause
                     // anything to break

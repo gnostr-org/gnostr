@@ -7,10 +7,10 @@ use std::{
 };
 
 use anyhow::Result;
-use gnostr_asyncgit::sync::{RepoPathRef, ShowUntrackedFilesConfig, diff::DiffOptions, repo_dir};
+use gnostr_asyncgit::sync::{diff::DiffOptions, repo_dir, RepoPathRef, ShowUntrackedFilesConfig};
 use ron::{
     de::from_bytes,
-    ser::{PrettyConfig, to_string_pretty},
+    ser::{to_string_pretty, PrettyConfig},
 };
 use serde::{Deserialize, Serialize};
 
