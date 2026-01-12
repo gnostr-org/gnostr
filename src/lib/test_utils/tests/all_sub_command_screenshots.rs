@@ -151,7 +151,8 @@ mod tests {
     // "set-channel-metadata", false); screenshot_test!
     // (test_sniper_run_screenshot, "sniper", true);
     // screenshot_test!(test_user_status_run_screenshot, "user-status", false);
-    // screenshot_test!(test_vanity_run_screenshot, "vanity", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_vanity_run_screenshot, "vanity", true);
     // screenshot_test!(test_privkey_to_bech32_run_screenshot,
     // "privkey-to-bech32", false); screenshot_test!
     // (test_chat_run_screenshot, "chat", true);
