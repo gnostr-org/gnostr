@@ -15,6 +15,7 @@ use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::S
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    env::set_var("GNOSTR_GITDIR", "");
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
     env::set_var("WOBBLE", "0");
@@ -47,57 +48,76 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let app_cache = get_app_cache_path();
+    trace!("{:?}", app_cache);
 
     let env_args: Vec<String> = env::args().collect();
     for arg in &env_args {
-        debug!("40:arg={:?}", arg);
-    }
-
-    if env_args.contains(&String::from("--gitdir")) {
-        debug!("main::72:The --gitdir argument was found!");
-    } else {
-        debug!("main::72:The --gitdir argument was not found.");
+        debug!("54:arg={:?}", arg);
     }
 
     let mut gitdir_value: Option<String> = None;
+    if env_args.contains(&String::from("--gitdir")) {
+        debug!("main::59:The --gitdir argument was found!");
+    } else {
+        debug!("main::61:The --gitdir argument was not found.");
+    }
+
+    // let mut workdir_value: Option<String> = None;
+    // if env_args.contains(&String::from("--workdir")) {
+    //     debug!("main::66:The --workdir argument was found!");
+    // } else {
+    //     debug!("main::68:The --workdir argument was not found.");
+    // }
+
+    // let mut directory_value: Option<String> = None;
+    // if env_args.contains(&String::from("--directory")) {
+    //     debug!("main::73:The --directory argument was found!");
+    // } else {
+    //     debug!("main::75:The --directory argument was not found.");
+    // }
 
     for i in 0..env_args.len() {
         if env_args[i] == "--gitdir" {
             if i + 1 < env_args.len() {
-                // We found --gitdir and there's a next argument
                 gitdir_value = Some(env_args[i + 1].clone());
             }
-            break; // We found what we're looking for, no need to continue the loop
+            break;
         }
+        // if env_args[i] == "--workdir" {
+        //     if i + 1 < env_args.len() {
+        //         workdir_value = Some(env_args[i + 1].clone());
+        //     }
+        //     break;
+        // }
+        // if env_args[i] == "--directory" {
+        //     if i + 1 < env_args.len() {
+        //         directory_value = Some(env_args[i + 1].clone());
+        //     }
+        //     break;
+        // }
     }
 
     match gitdir_value.clone() {
         Some(value) => {
-            debug!("main:91:The --gitdir value is: {}", value);
+            debug!("main:103:The --gitdir value is: {}", value);
             let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
-            debug!("main:93:repo_path={:?}", repo_path);
+            debug!("main:105:repo_path={:?}", repo_path);
             // Convert the RepoPath to an OsStr reference
             let path_os_str = repo_path.as_path().as_os_str();
 
-            // Now set the environment variable
+            // GNOSTR_GITDIR is used to enable "gnostr chat" or other cases
+            // to start outside any GITDIR
             env::set_var("GNOSTR_GITDIR", path_os_str);
         }
         None => {
-            //OBJECTIVE to let sub services like "gnostr chat" to run outside of repos
-            //TODO check if use home dir has $HOME/gnostr if not then create
-            //THEN env::set_var("GNOSTR_GITDIR", $HOME/.gnostr);
-            debug!("72:The --gitdir argument was not found or has no value.")
+            // OBJECTIVE to let sub services like "gnostr chat" to run outside of repos
+            // TODO check if use home dir has $HOME/.gnostr
+            // if not then create
+            // THEN env::set_var("GNOSTR_GITDIR", $HOME/.gnostr);
+            debug!("116:The --gitdir argument was not found or has no value.")
         }
     }
 
-    //let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    //tracing::subscriber::set_global_default(subscriber).expect("setting default
-    // subscriber failed");
-    trace!("{:?}", app_cache);
-
-    // These if statements don't return anything, which is fine as long as the match
-    // statement returns Result. if gnostr_cli_args.workdir.is_some() {};
-    // if gnostr_cli_args.directory.is_some() {};
     if gnostr_cli_args.hash.is_some() {
         //not none
         if let Some(ref input_string) = gnostr_cli_args.hash {
