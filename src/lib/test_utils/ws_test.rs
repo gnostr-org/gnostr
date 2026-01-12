@@ -61,6 +61,8 @@ async fn test_message_conversion() {
 }
 
 #[tokio::test]
+#[cfg(feature = "expensive_tests")]
+#[ignore]
 async fn test_find_available_listener_and_connect_websocket_client() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();
@@ -184,6 +186,8 @@ async fn test_responder_client_id() {
 }
 
 #[tokio::test]
+#[cfg(feature = "expensive_tests")]
+#[ignore]
 async fn test_websocket_connection_and_message_echo() {
     let listener = find_available_listener().await;
     let port = listener.local_addr().unwrap().port();

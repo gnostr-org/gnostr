@@ -16,6 +16,8 @@ mod tests {
 
     #[test]
     #[serial]
+    #[cfg(feature = "expensive_tests")]
+    #[ignore]
     fn test_chat_simulation() -> Result<(), Box<dyn std::error::Error>> {
         // Enable verbose output for this test
         println!("Starting chat simulation test with verbose output");

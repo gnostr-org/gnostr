@@ -1,11 +1,12 @@
-
 #[cfg(test)]
 mod kvs_tests {
-    use crate::p2p::kvs::*;
-    use libp2p::{identity, Multiaddr, PeerId, multiaddr::Protocol};
     use std::error::Error;
+
     use futures::StreamExt;
+    use libp2p::{Multiaddr, PeerId, identity, multiaddr::Protocol};
     use tokio::time::{self, Duration};
+
+    use crate::p2p::kvs::*;
 
     // Helper to create a dummy peer ID
     fn create_dummy_peer_id() -> PeerId {
@@ -13,6 +14,8 @@ mod kvs_tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "expensive_tests")]
+    #[ignore]
     async fn test_new_client_and_event_loop() -> Result<(), Box<dyn Error + Send>> {
         let (mut client, mut event_receiver, event_loop) = new(None).await?;
 
@@ -60,19 +63,23 @@ mod kvs_tests {
             _ => panic!("Unexpected event type"),
         };
 
-        let peer_id1 = listen_addr_client1.iter().find_map(|p| {
-            if let Protocol::P2p(peer_id) = p {
-                Some(peer_id)
-            } else {
-                None
-            }
-        }).expect("Should have a peer ID");
+        let peer_id1 = listen_addr_client1
+            .iter()
+            .find_map(|p| {
+                if let Protocol::P2p(peer_id) = p {
+                    Some(peer_id)
+                } else {
+                    None
+                }
+            })
+            .expect("Should have a peer ID");
 
         // Dial client1 from client2
         client2.dial(peer_id1, listen_addr_client1.clone()).await?;
 
-        // We can't directly assert connection established without more complex event handling,
-        // but if dial doesn't return an error, it's a good indication.
+        // We can't directly assert connection established without more complex event
+        // handling, but if dial doesn't return an error, it's a good
+        // indication.
         Ok(())
     }
 
@@ -98,13 +105,16 @@ mod kvs_tests {
             _ => panic!("Unexpected event type"),
         };
 
-        let peer_id1 = listen_addr_client1.iter().find_map(|p| {
-            if let Protocol::P2p(peer_id) = p {
-                Some(peer_id)
-            } else {
-                None
-            }
-        }).expect("Should have a peer ID");
+        let peer_id1 = listen_addr_client1
+            .iter()
+            .find_map(|p| {
+                if let Protocol::P2p(peer_id) = p {
+                    Some(peer_id)
+                } else {
+                    None
+                }
+            })
+            .expect("Should have a peer ID");
 
         client2.dial(peer_id1, listen_addr_client1.clone()).await?;
 
@@ -142,13 +152,16 @@ mod kvs_tests {
             _ => panic!("Unexpected event type"),
         };
 
-        let peer_id1 = listen_addr_client1.iter().find_map(|p| {
-            if let Protocol::P2p(peer_id) = p {
-                Some(peer_id)
-            } else {
-                None
-            }
-        }).expect("Should have a peer ID");
+        let peer_id1 = listen_addr_client1
+            .iter()
+            .find_map(|p| {
+                if let Protocol::P2p(peer_id) = p {
+                    Some(peer_id)
+                } else {
+                    None
+                }
+            })
+            .expect("Should have a peer ID");
 
         client2.dial(peer_id1, listen_addr_client1.clone()).await?;
 

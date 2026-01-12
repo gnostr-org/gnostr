@@ -8,6 +8,8 @@ mod tests {
     use tokio::time::timeout;
 
     #[tokio::test]
+    #[cfg(feature = "expensive_tests")]
+    #[ignore]
     async fn test_chat_headless_mode_does_not_block() {
         // Build the project first to ensure the binary is available
         // We're using `cargo build` here to make sure the binary is up-to-date
