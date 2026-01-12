@@ -5,13 +5,14 @@
 ///
 /// To add a new screenshot test, simply add a new call to the `screenshot_test`
 /// macro with the subcommand name.
+#[cfg(not(feature = "nightly"))]
 #[cfg(test)]
 mod tests {
 
     use std::{fs, io::Write, path::Path, process::Command};
 
     use anyhow::Error;
-    use assert_cmd::cargo_bin;
+    use assert_cmd::cargo::cargo_bin;
     use git2::{Repository, Signature};
     use serial_test::serial;
     use tempfile::TempDir;
@@ -68,13 +69,17 @@ mod tests {
         (tmp_dir, repo)
     }
 
-    macro_rules! _screenshot_test {
+    // cargo t -j$(nproc) --features expensive_tests -- --no-capture --ignored
+    #[cfg(not(feature = "nightly"))]
+    macro_rules! screenshot_test {
         ($name:ident, $subcommand:expr, $is_tui:expr) => {
             #[test]
             #[serial]
+            #[ignore]
             #[cfg(target_os = "macos")]
             #[cfg(feature = "expensive_tests")]
-            fn $name() -> Result<(), Box<dyn Error>> {
+            #[cfg(not(feature = "nightly"))]
+            fn $name() -> Result<(), Box<dyn crate::Error>> {
                 let (_tmp_dir, repo) = _setup_test_repo();
                 let repo_path = repo.path().to_str().unwrap().to_string();
                 let gnostr_bin = cargo_bin("gnostr");
@@ -114,70 +119,121 @@ mod tests {
     // Test cases
     //TODO cargo fmt ignore these
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(
         test_broadcast_events_run_screenshot,
         "broadcast-events",
         false
     );
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
     #[cfg(feature = "expensive_tests")]
-    screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel", false);
+    #[cfg(not(feature = "nightly"))]
+    screenshot_test!(
+        test_create_public_channel_run_screenshot,
+        "create-public-channel",
+        false
+    );
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_delete_event_run_screenshot, "delete-event", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_delete_profile_run_screenshot, "delete-profile", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_fetch_run_screenshot, "fetch", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_git_run_screenshot, "git", true);
     #[cfg(feature = "expensive_tests")]
-    screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message", false);
+    #[cfg(not(feature = "nightly"))]
+    screenshot_test!(
+        test_hide_public_channel_message_run_screenshot,
+        "hide-public-channel-message",
+        false
+    );
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_login_run_screenshot, "login", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_note_run_screenshot, "note", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_profile_badges_run_screenshot, "profile-badges", false);
     #[cfg(feature = "expensive_tests")]
-    screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv", false);
+    #[cfg(not(feature = "nightly"))]
+    screenshot_test!(
+        test_publish_contactlist_csv_run_screenshot,
+        "publish-contactlist-csv",
+        false
+    );
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_query_run_screenshot, "query", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_react_run_screenshot, "react", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_relay_run_screenshot, "relay", true);
     #[cfg(feature = "expensive_tests")]
-    screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata", false);
+    #[cfg(not(feature = "nightly"))]
+    screenshot_test!(
+        test_set_channel_metadata_run_screenshot,
+        "set-channel-metadata",
+        false
+    );
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_sniper_run_screenshot, "sniper", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_user_status_run_screenshot, "user-status", false);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_vanity_run_screenshot, "vanity", true);
     #[cfg(feature = "expensive_tests")]
-    screenshot_test!(test_privkey_to_bech32_run_screenshot, "privkey-to-bech32", false);
+    #[cfg(not(feature = "nightly"))]
+    screenshot_test!(
+        test_privkey_to_bech32_run_screenshot,
+        "privkey-to-bech32",
+        false
+    );
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_chat_run_screenshot, "chat", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_tui_run_screenshot, "tui", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_ngit_run_screenshot, "ngit", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_init_run_screenshot, "init", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_push_run_screenshot, "push", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_send_run_screenshot, "send", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_list_run_screenshot, "list", true);
     #[cfg(feature = "expensive_tests")]
+    #[cfg(not(feature = "nightly"))]
     screenshot_test!(test_pull_run_screenshot, "pull", true);
 }
 

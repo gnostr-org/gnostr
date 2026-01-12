@@ -28,12 +28,7 @@ fn test_capture_tmux() {
     }
 
     let session_name = "gnostr-tmux-test";
-    let screenshot_path: PathBuf = [
-        "test_screenshots",
-        "tmux_test.txt",
-    ]
-    .iter()
-    .collect();
+    let screenshot_path: PathBuf = ["test_screenshots", "tmux_test.txt"].iter().collect();
 
     // Start a new detached tmux session
     let new_session = NewSession {
