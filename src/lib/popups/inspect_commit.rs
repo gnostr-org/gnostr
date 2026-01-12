@@ -1,13 +1,13 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    AsyncDiff, AsyncGitNotification, DiffParams, DiffType,
     sync::{CommitId, CommitTags},
+    AsyncDiff, AsyncGitNotification, DiffParams, DiffType,
 };
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     widgets::Clear,
+    Frame,
 };
 
 use super::FileTreeOpen;
@@ -15,11 +15,11 @@ use crate::{
     accessors,
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, /*  */ CommitDetailsComponent, /*  */
-        Component, DiffComponent, DrawableComponent, EventState, command_pump, event_pump,
-        visibility_blocking,
+        command_pump, event_pump, visibility_blocking, CommandBlocking, CommandInfo,
+        /*  */ CommitDetailsComponent, /*  */
+        Component, DiffComponent, DrawableComponent, EventState,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings,
@@ -75,11 +75,11 @@ impl DrawableComponent for InspectCommitPopup {
             let vertical_percentages = if self.diff.focused() {
                 //
                 (50, 50) //space for line-by-line commenting
-            //comment widget below diff
+                         //comment widget below diff
             } else {
                 //
                 (50, 0) //space for commit-topic chat
-                //on right side of screen
+                        //on right side of screen
             };
 
             let vertical_chunks = Layout::default()

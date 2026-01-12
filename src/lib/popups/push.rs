@@ -1,31 +1,31 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    AsyncGitNotification, AsyncPush, PushRequest, PushType, RemoteProgress, RemoteProgressState,
     sync::{
-        RepoPathRef,
         cred::{
-            BasicAuthCredential, extract_username_password_for_push,
-            need_username_password_for_push,
+            extract_username_password_for_push, need_username_password_for_push,
+            BasicAuthCredential,
         },
         get_branch_remote,
         remotes::get_default_remote_for_push,
+        RepoPathRef,
     },
+    AsyncGitNotification, AsyncPush, PushRequest, PushType, RemoteProgress, RemoteProgressState,
 };
 use ratatui::{
-    Frame,
     layout::Rect,
     text::Span,
     widgets::{Block, BorderType, Borders, Clear, Gauge},
+    Frame,
 };
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, CredComponent, DrawableComponent, EventState,
-        visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, CredComponent,
+        DrawableComponent, EventState,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, Queue},
     strings,
     ui::{self, style::SharedTheme},
