@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use crate::ssh::config::{
-    repo::{RepoConfig, load_repo_config_from_path},
-    server::{ServerConfig, load_server_config},
+    repo::{load_repo_config_from_path, RepoConfig},
+    server::{load_server_config, ServerConfig},
 };
 
 pub struct State {
