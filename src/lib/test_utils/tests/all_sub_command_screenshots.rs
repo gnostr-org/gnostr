@@ -27,7 +27,7 @@ mod tests {
         config.set_str("user.name", "Test User").unwrap();
         config.set_str("user.email", "test@example.com").unwrap();
         config
-            .set_str("gnostr.relays", "wss://relay.example.com")
+            .set_str("gnostr.relays", "ws://127.0.0.1:8080")
             .unwrap();
 
         // Create an initial commit
