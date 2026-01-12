@@ -73,6 +73,7 @@ mod tests {
             #[test]
             #[serial]
             #[cfg(target_os = "macos")]
+            #[cfg(feature = "expensive_tests")]
             fn $name() -> Result<(), Box<dyn Error>> {
                 let (_tmp_dir, repo) = setup_test_repo();
                 let repo_path = repo.path().to_str().unwrap().to_string();
@@ -113,11 +114,14 @@ mod tests {
     // Test cases - currently commented out as they are more complex to run in
     // CI Uncomment and use the _screenshot_test! macro when ready
 
-    // screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
-    // screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any",
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_award_badge_run_screenshot, "award-badge", false);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_bech32_to_any_run_screenshot, "bech32-to-any", false);
     // false); screenshot_test!(test_broadcast_events_run_screenshot,
     // "broadcast-events", false); screenshot_test!
-    // (test_create_badge_run_screenshot, "create-badge",
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_create_badge_run_screenshot, "create-badge", false);
     // false); screenshot_test!(test_create_public_channel_run_screenshot,
     // "create-public-channel", false); screenshot_test!
     // (test_delete_event_run_screenshot, "delete-event",
@@ -127,7 +131,8 @@ mod tests {
     // (test_git_run_screenshot, "git", true);
     // screenshot_test!(test_hide_public_channel_message_run_screenshot,
     // "hide-public-channel-message", false); screenshot_test!
-    // (test_login_run_screenshot, "login", true);
+    #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_login_run_screenshot, "login", true);
     // screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey",
     // false); screenshot_test!(test_note_run_screenshot, "note", false);
     // screenshot_test!(test_profile_badges_run_screenshot, "profile-badges",
