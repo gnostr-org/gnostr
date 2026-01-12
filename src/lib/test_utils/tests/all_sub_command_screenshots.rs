@@ -17,7 +17,7 @@ mod tests {
     use tempfile::TempDir;
 
     // Helper function to set up a temporary git repository for testing.
-    fn setup_test_repo() -> (TempDir, Repository) {
+    fn _setup_test_repo() -> (TempDir, Repository) {
         let tmp_dir = TempDir::new().unwrap();
         let repo_path = tmp_dir.path();
         let repo = Repository::init(repo_path).unwrap();
@@ -75,7 +75,7 @@ mod tests {
             #[cfg(target_os = "macos")]
             #[cfg(feature = "expensive_tests")]
             fn $name() -> Result<(), Box<dyn Error>> {
-                let (_tmp_dir, repo) = setup_test_repo();
+                let (_tmp_dir, repo) = _setup_test_repo();
                 let repo_path = repo.path().to_str().unwrap().to_string();
                 let gnostr_bin = cargo_bin("gnostr");
 
