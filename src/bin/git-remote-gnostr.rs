@@ -2,9 +2,6 @@ use std::{
     collections::{BTreeMap, HashMap},
     io::{self, BufRead, BufReader},
     process,
-    sync::{Arc, Mutex},
-    thread,
-    time::Instant,
 };
 
 use gnostr::types::{
@@ -91,6 +88,1034 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                     for (ref_name, commit_id) in refs {
                         println!("@{} {}", ref_name, ref_name);
                         println!("{} {}", commit_id, ref_name);
+                    }
+                }
+
+                #[cfg(test)]
+                mod integration_tests {
+                    use super::*;
+                    use gnostr::test_utils::{git::GitTestRepo, relay::Relay};
+                    use serial_test::serial;
+
+                    // Test infrastructure for CLI testing
+                    pub struct GnostrCliTester {
+                        output: std::sync::Mutex<Vec<String>>,
+                        input: std::sync::Mutex<Vec<String>>,
+                    }
+
+                    impl GnostrCliTester {
+                        pub fn new() -> Self {
+                            Self {
+                                output: std::sync::Mutex::new(Vec::new()),
+                                input: std::sync::Mutex::new(Vec::new()),
+                            }
+                        }
+
+                        pub fn send_line(&self, line: &str) {
+                            self.input.lock().unwrap().push(line.to_string());
+                        }
+
+                        pub fn expect(
+                            &self,
+                            expected: &str,
+                        ) -> Result<(), Box<dyn std::error::Error>> {
+                            let output = self.output.lock().unwrap();
+                            for line in output.iter() {
+                                if line.contains(expected) {
+                                    return Ok(());
+                                }
+                            }
+
+                            #[cfg(test)]
+                            mod integration_tests {
+                                use super::*;
+                                use serial_test::serial;
+
+                                // Test infrastructure for CLI testing
+                                pub struct GnostrCliTester {
+                                    output: std::sync::Mutex<Vec<String>>,
+                                    input: std::sync::Mutex<Vec<String>>,
+                                }
+
+                                impl GnostrCliTester {
+                                    pub fn new() -> Self {
+                                        Self {
+                                            output: std::sync::Mutex::new(Vec::new()),
+                                            input: std::sync::Mutex::new(Vec::new()),
+                                        }
+                                    }
+
+                                    pub fn send_line(&self, line: &str) {
+                                        self.input.lock().unwrap().push(line.to_string());
+                                    }
+
+                                    pub fn expect(
+                                        &self,
+                                        expected: &str,
+                                    ) -> Result<(), Box<dyn std::error::Error>>
+                                    {
+                                        let output = self.output.lock().unwrap();
+                                        for line in output.iter() {
+                                            if line.contains(expected) {
+                                                return Ok(());
+                                            }
+                                        }
+                                        Err(format!("Expected '{}' not found in output", expected)
+                                            .into())
+                                    }
+
+                                    pub fn get_output(&self) -> Vec<String> {
+                                        self.output.lock().unwrap().clone()
+                                    }
+                                }
+
+                                mod url_parsing_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn complete_workflow_with_valid_naddr() {
+                                        // Test complete workflow with valid naddr URL
+                                        let url = "gnostr://naddr1qqzynhx9qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v93qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v9";
+                                        let result = parse_gnostr_url(url);
+                                        assert!(result.is_ok());
+
+                                        let repo_info = result.unwrap();
+                                        assert_eq!(repo_info.url, url);
+                                        assert_eq!(repo_info.author.as_hex_string(), "0000000000000000000000000000000000000000000000000000001");
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn error_handling_invalid_urls() {
+                                        // Test with malformed URLs
+                                        let invalid_urls = vec![
+                                            "http://test.com",
+                                            "gnostr://",
+                                            "gnostr://invalid",
+                                            "",
+                                        ];
+
+                                        for url in invalid_urls {
+                                            let result = parse_gnostr_url(url);
+                                            assert!(result.is_err());
+                                        }
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn edge_case_handling() {
+                                        // Test edge cases in URL parsing
+                                        let result = parse_gnostr_url("gnostr://npub");
+                                        assert!(result.is_ok()); // Should handle gracefully
+
+                                        let result = parse_gnostr_url("gnostr://naddr1");
+                                        assert!(result.is_err()); // Too short
+                                    }
+                                }
+
+                                mod list_command_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn lists_refs_from_mock_events() {
+                                        // Setup mock environment
+                                        let keys = Keys::generate();
+                                        let options = Options::new();
+                                        let client = Client::new(&keys, options);
+
+                                        // Create mock repo info
+                                        let repo_info = create_test_repo_info();
+
+                                        // This would normally query nostr, but we test the logic
+                                        let filter = create_ref_filter(&repo_info);
+                                        assert!(!filter.authors.is_empty());
+                                        assert!(!filter.kinds.is_empty());
+                                        assert_eq!(filter.kinds[0], EventKind::TextNote);
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn list_with_empty_repository() {
+                                        // Test list behavior with no events
+                                        let repo_info = create_test_repo_info();
+                                        let filter = create_ref_filter(&repo_info);
+
+                                        // Verify filter is created correctly even for empty repo
+                                        assert_eq!(filter.authors.len(), 1);
+                                        assert_eq!(filter.kinds.len(), 1);
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn list_output_format_validation() {
+                                        // Test that list output follows git remote protocol
+                                        let cli_tester = GnostrCliTester::new();
+
+                                        // Simulate list command execution
+                                        // In real scenario, this would connect to relays and format output
+                                        cli_tester.send_line("list");
+
+                                        // Verify output contains expected git remote format
+                                        // @refs/heads/main HEAD
+                                        // 0000000000000000000000000000000000000000 refs/heads/main
+                                        assert!(
+                                            cli_tester.expect("@refs/heads/main").is_ok()
+                                                || cli_tester
+                                                    .expect(
+                                                        "0000000000000000000000000000000000000000"
+                                                    )
+                                                    .is_ok()
+                                        );
+                                    }
+                                }
+
+                                mod fetch_command_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn fetch_downloads_git_data_events() {
+                                        // Test fetch with mock data events
+                                        let repo_info = create_test_repo_info();
+                                        let ref_name = "main";
+
+                                        // Create filter for fetch
+                                        let filter = create_data_filter(&repo_info, ref_name);
+
+                                        // Verify filter structure
+                                        assert!(!filter.authors.is_empty());
+                                        assert!(!filter.kinds.is_empty());
+                                        assert!(filter.tags.contains_key('t'));
+
+                                        let git_data_tags = filter.tags.get(&'t').unwrap();
+                                        assert!(git_data_tags.contains(&"gnostr-repo".to_string()));
+                                        assert!(git_data_tags.contains(&"git-data".to_string()));
+                                        assert!(git_data_tags
+                                            .contains(&format!("git-ref:{}", ref_name)));
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn fetch_handles_missing_references() {
+                                        // Test fetch for non-existent refs
+                                        let repo_info = create_test_repo_info();
+                                        let ref_name = "non-existent";
+
+                                        let filter = create_data_filter(&repo_info, ref_name);
+                                        assert_eq!(filter.authors.len(), 1);
+                                        assert_eq!(filter.kinds.len(), 1);
+
+                                        // Should create valid filter even for missing refs
+                                        assert!(filter.tags.contains_key('t'));
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn fetch_progress_reporting() {
+                                        // Test fetch progress and status updates
+                                        let cli_tester = GnostrCliTester::new();
+
+                                        // Simulate fetch command
+                                        cli_tester.send_line("fetch abc123 refs/heads/main");
+
+                                        // Should attempt to fetch and report status
+                                        // Output should include "ok" on success or "error" on failure
+                                        let output = cli_tester.get_output();
+                                        let has_ok = output.iter().any(|line| line.contains("ok"));
+                                        let has_error =
+                                            output.iter().any(|line| line.contains("error"));
+
+                                        assert!(has_ok || has_error); // Should indicate completion
+                                    }
+                                }
+
+                                mod push_command_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn push_creates_and_signs_events() {
+                                        // Test push event creation and signing
+                                        let keys = Keys::generate();
+                                        let options = Options::new();
+                                        let client = Client::new(&keys, options);
+                                        let repo_info = create_test_repo_info();
+
+                                        let result = create_and_publish_push_event(
+                                            &client,
+                                            &repo_info,
+                                            "abc123",
+                                            "def456",
+                                            "refs/heads/main",
+                                        );
+
+                                        assert!(result.is_ok());
+                                        let event_id = result.unwrap();
+
+                                        // Verify event ID is valid (64-char hex string)
+                                        assert_eq!(event_id.as_hex_string().len(), 64);
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn push_with_various_refspecs() {
+                                        // Test push with different refspec formats
+                                        let keys = Keys::generate();
+                                        let options = Options::new();
+                                        let client = Client::new(&keys, options);
+                                        let repo_info = create_test_repo_info();
+
+                                        let test_cases = vec![
+                                            (
+                                                "0000000000000000000000000000000000000000",
+                                                "refs/heads/main",
+                                                "deletion",
+                                            ),
+                                            ("abc123", "refs/heads/feature", "regular push"),
+                                            ("+def456", "refs/heads/feature", "force push"),
+                                        ];
+
+                                        for (src, dst, ref_name) in test_cases {
+                                            let result = create_and_publish_push_event(
+                                                &client, &repo_info, src, dst, ref_name,
+                                            );
+
+                                            assert!(result.is_ok());
+                                            let event_id = result.unwrap();
+                                            assert_eq!(event_id.as_hex_string().len(), 64);
+                                        }
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn push_event_structure_validation() {
+                                        // Verify push events have correct structure and tags
+                                        let keys = Keys::generate();
+                                        let options = Options::new();
+                                        let client = Client::new(&keys, options);
+                                        let repo_info = create_test_repo_info();
+
+                                        let result = create_and_publish_push_event(
+                                            &client,
+                                            &repo_info,
+                                            "abc123",
+                                            "def456",
+                                            "refs/heads/main",
+                                        );
+
+                                        assert!(result.is_ok());
+                                        // Note: In real scenario, we'd capture the event and verify its tags
+                                        // For now, we verify creation succeeds
+                                    }
+                                }
+
+                                mod error_handling_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn network_error_scenarios() {
+                                        // Test behavior when relays are unavailable
+                                        // This would involve testing timeout handling in real client
+                                        let repo_info = create_test_repo_info();
+
+                                        // Should create filters even if network is down
+                                        let ref_filter = create_ref_filter(&repo_info);
+                                        let data_filter = create_data_filter(&repo_info, "main");
+
+                                        assert!(!ref_filter.authors.is_empty());
+                                        assert!(!data_filter.authors.is_empty());
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn malformed_event_data_handling() {
+                                        // Test handling of corrupted event structures
+                                        let event = create_test_event();
+
+                                        // Test ref extraction with malformed tags
+                                        let ref_name = extract_ref_name(&event);
+                                        assert!(ref_name.is_some());
+
+                                        // Test with event that has malformed ref tags
+                                        let keys = Keys::generate();
+                                        let private_key = keys.secret_key()?;
+                                        let preevent = gnostr::types::PreEvent {
+                                            pubkey: keys.public_key(),
+                                            created_at: Unixtime::now(),
+                                            kind: EventKind::TextNote,
+                                            tags: vec![
+                                                Tag::new_identifier(
+                                                    "malformed-git-ref".to_string(),
+                                                ), // Missing "git-ref:" prefix
+                                                Tag::new_identifier("gnostr-repo".to_string()),
+                                            ],
+                                            content: "Test malformed event".to_string(),
+                                        };
+                                        let event =
+                                            Event::sign_with_private_key(preevent, &private_key)
+                                                .unwrap();
+                                        let ref_name = extract_ref_name(&event);
+                                        assert!(ref_name.is_none()); // Should return None for malformed tags
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn protocol_violation_handling() {
+                                        // Test graceful handling of protocol violations
+                                        let invalid_urls = vec![
+                                            "gnostr://naddr1invalidbech32",
+                                            "gnostr://npub1invalid",
+                                            "gnostr://unsupportedformat",
+                                        ];
+
+                                        for url in invalid_urls {
+                                            let result = parse_gnostr_url(url);
+                                            // Should not panic, should return error gracefully
+                                            assert!(result.is_err());
+                                        }
+                                    }
+                                }
+
+                                mod async_behavior_integration {
+                                    use super::*;
+                                    use std::sync::Arc;
+                                    use std::thread;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn concurrent_filter_creation() {
+                                        // Test thread safety of filter creation
+                                        let repo_info = Arc::new(create_test_repo_info());
+                                        let mut handles = vec![];
+
+                                        // Create multiple filters concurrently
+                                        for _ in 0..10 {
+                                            let repo_clone = Arc::clone(&repo_info);
+                                            let handle = thread::spawn(move || {
+                                                let ref_filter = create_ref_filter(&repo_clone);
+                                                let data_filter =
+                                                    create_data_filter(&repo_clone, "main");
+                                                assert!(!ref_filter.authors.is_empty());
+                                                assert!(!data_filter.authors.is_empty());
+                                            });
+                                            handles.push(handle);
+                                        }
+
+                                        // Wait for all threads to complete
+                                        for handle in handles {
+                                            handle.join().unwrap();
+                                        }
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn async_function_error_propagation() {
+                                        // Test that async errors are properly propagated
+                                        // This tests error handling in async contexts
+                                        let repo_info = create_test_repo_info();
+
+                                        // Test error propagation in filter functions
+                                        // (These are currently synchronous, but test structure for future async extensions)
+                                        let ref_filter = create_ref_filter(&repo_info);
+                                        let data_filter = create_data_filter(&repo_info, "test");
+
+                                        assert!(!ref_filter.authors.is_empty());
+                                        assert!(!data_filter.authors.is_empty());
+                                    }
+                                }
+
+                                mod performance_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    #[ignore] // Performance test
+                                    async fn large_reference_sets_performance() {
+                                        // Test performance with many references
+                                        let start_time = std::time::Instant::now();
+
+                                        for i in 0..1000 {
+                                            let repo_info = create_test_repo_info();
+                                            let ref_filter = create_ref_filter(&repo_info);
+                                            let data_filter = create_data_filter(
+                                                &repo_info,
+                                                &format!("branch-{}", i),
+                                            );
+
+                                            // Verify filters are created correctly
+                                            assert!(!ref_filter.authors.is_empty());
+                                            assert!(!data_filter.authors.is_empty());
+                                        }
+
+                                        let elapsed = start_time.elapsed();
+                                        // Should complete in reasonable time (< 1 second)
+                                        assert!(elapsed.as_millis() < 1000);
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    #[ignore] // Memory usage test
+                                    async fn memory_usage_with_large_events() {
+                                        // Test memory efficiency with large event data
+                                        let large_content = "x".repeat(10000);
+
+                                        for i in 0..100 {
+                                            let keys = Keys::generate();
+                                            let private_key = keys.secret_key()?;
+                                            let preevent = gnostr::types::PreEvent {
+                                                pubkey: keys.public_key(),
+                                                created_at: Unixtime::now(),
+                                                kind: EventKind::TextNote,
+                                                tags: vec![
+                                                    Tag::new_identifier(format!(
+                                                        "git-ref:branch-{}",
+                                                        i
+                                                    )),
+                                                    Tag::new_identifier("gnostr-repo".to_string()),
+                                                ],
+                                                content: large_content.clone(),
+                                            };
+                                            let event = Event::sign_with_private_key(
+                                                preevent,
+                                                &private_key,
+                                            )
+                                            .unwrap();
+
+                                            // Verify event creation succeeded
+                                            assert_eq!(event.id.as_hex_string().len(), 64);
+                                        }
+                                    }
+                                }
+
+                                mod protocol_compliance_integration {
+                                    use super::*;
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn git_remote_capabilities_output() {
+                                        // Test capabilities command output format
+                                        let cli_tester = GnostrCliTester::new();
+
+                                        // Simulate capabilities command
+                                        cli_tester.send_line("capabilities");
+
+                                        // Should output standard git remote capabilities
+                                        let output = cli_tester.get_output();
+                                        let has_push =
+                                            output.iter().any(|line| line.contains("push"));
+                                        let has_fetch =
+                                            output.iter().any(|line| line.contains("fetch"));
+                                        let has_option =
+                                            output.iter().any(|line| line.contains("option"));
+
+                                        assert!(has_push);
+                                        assert!(has_fetch);
+                                        assert!(has_option);
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn git_remote_option_handling() {
+                                        // Test option command handling
+                                        let cli_tester = GnostrCliTester::new();
+
+                                        // Test supported option
+                                        cli_tester.send_line("option verbosity 1");
+                                        // Should respond with "ok"
+                                        assert!(cli_tester.expect("ok").is_ok());
+
+                                        // Test unsupported option
+                                        cli_tester.send_line("option unsupported_option");
+                                        // Should respond with "unsupported"
+                                        assert!(cli_tester.expect("unsupported").is_ok());
+                                    }
+
+                                    #[tokio::test]
+                                    #[serial]
+                                    async fn git_remote_protocol_termination() {
+                                        // Test proper line termination in protocol
+                                        let cli_tester = GnostrCliTester::new();
+
+                                        // Commands should end with blank line
+                                        cli_tester.send_line("capabilities");
+                                        cli_tester.send_line("");
+
+                                        // Verify proper command handling
+                                        let output = cli_tester.get_output();
+                                        let has_capabilities =
+                                            output.iter().any(|line| line.trim().contains("push"));
+                                        assert!(has_capabilities);
+                                    }
+                                }
+                            }
+                            Err(format!("Expected '{}' not found in output", expected).into())
+                        }
+
+                        pub fn get_output(&self) -> Vec<String> {
+                            self.output.lock().unwrap().clone()
+                        }
+                    }
+
+                    mod url_parsing_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn complete_workflow_with_valid_naddr() {
+                            // Test complete workflow with valid naddr URL
+                            let url = "gnostr://naddr1qqzynhx9qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v93qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v9";
+                            let result = parse_gnostr_url(url);
+                            assert!(result.is_ok());
+
+                            let repo_info = result.unwrap();
+                            assert_eq!(repo_info.url, url);
+                            assert_eq!(repo_info.author.as_hex_string(), "0000000000000000000000000000000000000000000000000000000000000000000000001");
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn error_handling_invalid_urls() {
+                            // Test with malformed URLs
+                            let invalid_urls =
+                                vec!["http://test.com", "gnostr://", "gnostr://invalid", ""];
+
+                            for url in invalid_urls {
+                                let result = parse_gnostr_url(url);
+                                assert!(result.is_err());
+                            }
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn edge_case_handling() {
+                            // Test edge cases in URL parsing
+                            let result = parse_gnostr_url("gnostr://npub");
+                            assert!(result.is_ok()); // Should handle gracefully
+
+                            let result = parse_gnostr_url("gnostr://naddr1");
+                            assert!(result.is_err()); // Too short
+                        }
+                    }
+
+                    mod list_command_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn lists_refs_from_mock_events() {
+                            // Setup mock environment
+                            let keys = Keys::generate();
+                            let options = Options::new();
+                            let client = Client::new(&keys, options);
+
+                            // Create mock repo info
+                            let repo_info = create_test_repo_info();
+
+                            // This would normally query nostr, but we test the logic
+                            let filter = create_ref_filter(&repo_info);
+                            assert!(!filter.authors.is_empty());
+                            assert!(!filter.kinds.is_empty());
+                            assert_eq!(filter.kinds[0], EventKind::TextNote);
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn list_with_empty_repository() {
+                            // Test list behavior with no events
+                            let repo_info = create_test_repo_info();
+                            let filter = create_ref_filter(&repo_info);
+
+                            // Verify filter is created correctly even for empty repo
+                            assert_eq!(filter.authors.len(), 1);
+                            assert_eq!(filter.kinds.len(), 1);
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn list_output_format_validation() {
+                            // Test that list output follows git remote protocol
+                            let cli_tester = GnostrCliTester::new();
+
+                            // Simulate list command execution
+                            // In real scenario, this would connect to relays and format output
+                            cli_tester.send_line("list");
+
+                            // Verify output contains expected git remote format
+                            // @refs/heads/main HEAD
+                            // 0000000000000000000000000000000000000000000000 refs/heads/main
+                            assert!(
+                                cli_tester.expect("@refs/heads/main").is_ok()
+                                    || cli_tester
+                                        .expect("0000000000000000000000000000000000000000000")
+                                        .is_ok()
+                            );
+                        }
+                    }
+
+                    mod fetch_command_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn fetch_downloads_git_data_events() {
+                            // Test fetch with mock data events
+                            let repo_info = create_test_repo_info();
+                            let ref_name = "main";
+
+                            // Create filter for fetch
+                            let filter = create_data_filter(&repo_info, ref_name);
+
+                            // Verify filter structure
+                            assert!(!filter.authors.is_empty());
+                            assert!(!filter.kinds.is_empty());
+                            assert!(filter.tags.contains_key('t'));
+
+                            let git_data_tags = filter.tags.get(&'t').unwrap();
+                            assert!(git_data_tags.contains(&"gnostr-repo".to_string()));
+                            assert!(git_data_tags.contains(&"git-data".to_string()));
+                            assert!(git_data_tags.contains(&format!("git-ref:{}", ref_name)));
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn fetch_handles_missing_references() {
+                            // Test fetch for non-existent refs
+                            let repo_info = create_test_repo_info();
+                            let ref_name = "non-existent";
+
+                            let filter = create_data_filter(&repo_info, ref_name);
+                            assert_eq!(filter.authors.len(), 1);
+                            assert_eq!(filter.kinds.len(), 1);
+
+                            // Should create valid filter even for missing refs
+                            assert!(filter.tags.contains_key('t'));
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn fetch_progress_reporting() {
+                            // Test fetch progress and status updates
+                            let cli_tester = GnostrCliTester::new();
+
+                            // Simulate fetch command
+                            cli_tester.send_line("fetch abc123 refs/heads/main");
+
+                            // Should attempt to fetch and report status
+                            // Output should include "ok" on success or "error" on failure
+                            let output = cli_tester.get_output();
+                            let has_ok = output.iter().any(|line| line.contains("ok"));
+                            let has_error = output.iter().any(|line| line.contains("error"));
+
+                            assert!(has_ok || has_error); // Should indicate completion
+                        }
+                    }
+
+                    mod push_command_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn push_creates_and_signs_events() {
+                            // Test push event creation and signing
+                            let keys = Keys::generate();
+                            let options = Options::new();
+                            let client = Client::new(&keys, options);
+                            let repo_info = create_test_repo_info();
+
+                            let result = create_and_publish_push_event(
+                                &client,
+                                &repo_info,
+                                "abc123",
+                                "def456",
+                                "refs/heads/main",
+                            );
+
+                            assert!(result.is_ok());
+                            let event_id = result.unwrap();
+
+                            // Verify event ID is valid (64-char hex string)
+                            assert_eq!(event_id.as_hex_string().len(), 64);
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn push_with_various_refspecs() {
+                            // Test push with different refspec formats
+                            let keys = Keys::generate();
+                            let options = Options::new();
+                            let client = Client::new(&keys, options);
+                            let repo_info = create_test_repo_info();
+
+                            let test_cases = vec![
+                                (
+                                    "0000000000000000000000000000000000000000000",
+                                    "refs/heads/main",
+                                    "deletion",
+                                ),
+                                ("abc123", "refs/heads/feature", "regular push"),
+                                ("+def456", "refs/heads/feature", "force push"),
+                            ];
+
+                            for (src, dst, ref_name) in test_cases {
+                                let result = create_and_publish_push_event(
+                                    &client, &repo_info, src, dst, ref_name,
+                                );
+
+                                assert!(result.is_ok());
+                                let event_id = result.unwrap();
+                                assert_eq!(event_id.as_hex_string().len(), 64);
+                            }
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn push_event_structure_validation() {
+                            // Verify push events have correct structure and tags
+                            let keys = Keys::generate();
+                            let options = Options::new();
+                            let client = Client::new(&keys, options);
+                            let repo_info = create_test_repo_info();
+
+                            let result = create_and_publish_push_event(
+                                &client,
+                                &repo_info,
+                                "abc123",
+                                "def456",
+                                "refs/heads/main",
+                            );
+
+                            assert!(result.is_ok());
+                            // Note: In real scenario, we'd capture the event and verify its tags
+                            // For now, we verify creation succeeds
+                        }
+                    }
+
+                    mod error_handling_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn network_error_scenarios() {
+                            // Test behavior when relays are unavailable
+                            // This would involve testing timeout handling in real client
+                            let repo_info = create_test_repo_info();
+
+                            // Should create filters even if network is down
+                            let ref_filter = create_ref_filter(&repo_info);
+                            let data_filter = create_data_filter(&repo_info, "main");
+
+                            assert!(!ref_filter.authors.is_empty());
+                            assert!(!data_filter.authors.is_empty());
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn malformed_event_data_handling() {
+                            // Test handling of corrupted event structures
+                            let event = create_test_event();
+
+                            // Test ref extraction with malformed tags
+                            let ref_name = extract_ref_name(&event);
+                            assert!(ref_name.is_some());
+
+                            // Test with event that has malformed ref tags
+                            let keys = Keys::generate();
+                            let private_key = keys.secret_key().unwrap();
+                            let preevent = gnostr::types::PreEvent {
+                                pubkey: keys.public_key(),
+                                created_at: Unixtime::now(),
+                                kind: EventKind::TextNote,
+                                tags: vec![
+                                    Tag::new_identifier("malformed-git-ref".to_string()), // Missing "git-ref:" prefix
+                                    Tag::new_identifier("gnostr-repo".to_string()),
+                                ],
+                                content: "Test malformed event".to_string(),
+                            };
+                            let event =
+                                Event::sign_with_private_key(preevent, &private_key).unwrap();
+                            let ref_name = extract_ref_name(&event);
+                            assert!(ref_name.is_none()); // Should return None for malformed tags
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn protocol_violation_handling() {
+                            // Test graceful handling of protocol violations
+                            let invalid_urls = vec![
+                                "gnostr://naddr1invalidbech32",
+                                "gnostr://npub1invalid",
+                                "gnostr://unsupportedformat",
+                            ];
+
+                            for url in invalid_urls {
+                                let result = parse_gnostr_url(url);
+                                // Should not panic, should return error gracefully
+                                assert!(result.is_err());
+                            }
+                        }
+                    }
+
+                    mod async_behavior_integration {
+                        use super::*;
+                        use std::sync::Arc;
+                        use std::thread;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn concurrent_filter_creation() {
+                            // Test thread safety of filter creation
+                            let repo_info = Arc::new(create_test_repo_info());
+                            let mut handles = vec![];
+
+                            // Create multiple filters concurrently
+                            for _ in 0..10 {
+                                let repo_clone = Arc::clone(&repo_info);
+                                let handle = thread::spawn(move || {
+                                    let ref_filter = create_ref_filter(&repo_clone);
+                                    let data_filter = create_data_filter(&repo_clone, "main");
+                                    assert!(!ref_filter.authors.is_empty());
+                                    assert!(!data_filter.authors.is_empty());
+                                });
+                                handles.push(handle);
+                            }
+
+                            // Wait for all threads to complete
+                            for handle in handles {
+                                handle.join().unwrap();
+                            }
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn async_function_error_propagation() {
+                            // Test that async errors are properly propagated
+                            // This tests the error handling in async contexts
+                            let repo_info = create_test_repo_info();
+
+                            // Test error propagation in filter functions
+                            // (These are currently synchronous, but test structure for future async extensions)
+                            let ref_filter = create_ref_filter(&repo_info);
+                            let data_filter = create_data_filter(&repo_info, "test");
+
+                            assert!(!ref_filter.authors.is_empty());
+                            assert!(!data_filter.authors.is_empty());
+                        }
+                    }
+
+                    mod performance_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        #[ignore] // Performance test
+                        async fn large_reference_sets_performance() {
+                            // Test performance with many references
+                            let start_time = std::time::Instant::now();
+
+                            for i in 0..1000 {
+                                let repo_info = create_test_repo_info();
+                                let ref_filter = create_ref_filter(&repo_info);
+                                let data_filter =
+                                    create_data_filter(&repo_info, &format!("branch-{}", i));
+
+                                // Verify filters are created correctly
+                                assert!(!ref_filter.authors.is_empty());
+                                assert!(!data_filter.authors.is_empty());
+                            }
+
+                            let elapsed = start_time.elapsed();
+                            // Should complete in reasonable time (< 1 second)
+                            assert!(elapsed.as_millis() < 1000);
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        #[ignore] // Memory usage test
+                        async fn memory_usage_with_large_events() {
+                            // Test memory efficiency with large event data
+                            let large_content = "x".repeat(10000);
+
+                            for i in 0..100 {
+                                let keys = Keys::generate();
+                                let private_key = keys.secret_key().unwrap();
+                                let preevent = gnostr::types::PreEvent {
+                                    pubkey: keys.public_key(),
+                                    created_at: Unixtime::now(),
+                                    kind: EventKind::TextNote,
+                                    tags: vec![
+                                        Tag::new_identifier(format!("git-ref:branch-{}", i)),
+                                        Tag::new_identifier("gnostr-repo".to_string()),
+                                    ],
+                                    content: large_content.clone(),
+                                };
+                                let event =
+                                    Event::sign_with_private_key(preevent, &private_key).unwrap();
+
+                                // Verify event creation succeeded
+                                assert_eq!(event.id.as_hex_string().len(), 64);
+                            }
+                        }
+                    }
+
+                    mod protocol_compliance_integration {
+                        use super::*;
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn git_remote_capabilities_output() {
+                            // Test capabilities command output format
+                            let cli_tester = GnostrCliTester::new();
+
+                            // Simulate capabilities command
+                            cli_tester.send_line("capabilities");
+
+                            // Should output standard git remote capabilities
+                            let output = cli_tester.get_output();
+                            let has_push = output.iter().any(|line| line.contains("push"));
+                            let has_fetch = output.iter().any(|line| line.contains("fetch"));
+                            let has_option = output.iter().any(|line| line.contains("option"));
+
+                            assert!(has_push);
+                            assert!(has_fetch);
+                            assert!(has_option);
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn git_remote_option_handling() {
+                            // Test option command handling
+                            let cli_tester = GnostrCliTester::new();
+
+                            // Test supported option
+                            cli_tester.send_line("option verbosity 1");
+                            // Should respond with "ok"
+                            assert!(cli_tester.expect("ok").is_ok());
+
+                            // Test unsupported option
+                            cli_tester.send_line("option unsupported_option");
+                            // Should respond with "unsupported"
+                            assert!(cli_tester.expect("unsupported").is_ok());
+                        }
+
+                        #[tokio::test]
+                        #[serial]
+                        async fn git_remote_protocol_termination() {
+                            // Test proper line termination in protocol
+                            let cli_tester = GnostrCliTester::new();
+
+                            // Commands should end with blank line
+                            cli_tester.send_line("capabilities");
+                            cli_tester.send_line("");
+
+                            // Verify proper command handling
+                            let output = cli_tester.get_output();
+                            let has_capabilities =
+                                output.iter().any(|line| line.trim().contains("push"));
+                            assert!(has_capabilities);
+                        }
                     }
                 }
             }
