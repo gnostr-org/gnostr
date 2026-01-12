@@ -1,9 +1,9 @@
 use std::{convert::From, fmt};
 
 use serde::{
-    Deserialize, Serialize,
     de::{Deserializer, Error as DeError, Visitor},
     ser::Serializer,
+    Deserialize, Serialize,
 };
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};

@@ -5,8 +5,8 @@ use anyhow::Result;
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::types::{
-    Id, PublicKey, Signature, Tag, Unixtime,
     event::{Event, UnsignedEvent},
+    Id, PublicKey, Signature, Tag, Unixtime,
 };
 
 /// The name of the nonce tag.

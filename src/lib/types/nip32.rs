@@ -6,7 +6,7 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/32.md
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
@@ -64,7 +64,8 @@ impl NIP32Event for Event {
         // First, process 'L' tags to build the namespace map
         for tag in &self.tags {
             if tag.0.len() == 2 && tag.0[0] == LABEL_NAMESPACE_TAG_NAME {
-                let _ = namespace_map.insert(tag.0[1].clone(), tag.0[1].clone()); // Mark is usually same as namespace for 'L' tags
+                let _ = namespace_map.insert(tag.0[1].clone(), tag.0[1].clone());
+                // Mark is usually same as namespace for 'L' tags
             }
         }
 

@@ -6,11 +6,11 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/38.md
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Event, Id, PreEvent, PublicKey, Tag, Unixtime}; // Re-using existing types
 use crate::types::{event_kind::EventKind, signature::Signature};
+use crate::types::{Event, Id, PreEvent, PublicKey, Tag, Unixtime}; // Re-using existing types
 
 /// NIP-38 User Status Event Kind (Parameterized Replaceable Event)
 pub const USER_STATUS_KIND: u32 = 30315;
