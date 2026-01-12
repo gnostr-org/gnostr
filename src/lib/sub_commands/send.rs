@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use console::Style;
 use nostr_0_34_1::{
-    ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
+    ToBech32,
 };
 use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
@@ -13,15 +13,15 @@ use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
-    client::{Connect, fetching_with_report, get_events_from_cache, get_repo_ref_from_cache},
-    git::{Repo, RepoActions, identify_ahead_behind},
+    client::{fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect},
+    git::{identify_ahead_behind, Repo, RepoActions},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,
     repo_ref::get_repo_coordinates,
 };
 //use crate::client::Client;
 use crate::{
-    client::{Client, send_events},
+    client::{send_events, Client},
     git_events::generate_cover_letter_and_patch_events,
 };
 
