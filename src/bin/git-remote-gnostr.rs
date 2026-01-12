@@ -220,8 +220,9 @@ fn parse_naddr_repo(
     // For now, return a placeholder implementation
     // TODO: Properly decode bech32 NAddr
     Ok(GnostrRepoInfo {
-        author: PublicKey::from_hex(
+        author: PublicKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
+            false,
         )?,
         relays: vec![],
         kind: Some(EventKind::TextNote),
@@ -237,8 +238,9 @@ fn parse_npub_repo(
     // For now, return a placeholder implementation
     // TODO: Properly decode bech32 NPub
     Ok(GnostrRepoInfo {
-        author: PublicKey::from_hex(
+        author: PublicKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
+            false,
         )?,
         relays: vec![],
         kind: Some(EventKind::TextNote),
@@ -247,7 +249,7 @@ fn parse_npub_repo(
     })
 }
 
-fn query_git_refs(
+async fn query_git_refs(
     client: &Client,
     repo_info: &GnostrRepoInfo,
 ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
@@ -257,11 +259,10 @@ fn query_git_refs(
     let filter = create_ref_filter(repo_info);
 
     // Query events from relays
-    match client.get_events_of_with_opts(
-        vec![filter],
-        None,
-        gnostr::types::FilterOptions::ExitOnEOSE,
-    ) {
+    match client
+        .get_events_of_with_opts(vec![filter], None, gnostr::types::FilterOptions::ExitOnEOSE)
+        .await
+    {
         Ok(events) => {
             for event in events {
                 if let Some(ref_name) = extract_ref_name(&event) {
@@ -281,25 +282,25 @@ fn create_ref_filter(repo_info: &GnostrRepoInfo) -> Filter {
     let mut filter = Filter::new();
 
     // Filter by repository author
-    filter.author = Some(vec![repo_info.author]);
+    filter.authors = Some(vec![repo_info.author]);
 
     // Filter by event kind
-    filter.kind = Some(vec![EventKind::TextNote]);
+    filter.kinds = Some(vec![EventKind::TextNote]);
 
     // Filter by repository tags
-    filter.tags = vec![
-        ("t".to_string(), vec!["gnostr-repo".to_string()]),
-        ("t".to_string(), vec!["git-ref".to_string()]),
-    ];
+    let mut tags = BTreeMap::new();
+    tags.insert('t', vec!["gnostr-repo".to_string()]);
+    tags.insert('t', vec!["git-ref".to_string()]);
+    filter.tags = tags;
 
     filter
 }
 
 fn extract_ref_name(event: &Event) -> Option<String> {
     for tag in &event.tags {
-        if let Ok((tag_name, values)) = tag.parse_identifier() {
-            if tag_name == "git-ref" && !values.is_empty() {
-                return Some(values[0].clone());
+        if let Ok(tag_name) = tag.parse_identifier() {
+            if tag_name.starts_with("git-ref:") {
+                return Some(tag_name.strip_prefix("git-ref:").unwrap().to_string());
             }
         }
     }
@@ -314,7 +315,7 @@ fn create_and_publish_push_event(
     ref_name: &str,
 ) -> Result<Id, Box<dyn std::error::Error>> {
     let keys = Keys::generate();
-    let private_key = keys.private_key();
+    let private_key = &keys.private_key;
 
     let mut tags = Vec::new();
 
@@ -332,16 +333,19 @@ fn create_and_publish_push_event(
     tags.push(Tag::new_identifier(format!("dst:{}", dst)));
 
     // Add repository author tag
-    tags.push(Tag::new_public_key(repo_info.author, None, None));
+    tags.push(Tag::new_pubkey(repo_info.author, None, None));
 
     // Create event with push metadata
-    let event = Event::new(
-        private_key.clone(),
-        Unixtime::now(),
-        EventKind::TextNote,
-        tags,
-        format!("Git push to {}: {} -> {}", ref_name, src, dst),
-    );
+    let event = Event::sign_with_private_key(
+        gnostr::types::PreEvent::new(
+            keys.public_key(),
+            Unixtime::now(),
+            EventKind::TextNote,
+            tags,
+            format!("Git push to {}: {} -> {}", ref_name, src, dst),
+        ),
+        private_key,
+    )?;
 
     // TODO: Publish to relays
     eprintln!("Created push event: {}", event.id);
@@ -349,7 +353,7 @@ fn create_and_publish_push_event(
     Ok(event.id)
 }
 
-fn fetch_git_data(
+async fn fetch_git_data(
     client: &Client,
     repo_info: &GnostrRepoInfo,
     ref_name: &str,
@@ -358,11 +362,10 @@ fn fetch_git_data(
     let filter = create_data_filter(repo_info, ref_name);
 
     // Query events
-    match client.get_events_of_with_opts(
-        vec![filter],
-        None,
-        gnostr::types::FilterOptions::ExitOnEOSE,
-    ) {
+    match client
+        .get_events_of_with_opts(vec![filter], None, gnostr::types::FilterOptions::ExitOnEOSE)
+        .await
+    {
         Ok(events) => {
             for event in events {
                 eprintln!("Found git data event: {}", event.id);
@@ -382,17 +385,17 @@ fn create_data_filter(repo_info: &GnostrRepoInfo, ref_name: &str) -> Filter {
     let mut filter = Filter::new();
 
     // Filter by repository author
-    filter.author = Some(vec![repo_info.author]);
+    filter.authors = Some(vec![repo_info.author]);
 
     // Filter by event kind
-    filter.kind = Some(vec![EventKind::TextNote]);
+    filter.kinds = Some(vec![EventKind::TextNote]);
 
     // Filter by specific ref
-    filter.tags = vec![
-        ("t".to_string(), vec!["gnostr-repo".to_string()]),
-        ("t".to_string(), vec![format!("git-ref:{}", ref_name)]),
-        ("t".to_string(), vec!["git-data".to_string()]),
-    ];
+    let mut tags = BTreeMap::new();
+    tags.insert('t', vec!["gnostr-repo".to_string()]);
+    tags.insert('t', vec![format!("git-ref:{}", ref_name)]);
+    tags.insert('t', vec!["git-data".to_string()]);
+    filter.tags = tags;
 
     filter
 }
@@ -421,8 +424,9 @@ mod tests {
     #[test]
     fn test_create_ref_filter() {
         let repo_info = GnostrRepoInfo {
-            author: PublicKey::from_hex(
+            author: PublicKey::try_from_hex_string(
                 "0000000000000000000000000000000000000000000000000000000000000001",
+                false,
             )
             .unwrap(),
             relays: vec![],
@@ -432,8 +436,8 @@ mod tests {
         };
 
         let filter = create_ref_filter(&repo_info);
-        assert!(filter.author.is_some());
-        assert!(filter.kind.is_some());
+        assert!(filter.authors.is_some());
+        assert!(filter.kinds.is_some());
         assert!(!filter.tags.is_empty());
     }
 }
