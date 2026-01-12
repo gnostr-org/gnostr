@@ -1,7 +1,7 @@
 use core::str;
 use std::collections::HashMap;
 
-use anyhow::{Context, Result /* , Error */, anyhow};
+use anyhow::{anyhow, Context, Result /* , Error */};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
 use git::RepoActions;
@@ -22,9 +22,9 @@ use repo_ref::RepoRef;
 use crate::{
     git::Repo,
     utils::{
-        Direction, fetch_or_list_error_is_not_authentication_failure, get_open_proposals,
+        fetch_or_list_error_is_not_authentication_failure, get_open_proposals,
         get_read_protocols_to_try, get_short_git_server_name, join_with_and,
-        set_protocol_preference,
+        set_protocol_preference, Direction,
     },
 };
 
@@ -292,8 +292,8 @@ mod tests {
         #[tokio::test]
         #[serial]
         #[ignore]
-        async fn lists_head_and_2_branches_and_commit_ids_from_git_server()
-        -> Result<(), anyhow::Error> {
+        async fn lists_head_and_2_branches_and_commit_ids_from_git_server(
+        ) -> Result<(), anyhow::Error> {
             let mut source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
             std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
@@ -309,9 +309,11 @@ mod tests {
             let events = vec![
                 generate_test_key_1_metadata_event("fred"),
                 generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![
-                    source_git_repo.dir.to_str().unwrap().to_string(),
-                ]),
+                generate_repo_ref_event_with_git_server(vec![source_git_repo
+                    .dir
+                    .to_str()
+                    .unwrap()
+                    .to_string()]),
             ];
             // fallback (51,52) user write (53, 55) repo (55, 56) blaster
             // (57)
@@ -370,13 +372,14 @@ mod tests {
             use std::collections::HashSet;
 
             use gnostr::test_utils::{
-                E, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
                 generate_test_key_1_relay_list_event,
                 git::GitTestRepo,
                 git_remote::{
                     cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
                 },
-                relay::{Relay, shutdown_relay},
+                relay::{shutdown_relay, Relay},
+                E,
             };
             use nostr_0_34_1::Event;
             use serial_test::serial;
@@ -398,9 +401,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                     state_event,
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56)
@@ -461,13 +466,14 @@ mod tests {
             use std::collections::HashSet;
 
             use gnostr::test_utils::{
-                E, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
                 generate_test_key_1_relay_list_event,
                 git::GitTestRepo,
                 git_remote::{
                     cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
                 },
-                relay::{Relay, shutdown_relay},
+                relay::{shutdown_relay, Relay},
+                E,
             };
             use nostr_0_34_1::Event;
             use serial_test::serial;
@@ -500,9 +506,11 @@ mod tests {
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
                     generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
+                    generate_repo_ref_event_with_git_server(vec![source_git_repo
+                        .dir
+                        .to_str()
+                        .unwrap()
+                        .to_string()]),
                     state_event,
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56)
