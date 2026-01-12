@@ -15,12 +15,14 @@ use tracing_subscriber::{EnvFilter, Registry, fmt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
+    env::set_var("GNOSTR_GITDIR", "");
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
     env::set_var("WOBBLE", "0");
     let args: GnostrCli = GnostrCli::parse();
 
     let app_cache = get_app_cache_path();
+    debug!("app_cache={:?}", app_cache);
 
     // Setup tracing subscriber once and globally
     let base_level = if args.debug {
