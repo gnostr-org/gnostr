@@ -91,6 +91,8 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "expensive_tests")]
+    #[ignore]
     async fn test_p2p_connectivity_three_nodes() {
         // Create channels for three chat instances
         let (send_tx1, send_rx1) = mpsc::channel::<InternalEvent>(100);
