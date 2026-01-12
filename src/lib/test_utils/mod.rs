@@ -22,7 +22,7 @@ use once_cell::sync::Lazy;
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
-use crate::test_utils::git::GitTestRepo;
+pub use crate::test_utils::git::GitTestRepo;
 
 pub mod error;
 pub mod git;
