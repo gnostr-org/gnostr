@@ -1237,6 +1237,25 @@ mod tests {
     }
 
     mod integration_tests {
+        use std::collections::HashSet;
+
+        use git2::Oid;
+        use gnostr::test_utils::{
+            CliTester, E, FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
+            generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+            get_proposal_branch_name_from_events,
+            git::GitTestRepo,
+            git_remote::{
+                STATE_KIND, cli_expect_nostr_fetch, cli_tester_after_fetch,
+                cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
+                clone_git_repo_with_nostr_url, generate_repo_with_state_event,
+                get_nostr_remote_url, prep_git_repo,
+                prep_source_repo_and_events_including_proposals,
+            },
+            relay::{Relay, shutdown_relay},
+        };
+        use serial_test::serial;
+        use tokio::join;
 
         #[tokio::test]
         #[serial]
@@ -1247,6 +1266,22 @@ mod tests {
             Ok(())
         }
         mod two_branches_in_batch_one_added_one_updated {
+            use std::collections::HashSet;
+
+            use gnostr::test_utils::{
+                E, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event,
+                git::GitTestRepo,
+                git_remote::{
+                    cli_tester_after_fetch,
+                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
+                    generate_repo_with_state_event, prep_git_repo,
+                },
+                relay::{Relay, shutdown_relay},
+            };
+            use nostr_0_34_1::Event;
+            use serial_test::serial;
+            use tokio::join;
 
             #[tokio::test]
             #[serial]
@@ -1698,6 +1733,22 @@ mod tests {
             }
         }
         mod delete_one_branch {
+            use std::collections::HashSet;
+
+            use gnostr::test_utils::{
+                E, generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event,
+                git::GitTestRepo,
+                git_remote::{
+                    cli_tester_after_fetch,
+                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
+                    generate_repo_with_state_event, prep_git_repo,
+                },
+                relay::{Relay, shutdown_relay},
+            };
+            use nostr_0_34_1::Event;
+            use serial_test::serial;
+            use tokio::join;
 
             #[tokio::test]
             #[serial]
@@ -1923,6 +1974,26 @@ mod tests {
             }
 
             mod when_existing_state_event {
+                use std::collections::HashSet;
+
+                use git2::Oid;
+                use gnostr::test_utils::{
+                    CliTester, E, FEATURE_BRANCH_NAME_1, generate_repo_ref_event,
+                    generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                    generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+                    git::GitTestRepo,
+                    git_remote::{
+                        STATE_KIND, cli_expect_nostr_fetch, cli_tester_after_fetch,
+                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
+                        clone_git_repo_with_nostr_url, generate_repo_with_state_event,
+                        get_nostr_remote_url, prep_git_repo,
+                        prep_source_repo_and_events_including_proposals,
+                    },
+                    relay::{Relay, shutdown_relay},
+                };
+                use nostr_0_34_1::{Event, Kind};
+                use serial_test::serial;
+                use tokio::join;
 
                 #[tokio::test]
                 #[serial]
@@ -2005,6 +2076,20 @@ mod tests {
                 }
 
                 mod already_deleted_on_git_server {
+                    use std::collections::HashSet;
+
+                    use gnostr::test_utils::{
+                        E, generate_repo_ref_event, generate_repo_ref_event_with_git_server,
+                        generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                        git::GitTestRepo,
+                        git_remote::{
+                            cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
+                        },
+                        relay::{Relay, shutdown_relay},
+                    };
+                    use nostr_0_34_1::Event;
+                    use serial_test::serial;
+                    use tokio::join;
 
                     #[tokio::test]
                     #[serial]
