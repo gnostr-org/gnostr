@@ -1,12 +1,12 @@
 use aes::Aes256;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use block_padding::Pkcs7;
 use cbc::{
-    Decryptor, Encryptor,
     cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit},
+    Decryptor, Encryptor,
 };
 use rand::RngCore;
-use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey, ecdh};
+use secp256k1::{ecdh, Secp256k1, SecretKey, XOnlyPublicKey};
 
 type Aes256CbcEncryptor = Encryptor<Aes256>;
 type Aes256CbcDecryptor = Decryptor<Aes256>;

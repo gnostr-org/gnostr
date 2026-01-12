@@ -2,9 +2,9 @@ use std::fmt;
 
 use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
 use serde::{
-    Deserialize, Serialize,
     de::{Deserializer, Visitor},
     ser::Serializer,
+    Deserialize, Serialize,
 };
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};

@@ -156,7 +156,7 @@ impl TryFrom<u16> for Nip34Kind {
 #[cfg(test)]
 mod tests {
     use rand::rngs::OsRng;
-    use secp256k1::{Secp256k1, schnorr};
+    use secp256k1::{schnorr, Secp256k1};
 
     use super::*;
 
