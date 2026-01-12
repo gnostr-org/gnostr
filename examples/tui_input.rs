@@ -2,8 +2,8 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 //use tui_input::*;
 
 // Removed `use ratatui::prelude::*;` as it's not used in this standalone example
-use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use tui_input::Input;
 // Removed `use tui_input::backend::crossterm::EventHandler;` as it's implicit
 // for `handle_event`
 
