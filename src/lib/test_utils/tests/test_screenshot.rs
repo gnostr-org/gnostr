@@ -9,7 +9,7 @@ use std::{
 
 use tmux_interface::{CapturePane, KillSession, NewSession, SendKeys, Tmux};
 
-fn is_tmux_installed() -> bool {
+fn _is_tmux_installed() -> bool {
     Command::new("which")
         .arg("tmux")
         .stdout(Stdio::null())
@@ -22,7 +22,7 @@ fn is_tmux_installed() -> bool {
 #[cfg(feature = "expensive_tests")]
 #[ignore]
 fn test_capture_tmux() {
-    if !is_tmux_installed() {
+    if !_is_tmux_installed() {
         println!("Skipping test_capture_tmux: tmux is not installed.");
         return;
     }
