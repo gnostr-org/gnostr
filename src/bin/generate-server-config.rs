@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     env, fs, io,
     path::{Path, PathBuf},
-    process::{Command, exit},
+    process::{exit, Command},
 };
 
 use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
