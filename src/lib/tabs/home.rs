@@ -1,8 +1,8 @@
 use std::{
     rc::Rc,
     sync::{
-        Arc,
         atomic::{AtomicBool, Ordering},
+        Arc,
     },
     time::Duration,
 };
@@ -11,31 +11,31 @@ use anyhow::Result;
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification, AsyncLog, AsyncTags,
-    CommitFilesParams, FetchStatus, ProgressPercent,
     asyncjob::AsyncSingleJob,
     sync::{
-        self, CommitId, LogFilterSearch, LogFilterSearchOptions, RepoPathRef,
-        filter_commit_by_search,
+        self, filter_commit_by_search, CommitId, LogFilterSearch, LogFilterSearchOptions,
+        RepoPathRef,
     },
+    AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification, AsyncLog, AsyncTags,
+    CommitFilesParams, FetchStatus, ProgressPercent,
 };
 use indexmap::IndexSet;
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::Span,
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 use sync::CommitTags;
 
 use crate::{
     app::Environment,
     components::{
-        ChatDetailsComponent, CommandBlocking, CommandInfo,
+        visibility_blocking, ChatDetailsComponent, CommandBlocking, CommandInfo,
         /* CommitDetailsComponent, CommitList, */ Component, DrawableComponent, EventState,
-        TopicList, visibility_blocking,
+        TopicList,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     popups::{FileTreeOpen, InspectChatOpen, InspectCommitOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order},

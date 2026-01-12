@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
+    sync::{self, status::StatusType, RepoPathRef},
     AsyncGitNotification, AsyncStatus, StatusParams,
-    sync::{self, RepoPathRef, status::StatusType},
 };
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
@@ -16,10 +16,10 @@ use crate::{
     accessors,
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
-        StatusTreeComponent, command_pump, event_pump, visibility_blocking,
+        command_pump, event_pump, visibility_blocking, CommandBlocking, CommandInfo, Component,
+        DrawableComponent, EventState, StatusTreeComponent,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, Queue},
     strings,
     ui::style::SharedTheme,
