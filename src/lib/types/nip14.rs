@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn test_subject_found() {
         let subject_str = "Nostr Dev Talk";
-        let mut event = Event {
+        let event = Event {
             id: Id::mock(),
             pubkey: PublicKey::mock(),
             created_at: Unixtime::now(),

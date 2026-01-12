@@ -36,7 +36,7 @@ impl EventBuilder {
 
     /// Build and sign the event with proof of work
     pub fn to_pow_event(self, keys: &PrivateKey, difficulty_target: u8) -> Result<Event> {
-        let mut preevent = PreEvent {
+        let preevent = PreEvent {
             pubkey: keys.public_key(),
             created_at: self.created_at.unwrap_or_else(Unixtime::now),
             kind: self.kind,

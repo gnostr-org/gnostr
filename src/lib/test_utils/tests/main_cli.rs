@@ -97,21 +97,6 @@ mod tests {
         (tmp_dir, repo)
     }
 
-    // Helper to get clap error message for conflicting flags
-    fn get_clap_conflict_error(flag1: &str, flag2: &str) -> impl predicates::Predicate<str> {
-        let _cleanup_guard = TerminalCleanup;
-        let error_msg1 = format!(
-            "error: the argument '{}' cannot be used with '{}'",
-            flag1, flag2
-        );
-        let error_msg2 = format!(
-            "error: the argument '{}' cannot be used with '{}'",
-            flag2, flag1
-        );
-        let _cleanup_guard = TerminalCleanup;
-        str::contains(error_msg1.clone()).or(str::contains(error_msg2.clone()))
-    }
-
     #[test]
     #[serial]
     fn test_logging_flags_conflict() {

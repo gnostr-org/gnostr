@@ -76,14 +76,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_xor_with_key_and_stdin() -> Result<()> {
-        let args = XorArgs {
+        let _args = XorArgs {
             sec: Some("00".to_string()), // Hex for 0
             stdin: true,
         };
         let input = "hello";
 
-        let mut stdin_mock = simulate_stdin(input);
-        let original_stdin = io::stdin(); // Save original stdin
+        let _stdin_mock = simulate_stdin(input);
+        let _original_stdin = io::stdin(); // Save original stdin
         // Replace stdin with mock (this part is tricky, may need to use external crate
         // like `mock_stdin`) For actual tests, this would ideally involve
         // mocking std::io::stdin directly or passing a Read trait.
