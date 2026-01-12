@@ -125,7 +125,7 @@ fn test_mine_commit_success() {
     assert!(commit_hash_result.is_ok());
     //let commit_hash = commit_hash_result.unwrap();
     let commit_hash = commit_hash_result.clone().unwrap_or("".to_string());
-    println!("Mined commit hash: {}", commit_hash);
+    println!("\nMined commit hash: {}", commit_hash);
     assert!(commit_hash_result.is_ok());
 
     assert!(commit_hash.starts_with("0"));
