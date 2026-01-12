@@ -11,30 +11,30 @@ use std::{
     io::{self, Stdout},
     panic, process,
     sync::{
-        Arc,
         atomic::{AtomicBool, Ordering},
+        Arc,
     },
     time::{Duration, Instant},
 };
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use backtrace::Backtrace;
-use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
+use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use gnostr_asyncgit::{
+    sync::{utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
-    sync::{RepoPath, utils::repo_work_dir},
 };
 use nostr_sdk_0_37_0::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::{self, scope_time};
 use serde::ser::StdError;
-use tracing::{Level, debug};
-use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing::{debug, Level};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 use crate::{
     app::{App, QuitState},

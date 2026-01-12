@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use nostr_0_34_1::bech32;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 use crate::types::{NEvent, NostrBech32, PrivateKey};
 
