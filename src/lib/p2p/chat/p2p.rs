@@ -1,15 +1,15 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use futures::stream::StreamExt;
 use libp2p::{
-    StreamProtocol, gossipsub, identify, kad, mdns, noise, ping,
+    gossipsub, identify, kad, mdns, noise, ping,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux,
+    tcp, yamux, StreamProtocol,
 };
 use parking_lot::Mutex;
-use terminal_size::{Height, Width, terminal_size};
+use terminal_size::{terminal_size, Height, Width};
 use textwrap::{self, Options};
 use tokio::{io, select};
 use tracing::{debug, warn};

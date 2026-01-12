@@ -1,28 +1,28 @@
 use std::{error::Error as StdError, path::PathBuf, time::Duration};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
-use gnostr_asyncgit::sync::{RepoPath, commit::padded_commit_id};
+use gnostr_asyncgit::sync::{commit::padded_commit_id, RepoPath};
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use proctitle::set_title;
 use serde_json; // Explicitly added for clarity
-use textwrap::{Options, fill};
+use textwrap::{fill, Options};
 //use async_std::path::PathBuf;
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 use uuid::Uuid;
 
 use self::msg::{Msg, MsgKind};
 use crate::{
     queue::InternalEvent,
     types::{
-        Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
         metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
         nip28::CREATE_CHANNEL_MESSAGE,
+        Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
     },
 };
 
