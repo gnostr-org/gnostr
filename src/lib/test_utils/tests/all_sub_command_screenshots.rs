@@ -161,7 +161,8 @@ mod tests {
     // screenshot_test!(test_ngit_run_screenshot, "ngit", true);
     //     #[cfg(feature = "expensive_tests")]
     screenshot_test!(test_init_run_screenshot, "init", true);
-    // // screenshot_test!(test_push_run_screenshot, "push", true);
+    //     #[cfg(feature = "expensive_tests")]
+    screenshot_test!(test_push_run_screenshot, "push", true);
     // // screenshot_test!(test_send_run_screenshot, "send", true);
     // // screenshot_test!(test_list_run_screenshot, "list", true);
     // // screenshot_test!(test_pull_run_screenshot, "pull", true);
