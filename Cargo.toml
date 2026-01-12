@@ -47,6 +47,10 @@ path = "src/lib/mod.rs"
 name = "git-remote-nostr"
 path = "src/bin/git-remote-nostr/main.rs"
 
+[[bin]]
+name = "git-remote-gnostr"
+path = "src/bin/git-remote-gnostr.rs"
+
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
 expensive_tests = [] #nostr
