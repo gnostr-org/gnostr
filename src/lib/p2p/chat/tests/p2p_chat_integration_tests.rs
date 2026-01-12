@@ -155,5 +155,60 @@ mod tests {
                 received_event_3
             );
         }
+
+        // Test multi-sender scenarios: Send messages from peers 2 and 3
+        let msg2_content = "Response from peer 2";
+        let msg2 = Msg {
+            from: "peer2".to_string(),
+            ..Msg::default()
+        }
+        .set_content(msg2_content.to_string(), 0)
+        .set_kind(MsgKind::Chat);
+
+        let msg3_content = "Response from peer 3";
+        let msg3 = Msg {
+            from: "peer3".to_string(),
+            ..Msg::default()
+        }
+        .set_content(msg3_content.to_string(), 0)
+        .set_kind(MsgKind::Chat);
+
+        // Send messages concurrently from peers 2 and 3
+        let (tx2_result, tx3_result) = tokio::join!(
+            send_tx2.send(InternalEvent::ChatMessage(msg2)),
+            send_tx3.send(InternalEvent::ChatMessage(msg3))
+        );
+        tx2_result.unwrap();
+        tx3_result.unwrap();
+
+        // Peer 1 should receive messages from both peers 2 and 3
+        let mut received_messages = Vec::new();
+        for _ in 0..2 {
+            let received_event = tokio::time::timeout(Duration::from_secs(5), _recv_rx1.recv())
+                .await
+                .expect("Timeout waiting for message on peer 1")
+                .expect("Channel closed on peer 1");
+
+            if let InternalEvent::ChatMessage(msg) = received_event {
+                received_messages.push(msg);
+            } else {
+                panic!("Received wrong event type on peer 1: {:?}", received_event);
+            }
+        }
+
+        // Verify we received both messages (order may vary due to network timing)
+        let mut received_from_2 = false;
+        let mut received_from_3 = false;
+        for msg in &received_messages {
+            if msg.from == "peer2" {
+                assert_eq!(msg.content[0], msg2_content);
+                received_from_2 = true;
+            } else if msg.from == "peer3" {
+                assert_eq!(msg.content[0], msg3_content);
+                received_from_3 = true;
+            }
+        }
+        assert!(received_from_2, "Did not receive message from peer 2");
+        assert!(received_from_3, "Did not receive message from peer 3");
     }
 }

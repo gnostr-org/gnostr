@@ -1176,7 +1176,7 @@ mod tests {
             fs::write(test_repo.dir.join("t2.md"), "some content1")?;
             let oid = test_repo.stage_and_commit("add t2.md")?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
-            let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
+            let _parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
             let generated_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?;
 
@@ -1241,7 +1241,7 @@ libgit2 1.9.1
             fs::write(test_repo.dir.join("t2.md"), "some content1")?;
             let oid = test_repo.stage_and_commit("add t2.md")?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
-            let parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
+            let _parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
 
             let generated_patch =
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?;

@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn test_expiration_time_found() {
         let expiry = Unixtime::from(1678886400);
-        let mut event = Event {
+        let event = Event {
             id: Id::mock(),
             pubkey: PublicKey::mock(),
             created_at: Unixtime::now(),
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_expiration_time_invalid_format() {
-        let mut event = Event {
+        let event = Event {
             id: Id::mock(),
             pubkey: PublicKey::mock(),
             created_at: Unixtime::now(),

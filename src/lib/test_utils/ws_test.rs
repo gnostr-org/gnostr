@@ -215,4 +215,52 @@ async fn test_websocket_connection_and_message_echo() {
             );
         }
     };
+
+    // Send a message from client to server
+    let client_message = "Echo test message".to_string();
+    client_ws
+        .send(Message::Text(client_message.clone()).into())
+        .await
+        .unwrap();
+
+    // Verify message event on server side
+    let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async())
+        .await
+        .expect("Server did not send Message event in time")
+    {
+        Event::Message(id, msg) => {
+            assert_eq!(id, client_id);
+            msg
+        }
+        other => panic!("Expected Message event, got {:?}", other),
+    };
+
+    // Echo the message back to the client
+    responder.send(received_message.clone());
+
+    // Verify message received by client
+    let response = timeout(Duration::from_secs(5), client_ws.next())
+        .await
+        .expect("Client did not receive echo message in time")
+        .unwrap()
+        .unwrap();
+
+    match Message::try_from(response).unwrap() {
+        Message::Text(text) => assert_eq!(text, client_message),
+        other => panic!("Expected text message back, got {:?}", other),
+    }
+
+    // Test Responder::close
+    responder.close();
+
+    // The client should receive a close frame and then the connection should be
+    // dropped
+    let client_close_frame = client_ws.next().await.unwrap().unwrap().is_close();
+    assert!(client_close_frame);
+
+    // Verify disconnect event on server side
+    match event_hub.poll_async().await {
+        Event::Disconnect(id) => assert_eq!(id, client_id),
+        _ => panic!("Expected Disconnect event after Responder.close()"),
+    };
 }
