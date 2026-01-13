@@ -1215,7 +1215,7 @@ async fn handle_fetch(
     Ok(())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct GnostrRepoInfo {
     author: PublicKey,
     #[allow(dead_code)]
@@ -1750,7 +1750,7 @@ mod tests {
     #[test]
     fn test_handle_capabilities() {
         // Capture stdout to verify capabilities output
-        let mut output = Vec::new();
+        let mut output: Vec<u8> = Vec::new();
         {
             let mut stdout = std::io::stdout();
             // This test mainly ensures the function doesn't panic
