@@ -97,8 +97,6 @@ pub async fn run_push(
         }
     };
 
-    let refspecs_for_nostr_state = git_server_refspecs.clone();
-
     let (rejected_refspecs, remote_refspecs) = create_rejected_refspecs_and_remotes_refspecs(
         &term,
         git_repo,
@@ -152,9 +150,8 @@ pub async fn run_push(
         }
     }
 
-    if !refspecs_for_nostr_state.is_empty() {
-        let new_state =
-            generate_updated_state(git_repo, &existing_state, &refspecs_for_nostr_state)?;
+    if !git_server_refspecs.is_empty() {
+        let new_state = generate_updated_state(git_repo, &existing_state, &git_server_refspecs)?;
 
         let new_repo_state =
             RepoState::build(repo_ref.identifier.clone(), new_state, &signer).await?;
@@ -269,8 +266,8 @@ pub async fn run_push(
                     }
                 } else {
                     println!(
-                        "error {to} permission denied. you are not the proposal author or a repo maintainer"
-                    );
+						"error {to} permission denied. you are not the proposal author or a repo maintainer"
+					);
                     rejected_proposal_refspecs.push(refspec.clone());
                 }
             } else {
@@ -545,9 +542,9 @@ fn report_on_transfer_progress(
     };
 
     Some(format!(
-        "push: Writing objects: {percentage}% ({current}/{total}) {size:.2} {unit}  | {speed:.2} MiB/s{}",
-        if current == total { ", done." } else { "" },
-    ))
+		"push: Writing objects: {percentage}% ({current}/{total}) {size:.2} {unit}  | {speed:.2} MiB/s{}",
+		if current == total { ", done." } else { "" },
+	))
 }
 
 struct PushReporter<'a> {
@@ -935,8 +932,7 @@ async fn get_merged_status_events(
                                         )
                                     } else {
                                         None
-                                    }
-                                    .as_ref(),
+                                    }.as_ref(),
                                     &commit_hash,
                                     commit_event.id(),
                                 )
@@ -1224,6 +1220,21 @@ impl BuildRepoState for RepoState {
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Result as AnyhowResult;
+    use futures::join;
+    use gnostr::test_utils::{
+        generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+    };
+    use gnostr::test_utils::{
+        git::GitTestRepo,
+        git_remote::*,
+        relay::Relay,
+        {CliTester, FEATURE_BRANCH_NAME_1},
+    };
+    use nostr_0_34_1::Event;
+
+    type E = anyhow::Error;
 
     mod refspec_to_from_to_tests {
         use crate::push::refspec_to_from_to;
@@ -1235,59 +1246,23 @@ mod tests {
     }
 
     mod integration_tests {
-        use std::collections::HashSet;
-
-        use git2::Oid;
-        use gnostr::test_utils::{
-            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-            git::GitTestRepo,
-            git_remote::{
-                cli_expect_nostr_fetch, cli_tester_after_fetch,
-                cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-                clone_git_repo_with_nostr_url, generate_repo_with_state_event,
-                get_nostr_remote_url, prep_git_repo,
-                prep_source_repo_and_events_including_proposals, STATE_KIND,
-            },
-            relay::{shutdown_relay, Relay},
-            CliTester, E, FEATURE_BRANCH_NAME_1,
-        };
-        use serial_test::serial;
-        use tokio::join;
+        use super::*;
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn new_branch_when_no_state_event_exists() -> Result<(), E> {
+        async fn new_branch_when_no_state_event_exists() -> AnyhowResult<(), E> {
             generate_repo_with_state_event().await?;
             Ok(())
         }
         mod two_branches_in_batch_one_added_one_updated {
-            use std::collections::HashSet;
 
-            use gnostr::test_utils::{
-                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-                generate_test_key_1_relay_list_event,
-                git::GitTestRepo,
-                git_remote::{
-                    cli_tester_after_fetch,
-                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-                    generate_repo_with_state_event, prep_git_repo,
-                },
-                relay::{shutdown_relay, Relay},
-                E,
-            };
-            use nostr_0_34_1::Event;
-            use serial_test::serial;
-            use tokio::join;
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn updates_branch_on_git_server() -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+            async fn updates_branch_on_git_server() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
                 std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
@@ -1305,7 +1280,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1320,14 +1296,13 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                     assert_ne!(
                         source_git_repo.get_tip_of_local_branch("main")?,
                         main_commit_id
                     );
 
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
 
                     p.send_line("push refs/heads/main:refs/heads/main")?;
                     p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
@@ -1365,10 +1340,9 @@ mod tests {
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn remote_refs_updated_in_local_git() -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+            async fn remote_refs_updated_in_local_git() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
                 std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
@@ -1386,7 +1360,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1401,14 +1376,13 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                     assert_ne!(
                         source_git_repo.get_tip_of_local_branch("main")?,
                         main_commit_id
                     );
 
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push refs/heads/main:refs/heads/main")?;
                     p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
                     p.send_line("")?;
@@ -1422,7 +1396,7 @@ mod tests {
                         git_repo
                             .git_repo
                             .find_reference("refs/remotes/nostr/main")?
-                            .peel_to_commit()?
+                            .peel_to_commit()? 
                             .id(),
                         main_commit_id,
                     );
@@ -1431,7 +1405,7 @@ mod tests {
                         git_repo
                             .git_repo
                             .find_reference("refs/remotes/nostr/vnext")?
-                            .peel_to_commit()?
+                            .peel_to_commit()? 
                             .id(),
                         vnext_commit_id
                     );
@@ -1457,10 +1431,9 @@ mod tests {
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn prints_git_helper_ok_respose() -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+                async fn prints_git_helper_ok_respose() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
                 std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
@@ -1478,7 +1451,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1493,14 +1467,13 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                     assert_ne!(
                         source_git_repo.get_tip_of_local_branch("main")?,
                         main_commit_id
                     );
 
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
 
                     p.send_line("push refs/heads/main:refs/heads/main")?;
                     p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
@@ -1529,11 +1502,9 @@ mod tests {
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event(
-            ) -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
                 std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
@@ -1551,7 +1522,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1566,9 +1538,8 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push refs/heads/main:refs/heads/main")?;
                     p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
                     p.send_line("")?;
@@ -1619,14 +1590,12 @@ mod tests {
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn existing_state_event_published_in_nostr_state_event() -> Result<(), E> {
+            async fn existing_state_event_published_in_nostr_state_event() -> AnyhowResult<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
-                let mut git_repo = prep_git_repo()?;
-                let example_branch_commit_id =
-                    git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
+                let git_repo = prep_git_repo()?;
+                let example_branch_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
 
                 std::fs::write(git_repo.dir.join("new.md"), "some content")?;
                 let main_commit_id = git_repo.stage_and_commit("new.md")?;
@@ -1642,7 +1611,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                     state_event.clone(),
                 ];
 
@@ -1659,9 +1629,8 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push refs/heads/main:refs/heads/main")?;
                     p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
                     p.send_line("")?;
@@ -1675,7 +1644,7 @@ mod tests {
                         git_repo
                             .git_repo
                             .find_reference("refs/remotes/nostr/main")?
-                            .peel_to_commit()?
+                            .peel_to_commit()? 
                             .id(),
                         main_commit_id,
                     );
@@ -1684,7 +1653,7 @@ mod tests {
                         git_repo
                             .git_repo
                             .find_reference("refs/remotes/nostr/vnext")?
-                            .peel_to_commit()?
+                            .peel_to_commit()? 
                             .id(),
                         vnext_commit_id
                     );
@@ -1742,30 +1711,13 @@ mod tests {
             }
         }
         mod delete_one_branch {
-            use std::collections::HashSet;
 
-            use gnostr::test_utils::{
-                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-                generate_test_key_1_relay_list_event,
-                git::GitTestRepo,
-                git_remote::{
-                    cli_tester_after_fetch,
-                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-                    generate_repo_with_state_event, prep_git_repo,
-                },
-                relay::{shutdown_relay, Relay},
-                E,
-            };
-            use nostr_0_34_1::Event;
-            use serial_test::serial;
-            use tokio::join;
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn deletes_branch_on_git_server() -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+            async fn deletes_branch_on_git_server() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
 
                 git_repo.create_branch("vnext")?;
                 git_repo.checkout("vnext")?;
@@ -1781,7 +1733,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1796,18 +1749,15 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                     assert_eq!(
                         source_git_repo
                             .git_repo
-                            .find_reference("refs/heads/vnext")?
-                            .target()
-                            .unwrap(),
+                            .find_reference("refs/heads/vnext")?,
                         vnext_commit_id
                     );
 
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push :refs/heads/vnext")?;
                     p.send_line("")?;
                     p.expect_eventually_and_print("\r\n\r\n")?;
@@ -1837,10 +1787,9 @@ mod tests {
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn remote_refs_updated_in_local_git() -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+            async fn remote_refs_updated_in_local_git() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
 
                 git_repo.create_branch("vnext")?;
                 git_repo.checkout("vnext")?;
@@ -1849,12 +1798,9 @@ mod tests {
 
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
-                git_repo.git_repo.reference(
-                    "refs/remotes/nostr/vnext",
-                    vnext_commit_id,
-                    true,
-                    "",
-                )?;
+                git_repo
+                    .git_repo
+                    .reference("refs/remotes/nostr/vnext", vnext_commit_id, true, "")?;
 
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
@@ -1863,7 +1809,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1878,18 +1825,15 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                     assert_eq!(
                         git_repo
                             .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")?
-                            .target()
-                            .unwrap(),
+                            .find_reference("refs/remotes/nostr/vnext")?,
                         vnext_commit_id
                     );
 
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push :refs/heads/vnext")?;
                     p.send_line("")?;
                     p.expect_eventually("\r\n\r\n")?;
@@ -1918,10 +1862,9 @@ mod tests {
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn prints_git_helper_ok_respose() -> Result<(), E> {
-                let mut git_repo = prep_git_repo()?;
+            async fn prints_git_helper_ok_respose() -> AnyhowResult<(), E> {
+                let git_repo = prep_git_repo()?;
 
                 git_repo.create_branch("vnext")?;
                 git_repo.checkout("vnext")?;
@@ -1930,12 +1873,9 @@ mod tests {
 
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 
-                git_repo.git_repo.reference(
-                    "refs/remotes/nostr/vnext",
-                    vnext_commit_id,
-                    true,
-                    "",
-                )?;
+                git_repo
+                    .git_repo
+                    .reference("refs/remotes/nostr/vnext", vnext_commit_id, true, "")?;
 
                 let events = vec![
                     generate_test_key_1_metadata_event("fred"),
@@ -1944,7 +1884,8 @@ mod tests {
                         .dir
                         .to_str()
                         .unwrap()
-                        .to_string()]),
+                        .to_string()
+                    ]),
                 ];
                 // fallback (51,52) user write (53, 55) repo (55, 56) blaster
                 // (57)
@@ -1959,9 +1900,8 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+                    let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                     p.send_line("push :refs/heads/vnext")?;
                     p.send_line("")?;
                     p.expect("ok refs/heads/vnext\r\n")?;
@@ -1986,36 +1926,15 @@ mod tests {
             }
 
             mod when_existing_state_event {
-                use std::collections::HashSet;
 
-                use git2::Oid;
-                use gnostr::test_utils::{
-                    generate_repo_ref_event, generate_repo_ref_event_with_git_server,
-                    generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-                    get_proposal_branch_name_from_events,
-                    git::GitTestRepo,
-                    git_remote::{
-                        cli_expect_nostr_fetch, cli_tester_after_fetch,
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-                        clone_git_repo_with_nostr_url, generate_repo_with_state_event,
-                        get_nostr_remote_url, prep_git_repo,
-                        prep_source_repo_and_events_including_proposals, STATE_KIND,
-                    },
-                    relay::{shutdown_relay, Relay},
-                    CliTester, E, FEATURE_BRANCH_NAME_1,
-                };
-                use nostr_0_34_1::{Event, Kind};
-                use serial_test::serial;
-                use tokio::join;
 
                 #[tokio::test]
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
-                #[ignore]
-                async fn state_event_updated_and_branch_deleted_and_ok_printed() -> Result<(), E> {
+                async fn state_event_updated_and_branch_deleted_and_ok_printed() -> AnyhowResult<(), E> {
                     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
-                    let mut git_repo = prep_git_repo()?;
+                    let git_repo = prep_git_repo()?;
                     let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
 
                     let events = vec![
@@ -2025,7 +1944,8 @@ mod tests {
                             .dir
                             .to_str()
                             .unwrap()
-                            .to_string()]),
+                            .to_string()
+                        ]),
                         state_event.clone(),
                     ];
 
@@ -2042,10 +1962,9 @@ mod tests {
                     r51.events = events.clone();
                     r55.events = events;
 
-                    let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
-                        let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
-                            &git_repo,
-                        )?;
+                    let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+                        let mut p =
+                            cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                         p.send_line("push :refs/heads/example-branch")?;
                         p.send_line("")?;
                         p.expect("ok refs/heads/example-branch\r\n")?;
@@ -2091,29 +2010,13 @@ mod tests {
                 }
 
                 mod already_deleted_on_git_server {
-                    use std::collections::HashSet;
 
-                    use gnostr::test_utils::{
-                        generate_repo_ref_event, generate_repo_ref_event_with_git_server,
-                        generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-                        git::GitTestRepo,
-                        git_remote::{
-                            cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
-                        },
-                        relay::{shutdown_relay, Relay},
-                        E,
-                    };
-                    use nostr_0_34_1::Event;
-                    use serial_test::serial;
-                    use tokio::join;
 
                     #[tokio::test]
                     #[serial]
-                    #[ignore]
                     #[cfg(feature = "expensive_tests")]
-                    async fn existing_state_event_updated_and_ok_printed() -> Result<(), E> {
-                        let (state_event, source_git_repo) =
-                            generate_repo_with_state_event().await?;
+                    async fn existing_state_event_updated_and_ok_printed() -> AnyhowResult<(), E> {
+                        let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
                         {
                             // delete branch on git server
@@ -2132,7 +2035,8 @@ mod tests {
                                 .dir
                                 .to_str()
                                 .unwrap()
-                                .to_string()]),
+                                .to_string()
+                            ]),
                             state_event.clone(),
                         ];
 
@@ -2149,11 +2053,9 @@ mod tests {
                         r51.events = events.clone();
                         r55.events = events;
 
-                        let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+                        let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                             let mut p =
-                                cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
-                                    &git_repo,
-                                )?;
+                                cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                             p.send_line("push :refs/heads/example-branch")?;
                             p.send_line("")?;
                             p.expect("ok refs/heads/example-branch\r\n")?;
@@ -2203,15 +2105,14 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<(), E> {
+        async fn pushes_to_all_git_servers_listed_and_ok_printed() -> AnyhowResult<(), E> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let second_source_git_repo = GitTestRepo::duplicate(&source_git_repo)?;
 
             // uppdate announcement with extra git server
 
-            let mut git_repo = prep_git_repo()?;
+            let git_repo = prep_git_repo()?;
 
             std::fs::write(git_repo.dir.join("new.md"), "some content")?;
             let main_commit_id = git_repo.stage_and_commit("new.md")?;
@@ -2238,9 +2139,8 @@ mod tests {
             r51.events = events.clone();
             r55.events = events;
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
-                let mut p =
-                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+                let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
                 p.send_line("push refs/heads/main:refs/heads/main")?;
                 p.send_line("")?;
                 p.expect("ok refs/heads/main\r\n")?;
@@ -2278,13 +2178,10 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<(), E>
-        {
+        async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued() -> AnyhowResult<(), E> {
             //
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
+            let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -2301,11 +2198,10 @@ mod tests {
             #[allow(clippy::mutable_key_type)]
             let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<(String, Oid), E> {
-                let branch_name =
-                    get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(String, Oid), E> {
+                let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
 
-                let mut git_repo = clone_git_repo_with_nostr_url()?;
+                let git_repo = clone_git_repo_with_nostr_url()?;
                 git_repo.checkout_remote_branch(&branch_name)?;
                 git_repo.checkout("refs/heads/main")?;
 
@@ -2322,9 +2218,7 @@ mod tests {
 
                 let mut p = CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
                 cli_expect_nostr_fetch(&mut p)?;
-                p.expect(
-                    format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
-                )?;
+                p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
                 p.expect("list: connecting...\r\n")?;
                 p.expect_after_whitespace("merge commit ")?;
                 // shorthand merge commit id appears in this gap
@@ -2414,7 +2308,7 @@ mod tests {
                     .find(|t| t.as_vec().len().eq(&4) && t.as_vec()[3].eq("mention"))
                     .unwrap()
                     .as_vec()[1],
-                "status mentions proposal tip event \r\nmerge status:\r\n{} {} {}",
+                "status mentions proposal tip event \r\nmerge status:\r\n{}",
                 merge_status.as_json(),
                 "proposal tip:\r\n{}",
                 proposal_tip.as_json(),
@@ -2428,7 +2322,7 @@ mod tests {
                     .find(|t| t.is_root())
                     .unwrap()
                     .as_vec()[1],
-                "status tags proposal id as root \r\nmerge status:\r\n{} {} {}",
+                "status tags proposal id as root \r\nmerge status:\r\n{}",
                 merge_status.as_json(),
                 "proposal:\r\n{}",
                 proposal.as_json(),
@@ -2439,11 +2333,9 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn push_2_commits_to_existing_proposal() -> Result<(), E> {
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
+            async fn push_2_commits_to_existing_proposal() -> AnyhowResult<(), E> {
+            let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -2460,11 +2352,10 @@ mod tests {
             #[allow(clippy::mutable_key_type)]
             let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<(String, String), E> {
-                let branch_name =
-                    get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(String, String), E> {
+                let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
 
-                let mut git_repo = clone_git_repo_with_nostr_url()?;
+                let git_repo = clone_git_repo_with_nostr_url()?;
                 git_repo.checkout_remote_branch(&branch_name)?;
 
                 std::fs::write(git_repo.dir.join("new.md"), "some content")?;
@@ -2475,9 +2366,7 @@ mod tests {
 
                 let mut p = CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
                 cli_expect_nostr_fetch(&mut p)?;
-                p.expect(
-                    format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
-                )?;
+                p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
                 p.expect("list: connecting...\r\n\r\r\r")?;
                 p.expect(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
                 let output = p.expect_end_eventually()?;
@@ -2591,11 +2480,9 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn force_push_creates_proposal_revision() -> Result<(), E> {
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
+            async fn force_push_creates_proposal_revision() -> AnyhowResult<(String, String), E> {
+            let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -2612,11 +2499,10 @@ mod tests {
             #[allow(clippy::mutable_key_type)]
             let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<(String, String), E> {
-                let branch_name =
-                    get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(String, String), E> {
+                let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
 
-                let mut git_repo = clone_git_repo_with_nostr_url()?;
+                let git_repo = clone_git_repo_with_nostr_url()?;
                 let oid = git_repo.checkout_remote_branch(&branch_name)?;
                 // remove last commit
                 git_repo.checkout("main")?;
@@ -2633,14 +2519,10 @@ mod tests {
                 std::fs::write(git_repo.dir.join("new2.md"), "some content")?;
                 git_repo.stage_and_commit("new2.md")?;
 
-                let mut p = CliTester::new_git_with_remote_helper_from_dir(
-                    &git_repo.dir,
-                    ["push", "--force"],
-                );
+                let mut p =
+                    CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push", "--force"]);
                 cli_expect_nostr_fetch(&mut p)?;
-                p.expect(
-                    format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
-                )?;
+                p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
                 p.expect("list: connecting...\r\n")?;
                 p.expect_after_whitespace(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
                 let output = p.expect_end_eventually()?;
@@ -2665,8 +2547,7 @@ mod tests {
 
             assert_eq!(
                 output,
-                format!(" + eb5d678...8a296c8 {branch_name} -> {branch_name} (forced update)\r\n")
-                    .as_str(),
+                format!(" + eb5d678...8a296c8 {branch_name} -> {branch_name} (forced update)\r\n").as_str(),
             );
 
             let new_events = r55
@@ -2755,11 +2636,9 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn push_new_pr_branch_creates_proposal() -> Result<(), E> {
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
+            async fn push_new_pr_branch_creates_proposal() -> AnyhowResult<String, E> {
+            let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -2777,7 +2656,7 @@ mod tests {
             let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
             let branch_name = "pr/my-new-proposal";
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<String, E> {
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<String, E> {
                 let mut git_repo = clone_git_repo_with_nostr_url()?;
                 git_repo.delete_dir_on_drop = false;
                 git_repo.create_branch(branch_name)?;
@@ -2794,9 +2673,7 @@ mod tests {
                     ["push", "-u", "origin", branch_name],
                 );
                 cli_expect_nostr_fetch(&mut p)?;
-                p.expect(
-                    format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
-                )?;
+                p.expect(format!("fetching {} ref list over filesystem...\r\n", source_path).as_str())?;
                 p.expect("list: connecting...\r\n\r\r\r")?;
                 p.expect(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
                 let output = p.expect_end_eventually()?;
@@ -2830,9 +2707,7 @@ mod tests {
                 .cloned()
                 .collect::<HashSet<Event>>()
                 .difference(&before)
-                .cloned()
-                .collect::<Vec<Event>>()
-                .into_iter()
+                .cloned().collect::<Vec<Event>>()
                 .collect::<Vec<Event>>();
             assert_eq!(new_events.len(), 2);
 
