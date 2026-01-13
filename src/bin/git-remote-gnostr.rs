@@ -8,6 +8,45 @@ use gnostr::types::{
     Client, Event, EventKind, Filter, Id, Keys, Options, PublicKey, RelayUrl, Tag, Unixtime,
 };
 
+// Re-export test helpers for all modules to use
+#[cfg(test)]
+pub use test_helpers::*;
+
+#[cfg(test)]
+mod test_helpers {
+    use super::*;
+
+    pub fn create_test_repo_info() -> GnostrRepoInfo {
+        GnostrRepoInfo {
+            author: PublicKey::try_from_hex_string(
+                "0000000000000000000000000000000000000000000000000000000000000001",
+                false,
+            )
+            .unwrap(),
+            relays: vec![],
+            kind: Some(EventKind::TextNote),
+            identifier: None,
+            url: "gnostr://test".to_string(),
+        }
+    }
+
+    pub fn create_test_event() -> Event {
+        let keys = Keys::generate();
+        let private_key = keys.secret_key().unwrap();
+        let preevent = gnostr::types::PreEvent {
+            pubkey: keys.public_key(),
+            created_at: Unixtime::now(),
+            kind: EventKind::TextNote,
+            tags: vec![
+                Tag::new_identifier("git-ref:main".to_string()),
+                Tag::new_identifier("gnostr-repo".to_string()),
+            ],
+            content: "Test git ref event".to_string(),
+        };
+        Event::sign_with_private_key(preevent, &private_key).unwrap()
+    }
+}
+
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -27,7 +66,7 @@ async fn main() -> io::Result<()> {
     // Initialize client with default keys for now
     let keys = Keys::generate();
     let options = Options::new();
-    let client = Client::new(&keys, options);
+    let _client = Client::new(&keys, options);
 
     while reader.read_line(&mut line)? > 0 {
         let trimmed_line = line.trim();
@@ -94,7 +133,6 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                 #[cfg(test)]
                 mod integration_tests {
                     use super::*;
-                    use gnostr::test_utils::{git::GitTestRepo, relay::Relay};
                     use serial_test::serial;
 
                     // Test infrastructure for CLI testing
@@ -128,6 +166,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                             #[cfg(test)]
                             mod integration_tests {
+
                                 use super::*;
                                 use serial_test::serial;
 
@@ -215,6 +254,10 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                 }
 
                                 mod list_command_integration {
+
+                                    use super::super::super::{
+                                        create_test_event, create_test_repo_info,
+                                    };
                                     use super::*;
 
                                     #[tokio::test]
@@ -223,7 +266,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Setup mock environment
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let client = Client::new(&keys, options);
+                                        let _client = Client::new(&keys, options);
 
                                         // Create mock repo info
                                         let repo_info = create_test_repo_info();
@@ -287,7 +330,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Verify filter structure
                                         assert!(!filter.authors.is_empty());
                                         assert!(!filter.kinds.is_empty());
-                                        assert!(filter.tags.contains_key('t'));
+                                        assert!(filter.tags.contains_key(&'t'));
 
                                         let git_data_tags = filter.tags.get(&'t').unwrap();
                                         assert!(git_data_tags.contains(&"gnostr-repo".to_string()));
@@ -308,7 +351,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         assert_eq!(filter.kinds.len(), 1);
 
                                         // Should create valid filter even for missing refs
-                                        assert!(filter.tags.contains_key('t'));
+                                        assert!(filter.tags.contains_key(&'t'));
                                     }
 
                                     #[tokio::test]
@@ -340,7 +383,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Test push event creation and signing
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let client = Client::new(&keys, options);
+                                        let _client = Client::new(&keys, options);
                                         let repo_info = create_test_repo_info();
 
                                         let result = create_and_publish_push_event(
@@ -364,7 +407,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Test push with different refspec formats
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let client = Client::new(&keys, options);
+                                        let _client = Client::new(&keys, options);
                                         let repo_info = create_test_repo_info();
 
                                         let test_cases = vec![
@@ -394,7 +437,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Verify push events have correct structure and tags
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let client = Client::new(&keys, options);
+                                        let _client = Client::new(&keys, options);
                                         let repo_info = create_test_repo_info();
 
                                         let result = create_and_publish_push_event(
@@ -431,7 +474,9 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                                     #[tokio::test]
                                     #[serial]
-                                    async fn malformed_event_data_handling() {
+                                    async fn malformed_event_data_handling(
+                                    ) -> Result<(), Box<dyn std::error::Error>>
+                                    {
                                         // Test handling of corrupted event structures
                                         let event = create_test_event();
 
@@ -558,7 +603,9 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                     #[tokio::test]
                                     #[serial]
                                     #[ignore] // Memory usage test
-                                    async fn memory_usage_with_large_events() {
+                                    async fn memory_usage_with_large_events(
+                                    ) -> Result<(), Box<dyn std::error::Error>>
+                                    {
                                         // Test memory efficiency with large event data
                                         let large_content = "x".repeat(10000);
 
@@ -702,6 +749,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                     mod list_command_integration {
                         use super::*;
+                        use crate::test_helpers::{create_test_event, create_test_repo_info};
 
                         #[tokio::test]
                         #[serial]
@@ -709,7 +757,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Setup mock environment
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let client = Client::new(&keys, options);
+                            let _client = Client::new(&keys, options);
 
                             // Create mock repo info
                             let repo_info = create_test_repo_info();
@@ -771,7 +819,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Verify filter structure
                             assert!(!filter.authors.is_empty());
                             assert!(!filter.kinds.is_empty());
-                            assert!(filter.tags.contains_key('t'));
+                            assert!(filter.tags.contains_key(&'t'));
 
                             let git_data_tags = filter.tags.get(&'t').unwrap();
                             assert!(git_data_tags.contains(&"gnostr-repo".to_string()));
@@ -791,7 +839,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             assert_eq!(filter.kinds.len(), 1);
 
                             // Should create valid filter even for missing refs
-                            assert!(filter.tags.contains_key('t'));
+                            assert!(filter.tags.contains_key(&'t'));
                         }
 
                         #[tokio::test]
@@ -822,7 +870,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Test push event creation and signing
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let client = Client::new(&keys, options);
+                            let _client = Client::new(&keys, options);
                             let repo_info = create_test_repo_info();
 
                             let result = create_and_publish_push_event(
@@ -846,7 +894,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Test push with different refspec formats
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let client = Client::new(&keys, options);
+                            let _client = Client::new(&keys, options);
                             let repo_info = create_test_repo_info();
 
                             let test_cases = vec![
@@ -876,7 +924,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Verify push events have correct structure and tags
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let client = Client::new(&keys, options);
+                            let _client = Client::new(&keys, options);
                             let repo_info = create_test_repo_info();
 
                             let result = create_and_publish_push_event(
@@ -913,7 +961,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                         #[tokio::test]
                         #[serial]
-                        async fn malformed_event_data_handling() {
+                        async fn malformed_event_data_handling(
+                        ) -> Result<(), Box<dyn std::error::Error>> {
                             // Test handling of corrupted event structures
                             let event = create_test_event();
 
@@ -938,6 +987,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                 Event::sign_with_private_key(preevent, &private_key).unwrap();
                             let ref_name = extract_ref_name(&event);
                             assert!(ref_name.is_none()); // Should return None for malformed tags
+                            Ok(())
                         }
 
                         #[tokio::test]
@@ -1034,7 +1084,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                         #[tokio::test]
                         #[serial]
                         #[ignore] // Memory usage test
-                        async fn memory_usage_with_large_events() {
+                        async fn memory_usage_with_large_events(
+                        ) -> Result<(), Box<dyn std::error::Error>> {
                             // Test memory efficiency with large event data
                             let large_content = "x".repeat(10000);
 
@@ -1057,6 +1108,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                 // Verify event creation succeeded
                                 assert_eq!(event.id.as_hex_string().len(), 64);
                             }
+                            Ok(())
                         }
                     }
 
@@ -1435,36 +1487,6 @@ fn create_data_filter(repo_info: &GnostrRepoInfo, ref_name: &str) -> Filter {
 mod tests {
     use super::*;
 
-    fn create_test_repo_info() -> GnostrRepoInfo {
-        GnostrRepoInfo {
-            author: PublicKey::try_from_hex_string(
-                "0000000000000000000000000000000000000000000000000000000000000001",
-                false,
-            )
-            .unwrap(),
-            relays: vec![],
-            kind: Some(EventKind::TextNote),
-            identifier: None,
-            url: "gnostr://test".to_string(),
-        }
-    }
-
-    fn create_test_event() -> Event {
-        let keys = Keys::generate();
-        let private_key = keys.secret_key().unwrap();
-        let preevent = gnostr::types::PreEvent {
-            pubkey: keys.public_key(),
-            created_at: Unixtime::now(),
-            kind: EventKind::TextNote,
-            tags: vec![
-                Tag::new_identifier("git-ref:main".to_string()),
-                Tag::new_identifier("gnostr-repo".to_string()),
-            ],
-            content: "Test git ref event".to_string(),
-        };
-        Event::sign_with_private_key(preevent, &private_key).unwrap()
-    }
-
     #[test]
     fn test_parse_gnostr_url_naddr_format() {
         // Test with valid naddr format
@@ -1552,7 +1574,7 @@ mod tests {
 
         // Check tags field
         assert!(!filter.tags.is_empty());
-        assert!(filter.tags.contains_key('t'));
+        assert!(filter.tags.contains_key(&'t'));
         let repo_tags = filter.tags.get(&'t').unwrap();
         assert!(repo_tags.contains(&"gnostr-repo".to_string()));
         assert!(repo_tags.contains(&"git-ref".to_string()));
@@ -1576,7 +1598,7 @@ mod tests {
 
         // Check tags field
         assert!(!filter.tags.is_empty());
-        assert!(filter.tags.contains_key('t'));
+        assert!(filter.tags.contains_key(&'t'));
         let data_tags = filter.tags.get(&'t').unwrap();
         assert!(data_tags.contains(&"gnostr-repo".to_string()));
         assert!(data_tags.contains(&"git-data".to_string()));
@@ -1750,9 +1772,9 @@ mod tests {
     #[test]
     fn test_handle_capabilities() {
         // Capture stdout to verify capabilities output
-        let mut output: Vec<u8> = Vec::new();
+        let _output: Vec<u8> = Vec::new();
         {
-            let mut stdout = std::io::stdout();
+            let _stdout = std::io::stdout();
             // This test mainly ensures the function doesn't panic
             handle_capabilities();
         }
