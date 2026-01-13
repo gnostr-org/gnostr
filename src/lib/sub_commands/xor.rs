@@ -16,10 +16,10 @@ pub struct XorArgs {
     /// Private key (hex or bech32) to use as the XOR key.
     /// If not provided, it will be read from stdin.
     #[arg(long, short = 's', alias = "privkey")]
-    pub sec: Option<String>,
+    pub nsec: Option<String>,
 
     /// Read the input for XOR from stdin (default behavior if no key is
-    /// provided via --sec). If --sec is also provided, stdin will be XORed
+    /// provided via --nsec). If --nsec is also provided, stdin will be XORed
     /// with the provided key.
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub stdin: bool,
@@ -28,16 +28,16 @@ pub struct XorArgs {
 /// Executes the `xor` subcommand.
 pub async fn xor_command(args: &XorArgs) -> Result<()> {
     // 1. Get the key
-    let key_hex = if let Some(sec_val) = &args.sec {
-        sec_val.clone()
+    let key_hex = if let Some(nsec_val) = &args.nsec {
+        nsec_val.clone()
     } else if args.stdin {
-        // If --stdin is explicitly set and --sec is not, expect key from stdin first
+        // If --stdin is explicitly set and --nsec is not, expect key from stdin first
         let mut key_from_stdin = String::new();
         io::stdin().read_to_string(&mut key_from_stdin)?;
         key_from_stdin.trim().to_string()
     } else {
         // Fallback or error if no key is specified
-        eprintln!("Error: A key must be provided via --sec or piped through stdin (--stdin).");
+        eprintln!("Error: A key must be provided via --nsec or piped through stdin (--stdin).");
         return Ok(());
     };
 
@@ -77,7 +77,7 @@ mod tests {
     #[tokio::test]
     async fn test_xor_with_key_and_stdin() -> Result<()> {
         let _args = XorArgs {
-            sec: Some("00".to_string()), // Hex for 0
+            nsec: Some("00".to_string()), // Hex for 0
             stdin: true,
         };
         let input = "hello";
