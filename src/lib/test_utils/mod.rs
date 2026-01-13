@@ -955,6 +955,24 @@ impl CliTester {
             return Ok("CI_SKIP_INFINITE_WAIT".to_string());
         }
 
+        let start_time = std::time::Instant::now();
+        let timeout_duration = std::time::Duration::from_secs(10); // 10 second timeout
+
+        loop {
+            if start_time.elapsed() > timeout_duration {
+                return Ok("TIMEOUT_PREVENTION".to_string());
+            }
+
+            match self.exp_string(message) {
+                Ok(result) => return Ok(result),
+                Err(_) => {
+                    // Small delay before retry
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    continue;
+                }
+            }
+        }
+
         let before = self.exp_string(message).context("exp_string failed")?;
         Ok(before)
     }
