@@ -765,16 +765,10 @@ mod tests {
                     }
                     Ok(())
                 });
-        // launch relays
-        // launch relays
-        let _ = tokio::join!(
-            r51.listen_until_close(),
-            r52.listen_until_close(),
-            r53.listen_until_close(),
-            r55.listen_until_close(),
-            r56.listen_until_close(),
-            r57.listen_until_close(),
-        );
+                // launch relays
+                // launch relays
+                let _ = tokio::join!(
+                    r51.listen_until_close(),
                     r52.listen_until_close(),
                     r53.listen_until_close(),
                     r55.listen_until_close(),
