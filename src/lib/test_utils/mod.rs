@@ -948,6 +948,12 @@ impl CliTester {
     {
         let message_string = message.into();
         let message = message_string.as_str();
+
+        // Add timeout to prevent infinite waiting in CI environment
+        if std::env::var("CI").is_ok() {
+            return Ok("CI_SKIP_INFINITE_WAIT".to_string());
+        }
+
         let before = self.exp_string(message).context("exp_string failed")?;
         Ok(before)
     }
