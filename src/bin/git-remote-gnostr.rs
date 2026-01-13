@@ -66,7 +66,7 @@ async fn main() -> io::Result<()> {
     // Initialize client with default keys for now
     let keys = Keys::generate();
     let options = Options::new();
-    let _client = Client::new(&keys, options);
+    let client = Client::new(&keys, options);
 
     while reader.read_line(&mut line)? > 0 {
         let trimmed_line = line.trim();
@@ -266,7 +266,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Setup mock environment
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let _client = Client::new(&keys, options);
+                                        let client = Client::new(&keys, options);
 
                                         // Create mock repo info
                                         let repo_info = create_test_repo_info();
@@ -383,7 +383,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Test push event creation and signing
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let _client = Client::new(&keys, options);
+                                        let client = Client::new(&keys, options);
                                         let repo_info = create_test_repo_info();
 
                                         let result = create_and_publish_push_event(
@@ -407,7 +407,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Test push with different refspec formats
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let _client = Client::new(&keys, options);
+                                        let client = Client::new(&keys, options);
                                         let repo_info = create_test_repo_info();
 
                                         let test_cases = vec![
@@ -437,7 +437,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Verify push events have correct structure and tags
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let _client = Client::new(&keys, options);
+                                        let client = Client::new(&keys, options);
                                         let repo_info = create_test_repo_info();
 
                                         let result = create_and_publish_push_event(
@@ -757,7 +757,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Setup mock environment
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let _client = Client::new(&keys, options);
+                            let client = Client::new(&keys, options);
 
                             // Create mock repo info
                             let repo_info = create_test_repo_info();
@@ -870,7 +870,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Test push event creation and signing
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let _client = Client::new(&keys, options);
+                            let client = Client::new(&keys, options);
                             let repo_info = create_test_repo_info();
 
                             let result = create_and_publish_push_event(
@@ -894,7 +894,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Test push with different refspec formats
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let _client = Client::new(&keys, options);
+                            let client = Client::new(&keys, options);
                             let repo_info = create_test_repo_info();
 
                             let test_cases = vec![
@@ -924,7 +924,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Verify push events have correct structure and tags
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let _client = Client::new(&keys, options);
+                            let client = Client::new(&keys, options);
                             let repo_info = create_test_repo_info();
 
                             let result = create_and_publish_push_event(
