@@ -1113,8 +1113,12 @@ fn get_help_text(app: &App) -> String {
                 } else {
                     " | [Space] Select another | [c] Clear"
                 }
+            } else if app.show_full_commit {
+                // Auto-displayed commit - show navigation options
+                " | [Left] Summary"
             } else {
-                " | [Space] Select"
+                // Normal help - show diff option
+                " | [Right] Diff"
             };
 
             if app.show_full_commit {
