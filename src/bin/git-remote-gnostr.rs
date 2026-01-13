@@ -504,6 +504,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                                 .unwrap();
                                         let ref_name = extract_ref_name(&event);
                                         assert!(ref_name.is_none()); // Should return None for malformed tags
+                                        Ok(())
                                     }
 
                                     #[tokio::test]
@@ -634,6 +635,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                             // Verify event creation succeeded
                                             assert_eq!(event.id.as_hex_string().len(), 64);
                                         }
+                                        Ok(())
                                     }
                                 }
 
