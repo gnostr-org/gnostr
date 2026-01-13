@@ -5,6 +5,10 @@ default.profdata
 **.profraw
 **/**.profraw
 
+full_screen.png
+selected_area.png
+specific_window.png
+
 test-cli-expect-output.txt
 
 .genkit
