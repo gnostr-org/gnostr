@@ -15,7 +15,7 @@ license = "MIT"
 keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 build = "build.rs"
-
+default-run = "gnostr"
 exclude = [
     ".git/",
     ".github/",
