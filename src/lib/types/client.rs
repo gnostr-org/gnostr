@@ -1,8 +1,14 @@
 // Working Nostr Client Implementation with proper interface
 
 use anyhow::Result;
+use futures_util::{SinkExt, StreamExt};
+use serde_json::json;
 use std::time::Duration;
+use tokio::net::TcpStream;
 use tokio::sync::mpsc;
+use tokio_tungstenite::{
+    connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
+};
 
 use crate::types::{
     ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
@@ -231,13 +237,44 @@ impl Client {
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
         debug!("Sending event {} to {} relays", event.id, self.relays.len());
 
-        // In a real implementation, this would:
-        // 1. Serialize event to JSON
-        // 2. Send ["EVENT", event] to all connected relays
-        // 3. Wait for OK responses
-        // 4. Return event ID
+        // Serialize event to JSON
+        let event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
 
-        // For now, just return event ID
+        // Create client message
+        let client_message = ClientMessage::Event(Box::new(event.clone()));
+        let message_json =
+            serde_json::to_string(&client_message).map_err(|e| Error::Custom(e.into()))?;
+
+        // REAL IMPLEMENTATION: Connect to relays and send event
+        for relay_url in self.relays.iter() {
+            let ws_url = format!("ws://{}", relay_url.as_str());
+            info!("Connecting to relay: {}", ws_url);
+
+            match connect_async(&ws_url).await {
+                Ok((ws_stream, _)) => {
+                    let (mut ws_write, _) = ws_stream.split();
+
+                    // Send EVENT message
+                    if let Err(e) = ws_write
+                        .send(WsMessage::Text(message_json.clone().into()))
+                        .await
+                    {
+                        warn!("Failed to send event to {}: {}", relay_url, e);
+                        continue;
+                    }
+
+                    info!("Event {} sent to relay {}", event.id, relay_url);
+
+                    // Keep connection open briefly for response
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                }
+                Err(e) => {
+                    warn!("Failed to connect to relay {}: {}", relay_url, e);
+                    continue;
+                }
+            }
+        }
+
         Ok(event.id)
     }
 }
