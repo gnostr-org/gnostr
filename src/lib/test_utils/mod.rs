@@ -27,6 +27,7 @@ pub use crate::test_utils::git::GitTestRepo;
 pub mod error;
 pub mod git;
 pub mod git_remote;
+pub mod mock_git_ssh_server;
 pub mod reader;
 pub mod relay;
 pub mod ws_test;
