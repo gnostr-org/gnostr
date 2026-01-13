@@ -607,13 +607,15 @@ mod tests {
     mod integration_tests {
         use anyhow::Context;
         use gnostr::test_utils::git_remote::{
-            prep_git_repo, prep_source_repo_and_events_including_proposals,
+            cli_tester_after_fetch, prep_git_repo, prep_source_repo_and_events_including_proposals,
         };
+        use gnostr::test_utils::relay::{shutdown_relay, Relay};
         use gnostr::test_utils::{
             cli_tester_create_proposal_branches_ready_to_send,
             generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
             generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
         };
+        use gnostr::test_utils::{git::GitTestRepo, E, FEATURE_BRANCH_NAME_1};
         use nostr_0_34_1::Event;
         use serial_test::serial;
         use tokio::join;
@@ -761,7 +763,7 @@ mod tests {
 
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
+                        shutdown_relay(8000 + p)?;
                     }
                     Ok(())
                 });
@@ -785,7 +787,8 @@ mod tests {
         #[ignore]
         #[cfg(feature = "expensive_tests")]
         async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<(), E> {
-            let source_git_repo = prep_git_repo()?;
+            let (events, source_git_repo): (Vec<Event>, GitTestRepo) =
+                prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
