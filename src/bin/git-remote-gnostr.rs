@@ -1400,7 +1400,7 @@ fn create_and_publish_push_event(
     ref_name: &str,
 ) -> Result<Id, Box<dyn std::error::Error>> {
     let keys = Keys::generate();
-    let private_key = keys.secret_key()?;
+    let private_key = keys.secret_key().unwrap();
 
     let mut tags = Vec::new();
 
