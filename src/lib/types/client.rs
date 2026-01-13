@@ -238,7 +238,8 @@ impl Client {
         debug!("Sending event {} to {} relays", event.id, self.relays.len());
 
         // Serialize event to JSON
-        let event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
+        let _event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
+        debug!("Sending event {} to {} relays", _event_json, self.relays.len());
 
         // Create client message
         let client_message = ClientMessage::Event(Box::new(event.clone()));
