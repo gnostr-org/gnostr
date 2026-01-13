@@ -230,7 +230,8 @@ impl Client {
             )
             .map_err(|e| Error::Custom(e.into()))?;
 
-        let _ = self.send_event(contact_event).await?;
+        let contact_event = self.send_event(contact_event).await?;
+        debug!("contact_event={}", contact_event);
         Ok(())
     }
 
@@ -239,7 +240,11 @@ impl Client {
 
         // Serialize event to JSON
         let _event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
-        debug!("Sending event {} to {} relays", _event_json, self.relays.len());
+        debug!(
+            "Sending event {} to {} relays",
+            _event_json,
+            self.relays.len()
+        );
 
         // Create client message
         let client_message = ClientMessage::Event(Box::new(event.clone()));
