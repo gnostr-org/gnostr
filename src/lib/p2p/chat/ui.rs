@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 
+use ratatui::prelude::Stylize;
 use ratatui::style::Style;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
@@ -63,6 +64,7 @@ pub struct App {
     pub _on_input_enter: Option<Box<dyn FnMut(msg::Msg)>>,
     pub msgs_scroll: usize,
     pub topic: String,
+    pub show_side_panel: bool,
 }
 
 impl Default for App {
@@ -74,6 +76,7 @@ impl Default for App {
             _on_input_enter: None,
             msgs_scroll: usize::MAX,
             topic: String::from("gnostr"),
+            show_side_panel: false,
         }
     }
 }
@@ -176,6 +179,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         return Ok(());
                     }
                     KeyCode::Char('\\') => {
+                        // Toggle side panel
+                        app.show_side_panel = !app.show_side_panel;
+                    }
+                    KeyCode::Char('d') => {
                         // New keybinding for selecting diffs
                         let all_messages = app.messages.lock().unwrap();
                         let diff_messages: Vec<msg::Msg> = all_messages
@@ -298,6 +305,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 
 //as popup widget is constructed in chat_details/mos.rs
 fn ui(f: &mut Frame, app: &App) {
+    let main_layout_constraints = if app.show_side_panel {
+        vec![Constraint::Percentage(70), Constraint::Percentage(30)]
+    } else {
+        vec![Constraint::Percentage(100)]
+    };
+
+    let main_layout_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(main_layout_constraints)
+        .split(f.area());
+
+    let message_and_input_area = main_layout_chunks[0];
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -308,7 +328,7 @@ fn ui(f: &mut Frame, app: &App) {
             ]
             .as_ref(),
         )
-        .split(f.area());
+        .split(message_and_input_area);
 
     // Header Widget
     let header_text = vec![Line::from(app.topic.as_str())];
@@ -484,5 +504,15 @@ fn ui(f: &mut Frame, app: &App) {
             chunks[2].y + 1,
         )),
         AppMode::SelectingDiff { .. } => {} // No cursor in this mode
+    }
+
+    // Render side panel if active
+    if app.show_side_panel {
+        let side_panel_area = main_layout_chunks[1];
+        let side_panel = Block::default()
+            .borders(Borders::ALL)
+            .title("Side Panel")
+            .fg(Color::White);
+        f.render_widget(side_panel, side_panel_area);
     }
 }
