@@ -605,22 +605,13 @@ mod tests {
     }
 
     mod integration_tests {
-        use std::collections::HashSet;
-
         use anyhow::Context;
         use gnostr::test_utils::{
             cli_tester_create_proposal_branches_ready_to_send,
-            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-            git::GitTestRepo,
-            git_remote::{
-                cli_tester_after_fetch,
-                cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-                generate_repo_with_state_event, prep_git_repo, prep_git_repo_minus_1_commit,
-                prep_source_repo_and_events_including_proposals,
-            },
-            relay::{shutdown_relay, Relay},
-            E, FEATURE_BRANCH_NAME_1,
+            generate_repo_ref_event_with_git_server, generate_repo_with_state_event,
+            generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+            get_proposal_branch_name_from_events, prep_git_repo,
+            prep_source_repo_and_events_including_proposals,
         };
         use nostr_0_34_1::Event;
         use serial_test::serial;
@@ -697,9 +688,7 @@ mod tests {
         }
 
         mod when_first_git_server_fails_ {
-            use std::collections::HashSet;
 
-            use anyhow::Context;
             use gnostr::test_utils::{
                 cli_tester_create_proposal_branches_ready_to_send,
                 generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
@@ -776,9 +765,16 @@ mod tests {
                     }
                     Ok(())
                 });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
+        // launch relays
+        // launch relays
+        let _ = tokio::join!(
+            r51.listen_until_close(),
+            r52.listen_until_close(),
+            r53.listen_until_close(),
+            r55.listen_until_close(),
+            r56.listen_until_close(),
+            r57.listen_until_close(),
+        );
                     r52.listen_until_close(),
                     r53.listen_until_close(),
                     r55.listen_until_close(),
