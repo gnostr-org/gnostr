@@ -435,4 +435,70 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_build_filter_map_with_nostr_url_bech32_conversion() -> anyhow::Result<()> {
+        // Test equivalent to: gnostr query --authors $(gnostr bech32-to-any nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr --raw)
+        // The nostr URL contains the same npub, which should convert to the same hex pubkey
+        let expected_hex_pubkey =
+            "86a254249e6321386a1dcca7356a9a0792e21e8cc5a2b490266532d44a48d72c";
+
+        // This simulates what command substitution would produce
+        let args = create_query_subcommand(&["--authors", expected_hex_pubkey]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 1); // Default limit
+        assert_eq!(filt.get("authors").unwrap(), &json!([expected_hex_pubkey]));
+        assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
+
+    #[test]
+    fn test_bech32_to_any_with_nostr_url() -> anyhow::Result<()> {
+        use std::process::Command;
+
+        // Test the bech32-to-any command with nostr URL directly
+        let nostr_url = "nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr";
+
+        // Set environment to use gnostr binary for CliTester
+        std::env::set_var("CARGO_BIN_EXE_ngit", "gnostr");
+
+        let bech32_output = Command::new("cargo")
+            .args(&[
+                "run",
+                "--bin",
+                "gnostr",
+                "--",
+                "bech32-to-any",
+                nostr_url,
+                "--raw",
+            ])
+            .output()
+            .expect("Failed to run bech32-to-any command");
+
+        assert!(
+            bech32_output.status.success(),
+            "bech32-to-any should succeed"
+        );
+
+        let hex_pubkey = String::from_utf8(bech32_output.stdout)
+            .expect("Output should be valid UTF-8")
+            .trim()
+            .to_string();
+
+        // Verify the hex pubkey matches expected value
+        assert_eq!(
+            hex_pubkey,
+            "86a254249e6321386a1dcca7356a9a0792e21e8cc5a2b490266532d44a48d72c"
+        );
+
+        // Now verify this hex pubkey works in query filter map
+        let args = create_query_subcommand(&["--authors", &hex_pubkey]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 1); // Default limit
+        assert_eq!(filt.get("authors").unwrap(), &json!([hex_pubkey]));
+        assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
 }
