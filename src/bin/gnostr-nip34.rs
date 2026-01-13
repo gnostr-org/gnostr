@@ -691,48 +691,102 @@ fn run_app<B: ratatui::backend::Backend>(
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match key.code {
-                        KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
+                        KeyCode::Char('q') /*| KeyCode::Esc*/ => return Ok(()),
                         KeyCode::Tab => app.switch_mode(),
                         KeyCode::Char('1') => app.set_mode(NavigatorMode::Commits),
                         KeyCode::Char('2') => app.set_mode(NavigatorMode::Branches),
                         KeyCode::Char('3') => app.set_mode(NavigatorMode::Nip34Events),
-                        KeyCode::Down | KeyCode::Char('j') => app.next(),
-                        KeyCode::Up | KeyCode::Char('k') => app.previous(),
-                        KeyCode::Enter | KeyCode::Char(' ') => match app.current_mode {
-                            NavigatorMode::Commits => app.toggle_commit_selection(),
+                        KeyCode::Down | KeyCode::Char('j') => {
+
+                            app.next();
+                            if app.current_mode == NavigatorMode::Commits {
+                                app.show_full_commit = false; //always show_full_commit
+
+                                if let Err(_e) = app.load_full_commit() {
+
+                                    // Could show error message in UI
+
+                                }
+
+                            }
+
+                        },
+                        KeyCode::Up | KeyCode::Char('k') => {
+
+                           app.previous();
+                            if app.current_mode == NavigatorMode::Commits {
+                                app.show_full_commit = false; //always show_full_commit
+
+                                if let Err(_e) = app.load_full_commit() {
+
+                                    // Could show error message in UI
+
+                                }
+
+                            }
+
+                        },
+                        /*KeyCode::Enter | */
+                        KeyCode::Char(' ') => match app.current_mode {
+
+                            NavigatorMode::Commits => {
+
+                               app.toggle_commit_selection()
+
+                            },
                             NavigatorMode::Branches => {
+
                                 // Could add branch checkout here
+
                             }
                             NavigatorMode::Nip34Events => app.toggle_nip34_selection(),
                         },
                         KeyCode::Right => {
                             if app.current_mode == NavigatorMode::Commits {
+                                app.show_full_commit = false; //always show_full_commit
+
                                 if let Err(_e) = app.load_full_commit() {
+
                                     // Could show error message in UI
+
                                 }
+
                             }
                         }
                         KeyCode::Left => {
                             if app.current_mode == NavigatorMode::Commits && app.show_full_commit {
-                                app.show_full_commit = false;
+                                  app.show_full_commit = false;
+                                  if let Err(_e) = app.load_full_commit() {
+
+                                      // Could show error message in UI
+
+                                  }
                             }
                         }
                         KeyCode::Char('c') => {
+
                             app.clear_selection();
                             app.show_full_commit = false;
+
                         }
                         KeyCode::Char('n') => {
                             // Create NIP-34 patch from selected commits
                             if app.current_mode == NavigatorMode::Commits {
+
                                 if let Err(_e) = app.create_nip34_patch_event() {
+
                                     // Could show error message
+
                                 }
                             }
                         }
                         KeyCode::Char('r') => {
                             if app.current_mode == NavigatorMode::Nip34Events {
+
                                 if let Err(_e) = app.republish_nip34_event() {
+
                                     // Could show error message
+
                                 }
                             }
                         }
@@ -883,23 +937,26 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
                 vertical: 1,
             }));
 
-        f.render_widget(
-            Paragraph::new("Use ↑↓ to navigate, Space to select (max 2)")
-                .style(Style::default().fg(Color::Cyan)),
-            details_chunk[0],
-        );
+        // TODO this is help that should be displayed when . is pressed
+        // Help [.] option should be in the bottom menu bar
 
-        f.render_widget(
-            Paragraph::new(format!("Selected: {} commits", app.selected_commits.len()))
-                .style(Style::default().fg(Color::Yellow)),
-            details_chunk[1],
-        );
+        //f.render_widget(
+        //    Paragraph::new("Use ↑↓ to navigate, Space to select (max 2)")
+        //        .style(Style::default().fg(Color::Cyan)),
+        //    details_chunk[0],
+        //);
 
-        f.render_widget(
-            Paragraph::new("Press 'n' to create NIP-34 patch from selected commits")
-                .style(Style::default().fg(Color::Green)),
-            details_chunk[2],
-        );
+        //f.render_widget(
+        //    Paragraph::new(format!("Selected: {} commits", app.selected_commits.len()))
+        //        .style(Style::default().fg(Color::Yellow)),
+        //    details_chunk[1],
+        //);
+
+        //f.render_widget(
+        //    Paragraph::new("Press 'n' to create NIP-34 patch from selected commits")
+        //        .style(Style::default().fg(Color::Green)),
+        //    details_chunk[2],
+        //);
     }
 }
 
@@ -1113,12 +1170,8 @@ fn get_help_text(app: &App) -> String {
                 } else {
                     " | [Space] Select another | [c] Clear"
                 }
-            } else if app.show_full_commit {
-                // Auto-displayed commit - show navigation options
-                " | [Left] Summary"
             } else {
-                // Normal help - show diff option
-                " | [Right] Diff"
+                " | [Space] Select"
             };
 
             if app.show_full_commit {
