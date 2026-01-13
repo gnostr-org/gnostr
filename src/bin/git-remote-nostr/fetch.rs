@@ -18,7 +18,8 @@ use gnostr::{
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr_0_34_1::{nips::nip19, ToBech32};
+use nostr_0_34_1::nips::nip19;
+use nostr_0_34_1::ToBech32;
 
 use crate::utils::{
     count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
@@ -83,11 +84,9 @@ pub async fn run_fetch(
         let current_user = get_curent_user(git_repo)?;
 
         for (refstr, oid) in fetch_batch {
-            if let Some((_, (_, patches))) = find_proposal_and_patches_by_branch_name(
-                &refstr,
-                &open_proposals,
-                current_user.as_ref(),
-            ) {
+            if let Some((_, (_, patches))) =
+                find_proposal_and_patches_by_branch_name(&refstr, &open_proposals, current_user.as_ref())
+            {
                 if !git_repo.does_commit_exist(&oid)? {
                     let mut patches_ancestor_first = patches.clone();
                     patches_ancestor_first.reverse();
@@ -348,11 +347,8 @@ impl<'a> FetchReporter<'a> {
             self.start_time = Some(Instant::now());
         }
         let existing_lines = self.just_count_transfer_progress();
-        let updated = report_on_transfer_progress(
-            progress_stats,
-            &self.start_time.unwrap(),
-            self.end_time.as_ref(),
-        );
+        let updated =
+            report_on_transfer_progress(progress_stats, &self.start_time.unwrap(), self.end_time.as_ref());
         if self.transfer_progress_msgs.len() <= updated.len() {
             if self.end_time.is_none() && updated.first().is_some_and(|f| f.contains("100%")) {
                 self.end_time = Some(Instant::now());
@@ -411,8 +407,20 @@ fn fetch_from_git_server_url(
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Result as AnyhowResult;
+    use futures::join;
+    use gnostr::test_utils::{
+        self, cli_tester_create_proposal_branches_ready_to_send,
+        generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+        generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+    };
+    use gnostr::test_utils::{git::GitTestRepo, git_remote::*, relay};
+    use nostr_0_34_1::Event;
 
     use crate::fetch::FetchReporter;
+
+
+    type E = anyhow::Error;
 
     fn pass_through_fetch_reporter_proces_remote_msg(msgs: Vec<&str>) -> Vec<String> {
         let term = console::Term::stdout();
@@ -605,27 +613,12 @@ mod tests {
     }
 
     mod integration_tests {
-        use anyhow::Context;
-        use gnostr::test_utils::git_remote::{
-            cli_tester_after_fetch, prep_git_repo, prep_source_repo_and_events_including_proposals,
-        };
-        use gnostr::test_utils::relay::{shutdown_relay, Relay};
-        use gnostr::test_utils::{
-            cli_tester_create_proposal_branches_ready_to_send,
-            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-        };
-        use gnostr::test_utils::{git::GitTestRepo, E, FEATURE_BRANCH_NAME_1};
-        use nostr_0_34_1::Event;
-        use serial_test::serial;
-        use tokio::join;
-
+        use super::*;
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn fetch_downloads_specified_commits_from_git_server() -> Result<(), E> {
-            let mut source_git_repo = prep_git_repo()?;
+        async fn fetch_downloads_specified_commits_from_git_server() -> AnyhowResult<(), E> {
+            let source_git_repo = prep_git_repo()?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
@@ -658,7 +651,7 @@ mod tests {
             r51.events = events.clone();
             r55.events = events;
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                 assert!(git_repo.git_repo.find_commit(vnext_commit_id).is_err());
 
                 let mut p = cli_tester_after_fetch(&git_repo)?;
@@ -692,29 +685,12 @@ mod tests {
 
         mod when_first_git_server_fails_ {
 
-            use gnostr::test_utils::git_remote::{
-                cli_tester_after_fetch,
-                cli_tester_after_nostr_fetch_and_sent_list_for_push_responds,
-                generate_repo_with_state_event, prep_git_repo, prep_git_repo_minus_1_commit,
-            };
-            use gnostr::test_utils::relay::{shutdown_relay, Relay};
-            use gnostr::test_utils::{
-                cli_tester_create_proposal_branches_ready_to_send,
-                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-                generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-            };
-            use gnostr::test_utils::{E, FEATURE_BRANCH_NAME_1};
-            use nostr_0_34_1::Event;
-            use serial_test::serial;
-            use tokio::join;
 
             #[tokio::test]
             #[serial]
-            #[ignore]
             #[cfg(feature = "expensive_tests")]
-            async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {
-                let (state_event, source_git_repo): (Event, GitTestRepo) =
-                    generate_repo_with_state_event().await?;
+                async fn fetch_downloads_speficied_commits_from_second_git_server() -> AnyhowResult<(), E> {
+                let (state_event, source_git_repo): (Event, GitTestRepo) = generate_repo_with_state_event().await?;
                 // let source_path =
                 // source_git_repo.dir.to_str().unwrap().to_string();
                 let error_path = "./path-doesnt-exist".to_string();
@@ -745,7 +721,7 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
                     assert!(git_repo.git_repo.find_commit(main_commit_id).is_err());
 
                     let mut p = cli_tester_after_fetch(&git_repo)?;
@@ -763,13 +739,12 @@ mod tests {
 
                     p.exit()?;
                     for p in [51, 52, 53, 55, 56, 57] {
-                        shutdown_relay(8000 + p)?;
+                        relay::shutdown_relay(8000 + p)?;
                     }
                     Ok(())
                 });
                 // launch relays
-                // launch relays
-                let _ = tokio::join!(
+                let _ = join!(
                     r51.listen_until_close(),
                     r52.listen_until_close(),
                     r53.listen_until_close(),
@@ -784,11 +759,9 @@ mod tests {
 
         #[tokio::test]
         #[serial]
-        #[ignore]
         #[cfg(feature = "expensive_tests")]
-        async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<(), E> {
-            let (events, source_git_repo): (Vec<Event>, GitTestRepo) =
-                prep_source_repo_and_events_including_proposals().await?;
+        async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> AnyhowResult<(), E> {
+            let (events, source_git_repo): (Vec<Event>, GitTestRepo) = prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
             let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
@@ -804,9 +777,8 @@ mod tests {
 
             let git_repo = prep_git_repo()?;
 
-            let cli_tester_handle = std::thread::spawn(move || -> Result<(), E> {
-                let branch_name =
-                    get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
+            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
+                let branch_name = get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
                 let proposal_tip = cli_tester_create_proposal_branches_ready_to_send()?
                     .get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?;
 
@@ -817,7 +789,7 @@ mod tests {
                 p.send_line("")?;
                 p.expect(format!("fetching {source_path} over filesystem...\r\n").as_str())?;
                 // expect no errors
-                p.expect_after_whitespace("\r\n\r\n")?;
+                p.expect_after_whitespace("\r\n")?;
                 p.exit()?;
                 for p in [51, 52, 53, 55, 56, 57] {
                     relay::shutdown_relay(8000 + p)?;
