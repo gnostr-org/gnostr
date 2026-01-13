@@ -62,6 +62,24 @@ pub mod ssh;
 pub mod string_utils;
 ///  <https://docs.rs/gnostr/latest/gnostr/strings/index.html>
 pub mod strings;
+///  <https://docs.rs/gnostr/latest/gnostr/sub_commands/index.html>
+pub mod sub_commands;
+///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
+pub mod tabs;
+///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
+pub mod test_utils;
+///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
+pub mod types;
+///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
+pub mod ui;
+///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
+pub mod utils;
+///  <https://docs.rs/gnostr/latest/gnostr/verify_keypair/index.html>
+pub mod verify_keypair;
+///  <https://docs.rs/gnostr/latest/gnostr/watcher/index.html>
+pub mod watcher;
+/// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
+pub mod ws;
 //avoid?//upgrade?
 //pub use lightning;
 use anyhow::{anyhow, Result};
