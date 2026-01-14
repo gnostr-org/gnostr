@@ -1248,6 +1248,8 @@ mod tests {
 
     mod integration_tests {
         use super::*;
+        use nostr_0_34_1::JsonUtil;
+        use serial_test::serial;
 
         #[tokio::test]
         #[serial]
@@ -1724,6 +1726,8 @@ mod tests {
         }
         mod delete_one_branch {
 
+            use futures::join;
+            use serial_test::serial;
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
@@ -1943,7 +1947,8 @@ mod tests {
             }
 
             mod when_existing_state_event {
-
+                use futures::join;
+                use serial_test::serial;
                 #[tokio::test]
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
@@ -2027,6 +2032,8 @@ mod tests {
                 }
 
                 mod already_deleted_on_git_server {
+                    use futures::join;
+                    use serial_test::serial;
 
                     #[tokio::test]
                     #[serial]
@@ -2683,7 +2690,8 @@ mod tests {
         #[tokio::test]
         #[serial]
         #[cfg(feature = "expensive_tests")]
-        async fn push_new_pr_branch_creates_proposal() -> AnyhowResult<String, E> {
+        //async fn push_new_pr_branch_creates_proposal() -> AnyhowResult<String, E> {
+        async fn push_new_pr_branch_creates_proposal() -> AnyhowResult<()> {
             let (events, source_git_repo) =
                 prep_source_repo_and_events_including_proposals().await?;
             let source_path = source_git_repo.dir.to_str().unwrap().to_string();

@@ -497,7 +497,7 @@ mod tests {
 
                 {
                     // add commit to main on git server
-                    let tmp_repo = GitTestRepo::clone_repo(&source_git_repo)?;
+                    let mut tmp_repo = GitTestRepo::clone_repo(&source_git_repo)?;
                     std::fs::write(tmp_repo.dir.join("commitx.md"), "some content")?;
                     tmp_repo.stage_and_commit("commitx.md")?;
                     let mut remote = tmp_repo.git_repo.find_remote("origin")?;
