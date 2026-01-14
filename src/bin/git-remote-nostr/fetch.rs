@@ -609,12 +609,21 @@ mod tests {
 
     mod integration_tests {
         use serial_test::serial;
+        use std::collections::HashSet;
         use tokio::join;
         type E = anyhow::Error;
         type AnyhowResult<T> = anyhow::Result<T>;
         use gnostr::test_utils::{
+            cli_tester_create_proposal_branches_ready_to_send,
             generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-            generate_test_key_1_relay_list_event, git_remote::prep_git_repo, relay::Relay,
+            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+            git_remote::{
+                cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
+                prep_git_repo_minus_1_commit, prep_source_repo_and_events_including_proposals,
+            },
+            nostr_0_34_1::Event,
+            relay::{shutdown_relay, Relay},
+            GitTestRepo, FEATURE_BRANCH_NAME_1,
         };
 
         #[tokio::test]
