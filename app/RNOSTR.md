@@ -1,6 +1,5 @@
 # Rnostr [![Build](https://github.com/RandyMcMillan/rnostr/actions/workflows/build.yml/badge.svg)](https://github.com/RandyMcMillan/rnostr/actions/workflows/build.yml) [![Test](https://github.com/RandyMcMillan/rnostr/actions/workflows/test.yml/badge.svg)](https://github.com/RandyMcMillan/rnostr/actions/workflows/test.yml)
 
-
 A high-performance and scalable [nostr](https://github.com/nostr-protocol/nostr) relay written in Rust.
 
 ## Features

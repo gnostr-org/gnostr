@@ -14,13 +14,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-
   test:
     name: test ${{ matrix.args }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         args:
           [
             -p nostr-kv,
@@ -36,7 +35,7 @@ jobs:
         # Building `aws-lc-rs` for Windows MSVC depends on `NASM`.
         # See: https://aws.github.io/aws-lc-rs/requirements/windows.html
         uses: ilammy/setup-nasm@v1
-        if: ${{ contains(matrix.os, 'windows') }} 
+        if: ${{ contains(matrix.os, 'windows') }}
       - name: Cache
         uses: actions/cache@v3
         with:

@@ -2,11 +2,11 @@ name: Lint
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - dev
   pull_request:
-    branches: 
+    branches:
       - main
       - dev
 
@@ -35,4 +35,3 @@ jobs:
           toolchain: stable
           components: clippy
       - run: cargo clippy --workspace --all-features
-
