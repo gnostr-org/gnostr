@@ -924,7 +924,7 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
             );
         }
     } else {
-        let details_chunk = Layout::default()
+        let _details_chunk = Layout::default()
             .direction(Direction::Vertical)
             .margin(1)
             .constraints([
