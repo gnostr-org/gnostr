@@ -412,11 +412,6 @@ fn fetch_from_git_server_url(
 
 #[cfg(test)]
 mod tests {
-    
-    
-    
-    
-    
 
     use crate::fetch::FetchReporter;
 
@@ -613,15 +608,14 @@ mod tests {
     }
 
     mod integration_tests {
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        use serial_test::serial;
+        use tokio::join;
+        type E = anyhow::Error;
+        type AnyhowResult<T> = anyhow::Result<T>;
+        use gnostr::test_utils::{
+            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+            generate_test_key_1_relay_list_event, git_remote::prep_git_repo, relay::Relay,
+        };
 
         #[tokio::test]
         #[serial]
@@ -693,15 +687,8 @@ mod tests {
         }
 
         mod when_first_git_server_fails_ {
-            
+
             //use futures::join;
-            
-            
-            
-            
-            
-            
-            
 
             #[tokio::test]
             #[serial]

@@ -1221,11 +1221,6 @@ impl BuildRepoState for RepoState {
 
 #[cfg(test)]
 mod tests {
-    
-    
-    
-    
-    
 
     type E = anyhow::Error;
 
@@ -1239,9 +1234,18 @@ mod tests {
     }
 
     mod integration_tests {
-        
-        
-        
+        use serial_test::serial;
+        use tokio::join;
+        type E = anyhow::Error;
+        type AnyhowResult<T> = anyhow::Result<T>;
+        use gnostr::test_utils::{
+            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
+            git::GitTestRepo,
+            git_remote::{cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo},
+            relay::{shutdown_relay, Relay},
+            FEATURE_BRANCH_NAME_1,
+        };
 
         #[tokio::test]
         #[serial]
@@ -1251,13 +1255,17 @@ mod tests {
             Ok(())
         }
         mod two_branches_in_batch_one_added_one_updated {
-            
-            
-            
-            
-            
-            
-            
+            use serial_test::serial;
+            use tokio::join;
+            type E = anyhow::Error;
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event,
+                git::GitTestRepo,
+                git_remote::{cli_tester_after_fetch, prep_git_repo},
+                relay::{shutdown_relay, Relay},
+                E, FEATURE_BRANCH_NAME_1,
+            };
 
             #[tokio::test]
             #[serial]
@@ -1714,9 +1722,18 @@ mod tests {
             }
         }
         mod delete_one_branch {
+            use serial_test::serial;
+            use tokio::join;
+            type E = anyhow::Error;
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event,
+                git::GitTestRepo,
+                git_remote::{cli_tester_after_fetch, prep_git_repo},
+                relay::{shutdown_relay, Relay},
+                E, FEATURE_BRANCH_NAME_1,
+            };
 
-            
-            
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
@@ -1936,8 +1953,18 @@ mod tests {
             }
 
             mod when_existing_state_event {
-                
-                
+                use serial_test::serial;
+                use tokio::join;
+                type E = anyhow::Error;
+                use gnostr::test_utils::{
+                    generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                    generate_test_key_1_relay_list_event,
+                    git::GitTestRepo,
+                    git_remote::{cli_tester_after_fetch, prep_git_repo},
+                    relay::{shutdown_relay, Relay},
+                    E, FEATURE_BRANCH_NAME_1,
+                };
+
                 #[tokio::test]
                 #[serial]
                 #[cfg(feature = "expensive_tests")]
@@ -2021,8 +2048,18 @@ mod tests {
                 }
 
                 mod already_deleted_on_git_server {
-                    
-                    
+                    use serial_test::serial;
+                    use tokio::join;
+                    type E = anyhow::Error;
+                    type AnyhowResult<T> = anyhow::Result<T>;
+                    use gnostr::test_utils::{
+                        generate_repo_ref_event_with_git_server,
+                        generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                        git::GitTestRepo,
+                        git_remote::{cli_tester_after_fetch, prep_git_repo},
+                        relay::{shutdown_relay, Relay},
+                        FEATURE_BRANCH_NAME_1,
+                    };
 
                     #[tokio::test]
                     #[serial]
@@ -2332,9 +2369,8 @@ mod tests {
                     .find(|t| t.as_vec().len().eq(&4) && t.as_vec()[3].eq("mention"))
                     .unwrap()
                     .as_vec()[1],
-                "status mentions proposal tip event \r\nmerge status:\r\n{}",
+                "status mentions proposal tip event \r\nmerge status:\r\n{}\r\nproposal tip:\r\n{}",
                 merge_status.as_json(),
-                "proposal tip:\r\n{}",
                 proposal_tip.as_json(),
             );
 
@@ -2346,9 +2382,8 @@ mod tests {
                     .find(|t| t.is_root())
                     .unwrap()
                     .as_vec()[1],
-                "status tags proposal id as root \r\nmerge status:\r\n{}",
+                "status tags proposal id as root \r\nmerge status:\r\n{}\r\nproposal:\r\n{}",
                 merge_status.as_json(),
-                "proposal:\r\n{}",
                 proposal.as_json(),
             );
 

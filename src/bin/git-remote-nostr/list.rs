@@ -275,12 +275,6 @@ fn get_ahead_behind(
 
 #[cfg(test)]
 mod tests {
-    
-
-    
-    
-    
-    
 
     mod without_state_announcement {
 
@@ -374,13 +368,16 @@ mod tests {
     mod with_state_announcement {
 
         mod when_announcement_matches_git_server {
-            
-            
-            
-            
-            
-            
-            
+            use serial_test::serial;
+            use tokio::join;
+            type E = anyhow::Error;
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_repo_with_state_event,
+                generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                git::GitTestRepo,
+                git_remote::{cli_tester_after_fetch, prep_git_repo},
+                relay::{shutdown_relay, Relay},
+            };
 
             #[tokio::test]
             #[serial]
@@ -462,13 +459,16 @@ mod tests {
             }
         }
         mod when_announcement_doesnt_match_git_server {
-            
-            
-            
-            
-            
-            
-            
+            use serial_test::serial;
+            use tokio::join;
+            type E = anyhow::Error;
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_repo_with_state_event,
+                generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                git::GitTestRepo,
+                git_remote::{cli_tester_after_fetch, prep_git_repo},
+                relay::{shutdown_relay, Relay},
+            };
 
             #[tokio::test]
             #[serial]
