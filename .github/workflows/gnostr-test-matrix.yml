@@ -3,10 +3,10 @@ name: gnostr-test-matrix
 # Controls when the action will run.
 on:
   schedule:
-    - cron: '*/30 * * * *' # run 30th minute
+    - cron: "*/30 * * * *" # run 30th minute
   push:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 permissions:
   actions: read
@@ -139,8 +139,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           #submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
+          set-safe-directory: "true"
+          fetch-depth: "0"
           #fetch-tags: 'false'
 
       - name: printenv
@@ -203,7 +203,6 @@ jobs:
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
 
-
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
@@ -248,7 +247,6 @@ jobs:
         run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
         if: runner.os == 'windows'
 
-
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
       #  run: |
@@ -256,7 +254,6 @@ jobs:
       #    gnostr ${{ matrix.commands }} --version
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
-
       - name: create set-metadata kind 0
         shell: bash
         run: |

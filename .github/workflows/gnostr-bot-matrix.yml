@@ -3,10 +3,10 @@ name: gnostr-bot-matrix
 # Controls when the action will run.
 on:
   schedule:
-    - cron: '*/30 * * * *' # run 30th minute
+    - cron: "*/30 * * * *" # run 30th minute
   push:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 permissions:
   actions: read
@@ -144,7 +144,7 @@ jobs:
 
           # Ensures the workspace is added to git's safe.directory config
           # Crucial for avoiding "dubious ownership" errors in containerized builds
-          set-safe-directory: 'true'
+          set-safe-directory: "true"
 
           # Optional: Uncomment if you need git submodules
           # submodules: 'true'
@@ -201,14 +201,12 @@ jobs:
       #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
       #  if: runner.os == 'windows'
 
-
       - name: Install Strawberry Perl
         run: choco install strawberryperl
         if: runner.os == 'windows'
       - name: Install Perl modules
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
-
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -254,7 +252,6 @@ jobs:
         run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
         if: runner.os == 'windows'
 
-
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
       #  run: |
@@ -262,7 +259,6 @@ jobs:
       #    gnostr ${{ matrix.commands }} --version
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
-
       - name: create set-metadata kind 0
         shell: bash
         run: |
@@ -358,12 +354,12 @@ jobs:
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
         run: |
-         make gnostr-chat &
-         make gnostr-chat &
-         gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
-         gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
-         sleep 5 # Wait for services to start
-         gnostr query --limit 100
+          make gnostr-chat &
+          make gnostr-chat &
+          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
+          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
+          sleep 5 # Wait for services to start
+          gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
         if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')

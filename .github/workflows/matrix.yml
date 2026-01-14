@@ -4,16 +4,16 @@ name: build-install-matrix
 on:
   pull_request:
     branches:
-      - '*'
-      - '*/*'
-      - '**'
-      - 'ma**'
+      - "*"
+      - "*/*"
+      - "**"
+      - "ma**"
   push:
     branches:
-      - '*'
-      - '*/*'
-      - '**'
-      - 'ma**'
+      - "*"
+      - "*/*"
+      - "**"
+      - "ma**"
 
   workflow_dispatch:
 
@@ -78,10 +78,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: 'false'
+          submodules: "true"
+          set-safe-directory: "true"
+          fetch-depth: "0"
+          fetch-tags: "false"
 
       - uses: cargo-bins/cargo-binstall@main
       - run: rustup default ${{ matrix.rustup }}
@@ -179,10 +179,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: 'false'
+          submodules: "true"
+          set-safe-directory: "true"
+          fetch-depth: "0"
+          fetch-tags: "false"
 
       - run: rustup default ${{ matrix.rustup }}
       - run: V=1 sudo make docs || true
@@ -272,10 +272,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: 'false'
+          submodules: "true"
+          set-safe-directory: "true"
+          fetch-depth: "0"
+          fetch-tags: "false"
 
       - run: rustup default ${{ matrix.rustup }}
       - run: |

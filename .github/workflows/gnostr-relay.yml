@@ -3,10 +3,10 @@ name: gnostr-relay.yml
 # Controls when the action will run.
 on:
   schedule:
-    - cron: '*/30 * * * *' # run 30th minute
+    - cron: "*/30 * * * *" # run 30th minute
   push:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 permissions:
   actions: read
@@ -75,10 +75,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: 'true'
+          submodules: "true"
+          set-safe-directory: "true"
+          fetch-depth: "0"
+          fetch-tags: "true"
 
       - run: printenv || true
 
