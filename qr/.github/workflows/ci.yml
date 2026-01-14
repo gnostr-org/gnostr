@@ -31,16 +31,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          set-safe-directory: ''
-          submodules: 'true'
+          set-safe-directory: ""
+          submodules: "true"
           ref: ${{ github.ref }}
         if: github.event_name == 'pull_request_target'
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          set-safe-directory: ''
-          submodules: 'true'
+          set-safe-directory: ""
+          submodules: "true"
         if: github.event_name != 'pull_request_target'
 
       - name: Install toolchain stable
@@ -66,7 +66,7 @@ jobs:
           args: -- --check
 
       #- name: temporary workaround - fmt all files under src
-         #run: cargo fmt -- --check $(find ./src -name '*.rs' -print)
+      #run: cargo fmt -- --check $(find ./src -name '*.rs' -print)
 
   test:
     name: ${{ matrix.name }}
