@@ -5,11 +5,12 @@ information as you feel necessary.
 
 This Pull Request fixes/closes #{issue_num}.
 
-It changes the following:
--
+## It changes the following:
+
 -
 
 I followed the checklist:
+
 - [ ] I added unittests
 - [ ] I ran `make check` without errors
 - [ ] I tested the overall application
