@@ -368,14 +368,18 @@ mod tests {
     mod with_state_announcement {
 
         mod when_announcement_matches_git_server {
+            use anyhow::Error;
             use serial_test::serial;
+            use std::collections::HashSet;
             use tokio::join;
             type E = anyhow::Error;
             use gnostr::test_utils::{
-                generate_repo_ref_event_with_git_server, generate_repo_with_state_event,
-                generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event,
                 git::GitTestRepo,
-                git_remote::{cli_tester_after_fetch, prep_git_repo},
+                git_remote::{
+                    cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
+                },
                 relay::{shutdown_relay, Relay},
             };
 
@@ -414,37 +418,34 @@ mod tests {
                 r51.events = events.clone();
                 r55.events = events;
 
-                let cli_tester_handle = std::thread::spawn(
-                    move || Result < (),
-                    anyhow::Error > {
-                        let mut p = cli_tester_after_fetch(&git_repo)?;
-                        p.send_line("list")?;
-                        p.expect(
-                            format!("fetching {} ref list over filesystem...\r\n", source_path)
-                                .as_str(),
-                        )?;
-                        p.expect("list: connecting...\r\n\r\r\r")?;
-                        // println!("{}",
-                        // p.expect_eventually("\r\n\r\n")?);
-                        let res = p.expect_eventually("\r\n\r\n")?;
-                        p.exit()?;
-                        for p in [51, 52, 53, 55, 56, 57] {
-                            gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
-                        }
-                        assert_eq!(
-                            res.split("\r\n")
-                                .map(|e| e.to_string())
-                                .collect::<HashSet<String>>(),
-                            HashSet::from([
-                                "@refs/heads/main HEAD".to_string(),
-                                format!("{} refs/heads/main", main_commit_id),
-                                format!("{} refs/heads/example-branch", example_commit_id),
-                            ]),
-                        );
+                let cli_tester_handle = std::thread::spawn(move || -> Result<(), anyhow::Error> {
+                    let mut p = cli_tester_after_fetch(&git_repo)?;
+                    p.send_line("list")?;
+                    p.expect(
+                        format!("fetching {} ref list over filesystem...\r\n", source_path)
+                            .as_str(),
+                    )?;
+                    p.expect("list: connecting...\r\n\r\r\r")?;
+                    // println!("{}",
+                    // p.expect_eventually("\r\n\r\n")?);
+                    let res = p.expect_eventually("\r\n\r\n")?;
+                    p.exit()?;
+                    for p in [51, 52, 53, 55, 56, 57] {
+                        gnostr::test_utils::relay::shutdown_relay(8000 + p)?;
+                    }
+                    assert_eq!(
+                        res.split("\r\n")
+                            .map(|e| e.to_string())
+                            .collect::<HashSet<String>>(),
+                        HashSet::from([
+                            "@refs/heads/main HEAD".to_string(),
+                            format!("{} refs/heads/main", main_commit_id),
+                            format!("{} refs/heads/example-branch", example_commit_id),
+                        ]),
+                    );
 
-                        Ok(())
-                    },
-                );
+                    Ok(())
+                });
                 // launch relays
                 let _ = join!(
                     r51.listen_until_close(),
@@ -459,14 +460,18 @@ mod tests {
             }
         }
         mod when_announcement_doesnt_match_git_server {
+            use anyhow::Error;
             use serial_test::serial;
+            use std::collections::HashSet;
             use tokio::join;
             type E = anyhow::Error;
             use gnostr::test_utils::{
-                generate_repo_ref_event_with_git_server, generate_repo_with_state_event,
-                generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event,
                 git::GitTestRepo,
-                git_remote::{cli_tester_after_fetch, prep_git_repo},
+                git_remote::{
+                    cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
+                },
                 relay::{shutdown_relay, Relay},
             };
 

@@ -1264,7 +1264,7 @@ mod tests {
                 git::GitTestRepo,
                 git_remote::{cli_tester_after_fetch, prep_git_repo},
                 relay::{shutdown_relay, Relay},
-                E, FEATURE_BRANCH_NAME_1,
+                FEATURE_BRANCH_NAME_1,
             };
 
             #[tokio::test]
@@ -1731,7 +1731,7 @@ mod tests {
                 git::GitTestRepo,
                 git_remote::{cli_tester_after_fetch, prep_git_repo},
                 relay::{shutdown_relay, Relay},
-                E, FEATURE_BRANCH_NAME_1,
+                FEATURE_BRANCH_NAME_1,
             };
 
             #[tokio::test]
@@ -1962,7 +1962,7 @@ mod tests {
                     git::GitTestRepo,
                     git_remote::{cli_tester_after_fetch, prep_git_repo},
                     relay::{shutdown_relay, Relay},
-                    E, FEATURE_BRANCH_NAME_1,
+                    FEATURE_BRANCH_NAME_1,
                 };
 
                 #[tokio::test]
