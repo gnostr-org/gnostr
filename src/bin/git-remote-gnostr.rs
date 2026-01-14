@@ -255,9 +255,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                                 mod list_command_integration {
 
-                                    use super::super::super::{
-                                        create_test_event, create_test_repo_info,
-                                    };
+                                    use super::super::super::create_test_repo_info;
                                     use super::*;
 
                                     #[tokio::test]
@@ -266,7 +264,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Setup mock environment
                                         let keys = Keys::generate();
                                         let options = Options::new();
-                                        let client = Client::new(&keys, options);
+                                        let _client = Client::new(&keys, options);
 
                                         // Create mock repo info
                                         let repo_info = create_test_repo_info();
@@ -751,7 +749,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                     mod list_command_integration {
                         use super::*;
-                        use crate::test_helpers::{create_test_event, create_test_repo_info};
+                        use crate::test_helpers::create_test_repo_info;
 
                         #[tokio::test]
                         #[serial]
@@ -759,7 +757,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Setup mock environment
                             let keys = Keys::generate();
                             let options = Options::new();
-                            let client = Client::new(&keys, options);
+                            let _client = Client::new(&keys, options);
 
                             // Create mock repo info
                             let repo_info = create_test_repo_info();
