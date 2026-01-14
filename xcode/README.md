@@ -1,4 +1,3 @@
-
 # damus
 
 A twitter-like [nostr][nostr] client for iPhone, iPad and MacOS.
@@ -22,25 +21,29 @@ damus implements the following [Nostr Implementation Possibilities][nips]
 [nip10]: https://github.com/nostr-protocol/nips/blob/master/10.md
 [nip12]: https://github.com/nostr-protocol/nips/blob/master/12.md
 
-## Getting Started on Damus 
+## Getting Started on Damus
 
 ### Damus iOS
-1) Get the Damus app on Testflight: https://testflight.apple.com/join/CLwjLxWl
+
+1. Get the Damus app on Testflight: https://testflight.apple.com/join/CLwjLxWl
 
 #### ⚙️ Settings (gear icon, top right)
-- Relays: You can add more relays to send your notes to by tapping the "+". 
-  - Find more relays to add: https://nostr.info/relays/ 
+
+- Relays: You can add more relays to send your notes to by tapping the "+".
+  - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
- - Secret Key: Your *private* key unique to you. Never share your private key publically and share with other clients at your own risk!
-   - Save your keys somewhere safe
- - Log out
+- Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!
+  - Save your keys somewhere safe
+- Log out
 
 #### 🏠 Personal Feed (home icon, bottom navigation)
+
 - Feed from everyone you follow
 - Can post notes by tapping the blue + button
 
 #### Notes (under 🏠 Personal Feed)
-- Sending a Note is easy and it goes to both your 🏠 Personal and 🔍 Global Feeds 
+
+- Sending a Note is easy and it goes to both your 🏠 Personal and 🔍 Global Feeds
 - To tag a user you must grab their pubkey:
   1. Search their username in the search bar at the top of the 🔍 Global Feed and click their profile
   2. Tap the 🔑 icon which will copy their pubkey to your clipboard
@@ -57,34 +60,41 @@ damus implements the following [Nostr Implementation Possibilities][nips]
   - Italics: 1 asterisk `*italic*`
   - Bold: 2 asterisk `**bold**`
   - Strikethrough: 2 tildes `~~strikethrough~~`
-  - Code: 1 back-tick ``code``
+  - Code: 1 back-tick `code`
 
 #### 💬 Encrypted DMs (chat app, bottom navigation)
+
 - Tap the chat icon and you'll notice there's nothing to see at first. Go to a user profile and tap the 💬 chat icon next to the follow button to begin a DM
 
 #### 🔍 Global Feed (magnify glass, bottom navigation)
+
 - View the Global Feed from all the relays you've added in ⚙️ Settings. Currently you can only search hashtags and user names and pubkeys
 
 #### 🔔 Notifications
+
 - All your notifications except 💬 DMs
 
 #### 👤 Change Your Profile (PFP) and Bio
+
 1. Go to your Profile Page on Damus app
 2. Tap on Edit button at the top
 3. You will see text fields to update your information and bio
 4. For PFP, insert a URL containing your image (support video: https://cdn.jb55.com/vid/pfp-editor.mp4)
 5. Save
 
-#### ⚡️ Request Sats 
+#### ⚡️ Request Sats
+
     (Sats or Satoshis are the smallest denomination of bitcoin)
-	
+
 **Alby (browser extension)**
+
 - Get the [Alby](https://getalby.com/) browser extension and create your Alby address [yourname]@getalby.com or connect your existing Lightning wallet
 - Convert your Damus secret key from nsec to hex at https://damus.io/key then go to Settings in Alby and under the Nostr section at the bottom of the page add your private hex key. You can also generate new address in the extension
 - Click the Alby extension > click Receive > enter the amount of Sats > click Get Invoice > click Copy > then paste into Damus
 - Note: On Damus Web it will appear as a string of characters but on Damus iOS it will appear as a clickable image
 
 **Zeus (mobile app)**
+
 - Download [Zeus](https://zeusln.app/) app (iOS, Google, APK)
 - Tap Get Started button > tap Connect a node > click on + sign (top right) > select Indhub > press Scan Lndhub QR > (from the Alby browser extension… click your account on the top left > click Manage Accounts > click 3-dot menu to right of your account and click Export Account to get a QR code then go back to Zeus app) > scan the QR Code and tap Save Node Config button
 - To create an invoice tap Lightning > tap Receive > type in amount > tap Create Invoice > tap Copy Invoice > paste into a new Damus note
@@ -99,7 +109,7 @@ Contributors welcome! [Email patches][git-send-email] to jb55@jb55.com are prefe
 
 npub1fjtdwclt9lspjy8huu3qklr7eklp5uq90u6yh8mec290pqxraccqlufnas
 
-### Awards 
+### Awards
 
 There may be nostr badges awarded for contributors in the future... :)
 

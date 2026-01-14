@@ -14,7 +14,6 @@
 - Fixed issue where contact list would sometimes revert to an older version (William Casarin)
 - Don't show boosts in threads (Thomas)
 
-
 [0.1.8-9]: https://github.com/damus-io/damus/releases/tag/v0.1.8-9
 
 ## [0.1.8-6] - 2022-12-28
@@ -27,14 +26,12 @@
 - Link Previews! (Sam DuBois)
 - Added paste and delete buttons to add relay field (Suhail Saqan)
 
-
 ### Changed
 
 - Blur and opaque non-friend images rather than only display the link (Sam DuBois)
 - Remove URLs in content text when image is displayed (Sam DuBois)
 - Show non-image URLs as clickable link views (Sam DuBois)
 - Adjusted Pay button on invoices. (Sam DuBois)
-
 
 ### Fixed
 
@@ -44,15 +41,13 @@
 - Fix post button moving after selecting from search result (OlegAba)
 - Don't show white background on images in dark mode (William Casarin)
 
-
-
 [0.1.8-6]: https://github.com/damus-io/damus/releases/tag/v0.1.8-6
+
 ## [0.1.8-5] - 2022-12-27
 
 ### Added
 
      - Added the ability to zoom profile pic on profile page
-
 
 ### Changed
 
@@ -62,21 +57,18 @@
      - Swap order of Boost and Cancel alert buttons
      - Rename "Copy Note" to "Copy Note JSON"
 
-
 ### Fixed
 
      - Don't cutoff gifs
      - Fixed bug where booster's names are not displayed
 
-
-
 [0.1.8-5]: https://github.com/damus-io/damus/releases/tag/v0.1.8-5
+
 ## [0.1.8-4] - 2022-12-26
 
 ### Added
 
      - Long press lightning tip button to copy lnurl
-
 
 ### Changed
 
@@ -85,7 +77,6 @@
      - Also show inline images from friend-of-friends
      - Show rounded corners on inline images
 
-
 ### Fixed
 
      - Fix bug where typing the first character in the search box defocuses
@@ -93,7 +84,6 @@
      - Fix profile and event loading in global view
      - Fix lightning tip button sometimes not working
      - Make about me multi-line in profile editor
-
 
 [0.1.8-4]: https://github.com/damus-io/damus/releases/tag/v0.1.8-4
 
@@ -113,7 +103,6 @@
 
      - Fix crash on some bolt11 invoices
      - Fixed issues when refreshing global view
-
 
 ## [0.1.8] - 2022-12-21
 
@@ -139,7 +128,6 @@
      - Parse lightning: prefixes on lightning invoice
      - Resize images to fill the space
 
-
 ## [0.1.7] - 2022-12-21
 
 ### Changed
@@ -147,14 +135,11 @@
      - Only show inline images from your friends
      - Improved look of profile view
 
-
 ### Fixed
 
      - Added ability to dismiss keyboard during account creation
      - Fixed crashed on lightning invoices with empty descriptions
      - Make dm chat area visible again
-
-
 
 [0.1.7]: https://github.com/damus-io/damus/releases/tag/v0.1.7
 
@@ -176,7 +161,6 @@
 
      - Damus will now stay connected at all times
 
-
 ## [0.1.3] - 2022-08-19
 
 ### Added
@@ -189,7 +173,6 @@
      - Added profile picture cache
      - Multiline DM messages
 
-
 ### Changed
 
      - #hashtags now use the `t` tag instead of `hashtag`
@@ -199,7 +182,6 @@
      - use bech32 ids everywhere
      - Don't animate scroll in chat view
      - Post button is not shown if the content is only whitespace
-
 
 ### Fixed
 
@@ -217,7 +199,6 @@
 
 [0.1.3]: https://github.com/damus-io/damus/releases/tag/v0.1.3
 
-
 ## [0.1.2] - 2022-07-03
 
 ### Added
@@ -226,14 +207,10 @@
      - Implement NIP04: Encrypted Direct Messages
      - Add blue dot notification to home tab
 
-
 ### Fixed
 
      - Fixed crash when unfollowing users
      - Clicking tabs now clear blue dots immediately
      - Cancel button on add relay view
 
-
-
 [0.1.2]: https://github.com/damus-io/damus/releases/tag/v0.1.2
-
