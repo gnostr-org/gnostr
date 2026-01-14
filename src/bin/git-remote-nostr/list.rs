@@ -381,12 +381,23 @@ mod tests {
     mod with_state_announcement {
 
         mod when_announcement_matches_git_server {
+            use futures::join;
+            use gnostr::test_utils::git_remote::{
+                cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
+            };
+            use gnostr::test_utils::relay::{shutdown_relay, Relay};
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event, git::GitTestRepo, E,
+            };
+            use nostr_0_34_1::Event;
+            use serial_test::serial;
+            use std::collections::HashSet;
 
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-            async fn lists_head_and_2_branches_and_commit_ids_announcement(
-            ) -> Result<(), anyhow::Error> {
+            async fn lists_head_and_2_branches_and_commit_ids_announcement() -> Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
                 let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 
@@ -463,11 +474,23 @@ mod tests {
             }
         }
         mod when_announcement_doesnt_match_git_server {
+            use futures::join;
+            use gnostr::test_utils::git_remote::{
+                cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
+            };
+            use gnostr::test_utils::relay::{shutdown_relay, Relay};
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event, git::GitTestRepo, E,
+            };
+            use nostr_0_34_1::Event;
+            use serial_test::serial;
+            use std::collections::HashSet;
 
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-            async fn anouncement_state_is_used() -> Result<(), anyhow::Error> {
+            async fn anouncement_state_is_used() -> Result<(), E> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
                 let source_path = source_git_repo.dir.to_str().unwrap().to_string();
                 let main_original_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
