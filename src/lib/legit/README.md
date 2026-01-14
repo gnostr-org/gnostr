@@ -4,12 +4,12 @@ This module integrates Git repository operations with the Nostr protocol, enabli
 
 ## Features
 
-*   **Git Commit Mining:** Generates Nostr events based on Git commit data, potentially using commit hashes for key derivation.
-*   **Nostr Event Creation:** Creates Nostr text note events containing serialized Git commit information.
-*   **Custom Tagging:** Attaches custom tags to Nostr events, including information derived from Git commits and repository metadata.
-*   **Key Derivation:** Generates Nostr keys from Git commit hashes, allowing for unique event identities tied to specific commits.
-*   **Event Publishing:** Publishes generated Nostr events to a predefined list of bootstrap relays.
-*   **Git State Handling:** Checks for clean Git repository state before proceeding and captures Git diffs for event content.
+- **Git Commit Mining:** Generates Nostr events based on Git commit data, potentially using commit hashes for key derivation.
+- **Nostr Event Creation:** Creates Nostr text note events containing serialized Git commit information.
+- **Custom Tagging:** Attaches custom tags to Nostr events, including information derived from Git commits and repository metadata.
+- **Key Derivation:** Generates Nostr keys from Git commit hashes, allowing for unique event identities tied to specific commits.
+- **Event Publishing:** Publishes generated Nostr events to a predefined list of bootstrap relays.
+- **Git State Handling:** Checks for clean Git repository state before proceeding and captures Git diffs for event content.
 
 ## Usage
 
@@ -43,20 +43,20 @@ match run_legit_command(opts).await {
 
 ## Internal Components
 
-*   **`Gitminer`:** Handles the core logic of mining Git commits and generating unique identifiers.
-*   **`create_event` / `create_event_with_custom_tags`:** Functions for constructing and signing Nostr events with specific content and tags.
-*   **`serialize_commit` / `deserialize_commit`:** Utilities for converting Git `Commit` objects to and from JSON representations.
-*   **`generate_nostr_keys_from_commit_hash`:** Creates Nostr `Keys` from a given commit hash.
-*   **`gnostr_legit_event`:** An asynchronous function that orchestrates the Git-to-Nostr event pipeline, including spawning background tasks for event creation and publishing.
+- **`Gitminer`:** Handles the core logic of mining Git commits and generating unique identifiers.
+- **`create_event` / `create_event_with_custom_tags`:** Functions for constructing and signing Nostr events with specific content and tags.
+- **`serialize_commit` / `deserialize_commit`:** Utilities for converting Git `Commit` objects to and from JSON representations.
+- **`generate_nostr_keys_from_commit_hash`:** Creates Nostr `Keys` from a given commit hash.
+- **`gnostr_legit_event`:** An asynchronous function that orchestrates the Git-to-Nostr event pipeline, including spawning background tasks for event creation and publishing.
 
 ## Dependencies
 
 This module relies on the following key libraries:
 
-*   `git2`: For interacting with Git repositories.
-*   `nostr-sdk`: For Nostr client functionality (event creation, signing, publishing).
-*   `tokio`: For asynchronous runtime and I/O operations.
-*   `serde` & `serde_json`: For JSON serialization and deserialization.
-*   `clap` (implied): For command-line argument parsing if used in a CLI context.
-*   `chrono` & `time`: For handling timestamps.
-*   `anyhow`: For error handling.
+- `git2`: For interacting with Git repositories.
+- `nostr-sdk`: For Nostr client functionality (event creation, signing, publishing).
+- `tokio`: For asynchronous runtime and I/O operations.
+- `serde` & `serde_json`: For JSON serialization and deserialization.
+- `clap` (implied): For command-line argument parsing if used in a CLI context.
+- `chrono` & `time`: For handling timestamps.
+- `anyhow`: For error handling.

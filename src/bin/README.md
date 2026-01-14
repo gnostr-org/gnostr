@@ -31,6 +31,7 @@ gnostr-legit . -p 00000 -m "My first gnostr-legit commit"
 ```
 
 This command will:
+
 1. Discover the Git repository in the current directory.
 2. Mine for a commit SHA starting with `00000`.
 3. Use "My first gnostr-legit commit" as the commit message.
@@ -69,6 +70,7 @@ generate-server-config myemail@example.com
 ```
 
 This command will:
+
 1. Ensure the `~/.ssh` directory exists and has correct permissions.
 2. Generate a new `gnostr-gnit-key` SSH key pair using `myemail@example.com` as the comment.
 3. Set appropriate permissions for the generated SSH keys and `authorized_keys`.
@@ -324,14 +326,14 @@ The tool provides extensive logging (info, debug, warn) about network events, pe
 
 - **Nostr Relay Querying**: Connects to Nostr relays (specified or bootstrap relays) to fetch events.
 - **Flexible Filtering**: Supports filtering by:
-    - **Authors**: `authors <public_key1,public_key2,...>`
-    - **Event IDs**: `ids <event_id1,event_id2,...>`
-    - **Kinds**: `kinds <kind1,kind2,...>` (e.g., NIP-0034 kinds like `1630,1632,...`)
-    - **Hashtags**: `hashtag <tag1,tag2,...>`
-    - **Mentions**: `mentions <public_key1,public_key2,...>`
-    - **References**: `references <event_id1,event_id2,...>`
-    - **Generic Tags**: `generic <tag_name> <value1,value2,...>`
-    - **Search**: `search <search_term>`
+  - **Authors**: `authors <public_key1,public_key2,...>`
+  - **Event IDs**: `ids <event_id1,event_id2,...>`
+  - **Kinds**: `kinds <kind1,kind2,...>` (e.g., NIP-0034 kinds like `1630,1632,...`)
+  - **Hashtags**: `hashtag <tag1,tag2,...>`
+  - **Mentions**: `mentions <public_key1,public_key2,...>`
+  - **References**: `references <event_id1,event_id2,...>`
+  - **Generic Tags**: `generic <tag_name> <value1,value2,...>`
+  - **Search**: `search <search_term>`
 - **Limit Control**: Specify the maximum number of events to retrieve using `limit <count>`.
 
 ## Usage
