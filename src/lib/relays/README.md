@@ -17,7 +17,7 @@ Retrieves relays grouped by their supported NIP (Nostr Implementation Profile).
 - **API Endpoint:** `/relays/by/nip/{nip}`
 - **Description:** Get relays grouped by NIP support.
 - **Parameters:**
-    - `nip` (path parameter): The NIP number (e.g., "1", "9").
+  - `nip` (path parameter): The NIP number (e.g., "1", "9").
 
 ### `relays_all() -> Result<String>`
 
