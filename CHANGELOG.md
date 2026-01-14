@@ -1,6018 +1,4481 @@
-
 ### Cargo.toml
 
-* add doc test deps (d9e7eff)
-
-
+- add doc test deps (d9e7eff)
 
 ### Features
 
-* Implement NIP-38 and finalize NIP-53 (000e835)
+- Implement NIP-38 and finalize NIP-53 (000e835)
 
-* Implement NIP-94 File Metadata (0000c4f)
+- Implement NIP-94 File Metadata (0000c4f)
 
-* Implement NIP-14 Subject Tag (000f4eb)
+- Implement NIP-14 Subject Tag (000f4eb)
 
-* Implement NIP-30 Custom Emoji (0004de0)
+- Implement NIP-30 Custom Emoji (0004de0)
 
-* Implement NIP-30 Custom Emoji (000f8a6)
+- Implement NIP-30 Custom Emoji (000f8a6)
 
-* Implement NIP-32 Labeling (0006a15)
+- Implement NIP-32 Labeling (0006a15)
 
-* Implement NIP-36 Sensitive Content (000b8c3)
+- Implement NIP-36 Sensitive Content (000b8c3)
 
-* Implement NIP-13 Proof of Work (0000eb2)
-
-
+- Implement NIP-13 Proof of Work (0000eb2)
 
 ### examples/gnostr-xor.rs
 
-* remove (0b9e622)
-
-
+- remove (0b9e622)
 
 ### src/lib/mod.rs
 
-* remove nostr_sdk_0_19_1 (adaafdd)
-
-
+- remove nostr_sdk_0_19_1 (adaafdd)
 
 ### src/lib/sub_commands/xor.rs
 
-* initial impl (c458718)
-
-
+- initial impl (c458718)
 
 ### Cargo.toml
 
-* add dev deps:nostr_0_34_1:nostr-sdk_0_34_0 (511f907)
-
-
+- add dev deps:nostr_0_34_1:nostr-sdk_0_34_0 (511f907)
 
 ### Features
 
-* add --headless flag for detached chat (00016fd)
+- add --headless flag for detached chat (00016fd)
 
-* refine headless chat logging and process naming (000c709)
+- refine headless chat logging and process naming (000c709)
 
-* Implement NIP-53 events; refactor logging (000336e)
-
-
+- Implement NIP-53 events; refactor logging (000336e)
 
 ### examples/rat-carousel-branches.rs
 
-* apply cargo fmt (2483092)
-
-
+- apply cargo fmt (2483092)
 
 ### examples/rat-carousel.rs
 
-* apply cargo fmt (f54bcc5)
-
-
+- apply cargo fmt (f54bcc5)
 
 ### examples/rat-navigator.rs
 
-* NavigatorMode::Branches:default (7b9f318)
+- NavigatorMode::Branches:default (7b9f318)
 
-* show_full_commit (79dd5bb)
+- show_full_commit (79dd5bb)
 
-* header stubs (381d407)
-
-
+- header stubs (381d407)
 
 ### examples/rat-nip34-navigator.rs
 
-* initial (23045a6)
+- initial (23045a6)
 
-* intermediate (09d9c80)
+- intermediate (09d9c80)
 
-* intermediate (fa4055a)
+- intermediate (fa4055a)
 
-* initial impl (2650cfa)
+- initial impl (2650cfa)
 
-* NavigatorMode (136fa3d)
+- NavigatorMode (136fa3d)
 
-* NavigatorMode:Gnostr (2153c78)
+- NavigatorMode:Gnostr (2153c78)
 
-* republish nip34 events (d9d6657)
-
-
+- republish nip34 events (d9d6657)
 
 ### make_just.sh
 
-* use gnostr --weeble/blockheight/wobble (9d23742)
-
-
+- use gnostr --weeble/blockheight/wobble (9d23742)
 
 ### src
 
-* apply cargo fmt:src/lib/p2p/chat/ui.rs:intermediate:Select Diff (ef68b76)
-
-
+- apply cargo fmt:src/lib/p2p/chat/ui.rs:intermediate:Select Diff (ef68b76)
 
 ### src/bin/gnostr-nip34.rs
 
-* initial impl (d08892e)
-
-
+- initial impl (d08892e)
 
 ### src/lib/p2p/chat/mod.rs
 
-* print process id (8c2ab3d)
-
-
+- print process id (8c2ab3d)
 
 ### src/lib/p2p/chat/tests/headless_test.rs
 
-* intermediate (1c09d60)
+- intermediate (1c09d60)
 
-* child_process.kill().await.expect (e252575)
-
-
+- child_process.kill().await.expect (e252575)
 
 ### src/lib/p2p/chat/ui.rs
 
-* apply cargo fmt (8e265f8)
+- apply cargo fmt (8e265f8)
 
-* Select popup working (4b25e9d)
-
-
+- Select popup working (4b25e9d)
 
 ### Features
 
-* Add diff selection UI and keybindings (00006a4)
-
-
+- Add diff selection UI and keybindings (00006a4)
 
 ### src/lib/p2p/chat/msg.rs
 
-* decentralized diff messaging (54878e9)
-
-
+- decentralized diff messaging (54878e9)
 
 ### Bug Fixes
 
-* Make DEFAULT_AVATAR, DEFAULT_BANNER, and metadata module public (000c002)
+- Make DEFAULT_AVATAR, DEFAULT_BANNER, and metadata module public (000c002)
 
-* prevent accidental use of backticks in commit messages (000ef93)
+- prevent accidental use of backticks in commit messages (000ef93)
 
-* Ensure diff messages line-break correctly in TUI (0008fb6)
+- Ensure diff messages line-break correctly in TUI (0008fb6)
 
-* Implement dynamic line breaking for chat and diff messages (000a67e)
+- Implement dynamic line breaking for chat and diff messages (000a67e)
 
-* Render diff messages as separate list items with dynamic wrapping (000bb94)
+- Render diff messages as separate list items with dynamic wrapping (000bb94)
 
-* Correctly display wrapped OneShot messages in ratatui (0007ee0)
+- Correctly display wrapped OneShot messages in ratatui (0007ee0)
 
-* Ensure --oneshot messages are wrapped correctly on the receiving end (00067ab)
-
-
+- Ensure --oneshot messages are wrapped correctly on the receiving end (00067ab)
 
 ### CHANGELOG.md
 
-* update (9940ef6)
-
-
+- update (9940ef6)
 
 ### Features
 
-* Integrate Nostr event handling and refactor dependencies (0002068)
+- Integrate Nostr event handling and refactor dependencies (0002068)
 
-* Add DEFAULT_AVATAR and DEFAULT_BANNER constants (92a4401)
+- Add DEFAULT_AVATAR and DEFAULT_BANNER constants (92a4401)
 
-* Add --diff message formatting (000a205)
+- Add --diff message formatting (000a205)
 
-* Add OneShot MsgKind and integrate into oneshot command (00058b6)
+- Add OneShot MsgKind and integrate into oneshot command (00058b6)
 
-* Implement peer logic for MsgKind::OneShot with --diff formatting (0001ed4)
+- Implement peer logic for MsgKind::OneShot with --diff formatting (0001ed4)
 
-* Implement terminal width wrapping for --diff OneShot messages (000acb0)
+- Implement terminal width wrapping for --diff OneShot messages (000acb0)
 
-* Apply line breaking to all chat messages and update ratatui display (0003d3a)
+- Apply line breaking to all chat messages and update ratatui display (0003d3a)
 
-* Implement intelligent diff formatting with prefix preservation (000b293)
-
-
+- Implement intelligent diff formatting with prefix preservation (000b293)
 
 ### app/src/lib.rs
 
-* gnostr-app (dcbbe11)
-
-
+- gnostr-app (dcbbe11)
 
 ### src/lib/legit/command.rs
 
-* migrate to internal types:src/lib/types:intermediate (e6b92d2)
+- migrate to internal types:src/lib/types:intermediate (e6b92d2)
 
-* migrate to internal types:src/lib/types (1dcdd4e)
+- migrate to internal types:src/lib/types (1dcdd4e)
 
-* migrate to internal types:src/lib/types (4540605)
+- migrate to internal types:src/lib/types (4540605)
 
-* migrate to internal types:src/lib/types (624f835)
+- migrate to internal types:src/lib/types (624f835)
 
-* migrate to internal types:src/lib/types (4bb8e55)
+- migrate to internal types:src/lib/types (4bb8e55)
 
-* migrate to internal types:src/lib/types (242c517)
+- migrate to internal types:src/lib/types (242c517)
 
-* migrate to internal types:src/lib/types (e40cf33)
+- migrate to internal types:src/lib/types (e40cf33)
 
-* migrate to internal types:src/lib/types (a8c717a)
+- migrate to internal types:src/lib/types (a8c717a)
 
-* migrate to internal types:src/lib/types (fc74e01)
+- migrate to internal types:src/lib/types (fc74e01)
 
-* migrate to internal types:src/lib/types (089f6fd)
+- migrate to internal types:src/lib/types (089f6fd)
 
-* migrate to internal types:src/lib/types (3cc65de)
+- migrate to internal types:src/lib/types (3cc65de)
 
-* migrate to internal types:src/lib/types (4147f07)
+- migrate to internal types:src/lib/types (4147f07)
 
-* migrate to internal types:src/lib/types (8729162)
+- migrate to internal types:src/lib/types (8729162)
 
-* migrate to internal types:src/lib/types (86cc55e)
+- migrate to internal types:src/lib/types (86cc55e)
 
-* migrate to internal types:src/lib/types (4eec1e8)
+- migrate to internal types:src/lib/types (4eec1e8)
 
-* migrate to internal types:src/lib/types (7fa23b2)
+- migrate to internal types:src/lib/types (7fa23b2)
 
-* migrate to internal types:src/lib/types (202d8d7)
+- migrate to internal types:src/lib/types (202d8d7)
 
-* migrate to internal types:src/lib/types (31ec264)
+- migrate to internal types:src/lib/types (31ec264)
 
-* migrate to internal types:src/lib/types (99f7270)
+- migrate to internal types:src/lib/types (99f7270)
 
-* migrate to internal types:src/lib/types (b965e15)
+- migrate to internal types:src/lib/types (b965e15)
 
-* migrate to internal types:src/lib/types (42e2309)
+- migrate to internal types:src/lib/types (42e2309)
 
-* migrate to internal types:src/lib/types (77aac73)
+- migrate to internal types:src/lib/types (77aac73)
 
-* migrate to internal types:src/lib/types (2c72f43)
+- migrate to internal types:src/lib/types (2c72f43)
 
-* migrate to internal types:src/lib/types (6951cf3)
+- migrate to internal types:src/lib/types (6951cf3)
 
-* migrate to internal types:src/lib/types (0f4c960)
+- migrate to internal types:src/lib/types (0f4c960)
 
-* migrate to internal types:src/lib/types (d156a89)
+- migrate to internal types:src/lib/types (d156a89)
 
-* migrate to internal types:src/lib/types (bfa18fe)
+- migrate to internal types:src/lib/types (bfa18fe)
 
-* migrate to internal types:src/lib/types (0f303b7)
+- migrate to internal types:src/lib/types (0f303b7)
 
-* migrate to internal types:src/lib/types (dedec38)
+- migrate to internal types:src/lib/types (dedec38)
 
-* migrate to internal types:src/lib/types (060d727)
+- migrate to internal types:src/lib/types (060d727)
 
-* migrate to internal types:src/lib/types (47c8d20)
+- migrate to internal types:src/lib/types (47c8d20)
 
-* migrate to internal types:src/lib/types (c67d4cc)
+- migrate to internal types:src/lib/types (c67d4cc)
 
-* migrate to internal types:src/lib/types (9601ea7)
+- migrate to internal types:src/lib/types (9601ea7)
 
-* migrate to internal types:src/lib/types (9f43e1b)
+- migrate to internal types:src/lib/types (9f43e1b)
 
-* migrate to internal types:src/lib/types (ae333ac)
+- migrate to internal types:src/lib/types (ae333ac)
 
-* migrate to internal types:src/lib/types (da3126a)
+- migrate to internal types:src/lib/types (da3126a)
 
-* migrate to internal types:src/lib/types (270e716)
+- migrate to internal types:src/lib/types (270e716)
 
-* migrate to internal types:src/lib/types (b14fba7)
+- migrate to internal types:src/lib/types (b14fba7)
 
-* migrate to internal types:src/lib/types (a83ce5d)
+- migrate to internal types:src/lib/types (a83ce5d)
 
-* migrate to internal types:src/lib/types (ef7f831)
+- migrate to internal types:src/lib/types (ef7f831)
 
-* migrate to internal types:src/lib/types (8189e2e)
+- migrate to internal types:src/lib/types (8189e2e)
 
-* migrate to internal types:src/lib/types (f9a3e82)
+- migrate to internal types:src/lib/types (f9a3e82)
 
-* migrate to internal types:src/lib/types (58eecc9)
+- migrate to internal types:src/lib/types (58eecc9)
 
-* migrate to internal types:src/lib/types (3ef6c1c)
+- migrate to internal types:src/lib/types (3ef6c1c)
 
-* migrate to internal types:src/lib/types (f247820)
+- migrate to internal types:src/lib/types (f247820)
 
-* info output (00080bf)
+- info output (00080bf)
 
-* info output (000acb0)
+- info output (000acb0)
 
-* info output (00092b5)
-
-
+- info output (00092b5)
 
 ### src/lib/p2p/chat
 
-* message chunking:intermediate (2b5e638)
+- message chunking:intermediate (2b5e638)
 
-* message chunking:intermediate (cd1ea15)
-
-
+- message chunking:intermediate (cd1ea15)
 
 ### src/lib/p2p/chat/mod.rs
 
-* message chunking (d9492ff)
-
-
+- message chunking (d9492ff)
 
 ### src/lib/p2p/chat/msg.rs
 
-* NostrEvent (d734234)
+- NostrEvent (d734234)
 
-* left align all texts (2e42c97)
+- left align all texts (2e42c97)
 
-* line break:intermediate (d7eb95d)
+- line break:intermediate (d7eb95d)
 
-* message chunk ordering:intermediate (6848377)
-
-
+- message chunk ordering:intermediate (6848377)
 
 ### src/lib/p2p/chat/p2p.rs
 
-* message chunk ordering:intermediate (730f896)
+- message chunk ordering:intermediate (730f896)
 
-* message chunking:intermediate (62b3aa1)
+- message chunking:intermediate (62b3aa1)
 
-* message chunking:intermediate (def3aa6)
-
-
+- message chunking:intermediate (def3aa6)
 
 ### src/lib/p2p/chat/ui.rs
 
-* highlight-80th (de032df)
+- highlight-80th (de032df)
 
-* highlight-every-80th (3237046)
-
-
+- highlight-every-80th (3237046)
 
 ### src/lib/p2p/mod.rs
 
-* use src/lib/types (d943617)
-
-
+- use src/lib/types (d943617)
 
 ### src/lib/test_utils/mod.rs
 
-* use winapi:windows_process_killer (551114d)
-
-
+- use winapi:windows_process_killer (551114d)
 
 ### src/lib/utils/windows.rs
 
-* migrate windows_process_killer from src/lib/ws.rs (754a456)
-
-
+- migrate windows_process_killer from src/lib/ws.rs (754a456)
 
 ### src/bin
 
-* remove gnostr-weeble/blockhash/height/wobble (7b37398)
-
-
+- remove gnostr-weeble/blockhash/height/wobble (7b37398)
 
 ### src/bin/git-remote-nostr
 
-* remove unused (5038ae5)
-
-
+- remove unused (5038ae5)
 
 ### src/bin/gnostr-blockheight.rs
 
-* remove unused (39596e5)
-
-
+- remove unused (39596e5)
 
 ### src/lib/cli.rs
 
-* nsec:long_help (618eb18)
-
-
+- nsec:long_help (618eb18)
 
 ### src/lib/dashboard
 
-* remove (8e16a17)
-
-
+- remove (8e16a17)
 
 ### src/lib/components/topiclist.rs
 
-* quiet unused (6627ca1)
-
-
+- quiet unused (6627ca1)
 
 ### src/lib/popups/branchlist.rs
 
-* quiet unused (7ac18a1)
-
-
+- quiet unused (7ac18a1)
 
 ### /src/lib/sub_commands/query.rs
 
-* command-expansion (d7dd2e3)
-
-
+- command-expansion (d7dd2e3)
 
 ### Refactoring
 
-* update deprecated attributes and fix related tests (000f40c)
+- update deprecated attributes and fix related tests (000f40c)
 
-* update deprecated attributes and fix related tests (7920d93)
+- update deprecated attributes and fix related tests (7920d93)
 
-* update deprecated attributes and fix related tests (05d0be5)
+- update deprecated attributes and fix related tests (05d0be5)
 
-* update deprecated attributes and fix related tests (7ca0ca4)
+- update deprecated attributes and fix related tests (7ca0ca4)
 
-* update clap usage and fix git parse tests (00072f6)
-
-
+- update clap usage and fix git parse tests (00072f6)
 
 ### Testing
 
-* --all-features:fixes (ec59445)
+- --all-features:fixes (ec59445)
 
-* --all-features:fixes (ea3fe98)
+- --all-features:fixes (ea3fe98)
 
-* --all-features:fixes (34f47e2)
+- --all-features:fixes (34f47e2)
 
-* --all-features:fixes (2ef18a4)
+- --all-features:fixes (2ef18a4)
 
-* --all-features:fixes (272b326)
+- --all-features:fixes (272b326)
 
-* --all-features:fixes (4dad669)
+- --all-features:fixes (4dad669)
 
-* --all-features:fixes (22b3061)
+- --all-features:fixes (22b3061)
 
-* --all-features:fixes (0a1df8e)
-
-
+- --all-features:fixes (0a1df8e)
 
 ### WIP
 
-* Intermediate changes before applying stash (2909b28)
-
-
+- Intermediate changes before applying stash (2909b28)
 
 ### coverage.sh
 
-* remove (97255d5)
-
-
+- remove (97255d5)
 
 ### src/bin/git-remote-nostr/push.rs
 
-* intermediate (b62c665)
-
-
+- intermediate (b62c665)
 
 ### src/lib/components/topiclist.rs
 
-* begin types/nip34:impl (484b8f4)
+- begin types/nip34:impl (484b8f4)
 
-* set_local/remote/branches:detect pr (b74d4ab)
+- set_local/remote/branches:detect pr (b74d4ab)
 
-* re-enable-chat-history (ed59b95)
-
-
+- re-enable-chat-history (ed59b95)
 
 ### src/lib/strings.rs
 
-* details_sha:339 (de350ff)
-
-
+- details_sha:339 (de350ff)
 
 ### src/lib/sub_commands/query.rs
 
-* command-expansion (244c6fd)
+- command-expansion (244c6fd)
 
-* clean up (2fb74b3)
-
-
+- clean up (2fb74b3)
 
 ### src/lib/test_utils/coverage.rs
 
-* Cargo.toml:add coverage feature (f035804)
-
-
+- Cargo.toml:add coverage feature (f035804)
 
 ### src/lib/ui/style.rs
 
-* selected_tab:selection_fg:selection_fg:branch_fg (162e7d1)
-
-
+- selected_tab:selection_fg:selection_fg:branch_fg (162e7d1)
 
 ### src/main.rs
 
-* add-tests (01da4e6)
-
-
+- add-tests (01da4e6)
 
 ### Bug Fixes
 
-* resolve clippy warnings and type mismatches (0000037)
+- resolve clippy warnings and type mismatches (0000037)
 
-* resolve remaining clippy warnings and type mismatches (0000c63)
+- resolve remaining clippy warnings and type mismatches (0000c63)
 
-* pass url as string to connect_async (000386e)
+- pass url as string to connect_async (000386e)
 
-* resolve compilation errors in ws_test and git_test (000ed30)
-
-
+- resolve compilation errors in ws_test and git_test (000ed30)
 
 ### Build System
 
-* bypass-git_commit (a7d8fab)
-
-
+- bypass-git_commit (a7d8fab)
 
 ### Testing
 
-* intermediate (afc5f5e)
+- intermediate (afc5f5e)
 
-* intermediate (3e43556)
+- intermediate (3e43556)
 
-* intermediate (430cfa7)
+- intermediate (430cfa7)
 
-* intermediate (aa893e7)
+- intermediate (aa893e7)
 
-* intermediate (97504c1)
+- intermediate (97504c1)
 
-* intermediate (a1c6118)
-
-
+- intermediate (a1c6118)
 
 ### crawler
 
-* remove-use-Tag (9fe8795)
-
-
+- remove-use-Tag (9fe8795)
 
 ### src/bin/git-remote-nostr
 
-* fix tests imports (05de081)
-
-
+- fix tests imports (05de081)
 
 ### src/lib/p2p/chat/mod.rs
 
-* search_path:repo_path (f42ebcf)
-
-
+- search_path:repo_path (f42ebcf)
 
 ### src/lib/test_utils
 
-* intermediate (98a5b5e)
+- intermediate (98a5b5e)
 
-* intermediate (27b95bc)
-
-
+- intermediate (27b95bc)
 
 ### src/lib/test_utils/reader.rs
 
-* fix errors and doc test errors (7ee146b)
-
-
+- fix errors and doc test errors (7ee146b)
 
 ### src/main.rs
 
-* gnostr_cli_args.logging (fea9d9c)
-
-
+- gnostr_cli_args.logging (fea9d9c)
 
 ### ssh
 
-* remove (9c06aca)
-
-
+- remove (9c06aca)
 
 ### legit/build.rs
 
-* _git_commit (da291c9)
-
-
+- \_git_commit (da291c9)
 
 ### src/lib/types/versioned/relay_information_document2.rs
 
-* :test:fix (6146cc0)
-
-
+- :test:fix (6146cc0)
 
 ### dist-workspace.toml
 
-* allow-dirty (b939f57)
-
-
+- allow-dirty (b939f57)
 
 ### .github/workflows/gnostr-bot-matrix.yml
 
-* fail-fast (b32bf94)
-
-
+- fail-fast (b32bf94)
 
 ### Bug Fixes
 
-* move non_ascii_idents deny to crate level (0001f80)
+- move non_ascii_idents deny to crate level (0001f80)
 
-* fix unused variable warning (0001961)
+- fix unused variable warning (0001961)
 
-* fix unused variable warning (000f667)
+- fix unused variable warning (000f667)
 
-* fix unused variable warning (000223e)
+- fix unused variable warning (000223e)
 
-* fix unused variable warning (00057fe)
+- fix unused variable warning (00057fe)
 
-* fix unused variable warning (000fb74)
+- fix unused variable warning (000fb74)
 
-* use area() instead of deprecated size() (00070c8)
+- use area() instead of deprecated size() (00070c8)
 
-* use set_cursor_position() instead of deprecated set_cursor() (00031f1)
+- use set_cursor_position() instead of deprecated set_cursor() (00031f1)
 
-* fix deprecated libp2p kad config (00043c7)
+- fix deprecated libp2p kad config (00043c7)
 
-* use area() instead of deprecated size() (000a0e9)
+- use area() instead of deprecated size() (000a0e9)
 
-* use area() instead of deprecated size() (000b98b)
+- use area() instead of deprecated size() (000b98b)
 
-* use area() instead of deprecated size() (000619f)
+- use area() instead of deprecated size() (000619f)
 
-* use chunk_by() instead of deprecated group_by() (0002e08)
+- use chunk_by() instead of deprecated group_by() (0002e08)
 
-* Add #[allow(dead_code)] to unused functions (0c9d95b)
+- Add #[allow(dead_code)] to unused functions (0c9d95b)
 
-* Clarify gnostr legit usage (0000646)
-
-
+- Clarify gnostr legit usage (0000646)
 
 ### Cargo.toml
 
-* use cargo-dist = "0.28.2" (9e9e10b)
-
-
+- use cargo-dist = "0.28.2" (9e9e10b)
 
 ### EventKind
 
-* :MarketplaceUi (7cb69d8)
-
-
+- :MarketplaceUi (7cb69d8)
 
 ### Features
 
-* Fix Result<()> compilation errors in ngit/list.rs (0002d40)
+- Fix Result<()> compilation errors in ngit/list.rs (0002d40)
 
-* Add NIP-02 contact list subcommands (000c745)
+- Add NIP-02 contact list subcommands (000c745)
 
-* Add subscribe_to_contact_lists method (000b8b9)
+- Add subscribe_to_contact_lists method (000b8b9)
 
-* Implement GetContacts subcommand (000c221)
+- Implement GetContacts subcommand (000c221)
 
-* Implement add-contact and remove-contact subcommands (0004062)
+- Implement add-contact and remove-contact subcommands (0004062)
 
-* Implement NIP-15 marketplace subcommands (0000864)
+- Implement NIP-15 marketplace subcommands (0000864)
 
-* Implement NIP-26 delegation and fix various compilation errors (00023ce)
+- Implement NIP-26 delegation and fix various compilation errors (00023ce)
 
-* Implement NIP-03 OpenTimestamps (000003a)
+- Implement NIP-03 OpenTimestamps (000003a)
 
-* Implement NIP-10 Text Notes and Threads (0003f99)
+- Implement NIP-10 Text Notes and Threads (0003f99)
 
-* Update NIP-11 RelayInformationDocument (0002f1f)
+- Update NIP-11 RelayInformationDocument (0002f1f)
 
-* Implement NIP-13 Proof of Work (000cf05)
+- Implement NIP-13 Proof of Work (000cf05)
 
-* Implement NIP-14 subject tag (000b2e7)
+- Implement NIP-14 subject tag (000b2e7)
 
-* Implement NIP-59 Gift Wrap (00009f4)
+- Implement NIP-59 Gift Wrap (00009f4)
 
-* Implement NIP-18 Reposts (000799e)
+- Implement NIP-18 Reposts (000799e)
 
-* Implement NIP-17 SendNip17Dm subcommand (000b27a)
+- Implement NIP-17 SendNip17Dm subcommand (000b27a)
 
-* Implement NIP-17 private direct messages (SendNip17Dm) and update GetDms for NIP-59 (000d4b5)
+- Implement NIP-17 private direct messages (SendNip17Dm) and update GetDms for NIP-59 (000d4b5)
 
-* Implement NIP-18 Reposts and related fixes (000c564)
-
-
+- Implement NIP-18 Reposts and related fixes (000c564)
 
 ### Refactoring
 
-* remove unused imports (000b5e0)
+- remove unused imports (000b5e0)
 
-* remove unused Args import (000f6a6)
+- remove unused Args import (000f6a6)
 
-* remove unused git2 imports (0005748)
+- remove unused git2 imports (0005748)
 
-* remove unused InternalEvent import (00064fc)
+- remove unused InternalEvent import (00064fc)
 
-* remove unused libp2p import (000c14d)
+- remove unused libp2p import (000c14d)
 
-* remove unused serde imports (000c518)
+- remove unused serde imports (000c518)
 
-* remove unused tracing_subscriber import (000fc08)
+- remove unused tracing_subscriber import (000fc08)
 
-* remove more unused tracing_subscriber imports (000ea64)
+- remove more unused tracing_subscriber imports (000ea64)
 
-* remove unused SerializableCommit import (000fb85)
+- remove unused SerializableCommit import (000fb85)
 
-* remove unused utils import (000b4a1)
+- remove unused utils import (000b4a1)
 
-* remove unused std::any import (0002991)
+- remove unused std::any import (0002991)
 
-* remove unused git2 imports (000d070)
+- remove unused git2 imports (000d070)
 
-* remove unused legit import (0008e4e)
+- remove unused legit import (0008e4e)
 
-* remove unused asyncgit import (0001fe0)
+- remove unused asyncgit import (0001fe0)
 
-* remove unused crawler import (0007f67)
+- remove unused crawler import (0007f67)
 
-* remove unused serde imports (0001796)
+- remove unused serde imports (0001796)
 
-* remove unused serde_json imports (000c294)
+- remove unused serde_json imports (000c294)
 
-* remove unused HashMap import (000b3ad)
+- remove unused HashMap import (000b3ad)
 
-* remove unused fmt import (000e216)
+- remove unused fmt import (000e216)
 
-* remove unused asyncgit imports (000c856)
+- remove unused asyncgit imports (000c856)
 
-* remove unused utils imports (000fd05)
+- remove unused utils imports (000fd05)
 
-* remove unused kad imports (000a5fe)
+- remove unused kad imports (000a5fe)
 
-* remove unused futures import (0005576)
+- remove unused futures import (0005576)
 
-* remove unused futures imports (000d76f)
+- remove unused futures imports (000d76f)
 
-* remove unused libp2p import (0004860)
+- remove unused libp2p import (0004860)
 
-* remove unused libp2p import (000d46b)
+- remove unused libp2p import (000d46b)
 
-* remove unused libp2p import (000f179)
+- remove unused libp2p import (000f179)
 
-* remove unused libp2p imports (0000c81)
+- remove unused libp2p imports (0000c81)
 
-* remove unused libp2p import (000f7a4)
+- remove unused libp2p import (000f7a4)
 
-* remove unused io import (0004eb3)
+- remove unused io import (0004eb3)
 
-* remove unused str import (0007edb)
+- remove unused str import (0007edb)
 
-* remove unused time import (00093a7)
+- remove unused time import (00093a7)
 
-* remove unused clap imports (000ac25)
+- remove unused clap imports (000ac25)
 
-* remove unused gitui import (0007093)
+- remove unused gitui import (0007093)
 
-* remove unused ssh import (000be6a)
+- remove unused ssh import (000be6a)
 
-* remove unused relay import (000d4a4)
+- remove unused relay import (000d4a4)
 
-* remove unused serde import (000a20b)
+- remove unused serde import (000a20b)
 
-* remove unused nostr_sdk import (000daf7)
+- remove unused nostr_sdk import (000daf7)
 
-* remove unused tracing import (000436b)
+- remove unused tracing import (000436b)
 
-* remove unused imports (000c881)
+- remove unused imports (000c881)
 
-* remove unused cbc imports (000af35)
+- remove unused cbc imports (000af35)
 
-* remove unused secp256k1 import (000646f)
+- remove unused secp256k1 import (000646f)
 
-* remove unused secp256k1 import (0003c3a)
+- remove unused secp256k1 import (0003c3a)
 
-* remove unused hex import (00098e6)
+- remove unused hex import (00098e6)
 
-* remove unused tracing imports (000d63a)
+- remove unused tracing imports (000d63a)
 
-* remove unused reqwest import (000ded5)
+- remove unused reqwest import (000ded5)
 
-* remove unused io import (00049ff)
+- remove unused io import (00049ff)
 
-* remove unused time import (0005477)
+- remove unused time import (0005477)
 
-* src and tests (6de9851)
+- src and tests (6de9851)
 
-* Clarify gnostr legit usage and workflow steps (0005c28)
+- Clarify gnostr legit usage and workflow steps (0005c28)
 
-* Sync with latest stashed changes and ensure NIP-04 DM default (00011d1)
-
-
+- Sync with latest stashed changes and ensure NIP-04 DM default (00011d1)
 
 ### asyncgit/Cargo.toml
 
-* add [lib] section (f736364)
-
-
+- add [lib] section (f736364)
 
 ### src
 
-* code clean up (37ba0a7)
+- code clean up (37ba0a7)
 
-* apply clippy manually (ad2d8ab)
+- apply clippy manually (ad2d8ab)
 
-* apply clippy manually (ac357f3)
+- apply clippy manually (ac357f3)
 
-* apply clippy manually (c1d6d62)
+- apply clippy manually (c1d6d62)
 
-* apply clippy manually (06c3c33)
+- apply clippy manually (06c3c33)
 
-* apply clippy manually (6da5b6c)
+- apply clippy manually (6da5b6c)
 
-* apply clippy manually (e58e97e)
+- apply clippy manually (e58e97e)
 
-* apply clippy manually (1a636f5)
+- apply clippy manually (1a636f5)
 
-* apply clippy manually (a613b1c)
+- apply clippy manually (a613b1c)
 
-* apply clippy manually (ebd2a8a)
+- apply clippy manually (ebd2a8a)
 
-* apply clippy manually (eee88a0)
+- apply clippy manually (eee88a0)
 
-* apply clippy manually (761b0e1)
+- apply clippy manually (761b0e1)
 
-* apply clippy manually (bdb9447)
+- apply clippy manually (bdb9447)
 
-* apply clippy manually (df0911f)
+- apply clippy manually (df0911f)
 
-* apply clippy manually (f4bd710)
+- apply clippy manually (f4bd710)
 
-* apply clippy manually (ec3aa3b)
+- apply clippy manually (ec3aa3b)
 
-* apply clippy manually (f8e9fb9)
+- apply clippy manually (f8e9fb9)
 
-* apply clippy manually (d3bff9c)
+- apply clippy manually (d3bff9c)
 
-* apply clippy manually (2732719)
+- apply clippy manually (2732719)
 
-* apply clippy manually (680cac0)
+- apply clippy manually (680cac0)
 
-* apply clippy manually (d2a97de)
+- apply clippy manually (d2a97de)
 
-* apply clippy manually (da430c0)
+- apply clippy manually (da430c0)
 
-* apply clippy manually (d358fdd)
+- apply clippy manually (d358fdd)
 
-* apply clippy manually (a5be957)
+- apply clippy manually (a5be957)
 
-* apply clippy manually (9cd3df8)
+- apply clippy manually (9cd3df8)
 
-* apply clippy manually (f3aafc3)
+- apply clippy manually (f3aafc3)
 
-* apply clippy manually (de18532)
+- apply clippy manually (de18532)
 
-* apply clippy manually (9f3ede4)
+- apply clippy manually (9f3ede4)
 
-* apply clippy manually (ab37741)
+- apply clippy manually (ab37741)
 
-* apply clippy manually (c39ec3a)
+- apply clippy manually (c39ec3a)
 
-* apply clippy manually (3af9d37)
+- apply clippy manually (3af9d37)
 
-* apply clippy manually (cc393c4)
+- apply clippy manually (cc393c4)
 
-* apply clippy manually (e3eab81)
+- apply clippy manually (e3eab81)
 
-* apply clippy manually (969e44b)
+- apply clippy manually (969e44b)
 
-* apply clippy manually (e20c92b)
+- apply clippy manually (e20c92b)
 
-* apply clippy manually (d6a46a7)
+- apply clippy manually (d6a46a7)
 
-* apply clippy manually (dc879cf)
+- apply clippy manually (dc879cf)
 
-* apply clippy manually (a210b64)
+- apply clippy manually (a210b64)
 
-* apply clippy manually (80e86c6)
+- apply clippy manually (80e86c6)
 
-* apply clippy manually (3a68eee)
+- apply clippy manually (3a68eee)
 
-* apply clippy manually (0f4e558)
+- apply clippy manually (0f4e558)
 
-* apply clippy manually (443018d)
+- apply clippy manually (443018d)
 
-* apply clippy manually (cfb781a)
+- apply clippy manually (cfb781a)
 
-* apply clippy manually (e0d7876)
+- apply clippy manually (e0d7876)
 
-* apply clippy manually (d60daf1)
+- apply clippy manually (d60daf1)
 
-* apply clippy manually (4078585)
+- apply clippy manually (4078585)
 
-* apply clippy manually (ebc6878)
+- apply clippy manually (ebc6878)
 
-* apply clippy manually (cf3f321)
+- apply clippy manually (cf3f321)
 
-* apply clippy manually (bb7b0ca)
+- apply clippy manually (bb7b0ca)
 
-* apply clippy manually (a6ed389)
+- apply clippy manually (a6ed389)
 
-* apply clippy manually (c704897)
+- apply clippy manually (c704897)
 
-* apply clippy manually (cfb5c93)
+- apply clippy manually (cfb5c93)
 
-* apply clippy manually (e1bd9d7)
+- apply clippy manually (e1bd9d7)
 
-* apply clippy manually (236c7b9)
+- apply clippy manually (236c7b9)
 
-* apply clippy manually (b16b3b9)
+- apply clippy manually (b16b3b9)
 
-* apply clippy manually (ddd3587)
+- apply clippy manually (ddd3587)
 
-* apply clippy manually (2b360ed)
+- apply clippy manually (2b360ed)
 
-* apply clippy manually (e857a8c)
+- apply clippy manually (e857a8c)
 
-* apply cargo clippy manually (1f42e8e)
+- apply cargo clippy manually (1f42e8e)
 
-* apply cargo clippy manually (9dbe62e)
+- apply cargo clippy manually (9dbe62e)
 
-* apply cargo clippy manually (0f9d4d3)
+- apply cargo clippy manually (0f9d4d3)
 
-* apply clippy manually (a887b0f)
+- apply clippy manually (a887b0f)
 
-* apply clippy manually (244b6af)
-
-
+- apply clippy manually (244b6af)
 
 ### src/bin/gnostr-client.rs
 
-* basic impl working (c94ad48)
+- basic impl working (c94ad48)
 
-* clap (ef2b099)
+- clap (ef2b099)
 
-* intermediate (7bf19f3)
+- intermediate (7bf19f3)
 
-* interrmediate:Market (3e3ed0a)
-
-
+- interrmediate:Market (3e3ed0a)
 
 ### src/lib/core/ui.rs
 
-* make_screenshot_cross_platform (84079be)
-
-
+- make_screenshot_cross_platform (84079be)
 
 ### src/lib/dashboard/app.rs
 
-* remove unused (9c1478a)
-
-
+- remove unused (9c1478a)
 
 ### src/lib/dashboard/p2p.rs
 
-* remove unused (1719278)
-
-
+- remove unused (1719278)
 
 ### src/lib/dashboard/ui/mod.rs
 
-* remove unused (1e3ff8d)
-
-
+- remove unused (1e3ff8d)
 
 ### src/lib/legit/command.rs
 
-* remove unused (85ac073)
-
-
+- remove unused (85ac073)
 
 ### src/lib/p2p/chat/mod.rs
 
-* padded commit hash (d39e97b)
+- padded commit hash (d39e97b)
 
-* intermediate:nip28 (1cf6903)
+- intermediate:nip28 (1cf6903)
 
-* intermediate:nip28 (290b559)
-
-
+- intermediate:nip28 (290b559)
 
 ### src/lib/sub_commands/tui.rs
 
-* make_screenshot_cross_platform (c150c00)
-
-
+- make_screenshot_cross_platform (c150c00)
 
 ### src/lib/types
 
-* create_gift_wrap:create_seal (0b88cbc)
-
-
+- create_gift_wrap:create_seal (0b88cbc)
 
 ### src/lib/types/mod.rs
 
-* allow_missing_docs (4f47329)
-
-
+- allow_missing_docs (4f47329)
 
 ### src/lib/types/nip28.rs
 
-* intermediate:nip28 (f4e0a0a)
+- intermediate:nip28 (f4e0a0a)
 
-* intermediate (5b3684f)
+- intermediate (5b3684f)
 
-* intermediate (177064f)
+- intermediate (177064f)
 
-* tests:passing (ea24924)
+- tests:passing (ea24924)
 
-* p tag filter (949b36c)
-
-
+- p tag filter (949b36c)
 
 ### src/lib/types/nostr_client.rs
 
-* subscribe_to_dms (beb9631)
-
-
+- subscribe_to_dms (beb9631)
 
 ### src/lib/types/private_key/mod.rs
 
-* PrivateKey-derive-Clone (d7a276d)
-
-
+- PrivateKey-derive-Clone (d7a276d)
 
 ### src/lib/types/versioned/relay_information_document2.patch
 
-* serde-imple-for-reference (4c49b5d)
-
-
+- serde-imple-for-reference (4c49b5d)
 
 ### src/lib/utils/screenshot.rs
 
-* add make_screenshot_cross_platform (895629d)
+- add make_screenshot_cross_platform (895629d)
 
-* test_make_screenshot_cross_platform (175b900)
-
-
+- test_make_screenshot_cross_platform (175b900)
 
 ### src/main.rs
 
-* weeble/blockheight/wobble:print int only (4a04428)
-
-
+- weeble/blockheight/wobble:print int only (4a04428)
 
 ### .gitignore
 
-* .genkit (0241dd2)
-
-
+- .genkit (0241dd2)
 
 ### Bug Fixes
 
-* Restore terminal in TUI tests (0009620)
-
-
+- Restore terminal in TUI tests (0009620)
 
 ### Documentation
 
-* Document GitTestRepo refactoring and version updates (0000078)
-
-
+- Document GitTestRepo refactoring and version updates (0000078)
 
 ### Testing
 
-* intermediate (a9b1451)
+- intermediate (a9b1451)
 
-* intermediate (34894ee)
+- intermediate (34894ee)
 
-* ctor cleanup (c7deab6)
+- ctor cleanup (c7deab6)
 
-* intermediate (84b61cf)
+- intermediate (84b61cf)
 
-* intermediate (2fa354f)
+- intermediate (2fa354f)
 
-* all tests serial (dbf3356)
+- all tests serial (dbf3356)
 
-* intermediate (dd3cf38)
+- intermediate (dd3cf38)
 
-* remove:--debug flag (a6b2b7c)
+- remove:--debug flag (a6b2b7c)
 
-* remove tests (d6c6bd5)
+- remove tests (d6c6bd5)
 
-* intermediate (d09f97d)
-
-
+- intermediate (d09f97d)
 
 ### asyncgit/src/lib.rs
 
-* bypass linting (8bcde85)
-
-
+- bypass linting (8bcde85)
 
 ### chat
 
-* intermediate (aa00fa2)
-
-
+- intermediate (aa00fa2)
 
 ### serial
 
-* test:intermediate (ba82607)
+- test:intermediate (ba82607)
 
-* test:intermediate (3b52f03)
+- test:intermediate (3b52f03)
 
-* test:intermediate (b8f39ac)
+- test:intermediate (b8f39ac)
 
-* test:intermediate (369ee29)
+- test:intermediate (369ee29)
 
-* test:intermediate (0c4516d)
+- test:intermediate (0c4516d)
 
-* test:intermediate (a40efe5)
-
-
+- test:intermediate (a40efe5)
 
 ### src
 
-* tests:intermediate (7b8b25c)
-
-
+- tests:intermediate (7b8b25c)
 
 ### src/lib/relays
 
-* openapi:tests (4ada61f)
-
-
+- openapi:tests (4ada61f)
 
 ### .gemini/tmp
 
-* remove (81a03aa)
-
-
+- remove (81a03aa)
 
 ### Bug Fixes
 
-* Resolve clippy  and  errors (0007399)
+- Resolve clippy and errors (0007399)
 
-* Resolve all clippy warnings/errors (000915a)
+- Resolve all clippy warnings/errors (000915a)
 
-* Resolve clippy  and  errors (000ab8c)
+- Resolve clippy and errors (000ab8c)
 
-* Comment out incorrect  call (000553d)
+- Comment out incorrect call (000553d)
 
-* Resolve  clippy error (0007546)
+- Resolve clippy error (0007546)
 
-* Resolve  errors and  dependency (000314e)
-
-
+- Resolve errors and dependency (000314e)
 
 ### Documentation
 
-* Add missing documentation for State struct and its fields (00046cf)
-
-
+- Add missing documentation for State struct and its fields (00046cf)
 
 ### gnostr
 
-* v1906.925289.572444 (777b94b)
-
-
+- v1906.925289.572444 (777b94b)
 
 ### src/lib/types/nip44
 
-* intermediate:tests (d6d7c80)
-
-
+- intermediate:tests (d6d7c80)
 
 ### src/lib/types/nip44/tests.rs
 
-* intermediate (d9bf021)
+- intermediate (d9bf021)
 
-* intermediate:parsing good (328e9c9)
+- intermediate:parsing good (328e9c9)
 
-* passing (1ed657c)
-
-
+- passing (1ed657c)
 
 ### .gitignore
 
-* vendor (23a8a72)
-
-
+- vendor (23a8a72)
 
 ### Bug Fixes
 
-* correct visibility of OpTrait and Action (000a8af)
+- correct visibility of OpTrait and Action (000a8af)
 
-* correct asyncgit API test (000d510)
+- correct asyncgit API test (000d510)
 
-* correct borrow-checker error in asyncgit API test (0000b40)
+- correct borrow-checker error in asyncgit API test (0000b40)
 
-* correct compilation errors in asyncgit API test (000fc07)
+- correct compilation errors in asyncgit API test (000fc07)
 
-* correct compilation errors in asyncgit API test (000188d)
+- correct compilation errors in asyncgit API test (000188d)
 
-* correct compilation errors in asyncgit API test (0005b7e)
+- correct compilation errors in asyncgit API test (0005b7e)
 
-* correct compilation errors in asyncgit API test (0004f66)
+- correct compilation errors in asyncgit API test (0004f66)
 
-* correct compilation errors in asyncgit API test (0000c40)
+- correct compilation errors in asyncgit API test (0000c40)
 
-* correct compilation errors in asyncgit API test (0000e30)
+- correct compilation errors in asyncgit API test (0000e30)
 
-* correct compilation errors in asyncgit API test (000202e)
-
-
+- correct compilation errors in asyncgit API test (000202e)
 
 ### CHANGELOG.md
 
-* update (aa40009)
-
-
+- update (aa40009)
 
 ### Features
 
-* add --screenshots flag for TUI capture (0008f50)
+- add --screenshots flag for TUI capture (0008f50)
 
-* implement NIPs 02, 04, 05, 06 (000c74a)
+- implement NIPs 02, 04, 05, 06 (000c74a)
 
-* implement NIP-09 Event Deletion (0005b8c)
+- implement NIP-09 Event Deletion (0005b8c)
 
-* implement NIP-15 End of Stored Events (000d790)
+- implement NIP-15 End of Stored Events (000d790)
 
-* implement NIP-26 Delegation (00059f1)
-
-
+- implement NIP-26 Delegation (00059f1)
 
 ### Refactoring
 
-* guard os-specific code (000cade)
-
-
+- guard os-specific code (000cade)
 
 ### Testing
 
-* :test_chat_simulation:intermediate (677d478)
+- :test_chat_simulation:intermediate (677d478)
 
-* initial impl (d8c75af)
+- initial impl (d8c75af)
 
-* bypass some tests (bfbcc1d)
+- bypass some tests (bfbcc1d)
 
-* add integration test for asyncgit API (0004705)
+- add integration test for asyncgit API (0004705)
 
-* add comprehensive workflow test (0004388)
-
-
+- add comprehensive workflow test (0004388)
 
 ### asyncgit/src/gitui/ops/mod.rs
 
-* pub enum Op (4639507)
-
-
+- pub enum Op (4639507)
 
 ### cube
 
-* remove (d62630e)
-
-
+- remove (d62630e)
 
 ### make
 
-* cargo-test-types-nip_three_four (93063ca)
-
-
+- cargo-test-types-nip_three_four (93063ca)
 
 ### make_just.sh
 
-* cargo-test-types-nip34 (f00906f)
-
-
+- cargo-test-types-nip34 (f00906f)
 
 ### src/bin/capture_tui.rs
 
-* disable (74544b7)
-
-
+- disable (74544b7)
 
 ### src/lib/dashboard
 
-* initial impl (a292449)
-
-
+- initial impl (a292449)
 
 ### src/lib/p2p/lookup.rs
 
-* initial impl:add src/bin/gnostr-lookup.rs (aaf87e7)
-
-
+- initial impl:add src/bin/gnostr-lookup.rs (aaf87e7)
 
 ### src/lib/sub_commands/git.rs
 
-* refactor tag logic (cb43b48)
+- refactor tag logic (cb43b48)
 
-* sub-subcommand:intermediate (a1262a3)
+- sub-subcommand:intermediate (a1262a3)
 
-* sub-subcommands:initial impl (d47c33e)
-
-
+- sub-subcommands:initial impl (d47c33e)
 
 ### src/lib/sub_commands/nip34.rs
 
-* initial impl (f07af95)
-
-
+- initial impl (f07af95)
 
 ### src/lib/sub_commands/rad.rs
 
-* begin radicle support (76d69dd)
-
-
+- begin radicle support (76d69dd)
 
 ### src/lib/sub_commands/tui.rs
 
-* use os_cache fallback (436231b)
-
-
+- use os_cache fallback (436231b)
 
 ### src/lib/types
 
-* rename:tiny-bip39 to bip39 (3cb0149)
-
-
+- rename:tiny-bip39 to bip39 (3cb0149)
 
 ### src/lib/types/nip34.rs
 
-* add tests (ea7b9c3)
+- add tests (ea7b9c3)
 
-* more tests (20a3e66)
+- more tests (20a3e66)
 
-* more tests (538f394)
+- more tests (538f394)
 
-* test_event_creation (924c495)
+- test_event_creation (924c495)
 
-* tests:tolerant of wobble difference (46a1376)
-
-
+- tests:tolerant of wobble difference (46a1376)
 
 ### Bug Fixes
 
-* improve error handling and argument parsing (0006b31)
-
-
+- improve error handling and argument parsing (0006b31)
 
 ### Build System
 
-* refactor (fc61e51)
+- refactor (fc61e51)
 
-* nip44.vectors.json:sync/hash (5daddc7)
+- nip44.vectors.json:sync/hash (5daddc7)
 
-* let _ = git_commit(dir_path); (64e586e)
-
-
+- let \_ = git_commit(dir_path); (64e586e)
 
 ### Cargo.toml
 
-* build deps (94b6851)
-
-
+- build deps (94b6851)
 
 ### Documentation
 
-* update README and project structure (0004551)
+- update README and project structure (0004551)
 
-* add usage documentation to README (000406a)
-
-
+- add usage documentation to README (000406a)
 
 ### README.md
 
-* update (b130011)
-
-
+- update (b130011)
 
 ### Refactoring
 
-* clean up command-line arguments (0004efe)
-
-
+- clean up command-line arguments (0004efe)
 
 ### Testing
 
-* test_websocket_connection_and_message_echo (512b02b)
+- test_websocket_connection_and_message_echo (512b02b)
 
-* skip test if tmux is not installed (000fd21)
+- skip test if tmux is not installed (000fd21)
 
-* gnostr chat (c33f9b6)
-
-
+- gnostr chat (c33f9b6)
 
 ### legit/README.md
 
-* doc command syntax (2d611f0)
-
-
+- doc command syntax (2d611f0)
 
 ### screenshot.rs
 
-* testing usage (f254c31)
-
-
+- testing usage (f254c31)
 
 ### src
 
-* more tests (5515ef9)
+- more tests (5515ef9)
 
-* more tests (4221b78)
+- more tests (4221b78)
 
-* more tests (7f9cc7a)
+- more tests (7f9cc7a)
 
-* more tests (8ad6ae8)
-
-
+- more tests (8ad6ae8)
 
 ### src/bin/capture_tui.rs
 
-* osascript (837d4f8)
-
-
+- osascript (837d4f8)
 
 ### src/bin/gnostr-sha256.rs
 
-* test hello_panic_query (0c99e40)
-
-
+- test hello_panic_query (0c99e40)
 
 ### src/bin/screenshot.rs
 
-* clap impl (e99f52a)
-
-
+- clap impl (e99f52a)
 
 ### src/lib/cli.rs
 
-* src/main.rs (cab4831)
-
-
+- src/main.rs (cab4831)
 
 ### src/lib/mod.rs
 
-* remove eprintln! (a92f903)
-
-
+- remove eprintln! (a92f903)
 
 ### src/lib/sub_commands/bech32_to_any.rs
 
-* json output (79245c7)
+- json output (79245c7)
 
-* detect bech32 prefix (5acdca5)
+- detect bech32 prefix (5acdca5)
 
-* use crate::types (ba88577)
-
-
+- use crate::types (ba88577)
 
 ### src/lib/sub_commands/git.rs
 
-* gnostr git --serve-ssh (5b0ddd6)
+- gnostr git --serve-ssh (5b0ddd6)
 
-* clean up --help (3a9266e)
+- clean up --help (3a9266e)
 
-* git fallback (46ce549)
+- git fallback (46ce549)
 
-* add --tag-version (0ff1b9f)
+- add --tag-version (0ff1b9f)
 
-* add --tag-pr-version (1c84739)
-
-
+- add --tag-pr-version (1c84739)
 
 ### src/lib/sub_commands/login.rs
 
-* clean up help (86a9332)
-
-
+- clean up help (86a9332)
 
 ### src/lib/types
 
-* migrate:refactor (188bc8f)
+- migrate:refactor (188bc8f)
 
-* tests (a95d903)
-
-
+- tests (a95d903)
 
 ### src/lib/utils/mod.rs
 
-* bypass test_get_current_working_dir (429300f)
-
-
+- bypass test_get_current_working_dir (429300f)
 
 ### src/lib/utils/screenshot.rs
 
-* add unix timestamp (264ddde)
+- add unix timestamp (264ddde)
 
-* add weeble-blockheight-wobble to timestamp (bdb0aee)
+- add weeble-blockheight-wobble to timestamp (bdb0aee)
 
-* weeble-blockheight-wobble (46f3e0f)
-
-
+- weeble-blockheight-wobble (46f3e0f)
 
 ### Bug Fixes
 
-* Correctly handle DEPTH variable in gh-cancel-queue.sh (9f82e37)
-
-
+- Correctly handle DEPTH variable in gh-cancel-queue.sh (9f82e37)
 
 ### Cargo.toml
 
-* remove udeps (6ed065a)
+- remove udeps (6ed065a)
 
-* re-add gnostr_qr (b0768b1)
-
-
+- re-add gnostr_qr (b0768b1)
 
 ### Features
 
-* Add git info subcommand and display local git details (41e4955)
-
-
+- Add git info subcommand and display local git details (41e4955)
 
 ### Refactoring
 
-* Use internal weeble, wobble, blockheight functions for git tag (a79a823)
-
-
+- Use internal weeble, wobble, blockheight functions for git tag (a79a823)
 
 ### TODO
 
-* fix tests:bypassed for now (bdf1ffd)
-
-
+- fix tests:bypassed for now (bdf1ffd)
 
 ### Testing
 
-* should panic (52d9532)
-
-
+- should panic (52d9532)
 
 ### gh
 
-* intermediate:align deps (60bf13d)
-
-
+- intermediate:align deps (60bf13d)
 
 ### gnostr/gh
 
-* initial impl (a671745)
+- initial impl (a671745)
 
-* align deps (0d5fc0f)
-
-
+- align deps (0d5fc0f)
 
 ### src
 
-* more tests (f7725aa)
-
-
+- more tests (f7725aa)
 
 ### src/bin/git-chcekout-b/pr.rs
 
-* remove (6fc8be6)
-
-
+- remove (6fc8be6)
 
 ### src/lib/sub_commands/git.rs
 
-* gnostr git --tag (ab0442e)
+- gnostr git --tag (ab0442e)
 
-* --tag <empty_string> (9936b85)
+- --tag <empty_string> (9936b85)
 
-* checkout branch/pr (0e31d2c)
+- checkout branch/pr (0e31d2c)
 
-* checkout branch/pr (101657a)
+- checkout branch/pr (101657a)
 
-* more tests (51f31ea)
+- more tests (51f31ea)
 
-* more tests (8d0f907)
+- more tests (8d0f907)
 
-* more tests (822df09)
+- more tests (822df09)
 
-* more tests (86202c1)
-
-
+- more tests (86202c1)
 
 ### src/lib/sub_commands/tui.rs
 
-* unwrap_or(..into()) (17c4e62)
-
-
+- unwrap_or(..into()) (17c4e62)
 
 ### Testing
 
-* dont ignore tests (6efce48)
+- dont ignore tests (6efce48)
 
-* bypass gitsh test (14b77fd)
-
-
+- bypass gitsh test (14b77fd)
 
 ### Testing
 
-* fix test (d433eb8)
-
-
+- fix test (d433eb8)
 
 ### Cargo.toml
 
-* remove sccache as build dep (fb9b241)
-
-
+- remove sccache as build dep (fb9b241)
 
 ### Testing
 
-* passing (902f3c2)
-
-
+- passing (902f3c2)
 
 ### cargo-dist
 
-* update (c642d3c)
-
-
+- update (c642d3c)
 
 ### .cargo/config.toml
 
-* fix sscache typo (419b61f)
-
-
+- fix sscache typo (419b61f)
 
 ### .github/workflows/gnostr-bot-matrix.yml
 
-* add gitworkshop remote (5552497)
+- add gitworkshop remote (5552497)
 
-* cargo -j8 (ee0b835)
+- cargo -j8 (ee0b835)
 
-* cgnostr ngit --help (0178098)
+- cgnostr ngit --help (0178098)
 
-* gnostr --help (517feb1)
+- gnostr --help (517feb1)
 
-* cargo -j8 (6f3b855)
+- cargo -j8 (6f3b855)
 
-* cargo -j8 (02bcb05)
+- cargo -j8 (02bcb05)
 
-* cargo -j8 (300f88f)
-
-
+- cargo -j8 (300f88f)
 
 ### .github/workflows/run-all-workflows.yml
 
-* v4 (558ab2c)
-
-
+- v4 (558ab2c)
 
 ### Bug Fixes
 
-* Suppress all warnings in .cargo/config.toml (74b9240)
+- Suppress all warnings in .cargo/config.toml (74b9240)
 
-* Improve error reporting from gitminer (00014ef)
-
-
+- Improve error reporting from gitminer (00014ef)
 
 ### Build System
 
-* make src/empty (40aa913)
+- make src/empty (40aa913)
 
-* git_commit (df8b5e6)
+- git_commit (df8b5e6)
 
-* apply cargo fmt (0e450ed)
-
-
+- apply cargo fmt (0e450ed)
 
 ### Cargo.lock
 
-* gnostr/relay:v1908.924232.84720 (2e9dadc)
-
-
+- gnostr/relay:v1908.924232.84720 (2e9dadc)
 
 ### Cargo.toml
 
-* build optimizations (aa103dd)
-
-
+- build optimizations (aa103dd)
 
 ### Features
 
-* Enable cross-platform Docker builds in ghcr.io.yml (8a18810)
+- Enable cross-platform Docker builds in ghcr.io.yml (8a18810)
 
-* Add gnostr chat topic connectivity test (717cc53)
-
-
+- Add gnostr chat topic connectivity test (717cc53)
 
 ### README.md
 
-* restore (d8b2a95)
-
-
+- restore (d8b2a95)
 
 ### Refactoring
 
-* replace simple-websockets with local gnostr dependency (50b91d0)
-
-
+- replace simple-websockets with local gnostr dependency (50b91d0)
 
 ### Testing
 
-* repo unborn state (378cdf0)
+- repo unborn state (378cdf0)
 
-* use git2@0.18.3:explicitly (15ae2a6)
+- use git2@0.18.3:explicitly (15ae2a6)
 
-* rexpect:splice:intermediate (885cc8c)
+- rexpect:splice:intermediate (885cc8c)
 
-* rexpect:splice:intermediate (8b2c4c5)
+- rexpect:splice:intermediate (8b2c4c5)
 
-* rexpect:splice:intermediate (90e71b3)
+- rexpect:splice:intermediate (90e71b3)
 
-* rexpect:splice:intermediate (2e0ca08)
+- rexpect:splice:intermediate (2e0ca08)
 
-* rexpect:splice:intermediate (c7f6558)
+- rexpect:splice:intermediate (c7f6558)
 
-* rexpect:splice:intermediate (0f0af4d)
+- rexpect:splice:intermediate (0f0af4d)
 
-* rexpect:splice:intermediate (60b20e3)
+- rexpect:splice:intermediate (60b20e3)
 
-* rexpect:splice:intermediate (55695e6)
+- rexpect:splice:intermediate (55695e6)
 
-* rexpect:splice:intermediate (386e2a1)
+- rexpect:splice:intermediate (386e2a1)
 
-* rexpect:splice:intermediate (3734db7)
+- rexpect:splice:intermediate (3734db7)
 
-* rexpect:splice:intermediate (b282b71)
+- rexpect:splice:intermediate (b282b71)
 
-* rexpect:splice:intermediate (0a6afb1)
+- rexpect:splice:intermediate (0a6afb1)
 
-* passing:rexpect:merge complete (73f596f)
+- passing:rexpect:merge complete (73f596f)
 
-* cleanup (b3e8bdb)
+- cleanup (b3e8bdb)
 
-* cfg unix flags (14056f9)
+- cfg unix flags (14056f9)
 
-* intermediate (7efe5ea)
+- intermediate (7efe5ea)
 
-* remove (886de83)
+- remove (886de83)
 
-* repo_path (68d0113)
+- repo_path (68d0113)
 
-* intermediate (ad4ac40)
+- intermediate (ad4ac40)
 
-* create test commit (0003743)
+- create test commit (0003743)
 
-* use gnostr:ws and tokio_tungstenite (f5e1b8a)
+- use gnostr:ws and tokio_tungstenite (f5e1b8a)
 
-* refactor for tokio (732cb00)
+- refactor for tokio (732cb00)
 
-* refactor for tokio (ae710bc)
+- refactor for tokio (ae710bc)
 
-* refactor for tokio (886c05f)
+- refactor for tokio (886c05f)
 
-* refactor for tokio (dc5bc5f)
-
-
+- refactor for tokio (dc5bc5f)
 
 ### examples
 
-* tests (714f069)
+- tests (714f069)
 
-* tests (6dfccc8)
+- tests (6dfccc8)
 
-* tests (4c5f80d)
+- tests (4c5f80d)
 
-* tests (4cfeccc)
+- tests (4cfeccc)
 
-* clean up (3c21fc1)
-
-
+- clean up (3c21fc1)
 
 ### examples/repl.rs
 
-* remove (d79ee8b)
-
-
+- remove (d79ee8b)
 
 ### gnostr/legit
 
-* v1911.921558.782146 (a4177e0)
+- v1911.921558.782146 (a4177e0)
 
-* src/main/gitminer.rs (00056cd)
+- src/main/gitminer.rs (00056cd)
 
-* worker:add a new line before nonce (0000225)
+- worker:add a new line before nonce (0000225)
 
-* worker:add a new line before nonce (0006a92)
+- worker:add a new line before nonce (0006a92)
 
-* worker:add a new line before nonce (00089ef)
+- worker:add a new line before nonce (00089ef)
 
-* worker:add a new line before nonce (000e26c)
+- worker:add a new line before nonce (000e26c)
 
-* worker:add a new line before nonce (000e376)
-
-
+- worker:add a new line before nonce (000e376)
 
 ### gnostr/relay
 
-* v1908.924232.84720 (468901b)
-
-
+- v1908.924232.84720 (468901b)
 
 ### make
 
-* cargo-sort (9bc4bbd)
+- cargo-sort (9bc4bbd)
 
-* gh-act-run-all (70d7ac7)
+- gh-act-run-all (70d7ac7)
 
-* gnostr-chat (0acd275)
-
-
+- gnostr-chat (0acd275)
 
 ### rexpect
 
-* intermediate:merge:remove dep (c19a8df)
-
-
+- intermediate:merge:remove dep (c19a8df)
 
 ### src
 
-* remove unused imports (9033972)
+- remove unused imports (9033972)
 
-* remove unused imports (2bab54f)
+- remove unused imports (2bab54f)
 
-* remove deprecated methods (ae4fa31)
+- remove deprecated methods (ae4fa31)
 
-* remove deprecated methods (cbca8dc)
+- remove deprecated methods (cbca8dc)
 
-* tests (f346025)
+- tests (f346025)
 
-* tests (c65c4b5)
+- tests (c65c4b5)
 
-* tests (ce2ffb4)
+- tests (ce2ffb4)
 
-* tests (f6e4a35)
+- tests (f6e4a35)
 
-* tests (f8d0300)
+- tests (f8d0300)
 
-* tests (bef0eec)
-
-
+- tests (bef0eec)
 
 ### src/bin
 
-* clean up (07e7ca0)
-
-
+- clean up (07e7ca0)
 
 ### src/bin/git-remote-nostr
 
-* rename (80dc97a)
-
-
+- rename (80dc97a)
 
 ### src/lib
 
-* disable cube (c946399)
-
-
+- disable cube (c946399)
 
 ### src/lib/legit/command.rs
 
-* gnostr_event (0a1cdc1)
-
-
+- gnostr_event (0a1cdc1)
 
 ### src/lib/mod
 
-* cube (38f4e66)
-
-
+- cube (38f4e66)
 
 ### src/lib/p2p
 
-* modules (ca3b5c6)
+- modules (ca3b5c6)
 
-* modules (66f434b)
+- modules (66f434b)
 
-* modules (d63a2f0)
+- modules (d63a2f0)
 
-* modules (4dc4209)
+- modules (4dc4209)
 
-* modules (e71f56e)
+- modules (e71f56e)
 
-* modules (d8e0c43)
+- modules (d8e0c43)
 
-* modules (b9bee40)
+- modules (b9bee40)
 
-* modules (816fbe7)
+- modules (816fbe7)
 
-* modules (d90bf9d)
+- modules (d90bf9d)
 
-* modules (bd3e6a5)
+- modules (bd3e6a5)
 
-* modules (7ea1dc1)
+- modules (7ea1dc1)
 
-* modules (d842a0d)
+- modules (d842a0d)
 
-* modules (080d3f8)
+- modules (080d3f8)
 
-* README.md (5236bc1)
+- README.md (5236bc1)
 
-* tests (c74dd03)
+- tests (c74dd03)
 
-* tests (721c594)
+- tests (721c594)
 
-* chat:behavior (a964511)
-
-
+- chat:behavior (a964511)
 
 ### src/lib/sub_commands
 
-* re-add:Client (33efb2e)
+- re-add:Client (33efb2e)
 
-* re-add:Connect (a1ce1e5)
-
-
+- re-add:Connect (a1ce1e5)
 
 ### src/main.rs
 
-* tests:error capture (3adb93a)
-
-
+- tests:error capture (3adb93a)
 
 ### v0.0.0
 
-* reminder (5e4569f)
-
-
+- reminder (5e4569f)
 
 ### .github/workflows/run-all-workflows.yml
 
-* act configs (64743be)
-
-
+- act configs (64743be)
 
 ### Build System
 
-* detect if RUSTC_WRAPPER is set (6476048)
-
-
+- detect if RUSTC_WRAPPER is set (6476048)
 
 ### Testing
 
-* passing (150ed06)
+- passing (150ed06)
 
-* nocapture logging (452827e)
+- nocapture logging (452827e)
 
-* legit sub_command test (8e95959)
+- legit sub_command test (8e95959)
 
-* legit sub_command test (ed4d4ca)
-
-
+- legit sub_command test (ed4d4ca)
 
 ### gnostr/legit
 
-* know working version (59ace1e)
-
-
+- know working version (59ace1e)
 
 ### legit/src/gitminer.rs
 
-* ensure_gnostr_dirs_exist (c7ad8df)
-
-
+- ensure_gnostr_dirs_exist (c7ad8df)
 
 ### legit/src/worker.rs
 
-* nocapture logging (14958b5)
+- nocapture logging (14958b5)
 
-* .gnostr/blobs/reflog mkdir fix (93e713c)
-
-
+- .gnostr/blobs/reflog mkdir fix (93e713c)
 
 ### src/bin/generate-server-config.rs
 
-* crossplatform refactor:windows (318b5cb)
+- crossplatform refactor:windows (318b5cb)
 
+### src/bin/gnostr-git\*\*
 
+- print tag_name (ccf7927)
 
-### src/bin/gnostr-git**
+### src/bin/gnostr-git-checkout-\*
 
-* print tag_name (ccf7927)
-
-
-
-### src/bin/gnostr-git-checkout-*
-
-* print branch_name (6ccb3d9)
-
-
+- print branch_name (6ccb3d9)
 
 ### src/lib/p2p/chat/tests/p2p_chat_integration_tests.rs
 
-* p2p tests (3fa824f)
-
-
+- p2p tests (3fa824f)
 
 ### src/lib/sub_commands/query.rs
 
-* TODO (83c7b04)
-
-
+- TODO (83c7b04)
 
 ### src/lib/ws.rs
 
-* tests (ba6a5fc)
+- tests (ba6a5fc)
 
-* test:ignore (edb8df4)
-
-
+- test:ignore (edb8df4)
 
 ### .github/workflows/get_time.yml
 
-* seconds (841d586)
-
-
+- seconds (841d586)
 
 ### .github/workflows/gnostr-bot-macos/windows.yml
 
-* even/odd (7ab992d)
-
-
+- even/odd (7ab992d)
 
 ### .github/workflows/gnostr-bot-ubuntu.yml
 
-* even/odd (040a823)
-
-
+- even/odd (040a823)
 
 ### .github/workflows/gnostr-bot.yml
 
-* fetch tags false (fa676c5)
+- fetch tags false (fa676c5)
 
-* linuxbrew (4e5e354)
+- linuxbrew (4e5e354)
 
-* linuxbrew (158936e)
+- linuxbrew (158936e)
 
-* EVENT announcment (1b9abfd)
-
-
+- EVENT announcment (1b9abfd)
 
 ### Cargo.toml
 
-* use gnostr-grammar (db1ad89)
-
-
+- use gnostr-grammar (db1ad89)
 
 ### gnit
 
-* working (184c0fe)
-
-
+- working (184c0fe)
 
 ### gnostr-gnit/grammar
 
-* initial config (660a65d)
-
-
+- initial config (660a65d)
 
 ### gnostr-legit
 
-* refactor (d579df5)
-
-
+- refactor (d579df5)
 
 ### legit
 
-* integration (be7d140)
-
-
+- integration (be7d140)
 
 ### src/bin/gnostr-git
 
-* ignore some tests (c0a7a47)
-
-
+- ignore some tests (c0a7a47)
 
 ### src/bin/gnostr-git-checkout-b.rs
 
-* tests:use args_vector (6386b38)
-
-
+- tests:use args_vector (6386b38)
 
 ### src/bin/gnostr-git-checkout-pr.rs
 
-* tests:use args_vector (38068a6)
-
-
+- tests:use args_vector (38068a6)
 
 ### src/lib/sub_commands/query.rs
 
-* pub ids:short:-i (1c3b8f6)
+- pub ids:short:-i (1c3b8f6)
 
-* arg:relay:short:-r (389ad84)
-
-
+- arg:relay:short:-r (389ad84)
 
 ### templates/base.html
 
-* gnostr (adbba40)
-
-
+- gnostr (adbba40)
 
 ### Cargo.toml
 
-* v1912.921034.55846 (2e6dba6)
-
-
+- v1912.921034.55846 (2e6dba6)
 
 ### src/bin/gnostr-git-tag
 
-* tests (7bcd479)
-
-
+- tests (7bcd479)
 
 ### src/lib/sub_commands/custom_event.rs
 
-* verbose nip34 help (74dd9ad)
-
-
+- verbose nip34 help (74dd9ad)
 
 ### .github/workflows/release.yml
 
-* revert (628665d)
-
-
+- revert (628665d)
 
 ### plan-dist-manifest.json
 
-* update (c2fb64e)
+- update (c2fb64e)
 
+### src/bin/gnostr-git-\*
 
-
-### src/bin/gnostr-git-*
-
-* tests:intermediate (fc3f411)
-
-
+- tests:intermediate (fc3f411)
 
 ### src/bin/gnostr-git-checkout-b.rs
 
-* passing (8295846)
-
-
+- passing (8295846)
 
 ### Cargo.lock
 
-* v1912.920888.748912 (3d09e0b)
-
-
+- v1912.920888.748912 (3d09e0b)
 
 ### dist-workspace.toml
 
-* 0.30.0 (b02fab8)
-
-
+- 0.30.0 (b02fab8)
 
 ### src/bin/README.md
 
-* update (7f99cdb)
-
-
+- update (7f99cdb)
 
 ### src/bin/gnostr-git-tag-version.rs
 
-* update tag version logic (c91eff7)
-
-
+- update tag version logic (c91eff7)
 
 ### src/bin/gnostr-git
 
-* commands (72a8bc6)
-
-
+- commands (72a8bc6)
 
 ### .github/workflows/release.yml
 
-* handle gnostr tag format (1662985)
-
-
+- handle gnostr tag format (1662985)
 
 ### .github/workflows/release.yml
 
-* debug (2ed1a9d)
-
-
+- debug (2ed1a9d)
 
 ### src/main.rs
 
-* revert (0cffc51)
-
-
+- revert (0cffc51)
 
 ### .cargo/config.toml
 
-* target-dir = '.gnostr' (c645bce)
-
-
+- target-dir = '.gnostr' (c645bce)
 
 ### Cargo.toml
 
-* use gnostr-crawler = { version = 0.0.15, path = crawler } (d162836)
+- use gnostr-crawler = { version = 0.0.15, path = crawler } (d162836)
 
-* use time@0.3 (283fcd4)
+- use time@0.3 (283fcd4)
 
-* serde 1.0.203 (0e403b5)
+- serde 1.0.203 (0e403b5)
 
-* v0.0.125 (3c0a372)
-
-
+- v0.0.125 (3c0a372)
 
 ### Testing
 
-* ignore (2d85d7b)
+- ignore (2d85d7b)
 
-* fixed (4c0a834)
+- fixed (4c0a834)
 
-* intermediate:passing (cdf0bdf)
+- intermediate:passing (cdf0bdf)
 
-* add (8a77b64)
+- add (8a77b64)
 
-* refactor for "git-ssh" command (73d624b)
+- refactor for "git-ssh" command (73d624b)
 
-* test_gitsh_command_error_output (d606263)
+- test_gitsh_command_error_output (d606263)
 
-* ignore a few tests for now (7b5f4a2)
-
-
+- ignore a few tests for now (7b5f4a2)
 
 ### crawler/Cargo.toml
 
-* v0.0.15 (42cd5af)
-
-
+- v0.0.15 (42cd5af)
 
 ### examples
 
-* remove hashlist/haslist-padded.rs (c9e3ef2)
-
-
+- remove hashlist/haslist-padded.rs (c9e3ef2)
 
 ### make
 
-* gnostr-chat:use ./.gnostr/debug/gnostr chat (a735419)
-
-
+- gnostr-chat:use ./.gnostr/debug/gnostr chat (a735419)
 
 ### make_just.sh
 
-* use -j $(NPROC) (5ffaafb)
+- use -j $(NPROC) (5ffaafb)
 
-* make cargo-build (97e2590)
-
-
+- make cargo-build (97e2590)
 
 ### query/Cargo.toml
 
-* v0.0.12 (ce5367b)
-
-
+- v0.0.12 (ce5367b)
 
 ### src/bin/README.md
 
-* add (001bd43)
+- add (001bd43)
 
-* update (17cc6bf)
+- update (17cc6bf)
 
-* update (3aa738c)
+- update (3aa738c)
 
-* update (e68064e)
-
-
+- update (e68064e)
 
 ### src/bin/git_remote_nostr
 
-* update to nostr_0_34_1 (9ace744)
-
-
+- update to nostr_0_34_1 (9ace744)
 
 ### src/bin/gnostr-blockhash.rs
 
-* test stub (99824b4)
-
-
+- test stub (99824b4)
 
 ### src/bin/gnostr-blockheight.rs
 
-* test stub (3b2d9fc)
-
-
+- test stub (3b2d9fc)
 
 ### src/bin/gnostr-cube.rs
 
-* add tests (f5cae1c)
-
-
+- add tests (f5cae1c)
 
 ### src/bin/gnostr-cube/query.rs
 
-* cleanup (5cd050c)
-
-
+- cleanup (5cd050c)
 
 ### src/bin/gnostr-kvs.rs
 
-* generate_close_peer_id (9e10632)
-
-
+- generate_close_peer_id (9e10632)
 
 ### src/lib/cli.rs
 
-* fix import path for ArgMatches (80d3b9f)
-
-
+- fix import path for ArgMatches (80d3b9f)
 
 ### src/lib/core
 
-* add (73bffa2)
-
-
+- add (73bffa2)
 
 ### src/lib/p2p/chat/mod.rs
 
-* remove libp2p::StreamProtocol (e5706e2)
-
-
+- remove libp2p::StreamProtocol (e5706e2)
 
 ### src/lib/p2p/chat/msg.rs
 
-* wrap_text:unused vars (0987ad7)
-
-
+- wrap_text:unused vars (0987ad7)
 
 ### src/lib/p2p/mod.rs
 
-* fix some xor logic (39e7edc)
+- fix some xor logic (39e7edc)
 
-* remove Swarm (b022a14)
-
-
+- remove Swarm (b022a14)
 
 ### src/lib/sub_commands/chat.rs
 
-* remove unused imports (367c394)
-
-
+- remove unused imports (367c394)
 
 ### src/lib/sub_commands/custom_event.rs
 
-* add docs (3048b95)
+- add docs (3048b95)
 
-* --help verbose (acc16c6)
+- --help verbose (acc16c6)
 
-* verbose --help formatting (77d300b)
-
-
+- verbose --help formatting (77d300b)
 
 ### src/lib/sub_commands/gitsh.rs
 
-* initial impl (50725c6)
+- initial impl (50725c6)
 
-* mock_ssh (b98ab8f)
-
-
+- mock_ssh (b98ab8f)
 
 ### src/lib/sub_commands/query.rs
 
-* remove unused imports (c937707)
-
-
+- remove unused imports (c937707)
 
 ### src/lib/sub_commands/sniper.rs
 
-* add (5065859)
-
-
+- add (5065859)
 
 ### src/lib/sub_commands/tui.rs
 
-* remove unused imports (8bd2e8c)
-
-
+- remove unused imports (8bd2e8c)
 
 ### src/lib/utils/README.md
 
-* add (dd316ed)
+- add (dd316ed)
 
-* update (d000dde)
-
-
+- update (d000dde)
 
 ### src/lib/utils/RETRY.md
 
-* add (0d210f8)
-
-
+- add (0d210f8)
 
 ### src/lib/utils/mod.rs
 
-* add find_available_port and async_find_available_port (94282d5)
+- add find_available_port and async_find_available_port (94282d5)
 
-* remove unused imports (1c0c182)
-
-
+- remove unused imports (1c0c182)
 
 ### src/main.rs
 
-* remove unused imports (b5ff800)
-
-
+- remove unused imports (b5ff800)
 
 ### ssh
 
-* v0.0.1 (3790565)
-
-
+- v0.0.1 (3790565)
 
 ### Cargo.toml
 
-* use gnostr-asyncgit = { path = asyncgit, version = 0.0.7, default-features = false } (86039d8)
-
-
+- use gnostr-asyncgit = { path = asyncgit, version = 0.0.7, default-features = false } (86039d8)
 
 ### /src/main.rs
 
-* add gnostr relay sub_command (334ed33)
-
-
+- add gnostr relay sub_command (334ed33)
 
 ### Cargo.toml
 
-* nightly feature stub (e33d25c)
-
-
+- nightly feature stub (e33d25c)
 
 ### Testing
 
-* intermediate:should_panic (be2e909)
+- intermediate:should_panic (be2e909)
 
-* intermediate (8710b05)
+- intermediate (8710b05)
 
-* new stubs (8d092e9)
+- new stubs (8d092e9)
 
-* intermediate (9d131d7)
+- intermediate (9d131d7)
 
-* intermediate (c4d6c18)
+- intermediate (c4d6c18)
 
-* temp disable (27bd952)
+- temp disable (27bd952)
 
-* more tests (4c04c55)
+- more tests (4c04c55)
 
-* more tests (be4ace9)
+- more tests (be4ace9)
 
-* more tests (2f9ab51)
+- more tests (2f9ab51)
 
-* iniial impl (1ea4417)
-
-
+- iniial impl (1ea4417)
 
 ### app/target
 
-* remove (7fdbe14)
-
-
+- remove (7fdbe14)
 
 ### asyncgit
 
-* some ratatui integration (2c01fde)
+- some ratatui integration (2c01fde)
 
-* v0.0.7 (8a98886)
-
-
+- v0.0.7 (8a98886)
 
 ### asyncgit/src
 
-* escape stash view (0aa7277)
-
-
+- escape stash view (0aa7277)
 
 ### asyncgit/src/gitui/state/mod.rs
 
-* screen ordering (c14870f)
-
-
+- screen ordering (c14870f)
 
 ### asyncgit/src/sync/commits_info.rs
 
-* serialize/deserialize (58f2d62)
+- serialize/deserialize (58f2d62)
 
-* serialize/deserialize (ea54c0d)
-
-
+- serialize/deserialize (ea54c0d)
 
 ### crawler/src/processor.rs
 
-* add LOCALHOST_8080 (24d6b0d)
-
-
+- add LOCALHOST_8080 (24d6b0d)
 
 ### examples/ngit.rs
 
-* query (444f86c)
-
-
+- query (444f86c)
 
 ### gnostr/core
 
-* checkpoint (8720c4b)
-
-
+- checkpoint (8720c4b)
 
 ### gnostr_core
 
-* test refactor:intermediate (504a39f)
+- test refactor:intermediate (504a39f)
 
-* test refactor:intermediate (51b2449)
+- test refactor:intermediate (51b2449)
 
-* test refactor:intermediate (4bee9e2)
-
-
+- test refactor:intermediate (4bee9e2)
 
 ### handle_internal_event
 
-* intermediate (ac8a508)
-
-
+- intermediate (ac8a508)
 
 ### make
 
-* gnostr-chat:use debug (5d70aa2)
-
-
+- gnostr-chat:use debug (5d70aa2)
 
 ### make_just.sh
 
-* more commands (3790caf)
-
-
+- more commands (3790caf)
 
 ### qr/Cargo.toml
 
-* remove a workspace artifact (2289f75)
-
-
+- remove a workspace artifact (2289f75)
 
 ### src
 
-* intermediate:cargo insta snapshots broken (1416d54)
+- intermediate:cargo insta snapshots broken (1416d54)
 
-* cargo insta:intermediate refactoring (219463a)
-
-
+- cargo insta:intermediate refactoring (219463a)
 
 ### src/asyncjob/mod.rs
 
-* intermediate:fix cargo insta (63840e4)
+- intermediate:fix cargo insta (63840e4)
 
-* ignore  test_overwrite: (909b11f)
-
-
+- ignore test_overwrite: (909b11f)
 
 ### src/bin/gnostr-legit.rs
 
-* fix convert_to_u32 (a3980ca)
-
-
+- fix convert_to_u32 (a3980ca)
 
 ### src/bin/gnostr-query.rs
 
-* debug logging (d60d97c)
-
-
+- debug logging (d60d97c)
 
 ### src/gitui/tests/snapshots
 
-* remove (565fc24)
-
-
+- remove (565fc24)
 
 ### src/lib
 
-* refactor:intermediate (6bc3c1b)
+- refactor:intermediate (6bc3c1b)
 
-* refactor:intermediate (21ff799)
-
-
+- refactor:intermediate (21ff799)
 
 ### src/lib/chat/mod.rs
 
-* intermediate (9465200)
-
-
+- intermediate (9465200)
 
 ### src/lib/chat/p2p.rs
 
-* message_id_fn (bdd68ba)
-
-
+- message_id_fn (bdd68ba)
 
 ### src/lib/chat/title.txt
 
-* GNOSTR (25a8d0e)
-
-
+- GNOSTR (25a8d0e)
 
 ### src/lib/cli.rs
 
-* loggin conflicts_with:initial impl (342aca3)
+- loggin conflicts_with:initial impl (342aca3)
 
-* add Relay sub_command (e64eeb0)
-
-
+- add Relay sub_command (e64eeb0)
 
 ### src/lib/components/topiclist.rs
 
-* intermediate:chat (aa13d5f)
+- intermediate:chat (aa13d5f)
 
-* add chat history (4201134)
+- add chat history (4201134)
 
-* chat histories (3608b07)
-
-
+- chat histories (3608b07)
 
 ### src/lib/keys/key_list.rs
 
-* H = help (03aa71a)
-
-
+- H = help (03aa71a)
 
 ### src/lib/p2p
 
-* more tests (553bf09)
+- more tests (553bf09)
 
-* more tests (d6d9bd5)
-
-
+- more tests (d6d9bd5)
 
 ### src/lib/p2p/chat
 
-* migration:working (fa6502d)
-
-
+- migration:working (fa6502d)
 
 ### src/lib/p2p/kvs.rs
 
-* refactor (cdcded2)
-
-
+- refactor (cdcded2)
 
 ### src/lib/p2p/mod.rs
 
-* async_prompt (b80b781)
+- async_prompt (b80b781)
 
-* swarm.listen_on (7c10c5e)
-
-
+- swarm.listen_on (7c10c5e)
 
 ### src/lib/sub_commands
 
-* refactor:with tests:intermediate (c00f065)
+- refactor:with tests:intermediate (c00f065)
 
-* refactor:with tests:intermediate (32a6074)
-
-
+- refactor:with tests:intermediate (32a6074)
 
 ### src/lib/sub_commands/mod.rs
 
-* add pub mod relay and query (1152cdb)
-
-
+- add pub mod relay and query (1152cdb)
 
 ### src/lib/sub_commands/ngit.rs
 
-* test refactor:intermediate (9f27e93)
+- test refactor:intermediate (9f27e93)
 
-* intermedite (32aba75)
+- intermedite (32aba75)
 
-* disable async test_ngit_push_command and test_ngit_pull_command (72098b3)
-
-
+- disable async test_ngit_push_command and test_ngit_pull_command (72098b3)
 
 ### src/lib/sub_commands/query.rs
 
-* intermediate test config (d5c12db)
+- intermediate test config (d5c12db)
 
-* nip34:kind query matrix:initial impl (2e6b7d0)
+- nip34:kind query matrix:initial impl (2e6b7d0)
 
-* add gnostr ngit query:sub_command (07624ae)
+- add gnostr ngit query:sub_command (07624ae)
 
-* add LOCALHOST_8080 (3d9e0d6)
-
-
+- add LOCALHOST_8080 (3d9e0d6)
 
 ### src/lib/sub_commands/relay.rs
 
-* empty (0e8a563)
+- empty (0e8a563)
 
-* gnostr relay sub_commands stub (75d0c1b)
-
-
+- gnostr relay sub_commands stub (75d0c1b)
 
 ### sub_commands
 
-* check point (f0b9f25)
-
-
+- check point (f0b9f25)
 
 ### .github/workflows/gnostr-chat.yml
 
-* apply yamllint (c87a12a)
-
-
+- apply yamllint (c87a12a)
 
 ### .github/workflows/release.yml
 
-* fix aarch64-linux-unknonw-gnu: build (49b50fc)
+- fix aarch64-linux-unknonw-gnu: build (49b50fc)
 
-* gnostr release event:inital impl (1d5ee58)
+- gnostr release event:inital impl (1d5ee58)
 
-* apply yamllint (a195b87)
-
-
+- apply yamllint (a195b87)
 
 ### Dockerfile
 
-* gnostr repo (434706f)
-
-
+- gnostr repo (434706f)
 
 ### dist-workspace.toml
 
-* add aarch64-unknown-linux-gnu (84e9d00)
-
-
+- add aarch64-unknown-linux-gnu (84e9d00)
 
 ### just
 
-* docker-shared (4493483)
-
-
+- docker-shared (4493483)
 
 ### make_just
 
-* with Dockerfile config (dd15517)
-
-
+- with Dockerfile config (dd15517)
 
 ### gnostr
 
-* v0.0.123 (483cdc4)
-
-
+- v0.0.123 (483cdc4)
 
 ### gnostr-query
 
-* v0.0.11 (35c2b6e)
-
-
+- v0.0.11 (35c2b6e)
 
 ### Testing
 
-* add tests (d37d683)
-
-
+- add tests (d37d683)
 
 ### app
 
-* use gnostr-extensions (98a4f1d)
-
-
+- use gnostr-extensions (98a4f1d)
 
 ### app/relay
 
-* remove (953aa7c)
-
-
+- remove (953aa7c)
 
 ### app/src/main.rs
 
-* apply cargo fmt (8732b5f)
-
-
+- apply cargo fmt (8732b5f)
 
 ### config/gnostr.toml
 
-* enable search (73b9b3b)
-
-
+- enable search (73b9b3b)
 
 ### crawler/src/processor.rs
 
-* BOOTSTRAP_RELAY0 = ws://127.0.0.1:8080 (eec8c64)
+- BOOTSTRAP_RELAY0 = ws://127.0.0.1:8080 (eec8c64)
 
-* wss://gitnostr.com (71d258a)
-
-
+- wss://gitnostr.com (71d258a)
 
 ### gnostr-query
 
-* gnostr-relay:compatibility (e8f3865)
-
-
+- gnostr-relay:compatibility (e8f3865)
 
 ### gnostr_crawler
 
-* v0.0.14 (f757a5d)
-
-
+- v0.0.14 (f757a5d)
 
 ### query/src/cli.rs
 
-* default nip-34 kinds (407f5a8)
-
-
+- default nip-34 kinds (407f5a8)
 
 ### query/src/lib.rs
 
-* quiet (97293c6)
-
-
+- quiet (97293c6)
 
 ### query/src/main.rs
 
-* quiet (c80058b)
-
-
+- quiet (c80058b)
 
 ### relay/src/app.rs
 
-* test_main_app_creation (52dcc46)
-
-
+- test_main_app_creation (52dcc46)
 
 ### relay/src/lib.rs
 
-* add tests (6d40a07)
-
-
+- add tests (6d40a07)
 
 ### relay/src/list.rs
 
-* add tests (f2dfeea)
-
-
+- add tests (f2dfeea)
 
 ### relay/src/session.rs
 
-* logging config (2991bd5)
-
-
+- logging config (2991bd5)
 
 ### relay/src/setting.rs
 
-* apply cargo fmt (0b75c31)
+- apply cargo fmt (0b75c31)
 
-* add tests (6777020)
+- add tests (6777020)
 
-* add tests: use CONFIG (7a2aac4)
-
-
+- add tests: use CONFIG (7a2aac4)
 
 ### src/bin/gnostr-blockheight.rs
 
-* get_blockheight_sync() (692b53d)
-
-
+- get_blockheight_sync() (692b53d)
 
 ### src/bin/gnostr-cube.rs
 
-* apply cargo fmt (b558f18)
-
-
+- apply cargo fmt (b558f18)
 
 ### src/bin/gnostr-query.rs
 
-* output valid json (87d16d1)
+- output valid json (87d16d1)
 
-* json output (f7ca80f)
+- json output (f7ca80f)
 
-* apply cargo fmt (3422d7a)
+- apply cargo fmt (3422d7a)
 
-* quiet (d574928)
-
-
+- quiet (d574928)
 
 ### src/lib.rs
 
-* apply cargo fmt (a756ee2)
-
-
+- apply cargo fmt (a756ee2)
 
 ### src/lib/chat/mod.rs
 
-* apply cargo fmt (91ae7d0)
+- apply cargo fmt (91ae7d0)
 
-* additional raw message value (2899d4d)
+- additional raw message value (2899d4d)
 
-* intermediate (144ee26)
+- intermediate (144ee26)
 
-* add pub mod tests (bb68b91)
-
-
+- add pub mod tests (bb68b91)
 
 ### src/lib/chat/msg.rs
 
-* Color::Red (e0ef2b9)
+- Color::Red (e0ef2b9)
 
-* intermediate (e51c7ef)
-
-
+- intermediate (e51c7ef)
 
 ### src/lib/chat/tests/mod.rs
 
-* add tests (a165935)
+- add tests (a165935)
 
-* add tests (a260c0f)
-
-
+- add tests (a260c0f)
 
 ### src/lib/cube/app.rs
 
-* apply cargo fmt (d90bb44)
-
-
+- apply cargo fmt (d90bb44)
 
 ### src/lib/cube/handlers/event.rs
 
-* apply cargo fmt (3a0c9c6)
-
-
+- apply cargo fmt (3a0c9c6)
 
 ### src/lib/cube/local_git/mod.rs
 
-* apply cargo fmt (bf26b54)
-
-
+- apply cargo fmt (bf26b54)
 
 ### src/lib/cube/system_command.rs
 
-* apply cargo fmt (b43f9f1)
-
-
+- apply cargo fmt (b43f9f1)
 
 ### src/lib/cube/ui/mod.rs
 
-* apply cargo fmt (5e31c06)
-
-
+- apply cargo fmt (5e31c06)
 
 ### src/lib/mod.rs
 
-* get_blockheight_async (35ba025)
+- get_blockheight_async (35ba025)
 
-* get_blockheight_sync() (8d98728)
-
-
+- get_blockheight_sync() (8d98728)
 
 ### src/lib/sub_commands/chat.rs
 
-* migrate crate::chat::p2p (4d3447d)
-
-
+- migrate crate::chat::p2p (4d3447d)
 
 ### src/lib/utils/mod.rs
 
-* add tests (d9e857f)
-
-
+- add tests (d9e857f)
 
 ### Cargo.toml
 
-* v0.0.13 (afcfd20)
-
-
+- v0.0.13 (afcfd20)
 
 ### crawler/Cargo.toml
 
-* v0.0.12 (10dbce9)
-
-
+- v0.0.12 (10dbce9)
 
 ### crawler/src/bin/gnostr-sniper.rs
 
-* load_file(relays.yaml) (d1f5ce8)
-
-
+- load_file(relays.yaml) (d1f5ce8)
 
 ### src/bin/gnostr-unified.rs
 
-* apply cargo fmt (1f47115)
+- apply cargo fmt (1f47115)
 
-* app nip34 filter (2dba300)
-
-
+- app nip34 filter (2dba300)
 
 ### src/lib.rs
 
-* apply cargo fmt (8328a8d)
+- apply cargo fmt (8328a8d)
 
-* refactor (1a9c8b1)
-
-
+- refactor (1a9c8b1)
 
 ### src/main.rs
 
-* intermediate (466917c)
-
-
+- intermediate (466917c)
 
 ### .github/workflows/gnostr-bot.yml
 
-* markdown report (b177369)
+- markdown report (b177369)
 
-* markdown report (daf1a27)
+- markdown report (daf1a27)
 
-* markdown report (9987412)
+- markdown report (9987412)
 
-* markdown report (fb32e2f)
+- markdown report (fb32e2f)
 
-* nip-34 config (cf35c05)
+- nip-34 config (cf35c05)
 
-* nip-34 config (4ed7777)
+- nip-34 config (4ed7777)
 
-* nip-34 config (8d22587)
+- nip-34 config (8d22587)
 
-* nip-34 config (52d57ec)
+- nip-34 config (52d57ec)
 
-* nip-34 config (88c95e2)
+- nip-34 config (88c95e2)
 
-* nip-34 config (f21d927)
+- nip-34 config (f21d927)
 
-* nip-34 config (f58f081)
+- nip-34 config (f58f081)
 
-* nip-34 config (e5dd5d7)
+- nip-34 config (e5dd5d7)
 
-* nip-34 config (1452fc3)
-
-
+- nip-34 config (1452fc3)
 
 ### .github/workflows/gnostr-relay.yml
 
-* initial impl (dd500d4)
+- initial impl (dd500d4)
 
-* markdown report (fda883f)
+- markdown report (fda883f)
 
-* markdown report (d2c1c65)
+- markdown report (d2c1c65)
 
-* markdown report (4856a15)
+- markdown report (4856a15)
 
-* markdown report (72e5866)
+- markdown report (72e5866)
 
-* markdown report (42cc7ff)
-
-
+- markdown report (42cc7ff)
 
 ### Cargo.toml
 
-* v0.0.121 (4c66be7)
-
-
+- v0.0.121 (4c66be7)
 
 ### README.md
 
-* update docs (cd7d432)
-
-
+- update docs (cd7d432)
 
 ### gnostr-cube
 
-* initial impl (b26621e)
-
-
+- initial impl (b26621e)
 
 ### relay/extensions/examples/demo.rs
 
-* demo.toml (b29755a)
-
-
+- demo.toml (b29755a)
 
 ### relay/extentions/src/auth.rs
 
-* apply cargo fmt (3734cb0)
-
-
+- apply cargo fmt (3734cb0)
 
 ### relay/extentions/src/count.rs
 
-* apply cargo fmt (75bd435)
-
-
+- apply cargo fmt (75bd435)
 
 ### relay/extentions/src/metrics.rs
 
-* apply cargo fmt (19e0411)
-
-
+- apply cargo fmt (19e0411)
 
 ### relay/extentions/src/rate_limiter
 
-* apply cargo fmt (5e6c896)
-
-
+- apply cargo fmt (5e6c896)
 
 ### relay/extentions/src/search.rs
 
-* apply cargo fmt (bc71dc2)
-
-
+- apply cargo fmt (bc71dc2)
 
 ### src/lib/cube
 
-* initial impl (fc26f4d)
-
-
+- initial impl (fc26f4d)
 
 ### gnostr-relay
 
-* extensions:v0.0.1 (33a8daa)
-
-
+- extensions:v0.0.1 (33a8daa)
 
 ### relay/extensions
 
-* gnostr-relay-extentions:initial impl (46c6719)
-
-
+- gnostr-relay-extentions:initial impl (46c6719)
 
 ### .github/workflows/matrix.yml
 
-* cargo install -vv --path . --force (9ea6398)
-
-
+- cargo install -vv --path . --force (9ea6398)
 
 ### make_just
 
-* update (5257b3a)
-
-
+- update (5257b3a)
 
 ### Cargo.toml
 
-* v0.0.117 (aaf4eb2)
-
-
+- v0.0.117 (aaf4eb2)
 
 ### src/lib/gnostr/msg.rs
 
-* solarized_dark/light.rs (48290b5)
-
-
+- solarized_dark/light.rs (48290b5)
 
 ### .github/workflows/gnostr-bot.yml
 
-* export NOTE=note1qqqwldjg7gsg5nxdhwqpn94zzdm8yh7a4ndayakvpqy50emyhv3quazgcu (69b1e83)
-
-
+- export NOTE=note1qqqwldjg7gsg5nxdhwqpn94zzdm8yh7a4ndayakvpqy50emyhv3quazgcu (69b1e83)
 
 ### Build System
 
-* fixup os warnings (d4e4010)
-
-
+- fixup os warnings (d4e4010)
 
 ### Cargo.toml
 
-* use gnostr-crawler:v0.0.10 (bc6a7a0)
-
-
+- use gnostr-crawler:v0.0.10 (bc6a7a0)
 
 ### asyncgit/src/gitui/cli/mod.rs
 
-* docs (5531a57)
-
-
+- docs (5531a57)
 
 ### asyncgit/src/gitui/git/remote.rs
 
-* fix lifetime (6c95724)
-
-
+- fix lifetime (6c95724)
 
 ### asyncgit/src/gitui/gitui_error/mod.rs
 
-* fix docs (6b070a8)
-
-
+- fix docs (6b070a8)
 
 ### asyncgit/src/gitui/screen/mod.rs
 
-* fix lifetime (5ad3155)
-
-
+- fix lifetime (5ad3155)
 
 ### asyncgit/src/sync/commit_files.rs
 
-* cleanup comments (b64bd5b)
-
-
+- cleanup comments (b64bd5b)
 
 ### asyncgit/src/sync/remotes/mod.rs
 
-* fix lifetime (aead196)
+- fix lifetime (aead196)
 
-* fix docs (5d719b1)
-
-
+- fix docs (5d719b1)
 
 ### asyncgit/src/sync/reword.rs
 
-* fix lifetime (6450340)
-
-
+- fix lifetime (6450340)
 
 ### asyncgit/src/sync/sign.rs
 
-* cleanup docs (d8717ca)
-
-
+- cleanup docs (d8717ca)
 
 ### crawler/Cargo.toml
 
-* v0.0.10 (120dff3)
-
-
+- v0.0.10 (120dff3)
 
 ### crawler/src/bin/gnostr-watch.rs
 
-* formatting (81f9067)
-
-
+- formatting (81f9067)
 
 ### crawler/src/lib.rs
 
-* let _revwalk (61b177f)
-
-
+- let \_revwalk (61b177f)
 
 ### crawler/src/relays.rs
 
-* de_dup (203c691)
-
-
+- de_dup (203c691)
 
 ### relays.yaml
 
-* update (2ad824f)
-
-
+- update (2ad824f)
 
 ### src/bin/gnostr-sniper.rs
 
-* clean up (e893466)
-
-
+- clean up (e893466)
 
 ### src/bin/gnostr-watch.rs
 
-* clean up (927bc0a)
-
-
+- clean up (927bc0a)
 
 ### src/lib/chat/mod.rs
 
-* cleanup comments (9d6441d)
-
-
+- cleanup comments (9d6441d)
 
 ### src/relays.rs
 
-* get_all (b547f2a)
-
-
+- get_all (b547f2a)
 
 ### .github/workflows/matrix.yml
 
-* gnostr-bot.yml (1624ea1)
-
-
+- gnostr-bot.yml (1624ea1)
 
 ### .gitignore
 
-* server.toml (87dcdcf)
-
-
+- server.toml (87dcdcf)
 
 ### 1929/909608/309784
 
-* gnostr (23f9f97)
-
-
+- gnostr (23f9f97)
 
 ### Cargo.toml
 
-* use gnostr-asyncgit:v0.0.5 (e41362c)
-
-
+- use gnostr-asyncgit:v0.0.5 (e41362c)
 
 ### asyncgit/src/sync/repository.rs
 
-* as_path() impl (899c8d1)
-
-
+- as_path() impl (899c8d1)
 
 ### crawler/src/bin/gnostr-loris.rs
 
-* reset (2807dc9)
-
-
+- reset (2807dc9)
 
 ### examples
 
-* remove gnostr-weeble/wobble.rs (a2f5b40)
-
-
+- remove gnostr-weeble/wobble.rs (a2f5b40)
 
 ### examples/user-project-directories.rs
 
-* ProjectDirs::from org gnostr gnostr (c6984a6)
+- ProjectDirs::from org gnostr gnostr (c6984a6)
 
-* apply cargo fmt (8691735)
-
-
+- apply cargo fmt (8691735)
 
 ### genkeys.sh
 
-* initial impl (33faf1b)
-
-
+- initial impl (33faf1b)
 
 ### gnostr-asyncgit
 
-* v0.0.5 (b2f71f7)
-
-
+- v0.0.5 (b2f71f7)
 
 ### gnostr-legit
 
-* intermediate:initial impl (f93f532)
+- intermediate:initial impl (f93f532)
 
-* intermediate:more impl (2339291)
-
-
+- intermediate:more impl (2339291)
 
 ### maintainers.yaml
 
-* add wss://nos.lol (6b8f7ce)
-
-
+- add wss://nos.lol (6b8f7ce)
 
 ### server.toml
 
-* basic (de404dc)
+- basic (de404dc)
 
-* remove (6eb9116)
+- remove (6eb9116)
 
-* re-add (b7831dc)
-
-
+- re-add (b7831dc)
 
 ### src
 
-* apply cargo clippy fix (efc0999)
-
-
+- apply cargo clippy fix (efc0999)
 
 ### src/bin
 
-* intermediate (6511f77)
-
-
+- intermediate (6511f77)
 
 ### src/bin/generate-server-config.rs
 
-* initial impl (b72c280)
+- initial impl (b72c280)
 
-* add fn move_gnostr_gnit_key() (51dd13d)
+- add fn move_gnostr_gnit_key() (51dd13d)
 
-* windows cfg:intermediate (af9d51f)
+- windows cfg:intermediate (af9d51f)
 
-* return Ok(()) (e7b75ea)
-
-
+- return Ok(()) (e7b75ea)
 
 ### src/bin/gnostr-genssh.rs
 
-* initial impl (957431d)
-
-
+- initial impl (957431d)
 
 ### src/bin/gnostr-weeble.rs
 
-* tests use gnostr::global_rt::global_rt; (694627f)
-
-
+- tests use gnostr::global_rt::global_rt; (694627f)
 
 ### src/bin/gnostr-wobble.rs
 
-* refactor:add sync/async and tests (44578a8)
-
-
+- refactor:add sync/async and tests (44578a8)
 
 ### src/lib/blockhash.rs
 
-* add blockhash_sync:blockhash_async (f2ec8b3)
+- add blockhash_sync:blockhash_async (f2ec8b3)
 
-* remove deps (e3811c7)
-
-
+- remove deps (e3811c7)
 
 ### src/lib/chat
 
-* p2p:intermediate swarm config (d0c88c5)
+- p2p:intermediate swarm config (d0c88c5)
 
-* p2p:swarm config with args (7153c37)
-
-
+- p2p:swarm config with args (7153c37)
 
 ### src/lib/chat/mod.rs
 
-* listevents_subcommand (92f5a31)
-
-
+- listevents_subcommand (92f5a31)
 
 ### src/lib/chat/ui.rs
 
-* intermediate (4cb4477)
+- intermediate (4cb4477)
 
-* intermediate (4547fb7)
+- intermediate (4547fb7)
 
-* remove deps (427c284)
+- remove deps (427c284)
 
-* add blockheight_sync to test messages (ecb4726)
-
-
+- add blockheight_sync to test messages (ecb4726)
 
 ### src/lib/mod.rs
 
-* use refactored src/lib/weeble.rs and wobble.rs (c0d46ad)
+- use refactored src/lib/weeble.rs and wobble.rs (c0d46ad)
 
-* use crate::utils::pwd::pwd (3739758)
+- use crate::utils::pwd::pwd (3739758)
 
-* ProjectDirs::from("org", "gnostr", "gnostr") (19d5831)
-
-
+- ProjectDirs::from("org", "gnostr", "gnostr") (19d5831)
 
 ### src/lib/p2p.rs
 
-* remove deps (9e6214a)
-
-
+- remove deps (9e6214a)
 
 ### src/lib/p2p/mod.rs
 
-* add deps (8b2dc4d)
+- add deps (8b2dc4d)
 
-* add Network (5f90e40)
-
-
+- add Network (5f90e40)
 
 ### src/lib/sub_commands/convert_key.rs
 
-* apply cargo fmt (96ffd13)
-
-
+- apply cargo fmt (96ffd13)
 
 ### src/lib/sub_commands/legit.rs
 
-* add --repo --pow options (26cac3c)
-
-
+- add --repo --pow options (26cac3c)
 
 ### src/lib/sub_commands/list_events.rs
 
-* --kinds defaults --output .git/<output>.json (1e885a2)
-
-
+- --kinds defaults --output .git/<output>.json (1e885a2)
 
 ### src/lib/tui.rs
 
-* remove (da465c5)
+- remove (da465c5)
 
-* remove (448e8b5)
-
-
+- remove (448e8b5)
 
 ### src/lib/weeble.rs
 
-* add weeble_sync/async (17777a1)
+- add weeble_sync/async (17777a1)
 
-* refactor and add tests (91f302b)
-
-
+- refactor and add tests (91f302b)
 
 ### src/lib/wobble.rs
 
-* refactor:add wobble_sync/async and tests (00989a1)
-
-
+- refactor:add wobble_sync/async and tests (00989a1)
 
 ### src/main.rs
 
-* let gnostr_subcommands:not mut (84d4a3d)
+- let gnostr_subcommands:not mut (84d4a3d)
 
-* logging (074e464)
+- logging (074e464)
 
-* intermediate (1e732fb)
+- intermediate (1e732fb)
 
-* debug logging (151556b)
+- debug logging (151556b)
 
-* debug logging (d87cf37)
-
-
+- debug logging (d87cf37)
 
 ### ssh_key_permissions.sh
 
-* initial impl (ea27f71)
-
-
+- initial impl (ea27f71)
 
 ### tui.rs
 
-* NOT NOT valid case (2f148f5)
-
-
+- NOT NOT valid case (2f148f5)
 
 ### gnostr-kvs
 
-* initial impl (2fee663)
-
-
+- initial impl (2fee663)
 
 ### Cargo.toml
 
-* use gnostr-crawler:v0.0.9 (af5d522)
-
-
+- use gnostr-crawler:v0.0.9 (af5d522)
 
 ### .github/workflows/matrix.yml
 
-* use rustc 1.89 (7aea47a)
-
-
+- use rustc 1.89 (7aea47a)
 
 ### crawler/src/bin/gnostr-loris.rs
 
-* reset (1258782)
+- reset (1258782)
 
-* reset (c020355)
-
-
+- reset (c020355)
 
 ### gnostr-crawler
 
-* v0.0.9 (7160c92)
-
-
+- v0.0.9 (7160c92)
 
 ### src/bin/gnostr-loris.rs
 
-* remove (e7bb1e8)
-
-
+- remove (e7bb1e8)
 
 ### src/bin/gnostr-sniper.rs
 
-* apply cargo clippy --fix (59f11a6)
-
-
+- apply cargo clippy --fix (59f11a6)
 
 ### src/bin/gnostr-watch.rs
 
-* apply cargo clippy --fix (3263daf)
-
-
+- apply cargo clippy --fix (3263daf)
 
 ### src/lib/p2p/mod.rs
 
-* add distribvibutedbuted-key-share dependencies (c072b85)
-
-
+- add distribvibutedbuted-key-share dependencies (c072b85)
 
 ### src/processor.rs
 
-* apply cargo fmt (32cfa92)
-
-
+- apply cargo fmt (32cfa92)
 
 ### src/relays.rs
 
-* apply cargo clippy --fix (34f4f67)
-
-
+- apply cargo clippy --fix (34f4f67)
 
 ### Cargo.toml
 
-* add dep gnostr-query (961f431)
-
-
+- add dep gnostr-query (961f431)
 
 ### app/Cargo.toml
 
-* use gnostr version "*" (b98aecf)
-
-
+- use gnostr version "\*" (b98aecf)
 
 ### gnostr-query
 
-* add (c592ffb)
-
-
+- add (c592ffb)
 
 ### .github/workflows/matrix.yml
 
-* remove run: gnostr-fetch-by-id (20adc5f)
-
-
+- remove run: gnostr-fetch-by-id (20adc5f)
 
 ### Cargo.toml
 
-* apply cargo sort (bce20f3)
+- apply cargo sort (bce20f3)
 
-* add dev dep gnostr-query (97fafff)
+- add dev dep gnostr-query (97fafff)
 
-* gnostr-query = * (8524209)
-
-
+- gnostr-query = \* (8524209)
 
 ### crawler/src/processor.rs
 
-* add/remove some BOOTSTRAP_RELAYS (203cb66)
-
-
+- add/remove some BOOTSTRAP_RELAYS (203cb66)
 
 ### examples/nostr-sqlite.rs
 
-* apply cargo fmt (fdfe71e)
-
-
+- apply cargo fmt (fdfe71e)
 
 ### src/bin
 
-* move some to examples (a8ecd75)
-
-
+- move some to examples (a8ecd75)
 
 ### src/bin/git_remote_nostr/push.rs
 
-* apply cargo fmt (308a747)
-
-
+- apply cargo fmt (308a747)
 
 ### src/lib
 
-* apply cargo fmt (b6db416)
-
-
+- apply cargo fmt (b6db416)
 
 ### src/lib/args.rs
 
-* remove (e71d141)
-
-
+- remove (e71d141)
 
 ### src/lib/chat/mod.rs
 
-* use crate::p2p (a7f5636)
-
-
+- use crate::p2p (a7f5636)
 
 ### src/lib/chat/p2p.rs
 
-* remove (0562aa1)
-
-
+- remove (0562aa1)
 
 ### src/lib/client.rs
 
-* use gnostr_crawler-BOOTSTRAP_RELAYS (a5bf279)
-
-
+- use gnostr_crawler-BOOTSTRAP_RELAYS (a5bf279)
 
 ### src/lib/mod.rs
 
-* code cleanup (9e248fa)
-
-
+- code cleanup (9e248fa)
 
 ### src/lib/p2p.rs
 
-* move (fe227e9)
-
-
+- move (fe227e9)
 
 ### .github/workflows/matrix.yml
 
-* cargo t -vv -- --nocapture (afd6f6a)
+- cargo t -vv -- --nocapture (afd6f6a)
 
-* cargo t --no-fail-fast -vv -- --nocapture (b3780c6)
+- cargo t --no-fail-fast -vv -- --nocapture (b3780c6)
 
-* cargo test if rustup stable (b2b4139)
-
-
+- cargo test if rustup stable (b2b4139)
 
 ### examples/bitcoin_hashes.rs
 
-* example (06fc2d3)
-
-
+- example (06fc2d3)
 
 ### make
 
-* fetch-by-id (c00e626)
-
-
+- fetch-by-id (c00e626)
 
 ### src/bin/gnostr-sha256.rs
 
-* use gnostr::utils (c1ca52a)
-
-
+- use gnostr::utils (c1ca52a)
 
 ### src/lib/client.rs
 
-* remove:sendit.nosflare.com from relays (5d1e1f9)
-
-
+- remove:sendit.nosflare.com from relays (5d1e1f9)
 
 ### src/lib/ssh/ssh/commands.rs
 
-* knob.repo_note (3161be4)
-
-
+- knob.repo_note (3161be4)
 
 ### src/lib/ui/style.rs
 
-* selected_tab:Color::Gray (5ba0f7c)
-
-
+- selected_tab:Color::Gray (5ba0f7c)
 
 ### src/lib/utils.rs
 
-* cfg(test) (1526053)
+- cfg(test) (1526053)
 
-* add some pub functions (fa4ff4d)
-
-
+- add some pub functions (fa4ff4d)
 
 ### src/main.rs
 
-* apply cargo fmt (d85a059)
-
-
+- apply cargo fmt (d85a059)
 
 ### Cargo.lock
 
-* v0.0.101 (9c0af6b)
-
-
+- v0.0.101 (9c0af6b)
 
 ### Cargo.toml
 
-* .gitignore:.gnostr/.git (fff7971)
+- .gitignore:.gnostr/.git (fff7971)
 
-* add gnostr-cat:gnostr-xq:dev deps (684d2ae)
+- add gnostr-cat:gnostr-xq:dev deps (684d2ae)
 
-* gnostr-asyncgit:v0.0.4 (61861f3)
+- gnostr-asyncgit:v0.0.4 (61861f3)
 
-* add relay deps (bf517bf)
-
-
+- add relay deps (bf517bf)
 
 ### asyncgit/src/gitui/cli/mod.rs
 
-* apply cargo fmt (c5532cf)
-
-
+- apply cargo fmt (c5532cf)
 
 ### asyncgit/src/gitui/gitui_error/mod.rs
 
-* apply cargo fmt (53738b8)
-
-
+- apply cargo fmt (53738b8)
 
 ### asyncgit/src/sync/commit.rs
 
-* pub struct SerializableCommit (6f59c6d)
+- pub struct SerializableCommit (6f59c6d)
 
-* pub fn padded_commit_id (2baed3f)
-
-
+- pub fn padded_commit_id (2baed3f)
 
 ### chat
 
-* intermediate:handle nsec or hash from 'gnostr --nsec/hash <string>' (649ae52)
-
-
+- intermediate:handle nsec or hash from 'gnostr --nsec/hash <string>' (649ae52)
 
 ### examples/gnostr-chat.rs
 
-* remove (7dab894)
-
-
+- remove (7dab894)
 
 ### examples/tui_input.rs
 
-* initial immpl (0947fdb)
-
-
+- initial immpl (0947fdb)
 
 ### examples/ureq_example.rs
 
-* initial impl (73dc8ff)
-
-
+- initial impl (73dc8ff)
 
 ### gnostr-asyncgit
 
-* v0.0.3 (219a77c)
+- v0.0.3 (219a77c)
 
-* v0.0.4 (bfd955a)
-
-
+- v0.0.4 (bfd955a)
 
 ### make
 
-* gnostr-chat:remove examples/gnostr-chat.rs (a086e56)
+- gnostr-chat:remove examples/gnostr-chat.rs (a086e56)
 
-* broadcast_event_list:nip_thirty_four_requests (891a99a)
-
-
+- broadcast_event_list:nip_thirty_four_requests (891a99a)
 
 ### repo.toml
 
-* members = ["gnostr"] (aac148c)
-
-
+- members = ["gnostr"] (aac148c)
 
 ### server.toml
 
-* welcome_message:extra:toml format (d828668)
+- welcome_message:extra:toml format (d828668)
 
-* welcome_message:extra:toml format (46494f9)
+- welcome_message:extra:toml format (46494f9)
 
-* welcome_message:extra:toml format (cfda739)
+- welcome_message:extra:toml format (cfda739)
 
-* welcome_message:extra:toml format (eb28bb3)
-
-
+- welcome_message:extra:toml format (eb28bb3)
 
 ### src/bin/fetch_by_filter.rs
 
-* use gnostr_crawler::processor::BOOTSTRAP_RELAYS; (91c0622)
+- use gnostr_crawler::processor::BOOTSTRAP_RELAYS; (91c0622)
 
-* apply cargo fmt (4d48baf)
-
-
+- apply cargo fmt (4d48baf)
 
 ### src/bin/git-ssh.rs
 
-* EXAMPLEs (c6c58cf)
-
-
+- EXAMPLEs (c6c58cf)
 
 ### src/bin/gnostr-fetch-by-kind-and-author.rs
 
-* arg order (c719615)
-
-
+- arg order (c719615)
 
 ### src/bin/gnostr-pull.rs
 
-* remove (fbd21ff)
-
-
+- remove (fbd21ff)
 
 ### src/bin/gnostr-verify-keypair.rs
 
-* apply cargo fmt (d96ab33)
-
-
+- apply cargo fmt (d96ab33)
 
 ### src/bin/test_relay.rs
 
-* remove (b1296d1)
-
-
+- remove (b1296d1)
 
 ### src/lib/blockheight.rs
 
-* use crate::utils::ureq_async (82814e6)
+- use crate::utils::ureq_async (82814e6)
 
-* blockheight_sync:add (f6f4c26)
+- blockheight_sync:add (f6f4c26)
 
-* ureq_async:ureq_sync (feecae6)
+- ureq_async:ureq_sync (feecae6)
 
-* unwrap:to_string (8997d4b)
-
-
+- unwrap:to_string (8997d4b)
 
 ### src/lib/chat
 
-* app.topic:type tui_input::Input (b6d9f39)
+- app.topic:type tui_input::Input (b6d9f39)
 
-* intermediate:Msg formatting (b838019)
-
-
+- intermediate:Msg formatting (b838019)
 
 ### src/lib/chat/mod.rs
 
-* set_content:with index (2695e8f)
+- set_content:with index (2695e8f)
 
-* gossipsub:app.topic formatting (ae87eac)
+- gossipsub:app.topic formatting (ae87eac)
 
-* apply cargo fmt (9924ca3)
+- apply cargo fmt (9924ca3)
 
-* use gnostr_asyncgit::commit::de/serialize/deserialize (d15f864)
+- use gnostr_asyncgit::commit::de/serialize/deserialize (d15f864)
 
-* apply cargo fmt (176a2c1)
+- apply cargo fmt (176a2c1)
 
-* use gnostr_asyncgit::sync::commit::padded_commit_id; (bb3e0bf)
+- use gnostr_asyncgit::sync::commit::padded_commit_id; (bb3e0bf)
 
-* apply cargo fmt (3c9d89f)
+- apply cargo fmt (3c9d89f)
 
-* chat_version (1f5627b)
+- chat_version (1f5627b)
 
-* env::set_var("USER", &name); (3d34f8e)
+- env::set_var("USER", &name); (3d34f8e)
 
-* value.send(m).await.unwrap_or(()); (341285c)
+- value.send(m).await.unwrap_or(()); (341285c)
 
-* add some log directives (6cf41fd)
+- add some log directives (6cf41fd)
 
-* env::var("USER") (e8df8be)
-
-
+- env::var("USER") (e8df8be)
 
 ### src/lib/chat/msg.rs
 
-* set_content:index (26888f5)
+- set_content:index (26888f5)
 
-* GitCommitDiff (31e4b5c)
+- GitCommitDiff (31e4b5c)
 
-* join:weeble/blockheight/wobble (4e376da)
-
-
+- join:weeble/blockheight/wobble (4e376da)
 
 ### src/lib/chat/p2p.rs
 
-* set_content with index (4d607ef)
+- set_content with index (4d607ef)
 
-* debug! begin/end loop (9e6fb38)
+- debug! begin/end loop (9e6fb38)
 
-* pub async fn async_prompt:remove (ee1793f)
+- pub async fn async_prompt:remove (ee1793f)
 
-* handle.await.unwrap_or(()); (f8619c8)
+- handle.await.unwrap_or(()); (f8619c8)
 
-* evt_loop (9d45ad9)
+- evt_loop (9d45ad9)
 
-* apply cargo fmt (1124f7c)
+- apply cargo fmt (1124f7c)
 
-* thread::sleep 250 millis (8fdc3f7)
-
-
+- thread::sleep 250 millis (8fdc3f7)
 
 ### src/lib/chat/ui.rs
 
-* intermediate (bed105d)
+- intermediate (bed105d)
 
-* contraints:fit git commit message (1eb659d)
+- contraints:fit git commit message (1eb659d)
 
-* app.topic clone (d1d470c)
+- app.topic clone (d1d470c)
 
-* test message <ESC> (72542a2)
+- test message <ESC> (72542a2)
 
-* test message <ENTER> (06ebc11)
+- test message <ENTER> (06ebc11)
 
-* Normal Mode <ENTER> message (a715c77)
+- Normal Mode <ENTER> message (a715c77)
 
-* App:diffs (44577b2)
+- App:diffs (44577b2)
 
-* NormalMode:backslash (ab30cc7)
+- NormalMode:backslash (ab30cc7)
 
-* Modal Commands:begin (62bbbbc)
+- Modal Commands:begin (62bbbbc)
 
-* KeyCode::Char('?') (08b1bbc)
+- KeyCode::Char('?') (08b1bbc)
 
-* app.input_mode:handle Modal Commands (2e60287)
-
-
+- app.input_mode:handle Modal Commands (2e60287)
 
 ### src/lib/cli.rs
 
-* remove dead code (426caec)
-
-
+- remove dead code (426caec)
 
 ### src/lib/mod.rs
 
-* weeble/wobble async (b1ab61e)
+- weeble/wobble async (b1ab61e)
 
-* apply cargo fmt (55c91d6)
+- apply cargo fmt (55c91d6)
 
-* pub const VERSION (0c4e791)
-
-
+- pub const VERSION (0c4e791)
 
 ### src/lib/ssh
 
-* logging config (9b1f29b)
-
-
+- logging config (9b1f29b)
 
 ### src/lib/ssh/config/repo.rs
 
-* remove _get_config_file_path() (72cc409)
+- remove \_get_config_file_path() (72cc409)
 
-* debug logging (2377830)
-
-
+- debug logging (2377830)
 
 ### src/lib/ssh/config/server.rs
 
-* apply cargo fmt (3bd7e2c)
-
-
+- apply cargo fmt (3bd7e2c)
 
 ### src/lib/ssh/ssh/commands.rs
 
-* debug logging (4f3674f)
-
-
+- debug logging (4f3674f)
 
 ### src/lib/ssh/ssh/mod.rs
 
-* Handler:welcome_message:extra:toml::Table (df92fd4)
-
-
+- Handler:welcome_message:extra:toml::Table (df92fd4)
 
 ### src/lib/sub_commands/broadcast_events.rs
 
-* args.nsec:initial impl (a2e2b81)
+- args.nsec:initial impl (a2e2b81)
 
-* debug for relay in relays (bea8afa)
-
-
+- debug for relay in relays (bea8afa)
 
 ### src/lib/tui.rs
 
-* clean up code (0e57b64)
-
-
+- clean up code (0e57b64)
 
 ### src/lib/utils.rs
 
-* fn byte_array_to_hex_string (9c05b38)
+- fn byte_array_to_hex_string (9c05b38)
 
-* pub fn parse_json (6f285e1)
+- pub fn parse_json (6f285e1)
 
-* pub fn split_value_by_newline (5ef0143)
+- pub fn split_value_by_newline (5ef0143)
 
-* pub fn value_to_string:pub fn split_json_string (e8a0578)
+- pub fn value_to_string:pub fn split_json_string (e8a0578)
 
-* pub async fn ureq_async (5b077c1)
+- pub async fn ureq_async (5b077c1)
 
-* ureq_sync:apply cargo fmt (39cec1b)
+- ureq_sync:apply cargo fmt (39cec1b)
 
-* agent use from_millis(250) (9b08535)
+- agent use from_millis(250) (9b08535)
 
-* ureq expect (03cc744)
+- ureq expect (03cc744)
 
-* docs stubs (0418364)
+- docs stubs (0418364)
 
-* clean up comment (5d38511)
+- clean up comment (5d38511)
 
-* intermediate:handle ureq error (79293c4)
+- intermediate:handle ureq error (79293c4)
 
-* code clean up (f25552f)
-
-
+- code clean up (f25552f)
 
 ### src/lib/verify_keypair.rs
 
-* initial impl (309237b)
+- initial impl (309237b)
 
-* apply cargo fmt (eaf6b07)
-
-
+- apply cargo fmt (eaf6b07)
 
 ### src/lib/weeble.rs
 
-* use log::debug (1dad73d)
-
-
+- use log::debug (1dad73d)
 
 ### src/lib/wobble.rs
 
-* use log::debug (804b3f6)
-
-
+- use log::debug (804b3f6)
 
 ### src/main.rs
 
-* --hash arg (b261e9c)
+- --hash arg (b261e9c)
 
-* env::set_var:BLOCKHEIGHT (0a50be4)
-
-
+- env::set_var:BLOCKHEIGHT (0a50be4)
 
 ### app/relay/examples/demo.rs
 
-* demo use config/gnostr.toml (b0843eb)
-
-
+- demo use config/gnostr.toml (b0843eb)
 
 ### Cargo.toml
 
-* v0.0.100 (a34bb8f)
-
-
+- v0.0.100 (a34bb8f)
 
 ### examples/gnostr-chat.rs
 
-* apply cargo fmt (5e2e8fe)
-
-
+- apply cargo fmt (5e2e8fe)
 
 ### make
 
-* plan-dist-manifest (d58be42)
+- plan-dist-manifest (d58be42)
 
-* gnostr-chat (b175dbe)
+- gnostr-chat (b175dbe)
 
-* gnostr-chat:weeble/blockheight/wobble:alias (e21430b)
-
-
+- gnostr-chat:weeble/blockheight/wobble:alias (e21430b)
 
 ### plan-dist-manifest.json
 
-* windows-latest (020be7d)
-
-
+- windows-latest (020be7d)
 
 ### src/bin/gnostr-pull.rs
 
-* apply cargo fmt (c3f532b)
-
-
+- apply cargo fmt (c3f532b)
 
 ### src/lib/chat/mod.rs
 
-* refactor:if let Some(repo) (2522258)
-
-
+- refactor:if let Some(repo) (2522258)
 
 ### src/lib/sub_commands/chat.rs
 
-* apply cargo fmt (768f31c)
-
-
+- apply cargo fmt (768f31c)
 
 ### src/lib/sub_commands/tui.rs
 
-* apply cargo fmt (8fceb8e)
-
-
+- apply cargo fmt (8fceb8e)
 
 ### .github/workflows/matrix.yml
 
-* simplify (9a5b5d6)
-
-
+- simplify (9a5b5d6)
 
 ### Cargo.toml
 
-* apply cargo sort (93cc445)
-
-
+- apply cargo sort (93cc445)
 
 ### app
 
-* initial impl (7740cb0)
+- initial impl (7740cb0)
 
-* gnostr-relay:gpui:initial impl (224f842)
-
-
+- gnostr-relay:gpui:initial impl (224f842)
 
 ### app/config/gnostr.toml
 
-* default (c1f55e9)
-
-
+- default (c1f55e9)
 
 ### app/src/main.rs
 
-* GnostrApp:initial impl (6707028)
+- GnostrApp:initial impl (6707028)
 
-* fn gui:initial impl (0ea682d)
-
-
+- fn gui:initial impl (0ea682d)
 
 ### make
 
-* post_event:post_from_files (cd23c47)
-
-
+- post_event:post_from_files (cd23c47)
 
 ### plan-dist-manifest.json
 
-* v0.0.98 (3888d1a)
-
-
+- v0.0.98 (3888d1a)
 
 ### src/bin/post_from_files.rs
 
-* args ordering (105cc3f)
-
-
+- args ordering (105cc3f)
 
 ### src/lib/components/topiclist.rs
 
-* intermediate:apply cargo fmt (283e029)
-
-
+- intermediate:apply cargo fmt (283e029)
 
 ### src/lib/mod.rs
 
-* apply cargo fmt (4c428bd)
-
-
+- apply cargo fmt (4c428bd)
 
 ### src/lib/sub_commands/react.rs
 
-* apply cargo fmt (1b11492)
-
-
+- apply cargo fmt (1b11492)
 
 ### src/main.rs
 
-* apply cargo fmt (00f7e8f)
-
-
+- apply cargo fmt (00f7e8f)
 
 ### crawler
 
-* v0.0.8 (8d403af)
-
-
+- v0.0.8 (8d403af)
 
 ### ghcr.io.yml
 
-* gnostr tui (5edecec)
-
-
+- gnostr tui (5edecec)
 
 ### gnostr-xq
 
-* v0.0.3 (4b6b99e)
-
-
+- v0.0.3 (4b6b99e)
 
 ### .github/workflows/matrix.yml
 
-* cargo install cargo-binstall@1.9.0 (3f36256)
-
-
+- cargo install cargo-binstall@1.9.0 (3f36256)
 
 ### crawler/src/lib.rs
 
-* add BOOTSTRAP_RELAY4 (1b2ad94)
-
-
+- add BOOTSTRAP_RELAY4 (1b2ad94)
 
 ### crawler/src/processor.rs
 
-* BOOTSTRAP_RELAYS (f1f0091)
-
-
+- BOOTSTRAP_RELAYS (f1f0091)
 
 ### examples/gnostr-remote.rs
 
-* apply cargo fmt (0dfed50)
-
-
+- apply cargo fmt (0dfed50)
 
 ### gnostr-remote-test
 
-* more (ae3d43f)
+- more (ae3d43f)
 
-* gnostr react (bc4977e)
-
-
+- gnostr react (bc4977e)
 
 ### make
 
-* crawler-test-relays (c3dd12c)
-
-
+- crawler-test-relays (c3dd12c)
 
 ### src/bin/bech32_to_any.rs
 
-* remove (5986fc4)
-
-
+- remove (5986fc4)
 
 ### src/bin/fetch_by_kind_and_author.rs
 
-* get_weeble (0ccfa0a)
-
-
+- get_weeble (0ccfa0a)
 
 ### src/bin/fetch_by_kind_and_author_limit.rs
 
-* get_weeble (7682f8d)
-
-
+- get_weeble (7682f8d)
 
 ### src/bin/fetch_metadata.rs
 
-* get_weeble (83b3fe0)
-
-
+- get_weeble (83b3fe0)
 
 ### src/bin/gnostr-bech32-to-any.rs
 
-* print event id only (559db09)
-
-
+- print event id only (559db09)
 
 ### src/bin/gnostr-fetch-by-id-with-login.rs
 
-* begin get_weeble (8918c68)
-
-
+- begin get_weeble (8918c68)
 
 ### src/bin/gnostr-fetch-by-id.rs
 
-* get_weeble (d3c514c)
+- get_weeble (d3c514c)
 
-* BOOTSTRAP_RELAYS (e918d19)
+- BOOTSTRAP_RELAYS (e918d19)
 
-* debug! (a66998e)
-
-
+- debug! (a66998e)
 
 ### src/bin/gnostr-fetch-metadata.rs
 
-* use BOOTSTRAP_RELAYS (f501328)
-
-
+- use BOOTSTRAP_RELAYS (f501328)
 
 ### src/bin/gnostr-privkey-to-bech32.rs
 
-* use env and no dangling new lines (fe7e96f)
-
-
+- use env and no dangling new lines (fe7e96f)
 
 ### src/bin/gnostr-remote.rs
 
-* logging config (2348763)
-
-
+- logging config (2348763)
 
 ### src/bin/test_nip46.rs
 
-* get_weeble (7dc1106)
-
-
+- get_weeble (7dc1106)
 
 ### src/bin/test_relay.rs
 
-* intermediate (08c232a)
+- intermediate (08c232a)
 
-* apply cargo fmt (4e7e1d9)
-
-
+- apply cargo fmt (4e7e1d9)
 
 ### src/lib/cli.rs
 
-* info warn logging levels (6425cab)
-
-
+- info warn logging levels (6425cab)
 
 ### src/lib/mod.rs
 
-* weeble/wobble_millis (5a48b3a)
+- weeble/wobble_millis (5a48b3a)
 
-* intermediate:impl Probe:test_relay (30671d9)
+- intermediate:impl Probe:test_relay (30671d9)
 
-* debug! logging config (34f559e)
-
-
+- debug! logging config (34f559e)
 
 ### src/lib/popups/inspect_commit.rs
 
-* InspectCommitPopup:comment (7d3bfde)
-
-
+- InspectCommitPopup:comment (7d3bfde)
 
 ### src/lib/remote
 
-* poc for distributed/decent CI service (9cc6cd6)
-
-
+- poc for distributed/decent CI service (9cc6cd6)
 
 ### src/lib/remote/message_stream.rs
 
-* apply cargo fmt (145cb9f)
-
-
+- apply cargo fmt (145cb9f)
 
 ### src/lib/remote/options.rs
 
-* clap config (776c485)
-
-
+- clap config (776c485)
 
 ### src/lib/remote/remote_runner.rs
 
-* apply cargo fmt (a9fb94c)
+- apply cargo fmt (a9fb94c)
 
-* detect not windows:set_executable_perms (aff7cb3)
-
-
+- detect not windows:set_executable_perms (aff7cb3)
 
 ### src/lib/sub_commands/react.rs
 
-* relays = BOOTSTRAP_RELAYS.to_vec(); (b0add5c)
-
-
+- relays = BOOTSTRAP_RELAYS.to_vec(); (b0add5c)
 
 ### src/main.rs
 
-* info warn logging levels (ac9a2eb)
-
-
+- info warn logging levels (ac9a2eb)
 
 ### sub_commands
 
-* derive Debug (d18c504)
-
-
+- derive Debug (d18c504)
 
 ### examples/dns_resolver.rs
 
-* ip output (9b0e0c8)
-
-
+- ip output (9b0e0c8)
 
 ### src/lib/dns_resolver.rs
 
-* initial impl (9f8d449)
+- initial impl (9f8d449)
 
-* working with example (c31cba9)
-
-
+- working with example (c31cba9)
 
 ### Cargo.toml
 
-* use trust_dns_resolver: (95ef5d8)
-
-
+- use trust_dns_resolver: (95ef5d8)
 
 ### examples/dns_resolver.rs
 
-* use trust_dns_resolver::TokioAsyncResolver (c6bf04e)
-
-
+- use trust_dns_resolver::TokioAsyncResolver (c6bf04e)
 
 ### examples/nostr_fetch_by_filter.rs
 
-* nostr_sdk_0_37_0 (15336b2)
+- nostr_sdk_0_37_0 (15336b2)
 
-* nostr_sdk_0_37_0:apply cargo fmt (166bddc)
-
-
+- nostr_sdk_0_37_0:apply cargo fmt (166bddc)
 
 ### examples/nostr_fetch_git_patch.rs
 
-* initial impl (87a83e4)
-
-
+- initial impl (87a83e4)
 
 ### src/bin/fetch_by_filter.rs
 
-* Usage note (945a1f9)
-
-
+- Usage note (945a1f9)
 
 ### src/lib
 
-* intermediate:app.rs and key_list.rs (ec73032)
-
-
+- intermediate:app.rs and key_list.rs (ec73032)
 
 ### src/lib/app.rs
 
-* bypass self.do_quit (38dd327)
-
-
+- bypass self.do_quit (38dd327)
 
 ### src/lib/gnostr/ui.rs
 
-* disable Char q for Quit (90cf2b6)
-
-
+- disable Char q for Quit (90cf2b6)
 
 ### src/lib/internal.rs
 
-* filters_to_wire:get_weeble SubscriptionId (a9621da)
-
-
+- filters_to_wire:get_weeble SubscriptionId (a9621da)
 
 ### Testing
 
-* intermediate (43b17f8)
+- intermediate (43b17f8)
 
-* intermediate (d56bc95)
+- intermediate (d56bc95)
 
-* src:cargo t passing (9b32ccb)
-
-
+- src:cargo t passing (9b32ccb)
 
 ### asyncgit/Cargo.toml
 
-* dirs@5.0.1 (20bb3a3)
-
-
+- dirs@5.0.1 (20bb3a3)
 
 ### src
 
-* apply cargo fmt (ed817b8)
-
-
+- apply cargo fmt (ed817b8)
 
 ### src/bin/gnostr-blockheight.rs
 
-* bypass test (33d211b)
-
-
+- bypass test (33d211b)
 
 ### Cargo.toml
 
-* gnostr-crawler:v0.0.7 (96a08ca)
+- gnostr-crawler:v0.0.7 (96a08ca)
 
-* gnostr-crawler:v0.0.7 (f9b4002)
-
-
+- gnostr-crawler:v0.0.7 (f9b4002)
 
 ### crawler/Cargo.toml
 
-* v0.0.7 (724f04d)
-
-
+- v0.0.7 (724f04d)
 
 ### crawler/src/bin/gnostr-watch.rs
 
-* command.arg:default (8d121e8)
-
-
+- command.arg:default (8d121e8)
 
 ### crawler/src/lib.rs
 
-* processor::BOOTSTRAP_RELAYS (8658933)
+- processor::BOOTSTRAP_RELAYS (8658933)
 
-* app_keys:dirty impl (20f8e49)
-
-
+- app_keys:dirty impl (20f8e49)
 
 ### crawler/src/main.rs
 
-* BOOTSTRAP_RELAYS.get(3) (e1f56b5)
+- BOOTSTRAP_RELAYS.get(3) (e1f56b5)
 
-* apply cargo fmt (054ff3b)
-
-
+- apply cargo fmt (054ff3b)
 
 ### crawler/src/relay_manager.rs
 
-* if url not contain (a62bceb)
+- if url not contain (a62bceb)
 
-* apply cargo fmt (f74bad3)
-
-
+- apply cargo fmt (f74bad3)
 
 ### src/bin/generate_keypair.rs
 
-* remove (cc5730f)
-
-
+- remove (cc5730f)
 
 ### src/bin/gnostr-pi.rs
 
-* initial impl (8d8b8d6)
-
-
+- initial impl (8d8b8d6)
 
 ### .github/workflows/matrix.yml
 
-* fetch-by-id (c7642c3)
-
-
+- fetch-by-id (c7642c3)
 
 ### make
 
-* fetch-by-id (2b41182)
-
-
+- fetch-by-id (2b41182)
 
 ### src/bin/fetch_by_id.rs
 
-* remove (7563391)
-
-
+- remove (7563391)
 
 ### src/bin/gnostr-fetch-by-id-with-login.rs
 
-* intermediate (16c8e7b)
+- intermediate (16c8e7b)
 
-* intermediate:incomplete impl (b1fcc4e)
-
-
+- intermediate:incomplete impl (b1fcc4e)
 
 ### src/lib/sub_commands/note.rs
 
-* sub_command_args.verbose (712e805)
-
-
+- sub_command_args.verbose (712e805)
 
 ### types
 
-* Cargo.toml:v0.7.6 (9f2ca95)
-
-
+- Cargo.toml:v0.7.6 (9f2ca95)
 
 ### src/lib/internal.rs
 
-* RelayMessageV5 (37a4bbc)
-
-
+- RelayMessageV5 (37a4bbc)
 
 ### Cargo.toml
 
-* exclude .gnostr (7aa31f4)
-
-
+- exclude .gnostr (7aa31f4)
 
 ### src/bin/git-ssh.rs
 
-* print SERVER_TOML on error (87cdd48)
+- print SERVER_TOML on error (87cdd48)
 
-* print some help (cfe10fa)
-
-
+- print some help (cfe10fa)
 
 ### src/lib/ssh/config/repo.rs
 
-* apply cargo fmt (9f7419c)
+- apply cargo fmt (9f7419c)
 
-* load_repo_config (eaec9dc)
-
-
+- load_repo_config (eaec9dc)
 
 ### src/lib/ssh/ssh/commands.rs
 
-* print command (36c91f9)
-
-
+- print command (36c91f9)
 
 ### src/lib/ssh/config/repo.rs
 
-* dirs::home_dir impl (9bf16a5)
-
-
+- dirs::home_dir impl (9bf16a5)
 
 ### src/lib/ssh/config/server.rs
 
-* derive Debug (1502ec1)
-
-
+- derive Debug (1502ec1)
 
 ### src/lib/ssh/state.rs
 
-* State derive Debug (8bdc312)
-
-
+- State derive Debug (8bdc312)
 
 ### Build System
 
-* update detect brew and OSs (a5b5d81)
-
-
+- update detect brew and OSs (a5b5d81)
 
 ### Cargo.toml
 
-* add gnostr-bins deps (473915b)
-
-
+- add gnostr-bins deps (473915b)
 
 ### gnip44
 
-* add (438f05c)
-
-
+- add (438f05c)
 
 ### src/bin
 
-* add gnostr-bins:migration (3bba617)
-
-
+- add gnostr-bins:migration (3bba617)
 
 ### src/bin/git-ssh.rs
 
-* static SERVER_TOML (9a16e6d)
-
-
+- static SERVER_TOML (9a16e6d)
 
 ### src/bin/gnostr-objects.rs
 
-* remove (2f1c269)
-
-
+- remove (2f1c269)
 
 ### src/bin/gnostr-state.rs
 
-* remove (fe43128)
-
-
+- remove (fe43128)
 
 ### types
 
-* gnostr-types:add (6843219)
-
-
+- gnostr-types:add (6843219)
 
 ### vendor
 
-* remove (5c999ff)
-
-
+- remove (5c999ff)
 
 ### Cargo.toml
 
-* if not windows:sd-notify (5d1c34a)
-
-
+- if not windows:sd-notify (5d1c34a)
 
 ### src/bin/git-ssh.rs
 
-* initial config (b9f8774)
-
-
+- initial config (b9f8774)
 
 ### src/lib/ssh/mod.rs
 
-* if not windows:sd_notify (6e28423)
-
-
+- if not windows:sd_notify (6e28423)
 
 ### dist-workspace.toml
 
-* add linux-musl (19c7a9b)
-
-
+- add linux-musl (19c7a9b)
 
 ### .github/workflows/matrix.yml
 
-* error formatting:src/bin/gnostr-loris.rs (fd44bbe)
-
-
+- error formatting:src/bin/gnostr-loris.rs (fd44bbe)
 
 ### Cargo.lock
 
-* some gnostr-loris deps (faadc40)
-
-
+- some gnostr-loris deps (faadc40)
 
 ### Cargo.toml
 
-* some gnostr-loris deps (2cbfc15)
-
-
+- some gnostr-loris deps (2cbfc15)
 
 ### asyncgit
 
-* doc stubs (8f36aeb)
-
-
+- doc stubs (8f36aeb)
 
 ### crawler/src/bin/gnostr-loris.rs
 
-* args:intermediate (cfc5329)
-
-
+- args:intermediate (cfc5329)
 
 ### crawler/src/bin/gnostr-test.rs
 
-* apply cargo fmt (cdcbd73)
-
-
+- apply cargo fmt (cdcbd73)
 
 ### gnostr-crawler
 
-* v0.0.6 (a5979a9)
-
-
+- v0.0.6 (a5979a9)
 
 ### make_just.sh
 
-* update (d112103)
-
-
+- update (d112103)
 
 ### src/bin/gnostr-loris.rs
 
-* intermediate (49b6115)
+- intermediate (49b6115)
 
-* intermediate:args (d79b8d1)
+- intermediate:args (d79b8d1)
 
-* parse arg address:working (dbb6c8a)
+- parse arg address:working (dbb6c8a)
 
-* error formatting (1b5b03c)
+- error formatting (1b5b03c)
 
-* output.stderr (6b4fabf)
-
-
+- output.stderr (6b4fabf)
 
 ### src/lib/components/topiclist.rs
 
-* begin cube dashboard layout (6cd4ca2)
+- begin cube dashboard layout (6cd4ca2)
 
-* apply cargo fmt (32089d6)
+- apply cargo fmt (32089d6)
 
-* some detail layout (aaea45f)
-
-
+- some detail layout (aaea45f)
 
 ### src/lib/strings.rs
 
-* line numbers for test/design (d21b1f8)
-
-
+- line numbers for test/design (d21b1f8)
 
 ### Cargo.toml
 
-* update homepage/repo (80610bc)
+- update homepage/repo (80610bc)
 
-* gitui:intermediate (c0e298e)
+- gitui:intermediate (c0e298e)
 
-* intermediate (5c5861d)
+- intermediate (5c5861d)
 
-* intermediate (5e62e5a)
+- intermediate (5e62e5a)
 
-* cargo add --dev cargo-insta (030ab7f)
-
-
+- cargo add --dev cargo-insta (030ab7f)
 
 ### examples/gnostr-qr.rs
 
-* add (eee50aa)
-
-
+- add (eee50aa)
 
 ### gitui
 
-* initial config (0f189e2)
+- initial config (0f189e2)
 
-* intermediate (80bac99)
-
-
+- intermediate (80bac99)
 
 ### gnostr-asyncgit
 
-* v0.0.2 (52152a2)
+- v0.0.2 (52152a2)
 
-* v0.0.2 (d5c7a08)
-
-
+- v0.0.2 (d5c7a08)
 
 ### make
 
-* install:bins gnostr-asyncgit and git-tui (ec039d2)
-
-
+- install:bins gnostr-asyncgit and git-tui (ec039d2)
 
 ### qr
 
-* v0.0.7 (871c817)
-
-
+- v0.0.7 (871c817)
 
 ### src
 
-* crate::gitui::... (5bd1c1a)
-
-
+- crate::gitui::... (5bd1c1a)
 
 ### src/gitui
 
-* intermediate:compiling (b0eec9a)
-
-
+- intermediate:compiling (b0eec9a)
 
 ### src/lib.rs
 
-* warn missing docs (f84f280)
-
-
+- warn missing docs (f84f280)
 
 ### src/lib/cli.rs
 
-* CAUTION! (3c21759)
-
-
+- CAUTION! (3c21759)
 
 ### src/sync/hooks.rs
 
-* temp passing tests assert_ne! (4deaf34)
-
-
+- temp passing tests assert_ne! (4deaf34)
 
 ### Cargo.lock
 
-* gnostr-crawler:v0.0.2 (77ec591)
-
-
+- gnostr-crawler:v0.0.2 (77ec591)
 
 ### Cargo.toml
 
-* exclude vendor (8508153)
+- exclude vendor (8508153)
 
-* add reqwest (fc32b09)
+- add reqwest (fc32b09)
 
-* cargo add --dev dep-graph (4af3d9c)
+- cargo add --dev dep-graph (4af3d9c)
 
-* tui-input:v0.10.1 (f663028)
-
-
+- tui-input:v0.10.1 (f663028)
 
 ### crawler
 
-* gnostr-crawler (1e77288)
+- gnostr-crawler (1e77288)
 
-* update metadata (49284be)
+- update metadata (49284be)
 
-* update:gnostr-sniper (4372301)
-
-
+- update:gnostr-sniper (4372301)
 
 ### crawler/Cargo.toml
 
-* v0.0.5 (941abe7)
-
-
+- v0.0.5 (941abe7)
 
 ### crawler/src/bin/gnostr-sniper.rs
 
-* intermediate (840390c)
+- intermediate (840390c)
 
-* remove (09536fe)
+- remove (09536fe)
 
-* initial impl (9b5cb0a)
-
-
+- initial impl (9b5cb0a)
 
 ### crawler/src/bin/sniper.rs
 
-* remove (7313c35)
-
-
+- remove (7313c35)
 
 ### crawler/src/relays.rs
 
-* self.print() (f20de38)
-
-
+- self.print() (f20de38)
 
 ### examples/git-log.rs
 
-* use nostr_sdk_0_19_1 (0f7853e)
+- use nostr_sdk_0_19_1 (0f7853e)
 
-* relay_manager (78d89db)
-
-
+- relay_manager (78d89db)
 
 ### examples/parse_file.rs
 
-* all (6198205)
+- all (6198205)
 
-* all (9dc1499)
-
-
+- all (9dc1499)
 
 ### gnostr-crawler
 
-* v0.0.3 (51fd6d3)
+- v0.0.3 (51fd6d3)
 
-* v0.0.3 (96315e1)
+- v0.0.3 (96315e1)
 
-* v0.0.4 (7444171)
+- v0.0.4 (7444171)
 
-* v0.0.5 (20d46c3)
-
-
+- v0.0.5 (20d46c3)
 
 ### make
 
-* crawler:v0.0.2 (4c2f1ab)
+- crawler:v0.0.2 (4c2f1ab)
 
-* dep-graph (4bfab1f)
-
-
+- dep-graph (4bfab1f)
 
 ### src/bin/gnostr-sniper.rs
 
-* replace:http/s ws/s (b78c92c)
-
-
+- replace:http/s ws/s (b78c92c)
 
 ### src/bin/gnostr-watch.rs
 
-* intermediate:nip count (eef8611)
+- intermediate:nip count (eef8611)
 
-* intermediate (6d8abbc)
+- intermediate (6d8abbc)
 
-* nips json formatting (5807fba)
+- nips json formatting (5807fba)
 
-* await (4d4b01c)
-
-
+- await (4d4b01c)
 
 ### src/bin/sniper.rs
 
-* replace:http/s ws/s (22dd339)
+- replace:http/s ws/s (22dd339)
 
-* intermediate (2240fb3)
+- intermediate (2240fb3)
 
-* intermediate (9d94159)
-
-
+- intermediate (9d94159)
 
 ### src/lib
 
-* CliArgs:intermediate (efd24e9)
-
-
+- CliArgs:intermediate (efd24e9)
 
 ### src/lib..chat/ui.rs
 
-* clean up deps (55e27e7)
-
-
+- clean up deps (55e27e7)
 
 ### src/lib.rs
 
-* async (03c28e9)
-
-
+- async (03c28e9)
 
 ### src/lib/cli.rs
 
-* add NgitCommands:GnostrCommands (dbcd32d)
+- add NgitCommands:GnostrCommands (dbcd32d)
 
-* intermediate (11e6e8b)
+- intermediate (11e6e8b)
 
-* pub fn setup_logging/get_app_cache_path (6db19e4)
-
-
+- pub fn setup_logging/get_app_cache_path (6db19e4)
 
 ### src/lib/components/chat_details/mod.rs
 
-* apply cargo fmt (88109e5)
-
-
+- apply cargo fmt (88109e5)
 
 ### src/lib/components/mod.rs
 
-* clean up deps (a3a4308)
-
-
+- clean up deps (a3a4308)
 
 ### src/lib/components/topiclist.rs
 
-* remove unsed deps (5b645a2)
-
-
+- remove unsed deps (5b645a2)
 
 ### src/lib/gnostr/mod.rs
 
-* gnostr tui:intermediate (d59903e)
+- gnostr tui:intermediate (d59903e)
 
-* clean up deps (3096d64)
+- clean up deps (3096d64)
 
-* Default for GnostrSubCommands (acdb3a4)
-
-
+- Default for GnostrSubCommands (acdb3a4)
 
 ### src/lib/sub_command/chat.rs
 
-* remove unused deps (10c1aa0)
-
-
+- remove unused deps (10c1aa0)
 
 ### src/lib/sub_commands/text_note.rs
 
-* code clean up (497dafd)
+- code clean up (497dafd)
 
-* apply cargo fmt (b3f749f)
-
-
+- apply cargo fmt (b3f749f)
 
 ### src/lib/sub_commands/tui.rs
 
-* intermediate (052a8ac)
+- intermediate (052a8ac)
 
-* migrate:intermediate (5543252)
+- migrate:intermediate (5543252)
 
-* intrermediate (9679f13)
+- intrermediate (9679f13)
 
-* loop:run_app (07f4642)
-
-
+- loop:run_app (07f4642)
 
 ### src/lib/tui.rs
 
-* remove unused deps (4b46726)
-
-
+- remove unused deps (4b46726)
 
 ### src/main.rs
 
-* code clean up (32569f7)
+- code clean up (32569f7)
 
-* intermediate:tui subcommands (de6b903)
+- intermediate:tui subcommands (de6b903)
 
-* trace logging (03ca517)
+- trace logging (03ca517)
 
-* setup_logging (82a1eb6)
+- setup_logging (82a1eb6)
 
-* bypass use tracing::debug (a56d14e)
+- bypass use tracing::debug (a56d14e)
 
-* apply cargo fmt (d384367)
+- apply cargo fmt (d384367)
 
-* match None args (3d9ba25)
-
-
+- match None args (3d9ba25)
 
 ### src/relays.rs
 
-* async (982438a)
-
-
+- async (982438a)
 
 ### ssrc/lib/tui.rs
 
-* cli:intermediate (660e20c)
-
-
+- cli:intermediate (660e20c)
 
 ### theme.ron
 
-* example theme (46155f4)
-
-
+- example theme (46155f4)
 
 ### crawler
 
-* initial commit (1e559ab)
+- initial commit (1e559ab)
 
-* git-log.rs:json output (42bb84a)
+- git-log.rs:json output (42bb84a)
 
-* src/main.rs:json output (172c96c)
-
-
+- src/main.rs:json output (172c96c)
 
 ### make
 
-* cargo-dist (730b7fc)
-
-
+- cargo-dist (730b7fc)
 
 ### src/main.rs
 
-* default tui (ed85d5b)
-
-
+- default tui (ed85d5b)
 
 ### src/lib/chat/mod.rs
 
-* public args (7651266)
-
-
+- public args (7651266)
 
 ### src/lib/sub_command/chat.rs
 
-* tracing logging impl (520409a)
-
-
+- tracing logging impl (520409a)
 
 ### nostr_sqlite
 
-* :SQLiteDatabase:async config (7c1fe73)
-
-
+- :SQLiteDatabase:async config (7c1fe73)
 
 ### src/lib/components/topiclist.rs
 
-* CrossTermEvent (0f1e70f)
-
-
+- CrossTermEvent (0f1e70f)
 
 ### src/lib/login/mod.rs
 
-* debug logging event (e2c67b5)
-
-
+- debug logging event (e2c67b5)
 
 ### examples/nostr-sqlite.rs
 
-* initial impl (de19693)
-
-
+- initial impl (de19693)
 
 ### src/lib/chat/ui.rs
 
-* default:topic gnostr (3f0f02b)
-
-
+- default:topic gnostr (3f0f02b)
 
 ### src/lib/client.rs
 
-* add search relay (46d8851)
-
-
+- add search relay (46d8851)
 
 ### src/lib/components/topiclist.rs
 
-* being get_user_details (1901e2a)
+- being get_user_details (1901e2a)
 
-* login::get_user_details (1248b07)
-
-
+- login::get_user_details (1248b07)
 
 ### src/bin/gnostr-chat.rs
 
-* apply cargo fmt (ac01cff)
-
-
+- apply cargo fmt (ac01cff)
 
 ### src/lib/app.rs
 
-* cargo fmt (69fbc80)
-
-
+- cargo fmt (69fbc80)
 
 ### src/lib/args.rs
 
-* apply cargo fmt (962ddce)
-
-
+- apply cargo fmt (962ddce)
 
 ### src/lib/chat
 
-* GitCommit:Type formatting:intermediate (b9e2ae4)
+- GitCommit:Type formatting:intermediate (b9e2ae4)
 
-* Msg formatting:intermediate (7b2a0d9)
-
-
+- Msg formatting:intermediate (7b2a0d9)
 
 ### src/lib/components
 
-* apply cargo fmt (567fe85)
-
-
+- apply cargo fmt (567fe85)
 
 ### src/lib/mod.rs
 
-* handle --topic arg or commit id (b400cd9)
-
-
+- handle --topic arg or commit id (b400cd9)
 
 ### src/lib/popups
 
-* apply cargo fmt (beac77c)
-
-
+- apply cargo fmt (beac77c)
 
 ### src/lib/popups/submodules.rs
 
-* apply cargo fmt (b80ee65)
-
-
+- apply cargo fmt (b80ee65)
 
 ### src/lib/popups/tag_commit.rs
 
-* apply cargo fmt (4cdf858)
-
-
+- apply cargo fmt (4cdf858)
 
 ### src/lib/popups/taglist.rs
 
-* apply cargo fmt (af6366d)
-
-
+- apply cargo fmt (af6366d)
 
 ### src/lib/queue.rs
 
-* apply cargo fmt (b9c5594)
-
-
+- apply cargo fmt (b9c5594)
 
 ### src/lib/sub_commands/chat.rs
 
-* apply cargo fmt (69cd640)
-
-
+- apply cargo fmt (69cd640)
 
 ### src/lib/tabs/home.rs
 
-* apply cargo fmt (ed3b5d1)
-
-
+- apply cargo fmt (ed3b5d1)
 
 ### src/lib/tabs/revlog.rs
 
-* cargo fmt (4081012)
-
-
+- cargo fmt (4081012)
 
 ### src/lib/tabs/stashing.rs
 
-* apply cargo fmt (ffd7e8c)
-
-
+- apply cargo fmt (ffd7e8c)
 
 ### src/lib/tabs/status.rs
 
-* apply cargo fmt (d5185a2)
-
-
+- apply cargo fmt (d5185a2)
 
 ### src/lib/tui.rs
 
-* apply cargo fmt (30b2fb9)
-
-
+- apply cargo fmt (30b2fb9)
 
 ### .github/workflows/release-matrix.yml
 
-* add windows-latest (c6024d3)
+- add windows-latest (c6024d3)
 
-* follow up (e6e5fcb)
-
-
+- follow up (e6e5fcb)
 
 ### .gitignore
 
-* **DS_Store (319d5ee)
-
-
+- \*\*DS_Store (319d5ee)
 
 ### Bug Fixes
 
-* git2:conflict (6682ee3)
-
-
+- git2:conflict (6682ee3)
 
 ### asyncgit/Cargo.toml
 
-* gnostgr-asyncgit (7a560ff)
-
-
+- gnostgr-asyncgit (7a560ff)
 
 ### chat
 
-* ngit:Box<dyn StdError>>:impl (4e9d1a1)
-
-
+- ngit:Box<dyn StdError>>:impl (4e9d1a1)
 
 ### ghcr.io.yml
 
-* config (0d35612)
-
-
+- config (0d35612)
 
 ### maintainers.yaml
 
-* update (35ca5a0)
-
-
+- update (35ca5a0)
 
 ### plan-dist-manifest.json
 
-* v0.0.60 (11e0d47)
-
-
+- v0.0.60 (11e0d47)
 
 ### src/bin/gnostr-chat.rs
 
-* apply cargo fmt (aa603c9)
-
-
+- apply cargo fmt (aa603c9)
 
 ### src/lib/app.rs
 
-* OpenExternalChat:initial impl (a0fe3d9)
-
-
+- OpenExternalChat:initial impl (a0fe3d9)
 
 ### src/lib/chat/mod.rs
 
-* apply cargo fmt (d55535f)
+- apply cargo fmt (d55535f)
 
-* intermediate (d82faf3)
+- intermediate (d82faf3)
 
-* LevelFilter:OFF impl (5a1c16f)
-
-
+- LevelFilter:OFF impl (5a1c16f)
 
 ### src/lib/cli.rs
 
-* ChatCli and ChatCommands (87594ad)
-
-
+- ChatCli and ChatCommands (87594ad)
 
 ### src/lib/components/chat_details/mod.rs
 
-* layout notes (5ca7357)
-
-
+- layout notes (5ca7357)
 
 ### src/lib/components/commit_details/details.rs
 
-* Info header formatting (ae8169a)
-
-
+- Info header formatting (ae8169a)
 
 ### src/lib/components/topiclist.rs
 
-* more_text (9618857)
+- more_text (9618857)
 
-* intermediate (733e4f2)
+- intermediate (733e4f2)
 
-* truncate pubkey (5a8e93c)
-
-
+- truncate pubkey (5a8e93c)
 
 ### src/lib/keys/ley_list.rs
 
-* open_external_chat:initial impl (21d410d)
-
-
+- open_external_chat:initial impl (21d410d)
 
 ### src/lib/login/mod.rs
 
-* UserRelayRef:guards (b9b6a36)
-
-
+- UserRelayRef:guards (b9b6a36)
 
 ### src/lib/popups/chat.rs
 
-* initial impl (c3d7553)
-
-
+- initial impl (c3d7553)
 
 ### src/lib/popups/commit.rs
 
-* show_chat:initial implt (c9d231e)
-
-
+- show_chat:initial implt (c9d231e)
 
 ### src/lib/popups/mos.rs
 
-* openchat:initial impl (64a2c5c)
-
-
+- openchat:initial impl (64a2c5c)
 
 ### src/lib/popups/openchat.rs
 
-* intial impl (72bdeb2)
-
-
+- intial impl (72bdeb2)
 
 ### src/lib/queue.rs
 
-* OpenExternalChat:initial impl (15911b4)
-
-
+- OpenExternalChat:initial impl (15911b4)
 
 ### src/lib/strings.rs
 
-* open_chat:initial impl (f33f96c)
-
-
+- open_chat:initial impl (f33f96c)
 
 ### src/lib/sub_commands
 
-* no use cli::Cli (ea9c91e)
-
-
+- no use cli::Cli (ea9c91e)
 
 ### src/lib/sub_commands/chat.rs
 
-* --topic arg (9cd3d4c)
+- --topic arg (9cd3d4c)
 
-* chat/run:initial impl (34b0e96)
+- chat/run:initial impl (34b0e96)
 
-* intermediate (d685d26)
-
-
+- intermediate (d685d26)
 
 ### src/lib/sub_commands/mod.rs
 
-* add pub mod chat (34be020)
-
-
+- add pub mod chat (34be020)
 
 ### src/lib/sub_commands/ngit.rs
 
-* apply cargo fmt (e5ed486)
-
-
+- apply cargo fmt (e5ed486)
 
 ### src/lib/tui.rs
 
-* add lifecyle notes (b7f3ab4)
-
-
+- add lifecyle notes (b7f3ab4)
 
 ### src/lib/utils.rs
 
-* truncate_chars (b07eb43)
-
-
+- truncate_chars (b07eb43)
 
 ### src/main.rs
 
-* add chat subcommand (ccc4d8a)
+- add chat subcommand (ccc4d8a)
 
-* apply cargo fmt (6e746bd)
+- apply cargo fmt (6e746bd)
 
-* apply cargo fmt (ac9b377)
-
-
+- apply cargo fmt (ac9b377)
 
 ### topiclist.rs
 
-* begin nostr fields (eb15b2a)
-
-
+- begin nostr fields (eb15b2a)
 
 ### .github/workflows/release.yml
 
-* update cargo-dist:dirty config (2e2ecbd)
-
-
+- update cargo-dist:dirty config (2e2ecbd)
 
 ### src
 
-* cargo clippy passing:with many warnings (150f053)
+- cargo clippy passing:with many warnings (150f053)
 
-* apply cargo fmt (1794b0c)
-
-
+- apply cargo fmt (1794b0c)
 
 ### src/bin/chat.rs
 
-* use asyncgit::sync::commit::{serialize_commit, deserialize_commit} (7c7c18e)
+- use asyncgit::sync::commit::{serialize_commit, deserialize_commit} (7c7c18e)
 
-* intermediate (691d986)
+- intermediate (691d986)
 
-* intermediate (75841e7)
+- intermediate (75841e7)
 
-* intermediate (316cb0c)
+- intermediate (316cb0c)
 
-* intermediate (5beb11e)
+- intermediate (5beb11e)
 
-* intermediate-working (18e0c9f)
+- intermediate-working (18e0c9f)
 
-* if args.debug OR args.trace:display keys.secret_key (7dfff63)
-
-
+- if args.debug OR args.trace:display keys.secret_key (7dfff63)
 
 ### src/lib/chat/mod.rs
 
-* intermediate:migrate chat (5f16abd)
+- intermediate:migrate chat (5f16abd)
 
-* intermediate (d0b784a)
-
-
+- intermediate (d0b784a)
 
 ### src/lib/components/diff.rs
 
-* begin chat graft (beb2874)
+- begin chat graft (beb2874)
 
-* insert pubkey (2e9a5a3)
+- insert pubkey (2e9a5a3)
 
-* pubkey formatting (b2ff46c)
-
-
+- pubkey formatting (b2ff46c)
 
 ### src/lib/sub_commands/generate_keypair.rs
 
-* json output (66aaa5a)
+- json output (66aaa5a)
 
-* json formatting (4dad046)
-
-
+- json formatting (4dad046)
 
 ### src/lib/tui.rs
 
-* public tui functions (84d73b3)
-
-
+- public tui functions (84d73b3)
 
 ### inspect_chat
 
-* initial impl (136f7cd)
-
-
+- initial impl (136f7cd)
 
 ### src/lib/popups/inspect_commit.rs
 
-* diff split notes (da1084c)
-
-
+- diff split notes (da1084c)
 
 ### src/lib/tabs/home.rs
 
-* apply cargo fmt (32e7da3)
-
-
+- apply cargo fmt (32e7da3)
 
 ### src/bin/chat.rs
 
-* more Cli config (56d51f0)
+- more Cli config (56d51f0)
 
-* --info arg (97cca26)
-
-
+- --info arg (97cca26)
 
 ### src/lib/tabs/home.rs
 
-* topiclist_title:🅖 (e6ccaab)
+- topiclist_title:🅖 (e6ccaab)
 
-* TopicList:split view constraints:working (3df5c89)
-
-
+- TopicList:split view constraints:working (3df5c89)
 
 ### topiclist.rs
 
-* CIRCLE_G_STR:marked (8122e62)
-
-
+- CIRCLE_G_STR:marked (8122e62)
 
 ### .github
 
-* from main (6f45c66)
+- from main (6f45c66)
 
-* from main (5fc7d72)
-
-
+- from main (5fc7d72)
 
 ### asyncgit/Cargo.toml
 
-* add nostr-sdk@0.37.0 (2947ec8)
-
-
+- add nostr-sdk@0.37.0 (2947ec8)
 
 ### chat_details
 
-* ChatDetailsComponent:more impl (fcf3e6f)
-
-
+- ChatDetailsComponent:more impl (fcf3e6f)
 
 ### chat_details_toggle
 
-* initial impl (44c323d)
+- initial impl (44c323d)
 
+### crates/\_tui
 
-
-### crates/_tui
-
-* remove (74d0742)
-
-
+- remove (74d0742)
 
 ### crates/ngit
 
-* remove (f225d6e)
+- remove (f225d6e)
 
-* remove (03acd13)
-
-
+- remove (03acd13)
 
 ### crates/tui
 
-* add (97896dc)
+- add (97896dc)
 
-* remove (b0be388)
-
-
+- remove (b0be388)
 
 ### crates/tui/asyncgit
 
-* preliminary async/nostr integration (95ad9b0)
-
-
+- preliminary async/nostr integration (95ad9b0)
 
 ### crates/tui/src/bin/ngit.rs
 
-* pre remove (396f4b7)
-
-
+- pre remove (396f4b7)
 
 ### detail
 
-* split:better (6abfbcb)
-
-
+- split:better (6abfbcb)
 
 ### imtermediate
 
-* crates/tui:provides ngit (dee29e7)
-
-
+- crates/tui:provides ngit (dee29e7)
 
 ### install_script.sh
 
-* make cargo-release-all (98ba5a6)
-
-
+- make cargo-release-all (98ba5a6)
 
 ### make
 
-* cargo-install-crates (9b8b925)
+- cargo-install-crates (9b8b925)
 
-* cargo-release-all (0d8ec25)
+- cargo-release-all (0d8ec25)
 
-* from install_script.sh (e2a1bdb)
-
-
+- from install_script.sh (e2a1bdb)
 
 ### padded_hash
 
-* initial impl (116e68a)
-
-
+- initial impl (116e68a)
 
 ### passing
 
-* publish dry run (c99ac22)
-
-
+- publish dry run (c99ac22)
 
 ### src/bin/chat.rs
 
-* impl (8480dc1)
+- impl (8480dc1)
 
-* topic arg working (a565d4c)
+- topic arg working (a565d4c)
 
-* --name arg to env working (7fb39d0)
-
-
+- --name arg to env working (7fb39d0)
 
 ### src/lib/chat
 
-* being impl (6e6917a)
-
-
+- being impl (6e6917a)
 
 ### src/lib/components/chat_details/mod.rs
 
-* intermediate (a96be5c)
+- intermediate (a96be5c)
 
-* intermediate (bd3d580)
+- intermediate (bd3d580)
 
-* 3-way split (37291d5)
-
-
+- 3-way split (37291d5)
 
 ### src/lib/components/mod.rs
 
-* layout working:add notes (a30c082)
-
-
+- layout working:add notes (a30c082)
 
 ### src/lib/components/topiclist.rs
 
-* commit keys (77aa531)
+- commit keys (77aa531)
 
-* add constraints (8bdd432)
+- add constraints (8bdd432)
 
-* intermediate (b4cf508)
+- intermediate (b4cf508)
 
-* intermediate (f55255f)
+- intermediate (f55255f)
 
-* split fixed (04c9199)
+- split fixed (04c9199)
 
-* apply cargo fmt (85759eb)
-
-
+- apply cargo fmt (85759eb)
 
 ### src/lib/mod.rs
 
-* chat impl (31b95eb)
-
-
+- chat impl (31b95eb)
 
 ### src/lib/popups/display_chat.rs
 
-* initial impl (c25a5bc)
-
-
+- initial impl (c25a5bc)
 
 ### src/lib/sub_commands/login.rs
 
-* disable_cli_spinners:Option<bool> (16f889b)
-
-
+- disable_cli_spinners:Option<bool> (16f889b)
 
 ### src/lib/sub_commands/set_metadata.rs
 
-* output json (fea9142)
-
-
+- output json (fea9142)
 
 ### src/lib/tabs/home.rs
 
-* apply cargo fmt (be9d928)
-
-
+- apply cargo fmt (be9d928)
 
 ### src/ngit
 
-* intermediate (bb1966a)
-
-
+- intermediate (bb1966a)
 
 ### topiclist.rs
 
-* symbol::EMPTY_SPACE (44954c0)
-
-
+- symbol::EMPTY_SPACE (44954c0)
 
 ### .github/workflows/release-matrix.yml
 
-* run gnostr custom-event -k 1 (c7b8e87)
-
-
+- run gnostr custom-event -k 1 (c7b8e87)
 
 ### examples/input-to-sha256.rs
 
-* example (8e49384)
-
-
+- example (8e49384)
 
 ### src/global_rt.rs
 
-* intermediate impl (628d32b)
-
-
+- intermediate impl (628d32b)
 
 ### src/main.rs
 
-* --hash to args.nsec (07fce82)
-
-
+- --hash to args.nsec (07fce82)
 
 ### src/sub_commands/react.rs
 
-* return json (4213c5c)
-
-
+- return json (4213c5c)
 
 ### src/sub_commands/text_note.rs
 
-* id and bech32:json (980cccf)
+- id and bech32:json (980cccf)
 
-* return json (79fd93a)
+- return json (79fd93a)
 
-* --hex flag (dc5cc66)
-
-
+- --hex flag (dc5cc66)
 
 ### Build System
 
-* detect architecture (fd9b420)
-
-
+- detect architecture (fd9b420)
 
 ### .justfile
 
-* config (92e99e8)
-
-
+- config (92e99e8)
 
 ### crate
 
-* gnostr-ngit (ff47ac4)
-
-
+- gnostr-ngit (ff47ac4)
 
 ### gnostr-ngit
 
-* a fork of ngit (2b35aa0)
-
-
+- a fork of ngit (2b35aa0)
 
 ### make-just
 
-* config (d8325a2)
-
-
+- config (d8325a2)
 
 ### Bug Fixes
 
-* code cleanup (d329260)
+- code cleanup (d329260)
 
-* list events (c883e08)
+- list events (c883e08)
 
-* `vanity` short `-h` conflict (662a670)
+- `vanity` short `-h` conflict (662a670)
 
-* append tag key only once (#55) (5b7f266)
-
-
+- append tag key only once (#55) (5b7f266)
 
 ### Chores
 
-* bump `nostr-sdk` (7e23355)
-
-
+- bump `nostr-sdk` (7e23355)
 
 ### Features
 
-* Add support for bech32 encoded keys in commands (053eabb)
+- Add support for bech32 encoded keys in commands (053eabb)
 
-* print bech32 keys (59301f5)
+- print bech32 keys (59301f5)
 
-* add generate keypair command (e00c14b)
+- add generate keypair command (e00c14b)
 
-* Add key conversion (0f3dccc)
+- Add key conversion (0f3dccc)
 
-* Add support for converting noteids (eb5ece9)
+- Add support for converting noteids (eb5ece9)
 
-* Add support for LUD06 in metadata-update command (cce8464)
+- Add support for LUD06 in metadata-update command (cce8464)
 
-* list events save to json file (542b962)
+- list events save to json file (542b962)
 
-* broadcast events from json file (06c226f)
+- broadcast events from json file (06c226f)
 
-* option to print hex (00e9275)
-
-
+- option to print hex (00e9275)
 
 ### NIP-28
 
-* Add support for creating channels (e71bde9)
+- Add support for creating channels (e71bde9)
 
-* Added kind 41 support (f41febc)
+- Added kind 41 support (f41febc)
 
-* Add kind 43 support (a08abf7)
+- Add kind 43 support (a08abf7)
 
-* Add support for user mute (4ac6458)
-
-
+- Add support for user mute (4ac6458)
 
 ### command
 
-* gnostr:author:gnostr & 0xtr (0f25070)
-
-
+- gnostr:author:gnostr & 0xtr (0f25070)
 
 ### format
 
-* cargo fmt and clippy (7eef201)
-
-
+- cargo fmt and clippy (7eef201)
 
 ### gnostr
 
-* v0.0.1 (fbb53aa)
-
-
+- v0.0.1 (fbb53aa)
 
 ### improve
 
-* `list-events`  (#53) (18d01e2)
-
-
+- `list-events` (#53) (18d01e2)
 
 ### improvment
 
-* Pretty print events as json (7c12338)
-
-
+- Pretty print events as json (7c12338)
 
 ### package
 
-* gnostr (97e45c8)
-
-
+- gnostr (97e45c8)
 
 ### rust-toolchain.toml
 
-* remove (1baffc3)
-
-
+- remove (1baffc3)
 
 ### src/sub_commands/set_metadata.rs
 
-* banner_url (a9104f1)
-
-
+- banner_url (a9104f1)

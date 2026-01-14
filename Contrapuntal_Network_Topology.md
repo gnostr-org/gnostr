@@ -6,9 +6,9 @@ Our current understanding of network topology, from ancient waterways to modern 
 
 The emerging age of distributed, interplanetary networks demands a new way of thinking. This paper proposes a novel approach to address the fundamental challenges of deep-space communication:
 
-*   **Long-Distance Data Integrity:** How can we ensure data transmitted across millions, or even hundreds of millions, of miles remains uncorrupted and trustworthy?
-*   **Timekeeping Across the Void:** Earth's heliocentric timekeeping is insufficient for systems that do not orbit our sun. What does an interplanetary "timestamp" look like in a universe where time itself is relative and distorted by distance?
-*   **A Consensus of Meaning:** How can computer nodes, separated by vast distances, maintain a shared understanding and agreement on the data they collect and transmit?
+- **Long-Distance Data Integrity:** How can we ensure data transmitted across millions, or even hundreds of millions, of miles remains uncorrupted and trustworthy?
+- **Timekeeping Across the Void:** Earth's heliocentric timekeeping is insufficient for systems that do not orbit our sun. What does an interplanetary "timestamp" look like in a universe where time itself is relative and distorted by distance?
+- **A Consensus of Meaning:** How can computer nodes, separated by vast distances, maintain a shared understanding and agreement on the data they collect and transmit?
 
 Furthermore, as we deploy increasingly sophisticated AI, we must consider how these entities will perceive and interact with the networks we build. Will they be mere users, or will they view these networks as their own "social" frameworks? Could we design systems that "procreate," adapting and self-maintaining over the immense timescales and distances of space exploration?
 
@@ -40,7 +40,7 @@ This equation, or a more refined successor, would allow the network to dynamical
 
 The ultimate goal is to create a unified value that encapsulates both time and location. A theoretical timestamp could be derived from the principles of fractal time and distance-based trust, creating a single, verifiable data point. While the exact formula requires further research, it would integrate spatial coordinates (`x`, `y`, z) and the fractal time unit (`r` or `p`) into a cohesive whole.
 
-*(Note: The original paper presented a formula `p=r^((πxyz + π/xyz) / (πxyz + π/xyz))` which simplifies to `p=r`. We interpret the author's intent as a placeholder for a more complex relationship that integrates these variables.)*
+_(Note: The original paper presented a formula `p=r^((πxyz + π/xyz) / (πxyz + π/xyz))` which simplifies to `p=r`. We interpret the author's intent as a placeholder for a more complex relationship that integrates these variables.)_
 
 ## 4. The Contrapuntal Network: A Crypto-Logical Structure
 
@@ -53,4 +53,5 @@ Emerging technologies like the InterPlanetary File System (IPFS) are already pav
 The future of space exploration is inextricably linked to the future of network technology. By embracing decentralized principles, rethinking our concepts of time and trust, and building systems that are resilient by design, we can create the robust communication frameworks necessary for humanity's next giant leap. The Contrapuntal Network Topology offers a glimpse into that future—a network ready for the stars.
 
 ---
+
 _This document is a rewritten and reinterpreted version of the paper "Contrapuntal Network Topology" by Randy McMillan._

@@ -8,21 +8,20 @@ This crate aims to follow the WhatWG specification at
 
 ## Example
 
-~~~rust
+```rust
 use html_page::{Document, Element, Tag};
 let title = Element::new(Tag::Title).with_text("my page");
 let doc = Document::default().with_head_element(&title);
 assert_eq!(format!("{}", doc), "<!DOCTYPE html>\n<HTML>\n\
 <HEAD><TITLE>my page</TITLE></HEAD>\n<BODY/>\n</HTML>\n");
-~~~
-
+```
 
 ## License
 
 This library is released using the MIT licence. The copy of the
 licence text is from <https://mit-license.org/> originally.
 
-Copyright 2023  Lars Wirzenius
+Copyright 2023 Lars Wirzenius
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
