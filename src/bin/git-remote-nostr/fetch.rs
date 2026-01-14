@@ -618,7 +618,6 @@ mod tests {
 
     mod integration_tests {
         use anyhow::Context;
-        use futures::join;
         use gnostr::test_utils::git_remote::{
             cli_tester_after_fetch, prep_git_repo, prep_source_repo_and_events_including_proposals,
         };
