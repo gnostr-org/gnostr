@@ -1257,11 +1257,21 @@ mod tests {
             Ok(())
         }
         mod two_branches_in_batch_one_added_one_updated {
+            use futures::join;
+            use gnostr::test_utils::git_remote::{cli_tester_after_fetch, prep_git_repo};
+            use gnostr::test_utils::relay::{shutdown_relay, Relay};
+            use gnostr::test_utils::{
+                generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
+                generate_test_key_1_relay_list_event, git::GitTestRepo, E, FEATURE_BRANCH_NAME_1,
+            };
+            use nostr_0_34_1::{Event, Kind};
+            use serial_test::serial;
+            use std::collections::HashSet;
 
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
-            async fn updates_branch_on_git_server() -> AnyhowResult<(), E> {
+            async fn updates_branch_on_git_server() -> Result<(), E> {
                 let git_repo = prep_git_repo()?;
                 let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
 

@@ -631,6 +631,7 @@ mod tests {
         use gnostr::test_utils::{git::GitTestRepo, E, FEATURE_BRANCH_NAME_1};
         use nostr_0_34_1::Event;
         use serial_test::serial;
+        use std::collections::HashSet;
         use tokio::join;
 
         #[tokio::test]
