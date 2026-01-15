@@ -4,14 +4,12 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
-use crate::{
-    git::ReadmeFormat,
-    into_response,
+use crate::web::{
+    git::{Git, ReadmeFormat},
     methods::{
         filters,
         repo::{Repository, RepositoryPath, Result},
     },
-    Git,
 };
 
 #[derive(Deserialize)]

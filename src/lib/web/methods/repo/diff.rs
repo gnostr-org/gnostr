@@ -11,14 +11,13 @@ use bytes::{BufMut, BytesMut};
 use clap::crate_version;
 use time::format_description::well_known::Rfc2822;
 
-use crate::{
-    git::Commit,
-    http, into_response,
+use crate::web::{
+    git::{Commit, Git},
+    //http, into_response,
     methods::{
         filters,
         repo::{commit::UriQuery, Repository, RepositoryPath, Result},
     },
-    Git,
 };
 
 #[derive(Template)]

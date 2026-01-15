@@ -10,7 +10,7 @@ use std::{
 use comrak::adapters::SyntaxHighlighterAdapter;
 use tracing::{debug, error};
 use tree_sitter_grammar_repository::{Grammar, Language};
-use tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
+use crate::web::tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
 
 thread_local! {
     static HIGHLIGHTER: RefCell<Highlighter> = RefCell::new(Highlighter::new());

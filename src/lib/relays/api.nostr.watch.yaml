@@ -77,8 +77,7 @@ paths:
           in: query
           name: format
           required: false
-          description:
-            "Response format: full (all attribution), detailed (default, no
+          description: "Response format: full (all attribution), detailed (default, no
             attribution), simple (URLs only)"
       responses:
         "200":
@@ -108,8 +107,7 @@ paths:
           in: query
           name: format
           required: false
-          description:
-            "Response format: full (all attribution), detailed (default, no
+          description: "Response format: full (all attribution), detailed (default, no
             attribution), simple (treated as detailed for single relay)"
       responses:
         "200":
@@ -121,8 +119,7 @@ paths:
     post:
       tags:
         - relays
-      description:
-        Search relays with complex filters, pagination, and three-level
+      description: Search relays with complex filters, pagination, and three-level
         response shaping
       requestBody:
         content:
@@ -183,8 +180,7 @@ paths:
                     - detailed
                     - simple
                   default: detailed
-                  description:
-                    "Response format: full (all attribution), detailed (default, no
+                  description: "Response format: full (all attribution), detailed (default, no
                     attribution), simple (URLs only)"
       parameters:
         - schema:
@@ -216,8 +212,7 @@ paths:
           content:
             application/json:
               schema:
-                description:
-                  Payment Required when pricing applies. Returns 402 challenge
+                description: Payment Required when pricing applies. Returns 402 challenge
                   headers.
                 type: object
                 properties:
@@ -262,8 +257,7 @@ paths:
           in: query
           name: format
           required: false
-          description:
-            "Response format: full (all attribution), detailed (default,
+          description: "Response format: full (all attribution), detailed (default,
             aggregated), simple (URLs only), compact (deprecated)"
       responses:
         "200":
@@ -316,8 +310,7 @@ paths:
           in: query
           name: format
           required: false
-          description:
-            "Response format: full (all attribution), detailed (default,
+          description: "Response format: full (all attribution), detailed (default,
             aggregated), simple (URLs only), compact (deprecated)"
       responses:
         "200":
@@ -406,8 +399,7 @@ paths:
           in: query
           name: format
           required: false
-          description:
-            "Response format: full (all attribution), detailed (default,
+          description: "Response format: full (all attribution), detailed (default,
             aggregated), simple (URLs only), compact (deprecated)"
       responses:
         "200":
@@ -513,8 +505,7 @@ paths:
           in: header
           name: authorization
           required: false
-          description:
-            'Authorization header. Formats: "L402 <macaroon>:<preimage>" or
+          description: 'Authorization header. Formats: "L402 <macaroon>:<preimage>" or
             "Cashu <token>". Example: L402 eyJ...:abcdef | Cashu cashuBeyJ...'
       responses:
         "200":
@@ -523,8 +514,7 @@ paths:
             application/json:
               schema: {}
         "402":
-          description:
-            Payment Required. Returns 402 challenge headers for supported
+          description: Payment Required. Returns 402 challenge headers for supported
             methods.
           headers:
             WWW-Authenticate:
@@ -542,8 +532,7 @@ paths:
           content:
             application/json:
               schema:
-                description:
-                  Payment Required. Returns 402 challenge headers for supported
+                description: Payment Required. Returns 402 challenge headers for supported
                   methods.
                 type: object
                 properties:
@@ -588,8 +577,7 @@ paths:
     post:
       tags:
         - relays
-      description:
-        Get recently seen but currently offline relays with optional label
+      description: Get recently seen but currently offline relays with optional label
         filtering
       requestBody:
         content:
@@ -627,8 +615,7 @@ paths:
     post:
       tags:
         - relays
-      description:
-        Get probably dead relays (not seen in a long time) with optional
+      description: Get probably dead relays (not seen in a long time) with optional
         label filtering
       requestBody:
         content:
@@ -785,8 +772,7 @@ paths:
           content:
             application/json:
               schema:
-                description:
-                  Payment Required when pricing applies. Returns 402 challenge
+                description: Payment Required when pricing applies. Returns 402 challenge
                   headers.
                 type: object
                 properties:

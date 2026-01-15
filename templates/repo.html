@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/statics/css/main.css">
+    <script src="/statics/js/repo.js"></script>
+</head>
+<body>
+    <select id="branchSelect">
+        {% for branch in branches %}
+        <option value="{{path}}{{branch}}"{% if branchName == branch %} selected{% endif %}>{{branch}}</option>
+        {% endfor %}
+    </select>
+    <br/>
+	<table>
+		<tr>
+			<th>Message</th>
+	        <th>Oid</th>
+	        <th>Author</th>
+		</tr>
+	    {% for commit in commits %}
+		<tr>
+		   <td>{{commit.message}}</td>
+		   <td>{{commit.oid}}</td>
+		   <td>{{commit.author}}</td>
+	   </tr>
+		{% endfor %}
+	</table>
+</body>
+</html>
