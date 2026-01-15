@@ -1,47 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>{% block title %}gnostr{% endblock %}</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% block title %}gnostr.org/{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="/style-{{ crate::GLOBAL_CSS_HASH }}.css" />
     {%- block head -%}{%- endblock %}
-</head>
+  </head>
 
-<body>
-<header>
-    <h1>
-        <a href="/" class="no-hover">🏡</a>
-        {% block header -%}Git repository browser{%- endblock %}
-    </h1>
-</header>
+  <body>
+    <header>
+      <h1>
+        <a href="/" class="no-hover">
+          <img src="/gnostr.svg" alt="gnostr" width="128" height="128" style="vertical-align: middle" />
+        </a>
+        {% block header -%}gnostr.org{%- endblock %}
+      </h1>
+    </header>
 
-{%- block nav -%}
-<nav>
-    <div>
+    {%- block nav -%}
+    <nav>
+      <div>
         <a href="/" class="active">index</a>
-    </div>
+      </div>
 
-    <div class="grow"></div>
+      <div class="grow"></div>
 
-    <div>
-        {%- block extra_nav_links %}{% endblock %}
-    </div>
-</nav>
-{%- endblock -%}
+      <div>{%- block extra_nav_links %}{% endblock %}</div>
+    </nav>
+    {%- endblock -%}
 
-<aside>
-    {%- block subnav %}{% endblock %}
-</aside>
+    <aside>{%- block subnav %}{% endblock %}</aside>
 
-<main>
-    {%- block content %}{% endblock -%}
-</main>
+    <main>{%- block content %}{% endblock -%}</main>
 
-<footer>
-    <a href="https://github.com/gnostr-org/gnostr" target="_blank">gnostr</a> v{{ crate::CRATE_VERSION }}
-    at {{ time::OffsetDateTime::now_utc()|format_time }}
-    in {{ "{:?}"|format(crate::layers::logger::REQ_TIMESTAMP.get().elapsed()) }}
-</footer>
-</body>
+    <footer>
+      <a href="https://github.com/gnostr-org/gnostr" target="_blank">gnostr.org</a> v{{
+      crate::CRATE_VERSION }} at {{ time::OffsetDateTime::now_utc()|format_time }} in {{
+      "{:?}"|format(crate::layers::logger::REQ_TIMESTAMP.get().elapsed()) }}
+    </footer>
+  </body>
 </html>
