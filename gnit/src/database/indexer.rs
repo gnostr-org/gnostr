@@ -67,14 +67,8 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             }
         };
 
-        let name = if relative.as_os_str().is_empty() {
-            // For the root repository (empty path), use "root" as a consistent identifier
-            "root"
-        } else {
-            match relative.file_name().and_then(OsStr::to_str) {
-                Some(name) => name,
-                None => continue,
-            }
+        let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
+            continue;
         };
 
         // Try to read description file - for bare repos it's in root, for regular repos it's in .git/
@@ -116,7 +110,7 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             },
             default_branch: find_default_branch(&git_repository).ok().flatten(),
         }
-        .insert(db, storage_key);
+        .insert(db, relative);
 
         info!(
             "Inserted repository with key: '{:?}', name: '{}'",

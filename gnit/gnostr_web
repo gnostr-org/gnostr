@@ -10,7 +10,7 @@ echo "Searching for Git Root and Initializing Migration"
 echo "----------------------------------------------------------"
 
 # 1. Recursive Search for Git Root
-# This loop starts at the current directory and moves up until it finds .git 
+# This loop starts at the current directory and moves up until it finds .git
 # or reaches the system root (/)
 TARGET_SEARCH_DIR=$(pwd)
 GIT_ROOT=""
@@ -70,7 +70,7 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 		alias open='xdg-open';
 	fi
 fi
-cargo install -j8 --path . 
+cargo install -j8 --path .
 cargo install -j8 --path . --root .;
 open http://localhost:$PORT & \
 gnostr-gnit -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s $TARGET_DIR
