@@ -1,4 +1,4 @@
-@import 'colours';
+@import "colours";
 .table-responsive {
   display: block;
   width: 100%;
@@ -12,7 +12,8 @@ table {
 
   border-collapse: collapse;
 
-  th, td {
+  th,
+  td {
     white-space: nowrap;
     padding-right: 10px;
 
@@ -120,7 +121,8 @@ table.repositories {
 
 table.commit-info {
   color: $base1;
-  td, th {
+  td,
+  th {
     padding: 0.1em 1em 0.1em 0.1em;
   }
 }
