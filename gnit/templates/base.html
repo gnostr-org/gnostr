@@ -11,7 +11,7 @@
   <body>
     <header>
       <h1>
-        <a href="/" class="no-hover">
+        <a href="/" class="no-hover" style="text-decoration: none">
           <img src="/gnostr.svg" alt="gnostr" width="128" height="128" style="vertical-align: middle" />
         </a>
         {% block header -%}gnostr.org{%- endblock %}
@@ -24,19 +24,19 @@
         <a href="/" class="active">index</a>
       </div>
 
-      <div class="grow"></div>
+        <div class="grow"></div>
 
-      <div>{%- block extra_nav_links %}{% endblock %}</div>
-    </nav>
-    {%- endblock -%}
+        <div>{%- block extra_nav_links %}{% endblock %}</div>
+      </nav>
+      {%- endblock -%}
 
-    <aside>{%- block subnav %}{% endblock %}</aside>
+      <aside>{%- block subnav %}{% endblock %}</aside>
 
     <main>{%- block content %}{% endblock -%}</main>
 
     <footer>
-      <a href="https://github.com/gnostr-org/gnostr" target="_blank">gnostr.org</a> v{{
-      crate::CRATE_VERSION }} at {{ time::OffsetDateTime::now_utc()|format_time }} in {{
+      <a href="https://github.com/gnostr-org/gnostr" target="_blank">gnostr.org</a> v{{ crate::CRATE_VERSION }} at {{
+      time::OffsetDateTime::now_utc()|format_time }} in {{
       "{:?}"|format(crate::layers::logger::REQ_TIMESTAMP.get().elapsed()) }}
     </footer>
   </body>
