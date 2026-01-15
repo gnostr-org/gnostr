@@ -78,7 +78,13 @@ pub struct Args {
     #[clap(long, value_parser, default_value = "127.0.0.1")]
     bind_address: IpAddr,
     /// The socket port to bind to (e.g., 3333).
-    #[arg(short, long, value_parser, default_value = "3333", env = "GNOSTR_GNIT_BIND_PORT")]
+    #[arg(
+        short,
+        long,
+        value_parser,
+        default_value = "3333",
+        env = "GNOSTR_GNIT_BIND_PORT"
+    )]
     bind_port: u16,
     /// The path in which your bare Git repositories reside.
     ///
@@ -192,6 +198,17 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     };
 
+    let static_svg = |content: &'static [u8]| {
+        move || async move {
+            let mut resp = Response::new(Body::from(content));
+            resp.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                HeaderValue::from_static("image/svg+xml"),
+            );
+            resp
+        }
+    };
+
     info!("Priming highlighters...");
     prime_highlighters();
     info!("Server starting up...");
@@ -217,6 +234,10 @@ async fn main() -> Result<(), anyhow::Error> {
             "/favicon.ico",
             get(static_favicon(include_bytes!("../statics/favicon.ico"))),
         )
+        .route(
+            "/gnostr.svg",
+            get(static_svg(include_bytes!("../statics/gnostr.svg"))),
+        )
         .fallback(methods::repo::service)
         .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))
@@ -225,10 +246,8 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(Extension(Arc::new(args.scan_path)))
         .layer(CorsLayer::new());
 
-
-	println!("{}", &args.bind_port);
-	let socket = SocketAddr::new(args.bind_address, args.bind_port);
-
+    println!("{}", &args.bind_port);
+    let socket = SocketAddr::new(args.bind_address, args.bind_port);
 
     let listener = TcpListener::bind(&socket).await?;
     let app = app.into_make_service_with_connect_info::<SocketAddr>();
