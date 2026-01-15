@@ -1,521 +1,1041 @@
 use std::{
-    borrow::Cow,
-    ffi::OsStr,
-    fmt::Write,
-    fs,
-    path::{Path, PathBuf},
+    env, fs, io,
+    io::{Error, ErrorKind, Write},
+    path::Path,
     process::Command,
-    sync::LazyLock,
 };
 
-use anyhow::{bail, Context};
-use heck::{ToSnakeCase, ToUpperCamelCase};
-use quote::{format_ident, quote};
-use serde::Deserialize;
-use threadpool::ThreadPool;
+use sha2::{Digest, Sha256};
 
-const GRAMMAR_REPOSITORY_URL: &str = "https://github.com/helix-editor/helix";
-const GRAMMAR_REPOSITORY_REF: &str = "82dd96369302f60a9c83a2d54d021458f82bcd36";
-const GRAMMAR_REPOSITORY_CONFIG_PATH: &str = "languages.toml";
+fn _sync_nip44_vectors() {
+    const NIP44_VECTORS_URL: &str =
+        "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
+    const NIP44_VECTORS_SHA256: &str =
+        "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
+    let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let dest_path = Path::new(&out_dir).join("src/lib/types/nip44/nip44.vectors.json");
 
-static BLACKLISTED_MODULES: &[&str] = &[
-    // these languages all don't have corresponding grammars
-    "cabal",
-    "idris",
-    "llvm-mir-yaml",
-    "prolog",
-    "mint",
-    "hare",
-    "wren",
-    // doesn't compile on macos
-    "gemini",
-];
+    println!("cargo:rerun-if-changed={}", dest_path.display());
 
-fn main() -> anyhow::Result<()> {
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
+    let mut needs_download = true;
 
-    let root = std::env::var("TREE_SITTER_GRAMMAR_LIB_DIR").ok();
-    println!("cargo::rerun-if-env-changed=TREE_SITTER_GRAMMAR_LIB_DIR");
-
-    let (root, dylib) = if let Some(root) = root.as_deref() {
-        (Path::new(root), true)
-    } else {
-        (out_dir.as_path(), false)
-    };
-
-    let (config, query_path) = if dylib {
-        let config: HelixLanguages = toml::from_str(
-            &fs::read_to_string(root.join("languages.toml"))
-                .context("failed to read languages.toml")?,
-        )
-        .context("failed to parse helix languages.toml")?;
-
-        println!("cargo::rustc-link-search=native={}", root.display());
-
-        for grammar in &config.grammar {
-            if BLACKLISTED_MODULES.contains(&grammar.name.as_str()) {
-                continue;
-            }
-
-            println!("cargo::rustc-link-lib=dylib=tree-sitter-{}", grammar.name);
-        }
-
-        (config, root.join("queries"))
-    } else {
-        let sources = out_dir.join("sources");
-        fs::create_dir_all(&sources)?;
-
-        let helix_root = sources.join("helix");
-
-        fetch_git_repository(GRAMMAR_REPOSITORY_URL, GRAMMAR_REPOSITORY_REF, &helix_root)
-            .context(GRAMMAR_REPOSITORY_URL)?;
-
-        let config: HelixLanguages = toml::from_str(
-            &fs::read_to_string(helix_root.join(GRAMMAR_REPOSITORY_CONFIG_PATH))
-                .context("failed to read helix languages.toml")?,
-        )
-        .context("failed to parse helix languages.toml")?;
-
-        fetch_and_build_grammar(config.grammar.clone(), &sources)?;
-
-        (config, helix_root.join("runtime/queries"))
-    };
-
-    let mut grammar_defs = Vec::new();
-    for grammar in &config.grammar {
-        let name = &grammar.name;
-        if let Some(tokens) =
-            build_language_module(name, query_path.as_path()).with_context(|| name.to_string())?
-        {
-            grammar_defs.push(tokens);
-        }
-    }
-    fs::write(
-        out_dir.join("grammar.defs.rs"),
-        prettyplease::unparse(
-            &syn::parse2(quote!(#(#grammar_defs)*)).context("failed to parse grammar defs")?,
-        ),
-    )
-    .context("failed to write grammar defs")?;
-
-    let registry = build_grammar_registry(config.grammar.iter().map(|v| v.name.clone()));
-    fs::write(
-        out_dir.join("grammar.registry.rs"),
-        prettyplease::unparse(&syn::parse2(registry).context("failed to parse grammar registry")?),
-    )
-    .context("failed to write grammar registry")?;
-
-    let language = build_language_registry(config.language)?;
-    fs::write(
-        out_dir.join("language.registry.rs"),
-        prettyplease::unparse(&syn::parse2(language)?),
-    )?;
-
-    Ok(())
-}
-
-fn build_language_registry(
-    language_definition: Vec<LanguageDefinition>,
-) -> anyhow::Result<proc_macro2::TokenStream> {
-    let mut camel = Vec::new();
-    let mut grammars = Vec::new();
-
-    let mut globs = Vec::new();
-    let mut globs_to_camel = Vec::new();
-
-    let mut injection_regex = Vec::new();
-    let mut injection_regex_str_len = Vec::new();
-    let mut regex_to_camel = Vec::new();
-
-    for language in &language_definition {
-        if BLACKLISTED_MODULES.contains(&language.name.as_str()) {
-            continue;
-        }
-
-        let camel_cased_name = format_ident!("{}", language.name.to_upper_camel_case());
-        camel.push(camel_cased_name.clone());
-
-        let grammar = language
-            .grammar
-            .as_deref()
-            .unwrap_or(language.name.as_str());
-        grammars.push(format_ident!("{}", grammar.to_upper_camel_case()));
-
-        for ty in &language.file_types {
-            match ty {
-                FileType::Glob { glob } => globs.push(Cow::Borrowed(glob)),
-                FileType::Extension(ext) => globs.push(Cow::Owned(format!("*.{ext}"))),
-            }
-
-            globs_to_camel.push(camel_cased_name.clone());
-        }
-
-        if let Some(regex) = language.injection_regex.as_deref() {
-            injection_regex.push(format!("^{regex}$"));
-            injection_regex_str_len.push(regex.len());
-            regex_to_camel.push(camel_cased_name.clone());
+    if dest_path.exists() {
+        println!("cargo:warning=nip44.vectors.json already exists.");
+        let mut file = fs::File::open(&dest_path).unwrap();
+        let mut hasher = Sha256::new();
+        io::copy(&mut file, &mut hasher).unwrap();
+        let hash = hasher.finalize();
+        let hex_hash = hex::encode(hash);
+        if hex_hash == NIP44_VECTORS_SHA256 {
+            println!("cargo:warning=nip44.vectors.json hash is correct.");
+            needs_download = false;
+        } else {
+            println!("cargo:warning=nip44.vectors.json hash is incorrect. Re-downloading.");
+            fs::remove_file(&dest_path).unwrap();
         }
     }
 
-    let injection_regex_len = injection_regex.len();
-    let globs_array_len = globs.len();
-    let globs_string_len = globs.iter().map(|v| v.len()).collect::<Vec<_>>();
+    if needs_download {
+        println!("cargo:warning=Downloading nip44.vectors.json...");
+        match reqwest::blocking::get(NIP44_VECTORS_URL) {
+            Ok(response) => {
+                let content = response.bytes().unwrap();
+                let mut hasher = Sha256::new();
+                hasher.update(&content);
+                let hash = hasher.finalize();
+                let hex_hash = hex::encode(hash);
 
-    Ok(quote! {
-        #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        pub enum Language {
-            #(#camel),*
-        }
-
-        impl Language {
-            pub const VARIANTS: &[Self] = &[
-                #(Self::#camel),*
-            ];
-
-            pub const fn grammar(self) -> Grammar {
-                match self {
-                    #(Self::#camel => Grammar::#grammars),*
-                }
-            }
-
-            pub fn from_file_name<P: AsRef<::std::path::Path>>(name: P) -> Option<Self> {
-                const LENGTHS: [usize; #globs_array_len] = [#(#globs_string_len),*];
-                const GLOB_TO_VARIANT: [Language; #globs_array_len] = [#(Language::#globs_to_camel),*];
-
-                thread_local! {
-                    static GLOB: ::std::cell::LazyCell<::globset::GlobSet> = ::std::cell::LazyCell::new(|| {
-                        ::globset::GlobSetBuilder::new()
-                            #(.add(::globset::Glob::new(#globs).unwrap()))*
-                            .build()
-                            .unwrap()
-                    });
-                }
-
-                let mut max = usize::MAX;
-                let mut curr = None;
-
-                GLOB.with(|glob| {
-                    for m in glob.matches(name) {
-                        let curr_length = LENGTHS[m];
-
-                        if curr_length < max {
-                            max = curr_length;
-                            curr = Some(GLOB_TO_VARIANT[m]);
-                        }
-                    }
-                });
-
-                curr
-            }
-
-            pub fn from_injection(name: &str) -> Option<Self> {
-                const LENGTHS: [usize; #injection_regex_len] = [#(#injection_regex_str_len),*];
-                const REGEX_TO_VARIANT: [Language; #injection_regex_len] = [#(Language::#regex_to_camel),*];
-
-                thread_local! {
-                    static REGEX: ::std::cell::LazyCell<::regex::RegexSet> = ::std::cell::LazyCell::new(|| {
-                        ::regex::RegexSet::new([
-                            #(#injection_regex),*
-                        ])
-                        .unwrap()
-                    });
-                }
-
-                let mut max = usize::MAX;
-                let mut curr = None;
-
-                REGEX.with(|regex| {
-                    for m in regex.matches(name) {
-                        let curr_length = LENGTHS[m];
-
-                        if curr_length < max {
-                            max = curr_length;
-                            curr = Some(REGEX_TO_VARIANT[m]);
-                        }
-                    }
-                });
-
-                curr
-            }
-        }
-    })
-}
-
-fn build_grammar_registry(names: impl Iterator<Item = String>) -> proc_macro2::TokenStream {
-    let (ids, plain, camel, snake) = names
-        .filter(|name| !BLACKLISTED_MODULES.contains(&name.as_str()))
-        .enumerate()
-        .fold(
-            (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
-            |(mut ids, mut plain_acc, mut camel_acc, mut snake_acc), (i, name)| {
-                camel_acc.push(format_ident!("{}", name.to_upper_camel_case()));
-
-                if name == "move" {
-                    snake_acc.push(format_ident!("r#{}", name.to_snake_case()));
+                if hex_hash == NIP44_VECTORS_SHA256 {
+                    let mut file = fs::File::create(&dest_path).unwrap();
+                    file.write_all(&content).unwrap();
+                    println!(
+                        "cargo:warning=Successfully downloaded and verified nip44.vectors.json."
+                    );
                 } else {
-                    snake_acc.push(format_ident!("{}", name.to_snake_case()));
+                    panic!(
+                        "Downloaded nip44.vectors.json has incorrect hash. Expected {}, got {}",
+                        NIP44_VECTORS_SHA256, hex_hash
+                    );
                 }
+            }
+            Err(e) => {
+                if dest_path.exists() {
+                    println!(
+                        "cargo:warning=Failed to download nip44.vectors.json: {}. Using existing file.",
+                        e
+                    );
+                } else {
+                    panic!(
+                        "Failed to download nip44.vectors.json and no local copy available: {}",
+                        e
+                    );
+                }
+            }
+        }
+    }
+}
 
-                plain_acc.push(name);
+fn command_exists(command: &str) -> bool {
+    let checker = if env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows" {
+        "where"
+    } else {
+        "which"
+    };
+    Command::new(checker)
+        .arg(command)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success())
+}
 
-                ids.push(i);
-                (ids, plain_acc, camel_acc, snake_acc)
-            },
+// try:
+// cargo build --features memory_profiling -j8
+
+fn check_sscache() {
+    if Command::new("sccache").arg("--version").output().is_ok() {
+        println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
+        env::set_var("RUSTC_WRAPPER", "sscache");
+        println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
+    } else {
+        println!("cargo:warning=sscache not found - trying to install.");
+        install_sccache();
+    }
+}
+
+fn check_brew() -> bool {
+    command_exists("brew")
+}
+
+fn install_sccache() {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
+    if target_os == "linux" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Linux OS. Attempting to install sccache.");
+
+        let installer = if command_exists("apt-get") {
+            "apt-get"
+        } else if command_exists("yum") {
+            "yum"
+        } else if command_exists("dnf") {
+            "dnf"
+        } else {
+            println!(
+                "cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually."
+            );
+            return;
+        };
+
+        if installer == "apt-get"
+            && !Command::new("sudo")
+                .arg("apt-get")
+                .arg("update")
+                .status()
+                .is_ok_and(|s| s.success())
+        {
+            println!("cargo:warning=Failed to update package lists with apt-get.");
+        }
+
+        println!("cargo:warning=Installing sccache with {}", installer);
+        let output = Command::new("sudo")
+            .arg(installer)
+            .arg("install")
+            .arg("-y")
+            .arg("sccache")
+            .output();
+
+        match output {
+            Ok(output) if output.status.success() => {
+                println!("cargo:warning=Successfully installed sccache.");
+            }
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!("cargo:warning=Failed to install sccache: {}", stderr);
+                panic!("Failed to install required Linux dependencies.");
+            }
+            Err(e) => {
+                println!("cargo:warning=Failed to run installation command: {}", e);
+                panic!("Failed to run dependency installation command.");
+            }
+        }
+    } else if target_os == "macos" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
+
+        if check_brew() {
+            let output = Command::new("brew").arg("install").arg("sccache").output();
+            match output {
+                Ok(output) if output.status.success() => {
+                    println!("cargo:warning=Successfully installed sccache dependency.");
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!(
+                        "cargo:warning=Failed to install sccache with brew: {}",
+                        stderr
+                    );
+                    panic!("Failed to install required macOS dependencies.");
+                }
+                Err(e) => {
+                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
+                    panic!("Failed to run Homebrew command.");
+                }
+            }
+        } else {
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
+            panic!("Homebrew not found.");
+        }
+    } else if target_os == "windows" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Windows. Trying to install sccache.");
+        let install_command = if command_exists("scoop") {
+            "scoop install sccache"
+        } else if command_exists("winget") {
+            "winget install --id=Mozilla.sccache -e"
+        } else {
+            ""
+        };
+
+        if !install_command.is_empty() {
+            install_windows_dependency("sccache", install_command);
+        } else {
+            println!(
+                "cargo:warning=Neither scoop nor winget found. Please install sccache manually."
+            );
+        }
+    }
+}
+fn install_windows_dependency(name: &str, install_command: &str) {
+    // Check if the dependency is already installed using the Windows 'where'
+    // command.
+    let check_command = format!("where.exe {} >nul 2>nul", name);
+
+    // Command::new("cmd") is the standard way to run shell commands on Windows.
+    let output = Command::new("cmd").arg("/C").arg(&check_command).status();
+
+    match output {
+        Ok(status) => {
+            if status.success() {
+                println!("cargo:warning=Dependency '{}' already found.", name);
+                return;
+            }
+        }
+        Err(e) => {
+            // A non-zero exit from the 'where.exe' check is expected if the command isn't
+            // found, but a generic error here means 'cmd' itself couldn't run.
+            println!("cargo:warning=Failed to check for '{}': {}", name, e);
+        }
+    }
+
+    // Dependency not found (or check failed), proceed with installation.
+    println!(
+        "cargo:warning=Attempting to install dependency '{}' using: {}",
+        name, install_command
+    );
+
+    let output = Command::new("cmd")
+        .arg("/C") // Run the command string and then terminate
+        .arg(install_command)
+        .output();
+
+    match output {
+        Ok(output) => {
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                let stdout = String::from_utf8_lossy(&output.stdout);
+
+                println!("cargo:warning=Failed to install {}: {}", name, stderr);
+                println!("cargo:warning=Stdout: {}", stdout);
+
+                // Exit the build process with a panick, since the build cannot continue.
+                panic!(
+                    "Failed to install required Windows dependency: {}. Ensure Scoop or Winget is installed and on your PATH.",
+                    name
+                );
+            } else {
+                println!("cargo:warning=Successfully installed {} dependency.", name);
+            }
+        }
+        Err(e) => {
+            println!(
+                "cargo:warning=Failed to run installation command for {}: {}",
+                name, e
+            );
+            // Exit the build process with a panick.
+            panic!("Failed to run installation command for {}.", name);
+        }
+    }
+}
+
+fn install_xcb_deps() {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
+    if target_os == "linux" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Linux OS. Attempting to install xcb dependencies.");
+
+        let (installer, pkgs) = if command_exists("apt-get") {
+            (
+                "apt-get",
+                vec![
+                    "libxcb1-dev",
+                    "libxcb-render0-dev",
+                    "libxcb-shape0-dev",
+                    "libxcb-xfixes0-dev",
+                ],
+            )
+        } else if command_exists("yum") {
+            (
+                "yum",
+                vec![
+                    "libxcb-devel",
+                    "libxcb-render-devel",
+                    "libxcb-shape-devel",
+                    "libxcb-xfixes-devel",
+                ],
+            )
+        } else if command_exists("dnf") {
+            (
+                "dnf",
+                vec![
+                    "libxcb-devel",
+                    "libxcb-render-devel",
+                    "libxcb-shape-devel",
+                    "libxcb-xfixes-devel",
+                ],
+            )
+        } else {
+            println!(
+                "cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually."
+            );
+            return;
+        };
+
+        if installer == "apt-get"
+            && !Command::new("sudo")
+                .arg("apt-get")
+                .arg("update")
+                .status()
+                .is_ok_and(|s| s.success())
+        {
+            println!("cargo:warning=Failed to update package lists with apt-get.");
+        }
+
+        let mut cmd = Command::new("sudo");
+        cmd.arg(installer).arg("install").arg("-y").args(&pkgs);
+
+        match cmd.output() {
+            Ok(output) if output.status.success() => {
+                println!("cargo:warning=Successfully installed xcb dependencies.");
+            }
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                panic!("Failed to install required Linux dependencies.");
+            }
+            Err(e) => {
+                println!(
+                    "cargo:warning=Failed to run dependency installation command: {}",
+                    e
+                );
+                panic!("Failed to run dependency installation command.");
+            }
+        }
+    } else if target_os == "macos" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected macOS. Attempting to install 'libxcb' using Homebrew.");
+
+        if check_brew() {
+            let output = Command::new("brew").arg("install").arg("libxcb").output();
+            match output {
+                Ok(output) if output.status.success() => {
+                    println!("cargo:warning=Successfully installed xcb dependencies.");
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
+                    panic!("Failed to install required macOS dependencies.");
+                }
+                Err(e) => {
+                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
+                    panic!("Failed to run Homebrew command.");
+                }
+            }
+        } else {
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
+            panic!("Failed to install required macOS dependencies.");
+        }
+    } else if target_os == "windows" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected Windows. No XCB libraries are required for this build.");
+    }
+}
+
+fn install_openssl_brew() {
+    println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
+    let install_result = Command::new("brew").args(["install", "openssl@3"]).status();
+
+    match install_result {
+        Ok(status) if status.success() => {
+            println!("cargo:warning=Successfully installed openssl@3 via Homebrew.");
+            // Instruct rustc to link against the OpenSSL libraries installed by
+            // Brew. The exact paths might vary slightly based on
+            // Brew's configuration. It's generally safer to rely on
+            // the `openssl` crate to handle linking. However, if
+            // you need explicit linking: The corrected paths are
+            // used conditionally in the main function.
+        }
+        Ok(status) => {
+            println!(
+                "cargo:warning=Failed to install openssl@3 via Homebrew (exit code: {}).",
+                status
+            );
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
+            println!("cargo:warning=  brew install openssl@3");
+        }
+        Err(e) => {
+            println!(
+                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
+                e
+            );
+        }
+    }
+}
+fn install_pkg_config() {
+    println!("cargo:warning=Attempting to install pkg-config using Homebrew...");
+    let install_result = Command::new("brew")
+        .args(["install", "pkg-config"])
+        .status();
+
+    match install_result {
+        Ok(status) if status.success() => {
+            println!("cargo:warning=Successfully installed pkg-config via Homebrew.");
+            // Linking will be handled by the `openssl` crate or via pkg-config.
+        }
+        Ok(status) => {
+            println!(
+                "cargo:warning=Failed to install pkg-config via Homebrew (exit code: {}).",
+                status
+            );
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
+            println!("cargo:warning=  brew install pkg-config");
+        }
+        Err(e) => {
+            println!(
+                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
+                e
+            );
+        }
+    }
+}
+fn install_zlib() {
+    println!("cargo:warning=Attempting to install zlib using Homebrew...");
+    let install_result = Command::new("brew").args(["install", "zlib"]).status();
+
+    match install_result {
+        Ok(status) if status.success() => {
+            println!("cargo:warning=Successfully installed zlib via Homebrew.");
+            // Linking will be handled via pkg-config.
+        }
+        Ok(status) => {
+            println!(
+                "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
+                status
+            );
+            println!(
+                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
+            );
+            println!("cargo:warning=  brew install zlib");
+        }
+        Err(e) => {
+            println!(
+                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
+                e
+            );
+        }
+    }
+}
+
+use chrono::TimeZone;
+
+fn get_git_hash() -> String {
+    use std::process::Command;
+
+    // Allow builds from `git archive` generated tarballs if output of
+    // `git get-tar-commit-id` is set in an env var.
+    if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
+        return commit[..7].to_string();
+    };
+    let commit_output = Command::new("git")
+        .arg("rev-parse")
+        .arg("--short=7")
+        .arg("--verify")
+        .arg("HEAD")
+        .output()
+        .expect("Failed to execute git command to get commit hash");
+    let commit_string = String::from_utf8_lossy(&commit_output.stdout);
+
+    commit_string.lines().next().unwrap_or("").into()
+}
+
+fn main() {
+    println!("cargo:rerun-if-changed=src/empty");
+    //_make_empty();
+    //_sync_nip44_vectors();
+
+    if env::var("RUSTC_WRAPPER").is_ok() {
+        println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
+    } else {
+        check_sscache();
+    }
+    // Tell Cargo to rerun this build script only if the Git HEAD or index changes
+    println!("cargo:rerun-if-changed=.git/HEAD");
+    println!("cargo:rerun-if-changed=.git/index");
+
+    // Tell Cargo to rerun this build script only if these environment variables
+    // change
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+    println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
+
+    //_make_empty();
+
+    let now = match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(val) => chrono::Local
+            .timestamp_opt(val.parse::<i64>().unwrap(), 0)
+            .unwrap(),
+        Err(_) => chrono::Local::now(),
+    };
+    let build_date = now.date_naive();
+
+    let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!(
+            "{} {} ({})",
+            env!("CARGO_PKG_VERSION"),
+            build_date,
+            get_git_hash()
+        )
+    } else {
+        format!("nightly {} ({})", build_date, get_git_hash())
+    };
+
+    println!("cargo:warning=buildname '{}'", build_name);
+    println!("cargo:rustc-env=GITUI_BUILD_NAME={}", build_name);
+
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+
+    match target_arch.as_str() {
+        "x86_64" => {
+            println!("cargo:warning=Building for x86_64 architecture.");
+            println!("cargo:rustc-cfg=target_arch_x86_64");
+            // Add x86_64 specific build logic here
+
+            println!("cargo:warning=target_os={}", target_os);
+            if target_os == "windows" {}
+        }
+        "aarch64" => {
+            println!("cargo:warning=Building for aarch64 architecture.");
+            println!("cargo:rustc-cfg=target_arch_aarch64");
+            // Add aarch64 specific build logic here
+            println!("cargo:warning=target_os={}", target_os);
+            if target_os == "windows" {}
+        }
+        "arm" => {
+            println!("cargo:warning=Building for arm architecture.");
+            println!("cargo:rustc-cfg=target_arch_arm");
+            // Add arm specific build logic here
+            println!("cargo:warning=target_os={}", target_os);
+            if target_os == "windows" {}
+        }
+        "wasm32" => {
+            println!("cargo:warning=Building for wasm32 architecture.");
+            println!("cargo:rustc-cfg=target_arch_wasm32");
+            // Add wasm32 specific build logic here
+            println!("cargo:warning=target_os={}", target_os);
+            if target_os == "windows" {}
+        }
+        "riscv64" => {
+            println!("cargo:warning=Building for riscv64 architecture.");
+            println!("cargo:rustc-cfg=target_arch_riscv64");
+            // Add riscv64 specific build logic here
+            println!("cargo:warning=target_os={}", target_os);
+            if target_os == "windows" {}
+        }
+        _ => {
+            println!(
+                "cargo:warning=Building for an unknown architecture: {}",
+                target_arch
+            );
+            // Handle unknown architectures or provide a default
+            println!("cargo:warning=target_os={}", target_os);
+            if target_os == "windows" {}
+        }
+    }
+
+    if !if_windows() {
+        //try
+        musl_install_pkg_config();
+        install_xcb_deps();
+        if if_linux_unknown() {
+            linux_install_pkg_config();
+        }
+        if target_os == "aarch64-apple-darwin" || target_os == "x86_64-apple-darwin" {
+            println!("cargo:warning=On macOS, openssl@3 is recommended for this crate.");
+
+            if check_brew() {
+                println!("cargo:warning=Homebrew detected.");
+                install_pkg_config();
+                install_zlib();
+                install_openssl_brew();
+
+                // Instruct rustc to link against the OpenSSL libraries.
+                // The `openssl` crate generally handles finding these libraries.
+                // If you need explicit linking (less recommended):
+                if target_os == "aarch64-apple-darwin" {
+                    println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
+                    println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                } else if target_os == "x86_64-apple-darwin" {
+                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
+                    println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                }
+            } else {
+                println!(
+                    "cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:"
+                );
+                println!("cargo:warning=  brew install openssl@3");
+                println!("cargo:warning=  brew install pkg-config");
+                println!("cargo:warning=  brew install zlib");
+                println!("cargo:warning=Or using MacPorts:");
+                println!("cargo:warning=  sudo port install openssl@3");
+                println!("cargo:warning=And ensure your system can find the libraries.");
+            }
+        } else {
+            // For other operating systems, the `openssl` crate should handle linking.
+            println!("cargo:rustc-link-lib=dylib=ssl");
+            println!("cargo:rustc-link-lib=dylib=crypto");
+        }
+    }
+    // Add other build logic here if needed
+}
+
+fn if_windows() -> bool {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+
+    if target_os == "windows" {
+        println!("cargo:rustc-cfg=target_os_windows");
+        println!("cargo:warning=Building for Windows.");
+        // Add Windows-specific build logic here
+        // For example, linking against specific Windows libraries
+        // println!("cargo:rustc-link-lib=user32");
+        true
+    } else {
+        println!(
+            "cargo:warning=Not building for Windows (target OS: {}).",
+            target_os
+        );
+        // Add logic for other operating systems if needed
+        false
+    }
+}
+fn if_linux_unknown() -> bool {
+    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+
+    if target == "aarch64-unknown-linux-gnu" {
+        println!(
+            "cargo:warning=On AArch64 Linux, the `libssl-dev` package is required for this crate."
+        );
+        println!("cargo:warning=Please ensure you have it installed.");
+        println!("cargo:warning=For Debian/Ubuntu-based systems, use:");
+        println!("cargo:warning=  sudo apt-get update && sudo apt-get install libssl-dev");
+        println!("cargo:warning=For Fedora/CentOS/RHEL-based systems, use:");
+        println!("cargo:warning=  sudo dnf install openssl-devel"); // Package name might vary
+        println!("cargo:warning=Or:");
+        println!("cargo:warning=  sudo yum install openssl-devel"); // Older systems
+        println!("cargo:warning=For Arch Linux-based systems, use:");
+        println!("cargo:warning=  sudo pacman -S openssl"); // Development headers are usually included
+
+        // Optionally, you can try to check if the necessary libraries exist
+        // This is more reliable than trying to run package managers
+        let check_libssl = Command::new("ldconfig").arg("-p").output();
+
+        match check_libssl {
+            Ok(output)
+                if String::from_utf8_lossy(&output.stdout).contains("libssl.so")
+                    && String::from_utf8_lossy(&output.stdout).contains("libcrypto.so") =>
+            {
+                println!("cargo:rustc-link-lib=dylib=ssl");
+                println!("cargo:rustc-link-lib=dylib=crypto");
+            }
+            _ => {
+                println!(
+                    "cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly."
+                );
+                // You might choose to fail the build here if it's strictly
+                // necessary std::process::exit(1);
+            }
+        }
+        true
+    } else {
+        // Logic for other target platforms
+        println!("cargo:rustc-link-lib=dylib=ssl");
+        println!("cargo:rustc-link-lib=dylib=crypto");
+        false
+    }
+
+    // Add other build logic here if needed
+}
+fn linux_install_pkg_config() {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+
+    if target_os == "linux" {
+        println!(
+            "cargo:warning=On Linux, the `pkgconfig` package (or equivalent providing `pkg-config`) is required for this crate."
+        );
+        println!("cargo:warning=Please ensure you have it installed.");
+        println!("cargo:warning=For Debian/Ubuntu-based systems, use:");
+        println!("cargo:warning=  sudo apt-get update && sudo apt-get install pkgconfig");
+        println!("cargo:warning=For Fedora/CentOS/RHEL-based systems, use:");
+        println!("cargo:warning=  sudo dnf install pkg-config");
+        println!("cargo:warning=Or:");
+        println!("cargo:warning=  sudo yum install pkg-config"); // Older systems
+        println!("cargo:warning=For Arch Linux-based systems, use:");
+        println!("cargo:warning=  sudo pacman -S pkg-config"); // Development headers are usually included
+        println!("cargo:warning=For other distributions, please consult your package manager.");
+
+        // Optionally, you can try to find `pkg-config` in the PATH
+        let pkg_config_check = Command::new("which") // Or `command -v`
+            .arg("pkg-config")
+            .output();
+
+        match pkg_config_check {
+            Ok(output) if output.status.success() => {
+                println!("cargo:warning=Found `pkg-config` in your PATH.");
+                // You can now use `pkg-config` to get build information
+                // For example:
+                let config_output = Command::new("pkg-config").arg("--libs").output().unwrap();
+                println!(
+                    "cargo:rustc-link-lib={}",
+                    String::from_utf8_lossy(&config_output.stdout).trim()
+                );
+            }
+            _ => {
+                println!(
+                    "cargo:warning=`pkg-config` not found in your PATH. Ensure `pkg-config` (or equivalent) is installed and accessible."
+                );
+                // You might choose to fail the build here if it's strictly
+                // necessary std::process::exit(1);
+            }
+        }
+    } else {
+        // Logic for other operating systems
+    }
+
+    // Common build logic can go here
+}
+
+fn musl_install_pkg_config() {
+    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+
+    if target == "x86_64-unknown-linux-musl" {
+        println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
+        println!(
+            "cargo:warning=This build process may require `pkg-config` to locate necessary libraries."
+        );
+        println!(
+            "cargo:warning=Please ensure `pkg-config` is installed in your Musl-based environment."
         );
 
-    quote! {
-        #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        pub enum Grammar {
-            #(#camel),*
-        }
+        // How to install pkg-config in a typical Musl environment might vary.
+        // You might need to instruct the user to install it via their
+        // chosen base image or package manager within that environment.
+        println!("cargo:warning=For example, if you are using Alpine Linux, you might use:");
+        println!("cargo:warning=  apk add pkgconf"); // Alpine uses 'apk' and 'pkgconf'
 
-        impl Grammar {
-            pub const VARIANTS: &[Self] = &[
-                #(Self::#camel),*
-            ];
+        // Optionally, you can check if `pkg-config` is in the PATH
+        let pkg_config_check = Command::new("which") // Or `command -v`
+            .arg("pkg-config")
+            .output();
 
-            pub const fn highlight_configuration_params(self) -> crate::HighlightConfigurationParams {
-                match self {
-                    #(Self::#camel => crate::HighlightConfigurationParams {
-                        language: crate::grammar::#snake::LANGUAGE,
-                        name: #plain,
-                        highlights_query: crate::grammar::#snake::HIGHLIGHTS_QUERY,
-                        injection_query: crate::grammar::#snake::INJECTIONS_QUERY,
-                        locals_query: crate::grammar::#snake::LOCALS_QUERY,
-                    }),*
-                }
-            }
-
-            pub const fn idx(self) -> usize {
-                match self {
-                    #(Self::#camel => #ids),*
-                }
-            }
-        }
-    }
-}
-
-fn build_language_module(
-    name: &str,
-    query_path: &Path,
-) -> anyhow::Result<Option<proc_macro2::TokenStream>> {
-    if BLACKLISTED_MODULES.contains(&name) {
-        return Ok(None);
-    }
-
-    let highlights_query = read_local_query(query_path, name, "highlights.scm");
-    let injections_query = read_local_query(query_path, name, "injections.scm");
-    let locals_query = read_local_query(query_path, name, "locals.scm");
-
-    let ffi = format_ident!("tree_sitter_{}", name.to_snake_case());
-    let name = if name == "move" {
-        format_ident!("r#{}", name.to_snake_case())
-    } else {
-        format_ident!("{}", name.to_snake_case())
-    };
-
-    Ok(Some(quote! {
-        pub mod #name {
-            extern "C" {
-                fn #ffi() -> *const ();
-            }
-
-            pub const LANGUAGE: tree_sitter_language::LanguageFn = unsafe { tree_sitter_language::LanguageFn::from_raw(#ffi) };
-            pub const HIGHLIGHTS_QUERY: &str = #highlights_query;
-            pub const INJECTIONS_QUERY: &str = #injections_query;
-            pub const LOCALS_QUERY: &str = #locals_query;
-        }
-    }))
-}
-
-// taken from https://github.com/helix-editor/helix/blob/2ce4c6d5fa3e50464b41a3d0190ad0e5ada2fc3c/helix-core/src/syntax.rs#L721
-fn read_local_query(query_path: &Path, language: &str, filename: &str) -> String {
-    static INHERITS_REGEX: LazyLock<regex::Regex> =
-        LazyLock::new(|| regex::Regex::new(r";+\s*inherits\s*:?\s*([a-z_,()-]+)\s*").unwrap());
-
-    let path = query_path.join(language).join(filename);
-
-    if !path.exists() {
-        return String::new();
-    }
-
-    let query =
-        fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to fetch {path:?}: {e:?}"));
-
-    INHERITS_REGEX
-        .replace_all(&query, |captures: &regex::Captures| {
-            captures[1]
-                .split(',')
-                .fold(String::new(), |mut output, language| {
-                    // `write!` to a String cannot fail.
-                    write!(
-                        output,
-                        "\n{}\n",
-                        read_local_query(query_path, language, filename)
-                    )
+        match pkg_config_check {
+            Ok(output) if output.status.success() => {
+                println!("cargo:warning=Found `pkg-config` in your PATH.");
+                // Now you can use `pkg-config` to get information about libraries
+                // For example:
+                let lib_info = Command::new("pkg-config")
+                    .arg("--libs")
+                    .arg("your_library")
+                    .output()
                     .unwrap();
-                    output
-                })
-        })
-        .to_string()
-}
-
-fn fetch_and_build_grammar(
-    grammars: Vec<GrammarDefinition>,
-    source_dir: &Path,
-) -> anyhow::Result<()> {
-    let pool = ThreadPool::new(std::thread::available_parallelism()?.get());
-
-    for grammar in grammars {
-        if BLACKLISTED_MODULES.contains(&grammar.name.as_str()) {
-            continue;
-        }
-
-        let mut grammar_root = source_dir.join(&grammar.name);
-
-        pool.execute(move || {
-            let grammar_root = match grammar.source {
-                GrammarSource::Git {
-                    remote,
-                    revision,
-                    subpath,
-                } => {
-                    fetch_git_repository(&remote, &revision, &grammar_root)
-                        .context(GRAMMAR_REPOSITORY_URL)
-                        .expect("failed to fetch git repository");
-
-                    if let Some(subpath) = subpath {
-                        grammar_root.push(subpath);
-                    }
-
-                    grammar_root
-                }
-                GrammarSource::Local { path } => path,
-            };
-
-            let grammar_src = grammar_root.join("src");
-
-            let parser_file = Some(grammar_src.join("parser.c"))
-                .filter(|s| s.exists())
-                .or_else(|| Some(grammar_src.join("parser.cc")))
-                .filter(|s| s.exists());
-            let scanner_file = Some(grammar_src.join("scanner.c"))
-                .filter(|s| s.exists())
-                .or_else(|| Some(grammar_src.join("scanner.cc")))
-                .filter(|s| s.exists());
-
-            if let Some(parser_file) = parser_file {
-                cc::Build::new()
-                    .cpp(parser_file.extension() == Some(OsStr::new("cc")))
-                    .file(parser_file)
-                    .flag_if_supported("-w")
-                    .flag_if_supported("-s")
-                    .include(&grammar_src)
-                    .compile(&format!("{}-parser", grammar.name));
+                println!(
+                    "cargo:rustc-link-lib={}",
+                    String::from_utf8_lossy(&lib_info.stdout).trim()
+                );
             }
-
-            if let Some(scanner_file) = scanner_file {
-                cc::Build::new()
-                    .cpp(scanner_file.extension() == Some(OsStr::new("cc")))
-                    .file(scanner_file)
-                    .flag_if_supported("-w")
-                    .flag_if_supported("-s")
-                    .include(&grammar_src)
-                    .compile(&format!("{}-scanner", grammar.name));
+            _ => {
+                println!(
+                    "cargo:warning=`pkg-config` not found in your PATH. Please ensure it is installed and accessible."
+                );
+                // You might choose to fail the build here if `pkg-config` is
+                // strictly necessary std::process::exit(1);
             }
-        });
-    }
-
-    pool.join();
-
-    Ok(())
-}
-
-fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Result<()> {
-    if !destination.exists() {
-        let res = Command::new("git").arg("init").arg(destination).status()?;
-        if !res.success() {
-            bail!("git init failed with exit code {res}");
         }
 
-        let res = Command::new("git")
-            .args(["remote", "add", "origin", url])
-            .current_dir(destination)
-            .status()?;
-        if !res.success() {
-            bail!("git remote failed with exit code {res}");
+        println!("cargo:rustc-cfg=target_musl");
+    } else {
+        println!(
+            "cargo:warning=Not building for x86_64-unknown-linux-musl (current target: {}).",
+            target
+        );
+        // Logic for other target platforms
+    }
+
+    // Common build logic can go here
+}
+
+fn _make_empty() {
+    let target_path = Path::new("src/empty");
+
+    // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
+    // We try to remove the path as a file first, and if that fails, we try as a
+    // directory.
+    if target_path.exists() {
+        if target_path.is_file() {
+            println!("cargo:warning=Found file at target path. Removing src/empty.");
+            if let Err(e) = fs::remove_file(target_path) {
+                panic!(
+                    "Failed to remove existing file {}: {}",
+                    target_path.display(),
+                    e
+                );
+            }
+        } else if target_path.is_dir() {
+            // If it exists as a directory, we can skip removal, as
+            // create_dir_all is idempotent, but if the goal is
+            // absolute cleanup, we use remove_dir_all.
+            // For simplicity, we let create_dir_all handle the existing
+            // directory case.
         }
     }
 
-    let res = Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .current_dir(destination)
-        .output()?
-        .stdout;
-    if res == ref_.as_bytes() {
-        return Ok(());
+    // 2. Create the directory `./src/empty` (using create_dir_all for robustness).
+    // This function creates all necessary parent directories and succeeds if the
+    // directory already exists. println!("cargo:warning=Creating directory:
+    // ./src/empty"); if let Err(e) = fs::create_dir_all(target_path) {
+    //    panic!("Failed to create directory {}: {}", target_path.display(), e);
+    //}
+
+    let dir_path = Path::new("src/empty");
+    let readme_path = dir_path.join("README.md");
+
+    println!("cargo:rerun-if-changed=build.rs");
+
+    // --- 1. Remove the Directory (if it exists) ---
+    if dir_path.exists() {
+        match fs::remove_dir_all(dir_path) {
+            Ok(_) => println!(
+                "Build: Successfully removed directory: {}",
+                dir_path.display()
+            ),
+            Err(e) => {
+                panic!(
+                    "Build: Failed to remove directory {}: {}",
+                    dir_path.display(),
+                    e
+                );
+            }
+        }
+    } else {
+        println!(
+            "Build: Directory {} does not exist, skipping removal.",
+            dir_path.display()
+        );
     }
 
-    let res = Command::new("git")
-        .args(["fetch", "--depth", "1", "origin", ref_])
-        .current_dir(destination)
-        .status()?;
-    if !res.success() {
-        bail!("git fetch failed with exit code {res}");
+    // --- 2. Create the Directory ---
+    match fs::create_dir_all(dir_path) {
+        Ok(_) => println!(
+            "Build: Successfully created directory: {}",
+            dir_path.display()
+        ),
+        Err(e) => {
+            panic!(
+                "Build: Failed to create directory {}: {}",
+                dir_path.display(),
+                e
+            );
+        }
     }
 
-    let res = Command::new("git")
-        .args(["reset", "--hard", ref_])
-        .current_dir(destination)
-        .status()?;
-    if !res.success() {
-        bail!("git fetch failed with exit code {res}");
+    let content = r###"### gnostr-lfs/src/empty
+
+This directory is intentionally kept minimal and serves as a placeholder for the initial
+empty tree object in the Git repository history. The first commit creates the project's
+root using a known epoch date for historical consistency.
+
+GIT_AUTHOR_NAME=gnostr-vfs
+
+GIT_AUTHOR_EMAIL=admin@gnostr.org
+
+GIT_COMMITTER_NAME=gnostr_dev
+
+GIT_COMMITTER_EMAIL=admin@gnostr.org
+
+GIT_AUTHOR_DATE="Thu, 01 Jan 1970 00:00:00 +0000"
+
+GIT_COMMITTER_DATE="Thu, 01 Jan 1970 00:00:00 +0000"
+
+git commit --allow-empty -m "initial commit"
+
+"###;
+
+    match fs::File::create(&readme_path) {
+        Ok(mut file) => match file.write_all(content.as_bytes()) {
+            Ok(_) => println!("Build: Successfully wrote to {}", readme_path.display()),
+            Err(e) => panic!(
+                "Build: Failed to write content to {}: {}",
+                readme_path.display(),
+                e
+            ),
+        },
+        Err(e) => panic!(
+            "Build: Failed to create file {}: {}",
+            readme_path.display(),
+            e
+        ),
     }
 
-    Ok(())
+    // --- 3. Run 'git init' inside src/empty ---
+    println!(
+        "Build: Initializing Git repository in {}",
+        dir_path.display()
+    );
+
+    let output = Command::new("git")
+        .arg("init")
+        .current_dir(dir_path) // Crucial: executes 'git init' inside the target folder
+        .output()
+        .expect("Failed to execute 'git init'");
+
+    if output.status.success() {
+        println!("Build: git init successful.");
+    } else {
+        panic!(
+            "Build: git init failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    println!("Build: Adding README.md to the index...");
+
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(dir_path)
+        .arg("add")
+        .arg(".") // Use '.' to add all files in the current directory (src/empty)
+        //.current_dir(dir_path) // Executes 'git add .' inside src/empty
+        .output()
+        .expect("Failed to execute 'git add'");
+
+    if output.status.success() {
+        println!("Build: git add successful.");
+    } else {
+        panic!(
+            "Build: git add failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    println!("Build: Adding README.md to the index...");
+
+    //let output = Command::new("git")
+    //    .arg("-C")
+    //    .arg(dir_path)
+    //    .arg("commit")
+    //    .arg("-m") // Use '.' to add all files in the current directory
+    // (src/empty)    .arg("READM.md") // Use '.' to add all files in the
+    // current directory (src/empty)    //.current_dir(dir_path) // Executes
+    // 'git add .' inside src/empty    .output()
+    //    .expect("Failed to execute 'git add'");
+
+    //if output.status.success() {
+    //    println!("Build: git commit successful.");
+    //} else {
+    //    panic!(
+    //        "Build: git add failed: {}",
+    //        String::from_utf8_lossy(&output.stderr)
+    //    );
+    //}
+
+    let _ = _git_commit(dir_path);
+    // Good practice: Rerun build script if the script itself changes.
+    println!("cargo:rerun-if-changed=src/empty");
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct LanguageDefinition {
-    name: String,
-    injection_regex: Option<String>,
-    file_types: Vec<FileType>,
-    grammar: Option<String>,
-}
+fn _git_commit(dir_path: &Path) -> Result<(), io::Error> {
+    // 1. Convert Path to &str safely using .ok_or_else()
+    // This converts the Option<&str> to a Result<&str, io::Error>.
+    // If the path is invalid UTF-8 (None), it generates a custom io::Error
+    // with kind InvalidInput, which is compatible with the function's return type.
+    let dir_path_str = dir_path.to_str().ok_or_else(|| {
+        Error::new(
+            ErrorKind::InvalidInput,
+            format!("Path '{}' is not valid UTF-8", dir_path.display()),
+        )
+    })?; // Now the '?' operator works, returning an io::Error on failure.
 
-#[derive(Deserialize)]
-#[serde(untagged)]
-pub enum FileType {
-    Glob { glob: String },
-    Extension(String),
-}
+    // 2. Start the command and set environment variables (as in previous answer)
+    let mut command = Command::new("git");
 
-#[derive(Deserialize, Clone)]
-#[serde(rename_all = "kebab-case")]
-pub struct GrammarDefinition {
-    name: String,
-    source: GrammarSource,
-}
+    // Setting the environment variables:
+    command
+        .env("GIT_AUTHOR_NAME", "gnostr-vfs")
+        .env("GIT_AUTHOR_EMAIL", "admin@gnostr.org")
+        .env("GIT_COMMITTER_NAME", "gnostr_dev")
+        .env("GIT_COMMITTER_EMAIL", "admin@gnostr.org")
+        .env("GIT_AUTHOR_DATE", "Thu, 01 Jan 1970 00:00:00 +0000")
+        .env("GIT_COMMITTER_DATE", "Thu, 01 Jan 1970 00:00:00 +0000");
 
-#[derive(Deserialize, Clone)]
-#[serde(rename_all = "lowercase", untagged)]
-enum GrammarSource {
-    Git {
-        #[serde(rename = "git")]
-        remote: String,
-        #[serde(rename = "rev")]
-        revision: String,
-        subpath: Option<String>,
-    },
-    Local {
-        path: PathBuf,
-    },
-}
+    // 3. Set the arguments. Note the use of the safe dir_path_str variable.
+    command.args([
+        "-C", // Use -C to run the git command from the specified directory
+        dir_path_str,
+        "commit",
+        "--allow-empty",
+        "-m",
+        "initial commit",
+    ]);
 
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct HelixLanguages {
-    language: Vec<LanguageDefinition>,
-    grammar: Vec<GrammarDefinition>,
+    println!("Executing command: git -C {} commit ...", dir_path_str);
+
+    // 4. Execute the command. The '?' handles the *process execution* I/O error.
+    let output = command.output()?;
+
+    // 5. Check command success and return Result accordingly.
+    if output.status.success() {
+        println!("\n✅ Git command successful!");
+        println!("Stdout:\n{}", String::from_utf8_lossy(&output.stdout));
+        // The success block must return the success value, which is Ok(())
+        Ok(())
+    } else {
+        println!("\n❌ Git command failed!");
+        eprintln!("Status: {}", output.status);
+        eprintln!("Stderr:\n{}", String::from_utf8_lossy(&output.stderr));
+
+        // The failure block must return the error value, which is Err(io::Error).
+        // We create a new io::Error here to indicate the child process failed.
+        Err(Error::other(format!(
+            "'git commit' failed with status: {}",
+            output.status
+        )))
+    }
 }
