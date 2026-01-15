@@ -1,5 +1,6 @@
 use std::{io, io::ErrorKind, path::Path, process::Stdio, str::FromStr};
 
+use crate::web::methods::repo::{Repository, RepositoryPath, Result, StatusCode};
 use anyhow::{anyhow, Context};
 use axum::{
     body::Body,
@@ -21,9 +22,6 @@ use tokio::{
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::io::StreamReader;
 use tracing::{debug, error, info_span, warn, Instrument};
-use crate::web::{
-    methods::repo::{Repository, RepositoryPath, Result, StatusCode},
-};
 
 #[allow(clippy::unused_async)]
 pub async fn handle(
