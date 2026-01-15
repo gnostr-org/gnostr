@@ -117,6 +117,7 @@ fn rocket() -> _ {
             repos_config: cli.repos_config,
         })
         .mount("/", routes![index, repo_detail, gnostr_repo])
+        .mount("/statics", rocket::fs::FileServer::from("statics"))
 }
 #![deny(clippy::pedantic)]
 use std::{
