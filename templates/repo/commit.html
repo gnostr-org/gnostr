@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ repo.name }} - Commit {{ commit.id }}</title>
+    <link rel="stylesheet" href="/statics/css/main.css">
+</head>
+<body>
+    <h1>Commit {{ commit.id }}</h1>
+    
+    <div class="commit-info">
+        <p><strong>Author:</strong> {{ commit.author_name }} &lt;{{ commit.author_email }}&gt;</p>
+        <p><strong>Date:</strong> {{ commit.author_time }}</p>
+        <p><strong>Message:</strong> {{ commit.message }}</p>
+    </div>
+    
+    {% if parents %}
+    <div class="parents">
+        <h3>Parents:</h3>
+        {% for parent in parents %}
+        <a href="/repo/{{ repo.name }}/commit/{{ parent }}">{{ parent }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if branch %}
+    <p>Branch: {{ branch }}</p>
+    {% endif %}
+</body>
+</html>
