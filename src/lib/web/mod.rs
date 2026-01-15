@@ -11,7 +11,6 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use std::collections::HashMap;
 
 pub fn into_response<T: Template>(template: T) -> impl IntoResponse {
     let render_result = template.render();
@@ -38,12 +37,4 @@ impl<A: IntoResponse, B: IntoResponse> IntoResponse for ResponseEither<A, B> {
             ResponseEither::Right(b) => b.into_response(),
         }
     }
-}
-
-pub struct HighlightConfigurationParams {
-    pub language: String,
-    pub query: String,
-    pub content: String,
-    pub name: String,
-    pub highlights: HashMap<String, String>,
 }
