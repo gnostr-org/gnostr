@@ -414,26 +414,35 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
-    let current = match std::fs::read_dir(current) {
+    let current_dir_entries = match std::fs::read_dir(current) {
         Ok(v) => v,
         Err(error) => {
-            error!(%error, "Failed to enter repository directory {}", current.display());
+            error!(%error, "Failed to read directory {}", current.display());
             return;
         }
     };
 
-    let dirs = current
-        .filter_map(Result::ok)
-        .map(|v| v.path())
-        .filter(|path| path.is_dir());
+    for entry in current_dir_entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
 
-    for dir in dirs {
-        if dir.join("packed-refs").is_file() {
-            // we've hit what looks like a bare git repo, lets take it
-            discovered_repos.push(dir);
+        // Check for bare repository (e.g., gnostr-gnit.git/HEAD, gnostr-gnit.git/objects)
+        let is_bare_repo = path.join("HEAD").is_file() && path.join("objects").is_dir();
+
+        // Check for working tree repository (e.g., test_clone/.git)
+        let is_working_tree_repo = path.join(".git").is_dir();
+
+        if is_bare_repo {
+            info!("Discovered bare repository: {}", path.display());
+            discovered_repos.push(path);
+        } else if is_working_tree_repo {
+            info!("Discovered working tree repository: {}", path.display());
+            discovered_repos.push(path);
         } else {
-            // probably not a bare git repo, lets recurse deeper
-            discover_repositories(&dir, discovered_repos);
+            // Not a repository, recurse deeper
+            discover_repositories(&path, discovered_repos);
         }
     }
 }
