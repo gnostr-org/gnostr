@@ -35,8 +35,8 @@
     clippy::empty_docs
 )]
 
-// pub mod gitui
-// pub mod gitui;
+/// pub mod gitui
+pub mod gitui;
 
 /// pub mod gnostr
 pub mod gnostr;

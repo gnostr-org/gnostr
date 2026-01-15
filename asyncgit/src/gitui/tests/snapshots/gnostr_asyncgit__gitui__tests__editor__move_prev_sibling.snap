@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/editor.rs
+expression: ctx.redact_buffer()
+---
+▌commit 03590eed2a6b0cf59b0309f20a14342a08925768                                |
+▌Author: Author Name <author@email.com>                                         |
+▌Date:   Fri, 16 Feb 2024 11:11:00 +0100                                        |
+▌                                                                               |
+▌    add file-3                                                                 |
+▌                                                                               |
+▌    Commit body goes here                                                      |
+                                                                                |
+ added      file-3                                                              |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 8c55aa60b9aec51d
