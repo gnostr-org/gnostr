@@ -1,8 +1,8 @@
-@import 'util';
-@import 'diff';
-@import 'tables';
-@import 'code';
-@import 'colours';
+@import "util";
+@import "diff";
+@import "tables";
+@import "code";
+@import "colours";
 
 @media (prefers-color-scheme: dark) {
   html {
@@ -10,16 +10,17 @@
     color: $base3;
   }
 
-  h2, h3 {
+  h2,
+  h3 {
     color: darken($base3, 30%);
   }
 }
 
 a:any-link {
-color: $blue
+  color: $blue;
 }
 a:any-link:active {
-color: $blue
+  color: $blue;
 }
 
 body {
@@ -28,8 +29,31 @@ body {
   tab-size: 4;
 }
 
+// Sticky footer layout
+.site-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 header {
   border-bottom: solid 1px $base2;
+}
+
+aside {
+  flex: 0 0 200px;
+  margin-right: 1rem;
+}
+
+main {
+  flex: 1;
+  min-width: 0; /* Prevent flex item from overflowing */
 }
 
 nav {
@@ -61,6 +85,23 @@ nav {
       @media (prefers-color-scheme: dark) {
         background: $base03;
       }
+    }
+
+    &.no-hover {
+      text-decoration: none;
+    }
+  }
+
+  footer {
+    border-top: solid 1px $base2;
+    padding: 1rem 0;
+    text-align: center;
+    color: $base1;
+    font-size: 0.8rem;
+
+    @media (prefers-color-scheme: dark) {
+      border-top-color: $base3;
+      color: $base2;
     }
   }
 }
