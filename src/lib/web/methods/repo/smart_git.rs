@@ -21,10 +21,8 @@ use tokio::{
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::io::StreamReader;
 use tracing::{debug, error, info_span, warn, Instrument};
-
-use crate::{
-    methods::repo::{Repository, RepositoryPath, Result},
-    StatusCode,
+use crate::web::{
+    methods::repo::{Repository, RepositoryPath, Result, StatusCode},
 };
 
 #[allow(clippy::unused_async)]

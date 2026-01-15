@@ -8,14 +8,14 @@ use std::{
     sync::Arc,
 };
 
-use crate::{
-    git::{FileWithContent, PathDestination, TreeItem},
-    into_response,
+use crate::web::{
+    git::{FileWithContent, Git, PathDestination, TreeItem},
+    //into_response,
     methods::{
         filters,
         repo::{ChildPath, Repository, RepositoryPath, Result},
     },
-    Git, ResponseEither,
+    ResponseEither,
 };
 
 #[derive(Deserialize)]

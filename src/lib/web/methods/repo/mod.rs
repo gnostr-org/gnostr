@@ -37,8 +37,8 @@ use self::{
     tag::handle as handle_tag,
     tree::handle as handle_tree,
 };
-use crate::database::schema::tag::YokedString;
-use crate::{
+use crate::web::database::schema::tag::YokedString;
+use crate::web::{
     database::schema::{commit::YokedCommit, tag::YokedTag},
     layers::UnwrapInfallible,
 };
@@ -120,7 +120,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
     if path.as_os_str().is_empty()
-        || !crate::database::schema::repository::Repository::exists(db, &uri).unwrap_or_default()
+        || !crate::web::database::schema::repository::Repository::exists(db, &uri).unwrap_or_default()
     {
         return RepositoryNotFound.into_response();
     }

@@ -13,7 +13,8 @@ rustflags = [
 #     "-Adead_code", "-Awarnings", "-Ctarget-cpu=native", "-Aclippy::all"
 # ]
 
-#[build]
+[build]
+rustflags = ["--cfg", "tokio_unstable"]
 #target-dir = ".build"
 # rustc-wrapper = "sccache"
 # rustflags = [
@@ -21,16 +22,21 @@ rustflags = [
 # ]
 
 [check]
+rustflags = ["--cfg", "tokio_unstable"]
 #target-dir = ".check"
 rustc-wrapper = "sccache"
 #rustflags = [
 #"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
 #]
+
 [release]
+rustflags = ["--cfg", "tokio_unstable"]
 #target-dir = ".release"
 #rustc-wrapper = "sccache"
 #rustflags = [
 #"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
 #]
-# [test]
+
+[test]
+rustflags = ["--cfg", "tokio_unstable"]
 # rustc-wrapper = "sccache"

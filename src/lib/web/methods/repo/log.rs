@@ -5,10 +5,10 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
-use crate::{
-    database::schema::{commit::YokedCommit, repository::YokedRepository},
-    into_response,
-    methods::{
+use crate::web::{
+   database::schema::{commit::YokedCommit, repository::YokedRepository},
+//   into_response,
+   methods::{
         filters,
         repo::{Repository, Result, DEFAULT_BRANCHES},
     },
@@ -39,7 +39,7 @@ pub async fn handle(
     tokio::task::spawn_blocking(move || {
         let offset = query.offset.unwrap_or(0);
 
-        let repository = crate::database::schema::repository::Repository::open(&db, &*repo)?
+        let repository = crate::web::database::schema::repository::Repository::open(&db, &*repo)?
             .context("Repository does not exist")?;
         let mut commits =
             get_branch_commits(&repository, &db, query.branch.as_deref(), 101, offset)?;

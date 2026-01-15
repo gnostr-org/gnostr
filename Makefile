@@ -143,12 +143,12 @@ cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog
 	git-cliff --output CHANGELOG.md || cargo install git-cliff
 
 dep-graph: 	### 	dep-graph
-	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
+	@cargo depgraph --depth 1 | dot -Tpng > graph.png || brew install graphviz || cargo install cargo-depgraph
 
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j $(NPROC) --bin gnostr
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	./target/debug/gnostr chat --topic gnostr --oneshot "testing-1897/931589/762759" -n "0e3c49c57d4ab2494d55671730c356687405eb0423cc755381399f2f431b2d16"
+	./target/debug/gnostr chat --topic gnostr --oneshot "testing-1896/932295/797624" -n "9ce04d52aafc9d73c0cedd9a3b5841faa7fa2f28ea1b88068c910ef66c610be1"
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id

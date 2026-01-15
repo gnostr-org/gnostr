@@ -31,7 +31,7 @@ use tar::Builder;
 use time::{OffsetDateTime, UtcOffset};
 use tracing::{error, instrument, warn};
 
-use crate::{
+use crate::web::{
     syntax_highlight::{format_file, format_file_inner, ComrakHighlightAdapter, FileIdentifier},
     unified_diff_builder::{Callback, UnifiedDiffBuilder},
 };

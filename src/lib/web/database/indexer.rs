@@ -14,7 +14,7 @@ use rocksdb::WriteBatch;
 use time::{OffsetDateTime, UtcOffset};
 use tracing::{error, info, info_span, instrument, warn};
 
-use crate::database::schema::{
+use crate::web::database::schema::{
     commit::Commit,
     repository::{ArchivedRepository, Repository, RepositoryId},
     tag::{Tag, TagTree},

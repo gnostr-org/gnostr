@@ -5,9 +5,9 @@ use askama::Template;
 use axum::{response::IntoResponse, Extension};
 use rkyv::string::ArchivedString;
 
-use crate::{
+use crate::web::{
     database::schema::{commit::YokedCommit, repository::YokedRepository},
-    into_response,
+    //into_response,
     methods::{
         filters,
         repo::{Refs, Repository, Result, DEFAULT_BRANCHES},
@@ -28,7 +28,7 @@ pub async fn handle(
     Extension(db): Extension<Arc<rocksdb::DB>>,
 ) -> Result<impl IntoResponse> {
     tokio::task::spawn_blocking(move || {
-        let repository = crate::database::schema::repository::Repository::open(&db, &*repo)?
+        let repository = crate::web::database::schema::repository::Repository::open(&db, &*repo)?
             .context("Repository does not exist")?;
         let commits = get_default_branch_commits(&repository, &db)?;
 

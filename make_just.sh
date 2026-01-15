@@ -186,7 +186,7 @@ cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog
 	git-cliff --output CHANGELOG.md || cargo install git-cliff
 
 dep-graph: 	### 	dep-graph
-	@cargo  -j \$(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
+	@cargo depgraph --depth 1 | dot -Tpng > graph.png || brew install graphviz || cargo install cargo-depgraph
 
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j \$(NPROC) --bin gnostr
