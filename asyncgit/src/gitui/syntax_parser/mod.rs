@@ -156,20 +156,20 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
         } else if lang == &tree_sitter_c_sharp::language() {
             (tree_sitter_c_sharp::HIGHLIGHT_QUERY, "", "")
         } else if lang == &tree_sitter_python::language() {
-            (tree_sitter_python::HIGHLIGHTS_QUERY, "", "")
+            (tree_sitter_python::HIGHLIGHT_QUERY, "", "")
         } else if lang == &tree_sitter_typescript::language_typescript()
             || lang == &tree_sitter_typescript::language_tsx()
         {
             (
-                tree_sitter_typescript::HIGHLIGHT_QUERYs,
+                tree_sitter_typescript::HIGHLIGHT_QUERY,
                 "",
                 tree_sitter_typescript::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_bash::LANGUAGE() {
+        } else if lang == &tree_sitter_bash::language() {
             (tree_sitter_bash::HIGHLIGHT_QUERY, "", "")
         } else if lang == &tree_sitter_php::language() {
             (
-                tree_sitter_php::HIGHLIGHTS_QUERY,
+                tree_sitter_php::HIGHLIGHT_QUERY,
                 tree_sitter_php::INJECTIONS_QUERY,
                 "",
             )
@@ -187,7 +187,7 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
                 "",
                 tree_sitter_ocaml::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_html::LANGUAGE() {
+        } else if lang == &tree_sitter_html::language() {
             (
                 tree_sitter_html::HIGHLIGHTS_QUERY,
                 tree_sitter_html::INJECTIONS_QUERY,
