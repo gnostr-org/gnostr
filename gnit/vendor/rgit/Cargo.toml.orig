@@ -1,0 +1,21 @@
+[package]
+name = "rgit"
+version = "0.11.0"
+edition = "2021"
+description = "A small git web interface written in rust"
+license = "GPL-2.0"
+authors = ["MoriGM <mfkmorigaming@gmail.com>"]
+repository = "https://github.com/MoriGM/rgit"
+keywords = ["git"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+toml = "0.9"
+rocket = "0.5.1"
+git2 = "0.20.2"
+clap = { version = "4.5.45", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tera = "1.20.0"
+chrono = "0.4.41"
