@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+find . -name ".git" -type d | head -10
+
 # Define the target directory
 TARGET_DIR="$HOME/.gnostr/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/repo.git"
 

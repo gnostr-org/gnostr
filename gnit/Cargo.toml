@@ -103,3 +103,6 @@ yoke = { version = "0.7.1", features = ["derive"] }
 [build-dependencies]
 anyhow = "1.0"
 rsass = "0.28.0"
+
+[dev-dependencies]
+rgit = "0.11.0"

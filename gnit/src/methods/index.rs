@@ -31,8 +31,8 @@ pub async fn handle(
     }
 
     for (k, v) in fetched {
-        // Handle the root repository (".") specially
-        let key = if k == "." {
+        // Handle the root repository ("root") specially
+        let key = if k == "root" {
             None
         } else {
             let mut split: Vec<_> = k.split('/').collect();
