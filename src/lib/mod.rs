@@ -79,9 +79,6 @@ pub mod verify_keypair;
 ///  <https://docs.rs/gnostr/latest/gnostr/watcher/index.html>
 pub mod watcher;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
-#[cfg(feature = "gnostr-web")]
-pub mod web;
-/// <https://docs.rs/gnostr/latest/gnostr/web/index.html>
 pub mod ws;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 //avoid?//upgrade?

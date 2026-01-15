@@ -51,16 +51,6 @@ path = "src/bin/git-remote-nostr/main.rs"
 name = "git-remote-gnostr"
 path = "src/bin/git-remote-gnostr.rs"
 
-[[bin]]
-name = "gnostr-git-web"
-path = "src/bin/gnostr-git-web.rs"
-required-features = ["gnostr-web"]
-
-[[bin]]
-name = "gnostr-git-web-axum"
-path = "src/bin/gnostr-git-web-axum.rs"
-required-features = ["gnostr-web"]
-
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
 expensive_tests = [] #nostr
