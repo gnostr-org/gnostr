@@ -8,8 +8,8 @@ use std::{
 };
 
 use comrak::adapters::SyntaxHighlighterAdapter;
-use gnostr_grammar::{Grammar, Language};
 use tracing::{debug, error};
+use tree_sitter_grammar_repository::{Grammar, Language};
 use tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
 
 thread_local! {
