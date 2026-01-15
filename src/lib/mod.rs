@@ -28,8 +28,6 @@ pub mod git;
 pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
-///  <https://docs.rs/gnostr/latest/gnostr/grammar/index.html>
-pub mod grammar;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
@@ -115,14 +113,6 @@ pub const GNOSTR_SHA256: [u8; 32] = [
     0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, 0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06,
 ];
 pub const DEFAULT_POW_DIFFICULTY: u8 = 4;
-
-pub struct HighlightConfigurationParams {
-    pub language: tree_sitter_language::LanguageFn,
-    pub name: &'static str,
-    pub highlights_query: &'static str,
-    pub injection_query: &'static str,
-    pub locals_query: &'static str,
-}
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
     ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
