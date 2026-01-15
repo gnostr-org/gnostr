@@ -25,11 +25,25 @@ pub async fn handle(
         .await
         .context("Failed to join Tokio task")??;
 
+    tracing::info!("Found {} repositories in database", fetched.len());
+    for (k, _) in fetched.iter() {
+        tracing::info!("Repository key: '{}'", k);
+    }
+
     for (k, v) in fetched {
-        // TODO: fixme
-        let mut split: Vec<_> = k.split('/').collect();
-        split.pop();
-        let key = Some(split.join("/")).filter(|v| !v.is_empty());
+        // Handle the root repository (".") specially
+        let key = if k == "." {
+            None
+        } else {
+            let mut split: Vec<_> = k.split('/').collect();
+            split.pop();
+            let joined = split.join("/");
+            if joined.is_empty() {
+                None
+            } else {
+                Some(joined)
+            }
+        };
 
         let k = repositories.entry(key).or_default();
         k.push(v);
