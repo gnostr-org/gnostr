@@ -24,7 +24,11 @@ use clap::Parser;
 use const_format::formatcp;
 use database::schema::SCHEMA_VERSION;
 use rocksdb::{Options, SliceTransform};
-use tokio::{net::TcpListener, sync::mpsc};
+use tokio::{
+    net::TcpListener,
+    signal::unix::{signal, SignalKind},
+    sync::mpsc,
+};
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 use tower_layer::layer_fn;
 use tracing::{error, info, instrument, warn};
@@ -74,13 +78,7 @@ pub struct Args {
     #[clap(long, value_parser, default_value = "127.0.0.1")]
     bind_address: IpAddr,
     /// The socket port to bind to (e.g., 3333).
-    #[arg(
-        short,
-        long,
-        value_parser,
-        default_value = "3333",
-        env = "GNOSTR_GNIT_BIND_PORT"
-    )]
+    #[arg(short, long, value_parser, default_value = "3333", env = "GNOSTR_GNIT_BIND_PORT")]
     bind_port: u16,
     /// The path in which your bare Git repositories reside.
     ///
@@ -220,18 +218,17 @@ async fn main() -> Result<(), anyhow::Error> {
             get(static_favicon(include_bytes!("../statics/favicon.ico"))),
         )
         .fallback(methods::repo::service)
-        .layer(TimeoutLayer::with_status_code(
-            StatusCode::REQUEST_TIMEOUT,
-            args.request_timeout.into(),
-        ))
+        .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))
         .layer(Extension(Arc::new(Git::new())))
         .layer(Extension(db))
         .layer(Extension(Arc::new(args.scan_path)))
         .layer(CorsLayer::new());
 
-    println!("{}", &args.bind_port);
-    let socket = SocketAddr::new(args.bind_address, args.bind_port);
+
+	println!("{}", &args.bind_port);
+	let socket = SocketAddr::new(args.bind_address, args.bind_port);
+
 
     let listener = TcpListener::bind(&socket).await?;
     let app = app.into_make_service_with_connect_info::<SocketAddr>();
@@ -318,53 +315,29 @@ async fn run_indexer(
         }
     });
 
-    #[cfg(unix)]
-    {
-        use tokio::signal::unix::{signal, SignalKind};
-        tokio::spawn({
-            let mut sighup = signal(SignalKind::hangup()).expect("could not subscribe to sighup");
-            let build_sleeper = move || async move {
-                match refresh_interval {
-                    RefreshInterval::Never => futures_util::future::pending().await,
-                    RefreshInterval::Duration(v) => tokio::time::sleep(v).await,
-                };
+    tokio::spawn({
+        let mut sighup = signal(SignalKind::hangup()).expect("could not subscribe to sighup");
+        let build_sleeper = move || async move {
+            match refresh_interval {
+                RefreshInterval::Never => futures_util::future::pending().await,
+                RefreshInterval::Duration(v) => tokio::time::sleep(v).await,
             };
+        };
 
-            async move {
-                loop {
-                    tokio::select! {
-                        _ = sighup.recv() => {},
-                        () = build_sleeper() => {},
-                    }
+        async move {
+            loop {
+                tokio::select! {
+                    _ = sighup.recv() => {},
+                    () = build_sleeper() => {},
+                }
 
-                    if indexer_wakeup_send.send(()).await.is_err() {
-                        error!(
-                            "Indexing thread has died and is no longer accepting wakeup messages"
-                        );
-                    }
+                if indexer_wakeup_send.send(()).await.is_err() {
+                    error!("Indexing thread has died and is no longer accepting wakeup messages");
                 }
             }
-        })
-        .await
-    }
-    #[cfg(not(unix))]
-    {
-        tokio::spawn(async move {
-            if let RefreshInterval::Duration(v) = refresh_interval {
-                loop {
-                    tokio::time::sleep(v).await;
-                    if indexer_wakeup_send.send(()).await.is_err() {
-                        error!(
-                            "Indexing thread has died and is no longer accepting wakeup messages"
-                        );
-                    }
-                }
-            } else {
-                futures_util::future::pending().await
-            }
-        })
-        .await
-    }
+        }
+    })
+    .await
 }
 
 #[must_use]

@@ -165,7 +165,6 @@ impl ArchivedRepository {
 }
 
 #[derive(Serialize, Archive, Debug, Clone, PartialEq, Eq, Hash)]
-#[allow(dead_code)]
 pub struct Heads(pub Vec<String>);
 
 #[derive(Serialize, Archive, Debug, Copy, Clone, PartialEq, Eq, Hash)]

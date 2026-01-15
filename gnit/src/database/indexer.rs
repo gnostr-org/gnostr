@@ -45,12 +45,7 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
     discover_repositories(scan_path, &mut discovered);
 
     for repository in discovered {
-        info!(
-            "repository={} path={}",
-            &repository.display(),
-            scan_path.display()
-        );
-        let Some(relative) = get_relative_path(&repository, scan_path) else {
+        let Some(relative) = get_relative_path(scan_path, &repository) else {
             continue;
         };
 
@@ -70,25 +65,12 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
             continue;
         };
-
-        // Try to read description file - for bare repos it's in root, for regular repos it's in .git/
-        let description = std::fs::read(repository.join("description"))
-            .or_else(|_| std::fs::read(repository.join(".git").join("description")))
-            .unwrap_or_default();
+        let description = std::fs::read(repository.join("description")).unwrap_or_default();
         let description = String::from_utf8(description)
             .ok()
             .filter(|v| !v.is_empty());
 
-        let repository_path = match safe_join_path(scan_path, relative) {
-            Some(path) => path,
-            None => {
-                warn!(
-                    "Repository path {} is outside scan path bounds, skipping",
-                    relative.display()
-                );
-                continue;
-            }
-        };
+        let repository_path = scan_path.join(relative);
 
         let mut git_repository = match gix::open(repository_path.clone()) {
             Ok(v) => v,
@@ -100,17 +82,10 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
 
         git_repository.object_cache_size(10 * 1024 * 1024);
 
-        // For the root repository, store it with "root" key instead of empty string
-        let storage_key = if relative.as_os_str().is_empty() {
-            Path::new("root")
-        } else {
-            relative
-        };
-
         let res = Repository {
             id,
             name: name.to_string(),
-            description: description.clone(),
+            description,
             owner: find_gitweb_owner(repository_path.as_path()),
             last_modified: {
                 let r =
@@ -121,10 +96,6 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         }
         .insert(db, relative);
 
-        info!(
-            "Inserted repository with key: '{:?}', name: '{}'",
-            storage_key, name
-        );
         if let Err(error) = res {
             warn!(%error, "Failed to insert repository");
         }
@@ -170,7 +141,6 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
     };
 
     for (relative_path, db_repository) in repos {
-        info!("relative_path={}", &relative_path);
         let Some(git_repository) = open_repo(scan_path, &relative_path, db_repository.get(), &db)
         else {
             continue;
@@ -335,7 +305,6 @@ fn update_repository_tags(scan_path: &Path, db: Arc<rocksdb::DB>) {
     };
 
     for (relative_path, db_repository) in repos {
-        info!("relative_path={}", &relative_path);
         let Some(git_repository) = open_repo(scan_path, &relative_path, db_repository.get(), &db)
         else {
             continue;
@@ -419,21 +388,7 @@ fn open_repo<P: AsRef<Path> + Debug>(
     db_repository: &ArchivedRepository,
     db: &rocksdb::DB,
 ) -> Option<gix::Repository> {
-    let safe_path = match safe_join_path(scan_path, relative_path.as_ref()) {
-        Some(path) => path,
-        None => {
-            warn!(
-                "Repository path {} is outside scan path bounds or invalid, removing from db",
-                relative_path.as_ref().display()
-            );
-            if let Err(error) = db_repository.delete(db, relative_path) {
-                warn!(%error, "Failed to delete out-of-bounds index");
-            }
-            return None;
-        }
-    };
-
-    match gix::open(&safe_path) {
+    match gix::open(scan_path.join(relative_path.as_ref())) {
         Ok(mut v) => {
             v.object_cache_size(10 * 1024 * 1024);
             Some(v)
@@ -455,69 +410,10 @@ fn open_repo<P: AsRef<Path> + Debug>(
 }
 
 fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a Path> {
-    info!(
-        "relative_to={}, full_path={}",
-        relative_to.display(),
-        full_path.display()
-    );
-
-    // Use the validation function to ensure the path is safe
-    let _validated = validate_path_within_scan_path(relative_to, full_path)?;
-
-    let result = full_path.strip_prefix(relative_to).ok();
-    info!("Result: {:?}", result);
-    result
-}
-
-/// Validates that a path stays within the scan_path boundaries after resolution.
-/// Returns None if the path would escape or cannot be safely resolved.
-fn validate_path_within_scan_path(scan_path: &Path, target_path: &Path) -> Option<PathBuf> {
-    // Canonicalize both paths to resolve symlinks and normalize
-    let canonical_scan = std::fs::canonicalize(scan_path).ok()?;
-    let canonical_target = std::fs::canonicalize(target_path).ok()?;
-
-    // Check if the target path starts with the scan path
-    if canonical_target.starts_with(&canonical_scan) {
-        Some(canonical_target)
-    } else {
-        warn!(
-            "Path {} would escape scan path {}",
-            canonical_target.display(),
-            canonical_scan.display()
-        );
-        None
-    }
-}
-
-/// Safely joins scan_path with relative_path and validates the result stays within bounds.
-fn safe_join_path(scan_path: &Path, relative_path: &Path) -> Option<PathBuf> {
-    let joined = scan_path.join(relative_path);
-
-    // Additional check for obvious traversal attempts
-    if relative_path
-        .components()
-        .any(|c| matches!(c, std::path::Component::ParentDir))
-    {
-        warn!(
-            "Path traversal attempt detected in path: {}",
-            relative_path.display()
-        );
-        return None;
-    }
-
-    validate_path_within_scan_path(scan_path, &joined)
+    full_path.strip_prefix(relative_to).ok()
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
-    // First, check if the current path itself is a repository
-    if current.join("packed-refs").is_file() {
-        info!("current path is a bare git repo, taking it");
-        discovered_repos.push(current.to_path_buf());
-    } else if current.join(".git").is_dir() {
-        info!("current path is a regular git repo, taking it");
-        discovered_repos.push(current.to_path_buf());
-    }
-
     let current = match std::fs::read_dir(current) {
         Ok(v) => v,
         Err(error) => {
@@ -533,13 +429,10 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
 
     for dir in dirs {
         if dir.join("packed-refs").is_file() {
-            info!("we've hit what looks like a bare git repo, lets take it");
-            discovered_repos.push(dir);
-        } else if dir.join(".git").is_dir() {
-            info!("we've hit what looks like a regular git repo, lets take it");
+            // we've hit what looks like a bare git repo, lets take it
             discovered_repos.push(dir);
         } else {
-            info!("probably not a git repo, lets recurse deeper");
+            // probably not a bare git repo, lets recurse deeper
             discover_repositories(&dir, discovered_repos);
         }
     }
