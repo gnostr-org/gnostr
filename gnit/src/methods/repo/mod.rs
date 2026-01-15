@@ -53,7 +53,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<PathBuf>>()
         .expect("scan_path missing");
 
-    let mut uri_parts: Vec<&str> = request
+    let uri_segments: Vec<&str> = request
         .uri()
         .path()
         .trim_start_matches('/')
@@ -61,73 +61,82 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .split('/')
         .collect();
 
-    let mut child_path = None;
+    let mut repository_name = PathBuf::new();
+    let mut handler_segment = None;
+    let mut child_path_segments = Vec::new();
 
+    let db = request
+        .extensions()
+        .get::<Arc<rocksdb::DB>>()
+        .expect("db extension missing");
+
+
+    // Try to find the repository name and handler segment
+    let mut current_segment_index = 0;
+    while current_segment_index < uri_segments.len() {
+        let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
+        let potential_repo_name = potential_repo_name_segments.iter().collect::<PathBuf>().clean();
+        let full_potential_repo_path = scan_path.join(&potential_repo_name);
+
+        let is_bare_repo = full_potential_repo_path.is_dir() && potential_repo_name.extension().map_or(false, |ext| ext == "git");
+        let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
+
+        // Only consider it a repository if it exists on disk *and* is in the database
+        if (is_bare_repo || is_working_tree_repo) && crate::database::schema::repository::Repository::exists(db, &potential_repo_name).unwrap_or_default() {
+            repository_name = potential_repo_name;
+
+            // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
+            // we should treat the part before .git as the repository_name
+            if is_working_tree_repo && current_segment_index + 1 < uri_segments.len() && uri_segments[current_segment_index + 1] == ".git" {
+                // Adjust segments to skip ".git"
+                current_segment_index += 1; // Skip the .git segment
+            }
+
+            if current_segment_index + 1 < uri_segments.len() {
+                handler_segment = Some(uri_segments[current_segment_index + 1]);
+                child_path_segments = uri_segments[current_segment_index + 2..].to_vec();
+            }
+            break;
+        }
+        current_segment_index += 1;
+    }
+
+    if repository_name.as_os_str().is_empty() {
+        return RepositoryNotFound.into_response();
+    }
+
+    let mut child_path = None;
     macro_rules! h {
         ($handler:ident) => {
             BoxCloneService::new($handler.into_service())
         };
     }
 
-    let mut service = match uri_parts.pop() {
+    let mut service = match handler_segment {
         Some("about") => h!(handle_about),
-        Some("refs") if uri_parts.last() == Some(&"info") => {
-            uri_parts.pop();
+        Some("refs") if child_path_segments.last() == Some(&"info") => {
             h!(handle_smart_git)
         }
         Some("git-upload-pack") => h!(handle_smart_git),
         Some("refs") => h!(handle_refs),
         Some("log") => h!(handle_log),
-        Some("tree") => h!(handle_tree),
+        Some("tree") => {
+            child_path = Some(child_path_segments.into_iter().collect::<PathBuf>().clean());
+            h!(handle_tree)
+        },
         Some("commit") => h!(handle_commit),
         Some("diff") => h!(handle_diff),
         Some("patch") => h!(handle_patch),
         Some("tag") => h!(handle_tag),
         Some("snapshot") => h!(handle_snapshot),
-        Some(v) => {
-            uri_parts.push(v);
-
-            // match tree children
-            if uri_parts.iter().any(|v| *v == "tree") {
-                // TODO: this needs fixing up so it doesn't accidentally match repos that have
-                //  `tree` in their path
-                let mut reconstructed_path = Vec::new();
-
-                while let Some(part) = uri_parts.pop() {
-                    if part == "tree" {
-                        break;
-                    }
-
-                    // TODO: FIXME
-                    reconstructed_path.insert(0, part);
-                }
-
-                child_path = Some(reconstructed_path.into_iter().collect::<PathBuf>().clean());
-
-                h!(handle_tree)
-            } else {
-                h!(handle_summary)
-            }
-        }
-        None => panic!("not found"),
+        _ => h!(handle_summary), // Default to summary if no specific handler is found
     };
 
-    let uri = uri_parts.into_iter().collect::<PathBuf>().clean();
-    let path = scan_path.join(&uri);
-
-    let db = request
-        .extensions()
-        .get::<Arc<rocksdb::DB>>()
-        .expect("db extension missing");
-    if path.as_os_str().is_empty()
-        || !crate::database::schema::repository::Repository::exists(db, &uri).unwrap_or_default()
-    {
-        return RepositoryNotFound.into_response();
-    }
+    let repository_abs_path = scan_path.join(&repository_name);
 
     request.extensions_mut().insert(ChildPath(child_path));
-    request.extensions_mut().insert(Repository(uri));
-    request.extensions_mut().insert(RepositoryPath(path));
+    request.extensions_mut().insert(Repository(repository_name));
+    request.extensions_mut().insert(RepositoryPath(repository_abs_path));
 
     service
         .call(request)
