@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/stash.rs
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+▌Your branch is up to date with 'origin/main'.                                  |
+                                                                                |
+ Untracked files                                                                |
+ file-two                                                                       |
+                                                                                |
+ Stashes                                                                        |
+ stash@0 On main: file-one                                                      |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git stash pop -q 0                                                            |
+Already up to date.                                                             |
+styles_hash: 331238665090bd8c

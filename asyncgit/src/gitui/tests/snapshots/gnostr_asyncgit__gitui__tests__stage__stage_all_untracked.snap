@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/stage.rs
+expression: ctx.redact_buffer()
+---
+ No branch                                                                      |
+                                                                                |
+▌Staged changes (2)                                                             |
+▌added      file-a                                                              |
+▌added      file-b                                                              |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git add file-a file-b                                                         |
+styles_hash: 8de03ccd9895ecb7
