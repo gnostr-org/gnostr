@@ -14,7 +14,7 @@
     <h2>Branches</h2>
     {% if refs.heads %}
     <ul class="branches">
-        {% for branch_name, commit in refs.heads %}
+        {% for (branch_name, commit) in refs.heads %}
         <li>
             <a href="/repo/{{ repo.name }}/tree/?h={{ branch_name }}">{{ branch_name }}</a>
             - {{ commit.id }} - {{ commit.message }}
