@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ repo.name }} - File {{ file.path }}</title>
+    <link rel="stylesheet" href="/statics/css/main.css">
+</head>
+<body>
+    <h1>File: {{ file.path }}</h1>
+    
+    {% if branch %}
+    <p>Branch: {{ branch }}</p>
+    {% endif %}
+    
+    <div class="file-info">
+        <p><strong>Path:</strong> {{ file.path }}</p>
+        <p><strong>Size:</strong> {{ file.size }}</p>
+        {% if file.last_modified %}
+        <p><strong>Last Modified:</strong> {{ file.last_modified }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="file-actions">
+        <a href="/repo/{{ repo.name }}/raw/{{ file.path }}?h={{ branch }}">Download Raw</a>
+        {% if file.is_binary %}
+        <p>Binary file - cannot display content</p>
+        {% else %}
+        <a href="?raw=true">View Raw</a>
+        {% endif %}
+    </div>
+    
+    {% if file.content && !file.is_binary %}
+    <div class="file-content">
+        <h2>Content</h2>
+        {% if raw %}
+        <pre>{{ file.content }}</pre>
+        {% else %}
+        <div class="highlight">
+            <pre><code>{{ file.content }}</code></pre>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>
