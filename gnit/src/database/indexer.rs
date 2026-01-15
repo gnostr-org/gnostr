@@ -45,7 +45,12 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
     discover_repositories(scan_path, &mut discovered);
 
     for repository in discovered {
-        let Some(relative) = get_relative_path(scan_path, &repository) else {
+        info!(
+            "repository={} path={}",
+            &repository.display(),
+            scan_path.display()
+        );
+        let Some(relative) = get_relative_path(&repository, scan_path) else {
             continue;
         };
 
@@ -141,6 +146,9 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
     };
 
     for (relative_path, db_repository) in repos {
+        println!("\n");
+        info!("relative_path={}", &relative_path);
+        println!("\n");
         let Some(git_repository) = open_repo(scan_path, &relative_path, db_repository.get(), &db)
         else {
             continue;
@@ -305,6 +313,9 @@ fn update_repository_tags(scan_path: &Path, db: Arc<rocksdb::DB>) {
     };
 
     for (relative_path, db_repository) in repos {
+        println!("\n");
+        info!("relative_path={}", &relative_path);
+        println!("\n");
         let Some(git_repository) = open_repo(scan_path, &relative_path, db_repository.get(), &db)
         else {
             continue;
@@ -390,6 +401,7 @@ fn open_repo<P: AsRef<Path> + Debug>(
 ) -> Option<gix::Repository> {
     match gix::open(scan_path.join(relative_path.as_ref())) {
         Ok(mut v) => {
+            println!("open_repo!");
             v.object_cache_size(10 * 1024 * 1024);
             Some(v)
         }
@@ -410,6 +422,7 @@ fn open_repo<P: AsRef<Path> + Debug>(
 }
 
 fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a Path> {
+    info!("relative_to={}", relative_to.display());
     full_path.strip_prefix(relative_to).ok()
 }
 
@@ -429,10 +442,10 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
 
     for dir in dirs {
         if dir.join("packed-refs").is_file() {
-            // we've hit what looks like a bare git repo, lets take it
+            info!("we've hit what looks like a bare git repo, lets take it");
             discovered_repos.push(dir);
         } else {
-            // probably not a bare git repo, lets recurse deeper
+            info!("probably not a bare git repo, lets recurse deeper");
             discover_repositories(&dir, discovered_repos);
         }
     }

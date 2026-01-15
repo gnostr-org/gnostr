@@ -1,4 +1,64 @@
 #!/usr/bin/env bash
+
+# Define the target directory
+TARGET_DIR="$HOME/.gnostr/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/repo.git"
+
+echo "----------------------------------------------------------"
+echo "Searching for Git Root and Initializing Migration"
+echo "----------------------------------------------------------"
+
+# 1. Recursive Search for Git Root
+# This loop starts at the current directory and moves up until it finds .git 
+# or reaches the system root (/)
+TARGET_SEARCH_DIR=$(pwd)
+GIT_ROOT=""
+
+while [[ "$TARGET_SEARCH_DIR" != "" ]]; do
+    if [ -d "$TARGET_SEARCH_DIR/.git" ]; then
+        GIT_ROOT="$TARGET_SEARCH_DIR"
+        break
+    fi
+    # Move up one level
+    TARGET_SEARCH_DIR=${TARGET_SEARCH_DIR%/*}
+done
+
+# 2. Check if a repo was actually found
+if [ -z "$GIT_ROOT" ]; then
+    echo "Error: Could not find a Git repository in this directory or any parent directories."
+    exit 1
+else
+    echo "Found Git Root: $GIT_ROOT"
+fi
+
+# 3. Create the parent directory if it doesn't exist
+if [ ! -d "$HOME/.gnostr" ]; then
+    echo "Creating directory $HOME/.gnostr..."
+    mkdir -p "$HOME/.gnostr"
+fi
+
+# 4. Check if the target already exists to prevent overwriting
+if [ -d "$TARGET_DIR" ]; then
+    echo "Error: Target directory $TARGET_DIR already exists."
+    echo "Operation aborted to prevent data loss."
+    exit 1
+fi
+
+# 5. Perform the bare clone
+echo "Cloning $GIT_ROOT into bare repo at $TARGET_DIR..."
+git clone --bare "$GIT_ROOT" "$TARGET_DIR"
+
+# 6. Final Verification
+if [ $? -eq 0 ]; then
+    echo "----------------------------------------------------------"
+    echo "Success! Migration complete."
+    echo "Source: $GIT_ROOT"
+    echo "Bare Repo: $TARGET_DIR"
+    echo "----------------------------------------------------------"
+else
+    echo "Error: git clone operation failed."
+    exit 1
+fi
+
 PORT=${1:-3333}
 if [ ! $(uname -s) = 'Darwin' ]; then
 	if grep -q Microsoft /proc/version; then
@@ -8,6 +68,10 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 		alias open='xdg-open';
 	fi
 fi
+cargo install -j8 --path . 
 cargo install -j8 --path . --root .;
 open http://localhost:$PORT & \
-./bin/gnostr-gnit -d .gnostr/web/$PORT -b $PORT -s .
+gnostr-gnit -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s $TARGET_DIR
+#gnostr-gnit -d .gnostr/web/$PORT -b $PORT -s .
+#gnostr-gnit -d .gnostr/web/$PORT -b $PORT -s /Users/Shared/gnostr-org/.github/gnostr
+#./bin/gnostr-gnit -d .gnostr/web/$PORT -b $PORT -s /Users/Shared/gnostr-org/.github/gnostr

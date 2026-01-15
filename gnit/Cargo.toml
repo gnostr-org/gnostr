@@ -9,9 +9,6 @@ license = "WTFPL"
 [package.metadata.deb]
 section = "web"
 
-[workspace]
-members = ["grammar"]
-
 [dependencies]
 anyhow = "1.0"
 arc-swap = "1.7"
@@ -47,7 +44,7 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-gnostr-ssh = { version = "1912.921277.22959", path = "../ssh" }
+gnostr-grammar = { version = "1905.926180.332424", path = "../grammar" }
 httparse = "1.7"
 humantime = "2.1"
 itertools = "0.13.0"
@@ -96,19 +93,12 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "parking_lot",
   "fmt",
 ] }
-tree-sitter-grammar-repository = { package = "gnostr-grammar", version = "1912.921277.22946", path = "grammar" }
-#tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "./grammar" }
 tree-sitter-highlight = "0.23"
 unix_mode = "0.1"
 uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
-#[dependencies.tokio]#version = "1.27.0"#features = ["full"]#[dependencies.toml]
-#version = "0.7.3"
-
-
-
 
 [build-dependencies]
 anyhow = "1.0"
