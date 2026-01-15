@@ -120,7 +120,8 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
     if path.as_os_str().is_empty()
-        || !crate::web::database::schema::repository::Repository::exists(db, &uri).unwrap_or_default()
+        || !crate::web::database::schema::repository::Repository::exists(db, &uri)
+            .unwrap_or_default()
     {
         return RepositoryNotFound.into_response();
     }

@@ -391,9 +391,11 @@ sd-notify = "0.4.1"
 winapi = { version = "0.3", features = ["winnt", "handleapi", "processthreadsapi", "errhandlingapi"] }
 
 [build-dependencies]
+anyhow = "1.0.75"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 hex = "0.4.3"
 reqwest = { version = "0.11", features = ["blocking"] }
+rsass = "0.28"
 sha2 = "0.10"
 
 [dev-dependencies]

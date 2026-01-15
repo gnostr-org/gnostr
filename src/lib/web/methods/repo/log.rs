@@ -6,9 +6,9 @@ use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
 use crate::web::{
-   database::schema::{commit::YokedCommit, repository::YokedRepository},
-//   into_response,
-   methods::{
+    database::schema::{commit::YokedCommit, repository::YokedRepository},
+    //   into_response,
+    methods::{
         filters,
         repo::{Repository, Result, DEFAULT_BRANCHES},
     },

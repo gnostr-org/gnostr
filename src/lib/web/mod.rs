@@ -1,6 +1,6 @@
 pub mod database;
-pub mod grammar;
 pub mod git;
+pub mod grammar;
 pub mod layers;
 pub mod methods;
 pub mod syntax_highlight;
