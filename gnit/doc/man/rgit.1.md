@@ -2,35 +2,38 @@
 %
 % 11 January 2024
 
-# NAME
+NAME
+====
 
 rgit - a gitweb interface written in rust
 
-# SYNOPSIS
+SYNOPSIS
+========
 
-| **rgit** \[_OPTIONS_] **\--db-store** _path_ _bind_address_ _scan_path_
+| **rgit** \[*OPTIONS*] **\--db-store** *path* *bind_address* *scan_path*
 
-# DESCRIPTION
+DESCRIPTION
+===========
 
-A gitweb/cgit-like interface for the modern age. Written in Rust using Axum, gitoxide, Askama, and RocksDB.
+A gitweb/cgit-like interface for the modern age. Written in Rust using Axum, gitoxide, Askama, and RocksDB.  
+  
+_bind_address_ 
 
-_bind_address_
-
-: Specifies the network address and port to serve the application on.
-(Required)
+:   Specifies the network address and port to serve the application on.
+(Required)  
 
     Example:
 
     :   _0.0.0.0:3333_ (localhost, port 3333 on IPv4)
 
-        _[::]:3333_ (localhost, port 3333 on IPv6)
+        _[::]:3333_ (localhost, port 3333 on IPv6)  
 
-_scan_path_
+_scan_path_ 
 
-: Specifies the root directory where git repositories reside. Scans recursively.
-(Required)
-
-    For information about bare git repositories, see the manual for **git-init**(1).
+:   Specifies the root directory where git repositories reside. Scans recursively.
+(Required)  
+  
+    For information about bare git repositories, see the manual for **git-init**(1).  
 
     Example:
 
@@ -38,11 +41,13 @@ _scan_path_
 
         _$HOME/git_
 
-# OPTIONS
+
+OPTIONS
+=======
 
 **-d** _path_, **\--db-store** _path_
 
-: Path to a directory in which the RocksDB database should be stored, will be created if it doesn't already exist.
+:   Path to a directory in which the RocksDB database should be stored, will be created if it doesn't already exist.  
 
     The RocksDB database is very quick to generate, so this can be pointed to temporary storage. (Required)
 
@@ -52,7 +57,7 @@ _scan_path_
 
 **\--refresh-interval** _interval_
 
-: Configures the metadata refresh interval. This parameter accepts human-readable time formats.
+:   Configures the metadata refresh interval. This parameter accepts human-readable time formats.
 
     Default: _5m_
 
@@ -66,7 +71,8 @@ _scan_path_
 
     :    https://docs.rs/humantime/latest/humantime/
 
-# EXAMPLES
+EXAMPLES
+========
 
 ```
 $ rgit -d /tmp/rgit-cache.db [::]:3333 /srv/git
@@ -75,21 +81,25 @@ $ rgit -d /tmp/rgit-cache.db [::]:3333 /srv/git --refresh-interval 12h
 
 ```
 
-# BUGS
+BUGS
+====
 
 https://github.com/w4/rgit/issues
 
-# AUTHORS
+AUTHORS
+=======
 
 Jordan Doyle \<jordan@doyle.la>
 
-# REPOSITORY
+REPOSITORY
+==========
 
 https://git.inept.dev/~doyle/rgit.git
 
 https://github.com/w4/rgit
 
-# SEE ALSO
+SEE ALSO
+========
 
 **git**(1),
 **git-init**(1)
