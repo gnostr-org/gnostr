@@ -67,10 +67,20 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             }
         };
 
-        let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
-            continue;
+        let name = if relative.as_os_str().is_empty() {
+            // For the root repository (empty path), use "root" as a consistent identifier
+            "root"
+        } else {
+            match relative.file_name().and_then(OsStr::to_str) {
+                Some(name) => name,
+                None => continue,
+            }
         };
-        let description = std::fs::read(repository.join("description")).unwrap_or_default();
+
+        // Try to read description file - for bare repos it's in root, for regular repos it's in .git/
+        let description = std::fs::read(repository.join("description"))
+            .or_else(|_| std::fs::read(repository.join(".git").join("description")))
+            .unwrap_or_default();
         let description = String::from_utf8(description)
             .ok()
             .filter(|v| !v.is_empty());
@@ -87,10 +97,17 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
 
         git_repository.object_cache_size(10 * 1024 * 1024);
 
+        // For the root repository, store it with "root" key instead of empty string
+        let storage_key = if relative.as_os_str().is_empty() {
+            Path::new("root")
+        } else {
+            relative
+        };
+
         let res = Repository {
             id,
             name: name.to_string(),
-            description,
+            description: description.clone(),
             owner: find_gitweb_owner(repository_path.as_path()),
             last_modified: {
                 let r =
@@ -99,8 +116,12 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             },
             default_branch: find_default_branch(&git_repository).ok().flatten(),
         }
-        .insert(db, relative);
+        .insert(db, storage_key);
 
+        info!(
+            "Inserted repository with key: '{:?}', name: '{}'",
+            storage_key, name
+        );
         if let Err(error) = res {
             warn!(%error, "Failed to insert repository");
         }
@@ -422,11 +443,26 @@ fn open_repo<P: AsRef<Path> + Debug>(
 }
 
 fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a Path> {
-    info!("relative_to={}", relative_to.display());
-    full_path.strip_prefix(relative_to).ok()
+    info!(
+        "relative_to={}, full_path={}",
+        relative_to.display(),
+        full_path.display()
+    );
+    let result = full_path.strip_prefix(relative_to).ok();
+    info!("Result: {:?}", result);
+    result
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
+    // First, check if the current path itself is a repository
+    if current.join("packed-refs").is_file() {
+        info!("current path is a bare git repo, taking it");
+        discovered_repos.push(current.to_path_buf());
+    } else if current.join(".git").is_dir() {
+        info!("current path is a regular git repo, taking it");
+        discovered_repos.push(current.to_path_buf());
+    }
+
     let current = match std::fs::read_dir(current) {
         Ok(v) => v,
         Err(error) => {
@@ -444,8 +480,11 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         if dir.join("packed-refs").is_file() {
             info!("we've hit what looks like a bare git repo, lets take it");
             discovered_repos.push(dir);
+        } else if dir.join(".git").is_dir() {
+            info!("we've hit what looks like a regular git repo, lets take it");
+            discovered_repos.push(dir);
         } else {
-            info!("probably not a bare git repo, lets recurse deeper");
+            info!("probably not a git repo, lets recurse deeper");
             discover_repositories(&dir, discovered_repos);
         }
     }
