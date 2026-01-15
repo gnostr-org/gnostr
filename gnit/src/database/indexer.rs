@@ -79,7 +79,16 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             .ok()
             .filter(|v| !v.is_empty());
 
-        let repository_path = scan_path.join(relative);
+        let repository_path = match safe_join_path(scan_path, relative) {
+            Some(path) => path,
+            None => {
+                warn!(
+                    "Repository path {} is outside scan path bounds, skipping",
+                    relative.display()
+                );
+                continue;
+            }
+        };
 
         let mut git_repository = match gix::open(repository_path.clone()) {
             Ok(v) => v,
@@ -161,9 +170,7 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
     };
 
     for (relative_path, db_repository) in repos {
-        println!("\n");
         info!("relative_path={}", &relative_path);
-        println!("\n");
         let Some(git_repository) = open_repo(scan_path, &relative_path, db_repository.get(), &db)
         else {
             continue;
@@ -328,9 +335,7 @@ fn update_repository_tags(scan_path: &Path, db: Arc<rocksdb::DB>) {
     };
 
     for (relative_path, db_repository) in repos {
-        println!("\n");
         info!("relative_path={}", &relative_path);
-        println!("\n");
         let Some(git_repository) = open_repo(scan_path, &relative_path, db_repository.get(), &db)
         else {
             continue;
@@ -414,9 +419,22 @@ fn open_repo<P: AsRef<Path> + Debug>(
     db_repository: &ArchivedRepository,
     db: &rocksdb::DB,
 ) -> Option<gix::Repository> {
-    match gix::open(scan_path.join(relative_path.as_ref())) {
+    let safe_path = match safe_join_path(scan_path, relative_path.as_ref()) {
+        Some(path) => path,
+        None => {
+            warn!(
+                "Repository path {} is outside scan path bounds or invalid, removing from db",
+                relative_path.as_ref().display()
+            );
+            if let Err(error) = db_repository.delete(db, relative_path) {
+                warn!(%error, "Failed to delete out-of-bounds index");
+            }
+            return None;
+        }
+    };
+
+    match gix::open(&safe_path) {
         Ok(mut v) => {
-            println!("open_repo!");
             v.object_cache_size(10 * 1024 * 1024);
             Some(v)
         }
@@ -442,9 +460,52 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
         relative_to.display(),
         full_path.display()
     );
+
+    // Use the validation function to ensure the path is safe
+    let _validated = validate_path_within_scan_path(relative_to, full_path)?;
+
     let result = full_path.strip_prefix(relative_to).ok();
     info!("Result: {:?}", result);
     result
+}
+
+/// Validates that a path stays within the scan_path boundaries after resolution.
+/// Returns None if the path would escape or cannot be safely resolved.
+fn validate_path_within_scan_path(scan_path: &Path, target_path: &Path) -> Option<PathBuf> {
+    // Canonicalize both paths to resolve symlinks and normalize
+    let canonical_scan = std::fs::canonicalize(scan_path).ok()?;
+    let canonical_target = std::fs::canonicalize(target_path).ok()?;
+
+    // Check if the target path starts with the scan path
+    if canonical_target.starts_with(&canonical_scan) {
+        Some(canonical_target)
+    } else {
+        warn!(
+            "Path {} would escape scan path {}",
+            canonical_target.display(),
+            canonical_scan.display()
+        );
+        None
+    }
+}
+
+/// Safely joins scan_path with relative_path and validates the result stays within bounds.
+fn safe_join_path(scan_path: &Path, relative_path: &Path) -> Option<PathBuf> {
+    let joined = scan_path.join(relative_path);
+
+    // Additional check for obvious traversal attempts
+    if relative_path
+        .components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
+        warn!(
+            "Path traversal attempt detected in path: {}",
+            relative_path.display()
+        );
+        return None;
+    }
+
+    validate_path_within_scan_path(scan_path, &joined)
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
