@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 services:
   rgit:
     image: ghcr.io/w4/rgit:main

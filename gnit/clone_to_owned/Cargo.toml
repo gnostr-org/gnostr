@@ -1,6 +1,6 @@
 [package]
 name = "librqbit-clone-to-owned"
-version = "1905.926180.332424"
+version = "2.2.1"
 edition = "2021"
 description = "Util traits to represent something that can be made owned and change type at the same time."
 license = "Apache-2.0"

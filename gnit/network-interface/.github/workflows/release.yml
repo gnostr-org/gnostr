@@ -6,7 +6,7 @@ on:
       version:
         type: choice
         required: true
-        description: "Version number to bump"
+        description: 'Version number to bump'
         options:
           - patch
           - minor
@@ -49,7 +49,7 @@ jobs:
 
       - name: Install `cargo-edit`
         run: cargo install cargo-edit
-
+      
       - id: cargo-set-version
         name: Set Version
         run: cargo set-version --bump ${{ inputs.version }}

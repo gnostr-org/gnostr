@@ -1,6 +1,6 @@
 [package]
 name = "librqbit-tracker-comms"
-version = "1905.926180.332424"
+version = "1.0.0"
 edition = "2018"
 description = "Common interface around various sha1 implementations used in rqbit torrent client."
 license = "Apache-2.0"

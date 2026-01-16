@@ -19,7 +19,7 @@
 //! assert_eq!(e.plain_text(), "hello world");
 //! ~~~
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 use html_escape::{encode_double_quoted_attribute, encode_safe};
 use std::collections::HashMap;

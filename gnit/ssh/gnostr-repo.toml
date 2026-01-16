@@ -1,0 +1,4 @@
+name = "Eejit"
+public = true
+members = ["moh"]
+failed_push_message = "Issues and patches can be emailed to moh@moh.ink"
