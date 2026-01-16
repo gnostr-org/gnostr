@@ -424,7 +424,10 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
 
     for entry in current_dir_entries.filter_map(Result::ok) {
         let path = entry.path();
+        info!("Inspecting path: {}", path.display());
+
         if !path.is_dir() {
+            info!("Skipping non-directory: {}", path.display());
             continue;
         }
 
@@ -434,6 +437,9 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         // Check for working tree repository (e.g., test_clone/.git)
         let is_working_tree_repo = path.join(".git").is_dir();
 
+        info!("  Path: {}, is_dir: {}, is_bare_repo: {}, is_working_tree_repo: {}",
+            path.display(), path.is_dir(), is_bare_repo, is_working_tree_repo);
+
         if is_bare_repo {
             info!("Discovered bare repository: {}", path.display());
             discovered_repos.push(path);
@@ -442,6 +448,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
             discovered_repos.push(path);
         } else {
             // Not a repository, recurse deeper
+            info!("Recursing into: {}", path.display());
             discover_repositories(&path, discovered_repos);
         }
     }
