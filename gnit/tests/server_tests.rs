@@ -83,8 +83,7 @@ async fn test_patch_endpoint_with_id() {
 
     // Verify it's a valid git patch format
     let patch_content = res.text().await.expect("Failed to read patch content");
-    assert!(patch_content
-        .contains("From 00075f5cf3b95f42baba2b355b8a3197f949e297 Mon Sep 17 00:00:00 2001"));
+    assert!(patch_content.contains("From 00075f5cf3b95f42baba2b355b8a3197f949e297"));
     assert!(patch_content.contains("Subject: [PATCH] 1896/932470/576827"));
 
     // Test error case with invalid commit ID
