@@ -413,6 +413,26 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
     full_path.strip_prefix(relative_to).ok()
 }
 
+fn is_git_working_tree(path: &Path) -> bool {
+    let git_path = path.join(".git");
+
+    if git_path.is_dir() {
+        // Standard .git directory
+        true
+    } else if git_path.is_file() {
+        // .git is a file, indicating a worktree or submodule
+        if let Ok(content) = std::fs::read_to_string(&git_path) {
+            if content.starts_with("gitdir: ") {
+                // It's a gitdir file, so it's a working tree
+                return true;
+            }
+        }
+        false
+    } else {
+        false
+    }
+}
+
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
     let current_dir_entries = match std::fs::read_dir(current) {
         Ok(v) => v,
@@ -441,7 +461,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         let is_bare_repo = path.join("HEAD").is_file() && path.join("objects").is_dir();
 
         // Check for working tree repository (e.g., test_clone/.git)
-        let is_working_tree_repo = path.join(".git").is_dir();
+        let is_working_tree_repo = is_git_working_tree(&path);
 
         info!("  Path: {}, is_dir: {}, is_bare_repo: {}, is_working_tree_repo: {}",
             path.display(), path.is_dir(), is_bare_repo, is_working_tree_repo);
