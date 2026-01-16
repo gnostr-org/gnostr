@@ -1,8 +1,8 @@
-@import 'util';
-@import 'diff';
-@import 'tables';
-@import 'code';
-@import 'colours';
+@import "util";
+@import "diff";
+@import "tables";
+@import "code";
+@import "colours";
 
 @media (prefers-color-scheme: dark) {
   html {
@@ -10,16 +10,17 @@
     color: $base3;
   }
 
-  h2, h3 {
+  h2,
+  h3 {
     color: darken($base3, 30%);
   }
 }
 
 a:any-link {
-color: $blue
+  color: $blue;
 }
 a:any-link:active {
-color: $blue
+  color: $blue;
 }
 
 body {
