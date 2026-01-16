@@ -50,8 +50,19 @@ curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/tree -o
 echo -e "\n4b. Following /test/commit redirect:"
 curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/commit -o /dev/null
 
+# Test patch endpoint
+echo -e "\n5. Testing patch endpoint:"
+echo "5a. Testing patch with specific commit ID:"
+curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297 -o /dev/null
+
+echo "5b. Verifying patch content format:"
+curl -s http://localhost:$PORT/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297 | head -5
+
+echo "5c. Testing patch endpoint error handling:"
+curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/patch?id=invalidcommitid -o /dev/null
+
 # Test invalid paths
-echo -e "\n5. Testing invalid paths:"
+echo -e "\n6. Testing invalid paths:"
 curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/nonexistent -o /dev/null
 
 echo -e "\n=========================================="
