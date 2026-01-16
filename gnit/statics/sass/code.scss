@@ -1,4 +1,4 @@
-@import "colours";
+@import 'colours';
 
 re {
   height: 100%;
@@ -27,7 +27,7 @@ re {
       display: inline-block;
       width: 2em;
       padding: 0 1em 0.3em 0;
-      margin-right: 0.5em;
+      margin-right: .5em;
       color: $base1;
       -webkit-user-select: none;
     }
