@@ -1,0 +1,5 @@
+[v1]
+"gnostr-gnit 0.0.1 (path+file:///Users/Shared/gnostr-org/.github/gnostr/gnit)" = [
+    "gnostr-gnit",
+    "gnostr-ssh",
+]

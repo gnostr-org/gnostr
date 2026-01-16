@@ -431,6 +431,12 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
             continue;
         }
 
+        // Skip directories under `target/`
+        if path.components().any(|c| c.as_os_str() == "target") {
+            info!("Skipping target directory: {}", path.display());
+            continue;
+        }
+
         // Check for bare repository (e.g., gnostr-gnit.git/HEAD, gnostr-gnit.git/objects)
         let is_bare_repo = path.join("HEAD").is_file() && path.join("objects").is_dir();
 

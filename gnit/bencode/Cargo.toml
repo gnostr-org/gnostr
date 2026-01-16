@@ -1,6 +1,6 @@
 [package]
 name = "librqbit-bencode"
-version = "1905.926180.332424"
+version = "2.2.1"
 edition = "2021"
 description = "Bencode serialization and deserialization using Serde"
 license = "Apache-2.0"

@@ -1,0 +1,50 @@
+[package]
+edition = "2021"
+name = "gnostr-ssh"
+version = "0.0.1"
+description = "A self-hosted Git server that's easy to set up, use, and maintain."
+homepage = "https://github.com/gnostr-org/gnostr.git"
+repository = "https://github.com/gnostr-org/gnostr.git"
+authors = ["gnostr-org <gnostr@protonmail.com>"]
+readme = "README.md"
+keywords = [
+    "cli",
+    "git",
+    "nostr",
+    "gnostr",
+]
+categories = ["command-line-utilities"]
+license = "MIT"
+
+[lib]
+name = "gnostr_ssh_lib"
+path = "src/lib.rs"
+
+[dependencies] # These are the dependencies for the library
+anyhow = "1.0.70"
+async-trait = "0.1.68"
+clean-path = "0.2.1"
+colored = "2.0.0"
+comrak = "0.18.0"
+futures = "0.3.28"
+log = "0.4.17"
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = "0.37.1"
+serde = { version = "1.0.159", features = ["derive"] }
+shellwords = "1.1.0"
+tempfile = "3.5.0"
+tera = "1.18.1"
+textwrap = "0.16.0"
+tokio = { version = "1.27.0", features = ["full"] }
+toml = "0.7.3"
+clap = { version = "4.5.20", features = ["derive"] }
+env_logger = "0.10.0"
+sd-notify = "0.4.1"
+
+[[bin]]
+name = "gnostr-ssh"
+path = "src/bin/gnostr-ssh.rs"
+
+[dev-dependencies]
+assert_cmd = "2.0.12"
+predicates = "1.0.1"

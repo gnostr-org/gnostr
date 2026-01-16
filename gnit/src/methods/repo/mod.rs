@@ -1,3 +1,5 @@
+use tracing::info;
+
 mod about;
 mod commit;
 mod diff;
@@ -61,6 +63,8 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .split('/')
         .collect();
 
+    info!("URI Segments: {:?}", uri_segments);
+
     let mut repository_name = PathBuf::new();
     let mut handler_segment = None;
     let mut child_path_segments = Vec::new();
@@ -81,6 +85,8 @@ pub async fn service(mut request: Request<Body>) -> Response {
         let is_bare_repo = full_potential_repo_path.is_dir() && potential_repo_name.extension().map_or(false, |ext| ext == "git");
         let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
 
+        info!("  Potential Repo: {}, Is Bare: {}, Is Working Tree: {}", potential_repo_name.display(), is_bare_repo, is_working_tree_repo);
+
         // Only consider it a repository if it exists on disk *and* is in the database
         if (is_bare_repo || is_working_tree_repo) && crate::database::schema::repository::Repository::exists(db, &potential_repo_name).unwrap_or_default() {
             repository_name = potential_repo_name;
@@ -100,6 +106,10 @@ pub async fn service(mut request: Request<Body>) -> Response {
         }
         current_segment_index += 1;
     }
+
+    info!("Repository Name: {}", repository_name.display());
+    info!("Handler Segment: {:?}", handler_segment);
+    info!("Child Path Segments: {:?}", child_path_segments);
 
     if repository_name.as_os_str().is_empty() {
         return RepositoryNotFound.into_response();
@@ -135,6 +145,8 @@ pub async fn service(mut request: Request<Body>) -> Response {
         Some("snapshot") => h!(handle_snapshot),
         _ => h!(handle_summary), // Default to summary if no specific handler is found
     };
+
+    info!("Final Child Path: {:?}", child_path);
 
     let repository_abs_path = scan_path.join(&repository_name);
 
