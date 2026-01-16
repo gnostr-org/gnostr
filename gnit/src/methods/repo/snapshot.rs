@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context};
 use axum::{body::Body, extract::Query, http::Response, Extension};
 use serde::Deserialize;
 use tokio_stream::wrappers::ReceiverStream;
-use tracing::{error, debug_span, Instrument};
+use tracing::{debug_span, error, Instrument};
 
 use super::{RepositoryPath, Result};
 use crate::git::Git;
