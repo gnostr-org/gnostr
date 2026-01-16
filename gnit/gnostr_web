@@ -9,5 +9,54 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 	fi
 fi
 cargo install -j8 --path . --root .;
-open http://localhost:$PORT & \
-./bin/gnostr-gnit -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s ./tests/resources/
+
+echo "Starting gnostr-gnit server..."
+./bin/gnostr-gnit -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s ./tests/resources/ &
+SERVER_PID=$!
+
+# Wait for server to start
+echo "Waiting for server to start..."
+sleep 5
+
+echo "Testing server endpoints..."
+echo "=========================================="
+
+# Test basic server
+echo "1. Testing root endpoint:"
+curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/ -o /dev/null
+
+# Test crlf.git repository directly
+echo -e "\n2. Testing crlf.git repository:"
+curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/tree -o /dev/null
+curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/commit -o /dev/null
+
+# Test mount point redirects
+echo -e "\n3. Testing mount point redirects:"
+echo "3a. /test/tree -> /crlf.git/tree:"
+curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/tree | grep -E "(HTTP|location)"
+
+echo -e "\n3b. /test/commit -> /crlf.git/commit:"
+curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/commit | grep -E "(HTTP|location)"
+
+echo -e "\n3c. /test/ -> /crlf.git/tree:"
+curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/ | grep -E "(HTTP|location)"
+
+# Test follow redirects
+echo -e "\n4. Testing following redirects:"
+echo "4a. Following /test/tree redirect:"
+curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/tree -o /dev/null
+
+echo -e "\n4b. Following /test/commit redirect:"
+curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/commit -o /dev/null
+
+# Test invalid paths
+echo -e "\n5. Testing invalid paths:"
+curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/nonexistent -o /dev/null
+
+echo -e "\n=========================================="
+echo "Opening browser..."
+open http://localhost:$PORT
+
+# Keep server running, or kill if script exits
+trap "kill $SERVER_PID 2>/dev/null" EXIT
+wait $SERVER_PID
