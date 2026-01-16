@@ -121,7 +121,11 @@ pub async fn service(mut request: Request<Body>) -> Response {
         Some("refs") => h!(handle_refs),
         Some("log") => h!(handle_log),
         Some("tree") => {
-            child_path = Some(child_path_segments.into_iter().collect::<PathBuf>().clean());
+            if child_path_segments.is_empty() {
+                child_path = None;
+            } else {
+                child_path = Some(child_path_segments.into_iter().collect::<PathBuf>().clean());
+            }
             h!(handle_tree)
         },
         Some("commit") => h!(handle_commit),
