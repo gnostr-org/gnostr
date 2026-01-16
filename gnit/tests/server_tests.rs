@@ -8,7 +8,7 @@ async fn test_commit_page_does_not_panic() {
 
     let crate_dir = env!("CARGO_MANIFEST_DIR");
     let binary_path = format!("{}/target/debug/gnostr-gnit", crate_dir);
-    
+
     let mut child = tokio::process::Command::new(binary_path)
         .arg("--scan-path")
         .arg(format!("{}/tests/resources", crate_dir))
@@ -44,4 +44,3 @@ async fn test_commit_page_does_not_panic() {
 
     child.kill().await.expect("failed to kill server");
 }
-

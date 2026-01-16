@@ -119,291 +119,179 @@ impl OpenRepository {
             .transpose()
             .context("Failed to parse tree hash")?;
 
-                tokio::task::spawn_blocking(move || {
-
-                    let repo = self.repo.to_thread_local();
-
-        
-
-                    let mut tree = if let Some(tree_id) = tree_id {
-
-                        repo.find_tree(tree_id)
-
-                            .context("Couldn't find tree with given id")?
-
-                    } else if let Some(branch) = &self.branch {
-
-                        repo.find_reference(branch.as_ref())?
-
-                            .peel_to_tree()
-
-                            .context("Couldn't find tree for reference")?
-
-                    } else {
-
-                        repo.find_reference("HEAD")
-
-                            .context("Failed to find HEAD")?
-
-                            .peel_to_tree()
-
-                            .context("Couldn't find HEAD for reference")?
-
-                    };
-
-        
-
-                    let effective_path_buf = root_path_param.clone().unwrap_or_default();
-
-        
-
-                    let resolved_tree = if let Some(path_ref) = root_path_param.as_ref().filter(|p| !p.as_os_str().is_empty()) {
-
-                        let item = tree
-
-                            .peel_to_entry_by_path(path_ref)?
-
-                            .context("Path doesn't exist in tree")?;
-
-                        let object = item.object().context("Path in tree isn't an object")?;
-
-        
-
-                        match object.kind {
-
-                            Kind::Blob => {
-
-                                let mut blob = object.into_blob();
-
-        
-
-                                let size = blob.data.len();
-
-        
-
-                                let content = match (formatted, simdutf8::basic::from_utf8(&blob.data)) {
-
-                                    (true, Err(_)) => Content::Binary(vec![]),
-
-                                    (true, Ok(data)) => Content::Text(Cow::Owned(format_file(
-
-                                        data,
-
-                                        FileIdentifier::Path(path_ref.as_path()),
-
-                                    )?)),
-
-                                    (false, Err(_)) => Content::Binary(blob.take_data()),
-
-                                    (false, Ok(_data)) => Content::Text(Cow::Owned(unsafe {
-
-                                        String::from_utf8_unchecked(blob.take_data())
-
-                                    })),
-
-                                };
-
-        
-
-                                return Ok(PathDestination::File(FileWithContent {
-
-                                    metadata: File {
-
-                                        mode: item.mode().0,
-
-                                        size,
-
-                                        path: path_ref.clone(),
-
-                                        name: item.filename().to_string(),
-
-                                    },
-
-                                    content,
-
-                                }));
-
-                            }
-
-                            Kind::Tree => object.into_tree(),
-
-                            _ => anyhow::bail!("bad object of type {:?}", object.kind),
-
-                        }
-
-                    } else {
-
-                        // If root_path_param is None or empty, we are at the root of the tree, so use the current `tree` itself.
-
-                        tree
-
-                    };
-
-        
-
-                    let mut tree_items = Vec::new();
-
-                    let submodules = repo
-
-                        .submodules()?
-
-                        .into_iter()
-
-                        .flatten()
-
-                        .filter_map(|v| Some((v.name().to_path_lossy().to_path_buf(), v.url().ok()?)))
-
-                        .collect::<BTreeMap<_, _>>();
-
-        
-
-                    for item in resolved_tree.iter() {
-
-                        let item = item?;
-
-        
-
-                        // Construct the full path for the current item within the tree view
-
-                        let item_path = effective_path_buf.join(item.filename().to_path_lossy());
-
-        
-
-                        match item.mode().kind() {
-
-                            EntryKind::Tree
-
-                            | EntryKind::Blob
-
-                            | EntryKind::BlobExecutable
-
-                            | EntryKind::Link => {
-
-                                let mut object = item
-
-                                    .object()
-
-                                    .context("Expected item in tree to be object but it wasn't")?;
-
-        
-
-                                tree_items.push(match object.kind {
-
-                                    Kind::Blob => TreeItem::File(File {
-
-                                        mode: item.mode().0,
-
-                                        size: object.into_blob().data.len(),
-
-                                        path: item_path.clone(),
-
-                                        name: item.filename().to_string(),
-
-                                    }),
-
-                                    Kind::Tree => {
-
-                                        let mut children = PathBuf::new();
-
-        
-
-                                        // if the tree only has one child, flatten it down
-
-                                        while let Ok(Some(Ok(child_item))) = object
-
-                                            .try_into_tree()
-
-                                            .iter()
-
-                                            .flat_map(gix::Tree::iter)
-
-                                            .at_most_one()
-
-                                        {
-
-                                            let nested_object = child_item.object().context(
-
-                                                "Expected item in tree to be object but it wasn't",
-
-                                            )?;
-
-        
-
-                                            if nested_object.kind != Kind::Tree {
-
-                                                break;
-
-                                            }
-
-        
-
-                                            object = nested_object;
-
-                                            children.push(child_item.filename().to_path_lossy());
-
-                                        }
-
-        
-
-                                        TreeItem::Tree(Tree {
-
-                                            mode: item.mode().0,
-
-                                            path: item_path.clone(),
-
-                                            children,
-
-                                            name: item.filename().to_string(),
-
-                                        })
-
-                                    }
-
-                                    _ => continue,
-
-                                });
-
-                            }
-
-                            EntryKind::Commit => {
-
-                                if let Some(mut url) = submodules.get(item_path.as_path()).cloned() {
-
-                                    if matches!(url.scheme, Scheme::Git | Scheme::Ssh) {
-
-                                        url.scheme = Scheme::Https;
-
-                                    }
-
-        
-
-                                    tree_items.push(TreeItem::Submodule(Submodule {
-
-                                        mode: item.mode().0,
-
-                                        name: item.filename().to_string(),
-
-                                        url,
-
-                                        oid: item.object_id(),
-
-                                    }));
-
-        
-
-                                    continue;
-
-                                }
-
-                            }
-
-                        }
-
+        tokio::task::spawn_blocking(move || {
+            let repo = self.repo.to_thread_local();
+
+            let mut tree = if let Some(tree_id) = tree_id {
+                repo.find_tree(tree_id)
+                    .context("Couldn't find tree with given id")?
+            } else if let Some(branch) = &self.branch {
+                repo.find_reference(branch.as_ref())?
+                    .peel_to_tree()
+                    .context("Couldn't find tree for reference")?
+            } else {
+                repo.find_reference("HEAD")
+                    .context("Failed to find HEAD")?
+                    .peel_to_tree()
+                    .context("Couldn't find HEAD for reference")?
+            };
+
+            let effective_path_buf = root_path_param.clone().unwrap_or_default();
+
+            let resolved_tree = if let Some(path_ref) = root_path_param
+                .as_ref()
+                .filter(|p| !p.as_os_str().is_empty())
+            {
+                let item = tree
+                    .peel_to_entry_by_path(path_ref)?
+                    .context("Path doesn't exist in tree")?;
+
+                let object = item.object().context("Path in tree isn't an object")?;
+
+                match object.kind {
+                    Kind::Blob => {
+                        let mut blob = object.into_blob();
+
+                        let size = blob.data.len();
+
+                        let content = match (formatted, simdutf8::basic::from_utf8(&blob.data)) {
+                            (true, Err(_)) => Content::Binary(vec![]),
+
+                            (true, Ok(data)) => Content::Text(Cow::Owned(format_file(
+                                data,
+                                FileIdentifier::Path(path_ref.as_path()),
+                            )?)),
+
+                            (false, Err(_)) => Content::Binary(blob.take_data()),
+
+                            (false, Ok(_data)) => Content::Text(Cow::Owned(unsafe {
+                                String::from_utf8_unchecked(blob.take_data())
+                            })),
+                        };
+
+                        return Ok(PathDestination::File(FileWithContent {
+                            metadata: File {
+                                mode: item.mode().0,
+
+                                size,
+
+                                path: path_ref.clone(),
+
+                                name: item.filename().to_string(),
+                            },
+
+                            content,
+                        }));
                     }
 
-        
+                    Kind::Tree => object.into_tree(),
 
-                    Ok(PathDestination::Tree(tree_items))
+                    _ => anyhow::bail!("bad object of type {:?}", object.kind),
+                }
+            } else {
+                // If root_path_param is None or empty, we are at the root of the tree, so use the current `tree` itself.
+
+                tree
+            };
+
+            let mut tree_items = Vec::new();
+
+            let submodules = repo
+                .submodules()?
+                .into_iter()
+                .flatten()
+                .filter_map(|v| Some((v.name().to_path_lossy().to_path_buf(), v.url().ok()?)))
+                .collect::<BTreeMap<_, _>>();
+
+            for item in resolved_tree.iter() {
+                let item = item?;
+
+                // Construct the full path for the current item within the tree view
+
+                let item_path = effective_path_buf.join(item.filename().to_path_lossy());
+
+                match item.mode().kind() {
+                    EntryKind::Tree
+                    | EntryKind::Blob
+                    | EntryKind::BlobExecutable
+                    | EntryKind::Link => {
+                        let mut object = item
+                            .object()
+                            .context("Expected item in tree to be object but it wasn't")?;
+
+                        tree_items.push(match object.kind {
+                            Kind::Blob => TreeItem::File(File {
+                                mode: item.mode().0,
+
+                                size: object.into_blob().data.len(),
+
+                                path: item_path.clone(),
+
+                                name: item.filename().to_string(),
+                            }),
+
+                            Kind::Tree => {
+                                let mut children = PathBuf::new();
+
+                                // if the tree only has one child, flatten it down
+
+                                while let Ok(Some(Ok(child_item))) = object
+                                    .try_into_tree()
+                                    .iter()
+                                    .flat_map(gix::Tree::iter)
+                                    .at_most_one()
+                                {
+                                    let nested_object = child_item.object().context(
+                                        "Expected item in tree to be object but it wasn't",
+                                    )?;
+
+                                    if nested_object.kind != Kind::Tree {
+                                        break;
+                                    }
+
+                                    object = nested_object;
+
+                                    children.push(child_item.filename().to_path_lossy());
+                                }
+
+                                TreeItem::Tree(Tree {
+                                    mode: item.mode().0,
+
+                                    path: item_path.clone(),
+
+                                    children,
+
+                                    name: item.filename().to_string(),
+                                })
+                            }
+
+                            _ => continue,
+                        });
+                    }
+
+                    EntryKind::Commit => {
+                        if let Some(mut url) = submodules.get(item_path.as_path()).cloned() {
+                            if matches!(url.scheme, Scheme::Git | Scheme::Ssh) {
+                                url.scheme = Scheme::Https;
+                            }
+
+                            tree_items.push(TreeItem::Submodule(Submodule {
+                                mode: item.mode().0,
+
+                                name: item.filename().to_string(),
+
+                                url,
+
+                                oid: item.object_id(),
+                            }));
+
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            Ok(PathDestination::Tree(tree_items))
         })
         .await
         .context("Failed to join Tokio task")?

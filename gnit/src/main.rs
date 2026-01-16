@@ -14,6 +14,7 @@ use anyhow::Context;
 use askama::Template;
 use axum::{
     body::Body,
+    extract::Path,
     http,
     http::{HeaderValue, StatusCode},
     response::{IntoResponse, Response},
@@ -128,6 +129,11 @@ impl FromStr for RefreshInterval {
     }
 }
 
+async fn test_mount_handler(Path(path): Path<String>) -> impl IntoResponse {
+    let redirect_path = format!("/crlf.git/{}", path);
+    (StatusCode::FOUND, [(http::header::LOCATION, redirect_path)]).into_response()
+}
+
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() -> Result<(), anyhow::Error> {
@@ -147,10 +153,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let db = open_db(&args)?;
 
-    let scan_path = args.scan_path.canonicalize().context("Could not canonicalize scan path")?;
+    let scan_path = args
+        .scan_path
+        .canonicalize()
+        .context("Could not canonicalize scan path")?;
 
-    let indexer_wakeup_task =
-        run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
+    let indexer_wakeup_task = run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
 
     let css = {
         let theme = toml::from_str::<Theme>(include_str!("../themes/solarized_light.toml"))
@@ -240,6 +248,7 @@ async fn main() -> Result<(), anyhow::Error> {
             "/gnostr.svg",
             get(static_svg(include_bytes!("../statics/gnostr.svg"))),
         )
+        .route("/test/*path", get(test_mount_handler))
         .fallback(methods::repo::service)
         .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))

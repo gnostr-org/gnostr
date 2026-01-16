@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::config::server::{load_server_config, ServerConfig, ServerUser};
     use crate::config::repo::{load_repo_config_from_path, RepoConfig};
+    use crate::config::server::{load_server_config, ServerConfig, ServerUser};
     use crate::state::State;
     use anyhow::Context;
     use std::fs;

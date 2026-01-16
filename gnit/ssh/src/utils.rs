@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use russh::CryptoVec;
-use std::net::{TcpListener, SocketAddr};
 use std::io::ErrorKind;
+use std::net::{SocketAddr, TcpListener};
 
 pub trait CustomContext<T> {
     fn context(self, context: &str) -> anyhow::Result<T>;

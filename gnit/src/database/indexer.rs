@@ -428,8 +428,10 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         Err(error) => {
             // Don't log an error if we just can't read a directory, it might be permissions, etc.
             // Only log if it's unexpected.
-            if error.kind() != std::io::ErrorKind::NotFound && error.kind() != std::io::ErrorKind::PermissionDenied {
-                 error!(%error, "Failed to read directory {}", current.display());
+            if error.kind() != std::io::ErrorKind::NotFound
+                && error.kind() != std::io::ErrorKind::PermissionDenied
+            {
+                error!(%error, "Failed to read directory {}", current.display());
             }
             return;
         }
@@ -439,7 +441,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         let path = entry.path();
 
         if path.is_dir() {
-             // Skip directories under `target/`
+            // Skip directories under `target/`
             if path.components().any(|c| c.as_os_str() == "target") {
                 info!("Skipping target directory: {}", path.display());
                 continue;
