@@ -1,4 +1,4 @@
-@import "colours";
+@import 'colours';
 
 pre.diff {
   @media (prefers-color-scheme: dark) {
@@ -6,9 +6,7 @@ pre.diff {
   }
 }
 
-.diff-add-line::before,
-.diff-remove-line::before,
-.diff-context::before {
+.diff-add-line::before, .diff-remove-line::before, .diff-context::before {
   display: inline-block;
   color: $base0;
   background: $base3;
@@ -38,8 +36,8 @@ pre.diff {
   }
 
   &::before {
-    content: "+ ";
-    color: $green;
+    content: '+ ';
+    color: $green
   }
 }
 
@@ -52,13 +50,13 @@ pre.diff {
   }
 
   &::before {
-    content: "- ";
-    color: $red;
+    content: '- ';
+    color: $red
   }
 }
 
 .diff-context {
   &::before {
-    content: "  ";
+    content: '  ';
   }
 }
