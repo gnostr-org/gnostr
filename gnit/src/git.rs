@@ -136,9 +136,9 @@ impl OpenRepository {
                     .context("Couldn't find HEAD for reference")?
             };
 
-            if let Some(path) = path.as_ref() {
+            if let Some(path_buf) = path.as_ref().filter(|p| !p.as_os_str().is_empty()) {
                 let item = tree
-                    .peel_to_entry_by_path(path)?
+                    .peel_to_entry_by_path(path_buf)?
                     .context("Path doesn't exist in tree")?;
                 let object = item.object().context("Path in tree isn't an object")?;
 
@@ -152,7 +152,7 @@ impl OpenRepository {
                             (true, Err(_)) => Content::Binary(vec![]),
                             (true, Ok(data)) => Content::Text(Cow::Owned(format_file(
                                 data,
-                                FileIdentifier::Path(path.as_path()),
+                                FileIdentifier::Path(path_buf.as_path()),
                             )?)),
                             (false, Err(_)) => Content::Binary(blob.take_data()),
                             (false, Ok(_data)) => Content::Text(Cow::Owned(unsafe {
@@ -164,7 +164,7 @@ impl OpenRepository {
                             metadata: File {
                                 mode: item.mode().0,
                                 size,
-                                path: path.clone(),
+                                path: path_buf.clone(),
                                 name: item.filename().to_string(),
                             },
                             content,
@@ -176,6 +176,7 @@ impl OpenRepository {
                     _ => anyhow::bail!("bad object of type {:?}", object.kind),
                 }
             }
+
 
             let mut tree_items = Vec::new();
             let submodules = repo
