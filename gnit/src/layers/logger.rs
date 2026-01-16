@@ -14,7 +14,7 @@ use axum::{
 use futures_util::future::{FutureExt, Join, Map, Ready};
 use tokio::task::futures::TaskLocalFuture;
 use tower_service::Service;
-use tracing::{error, debug, debug_span, instrument::Instrumented, Instrument, Span};
+use tracing::{debug, debug_span, error, instrument::Instrumented, Instrument, Span};
 use uuid::Uuid;
 
 use super::UnwrapInfallible;
@@ -118,7 +118,8 @@ impl PendingLogMessage {
         } else {
             // Only log successful requests if RUST_LOG is set to info or debug
             let rust_log = std::env::var("RUST_LOG").unwrap_or_default();
-            if rust_log.contains("debug") // || rust_log.contains("info") || rust_log.contains("trace")
+            if rust_log.contains("debug")
+            // || rust_log.contains("info") || rust_log.contains("trace")
             {
                 debug!(
                     "{ip} - \"{method} {uri}\" {status} {duration:?} \"{user_agent}\" \"{error:?}\"",
