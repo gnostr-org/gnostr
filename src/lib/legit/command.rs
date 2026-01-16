@@ -30,7 +30,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let _start = SystemTime::now();
     let _system_time = SystemTime::now();
 
-    let repo = Repository::open(&opts.repo).expect("Couldn't open repository");
+    let repo = Repository::discover(&opts.repo).expect("Couldn't open repository");
 
     if repo.state() != RepositoryState::Clean {
         let repo_state = if cfg!(target_os = "windows") {
@@ -41,7 +41,8 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         } else {
             Command::new("sh")
                 .arg("-c")
-                .arg("gnostr-git diff")
+                .arg("git")
+                .arg("status")
                 .output()
                 .expect("failed to execute process")
         };
@@ -51,7 +52,6 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
             .unwrap();
     }
 
-    // GEMINI we need to handle --kind flag from ../sub_commands/legit.rs
     if opts.message.is_empty() {
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
@@ -61,7 +61,8 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
         } else {
             Command::new("sh")
                 .arg("-c")
-                .arg("git diff")
+                .arg("git")
+                .arg("diff")
                 .output()
                 .expect("failed to execute process")
         };
