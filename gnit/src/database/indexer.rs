@@ -12,7 +12,7 @@ use ini::Ini;
 use itertools::Itertools;
 use rocksdb::WriteBatch;
 use time::{OffsetDateTime, UtcOffset};
-use tracing::{error, debug, debug_span, instrument, warn};
+use tracing::{debug, debug_span, error, instrument, warn};
 
 use crate::database::schema::{
     commit::Commit,
@@ -48,6 +48,11 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         let Some(relative) = get_relative_path(scan_path, &repository) else {
             continue;
         };
+        debug!(
+            "Processing repository: relative={}, repository={}",
+            relative.display(),
+            repository.display()
+        );
 
         let id = match Repository::open(db, relative) {
             Ok(v) => v.map_or_else(RepositoryId::new, |v| {
@@ -65,7 +70,22 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
             continue;
         };
-        let description = std::fs::read(repository.join("description")).unwrap_or_default();
+        // Read description from correct location based on repository type
+        let description_path = if std::process::Command::new("git")
+            .args(["rev-parse", "--is-bare-repository"])
+            .current_dir(&repository)
+            .output()
+            .map(|output| output.status.success() && output.stdout.starts_with(b"true"))
+            .unwrap_or(false)
+        {
+            // Bare repository: description is in repo root
+            repository.join("description")
+        } else {
+            // Working tree: description is in .git directory
+            repository.join(".git").join("description")
+        };
+
+        let description = std::fs::read(&description_path).unwrap_or_default();
         let description = String::from_utf8(description)
             .ok()
             .filter(|v| !v.is_empty());
