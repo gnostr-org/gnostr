@@ -413,68 +413,37 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
     full_path.strip_prefix(relative_to).ok()
 }
 
-fn is_git_working_tree(path: &Path) -> bool {
-    let git_path = path.join(".git");
-
-    if git_path.is_dir() {
-        // Standard .git directory
-        true
-    } else if git_path.is_file() {
-        // .git is a file, indicating a worktree or submodule
-        if let Ok(content) = std::fs::read_to_string(&git_path) {
-            if content.starts_with("gitdir: ") {
-                // It's a gitdir file, so it's a working tree
-                return true;
-            }
-        }
-        false
-    } else {
-        false
-    }
-}
-
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
+    // Attempt to open the current path as a Git repository first.
+    if gix::open(current).is_ok() {
+        // If it's a valid repository, we don't need to look inside it for more repositories.
+        info!("Discovered Git repository at: {}", current.display());
+        discovered_repos.push(current.to_path_buf());
+        return; // Stop recursion for this path
+    }
+
+    // If it's not a repository, and it's a directory, then we can recurse.
     let current_dir_entries = match std::fs::read_dir(current) {
         Ok(v) => v,
         Err(error) => {
-            error!(%error, "Failed to read directory {}", current.display());
+            // Don't log an error if we just can't read a directory, it might be permissions, etc.
+            // Only log if it's unexpected.
+            if error.kind() != std::io::ErrorKind::NotFound && error.kind() != std::io::ErrorKind::PermissionDenied {
+                 error!(%error, "Failed to read directory {}", current.display());
+            }
             return;
         }
     };
 
     for entry in current_dir_entries.filter_map(Result::ok) {
         let path = entry.path();
-        info!("Inspecting path: {}", path.display());
 
-        if !path.is_dir() {
-            info!("Skipping non-directory: {}", path.display());
-            continue;
-        }
-
-        // Skip directories under `target/`
-        if path.components().any(|c| c.as_os_str() == "target") {
-            info!("Skipping target directory: {}", path.display());
-            continue;
-        }
-
-        // Check for bare repository (e.g., gnostr-gnit.git/HEAD, gnostr-gnit.git/objects)
-        let is_bare_repo = path.join("HEAD").is_file() && path.join("objects").is_dir();
-
-        // Check for working tree repository (e.g., test_clone/.git)
-        let is_working_tree_repo = is_git_working_tree(&path);
-
-        info!("  Path: {}, is_dir: {}, is_bare_repo: {}, is_working_tree_repo: {}",
-            path.display(), path.is_dir(), is_bare_repo, is_working_tree_repo);
-
-        if is_bare_repo {
-            info!("Discovered bare repository: {}", path.display());
-            discovered_repos.push(path);
-        } else if is_working_tree_repo {
-            info!("Discovered working tree repository: {}", path.display());
-            discovered_repos.push(path);
-        } else {
-            // Not a repository, recurse deeper
-            info!("Recursing into: {}", path.display());
+        if path.is_dir() {
+             // Skip directories under `target/`
+            if path.components().any(|c| c.as_os_str() == "target") {
+                info!("Skipping target directory: {}", path.display());
+                continue;
+            }
             discover_repositories(&path, discovered_repos);
         }
     }

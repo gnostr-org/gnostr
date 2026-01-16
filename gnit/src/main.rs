@@ -147,8 +147,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let db = open_db(&args)?;
 
+    let scan_path = args.scan_path.canonicalize().context("Could not canonicalize scan path")?;
+
     let indexer_wakeup_task =
-        run_indexer(db.clone(), args.scan_path.clone(), args.refresh_interval);
+        run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
 
     let css = {
         let theme = toml::from_str::<Theme>(include_str!("../themes/solarized_light.toml"))
@@ -243,7 +245,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(layer_fn(LoggingMiddleware))
         .layer(Extension(Arc::new(Git::new())))
         .layer(Extension(db))
-        .layer(Extension(Arc::new(args.scan_path)))
+        .layer(Extension(Arc::new(scan_path)))
         .layer(CorsLayer::new());
 
     println!("{}", &args.bind_port);
