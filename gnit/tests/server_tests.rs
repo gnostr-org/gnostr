@@ -9,18 +9,28 @@ async fn test_commit_page_does_not_panic() {
     let crate_dir = env!("CARGO_MANIFEST_DIR");
     let binary_path = format!("{}/target/debug/gnostr-gnit", crate_dir);
 
+    // Find available port starting from 3333
+    let port = find_available_port().await;
+
     let mut child = tokio::process::Command::new(binary_path)
         .arg("--scan-path")
         .arg(format!("{}/tests/resources", crate_dir))
         .arg("--db-store")
         .arg(db_path)
+        .arg("--bind-port")
+        .arg(port.to_string())
         .spawn()
         .expect("failed to spawn server");
 
     // Poll the server until it's ready
     let client = reqwest::Client::new();
     for _ in 0..30 {
-        if client.get("http://localhost:3333").send().await.is_ok() {
+        if client
+            .get(&format!("http://localhost:{}", port))
+            .send()
+            .await
+            .is_ok()
+        {
             break;
         }
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -28,51 +38,26 @@ async fn test_commit_page_does_not_panic() {
 
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3333/crlf.git/commit")
+        .get(&format!("http://localhost:{}/crlf.git/commit", port))
         .send()
         .await
         .expect("Failed to send request");
 
     assert!(res.status().is_success());
     let res = client
-        .get("http://localhost:3333/test/tree")
+        .get(&format!("http://localhost:{}/test/tree", port))
         .send()
         .await
         .expect("Failed to send request");
 
     assert!(res.status().is_success());
-
-    child.kill().await.expect("failed to kill server");
-}
-
-#[tokio::test]
-async fn test_patch_endpoint_with_id() {
-    let db_dir = tempdir().unwrap();
-    let db_path = db_dir.path().to_str().unwrap();
-
-    let crate_dir = env!("CARGO_MANIFEST_DIR");
-    let binary_path = format!("{}/target/debug/gnostr-gnit", crate_dir);
-
-    let mut child = tokio::process::Command::new(binary_path)
-        .arg("--scan-path")
-        .arg(format!("{}/tests/resources", crate_dir))
-        .arg("--db-store")
-        .arg(db_path)
-        .spawn()
-        .expect("failed to spawn server");
-
-    // Poll the server until it's ready
-    let client = reqwest::Client::new();
-    for _ in 0..30 {
-        if client.get("http://localhost:3333").send().await.is_ok() {
-            break;
-        }
-        tokio::time::sleep(Duration::from_secs(2)).await;
-    }
 
     // Test patch endpoint with specific commit ID
     let res = client
-        .get("http://localhost:3333/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297")
+        .get(&format!(
+            "http://localhost:{}/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297",
+            port
+        ))
         .send()
         .await
         .expect("Failed to send request");
@@ -88,7 +73,10 @@ async fn test_patch_endpoint_with_id() {
 
     // Test error case with invalid commit ID
     let res_invalid = client
-        .get("http://localhost:3333/crlf.git/patch?id=invalidcommitid")
+        .get(&format!(
+            "http://localhost:{}/crlf.git/patch?id=invalidcommitid",
+            port
+        ))
         .send()
         .await
         .expect("Failed to send request");
@@ -96,4 +84,21 @@ async fn test_patch_endpoint_with_id() {
     assert_eq!(res_invalid.status(), reqwest::StatusCode::NOT_FOUND);
 
     child.kill().await.expect("failed to kill server");
+}
+
+// Helper function to find available port
+async fn find_available_port() -> u16 {
+    use std::sync::atomic::{AtomicU16, Ordering};
+    use tokio::net::TcpListener;
+
+    static PORT_COUNTER: AtomicU16 = AtomicU16::new(3333);
+
+    for port_offset in 0..100 {
+        let test_port = PORT_COUNTER.fetch_add(1, Ordering::Relaxed) + port_offset;
+        if let Ok(_) = TcpListener::bind(&format!("127.0.0.1:{}", test_port)).await {
+            return test_port;
+        }
+    }
+
+    3333 // fallback if no ports available
 }
