@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context};
 use axum::{body::Body, extract::Query, http::Response, Extension};
 use serde::Deserialize;
 use tokio_stream::wrappers::ReceiverStream;
-use tracing::{error, info_span, Instrument};
+use tracing::{error, debug_span, Instrument};
 
 use super::{RepositoryPath, Result};
 use crate::git::Git;
@@ -45,7 +45,7 @@ pub async fn handle(
 
             Ok(())
         }
-        .instrument(info_span!("sender")),
+        .instrument(debug_span!("sender")),
     );
 
     // don't send any headers until `archive` has told us we're good

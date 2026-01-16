@@ -1,4 +1,4 @@
-use tracing::info;
+use tracing::debug;
 
 mod about;
 mod commit;
@@ -63,7 +63,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .split('/')
         .collect();
 
-    info!("URI Segments: {:?}", uri_segments);
+    debug!("URI Segments: {:?}", uri_segments);
 
     let mut repository_name = PathBuf::new();
     let mut handler_segment = None;
@@ -78,14 +78,14 @@ pub async fn service(mut request: Request<Body>) -> Response {
     let mut current_segment_index = 0;
     while current_segment_index < uri_segments.len() {
         let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
-        info!("Looping URI Segments: {:?}", potential_repo_name_segments);
+        debug!("Looping URI Segments: {:?}", potential_repo_name_segments);
         let potential_repo_name = potential_repo_name_segments
             .iter()
             .collect::<PathBuf>()
             .clean();
-        info!("Potential Repo Name: {}", potential_repo_name.display());
+        debug!("Potential Repo Name: {}", potential_repo_name.display());
         let full_potential_repo_path = scan_path.join(&potential_repo_name);
-        info!(
+        debug!(
             "Full Potential Repo Path: {}",
             full_potential_repo_path.display()
         );
@@ -96,7 +96,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         let exists_in_db =
             crate::database::schema::repository::Repository::exists(db, &potential_repo_name)
                 .unwrap_or_default();
-        info!(
+        debug!(
             "  Is Bare: {}, Is Working Tree: {}, Exists in DB: {}",
             is_bare_repo, is_working_tree_repo, exists_in_db
         );
@@ -124,9 +124,9 @@ pub async fn service(mut request: Request<Body>) -> Response {
         current_segment_index += 1;
     }
 
-    info!("Repository Name: {}", repository_name.display());
-    info!("Handler Segment: {:?}", handler_segment);
-    info!("Child Path Segments: {:?}", child_path_segments);
+    debug!("Repository Name: {}", repository_name.display());
+    debug!("Handler Segment: {:?}", handler_segment);
+    debug!("Child Path Segments: {:?}", child_path_segments);
 
     if repository_name.as_os_str().is_empty() {
         return RepositoryNotFound.into_response();
@@ -163,7 +163,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         _ => h!(handle_summary), // Default to summary if no specific handler is found
     };
 
-    info!("Final Child Path: {:?}", child_path);
+    debug!("Final Child Path: {:?}", child_path);
 
     let repository_abs_path = scan_path.join(&repository_name);
 
