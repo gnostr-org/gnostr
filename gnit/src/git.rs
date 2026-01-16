@@ -136,7 +136,7 @@ impl OpenRepository {
                     .context("Couldn't find HEAD for reference")?
             };
 
-            if let Some(path_buf) = path.as_ref().filter(|p| !p.as_os_str().is_empty()) {
+            let object = if let Some(path_buf) = path.as_ref().filter(|p| !p.as_os_str().is_empty()) {
                 let item = tree
                     .peel_to_entry_by_path(path_buf)?
                     .context("Path doesn't exist in tree")?;
@@ -170,12 +170,15 @@ impl OpenRepository {
                             content,
                         }));
                     }
-                    Kind::Tree => {
-                        tree = object.into_tree();
-                    }
+                    Kind::Tree => object,
                     _ => anyhow::bail!("bad object of type {:?}", object.kind),
                 }
-            }
+            } else {
+                // If path is None or empty, we are at the root of the tree, so the current `tree` is the object we want to list.
+                tree.into_object()
+            };
+
+            tree = object.into_tree();
 
 
             let mut tree_items = Vec::new();
