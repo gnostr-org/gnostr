@@ -79,16 +79,19 @@ pub async fn service(mut request: Request<Body>) -> Response {
     let mut current_segment_index = 0;
     while current_segment_index < uri_segments.len() {
         let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
+        info!("Looping URI Segments: {:?}", potential_repo_name_segments);
         let potential_repo_name = potential_repo_name_segments.iter().collect::<PathBuf>().clean();
+        info!("Potential Repo Name: {}", potential_repo_name.display());
         let full_potential_repo_path = scan_path.join(&potential_repo_name);
+        info!("Full Potential Repo Path: {}", full_potential_repo_path.display());
 
-        let is_bare_repo = full_potential_repo_path.is_dir() && potential_repo_name.extension().map_or(false, |ext| ext == "git");
+        let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() && full_potential_repo_path.join("objects").is_dir();
         let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
-
-        info!("  Potential Repo: {}, Is Bare: {}, Is Working Tree: {}", potential_repo_name.display(), is_bare_repo, is_working_tree_repo);
+        let exists_in_db = crate::database::schema::repository::Repository::exists(db, &potential_repo_name).unwrap_or_default();
+        info!("  Is Bare: {}, Is Working Tree: {}, Exists in DB: {}", is_bare_repo, is_working_tree_repo, exists_in_db);
 
         // Only consider it a repository if it exists on disk *and* is in the database
-        if (is_bare_repo || is_working_tree_repo) && crate::database::schema::repository::Repository::exists(db, &potential_repo_name).unwrap_or_default() {
+        if (is_bare_repo || is_working_tree_repo) && exists_in_db {
             repository_name = potential_repo_name;
 
             // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
