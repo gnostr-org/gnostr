@@ -35,7 +35,7 @@ async fn test_commit_page_does_not_panic() {
 
     assert!(res.status().is_success());
     let res = client
-        .get("http://localhost:3333/tests/resources/test/tree")
+        .get("http://localhost:3333/test/tree")
         .send()
         .await
         .expect("Failed to send request");
