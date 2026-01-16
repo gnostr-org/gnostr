@@ -10,4 +10,4 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 fi
 cargo install -j8 --path . --root .;
 open http://localhost:$PORT & \
-./bin/gnostr-gnit -d .gnostr/web/$PORT -b $PORT -s .
+./bin/gnostr-gnit -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s ../.
