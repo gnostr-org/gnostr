@@ -194,8 +194,8 @@ fn if_linux_unknown() -> bool {
         println!("cargo:warning= sudo yum install openssl-devel"); // Older systems
         println!("cargo:warning=For Arch Linux-based systems, use:");
         println!("cargo:warning= sudo pacman -S openssl"); // Development headers are usually included
-                                                          // Optionally, you can try to check if the necessary libraries exist
-                                                          // This is more reliable than trying to run package managers
+                                                           // Optionally, you can try to check if the necessary libraries exist
+                                                           // This is more reliable than trying to run package managers
         let check_libssl = Command::new("ldconfig").arg("-p").output();
         match check_libssl {
             Ok(output)

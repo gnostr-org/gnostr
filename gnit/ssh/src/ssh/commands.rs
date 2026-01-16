@@ -173,7 +173,8 @@ impl Handler {
                 if repo_path == PathBuf::from(SERVER_CONFIG_REPO) {
                     info!("Reloading server config...");
                     knob.info("Reloading server config...").await?;
-                    state.lock().await.server_config = load_server_config(state.lock().await.config_path.clone()).await?;
+                    state.lock().await.server_config =
+                        load_server_config(state.lock().await.config_path.clone()).await?;
                 } else {
                     knob.info("Reloading repo information...").await?;
                     state.lock().await.rebuild_site(&repo_path).await?;

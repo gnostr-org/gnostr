@@ -74,21 +74,32 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
 
-
     // Try to find the repository name and handler segment
     let mut current_segment_index = 0;
     while current_segment_index < uri_segments.len() {
         let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
         info!("Looping URI Segments: {:?}", potential_repo_name_segments);
-        let potential_repo_name = potential_repo_name_segments.iter().collect::<PathBuf>().clean();
+        let potential_repo_name = potential_repo_name_segments
+            .iter()
+            .collect::<PathBuf>()
+            .clean();
         info!("Potential Repo Name: {}", potential_repo_name.display());
         let full_potential_repo_path = scan_path.join(&potential_repo_name);
-        info!("Full Potential Repo Path: {}", full_potential_repo_path.display());
+        info!(
+            "Full Potential Repo Path: {}",
+            full_potential_repo_path.display()
+        );
 
-        let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() && full_potential_repo_path.join("objects").is_dir();
+        let is_bare_repo = full_potential_repo_path.join("HEAD").is_file()
+            && full_potential_repo_path.join("objects").is_dir();
         let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
-        let exists_in_db = crate::database::schema::repository::Repository::exists(db, &potential_repo_name).unwrap_or_default();
-        info!("  Is Bare: {}, Is Working Tree: {}, Exists in DB: {}", is_bare_repo, is_working_tree_repo, exists_in_db);
+        let exists_in_db =
+            crate::database::schema::repository::Repository::exists(db, &potential_repo_name)
+                .unwrap_or_default();
+        info!(
+            "  Is Bare: {}, Is Working Tree: {}, Exists in DB: {}",
+            is_bare_repo, is_working_tree_repo, exists_in_db
+        );
 
         // Only consider it a repository if it exists on disk *and* is in the database
         if (is_bare_repo || is_working_tree_repo) && exists_in_db {
@@ -96,7 +107,10 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
             // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
             // we should treat the part before .git as the repository_name
-            if is_working_tree_repo && current_segment_index + 1 < uri_segments.len() && uri_segments[current_segment_index + 1] == ".git" {
+            if is_working_tree_repo
+                && current_segment_index + 1 < uri_segments.len()
+                && uri_segments[current_segment_index + 1] == ".git"
+            {
                 // Adjust segments to skip ".git"
                 current_segment_index += 1; // Skip the .git segment
             }
@@ -140,7 +154,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
                 child_path = Some(child_path_segments.into_iter().collect::<PathBuf>().clean());
             }
             h!(handle_tree)
-        },
+        }
         Some("commit") => h!(handle_commit),
         Some("diff") => h!(handle_diff),
         Some("patch") => h!(handle_patch),
@@ -155,7 +169,9 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     request.extensions_mut().insert(ChildPath(child_path));
     request.extensions_mut().insert(Repository(repository_name));
-    request.extensions_mut().insert(RepositoryPath(repository_abs_path));
+    request
+        .extensions_mut()
+        .insert(RepositoryPath(repository_abs_path));
 
     service
         .call(request)
