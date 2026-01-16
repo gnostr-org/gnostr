@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-PORT=${1:-3333}
+LOG_LEVEL=${1:-off}
+PORT=${2:-3333}
 if [ ! $(uname -s) = 'Darwin' ]; then
 	if grep -q Microsoft /proc/version; then
 		# Ubuntu on Windows using the Linux subsystem
@@ -11,7 +12,7 @@ fi
 cargo install -j8 --path . --root .;
 
 echo "Starting gnostr-gnit server..."
-./bin/gnostr-gnit --info -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s ./tests/resources/ &
+cargo run --bin gnostr-gnit -- $LOG_LEVEL -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT -b $PORT -s ./tests/resources/ &
 SERVER_PID=$!
 
 # Wait for server to start

@@ -100,10 +100,10 @@ pub struct Args {
     request_timeout: humantime::Duration,
     /// debug logging
     #[clap(long, value_parser, default_value = "false")]
-    debug: Option<bool>,
+    debug: bool,
     /// info logging
     #[clap(long, value_parser, default_value = "false")]
-    info: Option<bool>,
+    info: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -147,9 +147,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Set logging level based on args, only if RUST_LOG is not already set
     if std::env::var_os("RUST_LOG").is_none() {
-        if args.debug.unwrap_or(false) {
+        if args.debug {
             std::env::set_var("RUST_LOG", "debug");
-        } else if args.info.unwrap_or(false) {
+        } else if args.info {
             std::env::set_var("RUST_LOG", "info");
         } else {
             std::env::set_var("RUST_LOG", "warn");

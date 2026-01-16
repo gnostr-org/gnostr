@@ -12,7 +12,7 @@ use ini::Ini;
 use itertools::Itertools;
 use rocksdb::WriteBatch;
 use time::{OffsetDateTime, UtcOffset};
-use tracing::{error, info, info_span, instrument, warn};
+use tracing::{error, debug, debug_span, instrument, warn};
 
 use crate::database::schema::{
     commit::Commit,
@@ -21,22 +21,22 @@ use crate::database::schema::{
 };
 
 pub fn run(scan_path: &Path, db: &Arc<rocksdb::DB>) {
-    let span = info_span!("index_update");
+    let span = debug_span!("index_update");
     let _entered = span.enter();
 
-    info!("Starting index update");
+    debug!("Starting index update");
 
     update_repository_metadata(scan_path, db);
     update_repository_reflog(scan_path, db.clone());
     update_repository_tags(scan_path, db.clone());
 
-    info!("Flushing to disk");
+    debug!("Flushing to disk");
 
     if let Err(error) = db.flush() {
         error!(%error, "Failed to flush database to disk");
     }
 
-    info!("Finished index update");
+    debug!("Finished index update");
 }
 
 #[instrument(skip(db))]
@@ -210,7 +210,7 @@ fn branch_index_update(
     git_repository: &gix::Repository,
     force_reindex: bool,
 ) -> Result<(), anyhow::Error> {
-    info!("Refreshing indexes");
+    debug!("Refreshing indexes");
 
     let commit_tree = db_repository.commit_tree(db.clone(), reference.name().as_bstr().to_str()?);
 
@@ -222,7 +222,7 @@ fn branch_index_update(
 
     let latest_indexed = if let Some(latest_indexed) = commit_tree.fetch_latest_one()? {
         if commit.id().as_bytes() == latest_indexed.get().hash.as_slice() {
-            info!("No commits since last index");
+            debug!("No commits since last index");
             return Ok(());
         }
 
@@ -259,7 +259,7 @@ fn branch_index_update(
             seen = true;
 
             if ((i + 1) % 25_000) == 0 {
-                info!("{} commits ingested", i + 1);
+                debug!("{} commits ingested", i + 1);
             }
 
             let commit = rev.object()?;
@@ -365,7 +365,7 @@ fn tag_index_update(
         .context("Failed to read newly discovered tag")?;
 
     if let Ok(tag) = reference.peel_to_tag() {
-        info!("Inserting newly discovered tag to index");
+        debug!("Inserting newly discovered tag to index");
 
         Tag::new(tag.tagger()?)?.insert(tag_tree, tag_name)?;
     }
@@ -375,7 +375,7 @@ fn tag_index_update(
 
 #[instrument(skip(tag_tree))]
 fn tag_index_delete(tag_name: &str, tag_tree: &TagTree) -> Result<(), anyhow::Error> {
-    info!("Removing stale tag from index");
+    debug!("Removing stale tag from index");
     tag_tree.remove(tag_name)?;
 
     Ok(())
@@ -417,7 +417,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
     // Attempt to open the current path as a Git repository first.
     if gix::open(current).is_ok() {
         // If it's a valid repository, we don't need to look inside it for more repositories.
-        info!("Discovered Git repository at: {}", current.display());
+        debug!("Discovered Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
         return; // Stop recursion for this path
     }
@@ -443,7 +443,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         if path.is_dir() {
             // Skip directories under `target/`
             if path.components().any(|c| c.as_os_str() == "target") {
-                info!("Skipping target directory: {}", path.display());
+                debug!("Skipping target directory: {}", path.display());
                 continue;
             }
             discover_repositories(&path, discovered_repos);

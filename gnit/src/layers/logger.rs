@@ -1,5 +1,4 @@
 //! Logs each and every request out in a format similar to that of Apache's logs.
-
 use std::{
     fmt::Debug,
     future::Future,
@@ -15,7 +14,7 @@ use axum::{
 use futures_util::future::{FutureExt, Join, Map, Ready};
 use tokio::task::futures::TaskLocalFuture;
 use tower_service::Service;
-use tracing::{error, info, instrument::Instrumented, Instrument, Span};
+use tracing::{error, debug, debug_span, instrument::Instrumented, Instrument, Span};
 use uuid::Uuid;
 
 use super::UnwrapInfallible;
@@ -49,7 +48,7 @@ where
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         let request_id = Uuid::new_v4();
-        let span = tracing::info_span!("web", "request_id" = request_id.to_string().as_str());
+        let span = debug_span!("web", "request_id" = request_id.to_string().as_str());
 
         let log_message = PendingLogMessage {
             span: span.clone(),
@@ -117,23 +116,28 @@ impl PendingLogMessage {
                 }
             );
         } else {
-            info!(
-                "{ip} - \"{method} {uri}\" {status} {duration:?} \"{user_agent}\" \"{error:?}\"",
-                ip = self.ip,
-                method = self.method,
-                uri = self.uri,
-                status = response.status().as_u16(),
-                duration = self.start.elapsed(),
-                user_agent = self
-                    .user_agent
-                    .as_ref()
-                    .and_then(|v| v.to_str().ok())
-                    .unwrap_or("unknown"),
-                error = match response.extensions().get::<Box<dyn GenericError>>() {
-                    Some(e) => Err(e),
-                    None => Ok(()),
-                }
-            );
+            // Only log successful requests if RUST_LOG is set to info or debug
+            let rust_log = std::env::var("RUST_LOG").unwrap_or_default();
+            if rust_log.contains("debug") // || rust_log.contains("info") || rust_log.contains("trace")
+            {
+                debug!(
+                    "{ip} - \"{method} {uri}\" {status} {duration:?} \"{user_agent}\" \"{error:?}\"",
+                    ip = self.ip,
+                    method = self.method,
+                    uri = self.uri,
+                    status = response.status().as_u16(),
+                    duration = self.start.elapsed(),
+                    user_agent = self
+                        .user_agent
+                        .as_ref()
+                        .and_then(|v| v.to_str().ok())
+                        .unwrap_or("unknown"),
+                    error = match response.extensions().get::<Box<dyn GenericError>>() {
+                        Some(e) => Err(e),
+                        None => Ok(()),
+                    }
+                );
+            }
         }
     }
 }
