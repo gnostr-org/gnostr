@@ -26,6 +26,9 @@ async fn test_commit_page_does_not_panic() {
         tokio::time::sleep(Duration::from_secs(2)).await;
     }
 
+    // Give the server time to start
+    // tokio::time::sleep(Duration::from_secs(30)).await;
+
     let client = reqwest::Client::new();
     let res = client
         .get("http://localhost:3333/crlf.git/commit")
