@@ -3,7 +3,7 @@ name = "gnostr-grammar"
 description = "tree-sitter grammars built from Helix with support for dynamic linking"
 version = "1896.932853.83355"
 edition = "2021"
-authors = ["Jordan Doyle <jordan@doyle.la>"]
+authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
 
 [dependencies]

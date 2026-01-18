@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1896.932853.83355"
+version = "1896.932856.79846"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -200,7 +200,7 @@ globset = "0.4"
 #anyhow = "1.0"
 gnostr-asyncgit = { version = "1896.932853.83355", default-features = false, path = "asyncgit" }
 gnostr-crawler = { version = "1896.932853.83355", path = "crawler" }
-gnostr-grammar = { version = "1896.932853.83355", path = "grammar" }
+#gnostr-grammar = { version = "1896.932853.83355", path = "grammar" }
 gnostr-legit = { version = "1896.932853.83355", path = "legit" }
 gnostr-query = { version = "1896.932853.83355", path = "query" }
 gnostr-relay = { version = "1896.932853.83355", path = "relay", features = ["search"] }
