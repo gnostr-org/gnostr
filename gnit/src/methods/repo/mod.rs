@@ -84,17 +84,15 @@ pub async fn service(mut request: Request<Body>) -> Response {
     // Try to find the repository name and handler segment
     let mut current_segment_index = 0;
 
-    // Handle root repository case (URI segments is [""] or ["about", "summary", etc.])
-    if is_root_repo && root_repo_exists_in_db && (uri_segments.is_empty() || uri_segments == [""]) {
+    // Handle root repository case (URI segments could be ["summary"], ["about"], etc. for root repo)
+    if is_root_repo && root_repo_exists_in_db {
         repository_name = PathBuf::new();
-
-        if uri_segments.len() > 1 {
-            handler_segment = Some(uri_segments[1]);
-            child_path_segments = uri_segments[2..].to_vec();
-        } else if uri_segments.len() == 1 {
-            handler_segment = Some(uri_segments[0]);
-            child_path_segments = Vec::new();
-        }
+        handler_segment = uri_segments.get(0).copied();
+        child_path_segments = if uri_segments.len() > 1 {
+            uri_segments[1..].to_vec()
+        } else {
+            Vec::new()
+        };
     }
 
     // If not root repository, continue with normal detection
