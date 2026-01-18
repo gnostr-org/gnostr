@@ -1,6 +1,0 @@
-{
-  "git": {
-    "sha1": "0c2597c9d2320c3e20212aaadc340fc4a3ab7a8a"
-  },
-  "path_in_vcs": "crates/nostr-database"
-}
