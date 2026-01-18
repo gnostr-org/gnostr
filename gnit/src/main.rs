@@ -137,6 +137,7 @@ impl FromStr for RefreshInterval {
 
 async fn test_mount_handler(Path(path): Path<String>) -> impl IntoResponse {
     let redirect_path = format!("/crlf.git/{}", path);
+    println!("redirect_path={}", redirect_path);
     (StatusCode::FOUND, [(http::header::LOCATION, redirect_path)]).into_response()
 }
 
