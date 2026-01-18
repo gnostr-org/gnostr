@@ -16,7 +16,7 @@ cargo run --bin gnostr-gnit -- \
 $LOG_LEVEL \
 -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT \
 -b $PORT \
--s ../. &
+-s . &
 SERVER_PID=$!
 
 # Wait for server to start
