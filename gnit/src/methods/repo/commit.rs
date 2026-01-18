@@ -10,8 +10,8 @@ use crate::{
     into_response, Git,
 };
 
-use crate::methods::repo::Repository;
-use crate::methods::repo::RepositoryPath;
+use crate::methods::repo::Error;
+use crate::methods::repo::{Repository, RepositoryPath};
 
 #[derive(Template)]
 #[template(path = "repo/commit.html")]
@@ -35,7 +35,7 @@ pub async fn handle(
     Extension(RepositoryPath(repository_path)): Extension<RepositoryPath>,
     Extension(git): Extension<Arc<Git>>,
     Query(query): Query<UriQuery>,
-) -> Result<impl IntoResponse> {
+) -> Result<impl IntoResponse, Error> {
     let open_repo = git.repo(repository_path, query.branch.clone()).await?;
 
     let (dl_branch, commit) = tokio::try_join!(
@@ -55,7 +55,7 @@ pub async fn handle(
 async fn fetch_commit(
     commit_id: Option<&str>,
     open_repo: Arc<OpenRepository>,
-) -> Result<Arc<Commit>> {
+) -> Result<Arc<Commit>, Error> {
     Ok(if let Some(commit) = commit_id {
         open_repo.commit(commit, true).await?
     } else {
@@ -66,7 +66,7 @@ async fn fetch_commit(
 async fn fetch_dl_branch(
     branch: Option<Arc<str>>,
     open_repo: Arc<OpenRepository>,
-) -> Result<Arc<str>> {
+) -> Result<Arc<str>, Error> {
     if let Some(branch) = branch.clone() {
         Ok(branch)
     } else {

@@ -14,9 +14,9 @@ use crate::{
     into_response, Git, ResponseEither,
 };
 
+use crate::methods::repo::ChildPath;
 use crate::methods::repo::Repository;
 use crate::methods::repo::RepositoryPath;
-use crate::methods::repo::ChildPath;
 
 #[derive(Deserialize)]
 pub struct UriQuery {
