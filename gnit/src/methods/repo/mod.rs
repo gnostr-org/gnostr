@@ -81,6 +81,14 @@ pub async fn service(mut request: Request<Body>) -> Response {
         crate::database::schema::repository::Repository::exists(db, &PathBuf::from(""))
             .unwrap_or_default();
 
+    debug!(
+        "Root repo detection - path: {}, is_dir: {}, is_file: {}, exists_in_db: {}",
+        root_repo_path.display(),
+        root_repo_path.is_dir(),
+        root_repo_path.is_file(),
+        root_repo_exists_in_db
+    );
+
     // Try to find the repository name and handler segment
     let mut current_segment_index = 0;
 
@@ -93,10 +101,8 @@ pub async fn service(mut request: Request<Body>) -> Response {
         } else {
             Vec::new()
         };
-    }
-
-    // If not root repository, continue with normal detection
-    if repository_name.as_os_str().is_empty() {
+    } else {
+        // If not root repository, continue with normal detection
         while current_segment_index < uri_segments.len() {
             let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
             debug!("Looping URI Segments: {:?}", potential_repo_name_segments);
