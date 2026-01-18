@@ -8,15 +8,15 @@ use std::{
     sync::Arc,
 };
 
+use crate::methods::filters;
 use crate::{
     git::{FileWithContent, PathDestination, TreeItem},
-    into_response,
-    methods::{
-        filters,
-        repo::{ChildPath, Repository, RepositoryPath, Result},
-    },
-    Git, ResponseEither,
+    into_response, Git, ResponseEither,
 };
+
+use crate::methods::repo::Repository;
+use crate::methods::repo::RepositoryPath;
+use crate::methods::repo::ChildPath;
 
 #[derive(Deserialize)]
 pub struct UriQuery {

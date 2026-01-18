@@ -11,6 +11,8 @@ mod summary;
 mod tag;
 mod tree;
 
+use crate::database::schema::repository::YokedRepository;
+
 use std::{
     collections::BTreeMap,
     ops::Deref,

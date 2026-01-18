@@ -1,15 +1,12 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use crate::{
-    into_response,
-    methods::{
-        filters,
-        repo::{Refs, Repository, Result},
-    },
-};
 use anyhow::Context;
 use askama::Template;
 use axum::{response::IntoResponse, Extension};
+use crate::into_response;
+use crate::methods::repo::Repository;
+use crate::methods::repo::Refs;
+use crate::methods::filters;
 use rkyv::string::ArchivedString;
 use yoke::Yoke;
 

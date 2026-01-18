@@ -3,6 +3,7 @@ use std::{fmt::Write, sync::Arc};
 use askama::Template;
 use axum::{
     extract::Query,
+    http,
     http::HeaderValue,
     response::{IntoResponse, Response},
     Extension,
@@ -13,7 +14,7 @@ use time::format_description::well_known::Rfc2822;
 
 use crate::{
     git::Commit,
-    http, into_response,
+    into_response,
     methods::{
         filters,
         repo::{commit::UriQuery, Repository, RepositoryPath, Result},
