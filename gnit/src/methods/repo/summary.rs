@@ -11,7 +11,7 @@ use crate::methods::repo::Refs;
 use crate::methods::repo::Repository;
 use crate::methods::repo::YokedCommit;
 use crate::methods::repo::YokedRepository;
-use crate::methods::repo::DEFAULT_BRANCHES;
+use crate::methods::repo::{Error, DEFAULT_BRANCHES};
 
 #[derive(Template)]
 #[template(path = "repo/summary.html")]
@@ -25,7 +25,7 @@ pub struct View {
 pub async fn handle(
     Extension(repo): Extension<Repository>,
     Extension(db): Extension<Arc<rocksdb::DB>>,
-) -> Result<impl IntoResponse> {
+) -> Result<impl IntoResponse, Error> {
     tokio::task::spawn_blocking(move || {
         let repository = crate::database::schema::repository::Repository::open(&db, &*repo)?
             .context("Repository does not exist")?;
@@ -65,7 +65,7 @@ pub async fn handle(
 pub fn get_default_branch_commits(
     repository: &YokedRepository,
     database: &Arc<rocksdb::DB>,
-) -> Result<Vec<YokedCommit>> {
+) -> Result<Vec<YokedCommit>, Error> {
     for branch in repository
         .get()
         .default_branch
