@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
@@ -41,7 +41,7 @@ figment = { version = "0.10.19", features = ["toml"] }
 fuzzy-matcher = "0.3"
 git-version = "0.3.9"
 git2 = "0.20.1"
-git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1905.926180.332424" }
+git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1896.932853.83355" }
 # git2 = { version = "0.20.1", default-features = false }
 itertools = "0.14.0"
 log = "0.4"
@@ -57,7 +57,7 @@ ratatui = { version = "0.29.0", features = ["serde"] }
 rayon = "1.10"
 rayon-core = "1.12"
 regex = "1.11.1"
-scopetime = { package = "gnostr-scopetime", path = "../scopetime", version = "1905.926180.332424" }
+scopetime = { package = "gnostr-scopetime", path = "../scopetime", version = "1896.932853.83355" }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 # serde = { version = "1.0.219", features = ["derive"] }
@@ -102,7 +102,7 @@ cargo-insta = "1.43.1"
 criterion = "0.5.1"
 env_logger = "0.11"
 insta = "1.42.2"
-invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1905.926180.332424" }
+invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1896.932853.83355" }
 pretty_assertions = "1.4"
 serial_test = "3.1"
 # pretty_assertions = "1.4.0"

@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-scopetime"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "log runtime of arbitrary scope"
@@ -12,8 +12,8 @@ categories = ["development-tools::profiling"]
 keywords = ["profiling", "logging"]
 
 [features]
-default =[]
-enabled =[]
+default = []
+enabled = []
 
 [dependencies]
 log = "0.4"

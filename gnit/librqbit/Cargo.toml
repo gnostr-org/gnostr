@@ -1,6 +1,6 @@
 [package]
 name = "librqbit"
-version = "5.5.1"
+version = "1896.932853.83355"
 authors = ["Igor Katson <igor.katson@gmail.com>"]
 edition = "2021"
 description = "The main library used by rqbit torrent client. The binary is just a small wrapper on top of it."

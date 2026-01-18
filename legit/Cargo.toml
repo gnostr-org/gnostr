@@ -1,6 +1,6 @@
 [package]
 name    = "gnostr-legit"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
 edition = "2021"
 rust-version = "1.61.0"
@@ -12,7 +12,6 @@ repository = "https://github.com/randymcmillan/legit.git"
 license = "MIT OR Apache-2.0"
 keywords = ["git", "pow", "proof-of-work"]
 categories = ["command-line-utilities"]
-
 
 [dependencies]
 argparse = "0.2.2"

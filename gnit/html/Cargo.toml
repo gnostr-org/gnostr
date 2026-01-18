@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "html-page"
-version = "0.4.0"
+version = "1896.932853.83355"
 edition = "2021"
 authors = [
   "Lars Wirzenius <liw@liw.fi>",
