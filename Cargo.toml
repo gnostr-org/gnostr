@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1897.931636.697526"
+version = "1896.932853.83355"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -75,7 +75,7 @@ gnostr-web = [
     "actix-http",
     "actix-web",
     "actix-web-actors",
-    "rocket"
+    "rocket",
 ]
 # regex-* features are mutually exclusive.
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
@@ -174,7 +174,7 @@ duration-str = { version = "0.11.2", default-features = false }
 easy-cast = "0.5"
 env_logger = "0.11"
 expectrl = "0.8.0"
-filetreelist = { version = "1905.926180.332424", package = "gnostr-filetreelist", path = "filetreelist" }
+filetreelist = { version = "1896.932853.83355", package = "gnostr-filetreelist", path = "filetreelist" }
 flate2 = { version = "1.0", optional = true }
 
 flume = "0.10"
@@ -198,14 +198,13 @@ globset = "0.4"
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { version = "1905.926180.332424", default-features = false, path = "asyncgit" }
-gnostr-crawler = { version = "1905.926180.332424", path = "crawler" }
-gnostr-grammar = { version = "1905.926180.332424", path = "grammar" }
-gnostr-legit = { version = "1905.926180.332424", path = "legit" }
-gnostr-query = { version = "1905.926180.332424", path = "query" }
-gnostr-relay = { version = "1905.926180.332424", path = "relay", features = ["search"] }
-##gnostr-types = { version = "0.7.6", path = "types" }
-gnostr_qr = { version = "1905.926180.332424", path = "qr" }
+gnostr-asyncgit = { version = "1896.932853.83355", default-features = false, path = "asyncgit" }
+gnostr-crawler = { version = "1896.932853.83355", path = "crawler" }
+gnostr-grammar = { version = "1896.932853.83355", path = "grammar" }
+gnostr-legit = { version = "1896.932853.83355", path = "legit" }
+gnostr-query = { version = "1896.932853.83355", path = "query" }
+gnostr-relay = { version = "1896.932853.83355", path = "relay", features = ["search"] }
+gnostr_qr = { version = "1896.932853.83355", path = "qr" }
 hex = "0.4.3"
 hkdf = "0.12"
 hmac = "0.12"
@@ -322,7 +321,7 @@ russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
 rust-ini = { version = "0.21.1", optional = true }
 scopeguard = "1.2"
-scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1905.926180.332424" }
+scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1896.932853.83355" }
 scrypt = "0.11.0"
 #rand = "0.8"
 #rand_core = "0.6"

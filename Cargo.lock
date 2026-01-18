@@ -5363,7 +5363,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1897.931636.697526"
+version = "1896.932853.83355"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -5597,7 +5597,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "arboard",
  "bitflags 2.9.0",
@@ -5661,7 +5661,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "assert_cmd",
  "chrono",
@@ -5691,14 +5691,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "git2",
  "log 0.4.27",
@@ -5708,7 +5708,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "anyhow",
  "cc",
@@ -5727,7 +5727,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "argparse",
  "chrono",
@@ -5744,7 +5744,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-query"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "clap 4.5.53",
  "futures",
@@ -5759,7 +5759,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "actix",
  "actix-cors",
@@ -5788,14 +5788,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "log 0.4.27",
 ]
 
 [[package]]
 name = "gnostr_qr"
-version = "1905.926180.332424"
+version = "1896.932853.83355"
 dependencies = [
  "hex",
  "image",
