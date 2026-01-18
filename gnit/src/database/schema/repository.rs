@@ -164,6 +164,7 @@ impl ArchivedRepository {
     }
 }
 
+#[allow(unused)] //ArchivedHeads
 #[derive(Serialize, Archive, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Heads(pub Vec<String>);
 
