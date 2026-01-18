@@ -198,6 +198,9 @@ pub async fn service(mut request: Request<Body>) -> Response {
         scan_path.join(&repository_name)
     };
 
+    debug!("Repository Name: {}", repository_name.display());
+    debug!("Repository Path: {}", repository_abs_path.display());
+
     request.extensions_mut().insert(ChildPath(child_path));
     request.extensions_mut().insert(Repository(repository_name));
     request
