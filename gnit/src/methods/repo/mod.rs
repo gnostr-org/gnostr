@@ -195,7 +195,13 @@ pub async fn service(mut request: Request<Body>) -> Response {
         // Root repository - use .git directory
         scan_path.join(".git")
     } else {
-        scan_path.join(&repository_name)
+        // Check if this is a working tree repo and use .git subdirectory
+        let repo_path = scan_path.join(&repository_name);
+        if repo_path.join(".git").is_dir() {
+            repo_path.join(".git")
+        } else {
+            repo_path
+        }
     };
 
     debug!("Repository Name: {}", repository_name.display());
