@@ -40,7 +40,6 @@ use std::{
     time::Duration,
 };
 
-use anyhow::Context;
 use rocksdb::{Options, SliceTransform};
 use xxhash_rust::const_xxh3;
 
