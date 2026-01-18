@@ -10,7 +10,7 @@ async fn test_commit_page_does_not_panic() {
     let binary_path = format!("{}/target/debug/gnostr-gnit", crate_dir);
 
     // Find available port starting from 3333
-    let port = find_available_port().await;
+    let port = crate::find_available_port().await;
     println!("port={}", &port);
     let mut child = tokio::process::Command::new(binary_path)
         .arg("--scan-path")
