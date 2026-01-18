@@ -8,7 +8,7 @@ use gix::diff::blob::{
     Sink,
 };
 
-pub(crate) trait Callback {
+pub trait Callback {
     fn addition(&mut self, data: &str, dst: &mut String);
     fn remove(&mut self, data: &str, dst: &mut String);
     fn context(&mut self, data: &str, dst: &mut String);
