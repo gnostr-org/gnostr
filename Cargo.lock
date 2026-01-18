@@ -5363,7 +5363,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1896.932853.83355"
+version = "1896.932856.79846"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -5445,7 +5445,6 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-crawler",
  "gnostr-filetreelist",
- "gnostr-grammar",
  "gnostr-legit",
  "gnostr-query",
  "gnostr-relay",
@@ -5704,25 +5703,6 @@ dependencies = [
  "log 0.4.27",
  "shellexpand",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "gnostr-grammar"
-version = "1896.932853.83355"
-dependencies = [
- "anyhow",
- "cc",
- "globset",
- "heck 0.5.0",
- "prettyplease",
- "proc-macro2",
- "quote",
- "regex",
- "serde",
- "syn 2.0.106",
- "threadpool",
- "toml 0.8.22",
- "tree-sitter-language",
 ]
 
 [[package]]
