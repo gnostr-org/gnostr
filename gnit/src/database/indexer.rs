@@ -408,7 +408,13 @@ fn open_repo<P: AsRef<Path> + Debug>(
     db_repository: &ArchivedRepository,
     db: &rocksdb::DB,
 ) -> Option<gix::Repository> {
-    match gix::open(scan_path.join(relative_path.as_ref())) {
+    let full_path = scan_path.join(relative_path.as_ref());
+    debug!(
+        "Attempting to open repository: {} (relative: {:?})",
+        full_path.display(),
+        relative_path
+    );
+    match gix::open(&full_path) {
         Ok(mut v) => {
             v.object_cache_size(10 * 1024 * 1024);
             Some(v)
