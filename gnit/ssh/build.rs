@@ -128,6 +128,7 @@ fn main() {
     if !if_windows() {
         if if_linux_unknown() {
             linux_install_pkg_config();
+            musl_install_pkg_config();
         }
 
         if target_os == "aarch64-apple-darwin" || target_os == "x86_64-apple-darwin" {
