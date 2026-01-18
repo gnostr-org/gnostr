@@ -23,7 +23,7 @@ async fn test_commit_page_does_not_panic() {
         .expect("failed to spawn server");
 
     // Poll the server until it's ready
-    let mut client = reqwest::Client::new();
+    let client = reqwest::Client::new();
     for poll_count in 0..30 {
         println!("poll_count={}", poll_count);
         if client
