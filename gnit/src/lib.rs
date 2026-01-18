@@ -268,3 +268,20 @@ impl<A: axum::response::IntoResponse, B: axum::response::IntoResponse> axum::res
         }
     }
 }
+
+// Helper function to find available port
+pub async fn find_available_port() -> u16 {
+    use std::sync::atomic::{AtomicU16, Ordering};
+    use tokio::net::TcpListener;
+
+    static PORT_COUNTER: AtomicU16 = AtomicU16::new(3333);
+
+    for port_offset in 0..100 {
+        let test_port = PORT_COUNTER.fetch_add(1, Ordering::Relaxed) + port_offset;
+        if let Ok(_) = TcpListener::bind(&format!("127.0.0.1:{}", test_port)).await {
+            return test_port;
+        }
+    }
+
+    3333 // fallback if no ports available
+}
