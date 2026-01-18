@@ -4,15 +4,14 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
+use crate::methods::filters;
 use crate::{
     git::{Commit, OpenRepository},
-    into_response,
-    methods::{
-        filters,
-        repo::{Repository, RepositoryPath, Result},
-    },
-    Git,
+    into_response, Git,
 };
+
+use crate::methods::repo::Repository;
+use crate::methods::repo::RepositoryPath;
 
 #[derive(Template)]
 #[template(path = "repo/commit.html")]

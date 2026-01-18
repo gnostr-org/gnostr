@@ -1,10 +1,14 @@
 [package]
-name = "gnostr-gnit"
-description = "gnostr:git server"
+name = "gnostr_gnit"
+description = "gnostr:git server library and binary"
 version = "0.0.1"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
+
+[[bin]]
+name = "gnostr-gnit"
+path = "src/bin/gnostr-gnit.rs"
 
 [workspace]
 members = ["ssh", "tree-sitter-grammar-repository"]

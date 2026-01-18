@@ -5,14 +5,13 @@ use askama::Template;
 use axum::{response::IntoResponse, Extension};
 use rkyv::string::ArchivedString;
 
-use crate::{
-    database::schema::{commit::YokedCommit, repository::YokedRepository},
-    into_response,
-    methods::{
-        filters,
-        repo::{Refs, Repository, Result, DEFAULT_BRANCHES},
-    },
-};
+use crate::methods::repo::YokedRepository;
+use crate::methods::repo::YokedCommit;
+use crate::methods::repo::Refs;
+use crate::methods::filters;
+use crate::into_response;
+use crate::methods::repo::DEFAULT_BRANCHES;
+use crate::methods::repo::Repository;
 
 #[derive(Template)]
 #[template(path = "repo/summary.html")]
