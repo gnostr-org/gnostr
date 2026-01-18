@@ -440,12 +440,31 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
-    // Attempt to open the current path as a Git repository first.
+    // First check if current path is itself a repository
     if gix::open(current).is_ok() {
-        // If it's a valid repository, we don't need to look inside it for more repositories.
         debug!("Discovered Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
         return; // Stop recursion for this path
+    }
+
+    // Check if current is a directory that contains .git
+    if current.is_dir() {
+        let git_path = current.join(".git");
+
+        // Check if .git exists as either file or directory
+        if git_path.exists() {
+            // Try to open as repository (handles both .git file (worktree) and .git directory)
+            if gix::open(current).is_ok() {
+                debug!("Discovered Git repository at: {}", current.display());
+                discovered_repos.push(current.to_path_buf());
+                return; // Stop recursion for this path
+            } else {
+                debug!(
+                    "Found .git at {} but not a valid repository",
+                    current.display()
+                );
+            }
+        }
     }
 
     // If it's not a repository, and it's a directory, then we can recurse.

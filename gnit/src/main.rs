@@ -14,7 +14,6 @@ use anyhow::Context;
 use askama::Template;
 use axum::{
     body::Body,
-    extract::Path,
     http,
     http::{HeaderValue, StatusCode},
     response::{IntoResponse, Response},
@@ -133,12 +132,6 @@ impl FromStr for RefreshInterval {
             Err("must be seconds, a human readable duration (eg. '10m') or 'never'")
         }
     }
-}
-
-async fn test_mount_handler(Path(path): Path<String>) -> impl IntoResponse {
-    let redirect_path = format!("/crlf.git/{}", path);
-    println!("redirect_path={}", redirect_path);
-    (StatusCode::FOUND, [(http::header::LOCATION, redirect_path)]).into_response()
 }
 
 #[tokio::main]
@@ -262,7 +255,6 @@ async fn main() -> Result<(), anyhow::Error> {
             "/gnostr.svg",
             get(static_svg(include_bytes!("../statics/gnostr.svg"))),
         )
-        .route("/test/*path", get(test_mount_handler))
         .fallback(methods::repo::service)
         .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))
