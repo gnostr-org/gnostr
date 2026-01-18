@@ -25,7 +25,7 @@ async fn test_commit_page_does_not_panic() {
     // Poll the server until it's ready
     let mut client = reqwest::Client::new();
     for poll_count in 0..30 {
-    println!("poll_count={}", poll_count);
+        println!("poll_count={}", poll_count);
         if client
             .get(&format!("http://localhost:{}", port)) // no slash
             .send()
@@ -152,14 +152,6 @@ async fn test_commit_page_does_not_panic() {
     assert!(patch_content.contains("Subject: [PATCH] 1896/932470/576827"));
 
     //TODO mote tests
-
-
-
-
-
-
-
-
 
     // Test error case with invalid commit ID
     let res_invalid = client
