@@ -15,7 +15,7 @@ use expectrl::{
     Eof, Expect,
 };
 use futures::executor::block_on;
-use nostr_0_34_1::{self, nips::nip65::RelayMetadata, Kind, Tag};
+pub use nostr_0_34_1::{self, nips::nip65::RelayMetadata, Event, Kind, Tag};
 use nostr_database_0_34_0::{nostr, NostrDatabase, Order};
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::SQLiteDatabase;
