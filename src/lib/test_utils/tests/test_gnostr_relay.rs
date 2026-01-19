@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[cfg(feature = "gnostr-web")]
 mod tests {
 
     use std::{fs, sync::Arc};
@@ -43,6 +44,7 @@ mod tests {
         Ok((app_data, server_address))
     }
 
+    #[cfg(feature = "gnostr-web")]
     #[actix_web::test]
     //#[ignore]
     async fn test_server_starts_and_websocket_connects() -> Result<()> {
@@ -76,6 +78,7 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(feature = "gnostr-web")]
     #[actix_web::test]
     //#[ignore]
     async fn test_event_submission_and_retrieval() -> Result<()> {
