@@ -38,11 +38,11 @@ impl std::fmt::Display for LogLevel {
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct RelaySubCommand {
-    /// Path to the configuration file.
+    /// Path to configuration file.
     #[arg(short, long)]
     pub config: Option<PathBuf>,
 
-    /// Path to the data directory.
+    /// Path to data directory.
     #[arg(short, long)]
     pub data: Option<PathBuf>,
 
@@ -50,18 +50,38 @@ pub struct RelaySubCommand {
     #[arg(short, long)]
     pub watch: bool,
 
-    /// Set the logging level.
+    /// Set logging level.
     #[arg(long, value_enum, default_value_t = LogLevel::Info)]
     pub logging: LogLevel,
+
+    /// Run the relay in background (daemon mode).
+    #[arg(long, help = "Run the relay server in background as a daemon")]
+    pub detach: bool,
 }
+
 //TODO web actix runtime
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Start relay server with args: {:?}", args);
 
+    // Handle detach mode - run as daemon
+    if args.detach {
+        #[cfg(unix)]
+        {
+            return run_as_daemon(args).await;
+        }
+
+        #[cfg(not(unix))]
+        {
+            return Err(anyhow!(
+                "Detach functionality is currently only supported on Unix-like systems"
+            ));
+        }
+    }
+
     let mut final_config_path: Option<PathBuf> = None;
     let mut _final_data_path: Option<PathBuf> = None;
 
-    // Determine the configuration file path
+    // Determine configuration file path
     if let Some(config_arg_path) = args.config {
         final_config_path = Some(config_arg_path);
     } else {
@@ -85,7 +105,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
                     }
                 }
                 Err(e) => {
-                    // Log the error but don't fail, continue with other defaults/args
+                    // Log error but don't fail, continue with other defaults/args
                     info!("Failed to parse config file {:?}: {}", config_path, e);
                 }
             }
@@ -176,4 +196,67 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
 
     info!("Relay server shutdown");
     Ok(())
+}
+
+#[cfg(unix)]
+async fn run_as_daemon(args: RelaySubCommand) -> Result<()> {
+    info!("Starting relay in daemon mode...");
+
+    // Get current executable path
+    let current_exe = std::env::current_exe().context("Failed to get current executable path")?;
+
+    // Build daemon command arguments
+    let daemon_args = build_daemon_args(&args);
+
+    // Set environment variables for minimal logging
+    let mut cmd = tokio::process::Command::new(&current_exe);
+    cmd.args(&daemon_args);
+    cmd.env("RUST_LOG", "error");
+    cmd.env("GNOSTR_RELAY_MODE", "daemon");
+
+    // Detach from terminal
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.stdin(std::process::Stdio::null());
+        cmd.stdout(std::process::Stdio::null());
+        cmd.stderr(std::process::Stdio::null());
+    }
+
+    // Spawn daemon process
+    cmd.spawn().context("Failed to spawn daemon process")?;
+
+    println!("Relay started in background");
+    println!("Process ID: {}", std::process::id());
+
+    Ok(())
+}
+
+#[cfg(unix)]
+fn build_daemon_args(args: &RelaySubCommand) -> Vec<String> {
+    let mut daemon_args = Vec::new();
+
+    // Add relay subcommand
+    daemon_args.push("relay".to_string());
+
+    // Pass through essential arguments
+    if let Some(config) = &args.config {
+        daemon_args.push("--config".to_string());
+        daemon_args.push(config.to_string_lossy().to_string());
+    }
+
+    if let Some(data) = &args.data {
+        daemon_args.push("--data".to_string());
+        daemon_args.push(data.to_string_lossy().to_string());
+    }
+
+    if args.watch {
+        daemon_args.push("--watch".to_string());
+    }
+
+    // Force error-level logging for daemon mode to reduce noise
+    daemon_args.push("--logging".to_string());
+    daemon_args.push("error".to_string());
+
+    daemon_args
 }
