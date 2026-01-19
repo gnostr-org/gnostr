@@ -491,13 +491,14 @@ async fn main() -> anyhow::Result<()> {
                 gnostr::types::client::Options::new(),
             );
             // Try to parse the recipient string as a PublicKey
-            let recipient_pubkey = PublicKey::try_from_bech32_string(
-                &sub_command_args.recipient
-            )
-            .or_else(|_| PublicKey::try_from_hex_string(
-                &sub_command_args.recipient
-            ))
-            .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
+                          let recipient_pubkey = PublicKey::try_from_bech32_string(
+                              &sub_command_args.recipient,
+                              false,
+                          )
+                          .or_else(|_| PublicKey::try_from_hex_string(
+                              &sub_command_args.recipient,
+                              false,
+                          ))            .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
             client.add_relays(gnostr_cli_args.relays.clone()).await?;
 
