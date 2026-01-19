@@ -20,7 +20,7 @@ use tracing::{debug, info, warn};
 use k256::{
     ecdsa::SigningKey,
     elliptic_curve::{
-        ecdh::shared_secret,
+        ecdh::{self, SharedSecret},
         sec1::{FromEncodedPoint, ToEncodedPoint},
         SecretKey,
     },
