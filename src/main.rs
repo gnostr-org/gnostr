@@ -5,8 +5,9 @@ use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
     cli::{get_app_cache_path, GnostrCli, GnostrCommands},
-    sub_commands, weeble, wobble,
-    types::{PublicKey, Keys, PrivateKey},
+    sub_commands,
+    types::{Keys, PrivateKey, PublicKey},
+    weeble, wobble,
 };
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
@@ -486,22 +487,18 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             let mut client = gnostr::types::client::Client::new(
-                &Keys::new(
-                    PrivateKey::try_from_hex_string(
-                        &gnostr_cli_args.nsec.ok_or_else(|| anyhow!("nsec not provided"))?,
-                    )?
-                ),
+                &Keys::new(PrivateKey::try_from_hex_string(
+                    &gnostr_cli_args
+                        .nsec
+                        .ok_or_else(|| anyhow!("nsec not provided"))?,
+                )?),
                 gnostr::types::client::Options::new(),
             );
             // Try to parse the recipient string as a PublicKey
-                          let recipient_pubkey = PublicKey::try_from_bech32_string(
-                              &sub_command_args.recipient,
-                              false,
-                          )
-                          .or_else(|_| PublicKey::try_from_hex_string(
-                              &sub_command_args.recipient,
-                              false,
-                          ))            .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
+            let recipient_pubkey =
+                PublicKey::try_from_bech32_string(&sub_command_args.recipient, false)
+                    .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
+                    .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
             client.add_relays(gnostr_cli_args.relays.clone()).await?;
 
