@@ -1,3 +1,4 @@
+#[allow(unused)]
 // Working Nostr Client Implementation with proper interface
 
 use anyhow::Result;
@@ -56,6 +57,7 @@ impl Options {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Client {
     keys: Keys,

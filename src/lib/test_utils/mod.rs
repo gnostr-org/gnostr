@@ -1,3 +1,4 @@
+#[allow(unreachable_code)]
 use std::{
     ffi::OsStr,
     io::Write,
@@ -973,6 +974,7 @@ impl CliTester {
             }
         }
 
+        #[allow(unreachable_code)]
         let before = self.exp_string(message).context("exp_string failed")?;
         Ok(before)
     }
