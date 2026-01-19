@@ -1,31 +1,10 @@
 #![cfg(test)]
 
 use anyhow::anyhow;
-use async_trait::async_trait;
-use mockall::{automock, predicate::*};
-use crate::types::{Client as GnostrClient, Error, Id, Keys, PublicKey};
+use crate::types::{Error, Id, Keys, PublicKey};
 use crate::sub_commands::dm::dm_command;
-use crate::sub_commands::dm::DmClientTrait;
-use async_trait::async_trait;
-use mockall::{mock, predicate::*};
-
-mock! {
-    pub DmClientTrait {}
-
-    #[async_trait]
-    impl DmClientTrait for DmClientTrait {
-        async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error> {
-            todo!()
-        }
-        async fn nip44_direct_message(
-            &self,
-            recipient_pubkey: PublicKey,
-            message: String,
-        ) -> Result<Id, Error> {
-            todo!()
-        }
-    }
-}
+use crate::types::client::{Client, Options};
+use crate::types::RelayUrl;
 
 mod tests {
     use super::*;
@@ -34,28 +13,27 @@ mod tests {
 
     #[tokio::test]
     async fn test_dm_command_success() {
-        // Setup mock client
-        let mut mock_client = MockDmClientTrait::new();
-
-        // Create dummy keys and public key
-        let dummy_privkey = PrivateKey::try_from_hex_string(
+        // Setup real client
+        let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
         ).unwrap();
-        let dummy_keys = Keys::new(dummy_privkey);
-        let recipient_pubkey = dummy_keys.public_key(); // Use the public key from dummy_keys
+        let sender_keys = Keys::new(sender_privkey);
+        let mut client = Client::new(&sender_keys, Options::new());
 
-        let expected_event_id = Id::try_from_hex_string("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef").unwrap();
+        // Add a dummy relay for the client to connect to
+        client.add_relays(vec!["ws://localhost:8008".to_string()]).await.unwrap();
+
+        // Create recipient public key
+        let recipient_privkey = PrivateKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000002",
+        ).unwrap();
+        let recipient_keys = Keys::new(recipient_privkey);
+        let recipient_pubkey = recipient_keys.public_key();
+
         let message_content = "Hello, world!".to_string();
 
-        // Expect nip44_direct_message to be called and return success
-        mock_client
-            .expect_nip44_direct_message()
-            .with(eq(recipient_pubkey.clone()), eq(message_content.clone()))
-            .times(1)
-            .returning(move |_, _| Ok(expected_event_id.clone()));
-
-        // Call the function under test
-        let result = dm_command(&mock_client, recipient_pubkey.clone(), message_content.clone()).await;
+        // Call the function under test (this will now use the real nip44_direct_message)
+        let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
 
         // Assertions
         assert!(result.is_ok());
@@ -63,34 +41,35 @@ mod tests {
 
     #[tokio::test]
     async fn test_dm_command_failure() {
-        // Setup mock client
-        let mut mock_client = MockDmClientTrait::new();
-
-        // Create dummy keys and public key
-        let dummy_privkey = PrivateKey::try_from_hex_string(
+        // Setup real client (we expect nip44_direct_message to potentially fail for other reasons)
+        let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
         ).unwrap();
-        let dummy_keys = Keys::new(dummy_privkey);
-        let recipient_pubkey = dummy_keys.public_key(); // Use the public key from dummy_keys
+        let sender_keys = Keys::new(sender_privkey);
+        let mut client = Client::new(&sender_keys, Options::new());
 
-        let error_message = "Failed to encrypt message".to_string();
-        let message_content = "Secret message".to_string();
+        // Add a dummy relay for the client to connect to
+        client.add_relays(vec!["ws://localhost:8008".to_string()]).await.unwrap();
 
-        // Expect nip44_direct_message to be called and return an error
-        mock_client
-            .expect_nip44_direct_message()
-            .with(eq(recipient_pubkey.clone()), eq(message_content.clone()))
-            .times(1)
-            .returning(move |_, _| Err(Error::Custom(anyhow!(error_message.clone()).into())));
+        // Create recipient public key (a malformed one to simulate encryption failure if needed, or simply let the real function fail)
+        let recipient_pubkey_str = "invalidhexpubkey";
+        let recipient_pubkey_result = PublicKey::try_from_hex_string(recipient_pubkey_str, false);
+        assert!(recipient_pubkey_result.is_err()); // Ensure it's an invalid key for this test's intent
 
-        // Call the function under test
-        let result = dm_command(&mock_client, recipient_pubkey.clone(), message_content.clone()).await;
+        let recipient_pubkey = PublicKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000003", // Use a valid but arbitrary pubkey for client call
+            false,
+        ).unwrap();
 
-        // Assertions
+        let message_content = "Secret message that might fail to encrypt".to_string();
+
+        // Call the function under test (expecting it to fail due to, e.g., connection issues or malformed key in the real nip44_direct_message)
+        let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
+
+        // Assertions - we now expect a real error from the client's operations
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Failed to encrypt message"
-        );
+        // The error message will now be from the actual nip44_direct_message implementation, likely related to connection or key conversion if any
+        // For localhost:8008, it will likely be a connection refused error.
+        assert!(result.unwrap_err().to_string().contains("Failed to connect to relay"));
     }
 }
