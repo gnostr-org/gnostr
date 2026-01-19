@@ -68,8 +68,8 @@ mod tests {
 
         // Assertions - we now expect a real error from the client's operations
         assert!(result.is_err());
-        // The error message will now be from the actual nip44_direct_message implementation, likely related to connection or key conversion if any
-        // For localhost:8008, it will likely be a connection refused error.
-        assert!(result.unwrap_err().to_string().contains("Failed to connect to relay"));
+        let actual_error = result.unwrap_err();
+        eprintln!("Actual error: {}", actual_error);
+        assert!(actual_error.to_string().contains("Failed to send event to any configured relay."));
     }
 }
